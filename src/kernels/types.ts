@@ -32,6 +32,7 @@ import {
 } from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { generateIdFromRemoteProvider } from './jupyter/jupyterUtils';
+import { IJupyterServerUri } from '../api';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -736,6 +737,17 @@ export interface IKernelSessionFactory {
      * Creates a notebook.
      */
     create(options: KernelSessionCreationOptions): Promise<IKernelSession>;
+    addBeforeCreateHook(
+        hook: (
+            data: {
+                uri: Uri;
+                serverId: JupyterServerProviderHandle;
+                kernelSpecName: string;
+                jupyterUri: IJupyterServerUri;
+            },
+            token: CancellationToken
+        ) => Promise<IJupyterServerUri | undefined>
+    ): void;
 }
 
 export interface IKernelSocket {

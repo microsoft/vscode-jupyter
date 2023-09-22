@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Session } from '@jupyterlab/services';
 import type { CancellationToken, Uri } from 'vscode';
 
 declare module './api' {
@@ -22,8 +21,13 @@ declare module './api' {
          * In the case of Jupyter Notebooks and Interactive Window, this is the Uri of the Notebook.
          * @session The {@link Session.ISessionConnection Session Connection} for the Kernel. Use this to communicate with the backend kernel.
          */
-        onStartKernel?(
-            data: { uri: Uri; server: JupyterServer; session: Session.ISessionConnection },
+        onBeforeCreateJupyterKernelSession?(
+            data: {
+                uri: Uri;
+                server: JupyterServer;
+                kernelSpecName: string;
+                connectionInfo: JupyterServerConnectionInformation;
+            },
             token: CancellationToken
         ): Promise<void>;
     }

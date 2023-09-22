@@ -21,6 +21,7 @@ import { IConfigurationService } from '../../../platform/common/types';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { Uri } from 'vscode';
 import { JupyterLabHelper } from '../session/jupyterLabHelper';
+import { traceError } from '../../../platform/logging';
 
 /**
  * Creates IJupyterConnection objects for URIs and 3rd party handles/ids.
@@ -41,8 +42,17 @@ export class JupyterConnection {
         private readonly requestCreator: IJupyterRequestCreator
     ) {}
 
-    public async createConnectionInfo(serverId: JupyterServerProviderHandle) {
-        const serverUri = await this.getJupyterServerUri(serverId);
+    public async createConnectionInfo(
+        serverId: JupyterServerProviderHandle,
+        updateConnection?: (conn: IJupyterServerUri) => Promise<IJupyterServerUri>
+    ) {
+        let serverUri = await this.getJupyterServerUri(serverId);
+        if (updateConnection && serverId.extensionId.split('.')[0].toLowerCase() === 'SynapseVSCode'.toLowerCase()) {
+            serverUri = await updateConnection(serverUri).catch((ex) => {
+                traceError(`Failed to update connection`, ex);
+                return serverUri;
+            });
+        }
         return createJupyterConnectionInfo(
             serverId,
             serverUri,

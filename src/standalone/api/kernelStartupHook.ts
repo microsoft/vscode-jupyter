@@ -3,17 +3,24 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IKernel, IKernelProvider, IKernelSession, isRemoteConnection } from '../../kernels/types';
+import {
+    IKernel,
+    IKernelProvider,
+    IKernelSession,
+    IKernelSessionFactory,
+    isRemoteConnection
+} from '../../kernels/types';
 import { IDisposableRegistry, IExtensions } from '../../platform/common/types';
 import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
-import { CancellationError, CancellationToken } from 'vscode';
+import { CancellationError, CancellationToken, Uri } from 'vscode';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { raceCancellation } from '../../platform/common/cancellation';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../platform/common/utils/localize';
+import { IJupyterServerUri, JupyterServerConnectionInformation } from '../../api';
 
 @injectable()
 export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActivationService {
@@ -25,7 +32,9 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
         @inject(IExtensions)
         private readonly extensions: IExtensions,
         @inject(IJupyterServerProviderRegistry)
-        private readonly serverProviders: IJupyterServerProviderRegistry
+        private readonly serverProviders: IJupyterServerProviderRegistry,
+        @inject(IKernelSessionFactory)
+        private readonly sessionFactory: IKernelSessionFactory
     ) {}
     activate(): void {
         this.kernelProvider.onDidCreateKernel((kernel) => this.addOnStartHooks(kernel), this, this.disposables);
@@ -41,6 +50,121 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
         ) {
             return;
         }
+        this.sessionFactory.addBeforeCreateHook(async (options, token) => {
+            // For now only synapse is allows to use this hook.
+            if (options.serverId.extensionId.split('.')[0].toLowerCase() !== 'SynapseVSCode'.toLowerCase()) {
+                return;
+            }
+            const serverProvider = this.serverProviders.jupyterCollections.find(
+                (provider) =>
+                    provider.extensionId === connection.serverProviderHandle.extensionId &&
+                    provider.id === connection.serverProviderHandle.id
+            );
+            if (!serverProvider) {
+                // This is not possible
+                traceError(
+                    `Unable to find Jupyter Server Provider for ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
+                );
+                return;
+            }
+            if (!serverProvider.serverProvider?.onBeforeCreateJupyterKernelSession) {
+                // No hooks
+                return;
+            }
+            const provider = this.jupyterUrisRegistration.providers.find(
+                (p) =>
+                    p.extensionId === connection.serverProviderHandle.extensionId &&
+                    p.id === connection.serverProviderHandle.id
+            );
+            if (!provider) {
+                // This is not possible
+                traceError(
+                    `Unable to find Provider for ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
+                );
+                return;
+            }
+            const servers = provider.servers;
+            if (!servers) {
+                // This is not possible
+                traceError(
+                    `Unable to find servers for kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
+                );
+                return;
+            }
+            const server = servers.find((s) => s.id === connection.serverProviderHandle.handle);
+            if (!server) {
+                // This is not possible
+                traceError(
+                    `Unable to find server for kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id} and handle ${connection.serverProviderHandle.id}}`
+                );
+                return;
+            }
+            const time = Date.now();
+            try {
+                const extension = this.extensions.getExtension(provider.extensionId);
+                const message = DataScience.runningKernelStartupHooksFor(
+                    extension?.packageJSON?.displayName || provider.extensionId
+                );
+                return await KernelProgressReporter.wrapAndReportProgress<IJupyterServerUri>(
+                    kernel.resourceUri,
+                    message,
+                    async () => {
+                        const connectionInfo: JupyterServerConnectionInformation = {
+                            baseUrl: Uri.parse(options.jupyterUri.baseUrl),
+                            headers: options.jupyterUri.authorizationHeader,
+                            token: options.jupyterUri.token,
+                            webSocketProtocols: options.jupyterUri.webSocketProtocols
+                        };
+                        await raceCancellation(
+                            token,
+                            serverProvider.serverProvider!.onBeforeCreateJupyterKernelSession!(
+                                {
+                                    uri: options.uri,
+                                    kernelSpecName: options.kernelSpecName,
+                                    server,
+                                    connectionInfo
+                                },
+                                token
+                            )
+                        );
+                        return {
+                            baseUrl: connectionInfo.baseUrl.toString(),
+                            displayName: options.jupyterUri.displayName,
+                            token: connectionInfo.token || '',
+                            authorizationHeader: connectionInfo.headers,
+                            webSocketProtocols: connectionInfo.webSocketProtocols
+                        };
+                    }
+                );
+            } catch (ex) {
+                if (ex instanceof CancellationError) {
+                    return;
+                }
+                // We do not care about the errors from 3rd party extensions.
+                traceWarning(
+                    `Startup hook for ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id} failed`,
+                    ex
+                );
+                return options.jupyterUri;
+            } finally {
+                const duration = Date.now() - time;
+                sendTelemetryEvent(
+                    Telemetry.JupyterBeforeCreateSessionHook,
+                    { duration },
+                    {
+                        extensionId: connection.serverProviderHandle.extensionId,
+                        providerId: connection.serverProviderHandle.id
+                    }
+                );
+                if (duration > 1_000) {
+                    traceVerbose(
+                        `Kernel Startup hook for ${generateIdFromRemoteProvider(
+                            connection.serverProviderHandle
+                        )} took ${duration}ms`
+                    );
+                }
+            }
+        });
         kernel.addHook(
             'didStart',
             async (session: IKernelSession | undefined, token: CancellationToken) => {
@@ -59,11 +183,16 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                     );
                     return;
                 }
-                if (!serverProvider.serverProvider?.onStartKernel) {
+                if (
+                    !serverProvider.serverProvider?.onStartKernel &&
+                    !serverProvider.serverProvider?.onAfterStartJupyterSession
+                ) {
                     // No hooks
                     return;
                 }
-                const onStartKernel = serverProvider.serverProvider.onStartKernel.bind(serverProvider.serverProvider);
+                const onStartKernel = serverProvider.serverProvider.onAfterStartJupyterSession
+                    ? serverProvider.serverProvider.onAfterStartJupyterSession!.bind(serverProvider.serverProvider)
+                    : serverProvider.serverProvider.onStartKernel!.bind(serverProvider.serverProvider);
                 const provider = this.jupyterUrisRegistration.providers.find(
                     (p) =>
                         p.extensionId === connection.serverProviderHandle.extensionId &&
@@ -113,7 +242,7 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                 } finally {
                     const duration = Date.now() - time;
                     sendTelemetryEvent(
-                        Telemetry.JupyterKernelStartupHook,
+                        Telemetry.JupyterAfterStartSessionHook,
                         { duration },
                         {
                             extensionId: connection.serverProviderHandle.extensionId,

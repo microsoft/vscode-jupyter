@@ -123,7 +123,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
             // We do not have any of the previously used servers, or the data has not yet loaded.
             return;
         }
-        const usedServers = new Set(this.serverUriStorage.all.map((s) => generateIdFromRemoteProvider(s.provider)));
+        // const usedServers = new Set(this.serverUriStorage.all.map((s) => generateIdFromRemoteProvider(s.provider)));
         const serverProvider = collection.serverProvider;
         if (!serverProvider) {
             return;
@@ -140,8 +140,12 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
                 };
                 const serverId = generateIdFromRemoteProvider(serverProviderHandle);
                 currentServerIds.add(serverId);
-                // If this sever was never used in the past, then no need to create a finder for this.
-                if (this.mappedServers.has(serverId) || !usedServers.has(serverId)) {
+                // Commented, so that we have the kernels for all servers, requried for 3rd party API
+                // // If this sever was never used in the past, then no need to create a finder for this.
+                // if (this.mappedServers.has(serverId) || !usedServers.has(serverId)) {
+                //     return;
+                // }
+                if (this.mappedServers.has(serverId)) {
                     return;
                 }
                 this.mappedServers.add(serverId);
