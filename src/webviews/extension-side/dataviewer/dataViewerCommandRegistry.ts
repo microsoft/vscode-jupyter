@@ -12,9 +12,10 @@ import {
     IApplicationShell,
     ICommandManager,
     IDebugService,
+    IVSCodeNotebook,
     IWorkspaceService
 } from '../../../platform/common/application/types';
-import { Commands, Identifiers } from '../../../platform/common/constants';
+import { Commands, Identifiers, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -29,6 +30,8 @@ import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { DataViewerChecker } from './dataViewerChecker';
 import { IDataViewerDependencyService, IDataViewerFactory, IJupyterVariableDataProviderFactory } from './types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { IKernelProvider } from '../../../kernels/types';
+import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 
 @injectable()
 export class DataViewerCommandRegistry implements IExtensionSyncActivationService {
@@ -38,7 +41,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) configService: IConfigurationService,
-        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IJupyterVariableDataProviderFactory)
         @optional()
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory | undefined,
@@ -53,7 +56,10 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         @optional()
         private readonly dataViewerDependencyService: IDataViewerDependencyService | undefined,
         @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
-        @inject(IPlatformService) private readonly platformService: IPlatformService
+        @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
     ) {
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
         if (!this.workspace.isTrusted) {
@@ -111,15 +117,67 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
                 const columnSize = dataFrameInfo?.columns?.length;
                 if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
                     const title: string = `${DataScience.dataExplorerTitle} - ${jupyterVariable.name}`;
-                    await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+                    const dv = await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
+                    return dv;
                 }
             } catch (e) {
                 sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
                 traceError(e);
                 this.errorHandler.handleError(e).then(noop, noop);
             }
+        } else {
+            try {
+                const activeKernel = this.getActiveKernel();
+
+                if (activeKernel && this.jupyterVariableDataProviderFactory && this.dataViewerFactory) {
+                    // Create a variable data provider and pass it to the data viewer factory to create the data viewer
+                    const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
+                        request.variable,
+                        activeKernel
+                    );
+
+                    const title: string = `${DataScience.dataExplorerTitle} - ${request.variable.name}`;
+                    return await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+                }
+            } catch (e) {
+                traceError(e);
+                sendTelemetryEvent(Telemetry.FailedShowDataViewer);
+                this.appShell.showErrorMessage(DataScience.showDataViewerFail).then(noop, noop);
+            }
         }
+    }
+
+    private getActiveKernel() {
+        const activeNotebook = this.notebooks.activeNotebookEditor?.notebook;
+        const activeJupyterNotebookKernel =
+            activeNotebook?.notebookType == JupyterNotebookView ? this.kernelProvider.get(activeNotebook) : undefined;
+
+        if (activeJupyterNotebookKernel) {
+            return activeJupyterNotebookKernel;
+        }
+        const interactiveWindowDoc = this.getActiveInteractiveWindowDocument();
+        const activeInteractiveWindowKernel = interactiveWindowDoc
+            ? this.kernelProvider.get(interactiveWindowDoc)
+            : undefined;
+
+        if (activeInteractiveWindowKernel) {
+            return activeInteractiveWindowKernel;
+        }
+        const activeDataViewer = this.dataViewerFactory?.activeViewer;
+        return activeDataViewer
+            ? this.kernelProvider.kernels.find((item) => item === activeDataViewer.kernel)
+            : undefined;
+    }
+
+    private getActiveInteractiveWindowDocument() {
+        const interactiveWindow = this.interactiveWindowProvider.getActiveOrAssociatedInteractiveWindow();
+        if (!interactiveWindow) {
+            return;
+        }
+        return this.notebooks.notebookDocuments.find(
+            (notebookDocument) => notebookDocument === interactiveWindow?.notebookDocument
+        );
     }
 
     // For the given debug adapter, return the PythonEnvironment used to launch it

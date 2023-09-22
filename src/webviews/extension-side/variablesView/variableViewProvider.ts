@@ -12,9 +12,14 @@ import {
     IDocumentManager
 } from '../../../platform/common/application/types';
 import { Identifiers, isTestExecution } from '../../../platform/common/constants';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService,
+    IExtensionContext,
+    IExtensions
+} from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { IJupyterVariableDataProviderFactory, IDataViewerFactory } from '../dataviewer/types';
 import { INotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
 
@@ -50,12 +55,11 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variables: IJupyterVariables,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IJupyterVariableDataProviderFactory)
-        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDocumentManager) private readonly documentManager: IDocumentManager
+        @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IExperimentService) private readonly experiments: IExperimentService
     ) {}
 
     public async resolveWebviewView(
@@ -74,11 +78,11 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.variables,
             this.disposables,
             this.appShell,
-            this.jupyterVariableDataProviderFactory,
-            this.dataViewerFactory,
             this.notebookWatcher,
             this.commandManager,
-            this.documentManager
+            this.documentManager,
+            this.extensions,
+            this.experiments
         );
 
         // If someone is waiting for the variable view resolve that here

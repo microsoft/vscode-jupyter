@@ -39,6 +39,7 @@ export interface ICommandNameArgumentTypeMapping {
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
     ['workbench.action.closeActiveEditor']: [];
+    ['workbench.extensions.search']: [string];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     ['jupyter.selectJupyterInterpreter']: [];
