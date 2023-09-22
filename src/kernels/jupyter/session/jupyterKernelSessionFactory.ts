@@ -22,7 +22,8 @@ import {
     IJupyterBackingFileCreator,
     IJupyterKernelService,
     IJupyterRequestCreator,
-    IJupyterServerProvider
+    IJupyterServerProvider,
+    JupyterServerProviderHandle
 } from '../types';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IWorkspaceService } from '../../../platform/common/application/types';
@@ -54,9 +55,19 @@ import { getNameOfKernelConnection, jvscIdentifier } from '../../helpers';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { JupyterLabHelper } from './jupyterLabHelper';
 import { JupyterSessionWrapper, getRemoteSessionOptions } from './jupyterSession';
+import { IJupyterServerUri } from '../../../api';
 
 @injectable()
 export class JupyterKernelSessionFactory implements IKernelSessionFactory {
+    private readonly hooks: ((
+        data: {
+            uri: Uri;
+            serverId: JupyterServerProviderHandle;
+            kernelSpecName: string;
+            jupyterUri: IJupyterServerUri;
+        },
+        token: CancellationToken
+    ) => Promise<IJupyterServerUri | undefined>)[] = [];
     constructor(
         @inject(IJupyterServerProvider)
         private readonly jupyterNotebookProvider: IJupyterServerProvider,
@@ -69,6 +80,19 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         @inject(IJupyterKernelService) @optional() private readonly kernelService: IJupyterKernelService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
+    addBeforeCreateHook(
+        hook: (
+            data: {
+                uri: Uri;
+                serverId: JupyterServerProviderHandle;
+                kernelSpecName: string;
+                jupyterUri: IJupyterServerUri;
+            },
+            token: CancellationToken
+        ) => Promise<IJupyterServerUri | undefined>
+    ): void {
+        this.hooks.push(hook);
+    }
     public async create(options: KernelSessionCreationOptions): Promise<IJupyterKernelSession> {
         const disposables: IDisposable[] = [];
         let progressReporter: IDisposable | undefined;
@@ -96,17 +120,45 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         const disposablesIfAnyErrors: IDisposable[] = [];
         const idleTimeout = this.configService.getSettings(options.resource).jupyterLaunchTimeout;
         try {
-            connection = isRemoteConnection(options.kernelConnection)
-                ? await raceCancellationError(
-                      options.token,
-                      this.jupyterConnection.createConnectionInfo(options.kernelConnection.serverProviderHandle)
-                  )
-                : await this.jupyterNotebookProvider.getOrStartServer({
-                      resource: options.resource,
-                      token: options.token,
-                      ui: options.ui
-                  });
-
+            if (isRemoteConnection(options.kernelConnection)) {
+                connection = await raceCancellationError(
+                    options.token,
+                    this.jupyterConnection.createConnectionInfo(
+                        options.kernelConnection.serverProviderHandle,
+                        async (conn) => {
+                            if (
+                                this.hooks.length &&
+                                options.kernelConnection.kind === 'startUsingRemoteKernelSpec' &&
+                                options.resource
+                            ) {
+                                // This is a very bad hook,
+                                // We need hooks per provider, not per server (but this is temporary).
+                                let hook = this.hooks.shift();
+                                while (hook) {
+                                    const result = await hook(
+                                        {
+                                            uri: options.resource,
+                                            jupyterUri: conn,
+                                            kernelSpecName: options.kernelConnection.kernelSpec.name,
+                                            serverId: options.kernelConnection.serverProviderHandle
+                                        },
+                                        options.token
+                                    );
+                                    conn = result ?? conn;
+                                    hook = this.hooks.shift();
+                                }
+                            }
+                            return conn;
+                        }
+                    )
+                );
+            } else {
+                connection = await this.jupyterNotebookProvider.getOrStartServer({
+                    resource: options.resource,
+                    token: options.token,
+                    ui: options.ui
+                });
+            }
             await raceCancellationError(options.token, this.validateLocalKernelDependencies(options));
 
             const sessionManager = JupyterLabHelper.create(connection.settings);

@@ -7,6 +7,9 @@ import { IRawKernelSessionFactory, IOldRawKernelSessionFactory, IRawNotebookSupp
 import { JupyterKernelSessionFactory } from '../jupyter/session/jupyterKernelSessionFactory';
 import { Experiments, IExperimentService } from '../../platform/common/types';
 import { OldJupyterKernelSessionFactory } from '../jupyter/session/oldJupyterKernelSessionFactory';
+import { CancellationToken, Uri } from 'vscode';
+import { IJupyterServerUri } from '../../api';
+import { JupyterServerProviderHandle } from '../jupyter/types';
 
 /**
  * Generic class for connecting to a server. Probably could be renamed as it doesn't provide notebooks, but rather connections.
@@ -30,6 +33,23 @@ export class KernelSessionFactory implements IKernelSessionFactory {
         @inject(IExperimentService)
         private readonly experiments: IExperimentService
     ) {}
+    addBeforeCreateHook(
+        hook: (
+            data: {
+                uri: Uri;
+                serverId: JupyterServerProviderHandle;
+                kernelSpecName: string;
+                jupyterUri: IJupyterServerUri;
+            },
+            token: CancellationToken
+        ) => Promise<IJupyterServerUri | undefined>
+    ): void {
+        if (this.experiments.inExperiment(Experiments.NewJupyterSession)) {
+            this.newJupyterSessionFactory.addBeforeCreateHook(hook);
+        } else {
+            this.jupyterSessionFactory.addBeforeCreateHook(hook);
+        }
+    }
 
     public async create(options: KernelSessionCreationOptions): Promise<IKernelSession> {
         const kernelConnection = options.kernelConnection;

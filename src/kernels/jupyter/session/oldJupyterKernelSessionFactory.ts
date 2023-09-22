@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Uri } from 'vscode';
-import { Cancellation } from '../../../platform/common/cancellation';
+import { CancellationToken, Disposable, Uri } from 'vscode';
+import { Cancellation, raceCancellationError } from '../../../platform/common/cancellation';
 import {
     IJupyterConnection,
     IJupyterKernelSession,
@@ -11,7 +11,12 @@ import {
     isLocalConnection,
     isRemoteConnection
 } from '../../types';
-import { IJupyterServerProvider, IJupyterSessionManager, IOldJupyterSessionManagerFactory } from '../types';
+import {
+    IJupyterServerProvider,
+    IJupyterSessionManager,
+    IOldJupyterSessionManagerFactory,
+    JupyterServerProviderHandle
+} from '../types';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { inject, injectable } from 'inversify';
@@ -28,9 +33,19 @@ import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterLabHelper } from './jupyterLabHelper';
+import { IJupyterServerUri } from '../../../api';
 
 @injectable()
 export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
+    private readonly hooks: ((
+        data: {
+            uri: Uri;
+            serverId: JupyterServerProviderHandle;
+            kernelSpecName: string;
+            jupyterUri: IJupyterServerUri;
+        },
+        token: CancellationToken
+    ) => Promise<IJupyterServerUri | undefined>)[] = [];
     constructor(
         @inject(IJupyterServerProvider)
         private readonly jupyterNotebookProvider: IJupyterServerProvider,
@@ -40,6 +55,20 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {}
+    addBeforeCreateHook(
+        hook: (
+            data: {
+                uri: Uri;
+                serverId: JupyterServerProviderHandle;
+                kernelSpecName: string;
+                jupyterUri: IJupyterServerUri;
+            },
+            token: CancellationToken
+        ) => Promise<IJupyterServerUri | undefined>
+    ): void {
+        this.hooks.push(hook);
+    }
+
     public async create(options: KernelSessionCreationOptions): Promise<IJupyterKernelSession> {
         const disposables: IDisposable[] = [];
         let progressReporter: IDisposable | undefined;
@@ -66,13 +95,45 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
         // Check to see if we support ipykernel or not
         const disposablesWhenThereAreFailures: IDisposable[] = [];
         try {
-            connection = isRemoteConnection(options.kernelConnection)
-                ? await this.jupyterConnection.createConnectionInfo(options.kernelConnection.serverProviderHandle)
-                : await this.jupyterNotebookProvider.getOrStartServer({
-                      resource: options.resource,
-                      token: options.token,
-                      ui: options.ui
-                  });
+            if (isRemoteConnection(options.kernelConnection)) {
+                connection = await raceCancellationError(
+                    options.token,
+                    this.jupyterConnection.createConnectionInfo(
+                        options.kernelConnection.serverProviderHandle,
+                        async (conn) => {
+                            if (
+                                this.hooks.length &&
+                                options.kernelConnection.kind === 'startUsingRemoteKernelSpec' &&
+                                options.resource
+                            ) {
+                                // This is a very bad hook,
+                                // We need hooks per provider, not per server (but this is temporary).
+                                let hook = this.hooks.shift();
+                                while (hook) {
+                                    const result = await hook(
+                                        {
+                                            uri: options.resource,
+                                            jupyterUri: conn,
+                                            kernelSpecName: options.kernelConnection.kernelSpec.name,
+                                            serverId: options.kernelConnection.serverProviderHandle
+                                        },
+                                        options.token
+                                    );
+                                    conn = result ?? conn;
+                                    hook = this.hooks.shift();
+                                }
+                            }
+                            return conn;
+                        }
+                    )
+                );
+            } else {
+                connection = await this.jupyterNotebookProvider.getOrStartServer({
+                    resource: options.resource,
+                    token: options.token,
+                    ui: options.ui
+                });
+            }
 
             Cancellation.throwIfCanceled(options.token);
 
