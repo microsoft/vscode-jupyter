@@ -151,7 +151,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     return 'back';
                 }
                 // A new server was returned, meaning the list of servers could have changed.
-                this._servers.clear()
+                this._servers.clear();
                 return result.id;
             } catch (ex) {
                 if (ex instanceof CancellationError) {
