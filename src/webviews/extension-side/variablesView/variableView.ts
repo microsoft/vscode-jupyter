@@ -204,10 +204,12 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                         if (item) {
                             quickPick.hide();
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            this.commandManager.executeCommand(item.command as any, {
-                                container: {},
-                                variable: request.variable
-                            });
+                            this.commandManager
+                                .executeCommand(item.command as any, {
+                                    container: {},
+                                    variable: request.variable
+                                })
+                                .then(noop, noop);
                         }
                     });
                     quickPick.show();
