@@ -4,6 +4,11 @@
 import type { Uri } from 'vscode';
 
 declare module './api' {
+    /**
+     * Use of proposed API is not recommended.
+     * This could change anytime without any notice.
+     * Used only by synapse extension.
+     */
     export interface JupyterServerProvider {
         /**
          * Note: For Internal Jupyter Server Provider and JupyterHub extension.
