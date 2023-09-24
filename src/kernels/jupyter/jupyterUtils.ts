@@ -115,7 +115,9 @@ export function createJupyterConnectionInfo(
         baseUrl,
         appUrl: '',
         // A web socket is required to allow token authentication
-        wsUrl: baseUrl.replace('http', 'ws')
+        wsUrl: baseUrl.replace('http', 'ws'),
+        fetch: serverUri.fetch,
+        WebSocket: serverUri.WebSocket
     };
 
     // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
@@ -141,14 +143,17 @@ export function createJupyterConnectionInfo(
     serverSettings = {
         ...serverSettings,
         init: requestInit,
-        WebSocket: requestCreator.getWebsocketCtor(
-            undefined,
-            allowUnauthorized,
-            getAuthHeader,
-            getWebsocketProtocols
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ) as any,
-        fetch: requestCreator.getFetchMethod(),
+        WebSocket: serverUri.WebSocket
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              requestCreator.wrapWebSocketCtor(serverUri.WebSocket as any)
+            : (requestCreator.getWebsocketCtor(
+                  undefined,
+                  allowUnauthorized,
+                  getAuthHeader,
+                  getWebsocketProtocols
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ) as any),
+        fetch: serverUri.fetch || requestCreator.getFetchMethod(),
         Request: requestCreator.getRequestCtor(undefined, allowUnauthorized, getAuthHeader),
         Headers: requestCreator.getHeadersCtor()
     };

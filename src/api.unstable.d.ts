@@ -96,6 +96,14 @@ declare module './api' {
          * Note: The client side npm package @jupyterlab/services uses WebSockets to connect to remote Kernels.
          */
         webSocketProtocols?: string[];
+        /**
+         * The `fetch` method to use.
+         */
+        readonly fetch?: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+        /**
+         * The `WebSocket` object constructor.
+         */
+        readonly WebSocket?: typeof WebSocket;
     }
 
     export interface IJupyterUriProvider {

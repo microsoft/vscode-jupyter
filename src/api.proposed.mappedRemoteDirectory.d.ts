@@ -4,6 +4,11 @@
 import type { Uri } from 'vscode';
 
 declare module './api' {
+    /**
+     * Use of proposed API is not recommended.
+     * This could change anytime without any notice.
+     * Used only by synapse extension.
+     */
     export interface JupyterServer {
         /**
          * Note: Required for AzML, perhaps CodeSpaces and Pengs personal extension.

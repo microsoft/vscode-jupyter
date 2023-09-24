@@ -241,7 +241,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     token: info.token || '',
                     authorizationHeader: info.headers,
                     mappedRemoteNotebookDir: server.mappedRemoteDirectory?.toString(),
-                    webSocketProtocols: info.webSocketProtocols
+                    webSocketProtocols: info.webSocketProtocols,
+                    fetch: info.fetch,
+                    WebSocket: info.WebSocket
                 };
             }
             if (this.provider.serverProvider?.resolveJupyterServer) {
@@ -260,7 +262,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     token: info.token || '',
                     authorizationHeader: info.headers,
                     mappedRemoteNotebookDir: (result || server).mappedRemoteDirectory?.toString(),
-                    webSocketProtocols: info.webSocketProtocols
+                    webSocketProtocols: info.webSocketProtocols,
+                    fetch: info.fetch,
+                    WebSocket: info.WebSocket
                 };
             }
             throw new Error('Jupyter Provider does not implement the method resolveJupyterServer');

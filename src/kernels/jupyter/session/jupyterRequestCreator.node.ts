@@ -127,6 +127,39 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
         }
         return JupyterWebSocket as any;
     }
+    public wrapWebSocketCtor(websocketCtor: ClassType<WebSocketIsomorphic>): ClassType<WebSocketIsomorphic> {
+        class JupyterWebSocket extends KernelSocketWrapper(websocketCtor) {
+            private kernelId: string | undefined;
+            private timer: NodeJS.Timeout | number;
+
+            constructor(url: string, protocols?: string | string[] | undefined, options?: unknown) {
+                super(url, protocols, options);
+                let timer: NodeJS.Timeout | undefined = undefined;
+                // Parse the url for the kernel id
+                const parsed = /.*\/kernels\/(.*)\/.*/.exec(url);
+                if (parsed && parsed.length > 1) {
+                    this.kernelId = parsed[1];
+                }
+                if (this.kernelId) {
+                    JupyterWebSockets.set(this.kernelId, this);
+                    this.on('close', () => {
+                        if (timer && this.timer !== timer) {
+                            clearInterval(timer as any);
+                        }
+                        if (JupyterWebSockets.get(this.kernelId!) === this) {
+                            JupyterWebSockets.delete(this.kernelId!);
+                        }
+                    });
+                } else {
+                    traceError('KernelId not extracted from Kernel WebSocket URL');
+                }
+
+                // Ping the websocket connection every 30 seconds to make sure it stays alive
+                timer = this.timer = setInterval(() => this.ping(noop), 30_000);
+            }
+        }
+        return JupyterWebSocket as any;
+    }
 
     public getWebsocket(id: string): IKernelSocket | undefined {
         return JupyterWebSockets.get(id);
