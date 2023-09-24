@@ -203,8 +203,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                         const item = quickPick.selectedItems[0];
                         if (item) {
                             quickPick.hide();
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             this.commandManager
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 .executeCommand(item.command as any, {
                                     container: {},
                                     variable: request.variable
