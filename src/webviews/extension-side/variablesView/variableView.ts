@@ -154,23 +154,23 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     public async showDataViewer(request: IShowDataViewer) {
         try {
             if (this.experiments.inExperiment(Experiments.DataViewerContribution)) {
-                // dataframeViewer
+                // jupyterVariableViewers
                 const extensions = this.extensions.all
                     .filter(
                         (e) =>
-                            e.packageJSON?.contributes?.dataframeViewer &&
-                            e.packageJSON?.contributes?.dataframeViewer.length
+                            e.packageJSON?.contributes?.jupyterVariableViewers &&
+                            e.packageJSON?.contributes?.jupyterVariableViewers.length
                     )
                     .filter((e) => e.id !== JVSC_EXTENSION_ID);
 
-                const dataframeViewers = extensions
+                const variableViewers = extensions
                     .map((e) => {
                         const contributes = e.packageJSON?.contributes;
-                        if (contributes?.dataframeViewer) {
-                            return contributes.dataframeViewer.map(
-                                (dataframeViewer: { command: string; title: string }[]) => ({
+                        if (contributes?.jupyterVariableViewers) {
+                            return contributes.jupyterVariableViewers.map(
+                                (jupyterVariableViewers: { command: string; title: string }[]) => ({
                                     extension: e,
-                                    dataframeViewer
+                                    jupyterVariableViewers
                                 })
                             );
                         }
@@ -178,12 +178,15 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                     })
                     .flat();
 
-                if (dataframeViewers.length === 0) {
+                if (variableViewers.length === 0) {
                     // No data frame viewer extensions, show notifications
-                    await this.commandManager.executeCommand('workbench.extensions.search', '@tag:datascience');
+                    await this.commandManager.executeCommand(
+                        'workbench.extensions.search',
+                        '@tag:jupyterVariableViewers'
+                    );
                     return;
-                } else if (dataframeViewers.length === 1) {
-                    const command = dataframeViewers[0].dataframeViewer.command;
+                } else if (variableViewers.length === 1) {
+                    const command = variableViewers[0].jupyterVariableViewers.command;
                     return this.commandManager.executeCommand(command, {
                         container: {},
                         variable: request.variable
@@ -192,11 +195,11 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                     // show quick pick
                     const quickPick = this.appShell.createQuickPick<QuickPickItem & { command: string }>();
                     quickPick.title = 'Select DataFrame Viewer';
-                    quickPick.items = dataframeViewers.map((d) => {
+                    quickPick.items = variableViewers.map((d) => {
                         return {
-                            label: d.dataframeViewer.title,
+                            label: d.jupyterVariableViewers.title,
                             detail: d.extension.packageJSON?.displayName ?? d.extension.id,
-                            command: d.dataframeViewer.command
+                            command: d.jupyterVariableViewers.command
                         };
                     });
                     quickPick.onDidAccept(() => {

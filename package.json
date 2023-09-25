@@ -1965,7 +1965,7 @@
                 "label": "%jupyter.debuggers.interactive%"
             }
         ],
-        "dataframeViewer": [
+        "jupyterVariableViewers": [
             {
                 "command": "jupyter.showDataViewer",
                 "title": "%jupyter.command.jupyter.showDataViewer.title%"
