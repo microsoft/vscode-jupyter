@@ -112,7 +112,6 @@ suite('IPyWidget Script Manager @widgets', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Returns the right base Url', async function () {
         const baseUrl = await scriptManager.getBaseUrl!();
-        console.error(baseUrl);
         assert.isOk(baseUrl, 'BaseUrl should be defined');
 
         if (isLocalConnection(kernel.kernelConnectionMetadata)) {

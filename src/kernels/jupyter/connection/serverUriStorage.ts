@@ -397,9 +397,7 @@ class NewStorage {
                     }
                 }
             })
-            .catch((ex) => {
-                console.error(ex);
-            }));
+            .catch((ex) => traceError(`Failed to remove Server handle ${JSON.stringify(server)}`, ex)));
     }
     public getAll(): IJupyterServerUriEntry[] {
         const data = this.memento.get<StorageMRUItem[]>(this.mementoKey, []);
