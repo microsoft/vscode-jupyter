@@ -1964,6 +1964,12 @@
                 "type": "Python Interactive Window Debug Adapter",
                 "label": "%jupyter.debuggers.interactive%"
             }
+        ],
+        "jupyterVariableViewers": [
+            {
+                "command": "jupyter.showDataViewer",
+                "title": "%jupyter.command.jupyter.showDataViewer.title%"
+            }
         ]
     },
     "enabledApiProposals": [

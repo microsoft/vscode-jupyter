@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Uri, WebviewView as vscodeWebviewView } from 'vscode';
+import { QuickPickItem, Uri, WebviewView as vscodeWebviewView } from 'vscode';
 import { joinPath } from '../../../platform/vscode-path/resources';
 import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
@@ -26,20 +26,21 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IDisposable,
-    IExtensionContext
+    IExtensionContext,
+    IExtensions,
+    IExperimentService,
+    Experiments
 } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
-import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
-import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
 import { WebviewViewHost } from '../../../platform/webviews/webviewViewHost';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
+import { Commands, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection
 // to execution and changing of the active notebook
 export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> implements IDisposable {
-    private dataViewerChecker: DataViewerChecker;
     protected get owningResource(): Resource {
         return undefined;
     }
@@ -51,11 +52,11 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly variables: IJupyterVariables,
         private readonly disposables: IDisposableRegistry,
         private readonly appShell: IApplicationShell,
-        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        private readonly dataViewerFactory: IDataViewerFactory,
         private readonly notebookWatcher: INotebookWatcher,
         private readonly commandManager: ICommandManager,
-        private readonly documentManager: IDocumentManager
+        private readonly documentManager: IDocumentManager,
+        private readonly extensions: IExtensions,
+        private readonly experiments: IExperimentService
     ) {
         const variableViewDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
         super(
@@ -73,8 +74,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
         this.variables.refreshRequired(this.sendRefreshMessage, this, this.disposables);
         this.documentManager.onDidChangeActiveTextEditor(this.activeTextEditorChanged, this, this.disposables);
-
-        this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
 
     @capturePerfTelemetry(Telemetry.NativeVariableViewLoaded)
@@ -152,19 +151,77 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     // Handle a request from the react UI to show our data viewer. Public for testing
     @swallowExceptions()
-    public async showDataViewer(request: IShowDataViewer): Promise<IDataViewer | undefined> {
+    public async showDataViewer(request: IShowDataViewer) {
         try {
-            if (
-                this.notebookWatcher.activeKernel &&
-                (await this.dataViewerChecker.isRequestedColumnSizeAllowed(request.columnSize, this.owningResource))
-            ) {
-                // Create a variable data provider and pass it to the data viewer factory to create the data viewer
-                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
-                    request.variable,
-                    this.notebookWatcher.activeKernel
-                );
-                const title: string = `${localize.DataScience.dataExplorerTitle} - ${request.variable.name}`;
-                return await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+            if (this.experiments.inExperiment(Experiments.DataViewerContribution)) {
+                // jupyterVariableViewers
+                const extensions = this.extensions.all
+                    .filter(
+                        (e) =>
+                            e.packageJSON?.contributes?.jupyterVariableViewers &&
+                            e.packageJSON?.contributes?.jupyterVariableViewers.length
+                    )
+                    .filter((e) => e.id !== JVSC_EXTENSION_ID);
+
+                const variableViewers = extensions
+                    .map((e) => {
+                        const contributes = e.packageJSON?.contributes;
+                        if (contributes?.jupyterVariableViewers) {
+                            return contributes.jupyterVariableViewers.map(
+                                (jupyterVariableViewers: { command: string; title: string }[]) => ({
+                                    extension: e,
+                                    jupyterVariableViewers
+                                })
+                            );
+                        }
+                        return [];
+                    })
+                    .flat();
+
+                if (variableViewers.length === 0) {
+                    // No data frame viewer extensions, show notifications
+                    await this.commandManager.executeCommand(
+                        'workbench.extensions.search',
+                        '@tag:jupyterVariableViewers'
+                    );
+                    return;
+                } else if (variableViewers.length === 1) {
+                    const command = variableViewers[0].jupyterVariableViewers.command;
+                    return this.commandManager.executeCommand(command, {
+                        container: {},
+                        variable: request.variable
+                    });
+                } else {
+                    // show quick pick
+                    const quickPick = this.appShell.createQuickPick<QuickPickItem & { command: string }>();
+                    quickPick.title = 'Select DataFrame Viewer';
+                    quickPick.items = variableViewers.map((d) => {
+                        return {
+                            label: d.jupyterVariableViewers.title,
+                            detail: d.extension.packageJSON?.displayName ?? d.extension.id,
+                            command: d.jupyterVariableViewers.command
+                        };
+                    });
+                    quickPick.onDidAccept(() => {
+                        const item = quickPick.selectedItems[0];
+                        if (item) {
+                            quickPick.hide();
+                            this.commandManager
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                .executeCommand(item.command as any, {
+                                    container: {},
+                                    variable: request.variable
+                                })
+                                .then(noop, noop);
+                        }
+                    });
+                    quickPick.show();
+                }
+            } else {
+                return this.commandManager.executeCommand(Commands.ShowDataViewer, {
+                    container: {},
+                    variable: request.variable
+                });
             }
         } catch (e) {
             traceError(e);
