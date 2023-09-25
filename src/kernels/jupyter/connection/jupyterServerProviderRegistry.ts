@@ -268,9 +268,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                 };
             }
             throw new Error('Jupyter Provider does not implement the method resolveJupyterServer');
-        } catch (ex) {
-            console.error(ex);
-            throw ex;
         } finally {
             token.dispose();
         }
