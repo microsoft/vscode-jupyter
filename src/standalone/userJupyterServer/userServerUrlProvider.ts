@@ -17,7 +17,8 @@ import {
     commands,
     env,
     extensions,
-    window
+    window,
+    workspace
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
@@ -369,6 +370,9 @@ export class UserJupyterServerUrlProvider
         return this._cachedServerInfoInitialized;
     }
     private recommendInstallingJupyterHubExtension() {
+        if (workspace.getConfiguration('jupyter').get<boolean>('bypassJupyterHubExtensionCheck')) {
+            return;
+        }
         if (extensions.getExtension(JUPYTER_HUB_EXTENSION_ID)) {
             this.applicationShell
                 .showInformationMessage(DataScience.useJupyterHubExtension, {
@@ -403,6 +407,7 @@ export class UserJupyterServerUrlProvider
                     }
                 }, noop);
         }
+        throw new CancellationError();
     }
     async captureRemoteJupyterUrl(
         token: CancellationToken,
@@ -479,7 +484,6 @@ export class UserJupyterServerUrlProvider
                             isJupyterHub = await this.jupyterHubPasswordConnect.isJupyterHub(jupyterServerUri.baseUrl);
                             if (isJupyterHub) {
                                 this.recommendInstallingJupyterHubExtension();
-                                throw new CancellationError();
                             }
                             const result = isJupyterHub
                                 ? await this.jupyterHubPasswordConnect.getPasswordConnectionInfo({
