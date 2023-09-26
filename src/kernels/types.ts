@@ -585,10 +585,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly status: KernelMessage.Status;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     disposeAsync(): Promise<void>;
-    /**
-     * @deprecated Use statusChanged instead.
-     */
-    onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
     restart(): Promise<void>;
@@ -599,22 +595,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
 export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {}
 export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
-
-export interface ISessionWithSocket extends Session.ISessionConnection {
-    /**
-     * The resource associated with this session.
-     */
-    resource: Resource;
-    /**
-     * Whether this is a remote session that we attached to.
-     */
-    isRemoteSession?: boolean;
-    /**
-     * Socket information used for hooking messages to the kernel.
-     */
-    kernelSocketInformation: KernelSocketInformation;
-    kernelConnectionMetadata: KernelConnectionMetadata;
-}
 
 export interface INewSessionWithSocket extends Session.ISessionConnection {
     kernelSocketInformation: KernelSocketInformation;

@@ -31,10 +31,8 @@ import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteK
 import { JupyterServerSelector } from './connection/serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.node';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
-import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
 import { RequestAgentCreator } from './session/requestAgentCreator.node';
 import {
-    IOldJupyterSessionManagerFactory,
     INbConvertInterpreterDependencyChecker,
     INbConvertExportToPythonService,
     IJupyterServerProvider,
@@ -54,7 +52,6 @@ import {
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
-import { OldJupyterKernelSessionFactory } from './session/oldJupyterKernelSessionFactory';
 import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
 import { JupyterServerProviderRegistry } from './connection/jupyterServerProviderRegistry';
 import { IRemoteKernelFinderController } from './finder/types';
@@ -70,10 +67,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         MigrateJupyterInterpreterStateService
     );
     serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
-    serviceManager.addSingleton<IOldJupyterSessionManagerFactory>(
-        IOldJupyterSessionManagerFactory,
-        JupyterSessionManagerFactory
-    );
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
     serviceManager.addSingleton<JupyterInterpreterDependencyService>(
         JupyterInterpreterDependencyService,
@@ -113,10 +106,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<INotebookStarter>(INotebookStarter, JupyterServerStarter);
     serviceManager.addSingleton<IJupyterServerConnector>(IJupyterServerConnector, JupyterServerConnector);
     serviceManager.addSingleton<IKernelSessionFactory>(IKernelSessionFactory, KernelSessionFactory);
-    serviceManager.addSingleton<OldJupyterKernelSessionFactory>(
-        OldJupyterKernelSessionFactory,
-        OldJupyterKernelSessionFactory
-    );
     serviceManager.addSingleton<JupyterKernelSessionFactory>(JupyterKernelSessionFactory, JupyterKernelSessionFactory);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);

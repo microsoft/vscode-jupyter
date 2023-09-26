@@ -294,7 +294,6 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
 }
 
 export enum Experiments {
-    NewJupyterSession = 'NewJupyterSession',
     DataViewerContribution = 'DataViewerContribution'
 }
 

@@ -5,7 +5,6 @@ import { CancellationToken, Event } from 'vscode';
 import { IAsyncDisposable, Resource } from '../../platform/common/types';
 import {
     IRawKernelSession,
-    KernelSessionCreationOptions,
     LocaLKernelSessionCreationOptions,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
@@ -59,12 +58,6 @@ export interface IKernelProcess extends IAsyncDisposable {
 export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
 export interface IRawNotebookSupportedService {
     isSupported: boolean;
-}
-
-// Provides notebooks that talk directly to kernels as opposed to a jupyter server
-export const IOldRawKernelSessionFactory = Symbol('IOldRawKernelSessionFactory');
-export interface IOldRawKernelSessionFactory extends IAsyncDisposable {
-    create(options: KernelSessionCreationOptions): Promise<IRawKernelSession>;
 }
 
 export const IRawKernelSessionFactory = Symbol('IRawKernelSessionFactory');

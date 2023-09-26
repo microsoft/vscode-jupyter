@@ -152,15 +152,12 @@ suite('Base Jupyter Session Connection', () => {
         jupyterSession.statusChanged.connect((_, args) => statuses.push(args));
         jupyterSession.disposed.connect(() => (disposedEmitted = true));
         const disposed = createEventHandler(jupyterSession, 'onDidDispose', disposables);
-        const statusChanged = createEventHandler(jupyterSession, 'onSessionStatusChanged', disposables);
 
         jupyterSession.dispose();
 
         assert.deepEqual(statuses, ['dead']);
         assert.strictEqual(disposedEmitted, true);
         assert.strictEqual(disposed.count, 1);
-        // This event is deprecated and should no longer be fired.
-        assert.strictEqual(statusChanged.count, 0);
     });
     test('Restarting will restart the underlying kernel', async () => {
         when(kernel.restart()).thenResolve();

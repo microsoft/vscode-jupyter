@@ -115,11 +115,6 @@ export class ExperimentService implements IExperimentService {
             return true;
         }
 
-        // Temporarily until we enable an experiment for all insiders.
-        if (experiment === ExperimentGroups.NewJupyterSession && this.appEnvironment.channel === 'insiders') {
-            return true;
-        }
-
         // If getTreatmentVariable returns undefined,
         // it means that the value for this experiment was not found on the server.
         const treatmentVariable = this.experimentationService.getTreatmentVariable(
@@ -178,7 +173,6 @@ export class ExperimentService implements IExperimentService {
             return;
         }
 
-        const optedOutOfExperiments = new Set(this._optOutFrom);
         const optedIntoExperiments = new Set(this._optInto);
 
         // Log experiments that users manually opt out, these are experiments which are added using the exp framework.
@@ -201,8 +195,7 @@ export class ExperimentService implements IExperimentService {
                 // Filter out experiment groups that are not from the Python extension.
                 // Filter out experiment groups that are not already opted out or opted into.
                 if (
-                    (exp.toLowerCase().startsWith('jupyter') ||
-                        exp.toLowerCase() === ExperimentGroups.NewJupyterSession.toLowerCase()) &&
+                    exp.toLowerCase().startsWith('jupyter') &&
                     !this._optOutFrom.includes(exp) &&
                     !this._optInto.includes(exp)
                 ) {
@@ -210,13 +203,6 @@ export class ExperimentService implements IExperimentService {
                     traceInfo(Experiments.inGroup(exp));
                 }
             });
-
-            if (
-                !optedIntoExperiments.has(ExperimentGroups.NewJupyterSession) &&
-                !optedOutOfExperiments.has(ExperimentGroups.NewJupyterSession)
-            ) {
-                traceInfo(Experiments.inGroup(ExperimentGroups.NewJupyterSession));
-            }
         }
     }
 }

@@ -77,7 +77,6 @@ export class RawJupyterSessionWrapper
         this._isDisposed = true;
         this.terminatingStatus = 'terminating';
         this.statusChanged.emit('terminating');
-        this.onStatusChangedEvent.fire('terminating');
         const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata?.id}`;
         traceVerbose(`Shutdown session ${kernelIdForLogging} - start called from ${new Error('').stack}`);
         suppressShutdownErrors(this.session.kernel);

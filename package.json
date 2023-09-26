@@ -1427,9 +1427,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "NewJupyterSession"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
                     "scope": "application"
@@ -1438,9 +1436,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "NewJupyterSession"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
                     "scope": "application"
