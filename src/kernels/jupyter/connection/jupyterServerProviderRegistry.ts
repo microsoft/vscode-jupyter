@@ -240,7 +240,8 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     displayName: server.label,
                     token: info.token || '',
                     authorizationHeader: info.headers,
-                    mappedRemoteNotebookDir: server.mappedRemoteDirectory?.toString(),
+                    // eslint-disable-next-line local-rules/dont-use-fspath
+                    mappedRemoteNotebookDir: server.mappedRemoteDirectory?.fsPath,
                     webSocketProtocols: info.webSocketProtocols,
                     fetch: info.fetch,
                     WebSocket: info.WebSocket
@@ -261,7 +262,8 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     displayName: server.label,
                     token: info.token || '',
                     authorizationHeader: info.headers,
-                    mappedRemoteNotebookDir: (result || server).mappedRemoteDirectory?.toString(),
+                    // eslint-disable-next-line local-rules/dont-use-fspath
+                    mappedRemoteNotebookDir: (result || server).mappedRemoteDirectory?.fsPath,
                     webSocketProtocols: info.webSocketProtocols,
                     fetch: info.fetch,
                     WebSocket: info.WebSocket
