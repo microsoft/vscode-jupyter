@@ -20,4 +20,4 @@ K3D
 ipyleaflet
 matplotlib
 ipympl
-traitlets==5.9.0 # https://github.com/microsoft/vscode-jupyter/issues/14338
+traitlets==5.10.1 # https://github.com/microsoft/vscode-jupyter/issues/14338
