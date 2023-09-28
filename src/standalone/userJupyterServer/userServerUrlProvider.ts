@@ -746,28 +746,34 @@ export class UserJupyterServerUrlProvider
         }
 
         const isJupyterHub = await this.jupyterHubPasswordConnect.isJupyterHub(serverInfo.baseUrl);
-        const passwordResult = isJupyterHub
-            ? await this.jupyterHubPasswordConnect.getPasswordConnectionInfo({
-                  url: serverInfo.baseUrl,
-                  handle: id,
-                  displayName: serverInfo.displayName
-              })
-            : await this.jupyterPasswordConnect.getPasswordConnectionInfo({
-                  url: serverInfo.baseUrl,
-                  isTokenEmpty: serverInfo.token.length === 0,
-                  handle: id
-              });
+        let serverUriToReturn: any = Object.assign({}, serverInfo);
+        try {
+            const passwordResult = isJupyterHub
+                ? await this.jupyterHubPasswordConnect.getPasswordConnectionInfo({
+                      url: serverInfo.baseUrl,
+                      handle: id,
+                      displayName: serverInfo.displayName
+                  })
+                : await this.jupyterPasswordConnect.getPasswordConnectionInfo({
+                      url: serverInfo.baseUrl,
+                      isTokenEmpty: serverInfo.token.length === 0,
+                      handle: id
+                  });
 
-        const serverUriToReturn = Object.assign({}, serverInfo, {
-            authorizationHeader: passwordResult.requestHeaders || serverInfo.authorizationHeader
-        });
+            serverUriToReturn = Object.assign({}, serverInfo, {
+                authorizationHeader: passwordResult.requestHeaders || serverInfo.authorizationHeader
+            });
 
-        if (isJupyterHub && passwordResult.remappedBaseUrl) {
-            serverUriToReturn.baseUrl = passwordResult.remappedBaseUrl;
+            if (isJupyterHub && passwordResult.remappedBaseUrl) {
+                serverUriToReturn.baseUrl = passwordResult.remappedBaseUrl;
+            }
+            if (isJupyterHub && passwordResult.remappedToken) {
+                serverUriToReturn.token = passwordResult.remappedToken;
+            }
+        } catch (ex) {
+            traceError(`Failed to validate Password info`, ex);
         }
-        if (isJupyterHub && passwordResult.remappedToken) {
-            serverUriToReturn.token = passwordResult.remappedToken;
-        }
+
         return serverUriToReturn;
     }
 }
