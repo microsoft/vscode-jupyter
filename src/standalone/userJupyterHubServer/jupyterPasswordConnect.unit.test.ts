@@ -93,6 +93,7 @@ suite('Jupyter Hub Password Connect', () => {
         const hubActiveResponse = mock(nodeFetch.Response);
         when(hubActiveResponse.ok).thenReturn(true);
         when(hubActiveResponse.status).thenReturn(200);
+        when(hubActiveResponse.json()).thenResolve({ version: '4.0.1' });
         const invalidResponse = mock(nodeFetch.Response);
         when(invalidResponse.ok).thenReturn(false);
         when(invalidResponse.status).thenReturn(404);

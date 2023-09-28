@@ -97,8 +97,12 @@ export class JupyterHubPasswordConnect {
             // See this for the different REST endpoints:
             // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html
 
+            // If we have a token, then user is just connecting to a jupyter server (even if it may be on jupyterhub)
+            if (url.toLowerCase().includes('/user/') && url.includes('token=')) {
+                return false;
+            }
             // If the URL has the /user/ option in it, it's likely this is jupyter hub
-            if (url.toLowerCase().includes('/user/')) {
+            if (url.toLowerCase().includes('/user/') && !url.includes('token=')) {
                 return true;
             }
 
@@ -107,8 +111,21 @@ export class JupyterHubPasswordConnect {
             const response = await this.makeRequest(new URL('hub/api', addTrailingSlash(url)).toString(), {
                 method: 'get'
             });
-
-            return response.status === 200;
+            // Assume we are at the login page for jupyterlab, which means we're not a jupyter hub
+            // Sending this request with the /hub/api appended, still ends up going to the same loging page.
+            // Hence status of 200 check is not sufficient.
+            if (response.status !== 200) {
+                return false;
+            }
+            // Ensure we get a valid JSON with a version in it.
+            try {
+                const json = await response.json();
+                traceVerbose(`JupyterHub version is ${json && json.version} for url ${url}`);
+                return json && json.version;
+            } catch {
+                //
+            }
+            return false;
         } catch (ex) {
             traceVerbose(`Error in detecting whether url is isJupyterHub: ${ex}`);
             return false;
