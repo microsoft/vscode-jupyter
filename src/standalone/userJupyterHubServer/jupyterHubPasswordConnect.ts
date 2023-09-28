@@ -97,6 +97,10 @@ export class JupyterHubPasswordConnect {
             // See this for the different REST endpoints:
             // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html
 
+            // If we have a token, then user is just connecting to a jupyter server (even if it may be on jupyterhub)
+            if (url.toLowerCase().includes('/user/') && url.includes('token=')) {
+                return false;
+            }
             // If the URL has the /user/ option in it, it's likely this is jupyter hub
             if (url.toLowerCase().includes('/user/') && !url.includes('token=')) {
                 return true;
