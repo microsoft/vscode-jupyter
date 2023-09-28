@@ -446,6 +446,7 @@ export class UserJupyterServerUrlProvider
         }
         try {
             let isJupyterHub: boolean = false;
+            let failedUrlPasswordCapture = false;
             while (true) {
                 try {
                     handle = uuid();
@@ -502,7 +503,9 @@ export class UserJupyterServerUrlProvider
                                   });
                             requiresPassword = result.requiresPassword;
                             jupyterServerUri.authorizationHeader = result.requestHeaders;
+                            failedUrlPasswordCapture = false;
                         } catch (err) {
+                            failedUrlPasswordCapture = false;
                             if (
                                 err instanceof CancellationError ||
                                 err == InputFlowAction.back ||
@@ -534,8 +537,17 @@ export class UserJupyterServerUrlProvider
                                         ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
                                         : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
                                 )(errorMessage);
-                                nextStep = 'Get Url';
-                                continue;
+
+                                if (
+                                    jupyterServerUri.token.length > 0 &&
+                                    (err.message || '').toLowerCase() === 'Failed to fetch'.toLowerCase()
+                                ) {
+                                    failedUrlPasswordCapture = true;
+                                    // Possible we hit a CORS error, ignore this and try again.
+                                } else {
+                                    nextStep = 'Get Url';
+                                    continue;
+                                }
                             }
                         } finally {
                             this.disposables.push(...passwordDisposables);
@@ -589,6 +601,12 @@ export class UserJupyterServerUrlProvider
                             );
                         } catch (err) {
                             traceWarning('Uri verification error', err);
+                            // If we failed to verify the connection & we previously failed at capturing password,
+                            // Then go back to url with the same error message
+                            if (failedUrlPasswordCapture && validationErrorMessage) {
+                                nextStep = 'Get Url';
+                                continue;
+                            }
                             if (
                                 err instanceof CancellationError ||
                                 err == InputFlowAction.back ||
