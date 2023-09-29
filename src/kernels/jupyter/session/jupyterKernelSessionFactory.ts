@@ -17,14 +17,8 @@ import {
     isLocalConnection,
     isRemoteConnection
 } from '../../types';
-import {
-    IBackupFile,
-    IJupyterBackingFileCreator,
-    IJupyterKernelService,
-    IJupyterRequestCreator,
-    IJupyterServerProvider
-} from '../types';
-import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
+import { IJupyterKernelService, IJupyterRequestCreator, IJupyterServerProvider } from '../types';
+import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { inject, injectable, optional } from 'inversify';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
@@ -35,7 +29,6 @@ import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCerts
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
 import { BaseError } from '../../../platform/errors/types';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -65,7 +58,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IJupyterRequestCreator)
         private readonly requestCreator: IJupyterRequestCreator,
-        @inject(IJupyterBackingFileCreator) private readonly backingFileCreator: IJupyterBackingFileCreator,
         @inject(IJupyterKernelService) @optional() private readonly kernelService: IJupyterKernelService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
@@ -344,58 +336,8 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         contentsManager: ContentsManager;
         ui: IDisplayOptions;
     }): Promise<INewSessionWithSocket> {
-        const telemetryInfo = {
-            failedWithoutBackingFile: false,
-            failedWithBackingFile: false,
-            localHost: options.connection.localLaunch
-        };
-
-        try {
-            return await this.createNewSessionImpl({ ...options, createBakingFile: false });
-        } catch (ex) {
-            traceWarning(`Failed to create a session without a backing file, trying again with a backing file`, ex);
-            try {
-                telemetryInfo.failedWithoutBackingFile = true;
-                return await this.createNewSessionImpl({
-                    ...options,
-                    createBakingFile: true
-                });
-            } catch (ex) {
-                telemetryInfo.failedWithBackingFile = true;
-                throw ex;
-            }
-        } finally {
-            sendTelemetryEvent(Telemetry.StartedRemoteJupyterSessionWithBackingFile, undefined, telemetryInfo);
-        }
-    }
-    private async createNewSessionImpl(options: {
-        resource: Resource;
-        connection: IJupyterConnection;
-        creator: KernelActionSource;
-        kernelConnection: KernelConnectionMetadata;
-        token: CancellationToken;
-        idleTimeout: number;
-        sessionManager: SessionManager;
-        kernelSpecManager?: KernelSpecManager;
-        contentsManager: ContentsManager;
-        ui: IDisplayOptions;
-        createBakingFile: boolean;
-    }): Promise<INewSessionWithSocket> {
         const remoteSessionOptions = getRemoteSessionOptions(options.connection, options.resource);
-        let backingFile: IBackupFile | undefined;
         let sessionPath = remoteSessionOptions?.path;
-
-        if (!sessionPath && options.createBakingFile) {
-            // Create our backing file for the notebook
-            backingFile = await this.backingFileCreator.createBackingFile(
-                options.resource,
-                Uri.file(''),
-                options.kernelConnection,
-                options.connection,
-                options.contentsManager
-            );
-            sessionPath = backingFile?.filePath;
-        }
 
         // If kernelName is empty this can cause problems for servers that don't
         // understand that empty kernel name means the default kernel.
@@ -468,10 +410,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 throw ex;
             }
             throw new JupyterSessionStartError(ex);
-        } finally {
-            if (backingFile) {
-                options.contentsManager.delete(backingFile.filePath).catch(noop);
-            }
         }
     }
 }
