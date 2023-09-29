@@ -139,7 +139,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 options.resource,
                 options.kernelConnection,
                 Uri.file(workingDirectory),
-                connection,
                 this.kernelService,
                 options.creator
             );

@@ -154,7 +154,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         when(connection.settings).thenReturn(instance(serverSettings));
         when(jupyterNotebookProvider.getOrStartServer(anything())).thenResolve(resolvableInstance(connection));
 
-        when(connection.localLaunch).thenReturn(true);
         when(connection.baseUrl).thenReturn('http://localhost:8888');
         when(connection.hostName).thenReturn('localhost');
         when(connection.displayName).thenReturn('Hello World');
@@ -331,7 +330,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         await assert.isRejected(promise, 'No kernel created');
     });
     test('Connect to an existing remote session', async () => {
-        when(connection.localLaunch).thenReturn(false);
         const resource = Uri.parse('a.ipynb');
         const options: KernelSessionCreationOptions = {
             kernelConnection: liveRemoteSession,
@@ -360,7 +358,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         assert.strictEqual(wrapperSession.status, 'busy');
     });
     test('Start new remote Session', async () => {
-        when(connection.localLaunch).thenReturn(false);
         const resource = Uri.parse('a.ipynb');
         const options: KernelSessionCreationOptions = {
             kernelConnection: remoteKernelSpec,
@@ -391,7 +388,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         assert.strictEqual(wrapperSession.status, 'busy');
     });
     test('Start new remote Session (notebook)', async () => {
-        when(connection.localLaunch).thenReturn(false);
         const resource = Uri.parse('a.ipynb');
         const options: KernelSessionCreationOptions = {
             kernelConnection: remoteKernelSpec,
@@ -421,7 +417,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         assert.strictEqual(wrapperSession.status, 'busy');
     });
     test('Start new remote Session (interactive)', async () => {
-        when(connection.localLaunch).thenReturn(false);
         const resource = Uri.parse('a.py');
         const options: KernelSessionCreationOptions = {
             kernelConnection: remoteKernelSpec,
@@ -451,7 +446,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         assert.strictEqual(wrapperSession.status, 'busy');
     });
     test('Create Session with Jupyter style names (notebook)', async () => {
-        when(connection.localLaunch).thenReturn(false);
         when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar');
         const resource = Uri.file('/foo/bar/baz/abc.ipynb');
         const options: KernelSessionCreationOptions = {
@@ -487,7 +481,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         assert.deepStrictEqual(newSessionOptions.kernel, { name: 'python3' });
     });
     test('Create Session with non-Jupyter style names (notebook)', async () => {
-        when(connection.localLaunch).thenReturn(false);
         when(connection.mappedRemoteNotebookDir).thenReturn();
         const resource = Uri.file('/foo/bar/baz/abc.ipynb');
         const options: KernelSessionCreationOptions = {
@@ -538,7 +531,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         assert.deepStrictEqual(newSessionOptions.kernel, { name: 'python3' });
     });
     test('Create Session with Jupyter style names (interactive window with Python file)', async () => {
-        when(connection.localLaunch).thenReturn(false);
         when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar');
         const resource = Uri.file('/foo/bar/baz/abc.py');
         const options: KernelSessionCreationOptions = {

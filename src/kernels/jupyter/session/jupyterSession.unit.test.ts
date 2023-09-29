@@ -91,7 +91,6 @@ suite('JupyterSession', () => {
             instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
         );
         when(connection.rootDirectory).thenReturn(Uri.file(''));
-        when(connection.localLaunch).thenReturn(false);
         kernelService = mock(JupyterKernelService);
         when(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything())).thenResolve();
         resolvableInstance(session);
@@ -100,7 +99,6 @@ suite('JupyterSession', () => {
             resource,
             kernelConnectionMetadata,
             Uri.file(''),
-            instance(connection),
             instance(kernelService),
             'jupyterExtension'
         );
@@ -127,7 +125,6 @@ suite('JupyterSession', () => {
             let disposeSignalled = false;
             jupyterSession.disposed.connect(() => (disposeSignalled = true));
             // const onDidDispose = jupyterSession.
-            when(connection.localLaunch).thenReturn(false);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
@@ -158,7 +155,6 @@ suite('JupyterSession', () => {
             let disposeSignalled = false;
             jupyterSession.disposed.connect(() => (disposeSignalled = true));
             // const onDidDispose = jupyterSession.
-            when(connection.localLaunch).thenReturn(false);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
@@ -190,7 +186,6 @@ suite('JupyterSession', () => {
             const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
             let disposeSignalled = false;
             jupyterSession.disposed.connect(() => (disposeSignalled = true));
-            when(connection.localLaunch).thenReturn(false);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
@@ -220,7 +215,6 @@ suite('JupyterSession', () => {
             const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
             let disposeSignalled = false;
             jupyterSession.disposed.connect(() => (disposeSignalled = true));
-            when(connection.localLaunch).thenReturn(false);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
@@ -250,7 +244,6 @@ suite('JupyterSession', () => {
             const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
             let disposeSignalled = false;
             jupyterSession.disposed.connect(() => (disposeSignalled = true));
-            when(connection.localLaunch).thenReturn(false);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
@@ -279,7 +272,6 @@ suite('JupyterSession', () => {
             const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
             let disposeSignalled = false;
             jupyterSession.disposed.connect(() => (disposeSignalled = true));
-            when(connection.localLaunch).thenReturn(true);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
@@ -369,7 +361,6 @@ suite('JupyterSession', () => {
             }
 
             test('Restart should just restart the kernel', async () => {
-                when(connection.localLaunch).thenReturn(true);
                 when(session.isDisposed).thenReturn(false);
                 const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
                 when(session.serverSettings).thenReturn(instance(sessionServerSettings));
@@ -388,7 +379,6 @@ suite('JupyterSession', () => {
                 ).once();
             });
             test('Restart should fail if user cancels from installing missing dependencies', async () => {
-                when(connection.localLaunch).thenReturn(true);
                 when(session.isDisposed).thenReturn(false);
                 const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
                 when(session.serverSettings).thenReturn(instance(sessionServerSettings));

@@ -43,7 +43,6 @@ suite(`Remote Kernel Finder`, () => {
     let kernelsChanged: TestEventHandler<void>;
     let jupyterConnection: JupyterConnection;
     const connInfo: IJupyterConnection = {
-        localLaunch: false,
         baseUrl: 'http://foobar',
         displayName: 'foobar connection',
         token: '',
