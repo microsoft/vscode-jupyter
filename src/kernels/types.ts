@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
+import type { KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type {
     CancellationToken,
