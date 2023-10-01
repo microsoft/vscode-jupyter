@@ -579,8 +579,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     extends Session.ISessionConnection {
     readonly id: string;
     readonly kind: T;
-    readonly isDisposed: boolean;
-    readonly kernel: Kernel.IKernelConnection | null;
     readonly status: KernelMessage.Status;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     disposeAsync(): Promise<void>;
@@ -588,7 +586,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     onDidShutdown: Event<void>;
     restart(): Promise<void>;
     waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
-    shutdown(): Promise<void>;
 }
 
 export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {}
