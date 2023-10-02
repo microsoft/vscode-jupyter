@@ -117,8 +117,6 @@
             "{Locked='Notebook'}"
         ]
     },
-    "jupyter.command.jupyter.undocells.title": "Undo Last Interactive Action",
-    "jupyter.command.jupyter.redocells.title": "Redo Last Interactive Action",
     "jupyter.command.jupyter.notebookeditor.removeallcells.title": {
         "message": "Delete All Notebook Editor Cells",
         "comment": [
