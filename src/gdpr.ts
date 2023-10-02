@@ -1786,19 +1786,6 @@
      ]
    }
  */
-//Telemetry.JupyterInstalled
-/* __GDPR__
-   "JUPYTER_IS_INSTALLED" : {
-     "detection": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Jupyter is in current path of process owned by VS Code. I.e. jupyter can be found in the path as defined by the env variable process.env['PATH'].","owner":"donjayamanne"},
-     "frontEnd": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether this is jupyter lab or notebook.","owner":"donjayamanne"},
-     "reason": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"Reason for failure.","owner":"donjayamanne"},
-     "frontEndVersion": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Version of the form 6.11, 4.8","owner":"donjayamanne","isMeasurement":true},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX" : {

@@ -17,7 +17,6 @@ import { JupyterInterpreterSubCommandExecutionService } from './interpreter/jupy
 import { NbConvertExportToPythonService } from './interpreter/nbconvertExportToPythonService.node';
 import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertInterpreterDependencyChecker.node';
 import { JupyterConnection } from './connection/jupyterConnection';
-import { JupyterDetectionTelemetry } from './jupyterDetectionTelemetry.node';
 import { JupyterKernelService } from './session/jupyterKernelService.node';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
@@ -117,7 +116,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IJupyterRemoteCachedKernelValidator,
         JupyterRemoteCachedKernelValidator
     );
-    serviceManager.addSingleton<JupyterDetectionTelemetry>(IExtensionSyncActivationService, JupyterDetectionTelemetry);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandlerNode);
     serviceManager.addSingleton<IRemoteKernelFinderController>(
         IRemoteKernelFinderController,
