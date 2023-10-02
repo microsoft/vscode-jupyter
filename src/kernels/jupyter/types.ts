@@ -4,7 +4,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { ContentsManager } from '@jupyterlab/services';
 import type WebSocketIsomorphic from 'isomorphic-ws';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
@@ -16,10 +15,8 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
     IJupyterConnection,
-    IJupyterKernelSession,
     GetServerOptions,
     IKernelSocket,
-    KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../types';
@@ -53,23 +50,6 @@ export interface IJupyterServerHelper extends IAsyncDisposable {
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getJupyterServerError(): Promise<string>;
     refreshCommands(): Promise<void>;
-}
-
-export const IOldJupyterSessionManagerFactory = Symbol('IOldJupyterSessionManagerFactory');
-export interface IOldJupyterSessionManagerFactory {
-    create(connInfo: IJupyterConnection): IJupyterSessionManager;
-}
-
-export interface IJupyterSessionManager extends IAsyncDisposable {
-    readonly isDisposed: boolean;
-    startNew(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        workingDirectory: Uri,
-        ui: IDisplayOptions,
-        cancelToken: CancellationToken,
-        creator: KernelActionSource
-    ): Promise<IJupyterKernelSession>;
 }
 
 export interface IJupyterKernel {
@@ -219,17 +199,6 @@ export interface IJupyterServerUriStorage {
 export interface IBackupFile {
     dispose: () => Promise<unknown>;
     filePath: string;
-}
-
-export const IJupyterBackingFileCreator = Symbol('IJupyterBackingFileCreator');
-export interface IJupyterBackingFileCreator {
-    createBackingFile(
-        resource: Resource,
-        workingDirectory: Uri,
-        kernel: KernelConnectionMetadata,
-        connInfo: IJupyterConnection,
-        contentsManager: ContentsManager
-    ): Promise<IBackupFile | undefined>;
 }
 
 export const IJupyterKernelService = Symbol('IJupyterKernelService');

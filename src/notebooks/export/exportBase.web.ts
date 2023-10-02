@@ -1,33 +1,41 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import uuid from 'uuid/v4';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { Contents, ContentsManager } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Uri, CancellationToken, NotebookDocument } from 'vscode';
 import * as path from '../../platform/vscode-path/path';
 import { DisplayOptions } from '../../kernels/displayOptions';
-import { executeSilently } from '../../kernels/helpers';
-import {
-    IJupyterConnection,
-    IKernel,
-    IKernelProvider,
-    RemoteKernelConnectionMetadata,
-    isRemoteConnection
-} from '../../kernels/types';
+import { executeSilently, jvscIdentifier } from '../../kernels/helpers';
+import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { concatMultilineString } from '../../platform/common/utils';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportUtilBase } from './exportUtil';
 import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './types';
-import { traceLog } from '../../platform/logging';
+import { traceError, traceLog } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
-import { IBackupFile, IJupyterBackingFileCreator } from '../../kernels/jupyter/types';
 import { Resource } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
+import * as urlPath from '../../platform/vscode-path/resources';
+import { DataScience } from '../../platform/common/utils/localize';
+
+function getRemoteIPynbSuffix(): string {
+    return `${jvscIdentifier}${uuid()}`;
+}
+
+function generateBackingIPyNbFileName(resource: Resource) {
+    // Generate a more descriptive name
+    const suffix = `${getRemoteIPynbSuffix()}${uuid()}.ipynb`;
+    return resource
+        ? `${urlPath.basename(resource, '.ipynb')}${suffix}`
+        : `${DataScience.defaultNotebookName}${suffix}`;
+}
 
 /**
  * Base class for exporting on web. Uses the kernel to perform the export and then translates the blob sent back to a file.
@@ -39,7 +47,6 @@ export class ExportBase implements INbConvertExport, IExportBase {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExportDialog) protected readonly filePicker: IExportDialog,
         @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
-        @inject(IJupyterBackingFileCreator) private readonly backingFileCreator: IJupyterBackingFileCreator,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
     ) {}
 
@@ -104,13 +111,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
                 break;
         }
 
-        const backingFile = await this.backingFileCreator.createBackingFile(
-            resource,
-            Uri.file(''),
-            kernelConnectionMetadata,
-            connection,
-            contentsManager
-        );
+        const backingFile = await this.createBackingFile(resource, contentsManager);
 
         if (!backingFile) {
             return;
@@ -168,46 +169,38 @@ export class ExportBase implements INbConvertExport, IExportBase {
             contentsManager.dispose();
         }
     }
-    async invokeWithFileSynced(
+    public async createBackingFile(
         resource: Resource,
-        contents: string,
-        kernelConnectionMetadata: RemoteKernelConnectionMetadata,
-        connInfo: IJupyterConnection,
-        contentsManager: ContentsManager,
-        handler: (file: IBackupFile) => Promise<void>
-    ): Promise<void> {
-        if (!resource) {
-            return;
+        contentsManager: ContentsManager
+    ): Promise<{ dispose: () => Promise<unknown>; filePath: string } | undefined> {
+        let backingFile: Contents.IModel | undefined = undefined;
+
+        // However jupyter does not support relative paths outside of the original root.
+        const backingFileOptions: Contents.ICreateOptions = { type: 'notebook' };
+
+        // Generate a more descriptive name
+        const newName = generateBackingIPyNbFileName(resource);
+
+        try {
+            // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
+            backingFile = await contentsManager.newUntitled(backingFileOptions);
+            const backingFileDir = path.dirname(backingFile.path);
+            backingFile = await contentsManager.rename(
+                backingFile.path,
+                backingFileDir.length && backingFileDir !== '.' ? `${backingFileDir}/${newName}` : newName // Note, the docs say the path uses UNIX delimiters.
+            );
+        } catch (exc) {
+            traceError(`Backing file not supported: ${exc}`);
         }
 
-        const backingFile = await this.backingFileCreator.createBackingFile(
-            resource,
-            Uri.file(''),
-            kernelConnectionMetadata,
-            connInfo,
-            contentsManager
-        );
-
-        if (!backingFile) {
-            return;
+        if (backingFile) {
+            const filePath = backingFile.path;
+            return {
+                filePath,
+                dispose: () => contentsManager.delete(filePath)
+            };
         }
-
-        await contentsManager
-            .save(backingFile!.filePath, {
-                content: JSON.parse(contents),
-                type: 'notebook'
-            })
-            .catch(noop);
-
-        await handler({
-            filePath: backingFile.filePath,
-            dispose: backingFile.dispose.bind(backingFile)
-        });
-
-        await backingFile.dispose();
-        await contentsManager.delete(backingFile.filePath).catch(noop);
     }
-
     async getContents(
         file: string,
         format: Contents.FileFormat,

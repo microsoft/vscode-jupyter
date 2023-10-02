@@ -96,7 +96,6 @@ export function createJupyterConnectionInfo(
     requestCreator: IJupyterRequestCreator,
     requestAgentCreator: IJupyterRequestAgentCreator | undefined,
     configService: IConfigurationService,
-    localLaunch: boolean,
     rootDirectory: Uri,
     toDispose?: IDisposable
 ): IJupyterConnection {
@@ -164,7 +163,6 @@ export function createJupyterConnectionInfo(
         serverProviderHandle: jupyterHandle,
         token,
         hostName,
-        localLaunch,
         displayName:
             serverUri && serverUri.displayName
                 ? serverUri.displayName

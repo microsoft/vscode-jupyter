@@ -147,7 +147,6 @@ export class JupyterConnectionWaiter implements IDisposable {
                 requestCreator,
                 requestAgentCreator,
                 configService,
-                true,
                 this.rootDir,
                 new Disposable(() => this.launchResult.dispose())
             );

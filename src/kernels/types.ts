@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
+import type { KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type {
     CancellationToken,
@@ -543,7 +543,6 @@ export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPar
 }
 
 export interface IJupyterConnection extends Disposable {
-    readonly localLaunch: boolean;
     displayName: string;
     readonly baseUrl: string;
     readonly token: string;
@@ -580,41 +579,18 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     extends Session.ISessionConnection {
     readonly id: string;
     readonly kind: T;
-    readonly isDisposed: boolean;
-    readonly kernel: Kernel.IKernelConnection | null;
     readonly status: KernelMessage.Status;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     disposeAsync(): Promise<void>;
-    /**
-     * @deprecated Use statusChanged instead.
-     */
-    onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
     restart(): Promise<void>;
     waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
-    shutdown(): Promise<void>;
 }
 
 export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {}
 export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
-
-export interface ISessionWithSocket extends Session.ISessionConnection {
-    /**
-     * The resource associated with this session.
-     */
-    resource: Resource;
-    /**
-     * Whether this is a remote session that we attached to.
-     */
-    isRemoteSession?: boolean;
-    /**
-     * Socket information used for hooking messages to the kernel.
-     */
-    kernelSocketInformation: KernelSocketInformation;
-    kernelConnectionMetadata: KernelConnectionMetadata;
-}
 
 export interface INewSessionWithSocket extends Session.ISessionConnection {
     kernelSocketInformation: KernelSocketInformation;

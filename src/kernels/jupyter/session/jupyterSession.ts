@@ -50,11 +50,10 @@ export class JupyterSessionWrapper
         private readonly resource: Resource,
         private readonly kernelConnectionMetadata: KernelConnectionMetadata,
         public readonly workingDirectory: Uri,
-        connection: IJupyterConnection,
         private readonly kernelService: IJupyterKernelService | undefined,
         private readonly creator: KernelActionSource
     ) {
-        super(connection.localLaunch ? 'localJupyter' : 'remoteJupyter', session);
+        super(isLocalConnection(kernelConnectionMetadata) ? 'localJupyter' : 'remoteJupyter', session);
         this.initializeKernelSocket();
     }
 

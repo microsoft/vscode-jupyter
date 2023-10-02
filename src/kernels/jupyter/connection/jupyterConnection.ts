@@ -49,7 +49,6 @@ export class JupyterConnection {
             this.requestCreator,
             this.requestAgentCreator,
             this.configService,
-            false,
             Uri.file('')
         );
     }
@@ -67,7 +66,6 @@ export class JupyterConnection {
             this.requestCreator,
             this.requestAgentCreator,
             this.configService,
-            false,
             Uri.file('')
         );
         try {

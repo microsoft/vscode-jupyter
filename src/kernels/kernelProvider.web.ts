@@ -9,7 +9,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExtensionContext,
     IMemento,
     WORKSPACE_MEMENTO
@@ -45,8 +44,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
         @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
         @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento,
-        @inject(IExperimentService) private readonly experiments: IExperimentService
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
         disposables.push(jupyterServerUriStorage.onDidRemove(this.handleServerRemoval.bind(this)));
@@ -74,8 +72,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
             this.appShell,
             options.controller,
             this.startupCodeProviders.getProviders(notebookType),
-            this.workspaceStorage,
-            this.experiments
+            this.workspaceStorage
         ) as IKernel;
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
@@ -107,8 +104,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento,
-        @inject(IExperimentService) private readonly experiments: IExperimentService
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -134,8 +130,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             this.appShell,
             settings,
             this.startupCodeProviders.getProviders(notebookType),
-            this.workspaceStorage,
-            this.experiments
+            this.workspaceStorage
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

@@ -115,7 +115,6 @@ suite('Jupyter Connection Waiter', async () => {
 
         const connection = await waiter.ready;
 
-        assert.equal(connection.localLaunch, true);
         assert.equal(connection.baseUrl, expectedServerInfo.url);
         assert.equal(connection.hostName, expectedServerInfo.hostname);
         assert.equal(connection.token, expectedServerInfo.token);
