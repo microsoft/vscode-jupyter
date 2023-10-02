@@ -65,7 +65,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies for native modules
         run: |
@@ -115,7 +115,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies for native modules
         run: |
@@ -198,7 +198,7 @@ jobs:
         test-suite: [ts-unit]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies for native modules
         if: matrix.os == 'ubuntu-latest'
@@ -370,7 +370,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Generate Tag Variable
         run:
@@ -789,7 +789,7 @@ jobs:
         python: ['3.10']
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v4
@@ -880,7 +880,7 @@ jobs:
     needs: [ts_tests, vscodeTests, smoke-tests]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node
         uses: actions/setup-node@v3
