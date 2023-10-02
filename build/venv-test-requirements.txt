@@ -24,7 +24,7 @@ py4j
 bqplot
 K3D
 ipyleaflet
-jinja2==3.1.2 # https://github.com/microsoft/vscode-jupyter/issues/9468#issuecomment-1078468039
+jinja2
 matplotlib
 ipympl
-traitlets==5.9.0 # https://github.com/microsoft/vscode-jupyter/issues/14338
+traitlets
