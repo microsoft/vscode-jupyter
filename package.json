@@ -584,18 +584,6 @@
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
-                "command": "jupyter.notebookeditor.undocells",
-                "title": "%jupyter.command.jupyter.undocells.title%",
-                "category": "Notebook",
-                "enablement": "!jupyter.webExtension"
-            },
-            {
-                "command": "jupyter.notebookeditor.redocells",
-                "title": "%jupyter.command.jupyter.redocells.title%",
-                "category": "Notebook",
-                "enablement": "!jupyter.webExtension"
-            },
-            {
                 "command": "jupyter.interruptkernel",
                 "title": "%jupyter.command.jupyter.interruptkernel.title%",
                 "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
