@@ -121,3 +121,4 @@ test-results*
 !**/*nls.*.json
 *.d.ts
 debugpy_logging.cmd
+!NOTICE.txt
