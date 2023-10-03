@@ -1,0 +1,25 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.169.0/containers/python-3-miniconda
+{
+    "name": "dev",
+    "build": {
+        "context": "../..",
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-toolsai.jupyter-renderers",
+                "amodio.tsl-problem-matcher",
+                "dbaeumer.vscode-eslint",
+                "editorconfig.editorconfig",
+                "esbenp.prettier-vscode",
+                "hbenl.vscode-mocha-test-adapter"]
+        }
+    },
+    "mounts": ["source=${localWorkspaceFolder},target=/workspaces/local,type=bind,consistency=cached"]
+    // Use 'postCreateCommand' to run commands after the container is created.
+    // "postCreateCommand": "npm ci",
+    // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+    // , "remoteUser": "vscode"
+}

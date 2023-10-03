@@ -1,0 +1,15 @@
+{
+	"name": "test-alpine-x64",
+	"build": {
+		"context": "../..",
+		"dockerfile": "./Dockerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-toolsai.jupyter@prerelease", "ms-python.python@prerelease"
+			]
+		}
+	},
+	"workspaceFolder": "/workspaces/vscode-jupyter/src/test/testMultiRootWkspc/smokeTests"
+}
