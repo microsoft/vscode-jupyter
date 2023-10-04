@@ -27,7 +27,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: 16.14.2
+  NODE_VERSION: 16.17.1
   NPM_VERSION: 8.15.1
   PYTHON_VERSION: 3.8
   JULIA_VERSION: 1.5.2
