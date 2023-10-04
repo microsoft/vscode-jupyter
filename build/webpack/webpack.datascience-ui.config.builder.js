@@ -3,8 +3,6 @@
 
 'use strict';
 
-// Note to editors, if you change this file you have to restart compile-webviews.
-// It doesn't reload the config otherwise.
 const common = require('./common');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -15,6 +13,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
+const isWatchMode = process.argv.includes('--watch');
 const fasterCompiler = !!process.env.CI_JUPYTER_FAST_COMPILATION;
 
 function getEntry(bundle) {
@@ -24,10 +23,6 @@ function getEntry(bundle) {
                 plotViewer: ['babel-polyfill', `./src/webviews/webview-side/plot/index.tsx`],
                 dataExplorer: ['babel-polyfill', `./src/webviews/webview-side/data-explorer/index.tsx`],
                 variableView: ['babel-polyfill', `./src/webviews/webview-side/variable-view/index.tsx`]
-            };
-        case 'ipywidgetsKernel':
-            return {
-                ipywidgetsKernel: [`./src/webviews/webview-side/ipywidgets/kernel/index.ts`]
             };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
@@ -84,10 +79,6 @@ function getPlugins(bundle) {
                     })
                 ]
             );
-            break;
-        }
-        case 'ipywidgetsKernel': {
-            plugins.push(definePlugin);
             break;
         }
         default:
@@ -150,7 +141,7 @@ function buildConfiguration(bundle) {
                                 // there should be 1 cpu for the fork-ts-checker-webpack-plugin
                                 workers: require('os').cpus().length - 1,
                                 workerNodeArgs: ['--max-old-space-size=9096'],
-                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
+                                poolTimeout: isWatchMode ? Infinity : 1000 // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
                             }
                         },
                         {
@@ -234,4 +225,3 @@ function buildConfiguration(bundle) {
 }
 
 exports.viewers = buildConfiguration('viewers');
-exports.ipywidgetsKernel = buildConfiguration('ipywidgetsKernel');

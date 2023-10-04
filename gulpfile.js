@@ -182,19 +182,6 @@ gulp.task('installPythonLibs', async () => {
     }
 });
 
-gulp.task('compile-renderers', async () => {
-    console.log('Building renderers');
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js');
-});
-
-gulp.task('compile-viewers', async () => {
-    await Promise.all([
-        buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js'),
-        spawnAsync('npm', ['run', 'compile-widgetTester'], webpackEnv),
-        spawnAsync('npm', ['run', 'compile-widgetRenderer'], webpackEnv)
-    ]);
-});
-
 gulp.task('compile-webextension', async () => {
     // No need to build dependencies for desktop.
     if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
@@ -202,7 +189,6 @@ gulp.task('compile-webextension', async () => {
     }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
 });
-gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers', 'compile-webextension'));
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
@@ -218,14 +204,6 @@ gulp.task('webpack-dependencies', async () => {
         return;
     }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
-});
-
-gulp.task('webpack-renderers', async () => {
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js', 'production');
-});
-
-gulp.task('webpack-viewers', async () => {
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
 });
 
 gulp.task('webpack-extension-node', async () => {
@@ -253,6 +231,8 @@ function modifyJson(jsonFile, cb) {
 }
 
 gulp.task('updatePackageJsonForBundle', async () => {
+    // When building a web only VSIX, we need to remove the desktop entry point
+    // & vice versa (this is only required for platform specific builds)
     const packageJsonFile = path.join(__dirname, 'package.json');
     const packageJsonContents = fs.readFileSync(packageJsonFile).toString('utf-8');
     const json = JSON.parse(packageJsonContents);
@@ -286,16 +266,6 @@ gulp.task('updatePackageJsonForBundle', async () => {
         }
     }
 });
-
-gulp.task(
-    'webpack',
-    gulp.series(
-        // Dependencies first
-        gulp.parallel('webpack-dependencies', 'webpack-renderers', 'webpack-viewers'),
-        // Then the two extensions
-        gulp.parallel('webpack-extension-node', 'webpack-extension-web')
-    )
-);
 
 gulp.task('updateBuildNumber', async () => {
     await updateBuildNumber();
@@ -444,9 +414,36 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 
-gulp.task('prePublishBundle', gulp.series('webpack', 'updatePackageJsonForBundle'));
+gulp.task('compile-webviews-release', async () => {
+    await Promise.all([
+        spawnAsync('npm', ['run', 'compile-viewers-release'], webpackEnv),
+        spawnAsync('npm', ['run', 'compile-widget-renderer-release'], webpackEnv),
+        spawnAsync('npm', ['run', 'compile-widget-kernel-release'], webpackEnv)
+    ]);
+});
+
+gulp.task('compile-webviews-dev', async () => {
+    await Promise.all([
+        spawnAsync('npm', ['run', 'compile-viewers-dev'], webpackEnv),
+        spawnAsync('npm', ['run', 'compile-widget-tester-dev'], webpackEnv),
+        spawnAsync('npm', ['run', 'compile-widget-renderer-dev'], webpackEnv),
+        spawnAsync('npm', ['run', 'compile-widget-kernel-dev'], webpackEnv)
+    ]);
+});
+
+gulp.task(
+    'prePublishBundle',
+    gulp.series(
+        // Dependencies first
+        'webpack-dependencies',
+        // Then the two extensions
+        gulp.parallel('compile-webviews-release', 'webpack-extension-node', 'webpack-extension-web'),
+        'updatePackageJsonForBundle'
+    )
+);
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
-gulp.task('prePublishNonBundle', gulp.parallel('compile', gulp.series('compile-webviews')));
+
+gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-webviews-dev', 'compile-webextension'));
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};
