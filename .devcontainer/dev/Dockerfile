@@ -1,6 +1,6 @@
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.169.0/containers/python-3-miniconda/.devcontainer/base.Dockerfile
 
-FROM node:16.14.2-bullseye-slim
+FROM node:18.15.0-bullseye-slim
 
 RUN apt-get -y update
 RUN apt-get -y install apt-utils git gnupg2 curl locales ca-certificates sudo
@@ -26,7 +26,7 @@ RUN bash /tmp/library-scripts/common-debian.sh "${INSTALL_ZSH}" "${USERNAME}" "$
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts
 
 # # Finally install npm
-RUN echo "npm i -g npm@8.15.1" | bash
+RUN echo "npm i -g npm@9.5.0" | bash
 
 RUN apt install curl -y
 RUN sh -c "$(curl -fsSL https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)" -- \
