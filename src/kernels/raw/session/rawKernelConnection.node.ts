@@ -14,7 +14,7 @@ import {
     isUserRegisteredKernelSpecConnection
 } from '../../../kernels/helpers';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
-import { IKernelConnection, IKernelLauncher, IKernelProcess } from '../types';
+import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSocket } from './rawSocket.node';
 import { IKernelSocket, LocalKernelConnectionMetadata } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
@@ -155,7 +155,8 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 throw new CancellationError();
             }
             this.hookupKernelProcessExitHandler(kernelProcess);
-            const result = newRawKernel(kernelProcess.connection, this.clientId, this.username, this.model);
+            const result = newRawKernel(this.kernelProcess, this.clientId, this.username, this.model);
+            this.kernelProcess = result.kernelProcess;
             this.realKernel = result.realKernel;
             this.socket = result.socket;
             this.socket.emit('open');
@@ -562,7 +563,7 @@ async function postStartKernel(
         */
 }
 
-function newRawKernel(connection: IKernelConnection, clientId: string, username: string, model: Kernel.IModel) {
+function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username: string, model: Kernel.IModel) {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize =
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
@@ -572,7 +573,7 @@ function newRawKernel(connection: IKernelConnection, clientId: string, username:
     let socketInstance: IKernelSocket & IWebSocketLike & IDisposable;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize);
+            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize);
             socketInstance = this;
         }
     }
@@ -601,7 +602,7 @@ function newRawKernel(connection: IKernelConnection, clientId: string, username:
     });
 
     // Use this real kernel in result.
-    return { realKernel, socket: socketInstance! };
+    return { realKernel, socket: socketInstance!, kernelProcess };
 }
 
 /**
