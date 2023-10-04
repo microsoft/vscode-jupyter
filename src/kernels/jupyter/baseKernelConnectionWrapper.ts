@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Kernel } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type {
     IInfoReply,
     ShellMessageType,
@@ -47,6 +47,7 @@ export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConne
     public readonly iopubMessage = new Signal<this, IIOPubMessage<IOPubMessageType>>(this);
     public readonly unhandledMessage = new Signal<this, IMessage<MessageType>>(this);
     public readonly anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
+    public readonly pendingInput = new Signal<this, boolean>(this);
     public get serverSettings() {
         return (this.possibleKernelConnection || this._previousKernelConnection).serverSettings;
     }
@@ -91,6 +92,9 @@ export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConne
     public get isDisposed(): boolean {
         return this.possibleKernelConnection ? this.possibleKernelConnection?.isDisposed === true : true;
     }
+    public get hasPendingInput(): boolean {
+        return this.possibleKernelConnection ? this.possibleKernelConnection?.hasPendingInput === true : true;
+    }
 
     public get model(): Kernel.IModel {
         return (this.possibleKernelConnection || this._previousKernelConnection).model;
@@ -132,6 +136,9 @@ export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConne
     }
     reconnect(): Promise<void> {
         return this.getKernelConnection().reconnect();
+    }
+    removeInputGuard() {
+        this.getKernelConnection().removeInputGuard();
     }
     requestKernelInfo(): Promise<IInfoReplyMsg | undefined> {
         return this.getKernelConnection().requestKernelInfo();
@@ -179,8 +186,11 @@ export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConne
     requestCommInfo(content: { target_name?: string | undefined }): Promise<ICommInfoReplyMsg> {
         return this.getKernelConnection().requestCommInfo(content);
     }
-    sendInputReply(content: IReplyErrorContent | IReplyAbortContent | IInputReply): void {
-        return this.getKernelConnection().sendInputReply(content);
+    sendInputReply(
+        content: IReplyErrorContent | IReplyAbortContent | IInputReply,
+        parent_header: KernelMessage.IInputReplyMsg['parent_header']
+    ): void {
+        return this.getKernelConnection().sendInputReply(content, parent_header);
     }
     createComm(targetName: string, commId?: string): Kernel.IComm {
         return this.getKernelConnection().createComm(targetName, commId);
@@ -222,11 +232,13 @@ export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConne
         kernelConnection.anyMessage.connect(this.onAnyMessage, this);
         kernelConnection.iopubMessage.connect(this.onIOPubMessage, this);
         kernelConnection.unhandledMessage.connect(this.onUnhandledMessage, this);
+        kernelConnection.pendingInput.connect(this.onPendingInput, this);
     }
     protected stopHandlingKernelMessages(kernelConnection: Kernel.IKernelConnection) {
         kernelConnection.anyMessage.disconnect(this.onAnyMessage, this);
         kernelConnection.iopubMessage.disconnect(this.onIOPubMessage, this);
         kernelConnection.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+        kernelConnection.pendingInput.disconnect(this.onPendingInput, this);
     }
     private onAnyMessage(connection: Kernel.IKernelConnection, msg: Kernel.IAnyMessageArgs) {
         if (connection === this.possibleKernelConnection) {
@@ -241,6 +253,11 @@ export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConne
     private onUnhandledMessage(connection: Kernel.IKernelConnection, msg: IMessage<MessageType>) {
         if (connection === this.possibleKernelConnection) {
             this.unhandledMessage.emit(msg);
+        }
+    }
+    private onPendingInput(connection: Kernel.IKernelConnection, msg: boolean) {
+        if (connection === this.possibleKernelConnection) {
+            this.pendingInput.emit(msg);
         }
     }
 }

@@ -26,11 +26,10 @@ export class DelayedFutureExecute
     private pendingHooks: ((
         msg: KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>
     ) => boolean | PromiseLike<boolean>)[] = [];
-    private pendingInputReplies: (
-        | KernelMessage.IReplyErrorContent
-        | KernelMessage.IReplyAbortContent
-        | KernelMessage.IInputReply
-    )[] = [];
+    private pendingInputReplies: {
+        content: KernelMessage.IReplyErrorContent | KernelMessage.IReplyAbortContent | KernelMessage.IInputReply;
+        parent_header: KernelMessage.IInputReplyMsg['parent_header'];
+    }[] = [];
     private disposed = false;
     private statusChangedHandler: (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => void;
     constructor(
@@ -121,12 +120,13 @@ export class DelayedFutureExecute
         }
     }
     public sendInputReply(
-        content: KernelMessage.IReplyErrorContent | KernelMessage.IReplyAbortContent | KernelMessage.IInputReply
+        content: KernelMessage.IReplyErrorContent | KernelMessage.IReplyAbortContent | KernelMessage.IInputReply,
+        parent_header: KernelMessage.IInputReplyMsg['parent_header']
     ): void {
         if (this.requestFuture) {
-            this.requestFuture.sendInputReply(content);
+            this.requestFuture.sendInputReply(content, parent_header);
         } else {
-            this.pendingInputReplies.push(content);
+            this.pendingInputReplies.push({ content, parent_header });
         }
     }
     public get isDisposed(): boolean {
@@ -170,7 +170,7 @@ export class DelayedFutureExecute
                 this.pendingHooks.forEach((h) => this.requestFuture?.registerMessageHook(h));
             }
             if (this.pendingInputReplies) {
-                this.pendingInputReplies.forEach((r) => this.requestFuture?.sendInputReply(r));
+                this.pendingInputReplies.forEach((r) => this.requestFuture?.sendInputReply(r.content, r.parent_header));
             }
             this.requestFuture.done.then((r) => this.doneDeferred.resolve(r)).catch((e) => this.doneDeferred.reject(e));
             this.clear();

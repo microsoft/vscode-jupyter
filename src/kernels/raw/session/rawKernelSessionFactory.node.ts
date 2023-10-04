@@ -15,6 +15,7 @@ import { Cancellation, isCancellationError, raceCancellationError } from '../../
 import { noop } from '../../../platform/common/utils/misc';
 import { RawJupyterSessionWrapper } from './rawJupyterSession.node';
 import { RawSessionConnection } from './rawSessionConnection.node';
+import { IJupyterRequestCreator } from '../../jupyter/types';
 
 /**
  * Implements IRawNotebookProvider for raw kernel connections.
@@ -28,7 +29,8 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator
     ) {
         this.asyncRegistry.push(this);
     }
@@ -67,7 +69,8 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
                 workingDirectory,
                 options.kernelConnection as LocalKernelConnectionMetadata,
                 launchTimeout,
-                (options.resource?.path || '').toLowerCase().endsWith('.ipynb') ? 'notebook' : 'console'
+                (options.resource?.path || '').toLowerCase().endsWith('.ipynb') ? 'notebook' : 'console',
+                this.requestCreator
             );
             try {
                 await raceCancellationError(options.token, session.startKernel(options));

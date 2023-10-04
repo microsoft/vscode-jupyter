@@ -15,6 +15,7 @@ import { getNameOfKernelConnection } from '../../helpers';
 import { CancellationToken, Uri } from 'vscode';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { RawKernelConnection } from './rawKernelConnection.node';
+import { IJupyterRequestCreator } from '../../jupyter/types';
 
 /*
 RawSession class implements a jupyterlab ISession object
@@ -34,6 +35,7 @@ export class RawSessionConnection implements INewSessionWithSocket {
     public readonly unhandledMessage = new Signal<this, KernelMessage.IMessage>(this);
     public readonly anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
     public readonly disposed = new Signal<this, void>(this);
+    public readonly pendingInput = new Signal<this, boolean>(this);
     public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
     public readonly propertyChanged = new Signal<this, 'path' | 'name' | 'type'>(this);
     private _jupyterLabServices?: typeof import('@jupyterlab/services');
@@ -111,7 +113,8 @@ export class RawSessionConnection implements INewSessionWithSocket {
         workingDirectory: Uri,
         private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata,
         launchTimeout: number,
-        public readonly type: 'notebook' | 'console'
+        public readonly type: 'notebook' | 'console',
+        requestCreator: IJupyterRequestCreator
     ) {
         // Unique ID for this session instance
         this.id = uuid();
@@ -123,7 +126,8 @@ export class RawSessionConnection implements INewSessionWithSocket {
             kernelLauncher,
             workingDirectory,
             launchTimeout,
-            kernelConnectionMetadata
+            kernelConnectionMetadata,
+            requestCreator
         );
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
         this._kernel.iopubMessage.connect(this.onIOPubMessage, this);
@@ -131,6 +135,7 @@ export class RawSessionConnection implements INewSessionWithSocket {
         this._kernel.unhandledMessage.connect(this.onUnhandledMessage, this);
         this._kernel.anyMessage.connect(this.onAnyMessage, this);
         this._kernel.disposed.connect(this.onDisposed, this);
+        this._kernel.pendingInput.connect(this.onPendingInput, this);
     }
     public async startKernel(options: { token: CancellationToken }): Promise<void> {
         await trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
@@ -150,6 +155,7 @@ export class RawSessionConnection implements INewSessionWithSocket {
             this._kernel.unhandledMessage.disconnect(this.onUnhandledMessage, this);
             this._kernel.anyMessage.disconnect(this.onAnyMessage, this);
             this._kernel.disposed.disconnect(this.onDisposed, this);
+            this._kernel.pendingInput.disconnect(this.onPendingInput, this);
         } catch {
             //
         }
@@ -227,5 +233,8 @@ export class RawSessionConnection implements INewSessionWithSocket {
     }
     private onDisposed(_sender: Kernel.IKernelConnection) {
         this.disposed.emit();
+    }
+    private onPendingInput(_sender: Kernel.IKernelConnection, msg: boolean) {
+        this.pendingInput.emit(msg);
     }
 }

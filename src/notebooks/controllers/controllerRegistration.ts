@@ -194,6 +194,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
             traceWarning(
                 `Disposing old controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}'`
             );
+            // console.error('Commented out', new Error('Code Commented'));
             controller.dispose(); // This should remove it from the registered list
         });
     }

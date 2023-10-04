@@ -715,6 +715,7 @@ export interface IKernelSessionFactory {
 }
 
 export interface IKernelSocket {
+    readonly protocol?: string;
     /**
      * These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
      * As a result, we don't get any notification that messages were sent (on the anymessage signal).
@@ -774,6 +775,10 @@ export interface KernelSocketOptions {
          */
         readonly name: string;
     };
+    /**
+     * Protocol used by websocket.
+     */
+    protocol?: string;
 }
 export interface KernelSocketInformation {
     /**
