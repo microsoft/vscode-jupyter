@@ -152,7 +152,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
                 if (
                     finder.serverProviderHandle.extensionId === collection.extensionId &&
                     finder.serverProviderHandle.id === collection.id &&
-                    !currentServerIds.has(finder.serverProviderHandle.handle)
+                    !currentServerIds.has(generateIdFromRemoteProvider(finder.serverProviderHandle))
                 ) {
                     finder.dispose();
                     this.serverFinderMapping.delete(serverId);
