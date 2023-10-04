@@ -10,11 +10,9 @@
   - [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
         Instructions on updating `npm` dependencies in `package.json` & `package-lock.json` can be found [here](https://github.com/microsoft/vscode-jupyter/wiki/Resolving-Component-Governance-and-Dependabot-issues-(updating-package-lock.json)).
 - [ ] Create new release branch with format `release/release-YYYY.MM`.
-  - [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
   * Note: The release branch should not be changed after this step (not including hotfixes)
 - [ ] Disable [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283). (`...` menu > Settings > Processing of new requests: Disabled)
 - [ ] Create a PR to `main` with the following changes... (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
-  - [ ] Merge the changes from release (ThirdPartyNotices) into `main` branch
   - [ ] At this point, the vscode engine version should also be the same as in the release branch- will be bumped when the next release happens
   - [ ] Bump the version number in `main` to the next monthly ("YYYY.M.100") version number (e.g. if the latest is `2022.2.100`, bump it to `2022.3.100`).
     - [ ] Run `npm install` to update `package-lock.json`
@@ -47,7 +45,7 @@
   - [ ] Verify the PR Pipeline on Github actions is green against the release branch.
   - [ ] Approve the `Publish` stage of the last [Stable pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=284) that's successfully sanity tested.
   - [ ] Ensure a tag with the released version number on the commit that was released was created.
-    * This step occurs in the `Publish` Stage of the stable pipeline linked above. 
+    * This step occurs in the `Publish` Stage of the stable pipeline linked above.
   - [ ] If any steps were unclear or changed in this endgame plan please update the `endgame_plan.md` file to make it clear for the next release
 
 ## Wednesday/Thursday (Day of VS Code releasing the next insider version)
