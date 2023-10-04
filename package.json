@@ -1990,6 +1990,8 @@
         "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
         "compile-widgetTester": "esbuild ./src/test/datascience/widgets/rendererUtils.ts --bundle --outfile=out/webviews/webview-side/widgetTester/widgetTester.js --external:log4js --format=cjs --target=es2018 --define:global=this --sourcemap",
         "compile-widgetTester-watch": "npm run compile-widgetTester -- --watch",
+        "compile-widgetRenderer": "esbuild ./src/webviews/webview-side/ipywidgets/renderer/index.ts --bundle --outfile=out/webviews/webview-side/ipywidgetsRenderer/ipywidgetsRenderer.js --external:log4js --format=cjs --target=es2018 --define:global=this --sourcemap",
+        "compile-widgetRenderer-watch": "npm run compile-widgetTester -- --watch",
         "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "checkDependencies": "gulp checkDependencies",
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js",

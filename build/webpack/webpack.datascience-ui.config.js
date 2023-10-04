@@ -4,4 +4,4 @@
 'use strict';
 
 const builder = require('./webpack.datascience-ui.config.builder');
-module.exports = [builder.viewers, builder.ipywidgetsKernel, builder.ipywidgetsRenderer];
+module.exports = [builder.viewers, builder.ipywidgetsKernel];

@@ -188,8 +188,11 @@ gulp.task('compile-renderers', async () => {
 });
 
 gulp.task('compile-viewers', async () => {
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
-    await spawnAsync('npm', ['run', 'compile-widgetTester'], webpackEnv);
+    await Promise.all([
+        buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js'),
+        spawnAsync('npm', ['run', 'compile-widgetTester'], webpackEnv),
+        spawnAsync('npm', ['run', 'compile-widgetRenderer'], webpackEnv)
+    ]);
 });
 
 gulp.task('compile-webextension', async () => {

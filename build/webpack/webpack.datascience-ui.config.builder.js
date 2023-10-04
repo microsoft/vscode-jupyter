@@ -29,11 +29,6 @@ function getEntry(bundle) {
             return {
                 ipywidgetsKernel: [`./src/webviews/webview-side/ipywidgets/kernel/index.ts`]
             };
-        case 'ipywidgetsRenderer':
-            // This is only used in tests (not shipped with extension).
-            return {
-                ipywidgetsRenderer: [`./src/webviews/webview-side/ipywidgets/renderer/index.ts`]
-            };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
     }
@@ -241,4 +236,3 @@ function buildConfiguration(bundle) {
 
 exports.viewers = buildConfiguration('viewers');
 exports.ipywidgetsKernel = buildConfiguration('ipywidgetsKernel');
-exports.ipywidgetsRenderer = buildConfiguration('ipywidgetsRenderer');
