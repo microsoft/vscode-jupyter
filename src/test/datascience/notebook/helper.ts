@@ -720,8 +720,10 @@ export async function waitForKernelToGetAutoSelected(
             // Try the test.
             try {
                 await waitForKernelToGetAutoSelectedImpl(notebookEditor, expectedLanguage, timeout, skipAutoSelection);
+                traceInfoIfCI('Kernel got auto selected');
                 return true;
             } catch (ex) {
+                traceInfoIfCI('Kernel not auto selected', ex);
                 lastError = ex;
                 return false;
             }
@@ -749,6 +751,7 @@ export async function waitForKernelToGetAutoSelectedImpl(
 
     // Make sure we don't already have a selection (this function gets run even after opening a document)
     if (controllerRegistration.getSelected(notebookEditor.notebook)) {
+        traceInfoIfCI(`Controller already selected`);
         return;
     }
 

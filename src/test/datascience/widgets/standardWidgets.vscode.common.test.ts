@@ -19,7 +19,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo } from '../../../platform/logging';
+import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
@@ -151,6 +151,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
+            traceInfoIfCI(`Ended Test (failed) ${this.currentTest?.title}, ${this.currentTest.err?.message}`);
             await captureScreenShot(this);
         }
         // await closeNotebooksAndCleanUpAfterTests(disposables);
