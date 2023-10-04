@@ -164,7 +164,7 @@ function buildConfiguration(bundle) {
                                 // there should be 1 cpu for the fork-ts-checker-webpack-plugin
                                 workers: require('os').cpus().length - 1,
                                 workerNodeArgs: ['--max-old-space-size=9096'],
-                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
+                                poolTimeout: 1000 // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
                             }
                         },
                         {

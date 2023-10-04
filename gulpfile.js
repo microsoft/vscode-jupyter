@@ -188,16 +188,16 @@ gulp.task('compile-renderers', async () => {
 });
 
 gulp.task('compile-viewers', async () => {
-    // await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
-    await spawnAsync('npm', ['run', 'compile-widgetTester'], webpackEnv);
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
+    // await spawnAsync('npm', ['run', 'compile-widgetTester'], webpackEnv);
 });
 
 gulp.task('compile-webextension', async () => {
-    // No need to build dependencies for desktop.
-    if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
-        return;
-    }
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
+    // // No need to build dependencies for desktop.
+    // if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
+    //     return;
+    // }
+    // await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
 });
 gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers', 'compile-webextension'));
 

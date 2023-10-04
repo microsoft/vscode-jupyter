@@ -1988,7 +1988,7 @@
         "compile-web-test": "cross-env VSC_TEST_BUNDLE=true npm run compile-web",
         "compile-web-test-watch": "cross-env VSC_TEST_BUNDLE=true npm run compile-web-watch",
         "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
-        "compile-widgetTester": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui-widgetTester.config.js --watch",
+        "compile-widgetTester": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui-widgetTester.config.js",
         "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "checkDependencies": "gulp checkDependencies",
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js",
