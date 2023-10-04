@@ -2233,7 +2233,7 @@
         "postcss": "^8.4.31",
         "postcss-import": "^15.1.0",
         "postcss-loader": "^7.3.3",
-        "postcss-preset-env": "^9.1.4",
+        "postcss-preset-env": "^8.5.1",
         "prettier": "^3.0.0",
         "relative": "^3.0.2",
         "remove-files-webpack-plugin": "^1.5.0",
