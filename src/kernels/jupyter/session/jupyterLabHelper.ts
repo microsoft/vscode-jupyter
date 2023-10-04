@@ -99,9 +99,19 @@ export class JupyterLabHelper {
         const iterator = this.sessionManager.running();
         let session = iterator.next();
 
-        while (session) {
-            sessions.push(session);
-            session = iterator.next();
+        if (session) {
+            if ('value' in session && 'done' in session) {
+                while (!session.done) {
+                    sessions.push(session.value);
+                    session = iterator.next();
+                }
+            } else {
+                // Iterator types in jupyterlab isn't correct.
+                while (session) {
+                    sessions.push(session as unknown as Session.IModel);
+                    session = iterator.next();
+                }
+            }
         }
 
         return sessions;

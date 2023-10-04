@@ -845,7 +845,10 @@ export class CellExecutionMessageHandler implements IDisposable {
                     cancelToken.token
                 )
                 .then((v) => {
-                    this.kernel.sendInputReply({ value: v || '', status: 'ok' });
+                    this.kernel.sendInputReply(
+                        { value: v || '', status: 'ok' },
+                        msg.header as unknown as KernelMessage.IHeader<'input_request'>
+                    );
                 }, noop);
 
             this.prompts.delete(cancelToken);

@@ -178,10 +178,11 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_onKernelChanged]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
-    public [IPyWidgetMessages.IPyWidgets_binary_msg]:
-        | ((ArrayBuffer | ArrayBufferView)[] | undefined)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        | { id: string; data: any };
+    public [IPyWidgetMessages.IPyWidgets_binary_msg]: {
+        id: string;
+        data: (ArrayBuffer | ArrayBufferView)[] | undefined;
+        protocol?: string;
+    };
     public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
     public [IPyWidgetMessages.IPyWidgets_msg_received]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_iopub_msg_handled]: { id: string };

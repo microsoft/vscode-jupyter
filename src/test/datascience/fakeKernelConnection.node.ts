@@ -19,7 +19,11 @@ import {
 } from '@jupyterlab/services/lib/kernel/messages';
 
 function deserialize(msg: string | ArrayBuffer): KernelMessage.IMessage {
-    return typeof msg === 'string' || msg instanceof ArrayBuffer ? jupyterLabSerialize.deserialize(msg) : msg;
+    return typeof msg === 'string'
+        ? JSON.parse(msg)
+        : msg instanceof ArrayBuffer
+        ? jupyterLabSerialize.deserialize(msg)
+        : msg;
 }
 function serialize(msg: KernelMessage.IMessage): string | ArrayBuffer {
     return jupyterLabSerialize.serialize(msg);

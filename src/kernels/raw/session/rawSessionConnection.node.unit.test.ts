@@ -16,6 +16,7 @@ import { resolvableInstance } from '../../../test/datascience/helpers';
 import { waitForCondition } from '../../../test/common';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import { RawSessionConnection } from './rawSessionConnection.node';
+import { IJupyterRequestCreator } from '../../jupyter/types';
 const nonSerializingKernel =
     require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -75,7 +76,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         channel: 'iopub',
         content: {
             status: 'ok'
-        },
+        } as any,
         metadata: {},
         parent_header: {
             date: '',
@@ -126,6 +127,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         when(kernel.unhandledMessage).thenReturn(
             instance(mock<ISignal<Kernel.IKernelConnection, KernelMessage.IMessage<KernelMessage.MessageType>>>())
         );
+        when(kernel.pendingInput).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, boolean>>()));
         when(kernel.disposed).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, void>>()));
         when(kernel.connectionStatusChanged).thenReturn(
             instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
@@ -169,14 +171,16 @@ suite('Raw Session & Raw Kernel Connection', () => {
         when(kernelLauncher.launch(anything(), anything(), anything(), anything(), anything())).thenResolve(
             resolvableInstance(kernelProcess)
         );
-
+        const requestCreator = mock<IJupyterRequestCreator>();
+        when(requestCreator.getFetchMethod()).thenReturn(noop as any);
         session = new RawSessionConnection(
             Uri.file('one.ipynb'),
             instance(kernelLauncher),
             Uri.file(''),
             kernelConnectionMetadata,
             launchTimeout,
-            'notebook'
+            'notebook',
+            requestCreator
         );
     });
 
