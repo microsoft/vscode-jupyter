@@ -1,4 +1,3 @@
-# Maintained by @rzhao271
 path_classifiers:
   test:
     # Classify all files in the top-level directory src/test as test code.
