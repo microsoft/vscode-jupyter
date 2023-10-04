@@ -24,6 +24,10 @@ parameters:
     displayName: 🚀 Publish Extension
     type: boolean
     default: false
+  - name: generateNotice
+    displayName: Generate Notice
+    type: boolean
+    default: true
 
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
