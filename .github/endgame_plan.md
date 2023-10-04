@@ -13,7 +13,6 @@
   * Note: The release branch should not be changed after this step (not including hotfixes)
 - [ ] Disable [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283). (`...` menu > Settings > Processing of new requests: Disabled)
 - [ ] Create a PR to `main` with the following changes... (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
-  - [ ] Merge the changes from release (ThirdPartyNotices) into `main` branch
   - [ ] At this point, the vscode engine version should also be the same as in the release branch- will be bumped when the next release happens
   - [ ] Bump the version number in `main` to the next monthly ("YYYY.M.100") version number (e.g. if the latest is `2022.2.100`, bump it to `2022.3.100`).
     - [ ] Run `npm install` to update `package-lock.json`
