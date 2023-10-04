@@ -86,8 +86,7 @@ function getPlugins(bundle) {
             );
             break;
         }
-        case 'ipywidgetsKernel':
-        case 'ipywidgetsRenderer': {
+        case 'ipywidgetsKernel': {
             plugins.push(definePlugin);
             break;
         }
