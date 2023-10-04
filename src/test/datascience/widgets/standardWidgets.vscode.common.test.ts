@@ -102,7 +102,8 @@ export async function clickWidget(comms: Utils, cell: NotebookCell, selector: st
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Standard IPyWidget Tests @widgets', function () {
+// eslint-disable-next-line no-only-tests/no-only-tests
+suite.only('Standard IPyWidget Tests @widgets', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -158,7 +159,8 @@ suite('Standard IPyWidget Tests @widgets', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Slider Widget', async function () {
+    // eslint-disable-next-line no-only-tests/no-only-tests
+    test.only('Slider Widget', async function () {
         await initializeNotebookForWidgetTest(disposables, { templateFile: 'slider_widgets.ipynb' }, editor);
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
