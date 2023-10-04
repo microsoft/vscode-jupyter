@@ -24,9 +24,10 @@ import { ContributedKernelFinderKind } from '../../internalTypes';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { IJupyterUriProvider, JupyterServerCollection, JupyterServerProvider } from '../../../api';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationTokenSource, ExtensionMode } from 'vscode';
 import { traceError } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from './types';
+import { isCI } from '../../../platform/common/constants';
 
 @injectable()
 export class RemoteKernelFinderController implements IRemoteKernelFinderController, IExtensionSyncActivationService {
@@ -140,9 +141,15 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
                 };
                 const serverId = generateIdFromRemoteProvider(serverProviderHandle);
                 currentServerIds.add(serverId);
-                // If this sever was never used in the past, then no need to create a finder for this.
-                if (this.mappedServers.has(serverId) || !usedServers.has(serverId)) {
+                if (this.mappedServers.has(serverId)) {
                     return;
+                }
+                // If this sever was never used in the past, then no need to create a finder for this.
+                if (!usedServers.has(serverId)) {
+                    // On CI or when testing, we need to create the finder, so that the kernels can be added as controllers.
+                    if (!isCI && this.context.extensionMode !== ExtensionMode.Test) {
+                        return;
+                    }
                 }
                 this.mappedServers.add(serverId);
                 this.createRemoteKernelFinder(serverProviderHandle, server.label);
