@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/python:3
 ENV NVM_DIR /usr/local/nvm
 RUN mkdir -p $NVM_DIR
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-ENV NODE_VERSION 16.17.1
+ENV NODE_VERSION 16.14.2
 ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
 ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 
