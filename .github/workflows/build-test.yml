@@ -390,8 +390,11 @@ jobs:
             sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
         # This step is slow.
+    #   - name: npm ci
+    #     uses: ./.github/actions/npm-ci
+
       - name: npm ci
-        uses: ./.github/actions/npm-ci
+        run: npm ci --ignore-scripts
 
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -405,37 +408,37 @@ jobs:
           CI_JUPYTER_FAST_COMPILATION: 'true'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
-      # Used by tests for non-python kernels.
-      # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
-      - name: Install Julia
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
-        uses: julia-actions/setup-julia@v1
-        with:
-          version: ${{env.JULIA_VERSION}}
+    #   # Used by tests for non-python kernels.
+    #   # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
+    #   - name: Install Julia
+    #     if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+    #     uses: julia-actions/setup-julia@v1
+    #     with:
+    #       version: ${{env.JULIA_VERSION}}
 
-      - name: Install Julia Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
-        shell: bash
-        run: |
-          julia -e '
-            using Pkg
-            Pkg.add("IJulia")'
+    #   - name: Install Julia Kernel
+    #     if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+    #     shell: bash
+    #     run: |
+    #       julia -e '
+    #         using Pkg
+    #         Pkg.add("IJulia")'
 
-      - name: Install Dot.net
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
-        uses: actions/setup-dotnet@v3.2.0
-        with:
-          dotnet-version: ${{env.DOTNET_VERSION}}
+    #   - name: Install Dot.net
+    #     if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+    #     uses: actions/setup-dotnet@v3.2.0
+    #     with:
+    #       dotnet-version: ${{env.DOTNET_VERSION}}
 
-      - name: Install .NET Interactive
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
-        shell: bash -l {0}
-        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+    #   - name: Install .NET Interactive
+    #     if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+    #     shell: bash -l {0}
+    #     run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
-      - name: Install .NET Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
-        shell: bash -l {0}
-        run: dotnet interactive jupyter install
+    #   - name: Install .NET Kernel
+    #     if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+    #     shell: bash -l {0}
+    #     run: dotnet interactive jupyter install
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
