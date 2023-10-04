@@ -162,32 +162,6 @@
             }
         },
         {
-            "name": "Perf Tests (*.perf.test.ts)",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "${workspaceFolder}/src/test/testMultiRootWkspc/perfTests",
-                "--enable-proposed-api",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
-            ],
-            "env": {
-                "CI_PYTHON_PATH": "<Python Path>",
-                "VSC_JUPYTER_PERF_TEST": "1",
-                "TEST_FILES_SUFFIX": "notebookCellExecution.perf.test",
-                "VSC_JUPYTER_TEST_TIMEOUT": "60000"
-            },
-            "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"],
-            "presentation": {
-                "group": "2_tests",
-                "order": 12
-            }
-        },
-        {
             "name": "Jedi LSP tests",
             "type": "extensionHost",
             "request": "launch",
@@ -359,18 +333,6 @@
             "presentation": {
                 "group": "3_misc",
                 "order": 2
-            }
-        },
-        {
-            "name": "Python: Current File with iPython",
-            "type": "python",
-            "request": "launch",
-            "module": "IPython",
-            "console": "integratedTerminal",
-            "args": ["${file}"], // Additional args should be prefixed with a '--' first.
-            "presentation": {
-                "group": "3_misc",
-                "order": 3
             }
         },
         {
