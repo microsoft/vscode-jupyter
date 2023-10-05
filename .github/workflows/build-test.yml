@@ -333,6 +333,12 @@ jobs:
             tags: '@widgets'
             os: ubuntu-latest
             ipywidgetsVersion: '8'
+          - jupyterConnection: web
+            python: python
+            pythonVersion: '3.10'
+            tags: '@widgets'
+            os: ubuntu-latest
+            ipywidgetsVersion: '8'
         # Conda
           - jupyterConnection: raw
             python: conda
