@@ -27,7 +27,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: 16.17.1
+  NODE_VERSION: 16.14.2
   NPM_VERSION: 8.15.1
   PYTHON_VERSION: 3.8
   JULIA_VERSION: 1.5.2
@@ -333,6 +333,12 @@ jobs:
             tags: '@widgets'
             os: ubuntu-latest
             ipywidgetsVersion: '8'
+          - jupyterConnection: remote
+            python: python
+            pythonVersion: '3.10'
+            tags: '@widgets'
+            os: ubuntu-latest
+            ipywidgetsVersion: '8'
         # Conda
           - jupyterConnection: raw
             python: conda
@@ -557,6 +563,7 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
           python ./pythonFiles/install_debugpy.py
+          python -m pip install ipywidgets -U
           python -m ipykernel install --user
 
       - name: Install Python Libs for conda
@@ -585,6 +592,13 @@ jobs:
             python -m jupyter nbextension uninstall --sys-prefix --py ipympl
             sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
+      - name: Pip List
+        if: matrix.python != 'noPython'
+        run: |
+          python --version
+          python -c "import sys;print(sys.executable)"
+          python -m pip list
+
         # This step is slow.
       - name: npm ci
         uses: ./.github/actions/npm-ci
@@ -604,13 +618,13 @@ jobs:
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Julia
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         uses: julia-actions/setup-julia@v1
         with:
           version: ${{env.JULIA_VERSION}}
 
       - name: Install Julia Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         shell: bash
         run: |
           julia -e '
@@ -618,28 +632,28 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Install Dot.net
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         uses: actions/setup-dotnet@v3.2.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 
       - name: Install .NET Interactive
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
       - name: Install .NET Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         shell: bash -l {0}
         run: dotnet interactive jupyter install
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
 
       - name: Create Virtual Env for Tests (ipywidgets 8)
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         with:
           IPyWidgetVersion: '8'
 

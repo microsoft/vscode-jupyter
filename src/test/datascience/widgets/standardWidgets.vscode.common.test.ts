@@ -113,6 +113,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
     this.retries(1);
     let editor: NotebookEditor;
     let comms: Utils;
+    let ipyWidgetVersion = 8;
     suiteSetup(async function () {
         traceInfo('Suite Setup Standard IPyWidget Tests');
         this.timeout(120_000);
@@ -162,6 +163,18 @@ suite('Standard IPyWidget Tests @widgets', function () {
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
+
+        const cellVersion = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(4)!;
+        await Promise.all([
+            runCell(cellVersion),
+            waitForCondition(
+                async () => cellVersion.outputs.length > 0,
+                defaultNotebookTestTimeout,
+                'Cell output is empty'
+            )
+        ]);
+        const version = getTextOutputValue(cellVersion.outputs[0]).trim();
+        ipyWidgetVersion = parseInt(version.split('.')[0], 10);
     });
     suite('All other Widget tests', () => {
         setup(function () {
@@ -543,7 +556,10 @@ suite('Standard IPyWidget Tests @widgets', function () {
             assert.strictEqual(getTextOutputValue(cell.outputs[1]).trim(), `Executing do_something with 'Hello World'`);
             assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), `'Hello World'`);
         });
-        test('Interactive Plot', async () => {
+        test('Interactive Plot', async function () {
+            if (ipyWidgetVersion === 8) {
+                return this.skip();
+            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {

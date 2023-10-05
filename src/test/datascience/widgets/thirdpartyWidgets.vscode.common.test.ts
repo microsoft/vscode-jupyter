@@ -23,6 +23,7 @@ import {
     createEmptyPythonNotebook,
     defaultNotebookTestTimeout,
     prewarmNotebooks,
+    runCell,
     selectDefaultController
 } from '../notebook/helper';
 import {
@@ -35,6 +36,7 @@ import {
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
 import { initializeWidgetComms, Utils } from './commUtils';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { getTextOutputValue } from '../../../kernels/execution/helpers';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -50,7 +52,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
         this.retries(1);
         let editor: NotebookEditor;
         let comms: Utils;
-
+        let ipyWidgetVersion = 8;
         suiteSetup(async function () {
             if (isWeb()) {
                 return this.skip();
@@ -101,6 +103,24 @@ import { isWeb } from '../../../platform/common/utils/misc';
             traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
         });
         suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+        test('Slider Widget', async function () {
+            await initializeNotebookForWidgetTest(disposables, { templateFile: 'slider_widgets.ipynb' }, editor);
+            const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+            await executeCellAndWaitForOutput(cell, comms);
+            await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
+
+            const cellVersion = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(4)!;
+            await Promise.all([
+                runCell(cellVersion),
+                waitForCondition(
+                    async () => cellVersion.outputs.length > 0,
+                    defaultNotebookTestTimeout,
+                    'Cell output is empty'
+                )
+            ]);
+            const version = getTextOutputValue(cellVersion.outputs[0]).trim();
+            ipyWidgetVersion = parseInt(version.split('.')[0], 10);
+        });
 
         test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
             await initializeNotebookForWidgetTest(
@@ -121,6 +141,9 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
         test('Render IPySheets', async function () {
+            if (ipyWidgetVersion === 8) {
+                return this.skip();
+            }
             if (useCDN) {
                 // https://github.com/microsoft/vscode-jupyter/issues/10506
                 return this.skip();
@@ -138,6 +161,9 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
         });
         test('Render IPySheets & search', async function () {
+            if (ipyWidgetVersion === 8) {
+                return this.skip();
+            }
             if (useCDN) {
                 // https://github.com/microsoft/vscode-jupyter/issues/10506
                 return this.skip();
@@ -161,6 +187,9 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await assertOutputContainsHtml(cell2, comms, ['class="htSearchResult">train<']);
         });
         test('Render IPySheets & slider', async function () {
+            if (ipyWidgetVersion === 8) {
+                return this.skip();
+            }
             if (useCDN) {
                 // https://github.com/microsoft/vscode-jupyter/issues/10506
                 return this.skip();

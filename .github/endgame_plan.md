@@ -23,6 +23,7 @@
   - Enable `Publish Extension`, you do not need an approval to build the VSIX.
   - DO NOT ask for approval for the extension publish step, this step should only be done after sanity testing is done and ready to release.
 - [ ] Sanity test release candidate VSIX against VS Code RC
+  Tip: You can use the dev containers in the this repo for testing against linux (just open the repo and use thd command `Dev Containers: Reopen in Container`)
   - [ ] Windows
     - [ ] win32-x64
     - [ ] win32-ia32
@@ -55,8 +56,24 @@
 ## As needed
 - [ ] Determine if a hotfix is needed
   - Use the same `release/release-YYYY.MM` branch
-  - [ ] Ensure the version in package.json is updated as follows:
-    * If released version is `YYYY.MM.100`, then hot fix will be `YYYY.MM.110`
-    * If released version is `YYYY.MM.110`, then hot fix will be `YYYY.MM.120`
-  - [ ] Ensure that another tag was created for the new version's commit.
-    * If a tag was not pushed, investigate in the  `Publish` Stage of the stable pipeline linked above, and manually add one using: `git tag -a YYYY.MM -m YYYY.MM -s -f`
+- [ ] Ensure the version in package.json is updated as follows:
+  * If released version is `YYYY.MM.100`, then hot fix will be `YYYY.MM.110`
+  * If released version is `YYYY.MM.110`, then hot fix will be `YYYY.MM.120`
+- [ ] Verify all candidate issues
+- [ ] Sanity test release candidate VSIX against VS Code RC  
+  Tip: You can use the dev containers in the this repo for testing against linux (just open the repo and use thd command `Dev Containers: Reopen in Container`)
+  - [ ] Windows
+    - [ ] win32-x64
+    - [ ] win32-ia32
+    - [ ] win32-arm64
+  - [ ] macOS
+    - [ ] darwin-x64
+    - [ ] darwin-arm64
+  - [ ] Linux
+    - [ ] linux-arm64
+    - [ ] linux-armhf
+    - [ ] linux-x64
+    - [ ] alpine-arm64
+    - [ ] alpine-x64
+- [ ] Ensure that another tag was created for the new version's commit.
+  * If a tag was not pushed, investigate in the  `Publish` Stage of the stable pipeline linked above, and manually add one using: `git tag -a YYYY.MM -m YYYY.MM -s -f`
