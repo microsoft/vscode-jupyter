@@ -333,7 +333,7 @@ jobs:
             tags: '@widgets'
             os: ubuntu-latest
             ipywidgetsVersion: '8'
-          - jupyterConnection: web
+          - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
             tags: '@widgets'
