@@ -421,13 +421,6 @@ jobs:
         run: python -m pip install -U pip
         if: matrix.python != 'conda' && matrix.python != 'noPython'
 
-      # Required for chromimum & zmq
-      - name: Install dependencies for native modules
-        if: matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
-        run: |
-          sudo apt-get update
-          sudo apt-get install libpango1.0-dev libgif-dev
-
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
         with:
@@ -602,12 +595,19 @@ jobs:
 
         # This step is slow.
 
+      # Run npm install (we need chrome to get downloaded)
+      - name: npm ci
+        if: matrix.jupyterConnection == 'web'
+        uses: ./.github/actions/npm-ci
+
       # This is faster than running `npm ci`, we do not want to build zmq, etc.
       # Let that happen in other jobs, this job needs to be super fast for linting
       - name: npm ci
+        if: matrix.jupyterConnection != 'web'
         run: npm ci --ignore-scripts
 
       - name: npm run postinstall
+        if: matrix.jupyterConnection != 'web'
         run: npm run postinstall
 
       - name: Install screen capture dependencies
