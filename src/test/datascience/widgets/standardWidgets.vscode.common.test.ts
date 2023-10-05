@@ -158,21 +158,23 @@ suite('Standard IPyWidget Tests @widgets', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Get IPyWidget Version', async function () {
-        await initializeNotebookForWidgetTest(disposables, { templateFile: 'ipywidgets_version.ipynb' }, editor);
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
-        await Promise.all([
-            runCell(cell),
-            waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'Cell output is empty')
-        ]);
-        const version = getTextOutputValue(cell.outputs[0]).trim();
-        ipyWidgetVersion = parseInt(version.split('.')[0], 10);
-    });
     test('Slider Widget', async function () {
         await initializeNotebookForWidgetTest(disposables, { templateFile: 'slider_widgets.ipynb' }, editor);
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
+
+        const cellVersion = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(4)!;
+        await Promise.all([
+            runCell(cellVersion),
+            waitForCondition(
+                async () => cellVersion.outputs.length > 0,
+                defaultNotebookTestTimeout,
+                'Cell output is empty'
+            )
+        ]);
+        const version = getTextOutputValue(cellVersion.outputs[0]).trim();
+        ipyWidgetVersion = parseInt(version.split('.')[0], 10);
     });
     suite('All other Widget tests', () => {
         setup(function () {
