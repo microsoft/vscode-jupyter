@@ -51,9 +51,9 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private closed = false;
     /**
      * Used in node_modules/@jupyterlab/services/lib/kernel/default.js
-     * This needs to be an empty string.
+     * For raw sockets lets always not use any protocol.
      */
-    public readonly protocol = KernelMessage.supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg;
+    public readonly protocol = '';
 
     constructor(
         private connection: IKernelConnection,
