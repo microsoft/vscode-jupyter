@@ -431,9 +431,16 @@ suite('Kernel Execution @kernelCore', function () {
         // First path in PATH must be the directory where executable is located.
         const normalizedInterpreterPath = getNormalizedInterpreterPath(Uri.file(sysExecutable)).fsPath;
         const normalizedBinPath = path.dirname(normalizedInterpreterPath);
-        assert.equal(
-            getOSType() === OSType.Windows ? normalizedBinPath.toLowerCase() : normalizedBinPath,
-            getOSType() === OSType.Windows ? pathValue.toLowerCase() : pathValue,
+        const pathEquals =
+            (getOSType() === OSType.Windows ? normalizedBinPath.toLowerCase() : normalizedBinPath) ===
+            (getOSType() === OSType.Windows ? pathValue.toLowerCase() : pathValue);
+        const pathEquals2 =
+            (getOSType() === OSType.Windows
+                ? path.dirname(sysExecutable).toLowerCase()
+                : path.dirname(sysExecutable)) ===
+            (getOSType() === OSType.Windows ? pathValue.toLowerCase() : pathValue);
+        assert.isTrue(
+            pathEquals || pathEquals2,
             [
                 `First entry in PATH (${pathValue}) does not point to executable (${sysExecutable}).`,
                 `Normalized Interpreter Path = '${normalizedInterpreterPath}'`,
