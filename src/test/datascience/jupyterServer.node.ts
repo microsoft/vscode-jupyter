@@ -257,6 +257,7 @@ export class JupyterServer {
                     args.push(`--certfile=${pemFile}`);
                     args.push(`--keyfile=${keyFile}`);
                 }
+                console.log(`Starting Jupyter in ${getPythonPath()} with ${args.join(' ')}`);
                 const result = this.execObservable(getPythonPath(), args, {
                     cwd: testFolder,
                     detached
