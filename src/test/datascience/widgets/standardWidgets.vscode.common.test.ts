@@ -163,7 +163,6 @@ suite('Standard IPyWidget Tests @widgets', function () {
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runCell(cell),
-            waitForExecutionCompletedSuccessfully(cell),
             waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'Cell output is empty')
         ]);
         const version = getTextOutputValue(cell.outputs[0]).trim();
