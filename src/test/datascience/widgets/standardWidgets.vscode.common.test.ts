@@ -161,7 +161,11 @@ suite('Standard IPyWidget Tests @widgets', function () {
     test('Get IPyWidget Version', async function () {
         await initializeNotebookForWidgetTest(disposables, { templateFile: 'ipywidgets_version.ipynb' }, editor);
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
-        await executeCellAndWaitForOutput(cell, comms);
+        await Promise.all([
+            runCell(cell),
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'Cell output is empty')
+        ]);
         const version = getTextOutputValue(cell.outputs[0]).trim();
         ipyWidgetVersion = parseInt(version.split('.')[0], 10);
     });
