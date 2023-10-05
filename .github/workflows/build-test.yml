@@ -557,6 +557,7 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
           python ./pythonFiles/install_debugpy.py
+          python -m pip install ipywidgets -U
           python -m ipykernel install --user
 
       - name: Install Python Libs for conda
@@ -585,7 +586,7 @@ jobs:
             python -m jupyter nbextension uninstall --sys-prefix --py ipympl
             sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
-      - name: Install Python Libs (IPyWidget 8)
+      - name: Pip List
         if: matrix.python != 'noPython'
         run: |
           python --version
