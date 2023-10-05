@@ -585,6 +585,13 @@ jobs:
             python -m jupyter nbextension uninstall --sys-prefix --py ipympl
             sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
+      - name: Install Python Libs (IPyWidget 8)
+        if: matrix.python != 'noPython'
+        run: |
+          python --version
+          python -c "import sys;print(sys.executable)"
+          python -m pip list
+
         # This step is slow.
       - name: npm ci
         uses: ./.github/actions/npm-ci
