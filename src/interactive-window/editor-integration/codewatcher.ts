@@ -255,11 +255,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureUsageTelemetry(Telemetry.RunSelectionOrLine)
-    public async runSelectionOrLine(
-        activeEditor: TextEditor | undefined,
-        text?: string | Uri,
-        normalize?: boolean | undefined
-    ) {
+    public async runSelectionOrLine(activeEditor: TextEditor | undefined, text?: string | Uri) {
         if (this.document && activeEditor && urlPath.isEqual(activeEditor.document.uri, this.document.uri)) {
             const iw = await this.getActiveInteractiveWindow();
             let codeToExecute: string | undefined;
@@ -273,6 +269,7 @@ export class CodeWatcher implements ICodeWatcher {
                 return;
             }
 
+            const normalize = this.configService.getSettings(activeEditor.document.uri).normalizeSelectionForInteractiveWindow;
             const normalizedCode = normalize
                 ? await this.executionHelper.normalizeLines(codeToExecute!)
                 : codeToExecute;
