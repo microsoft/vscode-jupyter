@@ -35,6 +35,7 @@ import {
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
 import { initializeWidgetComms, Utils } from './commUtils';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { getTextOutputValue } from '../../../kernels/execution/helpers';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -50,7 +51,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
         this.retries(1);
         let editor: NotebookEditor;
         let comms: Utils;
-
+        let ipyWidgetVersion = 8;
         suiteSetup(async function () {
             if (isWeb()) {
                 return this.skip();
@@ -101,6 +102,13 @@ import { isWeb } from '../../../platform/common/utils/misc';
             traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
         });
         suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+        test('Get IPyWidget Version', async function () {
+            await initializeNotebookForWidgetTest(disposables, { templateFile: 'ipywidgets_version.ipynb' }, editor);
+            const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+            await executeCellAndWaitForOutput(cell, comms);
+            const version = getTextOutputValue(cell.outputs[0]).trim();
+            ipyWidgetVersion = parseInt(version.split('.')[0], 10);
+        });
 
         test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
             await initializeNotebookForWidgetTest(
@@ -121,6 +129,9 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
         test('Render IPySheets', async function () {
+            if (ipyWidgetVersion === 8) {
+                return this.skip();
+            }
             if (useCDN) {
                 // https://github.com/microsoft/vscode-jupyter/issues/10506
                 return this.skip();
@@ -138,6 +149,9 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
         });
         test('Render IPySheets & search', async function () {
+            if (ipyWidgetVersion === 8) {
+                return this.skip();
+            }
             if (useCDN) {
                 // https://github.com/microsoft/vscode-jupyter/issues/10506
                 return this.skip();
@@ -161,6 +175,9 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await assertOutputContainsHtml(cell2, comms, ['class="htSearchResult">train<']);
         });
         test('Render IPySheets & slider', async function () {
+            if (ipyWidgetVersion === 8) {
+                return this.skip();
+            }
             if (useCDN) {
                 // https://github.com/microsoft/vscode-jupyter/issues/10506
                 return this.skip();
