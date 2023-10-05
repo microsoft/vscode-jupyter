@@ -57,8 +57,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
     constructor(
         private connection: IKernelConnection,
-        private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
-        private deserialize: (data: ArrayBuffer) => KernelMessage.IMessage
+        private serialize: (msg: KernelMessage.IMessage, protocol?: string | undefined) => string | ArrayBuffer,
+        private deserialize: (data: ArrayBuffer, protocol?: string | undefined) => KernelMessage.IMessage
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
@@ -110,7 +110,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     public sendToRealKernel(data: any, _callback: any): void {
         // If from ipywidgets, this will be serialized already, so turn it back into a message so
         // we can add the special hash to it.
-        const message = typeof data === 'string' ? JSON.parse(data) : this.deserialize(data);
+        const message = typeof data === 'string' ? JSON.parse(data) : this.deserialize(data, this.protocol);
         // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
         // As a result, we don't get any notification that messages were sent (on the anymessage signal).
         // To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
@@ -248,7 +248,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             this.msgChain = this.msgChain
                 .then(() => {
                     // Hooks expect serialized data as this normally comes from a WebSocket
-                    const serialized = this.serialize(message);
+                    const serialized = this.serialize(message, this.protocol);
                     return Promise.all(this.receiveHooks.map((p) => p(serialized)));
                 })
                 .then(() => this.fireOnMessage(message, channel));
@@ -276,7 +276,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         // Then send through our hooks, and then post to the real zmq socket
         if (!bypassHooking && this.sendHooks.length) {
             // Separate encoding for ipywidgets. It expects the same result a WebSocket would generate.
-            const hookData = this.serialize(msg);
+            const hookData = this.serialize(msg, this.protocol);
 
             this.sendChain = this.sendChain
                 .then(() => Promise.all(this.sendHooks.map((s) => s(hookData, noop))))
