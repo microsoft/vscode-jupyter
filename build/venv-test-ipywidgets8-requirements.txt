@@ -12,8 +12,8 @@ pythreejs
 ipywidgets
 ipysheet==0.5.0
 ipyvolume
-beakerx
-beakerx_kernel_java
+# beakerx This forces ipywidtets 7
+# beakerx_kernel_java This forces ipywidtets 7
 py4j
 bqplot
 K3D
