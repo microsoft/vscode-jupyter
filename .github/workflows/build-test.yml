@@ -610,13 +610,13 @@ jobs:
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Julia
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web'
         uses: julia-actions/setup-julia@v1
         with:
           version: ${{env.JULIA_VERSION}}
 
       - name: Install Julia Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web'
         shell: bash
         run: |
           julia -e '
@@ -624,28 +624,28 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Install Dot.net
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web'
         uses: actions/setup-dotnet@v3.2.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 
       - name: Install .NET Interactive
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web'
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
       - name: Install .NET Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web'
         shell: bash -l {0}
         run: dotnet interactive jupyter install
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web'
 
       - name: Create Virtual Env for Tests (ipywidgets 8)
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web'
         with:
           IPyWidgetVersion: '8'
 
