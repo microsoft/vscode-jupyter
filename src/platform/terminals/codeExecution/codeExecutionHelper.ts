@@ -61,7 +61,7 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
         } else {
             code = this.getMultiLineSelectionText(textEditor);
         }
-        return this.dedentCode(code);
+        return this.dedentCode(code.trimEnd());
     }
 
     public async saveFileIfDirty(file: Uri): Promise<void> {
@@ -79,8 +79,9 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
             return lines
                 .map((line) => {
                     if (line.startsWith(leadingSpaces)) {
-                        line.replace(leadingSpaces, '');
+                        return line.replace(leadingSpaces, '');
                     }
+                    return line;
                 })
                 .join('\n');
         }

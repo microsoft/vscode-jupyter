@@ -22,15 +22,38 @@ const inputText = `print(1)
 
 if (true):
     print(2)
-    print(3)`;
+    print(3)
+`;
 
 suite('Normalize selected text for execution', () => {
     const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
 
-    test('getCodeExecutionCommands should return correct commands for Python', () => {
+    test('Normalize first line including newline', () => {
         const editor = initializeMockTextEditor(inputText, new Selection(0, 0, 1, 0));
         const helper = new CodeExecutionHelperBase(serviceContainer.object);
         const text = helper.getSelectedTextToExecute(editor);
-        assert.equal(text, 'print(1)');
+        assert.equal('print(1)', text);
     });
+
+    test('Normalize several lines', () => {
+        const editor = initializeMockTextEditor(inputText, new Selection(0, 0, 5, 0));
+        const helper = new CodeExecutionHelperBase(serviceContainer.object);
+        const text = helper.getSelectedTextToExecute(editor);
+        assert.equal(inputText.trimEnd(), text);
+    });
+
+    test('Normalize indented lines', () => {
+        const editor = initializeMockTextEditor(inputText, new Selection(3, 0, 5, 0));
+        const helper = new CodeExecutionHelperBase(serviceContainer.object);
+        const text = helper.getSelectedTextToExecute(editor);
+        assert.equal('print(2)\nprint(3)', text);
+    });
+
+    test('Normalize indented lines but first line partially selected', () => {
+        const editor = initializeMockTextEditor(inputText, new Selection(3, 3, 5, 0));
+        const helper = new CodeExecutionHelperBase(serviceContainer.object);
+        const text = helper.getSelectedTextToExecute(editor);
+        assert.equal('print(2)\nprint(3)', text);
+    });
+
 });
