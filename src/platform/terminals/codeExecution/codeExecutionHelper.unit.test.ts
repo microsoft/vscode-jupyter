@@ -56,4 +56,17 @@ suite('Normalize selected text for execution', () => {
         assert.equal('print(2)\nprint(3)', text);
     });
 
+    test('Normalize single indented line', () => {
+        const editor = initializeMockTextEditor(inputText, new Selection(3, 4, 3, 12));
+        const helper = new CodeExecutionHelperBase(serviceContainer.object);
+        const text = helper.getSelectedTextToExecute(editor);
+        assert.equal('print(2)', text);
+    });
+
+    test('Normalize indented line including leading newline', () => {
+        const editor = initializeMockTextEditor(inputText, new Selection(3, 12, 4, 12));
+        const helper = new CodeExecutionHelperBase(serviceContainer.object);
+        const text = helper.getSelectedTextToExecute(editor);
+        assert.equal('\nprint(3)', text);
+    });
 });
