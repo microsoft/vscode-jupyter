@@ -23,9 +23,11 @@ const inputText = `print(1)
 if (true):
     print(2)
     print(3)
-`;
+    print('''a multiline
+    string''')
+    `;
 
-suite('Normalize selected text for execution', () => {
+suite.only('Normalize selected text for execution', () => {
     const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
 
     test('Normalize first line including newline', () => {
@@ -36,7 +38,7 @@ suite('Normalize selected text for execution', () => {
     });
 
     test('Normalize several lines', () => {
-        const editor = initializeMockTextEditor(inputText, new Selection(0, 0, 5, 0));
+        const editor = initializeMockTextEditor(inputText, new Selection(0, 0, 7, 0));
         const helper = new CodeExecutionHelperBase(serviceContainer.object);
         const text = helper.getSelectedTextToExecute(editor);
         assert.equal(inputText.trimEnd(), text);
@@ -68,5 +70,12 @@ suite('Normalize selected text for execution', () => {
         const helper = new CodeExecutionHelperBase(serviceContainer.object);
         const text = helper.getSelectedTextToExecute(editor);
         assert.equal('\nprint(3)', text);
+    });
+
+    test('Normalize a multi-line string', () => {
+        const editor = initializeMockTextEditor(inputText, new Selection(5, 0, 7, 0));
+        const helper = new CodeExecutionHelperBase(serviceContainer.object);
+        const text = helper.getSelectedTextToExecute(editor);
+        assert.equal("print('''a multiline\nstring''')", text);
     });
 });
