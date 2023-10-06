@@ -19,15 +19,15 @@
             }
         },
         {
-            "label": "Compile Web Views",
+            "label": "Compile Viewers",
             "type": "npm",
-            "script": "compile-webviews-watch",
+            "script": "compile-viewers-watch",
             "isBackground": true,
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": ["$ts-webpack-watch"]
+            "problemMatcher": ["$esbuild-watch"]
         },
         {
             "label": "Compile Web Extension",

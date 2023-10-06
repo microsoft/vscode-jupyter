@@ -325,6 +325,22 @@ function ensureOrigNBFormatIsOptional() {
         fs.writeFileSync(filePath, source.replace(stringToReplace, 'orig_nbformat?: number;'));
     }
 }
+
+function commentOutInvalidExport() {
+    // Others have run into the same problem https://github.com/uber/baseweb/issues/4129
+    const stringToReplace = 'import { bpfrpt_proptype_WindowScroller } from "../WindowScroller.js";';
+    const filePath = path.join(
+        __dirname,
+        '..',
+        '..',
+        'node_modules/react-virtualized/dist/es/WindowScroller/utils/onScroll.js'
+    );
+    const source = fs.readFileSync(filePath, 'utf8');
+    if (source.includes(stringToReplace)) {
+        fs.writeFileSync(filePath, source.replace(stringToReplace, ''));
+    }
+}
+
 fixUIFabricForTS49();
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
@@ -336,6 +352,7 @@ fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
 fixUiFabricCompilationIssues();
 ensureOrigNBFormatIsOptional();
+commentOutInvalidExport();
 downloadZmqBinaries()
     .then(() => process.exit(0))
     .catch((ex) => {

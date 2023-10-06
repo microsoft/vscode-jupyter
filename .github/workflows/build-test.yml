@@ -137,10 +137,16 @@ jobs:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
+      - name: Cache the out/ directory
+        uses: actions/cache@v3
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
       # This is faster than running `npm ci`, we do not want to build zmq, etc.
       # Let that happen in other jobs, this job needs to be fast
       - name: npm ci
-        run: npm ci --ignore-scripts
+        run: npm ci --ignore-scripts --prefer-offline --no-audit
 
       - name: npm run postinstall
         run: npm run postinstall
@@ -171,12 +177,6 @@ jobs:
 
       - name: Run gulp prePublishNonBundle
         run: npm run prePublishNonBundle
-
-      - name: Cache the out/ directory
-        uses: actions/cache@v3
-        with:
-          path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Check dependencies
         run: npm run checkDependencies
@@ -244,7 +244,7 @@ jobs:
       # This is faster than running `npm ci`, we do not want to build zmq, etc.
       # Let that happen in other jobs, this job needs to be fast
       - name: npm ci
-        run: npm ci --ignore-scripts
+        run: npm ci --ignore-scripts --prefer-offline --no-audit
 
       - name: npm run postinstall
         run: npm run postinstall
@@ -252,8 +252,6 @@ jobs:
       - name: Compile if not cached
         run: npm run prePublishNonBundle
         if: steps.out-cache.outputs.cache-hit != 'true'
-        env:
-          CI_JUPYTER_FAST_COMPILATION: 'true'
 
       - name: Run TypeScript unit tests
         id: test_unittests
@@ -604,7 +602,7 @@ jobs:
       # Let that happen in other jobs, this job needs to be super fast for linting
       - name: npm ci
         if: matrix.jupyterConnection != 'web'
-        run: npm ci --ignore-scripts
+        run: npm ci --ignore-scripts --prefer-offline --no-audit
 
       - name: npm run postinstall
         if: matrix.jupyterConnection != 'web'
@@ -615,23 +613,24 @@ jobs:
         run: sudo apt-get install imagemagick x11-xserver-utils
 
         # This step is slow.
-      - name: Compile if not cached
+      - name: Compile # if not cached
         run: npm run prePublishNonBundle
-        if: steps.out-cache.outputs.cache-hit != 'true'
+        # Do not cache for web tests, as the code generated in the compiled code is different for each matrix in web tests
+        # Rememeber the compiled code contains injected tests, and the injected tests are different for each matrix in the web
+        # if: steps.out-cache.outputs.cache-hit != 'true' && matrix.jupyterConnection != 'web'
         env:
-          CI_JUPYTER_FAST_COMPILATION: 'true'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Julia
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         uses: julia-actions/setup-julia@v1
         with:
           version: ${{env.JULIA_VERSION}}
 
       - name: Install Julia Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         shell: bash
         run: |
           julia -e '
@@ -639,28 +638,28 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Install Dot.net
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         uses: actions/setup-dotnet@v3.2.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 
       - name: Install .NET Interactive
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
       - name: Install .NET Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         shell: bash -l {0}
         run: dotnet interactive jupyter install
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
 
       - name: Create Virtual Env for Tests (ipywidgets 8)
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
         with:
           IPyWidgetVersion: '8'
 
@@ -921,8 +920,6 @@ jobs:
       - name: Compile if not cached
         run: npm run prePublishNonBundle
         if: steps.out-cache.outputs.cache-hit != 'true'
-        env:
-          CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
       # The name pattern is ${{env.COVERAGE_REPORTS}}-${{runner.os}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.

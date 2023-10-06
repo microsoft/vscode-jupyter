@@ -58,7 +58,7 @@ For incremental builds you can use the following commands depending on your need
 
 ```shell
 npm run compile
-npm run compile-webviews-watch # For Interactive Window, Plot Viewer, Data Frame Viewer, and Notebooks (not the one based on VS Code)
+npm run compile-viewers-watch # For Plot, Data Frame, Variable & IPyWidget Viewer
 ```
 
 Sometimes you will need to run `npm run clean` and even `rm -r out`.
