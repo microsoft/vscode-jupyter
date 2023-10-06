@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
-import { traceInfoIfCI } from '../platform/logging';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
 
@@ -134,12 +133,6 @@ export class KernelFinder implements IKernelFinder {
 
             kernels.push(...contributedKernels);
         }
-
-        traceInfoIfCI(
-            `list kernel specs ${kernels.length}: ${kernels
-                .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri}`)
-                .join('\n')}`
-        );
 
         return kernels;
     }

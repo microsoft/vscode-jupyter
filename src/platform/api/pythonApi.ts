@@ -555,9 +555,7 @@ export class InterpreterService implements IInterpreterService {
                 return;
             }
             const envPath = api.environments.getActiveEnvironmentPath(resource);
-            traceInfoIfCI(`Active Environment Path for ${getDisplayPath(resource)} is ${JSON.stringify(envPath)}`);
             const env = await api.environments.resolveEnvironment(envPath);
-            traceInfoIfCI(`Resolved Active Environment for ${getDisplayPath(resource)} is ${JSON.stringify(env)}`);
             return this.trackResolvedEnvironment(env);
         });
 
@@ -787,15 +785,6 @@ export class InterpreterService implements IInterpreterService {
                         try {
                             const env = await api.environments.resolveEnvironment(item);
                             const resolved = this.trackResolvedEnvironment(env);
-                            traceInfoIfCI(
-                                `Python environment for ${
-                                    item.id
-                                } is ${env?.id} from Python Extension API is ${JSON.stringify(
-                                    env
-                                )} and original env is ${JSON.stringify(item)} and translated is ${JSON.stringify(
-                                    resolved
-                                )}`
-                            );
                             if (resolved) {
                                 allInterpreters.push(resolved);
                             } else if (item.executable.uri && item.environment?.type !== EnvironmentType.Conda) {

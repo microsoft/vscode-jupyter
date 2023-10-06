@@ -6,14 +6,7 @@ import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Uri } from 'vscode';
-import {
-    traceInfo,
-    traceVerbose,
-    traceDecoratorError,
-    traceError,
-    traceWarning,
-    traceInfoIfCI
-} from '../../../platform/logging';
+import { traceInfo, traceVerbose, traceDecoratorError, traceError, traceWarning } from '../../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { Resource, ReadWrite, IDisplayOptions } from '../../../platform/common/types';
@@ -268,11 +261,6 @@ export class JupyterKernelService implements IJupyterKernelService {
                     `Updated kernel spec for ${kernelConnection.id} with environment variables for ${getDisplayPath(
                         uri
                     )}`
-                );
-                traceInfoIfCI(
-                    `Updated kernel spec for ${kernelConnection.id} with environment variables for ${getDisplayPath(
-                        uri
-                    )} with env variables ${JSON.stringify(specModel.env)}}`
                 );
 
                 if (cancelToken?.isCancellationRequested) {

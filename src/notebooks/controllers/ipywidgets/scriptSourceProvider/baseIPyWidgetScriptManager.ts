@@ -182,11 +182,6 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
                 }
                 traceWarning(message);
             }
-            traceInfoIfCI(
-                `Extracted require.config entry for ${widgetFolderName} from ${getDisplayPath(
-                    script
-                )} for ${baseUrl.toString()} is ${JSON.stringify(config)}`
-            );
             return config;
         } catch (ex) {
             traceError(
@@ -201,8 +196,6 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
             this.getWidgetEntryPoints(),
             this.getNbExtensionsParentPath()
         ]);
-        traceInfoIfCI(`Widget Entry points = ${JSON.stringify(entryPoints)}`);
-        traceInfoIfCI(`Widget baseUrl = ${baseUrl?.toString()}`);
         if (!baseUrl) {
             return;
         }
@@ -224,7 +217,6 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
                 )}`
             );
         }
-        traceInfoIfCI(`Widget config = ${JSON.stringify(config)}`);
         sendTelemetryEvent(
             Telemetry.DiscoverIPyWidgetNamesPerf,
             { duration: stopWatch.elapsedTime },
