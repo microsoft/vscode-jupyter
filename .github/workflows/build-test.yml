@@ -613,11 +613,11 @@ jobs:
         run: sudo apt-get install imagemagick x11-xserver-utils
 
         # This step is slow.
-      - name: Compile if not cached
+      - name: Compile # if not cached
         run: npm run prePublishNonBundle
         # Do not cache for web tests, as the code generated in the compiled code is different for each matrix in web tests
         # Rememeber the compiled code contains injected tests, and the injected tests are different for each matrix in the web
-        if: steps.out-cache.outputs.cache-hit != 'true' && matrix.jupyterConnection != 'web'
+        # if: steps.out-cache.outputs.cache-hit != 'true' && matrix.jupyterConnection != 'web'
         env:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
