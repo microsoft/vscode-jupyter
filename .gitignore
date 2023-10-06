@@ -62,3 +62,5 @@ l10n/
 # Compilation of less to css
 src/webviews/webview-side/interactive-common/variableExplorerGrid.css
 src/webviews/webview-side/interactive-common/variableExplorerGrid.css.map
+src/webviews/webview-side/react-common/seti/seti.css
+src/webviews/webview-side/react-common/seti/seti.css.map
