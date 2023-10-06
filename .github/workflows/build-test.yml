@@ -611,7 +611,6 @@ jobs:
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install imagemagick x11-xserver-utils
-e-${{hashFiles('src/**')}}-${{ matrix.tags }}
 
         # This step is slow.
       - name: Compile if not cached
