@@ -86,10 +86,7 @@ export class Extensions implements IExtensions {
                                             extensionId: matchingExt.id,
                                             result: 'WorkedOnlyInAsync'
                                         });
-                                    } else if (
-                                        syncId.extensionId === unknownExtensionId &&
-                                        syncId.extensionId === matchingExt.id
-                                    ) {
+                                    } else if (syncId.extensionId === matchingExt.id) {
                                         sendTelemetryEvent(Telemetry.ExtensionCallerIdentification, undefined, {
                                             extensionId: matchingExt.id,
                                             result: 'WorkedInBoth'
@@ -142,7 +139,8 @@ export class Extensions implements IExtensions {
                     const matchingExt = this.all.find(
                         (ext) =>
                             ext.id !== JVSC_EXTENSION_ID &&
-                            (frame.startsWith(ext.extensionUri.fsPath) || frame.startsWith(ext.extensionUri.path))
+                            (frame.toLowerCase().startsWith(ext.extensionUri.fsPath.toLowerCase()) ||
+                                frame.toLowerCase().startsWith(ext.extensionUri.path.toLowerCase()))
                     );
                     if (matchingExt) {
                         return { extensionId: matchingExt.id, displayName: matchingExt.packageJSON.displayName };
