@@ -327,6 +327,7 @@ function ensureOrigNBFormatIsOptional() {
 }
 
 function commentOutInvalidExport() {
+    // Others have run into the same problem https://github.com/uber/baseweb/issues/4129
     const stringToReplace = 'import { bpfrpt_proptype_WindowScroller } from "../WindowScroller.js";';
     const filePath = path.join(
         __dirname,
