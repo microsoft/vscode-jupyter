@@ -325,6 +325,21 @@ function ensureOrigNBFormatIsOptional() {
         fs.writeFileSync(filePath, source.replace(stringToReplace, 'orig_nbformat?: number;'));
     }
 }
+
+function commentOutInvalidExport() {
+    const stringToReplace = 'import { bpfrpt_proptype_WindowScroller } from "../WindowScroller.js";';
+    const filePath = path.join(
+        __dirname,
+        '..',
+        '..',
+        'node_modules/react-virtualized/dist/es/WindowScroller/WindowScroller.js'
+    );
+    const source = fs.readFileSync(filePath, 'utf8');
+    if (source.includes(stringToReplace)) {
+        fs.writeFileSync(filePath, source.replace(stringToReplace, ''));
+    }
+}
+
 fixUIFabricForTS49();
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
@@ -336,6 +351,7 @@ fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
 fixUiFabricCompilationIssues();
 ensureOrigNBFormatIsOptional();
+commentOutInvalidExport();
 downloadZmqBinaries()
     .then(() => process.exit(0))
     .catch((ex) => {
