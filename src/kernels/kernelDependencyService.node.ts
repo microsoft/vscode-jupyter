@@ -278,7 +278,6 @@ export class KernelDependencyService implements IKernelDependencyService {
                     pythonEnvType: interpreter.envType
                 });
             }
-            traceInfoIfCI(`Prompting user for install (this.isCodeSpace=${this.isCodeSpace}).`);
             let selection;
             do {
                 selection =
