@@ -615,9 +615,9 @@ jobs:
         # This step is slow.
       - name: Compile if not cached
         run: npm run prePublishNonBundle
-        # Do not cache, as the compilation changes based on the test matrix
-        # As a result the output changes, meaning the cache might not be valid.
-        # if: steps.out-cache.outputs.cache-hit != 'true'
+        # Do not cache for web tests, as the code generated in the compiled code is different for each matrix in web tests
+        # Rememeber the compiled code contains injected tests, and the injected tests are different for each matrix in the web
+        if: steps.out-cache.outputs.cache-hit != 'true' && matrix.jupyterConnection != 'web'
         env:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
