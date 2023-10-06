@@ -146,7 +146,7 @@ jobs:
       # This is faster than running `npm ci`, we do not want to build zmq, etc.
       # Let that happen in other jobs, this job needs to be fast
       - name: npm ci
-        run: npm ci --ignore-scripts
+        run: npm ci --ignore-scripts --prefer-offline --no-audit
 
       - name: npm run postinstall
         run: npm run postinstall
@@ -244,7 +244,7 @@ jobs:
       # This is faster than running `npm ci`, we do not want to build zmq, etc.
       # Let that happen in other jobs, this job needs to be fast
       - name: npm ci
-        run: npm ci --ignore-scripts
+        run: npm ci --ignore-scripts --prefer-offline --no-audit
 
       - name: npm run postinstall
         run: npm run postinstall
@@ -602,7 +602,7 @@ jobs:
       # Let that happen in other jobs, this job needs to be super fast for linting
       - name: npm ci
         if: matrix.jupyterConnection != 'web'
-        run: npm ci --ignore-scripts
+        run: npm ci --ignore-scripts --prefer-offline --no-audit
 
       - name: npm run postinstall
         if: matrix.jupyterConnection != 'web'
