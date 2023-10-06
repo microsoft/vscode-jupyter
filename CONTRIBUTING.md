@@ -58,7 +58,6 @@ For incremental builds you can use the following commands depending on your need
 
 ```shell
 npm run compile
-npm run compile-dfviewer-watch # For DataFrame Viewer
 npm run compile-viewers-watch # For Plot, Data Frame, Variable & IPyWidget Viewer
 ```
 

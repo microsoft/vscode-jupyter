@@ -4,7 +4,7 @@
 import * as path from 'path';
 import * as esbuild from 'esbuild';
 import { green } from 'colors';
-import type { BuildOptions, Charset, Plugin, SameShape } from 'esbuild';
+import type { BuildOptions, Charset, Loader, Plugin, SameShape } from 'esbuild';
 import { lessLoader } from 'esbuild-plugin-less';
 import fs from 'fs';
 
@@ -25,6 +25,15 @@ interface StylePluginOptions {
      */
     charset?: Charset;
 }
+const loader: { [ext: string]: Loader } = {
+    '.woff': 'dataurl',
+    '.woff2': 'dataurl',
+    '.eot': 'dataurl',
+    '.ttf': 'dataurl',
+    '.gif': 'dataurl',
+    '.svg': 'dataurl',
+    '.png': 'dataurl'
+};
 
 // https://github.com/evanw/esbuild/issues/20#issuecomment-802269745
 // https://github.com/hyrious/esbuild-plugin-style
@@ -75,6 +84,13 @@ function style({ minify = true, charset = 'utf8' }: StylePluginOptions = {}): Pl
 
             onLoad({ filter: /.*/, namespace: 'style-content' }, async (args) => {
                 const options = { entryPoints: [args.path], ...opt };
+                options.loader = options.loader || {};
+                // Add the same loaders we add for other places
+                Object.keys(loader).forEach((key) => {
+                    if (options.loader && !options.loader[key]) {
+                        options.loader[key] = loader[key];
+                    }
+                });
                 const { errors, warnings, outputFiles } = await esbuild.build(options);
                 return { errors, warnings, contents: outputFiles![0].text, loader: 'text' };
             });
@@ -83,6 +99,10 @@ function style({ minify = true, charset = 'utf8' }: StylePluginOptions = {}): Pl
 }
 
 function createConfig(source: string, outfile: string): SameShape<BuildOptions, BuildOptions> {
+    const inject = [path.join(__dirname, isDevbuild ? 'process.development.js' : 'process.production.js')];
+    if (source.endsWith(path.join('data-explorer', 'index.tsx'))) {
+        inject.push(path.join(__dirname, 'jquery.js'));
+    }
     return {
         entryPoints: [source],
         outfile,
@@ -97,17 +117,9 @@ function createConfig(source: string, outfile: string): SameShape<BuildOptions, 
         minify: !isDevbuild,
         logLevel: 'info',
         sourcemap: isDevbuild,
-        inject: [path.join(__dirname, isDevbuild ? 'process.development.js' : 'process.production.js')],
+        inject,
         plugins: [style(), lessLoader()],
-        loader: {
-            '.woff': 'dataurl',
-            '.woff2': 'dataurl',
-            '.eot': 'dataurl',
-            '.ttf': 'dataurl',
-            '.gif': 'dataurl',
-            '.svg': 'dataurl',
-            '.png': 'dataurl'
-        }
+        loader
     };
 }
 async function build(source: string, outfile: string, watch = isWatchMode) {
@@ -126,39 +138,39 @@ async function watch(source: string, outfile: string) {}
 async function buildAll() {
     // First build the less file format, convert to css, and then build tsx to use the css
     // The source imports the css files.
-    await build(
-        path.join(
-            extensionFolder,
-            'src',
-            'webviews',
-            'webview-side',
-            'interactive-common',
-            'variableExplorerGrid.less'
-        ),
-        path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'interactive-common', 'variableExplorerGrid.css'),
-        false
-    );
+    const getLessBuilders = (watch = isWatchMode) => {
+        return [
+            build(
+                path.join(
+                    extensionFolder,
+                    'src',
+                    'webviews',
+                    'webview-side',
+                    'interactive-common',
+                    'variableExplorerGrid.less'
+                ),
+                path.join(
+                    extensionFolder,
+                    'src',
+                    'webviews',
+                    'webview-side',
+                    'interactive-common',
+                    'variableExplorerGrid.css'
+                ),
+                watch
+            ),
+            build(
+                path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'react-common', 'seti', 'seti.less'),
+                path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'react-common', 'seti', 'seti.css'),
+                watch
+            )
+        ];
+    };
+    await Promise.all(getLessBuilders(false));
 
     await Promise.all([
-        // Run again, in case we are in watch mode.
-        build(
-            path.join(
-                extensionFolder,
-                'src',
-                'webviews',
-                'webview-side',
-                'interactive-common',
-                'variableExplorerGrid.less'
-            ),
-            path.join(
-                extensionFolder,
-                'src',
-                'webviews',
-                'webview-side',
-                'interactive-common',
-                'variableExplorerGrid.css'
-            )
-        ),
+        // Run less builders again, in case we are in watch mode.
+        ...[isWatchMode ? getLessBuilders(true) : []],
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'ipywidgets', 'kernel', 'index.ts'),
             path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
@@ -174,6 +186,10 @@ async function buildAll() {
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'plot', 'index.tsx'),
             path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'viewers', 'plotViewer.js')
+        ),
+        build(
+            path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'data-explorer', 'index.tsx'),
+            path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'viewers', 'dataExplorer.js')
         ),
         ,
         isDevbuild

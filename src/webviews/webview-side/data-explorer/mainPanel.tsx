@@ -13,7 +13,9 @@ import { ISlickGridAdd, ISlickGridSlice, ISlickRow, ReactSlickGrid } from './rea
 import { generateTestData } from './testData';
 
 import '../react-common/codicon/codicon.css';
-import '../react-common/seti/seti.less';
+// This is actually a less file (such a file does not exist in the source)
+// As part of the build process the less file gets converted to css and placed in the same src folder.
+import '../react-common/seti/seti.css';
 import { SliceControl } from './sliceControl';
 import debounce from 'lodash/debounce';
 import uuid from 'uuid/v4';
