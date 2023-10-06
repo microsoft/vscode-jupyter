@@ -58,9 +58,8 @@ For incremental builds you can use the following commands depending on your need
 
 ```shell
 npm run compile
-npm run compile-webviews-watch # For Plot, Data Frame & Variable Viewer along with IPyWidget scripts
-npm run compile-viewers-watch # For Plot, Data Frame & Variable Viewer
-npm run compile-widgets-watch # For IPyWidget scripts
+npm run compile-dfviewer-watch # For DataFrame Viewer
+npm run compile-viewers-watch # For Plot, Data Frame, Variable & IPyWidget Viewer
 ```
 
 Sometimes you will need to run `npm run clean` and even `rm -r out`.

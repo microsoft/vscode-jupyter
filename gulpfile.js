@@ -416,15 +416,15 @@ function getAllowedWarningsForWebPack(buildConfig) {
 
 gulp.task('compile-webviews-release', async () => {
     await Promise.all([
-        spawnAsync('npm', ['run', 'compile-viewers-release'], webpackEnv),
-        spawnAsync('npm', ['run', 'compile-widgets-release'], webpackEnv)
+        spawnAsync('npm', ['run', 'compile-dfviewer-release'], webpackEnv),
+        spawnAsync('npm', ['run', 'compile-viewers-release'], webpackEnv)
     ]);
 });
 
 gulp.task('compile-webviews-dev', async () => {
     await Promise.all([
-        spawnAsync('npm', ['run', 'compile-viewers-dev'], webpackEnv),
-        spawnAsync('npm', ['run', 'compile-widgets'], webpackEnv)
+        spawnAsync('npm', ['run', 'compile-dfviewer-dev'], webpackEnv),
+        spawnAsync('npm', ['run', 'compile-viewers'], webpackEnv)
     ]);
 });
 

@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as esbuild from 'esbuild';
 import { green } from 'colors';
 import type { BuildOptions, Charset, Plugin, SameShape } from 'esbuild';
+import { lessLoader } from 'esbuild-plugin-less';
 import fs from 'fs';
 
 const isDevbuild = !process.argv.includes('--production');
@@ -97,11 +98,20 @@ function createConfig(source: string, outfile: string): SameShape<BuildOptions, 
         logLevel: 'info',
         sourcemap: isDevbuild,
         inject: [path.join(__dirname, isDevbuild ? 'process.development.js' : 'process.production.js')],
-        plugins: [style()]
+        plugins: [style(), lessLoader()],
+        loader: {
+            '.woff': 'dataurl',
+            '.woff2': 'dataurl',
+            '.eot': 'dataurl',
+            '.ttf': 'dataurl',
+            '.gif': 'dataurl',
+            '.svg': 'dataurl',
+            '.png': 'dataurl'
+        }
     };
 }
-async function build(source: string, outfile: string) {
-    if (isWatchMode) {
+async function build(source: string, outfile: string, watch = isWatchMode) {
+    if (watch) {
         const context = await esbuild.context(createConfig(source, outfile));
         await context.watch();
     } else {
@@ -114,7 +124,41 @@ async function build(source: string, outfile: string) {
 async function watch(source: string, outfile: string) {}
 
 async function buildAll() {
+    // First build the less file format, convert to css, and then build tsx to use the css
+    // The source imports the css files.
+    await build(
+        path.join(
+            extensionFolder,
+            'src',
+            'webviews',
+            'webview-side',
+            'interactive-common',
+            'variableExplorerGrid.less'
+        ),
+        path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'interactive-common', 'variableExplorerGrid.css'),
+        false
+    );
+
     await Promise.all([
+        // Run again, in case we are in watch mode.
+        build(
+            path.join(
+                extensionFolder,
+                'src',
+                'webviews',
+                'webview-side',
+                'interactive-common',
+                'variableExplorerGrid.less'
+            ),
+            path.join(
+                extensionFolder,
+                'src',
+                'webviews',
+                'webview-side',
+                'interactive-common',
+                'variableExplorerGrid.css'
+            )
+        ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'ipywidgets', 'kernel', 'index.ts'),
             path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
@@ -123,6 +167,15 @@ async function buildAll() {
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'ipywidgets', 'renderer', 'index.ts'),
             path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'ipywidgetsRenderer', 'ipywidgetsRenderer.js')
         ),
+        build(
+            path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'variable-view', 'index.tsx'),
+            path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'viewers', 'variableView.js')
+        ),
+        build(
+            path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'plot', 'index.tsx'),
+            path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'viewers', 'plotViewer.js')
+        ),
+        ,
         isDevbuild
             ? build(
                   path.join(extensionFolder, 'src', 'test', 'datascience', 'widgets', 'rendererUtils.ts'),
@@ -133,4 +186,4 @@ async function buildAll() {
 }
 
 const started = Date.now();
-buildAll().then(() => console.log(`Watching for changes in esbuild...`));
+buildAll();
