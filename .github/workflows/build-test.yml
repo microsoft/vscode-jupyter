@@ -252,8 +252,6 @@ jobs:
       - name: Compile if not cached
         run: npm run prePublishNonBundle
         if: steps.out-cache.outputs.cache-hit != 'true'
-        env:
-          CI_JUPYTER_FAST_COMPILATION: 'true'
 
       - name: Run TypeScript unit tests
         id: test_unittests
@@ -613,13 +611,15 @@ jobs:
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install imagemagick x11-xserver-utils
+e-${{hashFiles('src/**')}}-${{ matrix.tags }}
 
         # This step is slow.
       - name: Compile if not cached
         run: npm run prePublishNonBundle
+        # Do not cache, as the compilation changes based on the test matrix
+        # As a result the output changes, meaning the cache might not be valid.
         # if: steps.out-cache.outputs.cache-hit != 'true'
         env:
-          CI_JUPYTER_FAST_COMPILATION: 'true'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
       # Used by tests for non-python kernels.
@@ -921,8 +921,6 @@ jobs:
       - name: Compile if not cached
         run: npm run prePublishNonBundle
         if: steps.out-cache.outputs.cache-hit != 'true'
-        env:
-          CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
       # The name pattern is ${{env.COVERAGE_REPORTS}}-${{runner.os}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
