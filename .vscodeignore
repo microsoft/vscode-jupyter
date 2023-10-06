@@ -9,6 +9,7 @@ docs/**
 .editorconfig
 .env
 .eslintrc
+.eslintignore
 .gitattributes
 .gitignore
 .gitmodules
