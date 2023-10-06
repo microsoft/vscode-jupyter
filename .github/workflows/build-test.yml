@@ -222,7 +222,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         id: npm-cache
         run: |
-          echo "::set-output name=dir::$(npm config get cache)"
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
       - name: Cache npm on windows
         uses: actions/cache@v3
         if: matrix.os == 'windows-latest'
@@ -501,7 +501,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         id: npm-cache
         run: |
-          echo "::set-output name=dir::$(npm config get cache)"
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
       - name: Cache npm on windows
         uses: actions/cache@v3
         if: matrix.os == 'windows-latest'

@@ -20,7 +20,7 @@ runs:
       id: python_run
       # Use `bash -l {0}` when using the conda actions.
       shell: bash -l {0}
-      run: python -c "import sys;print('::set-output name=python_path::' + sys.executable)"
+      run: python -c "import sys;print('python_path=' + sys.executable)" >> $GITHUB_OUTPUT
 
     - name: Push to environment
       # Use `bash -l {0}` when using the conda actions.
