@@ -21,8 +21,8 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
     }
 
-    public async normalizeLines(_code: string, _resource?: Uri): Promise<string> {
-        throw Error('Not Implemented');
+    public async normalizeLines(code: string, _resource?: Uri): Promise<string> {
+        return code;
     }
 
     public async getFileToExecute(): Promise<Uri | undefined> {
