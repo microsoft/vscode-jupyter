@@ -20,9 +20,7 @@ function getEntry(bundle) {
     switch (bundle) {
         case 'viewers':
             return {
-                plotViewer: ['babel-polyfill', `./src/webviews/webview-side/plot/index.tsx`],
-                dataExplorer: ['babel-polyfill', `./src/webviews/webview-side/data-explorer/index.tsx`],
-                variableView: ['babel-polyfill', `./src/webviews/webview-side/variable-view/index.tsx`]
+                dataExplorer: ['babel-polyfill', `./src/webviews/webview-side/data-explorer/index.tsx`]
             };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
@@ -60,22 +58,10 @@ function getPlugins(bundle) {
                 ...[definePlugin],
                 ...[
                     new HtmlWebpackPlugin({
-                        template: 'src/webviews/webview-side/plot/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                        chunks: ['commons', 'plotViewer'],
-                        filename: 'index.plotViewer.html'
-                    }),
-                    new HtmlWebpackPlugin({
                         template: 'src/webviews/webview-side/data-explorer/index.html',
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'dataExplorer'],
                         filename: 'index.dataExplorer.html'
-                    }),
-                    new HtmlWebpackPlugin({
-                        template: 'src/webviews/webview-side/variable-view/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                        chunks: ['commons', 'variableView'],
-                        filename: 'index.variableView.html'
                     })
                 ]
             );
