@@ -624,13 +624,13 @@ jobs:
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Julia
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         uses: julia-actions/setup-julia@v1
         with:
           version: ${{env.JULIA_VERSION}}
 
       - name: Install Julia Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         shell: bash
         run: |
           julia -e '
@@ -638,18 +638,18 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Install Dot.net
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         uses: actions/setup-dotnet@v3.2.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 
       - name: Install .NET Interactive
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
       - name: Install .NET Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         shell: bash -l {0}
         run: dotnet interactive jupyter install
 
