@@ -333,7 +333,7 @@ function commentOutInvalidExport() {
         __dirname,
         '..',
         '..',
-        'node_modules/react-virtualized/dist/es/WindowScroller/WindowScroller.js'
+        'node_modules/react-virtualized/dist/es/WindowScroller/utils/onScroll.js'
     );
     const source = fs.readFileSync(filePath, 'utf8');
     if (source.includes(stringToReplace)) {
