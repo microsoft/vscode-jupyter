@@ -117,11 +117,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies for native modules
-        run: |
-          sudo apt-get update
-          sudo apt-get install libpango1.0-dev libgif-dev
-
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
         with:
@@ -142,8 +137,13 @@ jobs:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
+      # This is faster than running `npm ci`, we do not want to build zmq, etc.
+      # Let that happen in other jobs, this job needs to be fast
       - name: npm ci
-        uses: ./.github/actions/npm-ci
+        run: npm ci --ignore-scripts
+
+      - name: npm run postinstall
+        run: npm run postinstall
 
       - name: Verify Translation files
         run: npm run validateTranslationFiles
@@ -200,12 +200,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies for native modules
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install libpango1.0-dev libgif-dev
-
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
         with:
@@ -246,8 +240,14 @@ jobs:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
+
+      # This is faster than running `npm ci`, we do not want to build zmq, etc.
+      # Let that happen in other jobs, this job needs to be fast
       - name: npm ci
-        uses: ./.github/actions/npm-ci
+        run: npm ci --ignore-scripts
+
+      - name: npm run postinstall
+        run: npm run postinstall
 
       - name: Compile if not cached
         run: npm run prePublishNonBundle
@@ -420,12 +420,6 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install -U pip
         if: matrix.python != 'conda' && matrix.python != 'noPython'
-
-      - name: Install dependencies for native modules
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install libpango1.0-dev libgif-dev
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
@@ -600,8 +594,21 @@ jobs:
           python -m pip list
 
         # This step is slow.
+
+      # Run npm install (we need chrome to get downloaded)
       - name: npm ci
+        if: matrix.jupyterConnection == 'web'
         uses: ./.github/actions/npm-ci
+
+      # This is faster than running `npm ci`, we do not want to build zmq, etc.
+      # Let that happen in other jobs, this job needs to be super fast for linting
+      - name: npm ci
+        if: matrix.jupyterConnection != 'web'
+        run: npm ci --ignore-scripts
+
+      - name: npm run postinstall
+        if: matrix.jupyterConnection != 'web'
+        run: npm run postinstall
 
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -618,13 +625,13 @@ jobs:
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Julia
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         uses: julia-actions/setup-julia@v1
         with:
           version: ${{env.JULIA_VERSION}}
 
       - name: Install Julia Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         shell: bash
         run: |
           julia -e '
@@ -632,18 +639,18 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Install Dot.net
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         uses: actions/setup-dotnet@v3.2.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 
       - name: Install .NET Interactive
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
       - name: Install .NET Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote'
         shell: bash -l {0}
         run: dotnet interactive jupyter install
 
