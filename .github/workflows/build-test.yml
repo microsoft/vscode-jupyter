@@ -137,6 +137,12 @@ jobs:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
+      - name: Cache the out/ directory
+        uses: actions/cache@v3
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
       # This is faster than running `npm ci`, we do not want to build zmq, etc.
       # Let that happen in other jobs, this job needs to be fast
       - name: npm ci
@@ -171,12 +177,6 @@ jobs:
 
       - name: Run gulp prePublishNonBundle
         run: npm run prePublishNonBundle
-
-      - name: Cache the out/ directory
-        uses: actions/cache@v3
-        with:
-          path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Check dependencies
         run: npm run checkDependencies
