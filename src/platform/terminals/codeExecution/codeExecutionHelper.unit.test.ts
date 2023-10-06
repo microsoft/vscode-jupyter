@@ -27,7 +27,7 @@ if (true):
     string''')
     `;
 
-suite.only('Normalize selected text for execution', () => {
+suite('Normalize selected text for execution', () => {
     const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
 
     test('Normalize first line including newline', () => {
