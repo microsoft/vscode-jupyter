@@ -496,7 +496,7 @@
                 "command": "jupyter.execSelectionInteractive",
                 "title": "%jupyter.command.jupyter.execSelectionInteractive.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.createnewinteractive",
@@ -545,13 +545,13 @@
                 "command": "jupyter.runtoline",
                 "title": "%jupyter.command.jupyter.runtoline.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runfromline",
                 "title": "%jupyter.command.jupyter.runfromline.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.importnotebook",
@@ -1514,6 +1514,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.description%",
+                    "scope": "resource"
+                },
+                "jupyter.interactiveWindow.textEditor.normalizeSelection": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%jupyter.configuration.jupyter.normalizeSelectionForInteractiveWindow.description%",
                     "scope": "resource"
                 },
                 "jupyter.variableExplorerExclude": {

@@ -18,13 +18,12 @@ import {
 } from 'vscode';
 
 import { noop } from '../../platform/common/utils/misc';
-import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
 
 class MockEditorEdit implements TextEditorEdit {
     constructor(
         private _documentManager: MockDocumentManager,
-        private _document: MockDocument
+        private _document: TextDocument
     ) {}
 
     public replace(location: Selection | Range | Position, value: string): void {
@@ -59,7 +58,7 @@ export class MockEditor implements TextEditor {
 
     constructor(
         private _documentManager: MockDocumentManager,
-        private _document: MockDocument
+        private _document: TextDocument
     ) {
         this.selection = new Selection(0, 0, 0, 0);
         this._revealCallback = noop;

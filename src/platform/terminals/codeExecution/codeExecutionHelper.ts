@@ -21,8 +21,8 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
     }
 
-    public async normalizeLines(_code: string, _resource?: Uri): Promise<string> {
-        throw Error('Not Implemented');
+    public async normalizeLines(code: string, _resource?: Uri): Promise<string> {
+        return code;
     }
 
     public async getFileToExecute(): Promise<Uri | undefined> {
@@ -61,7 +61,7 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
         } else {
             code = this.getMultiLineSelectionText(textEditor);
         }
-        return code;
+        return this.dedentCode(code.trimEnd());
     }
 
     public async saveFileIfDirty(file: Uri): Promise<void> {
@@ -69,6 +69,23 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
         if (docs.length === 1 && docs[0].isDirty) {
             await docs[0].save();
         }
+    }
+
+    private dedentCode(code: string) {
+        const lines = code.split('\n');
+        const firstNonEmptyLine = lines.find((line) => line.trim().length > 0);
+        if (firstNonEmptyLine) {
+            const leadingSpaces = firstNonEmptyLine.match(/^\s*/)![0];
+            return lines
+                .map((line) => {
+                    if (line.startsWith(leadingSpaces)) {
+                        return line.replace(leadingSpaces, '');
+                    }
+                    return line;
+                })
+                .join('\n');
+        }
+        return code;
     }
 
     private getSingleLineSelectionText(textEditor: TextEditor): string {
@@ -152,8 +169,8 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
         //     if (m == 0):
         //         return n + 1
         //                ↑<------------------- To here (notice " + 1" is not selected)
-        if (selectionFirstLineText.trimLeft() === fullStartLineText.trimLeft()) {
-            return fullStartLineText + selectionText.substr(selectionFirstLineText.length);
+        if (selectionFirstLineText.trimStart() === fullStartLineText.trimStart()) {
+            return fullStartLineText + selectionText.substring(selectionFirstLineText.length);
         }
 
         // If you are here then user has selected partial start and partial end lines:

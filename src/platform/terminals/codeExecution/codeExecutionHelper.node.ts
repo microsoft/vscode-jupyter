@@ -92,7 +92,7 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
             }
             return normalizedLines;
         } catch (ex) {
-            traceError(ex, 'Python: Failed to normalize code for execution in terminal');
+            traceError(ex, 'Python: Failed to normalize code for execution in Interactive Window');
             return code;
         }
     }

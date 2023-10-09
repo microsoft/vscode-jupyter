@@ -268,7 +268,13 @@ export class CodeWatcher implements ICodeWatcher {
             if (!codeToExecute) {
                 return;
             }
-            const normalizedCode = await this.executionHelper.normalizeLines(codeToExecute!);
+
+            const normalize =
+                this.configService.getSettings(activeEditor.document.uri).normalizeSelectionForInteractiveWindow ??
+                true;
+            const normalizedCode = normalize
+                ? await this.executionHelper.normalizeLines(codeToExecute!)
+                : codeToExecute;
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
             }
