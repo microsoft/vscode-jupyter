@@ -426,10 +426,10 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
-        traceInfoIfCI(
-            `NotebookController selection event called for notebook ${event.notebook.uri.toString()} & controller ${
-                this.connection.kind
-            }:${this.id}. Selected ${event.selected} `
+        traceVerbose(
+            `NotebookController selection event called for notebook ${getDisplayPath(
+                event.notebook.uri
+            )} & controller ${this.connection.kind}:${this.id}. Selected ${event.selected} `
         );
         if (this.associatedDocuments.has(event.notebook) && event.selected) {
             // Possible it gets called again in our tests (due to hacks for testing purposes).
@@ -466,13 +466,16 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             `Controller ${this.connection.kind}:${this.id} associated with nb ${getDisplayPath(event.notebook.uri)}`
         );
         this.associatedDocuments.set(event.notebook, deferred.promise);
+        traceVerbose(`Controller selection Step1 for ${getDisplayPath(event.notebook.uri)}`);
         await this.onDidSelectController(event.notebook);
+        traceVerbose(`Controller selection Step2 for ${getDisplayPath(event.notebook.uri)}`);
         await this.updateCellLanguages(event.notebook);
+        traceVerbose(`Controller selection Step3 for ${getDisplayPath(event.notebook.uri)}`);
 
         // If this NotebookController was selected, fire off the event
         this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
         this._onNotebookControllerSelectionChanged.fire(event);
-        traceVerbose(`Controller selection change completed`);
+        traceVerbose(`Controller selection change completed for ${getDisplayPath(event.notebook.uri)}`);
         deferred.resolve();
     }
 
