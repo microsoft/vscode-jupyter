@@ -354,10 +354,6 @@ class KernelSocketWrapper implements IKernelSocket {
     public dispose() {
         dispose(this.disposables);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sendToRealKernel(data: any, cb?: (err?: Error) => void): void {
-        this.socket?.sendToRealKernel(data, cb);
-    }
     addReceiveHook(hook: (data: WebSocketData) => Promise<void>): void {
         this.receiveHooks.add(hook);
     }

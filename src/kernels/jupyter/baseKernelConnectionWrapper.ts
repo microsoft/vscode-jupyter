@@ -35,13 +35,11 @@ import type { JSONObject } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import { Disposable } from 'vscode';
 import { IDisposable } from '../../platform/common/types';
-import { ChainingExecuteRequester } from '../common/chainingExecuteRequester';
 
 /**
  * Wrapper around a Kernel.IKernelConnection.
  */
 export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConnection {
-    private chainingExecute = new ChainingExecuteRequester();
     public readonly statusChanged = new Signal<this, Kernel.Status>(this);
     public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
     public readonly iopubMessage = new Signal<this, IIOPubMessage<IOPubMessageType>>(this);
@@ -159,7 +157,7 @@ export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConne
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg> {
-        return this.chainingExecute.requestExecute(this.getKernelConnection(), content, disposeOnDone, metadata);
+        return this.getKernelConnection().requestExecute(content, disposeOnDone, metadata);
     }
     requestDebug(
         content: {

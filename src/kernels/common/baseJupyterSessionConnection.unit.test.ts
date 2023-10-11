@@ -13,7 +13,6 @@ import { noop } from '../../test/core';
 import { BaseJupyterSessionConnection } from './baseJupyterSessionConnection';
 import { dispose } from '../../platform/common/helpers';
 import { createEventHandler } from '../../test/common';
-import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 
 suite('Base Jupyter Session Connection', () => {
     const disposables: IDisposable[] = [];
@@ -195,21 +194,5 @@ suite('Base Jupyter Session Connection', () => {
         assert.strictEqual(socketInfo?.options.userName, 'some User Name');
         assert.strictEqual(socketInfo?.options.model.id, 'some Model Id');
         assert.strictEqual(socketInfo?.options.model.name, 'some Model Name');
-    });
-    test('Wrap the Kernel.IKernelConnection only when necessary', async () => {
-        const wrapperKernel = jupyterSession.kernel as KernelConnectionWrapper;
-        assert.strictEqual(wrapperKernel.originalKernel, instance(kernel));
-
-        // If we restart, and the kernel is still the same, ensure we return the same instance of the kernel wrapper
-        await jupyterSession.restart();
-        assert.strictEqual(jupyterSession.kernel as KernelConnectionWrapper, wrapperKernel);
-        assert.strictEqual(wrapperKernel.originalKernel, instance(kernel));
-
-        // If there's a new kernel, then ensure we have a new wrapper returned.
-        const newKernel = createKernel();
-        when(session.kernel).thenReturn(instance(newKernel));
-
-        assert.notEqual(jupyterSession.kernel as KernelConnectionWrapper, wrapperKernel);
-        assert.strictEqual((jupyterSession.kernel as KernelConnectionWrapper).originalKernel, instance(newKernel));
     });
 });
