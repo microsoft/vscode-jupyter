@@ -236,7 +236,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             if (server.connectionInformation) {
                 const info = server.connectionInformation;
                 return {
-                    baseUrl: info.baseUrl.toString(),
+                    baseUrl: info.baseUrl.toString(true),
                     displayName: server.label,
                     token: info.token || '',
                     authorizationHeader: info.headers,
@@ -258,7 +258,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     );
                 }
                 return {
-                    baseUrl: info.baseUrl.toString(),
+                    baseUrl: info.baseUrl.toString(true),
                     displayName: server.label,
                     token: info.token || '',
                     authorizationHeader: info.headers,
