@@ -307,48 +307,6 @@ declare module './api' {
      */
     export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
-    export interface IKernelSocket {
-        /**
-         * Whether the kernel socket is read & available for use.
-         * Use `onDidChange` to be notified when this changes.
-         */
-        ready: boolean;
-        /**
-         * Event fired when the underlying socket state changes.
-         * E.g. when the socket is connected/available or changes to another socket.
-         */
-        onDidChange: Event<void>;
-        /**
-         * Adds a listener to a socket that will be called before the socket's onMessage is called. This
-         * allows waiting for a callback before processing messages
-         */
-        addReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
-        /**
-         * Removes a listener for the socket. When no listeners are present, the socket no longer blocks
-         */
-        removeReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
-        /**
-         * Adds a hook to the sending of data from a websocket. Hooks can block sending so be careful.
-         */
-        addSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
-        /**
-         * Removes a send hook from the socket.
-         */
-        removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
-    }
-
-    export type IKernelConnectionInfo = {
-        /**
-         * Gives access to the jupyterlab Kernel.IKernelConnection object.
-         */
-        connection: Kernel.IKernelConnection;
-        /**
-         * Underlying socket used by jupyterlab/services to communicate with kernel.
-         * See jupyterlab/services/kernel/default.ts
-         */
-        kernelSocket: IKernelSocket;
-    };
-
     export interface IExportedKernelService {
         readonly status: 'discovering' | 'idle';
         /**
@@ -379,7 +337,7 @@ declare module './api' {
          * Gets the Kernel connection & the metadata that's associated with a given resource.
          * (only successfully started/active connections are returned).
          */
-        getKernel(uri: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined;
+        getKernel(uri: Uri): { metadata: KernelConnectionMetadata; connection: Session.ISessionConnection } | undefined;
         /**
          * Starts a kernel for a given resource.
          * The promise is resolved only after the kernel has successfully started.
@@ -389,12 +347,12 @@ declare module './api' {
             metadata: KernelConnectionMetadata,
             uri: Uri,
             token?: CancellationToken
-        ): Promise<IKernelConnectionInfo>;
+        ): Promise<Session.ISessionConnection>;
         /**
          * Connects an existing kernel to a resource.
          * The promise is resolved only after the kernel is successfully attached to a resource.
          * If one attempts to start another kernel or connect another kernel for the same resource, the same promise is returned.
          */
-        connect(metadata: LiveRemoteKernelConnectionMetadata, uri: Uri): Promise<IKernelConnectionInfo>;
+        connect(metadata: LiveRemoteKernelConnectionMetadata, uri: Uri): Promise<Session.ISessionConnection>;
     }
 }

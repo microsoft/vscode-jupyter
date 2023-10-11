@@ -124,8 +124,7 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         const kernelInfo = await kernelService?.startKernel(pythonKernel!, notebook.uri!);
 
-        assert.isOk(kernelInfo!.connection, 'Kernel Connection is undefined');
-        assert.isOk(kernelInfo!.kernelSocket, 'Kernel Socket is undefined');
+        assert.isOk(kernelInfo, 'Kernel Connection is undefined');
 
         await onDidChangeKernels.assertFiredExactly(1);
 
@@ -142,14 +141,14 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         assert.strictEqual(kernels![0].metadata.id, kernel!.metadata.id, 'Kernel Connection not same for the document');
 
         // Verify we can run some code against this kernel.
-        const outputs = await executeSilently(kernel?.connection.connection!, '98765');
+        const outputs = await executeSilently(kernel?.connection.kernel!, '98765');
         assert.strictEqual(outputs.length, 1);
         assert.include(getPlainTextOrStreamOutput(outputs), '98765');
         await closeNotebooksAndCleanUpAfterTests(disposables);
 
         await onDidChangeKernels.assertFiredExactly(2);
 
-        assert.strictEqual(kernelInfo!.connection.connectionStatus, 'disconnected');
-        assert.isTrue(kernelInfo!.connection.isDisposed, 'Not disposed');
+        assert.strictEqual(kernelInfo!.kernel!.connectionStatus, 'disconnected');
+        assert.isTrue(kernelInfo!.kernel!.isDisposed, 'Not disposed');
     });
 });
