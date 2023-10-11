@@ -78,8 +78,16 @@ jobs:
           echo 'day::$(node -p -e "new Date().getDay()")'
         shell: bash
       - name: MISC2
+        env:
+            ISSUE_IS_INTERNAL: ${{steps.internal.outputs.result}}
         run: |
-          echo '${{steps.proceed.outputs.result}}'
+          echo '$ISSUE_IS_INTERNAL'
+        shell: bash
+      - name: MISC2
+        env:
+            ISSUE_IS_INTERNAL: ${{steps.internal.outputs.result}}
+        run: |
+          echo '$ISSUE_IS_INTERNAL'
         shell: bash
       - name: Day of week
         if: steps.proceed.outputs.result == 1
