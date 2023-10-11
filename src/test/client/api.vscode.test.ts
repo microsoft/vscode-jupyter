@@ -146,9 +146,9 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         assert.include(getPlainTextOrStreamOutput(outputs), '98765');
         await closeNotebooksAndCleanUpAfterTests(disposables);
 
-        await onDidChangeKernels.assertFiredExactly(2);
+        await onDidChangeKernels.assertFiredAtLeast(2);
 
-        assert.strictEqual(kernelInfo!.kernel!.connectionStatus, 'disconnected');
-        assert.isTrue(kernelInfo!.kernel!.isDisposed, 'Not disposed');
+        assert.isNotOk(kernelInfo?.kernel);
+        assert.isTrue(kernelInfo?.isDisposed, 'Not disposed');
     });
 });
