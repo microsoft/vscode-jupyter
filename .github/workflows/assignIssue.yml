@@ -3,6 +3,7 @@ name: Assign DS issue to someone
 on:
   issues:
     types: [opened]
+  workflow_dispatch:
 
 permissions:
   issues: write
@@ -29,6 +30,15 @@ jobs:
             ISSUE_IS_INTERNAL: ${{steps.internal.outputs.result}}
         run: |
           echo result=$(node -p -e "process.env.ISSUE_IS_INTERNAL === '0' && JSON.parse(process.env.ISSUE_ASSIGNEES).length === 0 ? 1 : 0") >> $GITHUB_OUTPUT
+        shell: bash
+      - name: MISC
+        if: steps.proceed.outputs.result == '1'
+        run: |
+          echo 'day::$(node -p -e "new Date().getDay()")'
+        shell: bash
+      - name: MISC2
+        run: |
+          echo '${{steps.proceed.outputs.result}}'
         shell: bash
       - name: Day of week
         if: steps.proceed.outputs.result == 1
