@@ -12,6 +12,7 @@ export class ConfigMigration {
         interactiveWindowViewColumn: 'interactiveWindow.viewColumn',
 
         sendSelectionToInteractiveWindow: 'interactiveWindow.textEditor.executeSelection',
+        normalizeSelectionForInteractiveWindow: 'interactiveWindow.textEditor.normalizeSelection',
         magicCommandsAsComments: 'interactiveWindow.textEditor.magicCommandsAsComments',
         enableAutoMoveToNextCell: 'interactiveWindow.textEditor.autoMoveToNextCell',
         newCellOnRunLast: 'interactiveWindow.textEditor.autoAddNewCell',
