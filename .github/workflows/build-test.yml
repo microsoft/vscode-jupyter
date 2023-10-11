@@ -80,15 +80,15 @@ jobs:
       - name: MISC2
         env:
             ISSUE_IS_INTERNAL: ${{steps.internal.outputs.result}}
-        run: |
-          echo '$ISSUE_IS_INTERNAL'
-        shell: bash
+        run: echo "$ISSUE_IS_INTERNAL"
+      - name: MISC2
+        env:
+            GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
       - name: MISC2
         env:
             ISSUE_IS_INTERNAL: ${{steps.internal.outputs.result}}
-        run: |
-          echo '$ISSUE_IS_INTERNAL'
-        shell: bash
+        run: echo "Hello There $ISSUE_IS_INTERNAL"
       - name: Day of week
         if: steps.proceed.outputs.result == 1
         id: day
