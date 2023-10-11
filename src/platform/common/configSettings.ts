@@ -52,6 +52,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public useDefaultConfigForJupyter: boolean = false;
     public searchForJupyter: boolean = false;
     public sendSelectionToInteractiveWindow: boolean = false;
+    public normalizeSelectionForInteractiveWindow: boolean = true;
     public markdownRegularExpression: string = '';
     public codeRegularExpression: string = '';
     public errorBackgroundColor: string = '';
