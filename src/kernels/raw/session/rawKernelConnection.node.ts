@@ -571,7 +571,7 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
     let socketInstance: IKernelSocket & IWebSocketLike & IDisposable;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize);
+            super(kernelProcess.connection, jupyterLabSerialize.serialize);
             socketInstance = this;
         }
     }

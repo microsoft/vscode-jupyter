@@ -157,7 +157,7 @@ export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConne
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg> {
-        return this.getKernelConnection()!.requestExecute(content, disposeOnDone, metadata);
+        return this.getKernelConnection().requestExecute(content, disposeOnDone, metadata);
     }
     requestDebug(
         content: {

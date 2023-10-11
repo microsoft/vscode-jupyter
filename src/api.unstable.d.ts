@@ -319,11 +319,6 @@ declare module './api' {
          */
         onDidChange: Event<void>;
         /**
-         * Sends data to the underlying Jupyter kernel over the socket connection.
-         * This bypasses all of the jupyter kernel comms infrastructure.
-         */
-        sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
-        /**
          * Adds a listener to a socket that will be called before the socket's onMessage is called. This
          * allows waiting for a callback before processing messages
          */
