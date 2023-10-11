@@ -163,6 +163,7 @@ export function buildApi(
             return notebookEditor.notebook;
         },
         createJupyterServerCollection: (id, label, serverProvider) => {
+            sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
             label = stripCodicons(label);
             let documentation: Uri | undefined;
             let commandProvider: JupyterServerCommandProvider | undefined;
