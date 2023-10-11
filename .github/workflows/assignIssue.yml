@@ -34,13 +34,13 @@ jobs:
         if: steps.proceed.outputs.result == 1
         id: day
         run: |
-          echo 'number=$(node -p -e "new Date().getDay()")' >> $GITHUB_OUTPUT
+          echo "number=$(node -p -e 'new Date().getDay()')" >> $GITHUB_OUTPUT
         shell: bash
       - name: Hour of day
         if: steps.proceed.outputs.result == 1
         id: hour
         run: |
-          echo 'hour=$(node -p -e "(new Date().getUTCHours() - 7)%24")' >> $GITHUB_OUTPUT
+          echo "hour=$(node -p -e 'new Date().getUTCHours()%24')" >> $GITHUB_OUTPUT
         shell: bash
       - name: Week Number
         if: steps.proceed.outputs.result == 1
