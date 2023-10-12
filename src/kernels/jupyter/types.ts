@@ -16,7 +16,6 @@ import {
     KernelConnectionMetadata,
     IJupyterConnection,
     GetServerOptions,
-    IKernelSocket,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../types';
