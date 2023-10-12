@@ -13,8 +13,7 @@ import {
     IJupyterConnection,
     KernelActionSource,
     IJupyterKernelSession,
-    isRemoteConnection,
-    INewSessionWithSocket
+    isRemoteConnection
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IJupyterKernelService } from '../types';
@@ -26,7 +25,7 @@ import { BaseJupyterSessionConnection } from '../../common/baseJupyterSessionCon
 import { dispose } from '../../../platform/common/helpers';
 
 export class JupyterSessionWrapper
-    extends BaseJupyterSessionConnection<INewSessionWithSocket, 'localJupyter' | 'remoteJupyter'>
+    extends BaseJupyterSessionConnection<Session.ISessionConnection, 'localJupyter' | 'remoteJupyter'>
     implements IJupyterKernelSession
 {
     public get status(): KernelMessage.Status {
@@ -46,7 +45,7 @@ export class JupyterSessionWrapper
     private restartToken?: CancellationTokenSource;
 
     constructor(
-        session: INewSessionWithSocket,
+        session: Session.ISessionConnection,
         private readonly resource: Resource,
         private readonly kernelConnectionMetadata: KernelConnectionMetadata,
         public readonly workingDirectory: Uri,

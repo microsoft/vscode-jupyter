@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import type { KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
-import type { Observable } from 'rxjs/Observable';
 import type {
     CancellationToken,
     Disposable,
@@ -372,7 +371,7 @@ export interface IBaseKernel extends IAsyncDisposable {
      * Provides access to the underlying Kernel (web) socket.
      * The socket changes upon restarting the kernel, hence the use of an observable.
      */
-    readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    readonly kernelSocket: Event<KernelSocketInformation | undefined>;
     /**
      * Provides access to the underlying kernel.
      * The Jupyter kernel can be directly access via the `session.kernel` property.
@@ -577,10 +576,9 @@ export enum InterruptResult {
  */
 export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
     extends Session.ISessionConnection {
-    readonly id: string;
     readonly kind: T;
     readonly status: KernelMessage.Status;
-    readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    readonly kernelSocket: Event<KernelSocketInformation | undefined>;
     disposeAsync(): Promise<void>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
@@ -591,10 +589,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
 export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {}
 export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
-
-export interface INewSessionWithSocket extends Session.ISessionConnection {
-    kernelSocketInformation: KernelSocketInformation;
-}
 
 export interface IJupyterKernelSpec {
     /**
@@ -768,15 +762,7 @@ export interface KernelSocketOptions {
     };
 }
 export interface KernelSocketInformation {
-    /**
-     * Underlying socket used by jupyterlab/services to communicate with kernel.
-     * See jupyterlab/services/kernel/default.ts
-     */
-    readonly socket?: IKernelSocket;
-    /**
-     * Options used to clone a kernel.
-     */
-    readonly options: KernelSocketOptions;
+    x?: number;
 }
 
 /**

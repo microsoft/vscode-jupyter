@@ -4,8 +4,6 @@
 import uuid from 'uuid/v4';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { KernelMessage } from '@jupyterlab/services';
-import { Observable } from 'rxjs/Observable';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
 import {
     CancellationTokenSource,
     Event,
@@ -154,8 +152,8 @@ abstract class BaseKernel implements IBaseKernel {
     get disposing(): boolean {
         return this._disposing === true;
     }
-    get kernelSocket(): Observable<KernelSocketInformation | undefined> {
-        return this._kernelSocket.asObservable();
+    get kernelSocket(): Event<KernelSocketInformation | undefined> {
+        return this._kernelSocket.event;
     }
     private _session?: IKernelSession;
     /**
@@ -171,7 +169,7 @@ abstract class BaseKernel implements IBaseKernel {
     private _disposed?: boolean;
     private _disposing?: boolean;
     private _ignoreJupyterSessionDisposedErrors?: boolean;
-    private readonly _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
+    private readonly _kernelSocket = new EventEmitter<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
@@ -204,7 +202,7 @@ abstract class BaseKernel implements IBaseKernel {
         this.disposables.push(this._onStarted);
         this.disposables.push(this._onDisposed);
         this.disposables.push(this._onIPyWidgetVersionResolved);
-        this.disposables.push({ dispose: () => this._kernelSocket.unsubscribe() });
+        this.disposables.push(this._kernelSocket);
         trackKernelResourceInformation(this.resourceUri, {
             kernelConnection: this.kernelConnectionMetadata,
             actionSource: this.creator,
@@ -697,7 +695,7 @@ abstract class BaseKernel implements IBaseKernel {
         }
         if (!this.hookedSessionForEvents.has(session)) {
             this.hookedSessionForEvents.add(session);
-            session.kernelSocket.subscribe(this._kernelSocket);
+            session.kernelSocket((e) => this._kernelSocket.fire(e));
             session.onDidDispose(() => {
                 traceInfoIfCI(
                     `Kernel got disposed as a result of session.onDisposed (1) ${getDisplayPath(

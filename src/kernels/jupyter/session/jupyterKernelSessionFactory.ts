@@ -10,14 +10,13 @@ import {
     IJupyterConnection,
     IJupyterKernelSession,
     IKernelSessionFactory,
-    INewSessionWithSocket,
     KernelActionSource,
     KernelConnectionMetadata,
     KernelSessionCreationOptions,
     isLocalConnection,
     isRemoteConnection
 } from '../../types';
-import { IJupyterKernelService, IJupyterRequestCreator, IJupyterServerProvider } from '../types';
+import { IJupyterKernelService, IJupyterServerProvider } from '../types';
 import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { inject, injectable, optional } from 'inversify';
@@ -56,8 +55,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IJupyterRequestCreator)
-        private readonly requestCreator: IJupyterRequestCreator,
         @inject(IJupyterKernelService) @optional() private readonly kernelService: IJupyterKernelService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
@@ -249,7 +246,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         if (options.token.isCancellationRequested) {
             throw new CancellationError();
         }
-        let session: INewSessionWithSocket;
+        let session: Session.ISessionConnection;
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
             if (
@@ -264,23 +261,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 session = options.sessionManager.connectTo({
                     ...options.kernelConnection.kernelModel,
                     model: options.kernelConnection.kernelModel.model
-                }) as INewSessionWithSocket;
-
-                // Add on the kernel metadata & sock information
-                const requestCreator = this.requestCreator;
-                session.kernelSocketInformation = {
-                    get socket() {
-                        // When we restart kernels, a new websocket is created and we need to get the new one.
-                        // & the id in the dictionary is the kernel.id.
-                        return requestCreator.getWebsocket(options.kernelConnection.id);
-                    },
-                    options: {
-                        clientId: '',
-                        id: options.kernelConnection.id,
-                        model: { ...options.kernelConnection.kernelModel.model },
-                        userName: ''
-                    }
-                };
+                }) as Session.ISessionConnection;
 
                 await raceCancellationError(
                     options.token,
@@ -334,7 +315,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         kernelSpecManager?: KernelSpecManager;
         contentsManager: ContentsManager;
         ui: IDisplayOptions;
-    }): Promise<INewSessionWithSocket> {
+    }): Promise<Session.ISessionConnection> {
         const remoteSessionOptions = getRemoteSessionOptions(options.connection, options.resource);
         let sessionPath = remoteSessionOptions?.path;
 
@@ -373,7 +354,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             type: (options.resource?.path || '').toLowerCase().endsWith('.ipynb') ? 'notebook' : 'console'
         };
 
-        const requestCreator = this.requestCreator;
         try {
             const session = await raceCancellationError(
                 options.token,
@@ -387,23 +367,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 throw new JupyterSessionStartError(new Error(`No kernel created`));
             }
             traceInfo(DataScience.createdNewKernel(options.connection.baseUrl, session?.kernel?.id || ''));
-            const sessionWithSocket = session as INewSessionWithSocket;
-
-            // Add on the kernel metadata & sock information
-            sessionWithSocket.kernelSocketInformation = {
-                get socket() {
-                    // When we restart kernels, a new websocket is created and we need to get the new one.
-                    // & the id in the dictionary is the kernel.id.
-                    return requestCreator.getWebsocket(session.kernel!.id);
-                },
-                options: {
-                    clientId: session.kernel.clientId,
-                    id: session.kernel.id,
-                    model: { ...session.kernel.model },
-                    userName: session.kernel.username
-                }
-            };
-            return sessionWithSocket;
+            return session;
         } catch (ex) {
             if (ex instanceof JupyterSessionStartError) {
                 throw ex;

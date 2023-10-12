@@ -151,11 +151,10 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
     }
     private monitorKernel() {
+        this.hookKernelEvents();
         this.kernel.onStarted(this.hookKernelEvents, this, this.disposables);
         this.kernel.onRestarted(this.hookKernelEvents, this, this.disposables);
-
-        const subscription = this.kernel.kernelSocket.subscribe(() => this.hookKernelEvents());
-        this.disposables.push(new Disposable(() => subscription.unsubscribe()));
+        this.kernel.kernelSocket(() => this.hookKernelEvents(), this, this.disposables);
     }
     private hookKernelEvents() {
         const kernelConnection = this.kernel.session?.kernel;

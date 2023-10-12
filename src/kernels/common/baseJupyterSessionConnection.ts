@@ -4,16 +4,15 @@
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { Signal } from '@lumino/signaling';
 import { CancellationToken, EventEmitter } from 'vscode';
-import { Observable } from 'rxjs/Observable';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
 import type { IChangedArgs } from '@jupyterlab/coreutils';
 import { IDisposable } from '../../platform/common/types';
 import { dispose } from '../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
-import { IBaseKernelSession, INewSessionWithSocket, KernelSocketInformation } from '../types';
+import { IBaseKernelSession, IKernelSocket, KernelSocketInformation } from '../types';
+import { KernelSocketMap } from '../kernelSocket';
 
 export abstract class BaseJupyterSessionConnection<
-        S extends INewSessionWithSocket,
+        S extends Session.ISessionConnection,
         T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'
     >
     implements Session.ISessionConnection, IBaseKernelSession<T>
@@ -111,10 +110,10 @@ export abstract class BaseJupyterSessionConnection<
     public get kernelId(): string | undefined {
         return this.session?.kernel?.id || '';
     }
-    protected _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
+    protected _kernelSocket = new EventEmitter<KernelSocketInformation | undefined>();
 
-    public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
-        return this._kernelSocket;
+    public get kernelSocket() {
+        return this._kernelSocket.event;
     }
     public abstract readonly status: KernelMessage.Status;
     protected previousAnyMessageHandler?: IDisposable;
@@ -141,7 +140,10 @@ export abstract class BaseJupyterSessionConnection<
         this.initializeKernelSocket();
         traceInfo(`Restarted ${this.session?.kernel?.id}`);
     }
-    private previousKernelSocketInformation?: KernelSocketInformation & { kernel: Kernel.IKernelConnection };
+    private previousKernelSocketInformation?: KernelSocketInformation & {
+        kernel: Kernel.IKernelConnection;
+        socket: IKernelSocket | undefined;
+    };
     protected initializeKernelSocket() {
         if (!this.session.kernel) {
             throw new Error('Kernel not initialized in Session');
@@ -154,13 +156,14 @@ export abstract class BaseJupyterSessionConnection<
                 model: { ...this.session.kernel.model },
                 userName: this.session.kernel.username
             },
-            socket: this.session.kernelSocketInformation.socket
+            socket: KernelSocketMap.get(this.session.kernel.id)
         };
         // If we have a new session, then emit the new kernel connection information.
         if (
-            JSON.stringify(this.previousKernelSocketInformation?.options) ===
-                JSON.stringify(newKernelSocketInformation.options) &&
+            JSON.stringify(this.previousKernelSocketInformation?.kernel.model) ===
+                JSON.stringify(newKernelSocketInformation.kernel.model) &&
             this.previousKernelSocketInformation?.kernel === newKernelSocketInformation.kernel &&
+            this.previousKernelSocketInformation?.kernel.id === newKernelSocketInformation.kernel.id &&
             this.previousKernelSocketInformation?.socket === newKernelSocketInformation.socket
         ) {
             return;
@@ -172,7 +175,7 @@ export abstract class BaseJupyterSessionConnection<
 
         // Listen for session status changes
         this.session.kernel?.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
-        this._kernelSocket.next(newKernelSocketInformation);
+        this._kernelSocket.fire({});
     }
 
     private onPropertyChanged(_: unknown, value: 'path' | 'name' | 'type') {

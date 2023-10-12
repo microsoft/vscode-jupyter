@@ -16,6 +16,7 @@ import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { IKernel, IKernelProvider, KernelSocketInformation } from '../../../../kernels/types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from '../types';
 import { shouldMessageBeMirroredWithRenderer } from '../../../../kernels/kernel';
+import { KernelSocketMap } from '../../../../kernels/kernelSocket';
 
 type PendingMessage = {
     resultPromise: Deferred<void>;
@@ -189,11 +190,12 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         this.subscribedToKernelSocket = true;
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
-        kernel.session.kernelSocket.subscribe((info) => {
+        const oldKernelId = kernel.session.kernel?.id;
+        kernel.session.kernelSocket((info) => {
             // Remove old handlers.
-            this.kernelSocketInfo?.socket?.removeReceiveHook(this.onKernelSocketMessage); // NOSONAR
-            this.kernelSocketInfo?.socket?.removeSendHook(this.mirrorSend); // NOSONAR
-
+            const oldSocket = oldKernelId ? KernelSocketMap.get(oldKernelId) : undefined;
+            oldSocket?.removeReceiveHook(this.onKernelSocketMessage); // NOSONAR
+            oldSocket?.removeSendHook(this.mirrorSend); // NOSONAR
             if (this.kernelWasConnectedAtLeastOnce) {
                 // this means we restarted the kernel and we now have new information.
                 // Discard all of the messages upto this point.
@@ -207,7 +209,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.messageHooks.clear();
                 this.sendRestartKernel();
             }
-            if (!info || !info.socket) {
+            if (!info || !kernel.session?.kernel?.id || !KernelSocketMap.get(kernel.session?.kernel?.id)) {
                 // No kernel socket information, hence nothing much we can do.
                 this.kernelSocketInfo = undefined;
                 return;
@@ -215,8 +217,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
             this.kernelWasConnectedAtLeastOnce = true;
             this.kernelSocketInfo = info;
-            this.kernelSocketInfo.socket?.addReceiveHook(this.onKernelSocketMessage); // NOSONAR
-            this.kernelSocketInfo.socket?.addSendHook(this.mirrorSend); // NOSONAR
+            const kernelId = kernel.session.kernel?.id;
+            const newSocket = kernelId ? KernelSocketMap.get(kernelId) : undefined;
+            newSocket?.addReceiveHook(this.onKernelSocketMessage); // NOSONAR
+            newSocket?.addSendHook(this.mirrorSend); // NOSONAR
             this.sendKernelOptions();
             // Since we have connected to a kernel, send any pending messages.
             this.registerCommTargets(kernel);
@@ -228,10 +232,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
      * Information includes kernel connection info (client id, user name, model, etc).
      */
     private sendKernelOptions() {
-        if (!this.kernelSocketInfo) {
+        if (!this.kernel?.session?.kernel) {
             return;
         }
-        this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
+        this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, {
+            id: this.kernel?.session?.kernel?.id || '',
+            clientId: this.kernel?.session?.kernel?.clientId || '',
+            userName: this.kernel?.session?.kernel?.username || '',
+            model: this.kernel?.session?.kernel?.model || { id: '', name: '' }
+        });
     }
     private async mirrorSend(data: any, _cb?: (err?: Error) => void): Promise<void> {
         // If this is shell control message, mirror to the other side. This is how

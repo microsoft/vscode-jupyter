@@ -18,7 +18,6 @@ import { mock, when, instance, verify, anything, capture } from 'ts-mockito';
 import { CancellationTokenSource, Disposable, Uri } from 'vscode';
 import {
     IJupyterConnection,
-    IKernelSocket,
     KernelSessionCreationOptions,
     LiveRemoteKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
@@ -36,7 +35,7 @@ import {
 import { JupyterKernelSessionFactory } from './jupyterKernelSessionFactory';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { JupyterConnection } from '../connection/jupyterConnection';
-import { IJupyterServerProvider, IJupyterRequestCreator, IJupyterKernelService } from '../types';
+import { IJupyterServerProvider, IJupyterKernelService } from '../types';
 import { DisplayOptions } from '../../displayOptions';
 import { JupyterLabHelper } from './jupyterLabHelper';
 import { resolvableInstance } from '../../../test/datascience/helpers';
@@ -49,7 +48,6 @@ suite('New Jupyter Kernel Session Factory', () => {
     let jupyterConnection: JupyterConnection;
     let asyncDisposables: IAsyncDisposable[];
     let workspaceService: IWorkspaceService;
-    let requestCreator: IJupyterRequestCreator;
     let kernelService: IJupyterKernelService;
     let configService: IConfigurationService;
     let settings: IWatchableJupyterSettings;
@@ -59,7 +57,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         id: '1234',
         kernelSpec: {} as any
     });
-    let socket: IKernelSocket;
     const disposables: IDisposable[] = [];
     let token: CancellationTokenSource;
     let ui: DisplayOptions;
@@ -127,14 +124,12 @@ suite('New Jupyter Kernel Session Factory', () => {
         jupyterConnection = mock<JupyterConnection>();
         asyncDisposables = [] as any;
         workspaceService = mock<IWorkspaceService>();
-        requestCreator = mock<IJupyterRequestCreator>();
         kernelService = mock<IJupyterKernelService>();
         configService = mock<IConfigurationService>();
         settings = mock<IWatchableJupyterSettings>();
         connection = mock<IJupyterConnection>();
         sessionManager = mock<SessionManager>();
         contentsManager = mock<ContentsManager>();
-        socket = mock<IKernelSocket>();
         serverSettings = mock<ServerConnection.ISettings>();
 
         token = new CancellationTokenSource();
@@ -144,7 +139,6 @@ suite('New Jupyter Kernel Session Factory', () => {
 
         when(settings.jupyterLaunchTimeout).thenReturn(jupyterLaunchTimeout);
         when(configService.getSettings(anything())).thenReturn(instance(settings));
-        when(requestCreator.getWebsocket(anything())).thenReturn(instance(socket));
 
         when(workspaceService.computeWorkingDirectory(anything())).thenResolve('someDir');
         when(
@@ -182,7 +176,6 @@ suite('New Jupyter Kernel Session Factory', () => {
             instance(jupyterConnection),
             asyncDisposables as any,
             instance(workspaceService),
-            instance(requestCreator),
             instance(kernelService),
             instance(configService)
         );

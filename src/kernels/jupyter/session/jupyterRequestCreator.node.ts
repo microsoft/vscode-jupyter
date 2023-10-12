@@ -8,11 +8,8 @@ import WebSocketIsomorphic from 'isomorphic-ws';
 import { traceError } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
-import { IKernelSocket } from '../../types';
 import { injectable } from 'inversify';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const JupyterWebSockets = new Map<string, WebSocketIsomorphic & IKernelSocket>(); // NOSONAR
+import { KernelSocketMap } from '../../kernelSocket';
 
 // Function for creating node Request object that prevents jupyterlab services from writing its own
 // authorization header.
@@ -108,13 +105,13 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
                     this.kernelId = parsed[1];
                 }
                 if (this.kernelId) {
-                    JupyterWebSockets.set(this.kernelId, this);
+                    KernelSocketMap.set(this.kernelId, this);
                     this.on('close', () => {
                         if (timer && this.timer !== timer) {
                             clearInterval(timer as any);
                         }
-                        if (JupyterWebSockets.get(this.kernelId!) === this) {
-                            JupyterWebSockets.delete(this.kernelId!);
+                        if (KernelSocketMap.get(this.kernelId!) === this) {
+                            KernelSocketMap.delete(this.kernelId!);
                         }
                     });
                 } else {
@@ -141,13 +138,13 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
                     this.kernelId = parsed[1];
                 }
                 if (this.kernelId) {
-                    JupyterWebSockets.set(this.kernelId, this);
+                    KernelSocketMap.set(this.kernelId, this);
                     this.on('close', () => {
                         if (timer && this.timer !== timer) {
                             clearInterval(timer as any);
                         }
-                        if (JupyterWebSockets.get(this.kernelId!) === this) {
-                            JupyterWebSockets.delete(this.kernelId!);
+                        if (KernelSocketMap.get(this.kernelId!) === this) {
+                            KernelSocketMap.delete(this.kernelId!);
                         }
                     });
                 } else {
@@ -159,10 +156,6 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
             }
         }
         return JupyterWebSocket as any;
-    }
-
-    public getWebsocket(id: string): IKernelSocket | undefined {
-        return JupyterWebSockets.get(id);
     }
 
     public getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response> {

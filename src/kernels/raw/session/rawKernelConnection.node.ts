@@ -35,6 +35,7 @@ import {
 } from '../../../platform/common/cancellation';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { dispose } from '../../../platform/common/helpers';
+import { KernelSocketMap } from '../../kernelSocket';
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -94,7 +95,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     private kernelProcess?: IKernelProcess;
     private exitHandler?: IDisposable;
     private realKernel?: Kernel.IKernelConnection;
-    public socket: IKernelSocket & IWebSocketLike & IDisposable;
+    private socket: IKernelSocket & IWebSocketLike & IDisposable;
     private restartToken?: CancellationTokenSource;
 
     constructor(
@@ -157,7 +158,6 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             this.kernelProcess = result.kernelProcess;
             this.realKernel = result.realKernel;
             this.socket = result.socket;
-            this.socket.emit('open');
             result.realKernel.info.then(
                 (info) => this.infoDeferred.resolve(info),
                 (ex) => this.infoDeferred.reject(ex)
@@ -599,6 +599,8 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
         model
     });
 
+    KernelSocketMap.set(realKernel.id, socketInstance!);
+    socketInstance!.emit('open');
     // Use this real kernel in result.
     return { realKernel, socket: socketInstance!, kernelProcess };
 }

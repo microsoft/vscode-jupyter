@@ -5,10 +5,10 @@ import { ISignal, Signal } from '@lumino/signaling';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { IChangedArgs } from '@jupyterlab/coreutils';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { mock, when, instance } from 'ts-mockito';
 import { CancellationError, CancellationTokenSource, Disposable, Uri } from 'vscode';
-import { INewSessionWithSocket, LocalKernelSpecConnectionMetadata } from '../types';
+import { LocalKernelSpecConnectionMetadata } from '../types';
 import { noop } from '../../test/core';
 import { IDisposable } from '../../platform/common/types';
 import { dispose } from '../../platform/common/helpers';
@@ -21,38 +21,44 @@ suite('Kernel Common Helpers', () => {
         id: '1234',
         kernelSpec: {} as any
     });
-    let session: INewSessionWithSocket;
+    let session: Session.ISessionConnection;
     let token: CancellationTokenSource;
     const disposables: IDisposable[] = [];
     let kernel: Kernel.IKernelConnection;
-    let sessionDisposed: Signal<INewSessionWithSocket, void>;
+    let sessionDisposed: Signal<Session.ISessionConnection, void>;
 
     setup(() => {
         token = new CancellationTokenSource();
         disposables.push(token);
 
-        session = mock<INewSessionWithSocket>();
+        session = mock<Session.ISessionConnection>();
         kernel = mock<Kernel.IKernelConnection>();
         when(session.shutdown()).thenResolve();
         when(session.dispose()).thenReturn();
         when(session.kernel).thenReturn(instance(kernel));
-        sessionDisposed = new Signal<INewSessionWithSocket, void>(instance(session));
-        const sessionPropertyChanged = new Signal<INewSessionWithSocket, 'path'>(instance(session));
-        const sessionIOPubMessage = new Signal<INewSessionWithSocket, KernelMessage.IIOPubMessage>(instance(session));
-        const sessionKernelChanged = new Signal<
-            INewSessionWithSocket,
-            IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
-        >(instance(session));
-        const sessionUnhandledMessage = new Signal<INewSessionWithSocket, KernelMessage.IMessage>(instance(session));
-        const sessionConnectionStatusChanged = new Signal<INewSessionWithSocket, Kernel.ConnectionStatus>(
+        sessionDisposed = new Signal<Session.ISessionConnection, void>(instance(session));
+        const sessionPropertyChanged = new Signal<Session.ISessionConnection, 'path'>(instance(session));
+        const sessionIOPubMessage = new Signal<Session.ISessionConnection, KernelMessage.IIOPubMessage>(
             instance(session)
         );
-        const sessionAnyMessage = new Signal<INewSessionWithSocket, Kernel.IAnyMessageArgs>(instance(session));
+        const sessionKernelChanged = new Signal<
+            Session.ISessionConnection,
+            IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
+        >(instance(session));
+        const sessionUnhandledMessage = new Signal<Session.ISessionConnection, KernelMessage.IMessage>(
+            instance(session)
+        );
+        const sessionConnectionStatusChanged = new Signal<Session.ISessionConnection, Kernel.ConnectionStatus>(
+            instance(session)
+        );
+        const sessionAnyMessage = new Signal<Session.ISessionConnection, Kernel.IAnyMessageArgs>(instance(session));
         when(session.disposed).thenReturn(sessionDisposed);
         when(session.propertyChanged).thenReturn(sessionPropertyChanged);
         when(session.iopubMessage).thenReturn(sessionIOPubMessage);
         when(session.kernelChanged).thenReturn(sessionKernelChanged);
-        when(session.statusChanged).thenReturn(new Signal<INewSessionWithSocket, Kernel.Status>(instance(session)));
+        when(session.statusChanged).thenReturn(
+            new Signal<Session.ISessionConnection, Kernel.Status>(instance(session))
+        );
         when(session.unhandledMessage).thenReturn(sessionUnhandledMessage);
         when(session.connectionStatusChanged).thenReturn(sessionConnectionStatusChanged);
         when(session.anyMessage).thenReturn(sessionAnyMessage);
