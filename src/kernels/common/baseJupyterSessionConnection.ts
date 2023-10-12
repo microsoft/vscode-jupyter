@@ -8,7 +8,7 @@ import type { IChangedArgs } from '@jupyterlab/coreutils';
 import { IDisposable } from '../../platform/common/types';
 import { dispose } from '../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
-import { IBaseKernelSession, IKernelSocket, KernelSocketInformation } from '../types';
+import { IBaseKernelSession, IKernelSocket } from '../types';
 import { KernelSocketMap } from '../kernelSocket';
 
 export abstract class BaseJupyterSessionConnection<
@@ -110,7 +110,7 @@ export abstract class BaseJupyterSessionConnection<
     public get kernelId(): string | undefined {
         return this.session?.kernel?.id || '';
     }
-    protected _kernelSocket = new EventEmitter<KernelSocketInformation | undefined>();
+    protected _kernelSocket = new EventEmitter<void>();
 
     public get kernelSocket() {
         return this._kernelSocket.event;
@@ -140,7 +140,7 @@ export abstract class BaseJupyterSessionConnection<
         this.initializeKernelSocket();
         traceInfo(`Restarted ${this.session?.kernel?.id}`);
     }
-    private previousKernelSocketInformation?: KernelSocketInformation & {
+    private previousKernelSocketInformation?: {
         kernel: Kernel.IKernelConnection;
         socket: IKernelSocket | undefined;
     };
@@ -175,7 +175,7 @@ export abstract class BaseJupyterSessionConnection<
 
         // Listen for session status changes
         this.session.kernel?.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
-        this._kernelSocket.fire({});
+        this._kernelSocket.fire();
     }
 
     private onPropertyChanged(_: unknown, value: 'path' | 'name' | 'type') {

@@ -46,7 +46,6 @@ import {
     InterruptResult,
     IStartupCodeProvider,
     KernelConnectionMetadata,
-    KernelSocketInformation,
     IBaseKernel,
     KernelActionSource,
     KernelHooks,
@@ -152,7 +151,7 @@ abstract class BaseKernel implements IBaseKernel {
     get disposing(): boolean {
         return this._disposing === true;
     }
-    get kernelSocket(): Event<KernelSocketInformation | undefined> {
+    get kernelSocket(): Event<void> {
         return this._kernelSocket.event;
     }
     private _session?: IKernelSession;
@@ -169,7 +168,7 @@ abstract class BaseKernel implements IBaseKernel {
     private _disposed?: boolean;
     private _disposing?: boolean;
     private _ignoreJupyterSessionDisposedErrors?: boolean;
-    private readonly _kernelSocket = new EventEmitter<KernelSocketInformation | undefined>();
+    private readonly _kernelSocket = new EventEmitter<void>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();

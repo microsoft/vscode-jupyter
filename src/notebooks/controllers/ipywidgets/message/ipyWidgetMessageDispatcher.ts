@@ -13,7 +13,7 @@ import { noop } from '../../../../platform/common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../../../platform/common/utils/serializers';
 import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../messageTypes';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
-import { IKernel, IKernelProvider, KernelSocketInformation } from '../../../../kernels/types';
+import { IKernel, IKernelProvider } from '../../../../kernels/types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from '../types';
 import { shouldMessageBeMirroredWithRenderer } from '../../../../kernels/kernel';
 import { KernelSocketMap } from '../../../../kernels/kernelSocket';

@@ -16,7 +16,6 @@ import {
     isLocalConnection,
     KernelActionSource,
     KernelConnectionMetadata,
-    KernelSocketInformation,
     LiveRemoteKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
@@ -127,7 +126,7 @@ suite('Remote kernel connection handler', async () => {
         const kernelConnection = mock<Kernel.IKernelConnection>();
         when(session.kernel).thenReturn(instance(kernelConnection));
         when(kernelConnection.id).thenReturn('_KernelId_');
-        const subject = new EventEmitter<KernelSocketInformation>();
+        const subject = new EventEmitter<void>();
         disposables.push(subject);
         when(kernel1.kernelSocket).thenReturn(subject.event);
         const nbUri = Uri.file('a.ipynb');
@@ -140,7 +139,7 @@ suite('Remote kernel connection handler', async () => {
 
         verify(tracker.trackKernelIdAsUsed(anything(), anything(), anything())).never();
         verify(preferredRemoteKernelProvider.storePreferredRemoteKernelId(anything(), anything())).never();
-        subject.fire({});
+        subject.fire();
 
         if (connection.kind === 'startUsingRemoteKernelSpec' && source === 'jupyterExtension') {
             verify(
