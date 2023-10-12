@@ -164,6 +164,8 @@ export abstract class BaseJupyterSessionConnection<
                 JSON.stringify(newKernelSocketInformation.kernel.model) &&
             this.previousKernelSocketInformation?.kernel === newKernelSocketInformation.kernel &&
             this.previousKernelSocketInformation?.kernel.id === newKernelSocketInformation.kernel.id &&
+            // We MUST compare the instance of the socket,
+            // When restarting local kernels, the id is the same, but the socket instance is different.
             this.previousKernelSocketInformation?.socket === newKernelSocketInformation.socket
         ) {
             return;
