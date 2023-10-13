@@ -775,6 +775,29 @@
                 "icon": "$(vm)",
                 "enablement": "true",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.gatherCells",
+                "title": "Gather code",
+                "shortTitle": "Gather",
+                "icon": "$(gather)",
+                "enablement": "!jupyter.webExtension",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.selectSuccessorCells",
+                "title": "Select Successors",
+                "shortTitle": "Select",
+                "icon": "$(arrow-down)",
+                "enablement": "!jupyter.webExtension",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.debugCellSymbols",
+                "title": "Debug Cell Symbols",
+                "icon": "$(debug-alt-small)",
+                "enablement": "!jupyter.webExtension",
+                "category": "Jupyter"
             }
         ],
         "submenus": [
@@ -925,6 +948,16 @@
                     "command": "jupyter.runByLineStop",
                     "when": "notebookCellResource in jupyter.notebookeditor.runByLineCells && notebookCellToolbarLocation == right",
                     "group": "inline/cell@0"
+                },
+                {
+                    "command": "jupyter.gatherCells",
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.jupyter.executionAnalysis.enabled",
+                    "group": "executionAnalysis@0"
+                },
+                {
+                    "command": "jupyter.selectSuccessorCells",
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.jupyter.executionAnalysis.enabled",
+                    "group": "executionAnalysis@0"
                 }
             ],
             "notebook/cell/execute": [
@@ -1365,6 +1398,18 @@
                 {
                     "command": "jupyter.clearSavedJupyterUris",
                     "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%"
+                },
+                {
+                    "command": "jupyter.gatherCells",
+                    "when": "config.jupyter.executionAnalysis.enabled"
+                },
+                {
+                    "command": "jupyter.selectSuccessorCells",
+                    "when": "config.jupyter.executionAnalysis.enabled"
+                },
+                {
+                    "command": "jupyter.debugCellSymbols",
+                    "when": "config.jupyter.executionAnalysis.enabled"
                 }
             ],
             "debug/variables/context": [
@@ -1873,6 +1918,12 @@
                     "type": "boolean",
                     "default": false,
                     "markdownDescription": "%jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription%",
+                    "scope": "application"
+                },
+                "jupyter.executionAnalysis.enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Experimental feature to enable execution analysis in notebooks",
                     "scope": "application"
                 }
             }

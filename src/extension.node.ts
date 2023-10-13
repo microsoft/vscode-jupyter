@@ -92,6 +92,10 @@ import { IInterpreterPackages } from './platform/interpreter/types';
 import { homedir, platform, arch, userInfo } from 'os';
 import { getUserHomeDir } from './platform/common/utils/platform.node';
 import { homePath } from './platform/common/platform/fs-paths.node';
+import {
+    activate as activateExecutionAnalysis,
+    deactivate as deactivateExecutionAnalysis
+} from './standalone/executionAnalysis/extension';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -151,6 +155,8 @@ export function deactivate(): Thenable<void> {
         }
     }
 
+    deactivateExecutionAnalysis();
+
     return Promise.resolve();
 }
 
@@ -186,6 +192,10 @@ async function activateUnsafe(
 
         startupDurations.endActivateTime = startupStopWatch.elapsedTime;
         activationDeferred.resolve();
+
+        //===============================================
+        // dynamically load standalone plugins
+        activateExecutionAnalysis(context).then(noop, noop);
 
         const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
         return [api, activationPromise, serviceContainer];
