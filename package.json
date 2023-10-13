@@ -781,22 +781,26 @@
                 "title": "Gather code",
                 "shortTitle": "Gather",
                 "icon": "$(gather)",
-                "enablement": "!jupyter.webExtension",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
                 "category": "Jupyter"
             },
             {
                 "command": "jupyter.selectSuccessorCells",
-                "title": "Select Successors",
-                "shortTitle": "Select",
-                "icon": "$(arrow-down)",
-                "enablement": "!jupyter.webExtension",
+                "title": "Select Dependent Cells",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.runSuccessorCells",
+                "title": "Execute Cell with Dependencies",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
                 "category": "Jupyter"
             },
             {
                 "command": "jupyter.debugCellSymbols",
                 "title": "Debug Cell Symbols",
                 "icon": "$(debug-alt-small)",
-                "enablement": "!jupyter.webExtension",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
                 "category": "Jupyter"
             }
         ],
@@ -964,6 +968,10 @@
                 {
                     "command": "jupyter.runAndDebugCell",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.runSuccessorCells",
+                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && config.jupyter.executionAnalysis.enabled"
                 }
             ],
             "interactive/toolbar": [
