@@ -63,10 +63,33 @@ export function cellIndexesToRanges(indexes: number[]): vscode.NotebookRange[] {
         .map((val) => new vscode.NotebookRange(val[0], val[1]));
 }
 
-export function findNotebook(document: vscode.TextDocument): vscode.NotebookDocument | undefined {
+function findNotebook(document: vscode.TextDocument): vscode.NotebookDocument | undefined {
     return vscode.workspace.notebookDocuments.find(
         (doc) => doc.uri.authority === document.uri.authority && doc.uri.path === document.uri.path
     );
+}
+
+export function findNotebookAndCell(
+    cell: vscode.NotebookCell | undefined
+): { notebook: vscode.NotebookDocument; cell: vscode.NotebookCell } | undefined {
+    const doc =
+        vscode.workspace.textDocuments.find((doc) => doc.uri.toString() === cell?.document.uri.toString()) ??
+        vscode.window.activeTextEditor?.document;
+    if (!doc) {
+        return;
+    }
+
+    const notebook = findNotebook(doc);
+    if (!notebook) {
+        return;
+    }
+    const cells = notebook.getCells();
+    const currentCell = cells.find((cell) => cell.document.uri.toString() === doc.uri.toString());
+    if (!currentCell) {
+        return;
+    }
+
+    return { notebook, cell: currentCell };
 }
 
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function

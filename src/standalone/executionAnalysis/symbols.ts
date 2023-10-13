@@ -244,7 +244,6 @@ export class NotebookDocumentSymbolTracker {
 
     async selectSuccessorCells(cell: vscode.NotebookCell) {
         await this.requestCellSymbolsSync();
-        const tokenSource = new vscode.CancellationTokenSource();
         const refs = this._cellRefs.get(cell.document.uri.fragment);
         const cells = this._notebookEditor.notebook.getCells();
         const indexes: number[] = [];
@@ -266,8 +265,19 @@ export class NotebookDocumentSymbolTracker {
 
         const cellRanges = cellIndexesToRanges(indexes);
         this._notebookEditor.selections = cellRanges;
+    }
 
-        tokenSource.dispose();
+    async runSuccessorCells(cell: vscode.NotebookCell) {
+        await this.requestCellSymbolsSync();
+        const analysis = new CellAnalysis(this._cellExecution, this._cellRefs);
+        const successorCells = analysis.getSuccessorCells(cell) as vscode.NotebookCell[];
+        const cellRanges = cellIndexesToRanges(successorCells.map((cell) => cell.index));
+        await vscode.commands
+            .executeCommand('notebook.cell.execute', {
+                ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
+                document: this._notebookEditor.notebook.uri
+            })
+            .then(noop, noop);
     }
 
     async debugSymbols() {
@@ -451,6 +461,13 @@ export class SymbolsTracker {
         const tracker = this._notebookDocumentSymbolTrackers.get(notebookDocument.uri.toString());
         if (tracker) {
             await tracker.debugSymbols();
+        }
+    }
+
+    async runSuccessorCells(notebookDocument: vscode.NotebookDocument, cell: vscode.NotebookCell) {
+        const tracker = this._notebookDocumentSymbolTrackers.get(notebookDocument.uri.toString());
+        if (tracker) {
+            await tracker.runSuccessorCells(cell);
         }
     }
 

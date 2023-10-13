@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import { activatePylance } from './pylance';
-import { findNotebook, noop } from './common';
+import { findNotebookAndCell, noop } from './common';
 import { SymbolsTracker } from './symbols';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
@@ -27,48 +27,37 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.commands.registerCommand(
             'jupyter.selectSuccessorCells',
             async (cell: vscode.NotebookCell | undefined) => {
-                const doc =
-                    vscode.workspace.textDocuments.find(
-                        (doc) => doc.uri.toString() === cell?.document.uri.toString()
-                    ) ?? vscode.window.activeTextEditor?.document;
-                if (!doc) {
+                const matched = findNotebookAndCell(cell);
+                if (!matched) {
                     return;
                 }
 
-                const notebook = findNotebook(doc);
-                if (!notebook) {
-                    return;
-                }
-                const cells = notebook.getCells();
-                const currentCell = cells.find((cell) => cell.document.uri.toString() === doc.uri.toString());
-                if (!currentCell) {
-                    return;
-                }
-
+                const { notebook, cell: currentCell } = matched;
                 await symbolsManager.selectSuccessorCells(notebook, currentCell);
             }
         )
     );
 
     context.subscriptions.push(
+        vscode.commands.registerCommand('jupyter.runSuccessorCells', async (cell: vscode.NotebookCell | undefined) => {
+            const matched = findNotebookAndCell(cell);
+            if (!matched) {
+                return;
+            }
+
+            const { notebook, cell: currentCell } = matched;
+            await symbolsManager.runSuccessorCells(notebook, currentCell);
+        })
+    );
+
+    context.subscriptions.push(
         vscode.commands.registerCommand('jupyter.gatherCells', async (cell: vscode.NotebookCell | undefined) => {
-            const doc =
-                vscode.workspace.textDocuments.find((doc) => doc.uri.toString() === cell?.document.uri.toString()) ??
-                vscode.window.activeTextEditor?.document;
-            if (!doc) {
+            const matched = findNotebookAndCell(cell);
+            if (!matched) {
                 return;
             }
 
-            const notebook = findNotebook(doc);
-            if (!notebook) {
-                return;
-            }
-            const cells = notebook.getCells();
-            const currentCell = cells.find((cell) => cell.document.uri.toString() === doc.uri.toString());
-            if (!currentCell) {
-                return;
-            }
-
+            const { notebook, cell: currentCell } = matched;
             const gatheredCells = (await symbolsManager.gatherCells(notebook, currentCell)) as vscode.NotebookCell[];
             if (gatheredCells) {
                 // console.log(gatheredCells?.map(cell => `${cell.index}:\n ${cell.document.getText()}\n`));
