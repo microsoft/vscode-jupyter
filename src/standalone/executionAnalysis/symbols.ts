@@ -80,6 +80,7 @@ export class CellAnalysis {
 
         const reversedCellRefs = new Map<string, string[]>(); // key: cell uri fragment, value: cell uri fragment[]
         for (const [key, dependents] of this._cellRefs.entries()) {
+            const modifications = dependents.filter((item) => item.kind === 'write').map((item) => item.uri.fragment);
             dependents.forEach((dependent) => {
                 const fragment = dependent.uri.fragment;
 
@@ -87,6 +88,16 @@ export class CellAnalysis {
                     reversedCellRefs.get(fragment)?.push(key);
                 } else {
                     reversedCellRefs.set(fragment, [key]);
+                }
+            });
+
+            // if a cell modifies a symbol, then all other cells that use the symbol (no matter read or write) will depend on this cell
+            dependents.forEach((dependent) => {
+                const fragment = dependent.uri.fragment;
+                if (reversedCellRefs.has(fragment)) {
+                    reversedCellRefs.get(fragment)?.push(...modifications);
+                } else {
+                    reversedCellRefs.set(fragment, modifications);
                 }
             });
         }
@@ -125,22 +136,36 @@ export class CellAnalysis {
         const cellBitmap: boolean[] = new Array(this._cellExecution.length).fill(false);
         cellBitmap[cellIndex] = true;
 
-        // a symbol is a definition so modifying it is always a `write` operation
+        const modificationCellRefs: Map<string, ILocationWithReferenceKindAndSymbol[]> = new Map();
+        this._cellRefs.forEach((refs) => {
+            refs.forEach((ref) => {
+                if (ref.kind === 'write') {
+                    // this is a write ref, so all other read/write references to this symbol will depend on this cell
+                    const modifiedCellFragment = ref.uri.fragment;
+                    const modifiedCellRefs = modificationCellRefs.get(modifiedCellFragment) ?? [];
+                    modifiedCellRefs.push(...refs.filter((item) => item !== ref));
+                    modificationCellRefs.set(modifiedCellFragment, modifiedCellRefs);
+                }
+            });
+        });
 
+        // a symbol is a definition so modifying it is always a `write` operation
         for (let i = cellIndex; i < this._cellExecution.length; i++) {
             if (cellBitmap[i]) {
-                const deps = this._cellRefs.get(this._cellExecution[i].cell.document.uri.fragment);
-                deps?.forEach((dep) => {
+                const deps = this._cellRefs.get(this._cellExecution[i].cell.document.uri.fragment) || [];
+                const modificationDeps =
+                    modificationCellRefs.get(this._cellExecution[i].cell.document.uri.fragment) || [];
+                const mergedDeps = [...deps, ...modificationDeps];
+
+                mergedDeps.forEach((dep) => {
                     const index = this._cellExecution.findIndex(
                         (item) => item.cell.document.uri.fragment === dep.uri.fragment
                     );
                     // @todo what if index < cellIndex?
-                    if (index !== -1 && index >= cellIndex) {
+                    if (index !== -1 && index >= i) {
                         cellBitmap[index] = true;
                     }
                 });
-
-                // check if this cell contains `write` references
             }
         }
 
