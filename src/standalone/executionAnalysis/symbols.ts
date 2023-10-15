@@ -249,26 +249,9 @@ export class NotebookDocumentSymbolTracker {
 
     async selectSuccessorCells(cell: vscode.NotebookCell) {
         await this.requestCellSymbolsSync();
-        const refs = this._cellRefs.get(cell.document.uri.fragment);
-        const cells = this._notebookEditor.notebook.getCells();
-        const indexes: number[] = [];
-        const currentCellIndex = cells.findIndex((c) => c.document.uri.toString() === cell.document.uri.toString());
-        if (currentCellIndex === -1) {
-            return;
-        }
-
-        refs?.forEach((ref) => {
-            const index = cells.findIndex((cell) => cell.document.uri.fragment === ref.uri.fragment);
-            if (index !== -1 && index !== currentCellIndex) {
-                indexes.push(index);
-            }
-        });
-
-        if (indexes.length === 0) {
-            return;
-        }
-
-        const cellRanges = cellIndexesToRanges(indexes);
+        const analysis = new CellAnalysis(this._cellExecution, this._cellRefs);
+        const successorCells = analysis.getSuccessorCells(cell) as vscode.NotebookCell[];
+        const cellRanges = cellIndexesToRanges(successorCells.map((cell) => cell.index));
         this._notebookEditor.selections = cellRanges;
     }
 
