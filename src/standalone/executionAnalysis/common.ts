@@ -92,6 +92,15 @@ export function findNotebookAndCell(
     return { notebook, cell: currentCell };
 }
 
+export function areRangesEqual(a: Range | vscode.Range, b: Range | vscode.Range) {
+    return (
+        a.start.line === b.start.line &&
+        a.start.character === b.start.character &&
+        a.end.line === b.end.line &&
+        a.end.character === b.end.character
+    );
+}
+
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
 export function noop() {}
 

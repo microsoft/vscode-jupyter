@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import { INotebookLanguageClient } from './pylance';
-import { cellIndexesToRanges, LocationWithReferenceKind, noop, Range } from './common';
+import { cellIndexesToRanges, areRangesEqual, LocationWithReferenceKind, noop, Range } from './common';
 
 const writeDecorationType = vscode.window.createTextEditorDecorationType({
     after: {
@@ -33,7 +33,12 @@ export interface ILocationWithReferenceKind {
     uri: vscode.Uri;
     range: Range;
     kind?: string;
-    symbolKind?: vscode.SymbolKind;
+}
+
+type ISymbol = vscode.SymbolInformation & vscode.DocumentSymbol;
+
+export interface ILocationWithReferenceKindAndSymbol extends ILocationWithReferenceKind {
+    associatedSymbol?: ISymbol;
 }
 
 /**
@@ -47,7 +52,7 @@ export interface ILocationWithReferenceKind {
 export class CellAnalysis {
     constructor(
         private readonly _cellExecution: ICellExecution[],
-        private readonly _cellRefs: Map<string, ILocationWithReferenceKind[]>
+        private readonly _cellRefs: Map<string, ILocationWithReferenceKindAndSymbol[]>
     ) {}
 
     /**
@@ -178,7 +183,7 @@ export interface ICellExecution {
 
 export class NotebookDocumentSymbolTracker {
     private _pendingRequests: Map<string, vscode.CancellationTokenSource> = new Map();
-    private _cellRefs: Map<string, ILocationWithReferenceKind[]> = new Map();
+    private _cellRefs: Map<string, ILocationWithReferenceKindAndSymbol[]> = new Map();
     private _cellExecution: ICellExecution[] = [];
     private _disposables: vscode.Disposable[] = [];
     constructor(
@@ -318,7 +323,20 @@ export class NotebookDocumentSymbolTracker {
             if (matcheEditor) {
                 const writeRanges: vscode.Range[] = [];
                 const readRanges: vscode.Range[] = [];
-                locations.forEach((loc) => {
+
+                const dedupedLocations = locations.reduce(
+                    (acc: ILocationWithReferenceKind[], current: ILocationWithReferenceKind) => {
+                        const isDuplicate = acc.find((item) => areRangesEqual(item.range, current.range));
+                        if (!isDuplicate) {
+                            return acc.concat([current]);
+                        } else {
+                            return acc;
+                        }
+                    },
+                    []
+                );
+
+                dedupedLocations.forEach((loc) => {
                     const position = new vscode.Position(loc.range.end.line, loc.range.end.character);
                     const range = new vscode.Range(position, position);
 
@@ -380,7 +398,7 @@ export class NotebookDocumentSymbolTracker {
             return;
         }
 
-        const references: (LocationWithReferenceKind & { symbolKind?: vscode.SymbolKind })[] = [];
+        const references: (LocationWithReferenceKind & { associatedSymbol: ISymbol })[] = [];
         for (const symbol of symbols) {
             const symbolReferences = await this._client.getReferences(
                 cell.document,
@@ -392,7 +410,7 @@ export class NotebookDocumentSymbolTracker {
                 references.push(
                     ...symbolReferences.map((ref) => ({
                         ...ref,
-                        symbolKind: symbol.kind
+                        associatedSymbol: symbol
                     }))
                 );
             }
@@ -405,9 +423,8 @@ export class NotebookDocumentSymbolTracker {
                 references.map((ref) => ({
                     range: ref.range,
                     uri: vscode.Uri.parse(ref.uri),
-                    // @todo: should we support other symbol types?
-                    kind: ref.symbolKind === vscode.SymbolKind.Function ? 'write' : ref.kind,
-                    symbolKind: ref.symbolKind
+                    kind: areRangesEqual(ref.range, ref.associatedSymbol.selectionRange) ? 'write' : ref.kind,
+                    associatedSymbol: ref.associatedSymbol
                 }))
             );
         }
