@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import { INotebookLanguageClient } from './pylance';
-import { cellIndexesToRanges, LocationWithReferenceKind, noop, Range } from './common';
+import { cellIndexesToRanges, areRangesEqual, LocationWithReferenceKind, noop, Range } from './common';
 
 const writeDecorationType = vscode.window.createTextEditorDecorationType({
     after: {
@@ -33,7 +33,12 @@ export interface ILocationWithReferenceKind {
     uri: vscode.Uri;
     range: Range;
     kind?: string;
-    symbolKind?: vscode.SymbolKind;
+}
+
+type ISymbol = vscode.SymbolInformation & vscode.DocumentSymbol;
+
+export interface ILocationWithReferenceKindAndSymbol extends ILocationWithReferenceKind {
+    associatedSymbol?: ISymbol;
 }
 
 /**
@@ -47,7 +52,7 @@ export interface ILocationWithReferenceKind {
 export class CellAnalysis {
     constructor(
         private readonly _cellExecution: ICellExecution[],
-        private readonly _cellRefs: Map<string, ILocationWithReferenceKind[]>
+        private readonly _cellRefs: Map<string, ILocationWithReferenceKindAndSymbol[]>
     ) {}
 
     /**
@@ -75,6 +80,7 @@ export class CellAnalysis {
 
         const reversedCellRefs = new Map<string, string[]>(); // key: cell uri fragment, value: cell uri fragment[]
         for (const [key, dependents] of this._cellRefs.entries()) {
+            const modifications = dependents.filter((item) => item.kind === 'write').map((item) => item.uri.fragment);
             dependents.forEach((dependent) => {
                 const fragment = dependent.uri.fragment;
 
@@ -82,6 +88,16 @@ export class CellAnalysis {
                     reversedCellRefs.get(fragment)?.push(key);
                 } else {
                     reversedCellRefs.set(fragment, [key]);
+                }
+            });
+
+            // if a cell modifies a symbol, then all other cells that use the symbol (no matter read or write) will depend on this cell
+            dependents.forEach((dependent) => {
+                const fragment = dependent.uri.fragment;
+                if (reversedCellRefs.has(fragment)) {
+                    reversedCellRefs.get(fragment)?.push(...modifications);
+                } else {
+                    reversedCellRefs.set(fragment, modifications);
                 }
             });
         }
@@ -120,22 +136,36 @@ export class CellAnalysis {
         const cellBitmap: boolean[] = new Array(this._cellExecution.length).fill(false);
         cellBitmap[cellIndex] = true;
 
-        // a symbol is a definition so modifying it is always a `write` operation
+        const modificationCellRefs: Map<string, ILocationWithReferenceKindAndSymbol[]> = new Map();
+        this._cellRefs.forEach((refs) => {
+            refs.forEach((ref) => {
+                if (ref.kind === 'write') {
+                    // this is a write ref, so all other read/write references to this symbol will depend on this cell
+                    const modifiedCellFragment = ref.uri.fragment;
+                    const modifiedCellRefs = modificationCellRefs.get(modifiedCellFragment) ?? [];
+                    modifiedCellRefs.push(...refs.filter((item) => item !== ref));
+                    modificationCellRefs.set(modifiedCellFragment, modifiedCellRefs);
+                }
+            });
+        });
 
+        // a symbol is a definition so modifying it is always a `write` operation
         for (let i = cellIndex; i < this._cellExecution.length; i++) {
             if (cellBitmap[i]) {
-                const deps = this._cellRefs.get(this._cellExecution[i].cell.document.uri.fragment);
-                deps?.forEach((dep) => {
+                const deps = this._cellRefs.get(this._cellExecution[i].cell.document.uri.fragment) || [];
+                const modificationDeps =
+                    modificationCellRefs.get(this._cellExecution[i].cell.document.uri.fragment) || [];
+                const mergedDeps = [...deps, ...modificationDeps];
+
+                mergedDeps.forEach((dep) => {
                     const index = this._cellExecution.findIndex(
                         (item) => item.cell.document.uri.fragment === dep.uri.fragment
                     );
                     // @todo what if index < cellIndex?
-                    if (index !== -1 && index >= cellIndex) {
+                    if (index !== -1 && index >= i) {
                         cellBitmap[index] = true;
                     }
                 });
-
-                // check if this cell contains `write` references
             }
         }
 
@@ -178,7 +208,7 @@ export interface ICellExecution {
 
 export class NotebookDocumentSymbolTracker {
     private _pendingRequests: Map<string, vscode.CancellationTokenSource> = new Map();
-    private _cellRefs: Map<string, ILocationWithReferenceKind[]> = new Map();
+    private _cellRefs: Map<string, ILocationWithReferenceKindAndSymbol[]> = new Map();
     private _cellExecution: ICellExecution[] = [];
     private _disposables: vscode.Disposable[] = [];
     constructor(
@@ -244,26 +274,9 @@ export class NotebookDocumentSymbolTracker {
 
     async selectSuccessorCells(cell: vscode.NotebookCell) {
         await this.requestCellSymbolsSync();
-        const refs = this._cellRefs.get(cell.document.uri.fragment);
-        const cells = this._notebookEditor.notebook.getCells();
-        const indexes: number[] = [];
-        const currentCellIndex = cells.findIndex((c) => c.document.uri.toString() === cell.document.uri.toString());
-        if (currentCellIndex === -1) {
-            return;
-        }
-
-        refs?.forEach((ref) => {
-            const index = cells.findIndex((cell) => cell.document.uri.fragment === ref.uri.fragment);
-            if (index !== -1 && index !== currentCellIndex) {
-                indexes.push(index);
-            }
-        });
-
-        if (indexes.length === 0) {
-            return;
-        }
-
-        const cellRanges = cellIndexesToRanges(indexes);
+        const analysis = new CellAnalysis(this._cellExecution, this._cellRefs);
+        const successorCells = analysis.getSuccessorCells(cell) as vscode.NotebookCell[];
+        const cellRanges = cellIndexesToRanges(successorCells.map((cell) => cell.index));
         this._notebookEditor.selections = cellRanges;
     }
 
@@ -318,7 +331,20 @@ export class NotebookDocumentSymbolTracker {
             if (matcheEditor) {
                 const writeRanges: vscode.Range[] = [];
                 const readRanges: vscode.Range[] = [];
-                locations.forEach((loc) => {
+
+                const dedupedLocations = locations.reduce(
+                    (acc: ILocationWithReferenceKind[], current: ILocationWithReferenceKind) => {
+                        const isDuplicate = acc.find((item) => areRangesEqual(item.range, current.range));
+                        if (!isDuplicate) {
+                            return acc.concat([current]);
+                        } else {
+                            return acc;
+                        }
+                    },
+                    []
+                );
+
+                dedupedLocations.forEach((loc) => {
                     const position = new vscode.Position(loc.range.end.line, loc.range.end.character);
                     const range = new vscode.Range(position, position);
 
@@ -380,7 +406,7 @@ export class NotebookDocumentSymbolTracker {
             return;
         }
 
-        const references: (LocationWithReferenceKind & { symbolKind?: vscode.SymbolKind })[] = [];
+        const references: (LocationWithReferenceKind & { associatedSymbol: ISymbol })[] = [];
         for (const symbol of symbols) {
             const symbolReferences = await this._client.getReferences(
                 cell.document,
@@ -392,7 +418,7 @@ export class NotebookDocumentSymbolTracker {
                 references.push(
                     ...symbolReferences.map((ref) => ({
                         ...ref,
-                        symbolKind: symbol.kind
+                        associatedSymbol: symbol
                     }))
                 );
             }
@@ -405,9 +431,8 @@ export class NotebookDocumentSymbolTracker {
                 references.map((ref) => ({
                     range: ref.range,
                     uri: vscode.Uri.parse(ref.uri),
-                    // @todo: should we support other symbol types?
-                    kind: ref.symbolKind === vscode.SymbolKind.Function ? 'write' : ref.kind,
-                    symbolKind: ref.symbolKind
+                    kind: areRangesEqual(ref.range, ref.associatedSymbol.selectionRange) ? 'write' : ref.kind,
+                    associatedSymbol: ref.associatedSymbol
                 }))
             );
         }
