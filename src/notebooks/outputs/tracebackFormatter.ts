@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { NotebookCell } from 'vscode';
 import { ITracebackFormatter } from '../../kernels/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { traceInfoIfCI } from '../../platform/logging';
+import { IConfigurationService } from '../../platform/common/types';
 const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
 
 /**
@@ -15,6 +16,8 @@ const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
  */
 @injectable()
 export class NotebookTracebackFormatter implements ITracebackFormatter {
+    constructor(@inject(IConfigurationService) private configurationService: IConfigurationService) {}
+
     public format(cell: NotebookCell, traceback: string[]): string[] {
         if (cell.notebook.notebookType !== JupyterNotebookView) {
             return traceback;
@@ -23,7 +26,10 @@ export class NotebookTracebackFormatter implements ITracebackFormatter {
         return traceback.map((traceFrame) => this.modifyTracebackFrameIPython(cell, traceFrame));
     }
     private modifyTracebackFrameIPython(cell: NotebookCell, traceFrame: string): string {
-        if (/^[Cell|Input|File].*?\n.*/.test(traceFrame)) {
+        const settings = this.configurationService.getSettings(cell.document.uri);
+        const formatStackTraces = settings?.formatStackTraces ?? true;
+
+        if (formatStackTraces && /^[Cell|Input|File].*?\n.*/.test(traceFrame)) {
             return this.modifyTracebackFrameIPython8(cell, traceFrame);
         } else {
             return traceFrame;
