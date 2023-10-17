@@ -51,7 +51,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         this.interpreterService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
     }
     public clearCache() {
+        traceVerbose('Clear env var cache');
         this.activatedEnvVariablesCache.clear();
+        this.cachedEnvVariables.clear();
     }
     public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
@@ -61,10 +63,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         interpreter: { id: string },
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
+        traceVerbose(`Get Evn Vars`);
         const env =
             this.interpreterService.known.find((e) => e.id === interpreter.id) ||
             (await this.interpreterService.resolveEnvironment(interpreter.id));
         if (!env) {
+            traceVerbose(`Get Evn Vars failed as env not found for ${interpreter.id}`);
             return;
         }
         const title = DataScience.activatingPythonEnvironment(getPythonEnvDisplayName(env));
@@ -81,16 +85,19 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         environment: Environment,
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
+        traceVerbose(`Get Evn Vars without caching for ${getDisplayPath(environment.path)}`);
         const key = `${resource?.toString() || ''}${environment.id}`;
         const info = this.activatedEnvVariablesCache.get(key);
         if (info && info.time.elapsedTime >= ENV_VAR_CACHE_TIMEOUT) {
             this.activatedEnvVariablesCache.delete(key);
         }
         if (!this.activatedEnvVariablesCache.has(key)) {
+            traceVerbose(`Get Evn Vars without caching, cache not found for ${getDisplayPath(environment.path)}`);
             const promise = this.getActivatedEnvironmentVariablesImpl(resource, environment, token);
             promise.catch(noop);
             this.activatedEnvVariablesCache.set(key, { promise, time: new StopWatch() });
         }
+        traceVerbose(`Get Evn Vars without caching, cache found for ${getDisplayPath(environment.path)}`);
         const promise = this.activatedEnvVariablesCache.get(key)!.promise;
         if (token) {
             return promise;
@@ -110,8 +117,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         return this.getActivatedEnvironmentVariablesFromPython(resource, environment, token)
             .then((env) => {
                 if (token?.isCancellationRequested) {
+                    traceVerbose(
+                        `Get Evn Vars without caching failed as token ws cancelled ${getDisplayPath(environment.path)}`
+                    );
                     return;
                 }
+                `Got Evn Vars without caching  ${getDisplayPath(environment.path)}, ${JSON.stringify(env)}`;
                 return env;
             })
             .catch((ex) => {

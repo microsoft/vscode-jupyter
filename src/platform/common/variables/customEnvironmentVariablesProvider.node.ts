@@ -85,6 +85,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         purpose: 'RunPythonCode' | 'RunNonPythonCode',
         token?: CancellationToken
     ): Promise<EnvironmentVariables | undefined> {
+        traceVerbose(`Getting custom env vars in getCustomEnvironmentVariables`);
         resource = resource
             ? resource
             : this.workspaceService.workspaceFolders?.length
@@ -111,7 +112,9 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
                         this.disposables
                     );
                 }
-                return api.environments.getEnvironmentVariables(workspaceFolderUri);
+                const env = api.environments.getEnvironmentVariables(workspaceFolderUri);
+                traceVerbose(`Getting custom env vars in getCustomEnvironmentVariables, got ${JSON.stringify(env)}`);
+                return env;
             }
         }
         // Cache resource specific interpreter data
@@ -214,6 +217,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     }
 
     private onEnvironmentFileChanged(workspaceFolderUri: Resource) {
+        traceVerbose('Clearing env vars');
         new InMemoryCache<EnvironmentVariables>(
             this.cacheDuration,
             this.getCacheKeyForMergedVars(workspaceFolderUri)
