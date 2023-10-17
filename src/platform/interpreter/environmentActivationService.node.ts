@@ -52,6 +52,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     public clearCache() {
         this.activatedEnvVariablesCache.clear();
+        this.cachedEnvVariables.clear();
     }
     public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
