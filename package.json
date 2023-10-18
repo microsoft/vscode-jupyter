@@ -777,22 +777,27 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.gatherCells",
-                "title": "Gather code",
-                "shortTitle": "Gather",
+                "command": "jupyter.selectPrecedentCells",
+                "title": "Select Precedent Cells",
                 "icon": "$(gather)",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.selectSuccessorCells",
+                "command": "jupyter.selectDependentCells",
                 "title": "Select Dependent Cells",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.runSuccessorCells",
-                "title": "Execute Cell with Dependencies",
+                "command": "jupyter.runPrecedentCells",
+                "title": "Execute with Precedent Cells",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.runDependentCells",
+                "title": "Execute with Dependent Cells",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
                 "category": "Jupyter"
             },
@@ -954,24 +959,31 @@
                     "group": "inline/cell@0"
                 },
                 {
-                    "command": "jupyter.gatherCells",
+                    "command": "jupyter.selectPrecedentCells",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.jupyter.executionAnalysis.enabled",
                     "group": "executionAnalysis@0"
                 },
                 {
-                    "command": "jupyter.selectSuccessorCells",
+                    "command": "jupyter.selectDependentCells",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.jupyter.executionAnalysis.enabled",
-                    "group": "executionAnalysis@0"
+                    "group": "executionAnalysis@1"
                 }
             ],
             "notebook/cell/execute": [
                 {
                     "command": "jupyter.runAndDebugCell",
-                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted"
+                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted",
+                    "group": "jupyterCellExecute@0"
                 },
                 {
-                    "command": "jupyter.runSuccessorCells",
-                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && config.jupyter.executionAnalysis.enabled"
+                    "command": "jupyter.runPrecedentCells",
+                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && config.jupyter.executionAnalysis.enabled",
+                    "group": "jupyterCellExecute@1"
+                },
+                {
+                    "command": "jupyter.runDependentCells",
+                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && config.jupyter.executionAnalysis.enabled",
+                    "group": "jupyterCellExecute@2"
                 }
             ],
             "interactive/toolbar": [
@@ -1408,11 +1420,11 @@
                     "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%"
                 },
                 {
-                    "command": "jupyter.gatherCells",
+                    "command": "jupyter.selectPrecedentCells",
                     "when": "config.jupyter.executionAnalysis.enabled"
                 },
                 {
-                    "command": "jupyter.selectSuccessorCells",
+                    "command": "jupyter.selectDependentCells",
                     "when": "config.jupyter.executionAnalysis.enabled"
                 },
                 {

@@ -21,14 +21,6 @@ const readDecorationType = vscode.window.createTextEditorDecorationType({
     }
 });
 
-export interface IDocument {
-    uri: vscode.Uri;
-}
-
-export interface INotebookCell {
-    readonly document: IDocument;
-}
-
 export interface ILocationWithReferenceKind {
     uri: vscode.Uri;
     range: Range;
@@ -51,19 +43,33 @@ export interface ILocationWithReferenceKindAndSymbol extends ILocationWithRefere
  */
 export class CellAnalysis {
     constructor(
+        private readonly _notebookDocument: vscode.NotebookDocument,
         private readonly _cellExecution: ICellExecution[],
         private readonly _cellRefs: Map<string, ILocationWithReferenceKindAndSymbol[]>
     ) {}
 
+    private _getVirtualCellList(cell: vscode.NotebookCell): vscode.NotebookCell[] {
+        const cellExecutionIndex = this._cellExecution.findIndex(
+            (item) => item.cell.document.uri.toString() === cell.document.uri.toString()
+        );
+
+        if (cellExecutionIndex === -1) {
+            return this._notebookDocument.getCells();
+        }
+
+        return this._cellExecution.map((item) => item.cell);
+    }
+
     /**
      * Get predecessor cells
      */
-    getPredecessorCells(cell: INotebookCell): INotebookCell[] {
-        // find last execution item index from this._cellExecution whose cell property matches cell
+    getPredecessorCells(cell: vscode.NotebookCell): vscode.NotebookCell[] {
+        // find last execution item index from cell list whose cell property matches cell
+        const virtualCellList = this._getVirtualCellList(cell);
         var i;
         for (
-            i = this._cellExecution.length - 1;
-            i >= 0 && this._cellExecution[i].cell.document.uri.toString() !== cell.document.uri.toString();
+            i = virtualCellList.length - 1;
+            i >= 0 && virtualCellList[i].document.uri.toString() !== cell.document.uri.toString();
             i--
         ) {
             // no-op
@@ -74,7 +80,7 @@ export class CellAnalysis {
         }
 
         const lastExecutionIndex = i;
-        const slicedCellExecution = this._cellExecution.slice(0, lastExecutionIndex + 1);
+        const slicedCellExecution = virtualCellList.slice(0, lastExecutionIndex + 1);
         const cellBitmap: boolean[] = new Array(slicedCellExecution.length).fill(false);
         cellBitmap[lastExecutionIndex] = true;
 
@@ -103,17 +109,12 @@ export class CellAnalysis {
         }
 
         const cellFragment = cell.document.uri.fragment;
-        this._resolveDependencies(
-            reversedCellRefs,
-            cellBitmap,
-            cellFragment,
-            slicedCellExecution.map((item) => item.cell)
-        );
+        this._resolveDependencies(reversedCellRefs, cellBitmap, cellFragment, slicedCellExecution);
 
-        const cellData: INotebookCell[] = [];
+        const cellData: vscode.NotebookCell[] = [];
         for (let i = 0; i < cellBitmap.length; i++) {
             if (cellBitmap[i]) {
-                cellData.push(slicedCellExecution[i].cell);
+                cellData.push(slicedCellExecution[i]);
             }
         }
 
@@ -125,15 +126,17 @@ export class CellAnalysis {
      * cell might not have symbols, but it can have references of other cells' symbols
      * if the reference to the symbol is a write operation, then the following cells that use the symbol will depend on this cell
      */
-    getSuccessorCells(cell: INotebookCell): INotebookCell[] {
-        const cellIndex = this._cellExecution.findIndex(
-            (item) => item.cell.document.uri.fragment === cell.document.uri.fragment
+    getSuccessorCells(cell: vscode.NotebookCell): vscode.NotebookCell[] {
+        const virtualCellList = this._getVirtualCellList(cell);
+
+        const cellIndex = virtualCellList.findIndex(
+            (item) => item.document.uri.fragment === cell.document.uri.fragment
         );
         if (cellIndex === -1) {
             return [];
         }
 
-        const cellBitmap: boolean[] = new Array(this._cellExecution.length).fill(false);
+        const cellBitmap: boolean[] = new Array(virtualCellList.length).fill(false);
         cellBitmap[cellIndex] = true;
 
         const modificationCellRefs: Map<string, ILocationWithReferenceKindAndSymbol[]> = new Map();
@@ -150,17 +153,14 @@ export class CellAnalysis {
         });
 
         // a symbol is a definition so modifying it is always a `write` operation
-        for (let i = cellIndex; i < this._cellExecution.length; i++) {
+        for (let i = cellIndex; i < virtualCellList.length; i++) {
             if (cellBitmap[i]) {
-                const deps = this._cellRefs.get(this._cellExecution[i].cell.document.uri.fragment) || [];
-                const modificationDeps =
-                    modificationCellRefs.get(this._cellExecution[i].cell.document.uri.fragment) || [];
+                const deps = this._cellRefs.get(virtualCellList[i].document.uri.fragment) || [];
+                const modificationDeps = modificationCellRefs.get(virtualCellList[i].document.uri.fragment) || [];
                 const mergedDeps = [...deps, ...modificationDeps];
 
                 mergedDeps.forEach((dep) => {
-                    const index = this._cellExecution.findIndex(
-                        (item) => item.cell.document.uri.fragment === dep.uri.fragment
-                    );
+                    const index = virtualCellList.findIndex((item) => item.document.uri.fragment === dep.uri.fragment);
                     // @todo what if index < cellIndex?
                     if (index !== -1 && index >= i) {
                         cellBitmap[index] = true;
@@ -169,10 +169,10 @@ export class CellAnalysis {
             }
         }
 
-        const cellData: INotebookCell[] = [];
+        const cellData: vscode.NotebookCell[] = [];
         for (let i = 0; i < cellBitmap.length; i++) {
             if (cellBitmap[i]) {
-                cellData.push(this._cellExecution[i].cell);
+                cellData.push(virtualCellList[i]);
             }
         }
 
@@ -183,7 +183,7 @@ export class CellAnalysis {
         reversedCellRefs: Map<string, string[]>,
         cellBitmap: boolean[],
         cellFragment: string,
-        cellExecution: INotebookCell[]
+        cellExecution: vscode.NotebookCell[]
     ) {
         if (reversedCellRefs.has(cellFragment)) {
             for (const dependency of reversedCellRefs.get(cellFragment)!) {
@@ -202,7 +202,7 @@ export class CellAnalysis {
 }
 
 export interface ICellExecution {
-    cell: INotebookCell;
+    cell: vscode.NotebookCell;
     executionCount: number;
 }
 
@@ -266,23 +266,38 @@ export class NotebookDocumentSymbolTracker {
         }
     }
 
-    async gather(cell: vscode.NotebookCell) {
+    async selectPrecedentCells(cell: vscode.NotebookCell) {
         await this.requestCellSymbolsSync();
-        const analysis = new CellAnalysis(this._cellExecution, this._cellRefs);
-        return analysis.getPredecessorCells(cell);
+        const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
+        const precedentCells = analysis.getPredecessorCells(cell) as vscode.NotebookCell[];
+        const cellRanges = cellIndexesToRanges(precedentCells.map((cell) => cell.index));
+        this._notebookEditor.selections = cellRanges;
     }
 
     async selectSuccessorCells(cell: vscode.NotebookCell) {
         await this.requestCellSymbolsSync();
-        const analysis = new CellAnalysis(this._cellExecution, this._cellRefs);
+        const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
         const successorCells = analysis.getSuccessorCells(cell) as vscode.NotebookCell[];
         const cellRanges = cellIndexesToRanges(successorCells.map((cell) => cell.index));
         this._notebookEditor.selections = cellRanges;
     }
 
+    async runPrecedentCells(cell: vscode.NotebookCell) {
+        await this.requestCellSymbolsSync();
+        const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
+        const precedentCells = analysis.getPredecessorCells(cell) as vscode.NotebookCell[];
+        const cellRanges = cellIndexesToRanges(precedentCells.map((cell) => cell.index));
+        await vscode.commands
+            .executeCommand('notebook.cell.execute', {
+                ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
+                document: this._notebookEditor.notebook.uri
+            })
+            .then(noop, noop);
+    }
+
     async runSuccessorCells(cell: vscode.NotebookCell) {
         await this.requestCellSymbolsSync();
-        const analysis = new CellAnalysis(this._cellExecution, this._cellRefs);
+        const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
         const successorCells = analysis.getSuccessorCells(cell) as vscode.NotebookCell[];
         const cellRanges = cellIndexesToRanges(successorCells.map((cell) => cell.index));
         await vscode.commands
@@ -496,6 +511,13 @@ export class SymbolsTracker {
         }
     }
 
+    async runPrecedentCells(notebookDocument: vscode.NotebookDocument, cell: vscode.NotebookCell) {
+        const tracker = this._notebookDocumentSymbolTrackers.get(notebookDocument.uri.toString());
+        if (tracker) {
+            await tracker.runPrecedentCells(cell);
+        }
+    }
+
     async selectSuccessorCells(notebookDocument: vscode.NotebookDocument, cell: vscode.NotebookCell) {
         const tracker = this._notebookDocumentSymbolTrackers.get(notebookDocument.uri.toString());
         if (tracker) {
@@ -503,10 +525,10 @@ export class SymbolsTracker {
         }
     }
 
-    async gatherCells(notebookDocument: vscode.NotebookDocument, cell: vscode.NotebookCell) {
+    async selectPrecedentCells(notebookDocument: vscode.NotebookDocument, cell: vscode.NotebookCell) {
         const tracker = this._notebookDocumentSymbolTrackers.get(notebookDocument.uri.toString());
         if (tracker) {
-            return await tracker.gather(cell);
+            await tracker.selectPrecedentCells(cell);
         }
     }
 

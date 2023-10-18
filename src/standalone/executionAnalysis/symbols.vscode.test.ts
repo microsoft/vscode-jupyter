@@ -2,24 +2,24 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
 import * as vscode from 'vscode';
-import { CellAnalysis, ICellExecution, ILocationWithReferenceKind, INotebookCell } from './symbols';
+import { anything, instance, mock, when } from 'ts-mockito';
+import { CellAnalysis, ICellExecution, ILocationWithReferenceKind } from './symbols';
 
 function withNotebookCells(data: [string, string][], fileName: string) {
-    const cells: INotebookCell[] = data.map((cell) => ({
-        document: {
-            uri: vscode.Uri.parse(fileName).with({ fragment: cell[0] })
-        }
-    }));
+    const cells: vscode.NotebookCell[] = data.map((cellDto) => {
+        const cell = mock<vscode.NotebookCell>();
+        const document = mock<vscode.TextDocument>();
+        when(document.uri).thenReturn(vscode.Uri.parse(fileName).with({ fragment: cellDto[0] }));
+        when(cell.document).thenReturn(instance(document));
+        return instance(cell);
+    });
     return cells;
 }
 
 suite('Analysis', () => {
     test('Basic type dependencies', () => {
-        const cells: INotebookCell[] = withNotebookCells(
+        const cells: vscode.NotebookCell[] = withNotebookCells(
             [
                 ['W0sZmlsZQ==', 'def foo():\n    print(123)'],
                 ['W1sZmlsZQ==', 'def bar():\n    foo()'],
@@ -114,30 +114,72 @@ suite('Analysis', () => {
             }
         ];
 
-        const analyzer = new CellAnalysis(cellExecutions, refsMap);
-        const deps = analyzer.getPredecessorCells(cells[2]);
-        assert.strictEqual(deps.length, 2);
-        assert.strictEqual(deps[0].document.uri.fragment, 'W0sZmlsZQ==');
-        assert.strictEqual(deps[1].document.uri.fragment, 'W2sZmlsZQ==');
-        const deps2 = analyzer.getPredecessorCells(cells[3]);
-        assert.strictEqual(deps2.length, 3);
-        assert.strictEqual(deps2[0].document.uri.fragment, 'W0sZmlsZQ==');
-        assert.strictEqual(deps2[1].document.uri.fragment, 'W1sZmlsZQ==');
-        assert.strictEqual(deps2[2].document.uri.fragment, 'W3sZmlsZQ==');
+        const mockDocument = mock<vscode.NotebookDocument>();
+        when(mockDocument.getCells()).thenReturn(cells);
+        when(mockDocument.getCells(anything())).thenReturn(cells);
+        const document = instance(mockDocument);
 
-        const affectedCells = analyzer.getSuccessorCells(cells[0]);
-        assert.strictEqual(affectedCells.length, 4);
-        assert.strictEqual(affectedCells[1].document.uri.fragment, 'W1sZmlsZQ==');
-        assert.strictEqual(affectedCells[2].document.uri.fragment, 'W2sZmlsZQ==');
-        assert.strictEqual(affectedCells[3].document.uri.fragment, 'W3sZmlsZQ==');
+        {
+            const analyzer = new CellAnalysis(document, cellExecutions, refsMap);
+            const deps = analyzer.getPredecessorCells(cells[2]);
+            assert.strictEqual(deps.length, 2);
+            assert.strictEqual(deps[0].document.uri.fragment, 'W0sZmlsZQ==');
+            assert.strictEqual(deps[1].document.uri.fragment, 'W2sZmlsZQ==');
+            const deps2 = analyzer.getPredecessorCells(cells[3]);
+            assert.strictEqual(deps2.length, 3);
+            assert.strictEqual(deps2[0].document.uri.fragment, 'W0sZmlsZQ==');
+            assert.strictEqual(deps2[1].document.uri.fragment, 'W1sZmlsZQ==');
+            assert.strictEqual(deps2[2].document.uri.fragment, 'W3sZmlsZQ==');
+        }
 
-        const affectedCells2 = analyzer.getSuccessorCells(cells[1]);
-        assert.strictEqual(affectedCells2.length, 2);
-        assert.strictEqual(affectedCells2[1].document.uri.fragment, 'W3sZmlsZQ==');
+        {
+            const analyzer = new CellAnalysis(document, cellExecutions, refsMap);
+            const affectedCells = analyzer.getSuccessorCells(cells[0]);
+            assert.strictEqual(affectedCells.length, 4);
+            assert.strictEqual(affectedCells[1].document.uri.fragment, 'W1sZmlsZQ==');
+            assert.strictEqual(affectedCells[2].document.uri.fragment, 'W2sZmlsZQ==');
+            assert.strictEqual(affectedCells[3].document.uri.fragment, 'W3sZmlsZQ==');
+        }
+
+        {
+            const analyzer = new CellAnalysis(document, cellExecutions, refsMap);
+            const affectedCells = analyzer.getSuccessorCells(cells[1]);
+            assert.strictEqual(affectedCells.length, 2);
+            assert.strictEqual(affectedCells[1].document.uri.fragment, 'W3sZmlsZQ==');
+        }
+
+        {
+            const analyzer = new CellAnalysis(document, [], refsMap);
+            const deps = analyzer.getPredecessorCells(cells[2]);
+            assert.strictEqual(deps.length, 2);
+            assert.strictEqual(deps[0].document.uri.fragment, 'W0sZmlsZQ==');
+            assert.strictEqual(deps[1].document.uri.fragment, 'W2sZmlsZQ==');
+            const deps2 = analyzer.getPredecessorCells(cells[3]);
+            assert.strictEqual(deps2.length, 3);
+            assert.strictEqual(deps2[0].document.uri.fragment, 'W0sZmlsZQ==');
+            assert.strictEqual(deps2[1].document.uri.fragment, 'W1sZmlsZQ==');
+            assert.strictEqual(deps2[2].document.uri.fragment, 'W3sZmlsZQ==');
+        }
+
+        {
+            const analyzer = new CellAnalysis(document, [], refsMap);
+            const affectedCells = analyzer.getSuccessorCells(cells[0]);
+            assert.strictEqual(affectedCells.length, 4);
+            assert.strictEqual(affectedCells[1].document.uri.fragment, 'W1sZmlsZQ==');
+            assert.strictEqual(affectedCells[2].document.uri.fragment, 'W2sZmlsZQ==');
+            assert.strictEqual(affectedCells[3].document.uri.fragment, 'W3sZmlsZQ==');
+        }
+
+        {
+            const analyzer = new CellAnalysis(document, [], refsMap);
+            const affectedCells = analyzer.getSuccessorCells(cells[1]);
+            assert.strictEqual(affectedCells.length, 2);
+            assert.strictEqual(affectedCells[1].document.uri.fragment, 'W3sZmlsZQ==');
+        }
     });
 
     test('Basic type dependencies 2', () => {
-        const cells: INotebookCell[] = withNotebookCells(
+        const cells: vscode.NotebookCell[] = withNotebookCells(
             [
                 ['W0sZmlsZQ==', 'x=5'],
                 ['W1sZmlsZQ==', 'y=6'],
@@ -243,24 +285,48 @@ suite('Analysis', () => {
             }
         ];
 
-        const analyzer = new CellAnalysis(cellExecutions, refsMap);
-        const deps = analyzer.getPredecessorCells(cells[2]);
-        assert.strictEqual(deps.length, 3);
-        assert.strictEqual(deps[0].document.uri.fragment, 'W0sZmlsZQ==');
-        assert.strictEqual(deps[1].document.uri.fragment, 'W1sZmlsZQ==');
-        assert.strictEqual(deps[2].document.uri.fragment, 'W2sZmlsZQ==');
+        const mockDocument = mock<vscode.NotebookDocument>();
+        when(mockDocument.getCells()).thenReturn(cells);
+        when(mockDocument.getCells(anything())).thenReturn(cells);
+        const document = instance(mockDocument);
 
-        const affectedCells = analyzer.getSuccessorCells(cells[0]);
-        assert.strictEqual(affectedCells.length, 2);
-        assert.strictEqual(affectedCells[1].document.uri.fragment, 'W2sZmlsZQ==');
+        {
+            const analyzer = new CellAnalysis(document, cellExecutions, refsMap);
+            const deps = analyzer.getPredecessorCells(cells[2]);
+            assert.strictEqual(deps.length, 3);
+            assert.strictEqual(deps[0].document.uri.fragment, 'W0sZmlsZQ==');
+            assert.strictEqual(deps[1].document.uri.fragment, 'W1sZmlsZQ==');
+            assert.strictEqual(deps[2].document.uri.fragment, 'W2sZmlsZQ==');
 
-        const affectedCells2 = analyzer.getSuccessorCells(cells[1]);
-        assert.strictEqual(affectedCells2.length, 2);
-        assert.strictEqual(affectedCells2[1].document.uri.fragment, 'W2sZmlsZQ==');
+            const affectedCells = analyzer.getSuccessorCells(cells[0]);
+            assert.strictEqual(affectedCells.length, 2);
+            assert.strictEqual(affectedCells[1].document.uri.fragment, 'W2sZmlsZQ==');
+
+            const affectedCells2 = analyzer.getSuccessorCells(cells[1]);
+            assert.strictEqual(affectedCells2.length, 2);
+            assert.strictEqual(affectedCells2[1].document.uri.fragment, 'W2sZmlsZQ==');
+        }
+
+        {
+            const analyzer = new CellAnalysis(document, [], refsMap);
+            const deps = analyzer.getPredecessorCells(cells[2]);
+            assert.strictEqual(deps.length, 3);
+            assert.strictEqual(deps[0].document.uri.fragment, 'W0sZmlsZQ==');
+            assert.strictEqual(deps[1].document.uri.fragment, 'W1sZmlsZQ==');
+            assert.strictEqual(deps[2].document.uri.fragment, 'W2sZmlsZQ==');
+
+            const affectedCells = analyzer.getSuccessorCells(cells[0]);
+            assert.strictEqual(affectedCells.length, 2);
+            assert.strictEqual(affectedCells[1].document.uri.fragment, 'W2sZmlsZQ==');
+
+            const affectedCells2 = analyzer.getSuccessorCells(cells[1]);
+            assert.strictEqual(affectedCells2.length, 2);
+            assert.strictEqual(affectedCells2[1].document.uri.fragment, 'W2sZmlsZQ==');
+        }
     });
 
     test.skip('Basic type dependencies 3', () => {
-        const cells: INotebookCell[] = withNotebookCells(
+        const cells: vscode.NotebookCell[] = withNotebookCells(
             [
                 ['W0sZmlsZQ==', 'import pandas as pd'],
                 [
@@ -385,7 +451,12 @@ suite('Analysis', () => {
             }
         ];
 
-        const analyzer = new CellAnalysis(cellExecutions, refsMap);
+        const mockDocument = mock<vscode.NotebookDocument>();
+        when(mockDocument.getCells()).thenReturn(cells);
+        when(mockDocument.getCells(anything())).thenReturn(cells);
+        const document = instance(mockDocument);
+
+        const analyzer = new CellAnalysis(document, cellExecutions, refsMap);
         const deps = analyzer.getPredecessorCells(cells[4]);
         assert.strictEqual(deps.length, 3);
         assert.strictEqual(deps[0].document.uri.fragment, 'W0sZmlsZQ==');

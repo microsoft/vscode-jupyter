@@ -25,7 +25,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            'jupyter.selectSuccessorCells',
+            'jupyter.selectDependentCells',
             async (cell: vscode.NotebookCell | undefined) => {
                 const matched = findNotebookAndCell(cell);
                 if (!matched) {
@@ -39,7 +39,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('jupyter.runSuccessorCells', async (cell: vscode.NotebookCell | undefined) => {
+        vscode.commands.registerCommand('jupyter.runPrecedentCells', async (cell: vscode.NotebookCell | undefined) => {
+            const matched = findNotebookAndCell(cell);
+            if (!matched) {
+                return;
+            }
+
+            const { notebook, cell: currentCell } = matched;
+            await symbolsManager.runPrecedentCells(notebook, currentCell);
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('jupyter.runDependentCells', async (cell: vscode.NotebookCell | undefined) => {
             const matched = findNotebookAndCell(cell);
             if (!matched) {
                 return;
@@ -51,34 +63,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('jupyter.gatherCells', async (cell: vscode.NotebookCell | undefined) => {
-            const matched = findNotebookAndCell(cell);
-            if (!matched) {
-                return;
-            }
+        vscode.commands.registerCommand(
+            'jupyter.selectPrecedentCells',
+            async (cell: vscode.NotebookCell | undefined) => {
+                const matched = findNotebookAndCell(cell);
+                if (!matched) {
+                    return;
+                }
 
-            const { notebook, cell: currentCell } = matched;
-            const gatheredCells = (await symbolsManager.gatherCells(notebook, currentCell)) as vscode.NotebookCell[];
-            if (gatheredCells) {
-                // console.log(gatheredCells?.map(cell => `${cell.index}:\n ${cell.document.getText()}\n`));
-
-                const nbCells = gatheredCells.map((cell) => {
-                    return new vscode.NotebookCellData(
-                        vscode.NotebookCellKind.Code,
-                        cell.document.getText(),
-                        cell.document.languageId
-                    );
-                });
-                const doc = await vscode.workspace.openNotebookDocument(
-                    'jupyter-notebook',
-                    new vscode.NotebookData(nbCells)
-                );
-                await vscode.window.showNotebookDocument(doc, {
-                    viewColumn: 1,
-                    preserveFocus: true
-                });
+                const { notebook, cell: currentCell } = matched;
+                await symbolsManager.selectPrecedentCells(notebook, currentCell);
             }
-        })
+        )
     );
 
     context.subscriptions.push(
