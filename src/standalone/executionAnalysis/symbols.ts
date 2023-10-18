@@ -206,9 +206,16 @@ export interface ICellExecution {
     executionCount: number;
 }
 
+enum CellExecutionStatus {
+    Stale = 0,
+    Executing = 1,
+    Fresh = 2
+}
+
 export class NotebookDocumentSymbolTracker {
     private _pendingRequests: Map<string, vscode.CancellationTokenSource> = new Map();
     private _cellRefs: Map<string, ILocationWithReferenceKindAndSymbol[]> = new Map();
+    private _staleCellRefs: Map<string, CellExecutionStatus> = new Map(); // key: cell uri fragment, value: 'stale' | 'fresh' | 'executing'
     private _cellExecution: ICellExecution[] = [];
     private _disposables: vscode.Disposable[] = [];
     constructor(
@@ -235,6 +242,7 @@ export class NotebookDocumentSymbolTracker {
 
                     e.cellChanges.forEach((change) => {
                         this._requestCellSymbols(change.cell, false).then(noop, noop);
+                        this._updateCellStatus(change.cell, CellExecutionStatus.Stale);
                     });
                 }
             })
@@ -242,15 +250,28 @@ export class NotebookDocumentSymbolTracker {
 
         this._disposables.push(
             vscode.notebooks.onDidChangeNotebookCellExecutionState((e) => {
+                if (
+                    e.state === vscode.NotebookCellExecutionState.Executing &&
+                    e.cell.document.languageId === 'python'
+                ) {
+                    this._updateCellStatus(e.cell, CellExecutionStatus.Executing);
+                }
+
                 if (e.state === vscode.NotebookCellExecutionState.Idle && e.cell.document.languageId === 'python') {
                     // just finished execution
                     this._cellExecution.push({
                         cell: e.cell,
                         executionCount: e.cell.executionSummary?.executionOrder ?? 0
                     });
+
+                    this._updateCellStatus(e.cell, CellExecutionStatus.Fresh);
                 }
             })
         );
+    }
+
+    private _updateCellStatus(cell: vscode.NotebookCell, status: CellExecutionStatus) {
+        this._staleCellRefs.set(cell.document.uri.fragment, status);
     }
 
     async requestCellSymbolsSync() {
@@ -286,7 +307,17 @@ export class NotebookDocumentSymbolTracker {
         await this.requestCellSymbolsSync();
         const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
         const precedentCells = analysis.getPredecessorCells(cell) as vscode.NotebookCell[];
-        const cellRanges = cellIndexesToRanges(precedentCells.map((cell) => cell.index));
+
+        // find the first stale cell
+        const staleCellIndex = precedentCells.findIndex(
+            (cell) =>
+                (this._staleCellRefs.get(cell.document.uri.fragment) ?? CellExecutionStatus.Stale) ===
+                CellExecutionStatus.Stale
+        );
+
+        const cellRanges = cellIndexesToRanges(
+            (staleCellIndex === -1 ? precedentCells : precedentCells.slice(staleCellIndex)).map((cell) => cell.index)
+        );
         await vscode.commands
             .executeCommand('notebook.cell.execute', {
                 ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
