@@ -24,6 +24,7 @@ import {
 } from './types';
 import { IConnectionDisplayData, IConnectionDisplayDataProvider } from '../types';
 import { Disposables } from '../../../platform/common/utils';
+import { traceVerbose } from '../../../platform/logging';
 export type CompoundQuickPickItem =
     | CommandQuickPickItem
     | ConnectionQuickPickItem
@@ -54,6 +55,7 @@ function updateKernelQuickPickWithNewItems<T extends CompoundQuickPickItem>(
         }
     }
     quickPick.items = items;
+    traceVerbose(`KernelSelector Quick Pick Items: ${JSON.stringify(items)}`);
     quickPick.activeItems = activeItems;
 }
 
@@ -360,6 +362,7 @@ export class BaseKernelSelector extends Disposables implements IDisposable {
         };
         setData(info, displayData, connection);
         displayData.onDidChange((e) => setData(info, e, connection), this, this.disposables);
+        traceVerbose(`KernelSelector Quick Pick Item: ${JSON.stringify(info)}`);
         return info;
     }
 }

@@ -9,7 +9,7 @@ import { IExtensionSyncActivationService } from '../activation/types';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { PromiseMonitor } from '../common/utils/promises';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
-import { traceError } from '../logging';
+import { traceError, traceVerbose } from '../logging';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { dispose } from '../common/helpers';
@@ -35,6 +35,9 @@ export class PythonEnvironmentQuickPickItemProvider
             this.refreshedOnceBefore = true;
             this.refresh().catch(noop);
         }
+        traceVerbose(
+            `Known Environments in PythonEnvironmetnQuidckPickProvider ${JSON.stringify(this.api.environments.known)}`
+        );
         return this.api.environments.known;
     }
     private _status: 'idle' | 'discovering' = 'idle';

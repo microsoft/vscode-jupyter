@@ -9,7 +9,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../platform/common/types';
 import { isPromise } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { traceError } from '../../../platform/logging';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { IQuickPickKernelItemProvider } from './types';
@@ -107,7 +107,9 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
             }
         });
         this.kernels.length = 0;
+        traceVerbose(`Unfiltered kernels ${JSON.stringify(finder.kernels)}`);
         this.kernels.push(...this.filteredKernels(finder.kernels));
+        traceVerbose(`Filtered kernels ${JSON.stringify(this.kernels)}`);
         this._onDidChange.fire();
         this._onDidChangeStatus.fire();
 

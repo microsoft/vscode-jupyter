@@ -74,6 +74,7 @@ export class PythonEnvironmentFilter implements IDisposable {
                 item === interpreterPath ||
                 displayPath === interpreterPath
             ) {
+                traceVerbose(`Python Env hidden via filter: ${getDisplayPath(interpreterUri)}`);
                 return true;
             }
             // Possible user entered the path to the environment instead of the executable.
@@ -89,6 +90,7 @@ export class PythonEnvironmentFilter implements IDisposable {
                 item === envPath ||
                 displayPath === envPath
             ) {
+                traceVerbose(`Python Env hidden via filter: ${getDisplayPath(interpreterUri)}`);
                 return true;
             }
             return false;

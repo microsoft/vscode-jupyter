@@ -21,6 +21,7 @@ import { Common, DataScience } from './utils/localize';
 import { noop } from './utils/misc';
 import { IDisposable } from './types';
 import { dispose } from './helpers';
+import { traceVerbose } from '../logging';
 
 abstract class BaseQuickPickItem implements QuickPickItem {
     label: string;
@@ -288,6 +289,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         );
 
         const latestItems = new Map(provider.items.map((item) => [item.id, item]));
+        traceVerbose(`Current items ${JSON.stringify(currentItems)}`);
         // Possible some information has changed, update the quick pick items.
         this.quickPickItems = this.quickPickItems.map((item) => {
             if (this.isSelectorQuickPickItem(item)) {
@@ -312,13 +314,15 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
             }
             return item;
         });
+        traceVerbose(`Current items in quickPickItems ${JSON.stringify(this.quickPickItems)}`);
 
         const newQuickPickItems = provider.items
             .filter((item) => !currentItems.has(item.id))
             .map((item) => this.toQuickPickItem(item));
 
         this.removeOutdatedQuickPickItems(quickPick, provider);
-
+        traceVerbose(`Current items in Quick Pick ${JSON.stringify(quickPick.items)}`);
+        traceVerbose(`Current items in Quick Pick ${JSON.stringify(newQuickPickItems)}`);
         groupBy(newQuickPickItems, (a, b) =>
             compareIgnoreCase(this.getCategory(a.item, this), this.getCategory(b.item, this))
         ).forEach((items) => {
@@ -370,6 +374,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
             }
         });
         this.rebuildQuickPickItems(quickPick);
+        traceVerbose(`Current items in Quick Pick after rebuild ${JSON.stringify(quickPick.items)}`);
     }
     private rebuildQuickPickItems(quickPick: QuickPick<QuickPickItem>) {
         let recommendedItemQuickPick = this.recommended ? this.toQuickPickItem(this.recommended) : undefined;
