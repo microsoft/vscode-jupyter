@@ -99,6 +99,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public excludeUserSitePackages: boolean = false;
     public enableExtendedKernelCompletions: boolean = false;
     public useOldKernelResolve: boolean = false;
+    public formatStackTraces: boolean = false;
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {

@@ -108,6 +108,7 @@ export interface IJupyterSettings {
      * Added as a fallback in case the new approach of resolving Python env variables for Kernels fails or does not work as expected.
      */
     readonly useOldKernelResolve: boolean;
+    readonly formatStackTraces: boolean;
 }
 
 export interface IVariableTooltipFields {
