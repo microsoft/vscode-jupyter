@@ -45,3 +45,9 @@ export interface INotebookWatcher {
 
 export const IVariableViewProvider = Symbol('IVariableViewProvider');
 export interface IVariableViewProvider extends IVSCWebviewViewProvider {}
+
+export interface IVariableViewer {
+    command: string;
+    title: string;
+    dataTypes: string[];
+}

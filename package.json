@@ -2029,7 +2029,17 @@
         "jupyterVariableViewers": [
             {
                 "command": "jupyter.showDataViewer",
-                "title": "%jupyter.command.jupyter.showDataViewer.title%"
+                "title": "%jupyter.command.jupyter.showDataViewer.title%",
+                "dataTypes": [
+                    "DataFrame",
+                    "list",
+                    "dict",
+                    "ndarray",
+                    "Series",
+                    "Tensor",
+                    "EagerTensor",
+                    "DataArray"
+                ]
             }
         ]
     },
