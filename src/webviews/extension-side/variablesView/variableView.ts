@@ -212,11 +212,13 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     private getMatchingVariableViewers(
         variable: IJupyterVariable
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ): { extension: Extension<any>; jupyterVariableViewers: IVariableViewer }[] {
         const variableViewers = this.getVariableViewers();
         return variableViewers.filter((d) => d.jupyterVariableViewers.dataTypes.includes(variable.type));
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private getVariableViewers(): { extension: Extension<any>; jupyterVariableViewers: IVariableViewer }[] {
         const extensions = this.extensions.all
             .filter(
