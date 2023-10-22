@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { QuickPickItem, Uri, WebviewView as vscodeWebviewView } from 'vscode';
+import { Extension, QuickPickItem, Uri, WebviewView as vscodeWebviewView } from 'vscode';
 import { joinPath } from '../../../platform/vscode-path/resources';
 import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { INotebookWatcher, IVariableViewPanelMapping } from './types';
+import { INotebookWatcher, IVariableViewPanelMapping, IVariableViewer } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
 import { InteractiveWindowMessages, IShowDataViewer } from '../../../messageTypes';
 import {
+    IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
@@ -155,29 +156,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         try {
             if (this.experiments.inExperiment(Experiments.DataViewerContribution)) {
                 // jupyterVariableViewers
-                const extensions = this.extensions.all
-                    .filter(
-                        (e) =>
-                            e.packageJSON?.contributes?.jupyterVariableViewers &&
-                            e.packageJSON?.contributes?.jupyterVariableViewers.length
-                    )
-                    .filter((e) => e.id !== JVSC_EXTENSION_ID);
-
-                const variableViewers = extensions
-                    .map((e) => {
-                        const contributes = e.packageJSON?.contributes;
-                        if (contributes?.jupyterVariableViewers) {
-                            return contributes.jupyterVariableViewers.map(
-                                (jupyterVariableViewers: { command: string; title: string }[]) => ({
-                                    extension: e,
-                                    jupyterVariableViewers
-                                })
-                            );
-                        }
-                        return [];
-                    })
-                    .flat();
-
+                const variableViewers = this.getMatchingVariableViewers(request.variable);
                 if (variableViewers.length === 0) {
                     // No data frame viewer extensions, show notifications
                     await this.commandManager.executeCommand(
@@ -187,7 +166,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                     return;
                 } else if (variableViewers.length === 1) {
                     const command = variableViewers[0].jupyterVariableViewers.command;
-                    return this.commandManager.executeCommand(command, {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    return this.commandManager.executeCommand(command as any, {
                         container: {},
                         variable: request.variable
                     });
@@ -230,6 +210,53 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         }
     }
 
+    private getMatchingVariableViewers(
+        variable: IJupyterVariable
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ): { extension: Extension<any>; jupyterVariableViewers: IVariableViewer }[] {
+        const variableViewers = this.getVariableViewers();
+        return variableViewers.filter((d) => d.jupyterVariableViewers.dataTypes.includes(variable.type));
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private getVariableViewers(): { extension: Extension<any>; jupyterVariableViewers: IVariableViewer }[] {
+        const extensions = this.extensions.all
+            .filter(
+                (e) =>
+                    e.packageJSON?.contributes?.jupyterVariableViewers &&
+                    e.packageJSON?.contributes?.jupyterVariableViewers.length
+            )
+            .filter((e) => e.id !== JVSC_EXTENSION_ID);
+
+        const variableViewers = extensions
+            .map((e) => {
+                const contributes = e.packageJSON?.contributes;
+                if (contributes?.jupyterVariableViewers) {
+                    return contributes.jupyterVariableViewers.map((jupyterVariableViewers: IVariableViewer) => ({
+                        extension: e,
+                        jupyterVariableViewers
+                    }));
+                }
+                return [];
+            })
+            .flat();
+
+        return variableViewers;
+    }
+
+    private postProcessSupportsDataExplorer(response: IJupyterVariablesResponse) {
+        const variableViewers = this.getVariableViewers();
+        response.pageResponse.forEach((variable) => {
+            if (this.experiments.inExperiment(Experiments.DataViewerContribution)) {
+                variable.supportsDataExplorer = variableViewers.some((d) =>
+                    d.jupyterVariableViewers.dataTypes.includes(variable.type)
+                );
+            }
+        });
+
+        return response;
+    }
+
     // Variables for the current active editor are being requested, check that we have a valid active notebook
     // and use the variables interface to fetch them and pass them to the variable view UI
     @swallowExceptions()
@@ -238,7 +265,10 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         if (activeNotebook) {
             const response = await this.variables.getVariables(args, activeNotebook);
 
-            this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).catch(noop);
+            this.postMessage(
+                InteractiveWindowMessages.GetVariablesResponse,
+                this.postProcessSupportsDataExplorer(response)
+            ).catch(noop);
             sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, {
                 variableCount: response.totalCount
             });
