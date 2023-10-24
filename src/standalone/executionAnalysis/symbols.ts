@@ -63,9 +63,9 @@ export class CellAnalysis {
     /**
      * Get predecessor cells
      */
-    getPredecessorCells(cell: vscode.NotebookCell): vscode.NotebookCell[] {
+    getPredecessorCells(cell: vscode.NotebookCell, forceReadNotebook: boolean = false): vscode.NotebookCell[] {
         // find last execution item index from cell list whose cell property matches cell
-        const virtualCellList = this._getVirtualCellList(cell);
+        const virtualCellList = forceReadNotebook ? this._notebookDocument.getCells() : this._getVirtualCellList(cell);
         var i;
         for (
             i = virtualCellList.length - 1;
@@ -290,9 +290,19 @@ export class NotebookDocumentSymbolTracker {
     async selectPrecedentCells(cell: vscode.NotebookCell) {
         await this.requestCellSymbolsSync();
         const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
-        const precedentCells = analysis.getPredecessorCells(cell) as vscode.NotebookCell[];
-        const cellRanges = cellIndexesToRanges(precedentCells.map((cell) => cell.index));
-        this._notebookEditor.selections = cellRanges;
+        try {
+            const precedentCells = analysis.getPredecessorCells(cell);
+            this._notebookEditor.selections = cellIndexesToRanges(precedentCells.map((cell) => cell.index));
+            return;
+        } catch {}
+
+        try {
+            const precedentCells = analysis.getPredecessorCells(cell, true);
+            this._notebookEditor.selections = cellIndexesToRanges(precedentCells.map((cell) => cell.index));
+            return;
+        } catch {
+            // noop
+        }
     }
 
     async selectSuccessorCells(cell: vscode.NotebookCell) {
@@ -306,7 +316,18 @@ export class NotebookDocumentSymbolTracker {
     async runPrecedentCells(cell: vscode.NotebookCell) {
         await this.requestCellSymbolsSync();
         const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
-        const precedentCells = analysis.getPredecessorCells(cell) as vscode.NotebookCell[];
+        let precedentCells: vscode.NotebookCell[] = [];
+
+        try {
+            precedentCells = analysis.getPredecessorCells(cell);
+        } catch {
+            // precendent cells might not be executed yet
+            try {
+                precedentCells = analysis.getPredecessorCells(cell, true);
+            } catch {
+                throw new Error('No precedent cells found');
+            }
+        }
 
         // find the first stale cell
         const staleCellIndex = precedentCells.findIndex(
