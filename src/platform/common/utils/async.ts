@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { dispose } from '../helpers';
+import { IDisposable } from '../types';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
 
@@ -18,19 +21,24 @@ export async function waitForCondition(
     // Set a timer that will resolve with null
     return new Promise<boolean>((resolve) => {
         let finish: (result: boolean) => void;
+        const disposables: IDisposable[] = [];
         const timer = setTimeout(() => finish(false), timeout);
-        const intervalId = setInterval(() => {
+        disposables.push({ dispose: () => clearTimeout(timer) });
+        const tryCondition = () => {
             condition()
                 .then((r) => {
                     if (r) {
                         finish(true);
+                    } else {
+                        const timeout = setTimeout(() => tryCondition(), interval);
+                        disposables.push({ dispose: () => clearTimeout(timeout) });
                     }
                 })
                 .catch((_e) => finish(false));
-        }, interval);
+        };
+        tryCondition();
         finish = (result: boolean) => {
-            clearTimeout(timer);
-            clearInterval(intervalId);
+            dispose(disposables);
             resolve(result);
         };
     });
