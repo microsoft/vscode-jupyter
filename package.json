@@ -1428,6 +1428,14 @@
                     "when": "config.jupyter.executionAnalysis.enabled"
                 },
                 {
+                    "command": "jupyter.runPrecedentCells",
+                    "when": "config.jupyter.executionAnalysis.enabled"
+                },
+                {
+                    "command": "jupyter.runDependentCells",
+                    "when": "config.jupyter.executionAnalysis.enabled"
+                },
+                {
                     "command": "jupyter.debugCellSymbols",
                     "when": "config.jupyter.executionAnalysis.enabled"
                 }
