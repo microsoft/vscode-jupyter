@@ -12,7 +12,6 @@ import {
 } from 'vscode';
 import { IWebview, IWorkspaceService } from '../common/application/types';
 import { DefaultTheme, PythonExtension } from '../common/constants';
-import { traceInfo } from '../logging';
 import { Resource, IConfigurationService, IDisposable } from '../common/types';
 import { Deferred, createDeferred } from '../common/utils/async';
 import { testOnlyMethod } from '../common/utils/decorators';
@@ -169,23 +168,16 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         // react control.
         this.webviewInit = this.webviewInit || createDeferred();
 
-        traceInfo(`Loading webview. View is ${this.webview ? 'set' : 'notset'}`);
-
         // Create our web panel (it's the UI that shows up for the history)
         if (this.webview === undefined) {
             // Get our settings to pass along to the react control
             const settings = await this.generateDataScienceExtraSettings();
-
-            traceInfo('Loading web view...');
-
             const workspaceFolder = this.workspaceService.getWorkspaceFolder(cwd)?.uri;
 
             this.webview = await this.provideWebview(cwd, settings, workspaceFolder, webView);
 
             // Track to see if our webview fails to load
             this._disposables.push(this.webview.loadFailed(this.onWebViewLoadFailed, this));
-
-            traceInfo('Webview panel created.');
         }
 
         // Send the first settings message
@@ -287,8 +279,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         if (this.webviewInit && !this.webviewInit.resolved) {
             // Resolve our started promise. This means the webpanel is ready to go.
             this.webviewInit.resolve();
-
-            traceInfo('Web view react rendered');
         }
 
         // On started, resend our init data.
