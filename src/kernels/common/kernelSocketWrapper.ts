@@ -72,13 +72,6 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
             super.emit = patch;
         }
 
-        public sendToRealKernel(data: any, a2: any) {
-            // This will skip the send hooks. It's coming from
-            // the UI side.
-            this._onAnyMessage.fire({ msg: data, direction: 'send' });
-            super.send(data, a2);
-        }
-
         public override send(data: any, a2: any): void {
             if (this.sendHooks) {
                 // Stick the send hooks into the send chain. We use chain

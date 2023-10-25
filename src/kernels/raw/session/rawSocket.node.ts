@@ -13,7 +13,6 @@ import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelSocket } from '../../types';
 import { IKernelConnection } from '../types';
 import type { Channel } from '@jupyterlab/services/lib/kernel/messages';
-import { EventEmitter } from 'vscode';
 import { getZeroMQ } from './zeromq.node';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
@@ -37,8 +36,6 @@ interface IChannels {
  * it does all serialization/deserialization itself.
  */
 export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
-    private _onAnyMessage = new EventEmitter<{ msg: string; direction: 'send' }>();
-    public onAnyMessage = this._onAnyMessage.event;
     public onopen: (event: { target: any }) => void = noop;
     public onerror: (event: { error: any; message: string; type: string; target: any }) => void = noop;
     public onclose: (event: { wasClean: boolean; code: number; reason: string; target: any }) => void = noop;
@@ -52,8 +49,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
     constructor(
         private connection: IKernelConnection,
-        private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
-        private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage
+        private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
@@ -61,7 +57,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
     public dispose() {
         if (!this.closed) {
-            this._onAnyMessage.dispose();
             this.close();
         }
     }
@@ -102,18 +97,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         }
         return true;
     }
-    public sendToRealKernel(data: any, _callback: any): void {
-        // If from ipywidgets, this will be serialized already, so turn it back into a message so
-        // we can add the special hash to it.
-        const message = this.deserialize(data);
-        // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
-        // As a result, we don't get any notification that messages were sent (on the anymessage signal).
-        // To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
-        this._onAnyMessage.fire({ msg: data, direction: 'send' });
-        // Send this directly (don't call back into the hooks)
-        this.sendMessage(message, true);
-    }
-
     public send(data: any, _callback: any): void {
         // This comes directly from the jupyter lab kernel. It should be a message already
         this.sendMessage(data as KernelMessage.IMessage, false);

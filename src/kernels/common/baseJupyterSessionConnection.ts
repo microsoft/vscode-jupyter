@@ -11,7 +11,6 @@ import { IDisposable } from '../../platform/common/types';
 import { dispose } from '../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { IBaseKernelSession, INewSessionWithSocket, KernelSocketInformation } from '../types';
-import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 
 export abstract class BaseJupyterSessionConnection<
         S extends INewSessionWithSocket,
@@ -89,25 +88,11 @@ export abstract class BaseJupyterSessionConnection<
             }
         });
     }
-    /**
-     * Keep a single instance of KernelConnectionWrapper.
-     * This way when sessions change, we still have a single Kernel.IKernelConnection proxy (wrapper),
-     * which will have all of the event handlers bound to it.
-     * This allows consumers to add event handlers hand not worry about internals & can use the lower level Jupyter API.
-     */
-    protected _wrappedKernel?: KernelConnectionWrapper;
     public get kernel(): Kernel.IKernelConnection | null {
         if (this.isDisposed || !this.session.kernel) {
             return null;
         }
-        if (this._wrappedKernel?.originalKernel === this.session.kernel) {
-            return this._wrappedKernel;
-        }
-        // We need to use KernelConnectionWrapper just for one reason, we need to ensure all
-        // of the requestExecute methods are sent sequentially to the kernel.
-        // See KernelConnectionWrapper why we need to send these messages sequentially.
-        this._wrappedKernel = new KernelConnectionWrapper(this.session.kernel, this.disposables);
-        return this._wrappedKernel;
+        return this.session.kernel;
     }
 
     public disposed = new Signal<this, void>(this);
@@ -187,28 +172,6 @@ export abstract class BaseJupyterSessionConnection<
 
         // Listen for session status changes
         this.session.kernel?.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
-        if (this.session.kernelSocketInformation.socket?.onAnyMessage) {
-            // See IKernelSocket.onAnyMessage
-            // Some messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
-            // As a result onAnyMessage signal is not emitted for such messages.
-            // The IKernelSocket exposes an onAnyMessage event that can be used to listen to such messages
-            // Once we get these messages we can emit them on the anyMessage signal.
-            this.previousAnyMessageHandler = this.session.kernelSocketInformation.socket?.onAnyMessage((msg) => {
-                try {
-                    if (this._wrappedKernel) {
-                        const jupyterLabSerialize =
-                            require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
-                        const message =
-                            typeof msg.msg === 'string' || msg.msg instanceof ArrayBuffer
-                                ? jupyterLabSerialize.deserialize(msg.msg)
-                                : msg.msg;
-                        this._wrappedKernel.anyMessage.emit({ direction: msg.direction, msg: message });
-                    }
-                } catch (ex) {
-                    traceWarning(`failed to deserialize message to broadcast anymessage signal`);
-                }
-            });
-        }
         this._kernelSocket.next(newKernelSocketInformation);
     }
 

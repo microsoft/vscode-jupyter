@@ -349,6 +349,7 @@ suite('JupyterSession', () => {
                 when(future.done).thenReturn(Promise.resolve(undefined as any));
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 when(kernel.requestExecute(anything(), anything(), anything())).thenReturn(instance(future) as any);
+                when(kernel.requestExecute(anything())).thenReturn(instance(future) as any);
 
                 const result = jupyterSession.kernel!.requestExecute({
                     code: '',

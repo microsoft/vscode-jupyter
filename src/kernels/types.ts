@@ -716,14 +716,6 @@ export interface IKernelSessionFactory {
 
 export interface IKernelSocket {
     /**
-     * These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
-     * As a result, we don't get any notification that messages were sent (on the anymessage signal).
-     * To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
-     */
-    onAnyMessage: Event<{ msg: string | KernelMessage.IMessage; direction: 'send' }>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
-    /**
      * Adds a listener to a socket that will be called before the socket's onMessage is called. This
      * allows waiting for a callback before processing messages
      * @param listener

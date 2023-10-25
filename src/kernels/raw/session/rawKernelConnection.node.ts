@@ -20,7 +20,6 @@ import { IKernelSocket, LocalKernelConnectionMetadata } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { Signal } from '@lumino/signaling';
 import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
-import { ChainingExecuteRequester } from '../../common/chainingExecuteRequester';
 import { CancellationError, CancellationToken, CancellationTokenSource, Uri } from 'vscode';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -45,7 +44,6 @@ to a raw IPython kernel running on the local machine. RawKernel is in charge of 
 input request, translating them, sending them to an IPython kernel over ZMQ, then passing back the messages
 */
 export class RawKernelConnection implements Kernel.IKernelConnection {
-    private chainingExecute = new ChainingExecuteRequester();
     public readonly statusChanged = new Signal<this, Kernel.Status>(this);
     public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
     public readonly iopubMessage = new Signal<this, IIOPubMessage<IOPubMessageType>>(this);
@@ -378,7 +376,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         disposeOnDone?: boolean,
         metadata?: import('@lumino/coreutils').JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
-        return this.chainingExecute.requestExecute(this.realKernel!, content, disposeOnDone, metadata);
+        return this.realKernel!.requestExecute(content, disposeOnDone, metadata);
     }
     public requestDebug(
         // eslint-disable-next-line no-caller,no-eval
@@ -573,7 +571,7 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
     let socketInstance: IKernelSocket & IWebSocketLike & IDisposable;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize);
+            super(kernelProcess.connection, jupyterLabSerialize.serialize);
             socketInstance = this;
         }
     }

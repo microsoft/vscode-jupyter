@@ -364,7 +364,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         while (this.pendingMessages.length) {
             try {
-                this.kernelSocketInfo.socket?.sendToRealKernel(this.pendingMessages[0]); // NOSONAR
+                const msg = JSON.parse(this.pendingMessages[0]) as KernelMessage.IMessage;
+                if (msg.channel === 'control') {
+                    this.kernel.session.kernel!.sendControlMessage(msg as unknown as KernelMessage.IControlMessage);
+                } else {
+                    this.kernel.session.kernel!.sendShellMessage(msg as unknown as KernelMessage.IShellMessage);
+                }
+                // The only other message that can be send is an input reply,
+                // However widgets do not support that, as input requests are handled by the extension host kernel
+                // & not the widget (renderer/webview side) kernel
                 this.pendingMessages.shift();
             } catch (ex) {
                 traceError('Failed to send message to Kernel', ex);
