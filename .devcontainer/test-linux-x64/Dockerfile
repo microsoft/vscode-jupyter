@@ -1,5 +1,6 @@
-FROM amd64/alpine
-RUN apk add curl
+FROM amd64/ubuntu
+RUN apt-get update
+RUN apt install curl -y
 RUN sh -c "$(curl -fsSL https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)" -- \
     -t powerlevel10k/powerlevel10k \
     -p git \
