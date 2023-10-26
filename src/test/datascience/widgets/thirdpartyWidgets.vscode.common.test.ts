@@ -37,6 +37,7 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
 import { initializeWidgetComms, Utils } from './commUtils';
 import { isWeb } from '../../../platform/common/utils/misc';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
+import { noop } from '../../core';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -80,7 +81,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
             // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
             await commands.executeCommand('workbench.action.closePanel');
-            await commands.executeCommand('workbench.action.maximizeEditorGroup');
+            await commands.executeCommand('workbench.action.maximizeEditorGroup').then(noop, noop);
             comms = await initializeWidgetComms(disposables);
 
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
