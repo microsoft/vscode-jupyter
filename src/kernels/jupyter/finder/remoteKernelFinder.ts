@@ -336,14 +336,12 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             disposables.push(sessionManager);
 
             // Get running and specs at the same time
-            const running = await sessionManager.getRunningKernels();
-            console.error('running', running);
-            const specs = await sessionManager.getKernelSpecs();
-            console.error('specs', specs);
-            const sessions = await sessionManager.getRunningSessions();
-            console.error('sessions', sessions);
-            const serverId = await computeServerId(connInfo.serverProviderHandle);
-            console.error('serverId', serverId);
+            const [running, specs, sessions, serverId] = await Promise.all([
+                sessionManager.getRunningKernels(),
+                sessionManager.getKernelSpecs(),
+                sessionManager.getRunningSessions(),
+                computeServerId(connInfo.serverProviderHandle)
+            ]);
             // Turn them both into a combined list
             const mappedSpecs = specs.map((s) => {
                 sendKernelSpecTelemetry(s, 'remote');
