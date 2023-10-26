@@ -133,7 +133,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
         // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
         // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
         await commands.executeCommand('workbench.action.closePanel');
-        await commands.executeCommand('workbench.action.maximizeEditorGroup');
+        await commands.executeCommand('workbench.action.closeSidebar');
         await commands.executeCommand('notebook.cell.collapseAllCellInputs');
         comms = await initializeWidgetComms(disposables);
 
