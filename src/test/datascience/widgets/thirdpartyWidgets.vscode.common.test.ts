@@ -80,7 +80,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
             // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
             await commands.executeCommand('workbench.action.closePanel');
-            await commands.executeCommand('workbench.action.closeSidebar');
+            await commands.executeCommand('workbench.action.maximizeEditorHideSidebar');
             comms = await initializeWidgetComms(disposables);
 
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
