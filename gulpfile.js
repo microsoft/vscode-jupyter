@@ -29,7 +29,7 @@ const jsonc = require('jsonc-parser');
 
 function updateTSConfigForFasterCompilation() {
     if (isCI && process.env.VSC_JUPYTER_CI_FAST_COMPILATION === '1') {
-        const json = JSON.parse(fs.readFileSync('tsconfig.base.json').toString());
+        const json = jsonc.parse(fs.readFileSync('tsconfig.base.json').toString());
         json.compilerOptions.skipLibCheck = true;
         json.compilerOptions.strict = false;
         fs.writeFileSync('tsconfig.base.json', JSON.stringify(json, undefined, 4));
