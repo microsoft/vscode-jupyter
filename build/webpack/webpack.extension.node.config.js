@@ -26,7 +26,6 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
             resourcePath.toLowerCase().startsWith(path.join(parentFolder, folder).replace(/\\/g, '/').toLowerCase())
         )
     ) {
-        console.log('Ignore file (1)', resourcePath);
         return false;
     }
 
@@ -40,16 +39,10 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     }
     if (!resourcePath.includes(path.join(parentFolder, 'prebuilds').replace(/\\/g, '/').toLowerCase())) {
         // We do not ship any other sub directory.
-        console.log(
-            'Ignore file (2)',
-            `Not includes ${path.join(parentFolder, 'prebuilds').replace(/\\/g, '/').toLowerCase()}`,
-            resourcePath
-        );
         return false;
     }
     if (filename.includes('electron.') && resourcePath.endsWith('.node')) {
         // We do not ship electron binaries.
-        console.log('Ignore file (3)', resourcePath);
         return false;
     }
     const preBuildsFoldersToCopy = common.getZeroMQPreBuildsFoldersToKeep();
@@ -62,7 +55,6 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     if (preBuildsFoldersToCopy.some((folder) => resourcePath.includes(`${folder.toLowerCase()}/`))) {
         return true;
     }
-    console.log('Ignore file (6)', resourcePath);
     return false;
 }
 const config = {
