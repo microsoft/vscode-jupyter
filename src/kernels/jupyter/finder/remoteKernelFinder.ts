@@ -342,7 +342,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 sessionManager.getRunningSessions(),
                 computeServerId(connInfo.serverProviderHandle)
             ]);
-
             // Turn them both into a combined list
             const mappedSpecs = specs.map((s) => {
                 sendKernelSpecTelemetry(s, 'remote');

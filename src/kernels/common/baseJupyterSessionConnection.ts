@@ -43,6 +43,7 @@ export abstract class BaseJupyterSessionConnection<
         IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
     >(this);
     statusChanged = new Signal<this, Kernel.Status>(this);
+    pendingInput = new Signal<this, boolean>(this);
     /**
      * The kernel connectionStatusChanged signal, proxied from the current
      * kernel.
@@ -73,6 +74,7 @@ export abstract class BaseJupyterSessionConnection<
         session.iopubMessage.connect(this.onIOPubMessage, this);
         session.unhandledMessage.connect(this.onUnhandledMessage, this);
         session.anyMessage.connect(this.onAnyMessage, this);
+        session.pendingInput.connect(this.onPendingInput, this);
 
         this.disposables.push({
             dispose: () => {
@@ -86,6 +88,7 @@ export abstract class BaseJupyterSessionConnection<
                 this.session.iopubMessage.disconnect(this.onIOPubMessage, this);
                 this.session.unhandledMessage.disconnect(this.onUnhandledMessage, this);
                 this.session.anyMessage.disconnect(this.onAnyMessage, this);
+                this.session.pendingInput.disconnect(this.onPendingInput, this);
             }
         });
     }
@@ -187,20 +190,23 @@ export abstract class BaseJupyterSessionConnection<
 
         // Listen for session status changes
         this.session.kernel?.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
-        if (this.session.kernelSocketInformation.socket?.onAnyMessage) {
+        const socket = this.session.kernelSocketInformation.socket;
+        if (socket?.onAnyMessage) {
             // See IKernelSocket.onAnyMessage
             // Some messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
             // As a result onAnyMessage signal is not emitted for such messages.
             // The IKernelSocket exposes an onAnyMessage event that can be used to listen to such messages
             // Once we get these messages we can emit them on the anyMessage signal.
-            this.previousAnyMessageHandler = this.session.kernelSocketInformation.socket?.onAnyMessage((msg) => {
+            this.previousAnyMessageHandler = socket.onAnyMessage((msg) => {
                 try {
                     if (this._wrappedKernel) {
                         const jupyterLabSerialize =
                             require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
                         const message =
-                            typeof msg.msg === 'string' || msg.msg instanceof ArrayBuffer
-                                ? jupyterLabSerialize.deserialize(msg.msg)
+                            typeof msg.msg === 'string'
+                                ? JSON.parse(msg.msg)
+                                : msg.msg instanceof ArrayBuffer
+                                ? jupyterLabSerialize.deserialize(msg.msg, socket.protocol)
                                 : msg.msg;
                         this._wrappedKernel.anyMessage.emit({ direction: msg.direction, msg: message });
                     }
@@ -238,6 +244,9 @@ export abstract class BaseJupyterSessionConnection<
     }
     private onAnyMessage(_: unknown, value: Kernel.IAnyMessageArgs) {
         this.anyMessage.emit(value);
+    }
+    private onPendingInput(_: unknown, value: boolean) {
+        this.pendingInput.emit(value);
     }
     public setPath(value: string) {
         return this.session.setPath(value);

@@ -36,6 +36,7 @@ import {
 } from '../../../platform/common/cancellation';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { dispose } from '../../../platform/common/helpers';
+import { IJupyterRequestCreator } from '../../jupyter/types';
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -52,6 +53,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     public readonly unhandledMessage = new Signal<this, IMessage<MessageType>>(this);
     public readonly anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
     public readonly disposed = new Signal<this, void>(this);
+    public readonly pendingInput = new Signal<this, boolean>(this);
     public get connectionStatus() {
         return this.realKernel ? this.realKernel.connectionStatus : 'connecting';
     }
@@ -88,6 +90,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     public get handleComms(): boolean {
         return this.realKernel!.handleComms;
     }
+    public get hasPendingInput(): boolean {
+        return this.realKernel!.hasPendingInput;
+    }
     private isDisposing?: boolean;
     private _isDisposed?: boolean;
     public get isDisposed(): boolean {
@@ -105,7 +110,8 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         private readonly workingDirectory: Uri,
         private readonly launchTimeout: number,
 
-        private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata
+        private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata,
+        private readonly requestCreator: IJupyterRequestCreator
     ) {
         this.name = getNameOfKernelConnection(kernelConnectionMetadata) || 'python3';
         this.model = {
@@ -155,7 +161,13 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 throw new CancellationError();
             }
             this.hookupKernelProcessExitHandler(kernelProcess);
-            const result = newRawKernel(this.kernelProcess, this.clientId, this.username, this.model);
+            const result = newRawKernel(
+                this.kernelProcess,
+                this.clientId,
+                this.username,
+                this.model,
+                this.requestCreator
+            );
             this.kernelProcess = result.kernelProcess;
             this.realKernel = result.realKernel;
             this.socket = result.socket;
@@ -396,8 +408,11 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     }): Promise<KernelMessage.ICommInfoReplyMsg> {
         return this.realKernel!.requestCommInfo(content);
     }
-    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void {
-        return this.realKernel!.sendInputReply(content);
+    public sendInputReply(
+        content: KernelMessage.IInputReplyMsg['content'],
+        parent_header: KernelMessage.IInputReplyMsg['parent_header']
+    ): void {
+        return this.realKernel!.sendInputReply(content, parent_header);
     }
     public registerCommTarget(
         targetName: string,
@@ -423,12 +438,16 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     ): void {
         this.realKernel!.removeMessageHook(msgId, hook);
     }
+    public removeInputGuard(): void {
+        this.realKernel!.removeInputGuard();
+    }
     private startHandleKernelMessages() {
         this.realKernel!.anyMessage.connect(this.onAnyMessage, this);
         this.realKernel!.iopubMessage.connect(this.onIOPubMessage, this);
         this.realKernel!.unhandledMessage.connect(this.onUnhandledMessage, this);
         this.realKernel!.statusChanged.connect(this.onStatusChanged, this);
         this.realKernel!.disposed.connect(this.onDisposed, this);
+        this.realKernel!.pendingInput.connect(this.onPendingInput, this);
     }
     private stopHandlingKernelMessages() {
         this.realKernel!.anyMessage.disconnect(this.onAnyMessage, this);
@@ -436,6 +455,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         this.realKernel!.unhandledMessage.disconnect(this.onUnhandledMessage, this);
         this.realKernel!.statusChanged.disconnect(this.onStatusChanged, this);
         this.realKernel!.disposed.disconnect(this.onDisposed, this);
+        this.realKernel!.pendingInput.disconnect(this.onPendingInput, this);
     }
     private onAnyMessage(_connection: Kernel.IKernelConnection, msg: Kernel.IAnyMessageArgs) {
         this.anyMessage.emit(msg);
@@ -451,6 +471,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     }
     private onDisposed(_connection: Kernel.IKernelConnection) {
         this.disposed.emit();
+    }
+    private onPendingInput(_connection: Kernel.IKernelConnection, msg: boolean) {
+        this.pendingInput.emit(msg);
     }
 }
 
@@ -563,7 +586,13 @@ async function postStartKernel(
         */
 }
 
-function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username: string, model: Kernel.IModel) {
+function newRawKernel(
+    kernelProcess: IKernelProcess,
+    clientId: string,
+    username: string,
+    model: Kernel.IModel,
+    requestCreator: IJupyterRequestCreator
+) {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize =
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
@@ -582,6 +611,7 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
     const settings = jupyterLab.ServerConnection.makeSettings({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         WebSocket: RawSocketWrapper as any, // NOSONAR
+        fetch: requestCreator.getFetchMethod(),
         wsUrl: 'RAW'
     });
 
