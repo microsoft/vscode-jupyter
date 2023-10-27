@@ -246,7 +246,7 @@ jobs:
 
       - name: Compile if not cached
         run: npm run prePublishNonBundle
-        # if: steps.out-cache.outputs.cache-hit != 'true'
+        if: steps.out-cache.outputs.cache-hit != 'true'
 
       - name: Run TypeScript unit tests
         id: test_unittests
