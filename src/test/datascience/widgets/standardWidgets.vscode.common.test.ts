@@ -39,7 +39,6 @@ import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
 import { isWeb } from '../../../platform/common/utils/misc';
-import { noop } from '../../core';
 
 const templateRootPath: Uri =
     workspace.workspaceFolders && workspace.workspaceFolders.length > 0
