@@ -182,17 +182,6 @@ gulp.task('installPythonLibs', async () => {
     }
 });
 
-gulp.task('compile-webextension', async () => {
-    if (isCI && process.env.VSC_JUPYTER_CI_SKIP_WEB_BUNDLE === '1') {
-        return;
-    }
-    // No need to build dependencies for desktop.
-    if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
-        return;
-    }
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
-});
-
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
@@ -429,7 +418,7 @@ gulp.task(
 );
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 
-gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-webviews-dev', 'compile-webextension'));
+gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-webviews-dev'));
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};
