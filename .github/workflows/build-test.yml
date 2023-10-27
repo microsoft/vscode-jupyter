@@ -251,9 +251,7 @@ jobs:
 
       - name: Compile if not cached
         run: npm run prePublishNonBundle
-        if: steps.out-cache.outputs.cache-hit != 'true'
-        env:
-          VSC_JUPYTER_CI_FAST_COMPILATION: 1
+        # if: steps.out-cache.outputs.cache-hit != 'true'
 
       - name: Run TypeScript unit tests
         id: test_unittests
@@ -622,7 +620,7 @@ jobs:
         # if: steps.out-cache.outputs.cache-hit != 'true' && matrix.jupyterConnection != 'web'
         env:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
-          VSC_JUPYTER_CI_FAST_COMPILATION: 1
+          VSC_JUPYTER_CI_SKIP_WEB_BUNDLE: 1
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
