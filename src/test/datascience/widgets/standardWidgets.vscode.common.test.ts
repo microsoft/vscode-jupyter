@@ -39,6 +39,7 @@ import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { noop } from '../../core';
 
 const templateRootPath: Uri =
     workspace.workspaceFolders && workspace.workspaceFolders.length > 0
@@ -133,8 +134,8 @@ suite('Standard IPyWidget Tests @widgets', function () {
         // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
         // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
         await commands.executeCommand('workbench.action.closePanel');
-        await commands.executeCommand('workbench.action.maximizeEditorGroup');
-        await commands.executeCommand('notebook.cell.collapseAllCellInputs');
+        await commands.executeCommand('workbench.action.maximizeEditorGroup').then(noop, noop);
+        await commands.executeCommand('notebook.cell.collapseAllCellInputs').then(noop, noop);
         comms = await initializeWidgetComms(disposables);
 
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
