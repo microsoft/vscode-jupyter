@@ -47,7 +47,7 @@ import {
 import { isWeb, swallowExceptions } from '../../../platform/common/utils/misc';
 import { ProductNames } from '../../../platform/interpreter/installer/productNames';
 import { Product } from '../../../platform/interpreter/installer/types';
-import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import {
     areInterpreterPathsSame,
     getNormalizedInterpreterPath
@@ -58,7 +58,7 @@ import {
     hasErrorOutput,
     translateCellErrorOutput
 } from '../../../kernels/execution/helpers';
-import { IKernel, IKernelProvider, INotebookKernelExecution, NotebookCellRunState } from '../../../kernels/types';
+import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { noop } from '../../core';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
