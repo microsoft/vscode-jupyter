@@ -27,7 +27,17 @@ const { stripVTControlCharacters } = require('util');
 const common = require('./build/webpack/common');
 const jsonc = require('jsonc-parser');
 
+function updateTSConfigForFasterCompilation() {
+    if (isCI && process.env.VSC_JUPYTER_CI_FAST_COMPILATION === '1') {
+        const json = JSON.parse(fs.readFileSync('tsconfig.base.json').toString());
+        json.compilerOptions.skipLibCheck = true;
+        json.compilerOptions.strict = false;
+        fs.writeFileSync('tsconfig.base.json', JSON.stringify(json, undefined, 4));
+    }
+}
+
 gulp.task('compile', async (done) => {
+    updateTSConfigForFasterCompilation();
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
     try {
         const stdout = await spawnAsync('tsc', ['-p', './'], {}, true);
@@ -194,6 +204,8 @@ gulp.task('compile-webextension', async () => {
 });
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
+    updateTSConfigForFasterCompilation();
+
     if (configNameForProductionBuilds) {
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
