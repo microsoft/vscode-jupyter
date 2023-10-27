@@ -32,6 +32,7 @@ suite('Base Jupyter Session Connection', () => {
     let sessionUnhandledMessage: Signal<INewSessionWithSocket, KernelMessage.IMessage>;
     let sessionConnectionStatusChanged: Signal<INewSessionWithSocket, Kernel.ConnectionStatus>;
     let sessionAnyMessage: Signal<INewSessionWithSocket, Kernel.IAnyMessageArgs>;
+    let pendingInput: Signal<INewSessionWithSocket, boolean>;
     class DummySessionClass extends BaseJupyterSessionConnection<INewSessionWithSocket, 'remoteJupyter'> {
         override waitForIdle(_timeout: number, _token: CancellationToken): Promise<void> {
             throw new Error('Method not implemented.');
@@ -51,6 +52,7 @@ suite('Base Jupyter Session Connection', () => {
         when(kernel.status).thenReturn('idle');
         when(kernel.connectionStatus).thenReturn('connected');
         when(kernel.statusChanged).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()));
+        when(kernel.pendingInput).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, boolean>>()));
         when(kernel.iopubMessage).thenReturn(
             instance(
                 mock<ISignal<Kernel.IKernelConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>()
@@ -90,6 +92,7 @@ suite('Base Jupyter Session Connection', () => {
         sessionUnhandledMessage = new Signal<INewSessionWithSocket, KernelMessage.IMessage>(instance(session));
         sessionConnectionStatusChanged = new Signal<INewSessionWithSocket, Kernel.ConnectionStatus>(instance(session));
         sessionAnyMessage = new Signal<INewSessionWithSocket, Kernel.IAnyMessageArgs>(instance(session));
+        pendingInput = new Signal<INewSessionWithSocket, boolean>(instance(session));
         kernelSocketInformation = mock<KernelSocketInformation>();
         when(kernelSocketInformation.socket).thenReturn(instance(mock<IKernelSocket>()));
         when(session.disposed).thenReturn(sessionDisposed);
@@ -101,6 +104,7 @@ suite('Base Jupyter Session Connection', () => {
         when(session.unhandledMessage).thenReturn(sessionUnhandledMessage);
         when(session.connectionStatusChanged).thenReturn(sessionConnectionStatusChanged);
         when(session.anyMessage).thenReturn(sessionAnyMessage);
+        when(session.pendingInput).thenReturn(pendingInput);
         when(session.isDisposed).thenReturn(false);
         jupyterSession = new DummySessionClass(instance(session));
     });

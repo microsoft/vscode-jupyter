@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
+const serializer =
+    require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
 import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import type { ISignal, Signal } from '@lumino/signaling';
 import * as WebSocketWS from 'ws';
 import { KernelSocketOptions } from '../../../../kernels/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
-import { serializeDataViews, deserializeDataViews } from '../../../../platform/common/utils/serializers';
+import { deserializeDataViews, serializeDataViews } from '../../../../platform/common/utils/serializers';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../messageTypes';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 
@@ -72,6 +74,12 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     public get hasComm() {
         return this.realKernel.hasComm;
     }
+    public get hasPendingInput() {
+        return this.realKernel.hasPendingInput;
+    }
+    public get pendingInput() {
+        return this.realKernel.pendingInput as any;
+    }
     public createComm(targetName: string, commId?: string | undefined) {
         return this.realKernel.createComm(targetName, commId);
     }
@@ -107,6 +115,13 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
             public onopen?: ((this: ProxyWebSocket) => any) | null;
             public onmessage?: ((this: ProxyWebSocket, ev: MessageEvent) => any) | null;
             public sendEnabled: boolean = true;
+            /**
+             * Always ensure we do not have any protocols, else @jupyterlab/services code will
+             * attempt to use a different serizliation/deserialization mechanism.
+             * Since we have already serialized the data, in the extension host,
+             * & messages coming here are handled by us, we can just hardcode one mechanism.
+             */
+            public protocol = '';
             constructor() {
                 proxySocketInstance = this;
             }
@@ -121,15 +136,22 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
                         postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg, data);
                     } else {
                         // Serialize binary data properly before sending to extension.
-                        postOffice.sendMessage<IInteractiveWindowMapping>(
-                            IPyWidgetMessages.IPyWidgets_binary_msg,
-                            serializeDataViews([data as any])
-                        );
+                        postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_binary_msg, {
+                            id: '',
+                            data: serializeDataViews([data as any]),
+                            // We have no idea what protocol is used in the front end, could be empty or non-empty
+                            // The client (ext host) side needs to use the same protcol when deserializing the message.
+                            protocol: this.protocol
+                        });
                     }
                 }
             }
         }
-        const settings = ServerConnection.makeSettings({ WebSocket: ProxyWebSocket as any, wsUrl: 'BOGUS_PVSC' });
+        const settings = ServerConnection.makeSettings({
+            WebSocket: ProxyWebSocket as any,
+            wsUrl: 'BOGUS_PVSC',
+            fetch: fetch
+        });
 
         this.awaitingExtensionMessage = new Map<string, Deferred<void>>();
 
@@ -241,8 +263,11 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     }): Promise<KernelMessage.ICommInfoReplyMsg> {
         return this.realKernel.requestCommInfo(content);
     }
-    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void {
-        return this.realKernel.sendInputReply(content);
+    public sendInputReply(
+        content: KernelMessage.IInputReplyMsg['content'],
+        parent_header: KernelMessage.IInputReplyMsg['parent_header']
+    ): void {
+        return this.realKernel.sendInputReply(content, parent_header);
     }
     public registerCommTarget(
         targetName: string,
@@ -262,6 +287,9 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     ): void {
         return this.realKernel.removeCommTarget(targetName, callback);
     }
+    public removeInputGuard(): void {
+        return this.realKernel.removeInputGuard();
+    }
     public dispose(): void {
         this.postOffice.removeHandler(this);
         return this.realKernel.dispose();
@@ -276,15 +304,30 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
 
             case IPyWidgetMessages.IPyWidgets_msg:
                 if (this.websocket && this.websocket.onmessage) {
-                    this.websocket.onmessage({ target: this.websocket, data: payload.data, type: '' });
+                    const data = serializer.serialize(
+                        typeof payload.data === 'string' ? JSON.parse(payload.data) : payload.data
+                    );
+                    this.websocket.onmessage({
+                        target: this.websocket,
+                        data,
+                        type: ''
+                    });
                 }
                 this.sendResponse(payload.id);
                 break;
 
             case IPyWidgetMessages.IPyWidgets_binary_msg:
                 if (this.websocket && this.websocket.onmessage) {
-                    const deserialized = deserializeDataViews(payload.data)![0];
-                    this.websocket.onmessage({ target: this.websocket, data: deserialized as any, type: '' });
+                    const deserialized = deserializeDataViews(payload.data)![0] as unknown as ArrayBuffer;
+                    const protocolUsedByRealKernel = payload.protocol || '';
+                    if (protocolUsedByRealKernel === this.websocket.protocol) {
+                        this.websocket.onmessage({ target: this.websocket, data: deserialized as any, type: '' });
+                    } else {
+                        // Looks like the binary message is serialized using a different protocol.
+                        const message = serializer.deserialize(deserialized, protocolUsedByRealKernel);
+                        const serialized = serializer.serialize(message, this.websocket.protocol);
+                        this.websocket.onmessage({ target: this.websocket, data: serialized as any, type: '' });
+                    }
                 }
                 this.sendResponse(payload.id);
                 break;

@@ -26,7 +26,7 @@ function createJupyterKernelWithoutSerialization() {
     }
     var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
     var replacedContents = fileContents
-        .replace(/^const serialize =.*$/gm, 'const serialize = { serialize: (a) => a, deserialize: (a) => a };')
+        .replace(/^const serialize_1 =.*$/gm, 'const serialize_1 = { serialize: (a) => a, deserialize: (a) => a };')
         .replace(
             'const owned = team.session === this.clientId;',
             'const owned = parentHeader.session === this.clientId;'

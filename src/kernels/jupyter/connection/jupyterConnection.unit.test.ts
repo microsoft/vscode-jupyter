@@ -16,6 +16,7 @@ import { IApplicationShell } from '../../../platform/common/application/types';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import { JupyterLabHelper } from '../session/jupyterLabHelper';
 import { resolvableInstance } from '../../../test/datascience/helpers';
+import { noop } from '../../../test/core';
 use(chaiAsPromised);
 suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
@@ -38,6 +39,19 @@ suite('Jupyter Connection', async () => {
         displayName: 'someDisplayName',
         token: '1234'
     };
+    const oldFetch = globalThis.fetch;
+    const oldHeaders = globalThis.Headers;
+    const oldRequest = globalThis.Request;
+    suiteSetup(() => {
+        globalThis.fetch = noop as any;
+        globalThis.Headers = noop as any;
+        globalThis.Request = noop as any;
+    });
+    suiteTeardown(() => {
+        globalThis.fetch = oldFetch;
+        globalThis.Headers = oldHeaders;
+        globalThis.Request = oldRequest;
+    });
     setup(() => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
         sessionManager = mock<JupyterLabHelper>();
@@ -46,6 +60,7 @@ suite('Jupyter Connection', async () => {
         errorHandler = mock<IDataScienceErrorHandler>();
         requestAgentCreator = mock<IJupyterRequestAgentCreator>();
         requestCreator = mock<IJupyterRequestCreator>();
+        when(requestCreator.getFetchMethod()).thenReturn(noop as any);
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
             instance(appShell),

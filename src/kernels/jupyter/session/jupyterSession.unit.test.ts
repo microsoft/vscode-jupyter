@@ -70,6 +70,7 @@ suite('JupyterSession', () => {
         when(session.iopubMessage).thenReturn(sessionIOPubMessage);
         when(session.kernelChanged).thenReturn(sessionKernelChanged);
         when(session.statusChanged).thenReturn(new Signal<INewSessionWithSocket, Kernel.Status>(instance(session)));
+        when(session.pendingInput).thenReturn(new Signal<INewSessionWithSocket, boolean>(instance(session)));
         when(session.unhandledMessage).thenReturn(sessionUnhandledMessage);
         when(session.connectionStatusChanged).thenReturn(sessionConnectionStatusChanged);
         when(session.anyMessage).thenReturn(sessionAnyMessage);
@@ -82,6 +83,7 @@ suite('JupyterSession', () => {
                 mock<ISignal<Kernel.IKernelConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>()
             )
         );
+        when(kernel.pendingInput).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, boolean>>()));
         when(kernel.anyMessage).thenReturn({ connect: noop, disconnect: noop } as any);
         when(kernel.unhandledMessage).thenReturn(
             instance(mock<ISignal<Kernel.IKernelConnection, KernelMessage.IMessage<KernelMessage.MessageType>>>())
