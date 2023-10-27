@@ -7,6 +7,7 @@ import { green } from 'colors';
 import type { BuildOptions, Charset, Loader, Plugin, SameShape } from 'esbuild';
 import { lessLoader } from 'esbuild-plugin-less';
 import fs from 'fs';
+import { nodeModulesToExternalize } from '../webpack/common';
 
 const isDevbuild = !process.argv.includes('--production');
 const isWatchMode = process.argv.includes('--watch');
@@ -98,7 +99,11 @@ function style({ minify = true, charset = 'utf8' }: StylePluginOptions = {}): Pl
     };
 }
 
-function createConfig(source: string, outfile: string): SameShape<BuildOptions, BuildOptions> {
+function createConfig(
+    source: string,
+    outfile: string,
+    target: 'desktop' | 'web'
+): SameShape<BuildOptions, BuildOptions> {
     const inject = [path.join(__dirname, isDevbuild ? 'process.development.js' : 'process.production.js')];
     if (source.endsWith(path.join('data-explorer', 'index.tsx'))) {
         inject.push(path.join(__dirname, 'jquery.js'));
@@ -107,27 +112,35 @@ function createConfig(source: string, outfile: string): SameShape<BuildOptions, 
         entryPoints: [source],
         outfile,
         bundle: true,
-        external: ['log4js'], // From webacpk scripts we had.
+        external: ['log4js', 'vscode', 'commonjs'], // From webacpk scripts we had.
         format: 'esm',
-        define: {
-            BROWSER: 'true', // From webacpk scripts we had.
-            global: 'this'
-        },
-        target: 'es2018',
+        define:
+            target === 'desktop'
+                ? undefined
+                : {
+                      BROWSER: 'true', // From webacpk scripts we had.
+                      global: 'this'
+                  },
+        target: target === 'desktop' ? 'node18' : 'es2018',
+        platform: target === 'desktop' ? 'node' : 'browser',
         minify: !isDevbuild,
         logLevel: 'info',
         sourcemap: isDevbuild,
         inject,
-        plugins: [style(), lessLoader()],
-        loader
+        plugins: target === 'desktop' ? [] : [style(), lessLoader()],
+        loader: target === 'desktop' ? {} : loader
     };
 }
-async function build(source: string, outfile: string, watch = isWatchMode) {
-    if (watch) {
-        const context = await esbuild.context(createConfig(source, outfile));
+async function build(
+    source: string,
+    outfile: string,
+    options: { watch: boolean; target: 'desktop' | 'web' } = { watch: isWatchMode, target: 'web' }
+) {
+    if (options.watch) {
+        const context = await esbuild.context(createConfig(source, outfile, options.target));
         await context.watch();
     } else {
-        await esbuild.build(createConfig(source, outfile));
+        await esbuild.build(createConfig(source, outfile, options.target));
         const size = fs.statSync(outfile).size;
         const relativePath = `./${path.relative(extensionFolder, outfile)}`;
         console.log(`asset ${green(relativePath)} size: ${(size / 1024).toFixed()} KiB`);
@@ -197,7 +210,18 @@ async function buildAll() {
                   path.join(extensionFolder, 'src', 'test', 'datascience', 'widgets', 'rendererUtils.ts'),
                   path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'widgetTester', 'widgetTester.js')
               )
-            : Promise.resolve()
+            : Promise.resolve(),
+        ...nodeModulesToExternalize.map(async (module) => {
+            let fullPath = path.join(extensionFolder, 'node_modules', `${module}.js`);
+            if (!fs.existsSync(fullPath)) {
+                fullPath = require.resolve(path.join(extensionFolder, 'node_modules', module));
+                console.error(fullPath);
+            }
+            return build(fullPath, fullPath.replace('node_modules', path.join('out', 'node_modules')), {
+                target: 'desktop',
+                watch: isWatchMode
+            });
+        })
     ]);
 }
 
