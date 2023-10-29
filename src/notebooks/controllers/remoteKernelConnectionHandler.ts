@@ -82,6 +82,7 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
                 this.liveKernelTracker.trackKernelIdAsUsed(resource, serverId, kernelId);
             }
         };
+        storeKernelInfo();
         kernel.onDidKernelSocketChange(storeKernelInfo, this, this.disposables);
     }
 }
