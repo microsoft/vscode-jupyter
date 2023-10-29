@@ -151,8 +151,8 @@ abstract class BaseKernel implements IBaseKernel {
     get disposing(): boolean {
         return this._disposing === true;
     }
-    get kernelSocket(): Event<void> {
-        return this._kernelSocket.event;
+    get onDidKernelSocketChange(): Event<void> {
+        return this._onDidKernelSocketChange.event;
     }
     private _session?: IKernelSession;
     /**
@@ -168,7 +168,7 @@ abstract class BaseKernel implements IBaseKernel {
     private _disposed?: boolean;
     private _disposing?: boolean;
     private _ignoreJupyterSessionDisposedErrors?: boolean;
-    private readonly _kernelSocket = new EventEmitter<void>();
+    private readonly _onDidKernelSocketChange = new EventEmitter<void>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
@@ -201,7 +201,7 @@ abstract class BaseKernel implements IBaseKernel {
         this.disposables.push(this._onStarted);
         this.disposables.push(this._onDisposed);
         this.disposables.push(this._onIPyWidgetVersionResolved);
-        this.disposables.push(this._kernelSocket);
+        this.disposables.push(this._onDidKernelSocketChange);
         trackKernelResourceInformation(this.resourceUri, {
             kernelConnection: this.kernelConnectionMetadata,
             actionSource: this.creator,
@@ -694,7 +694,7 @@ abstract class BaseKernel implements IBaseKernel {
         }
         if (!this.hookedSessionForEvents.has(session)) {
             this.hookedSessionForEvents.add(session);
-            session.kernelSocket((e) => this._kernelSocket.fire(e));
+            session.onDidKernelSocketChange((e) => this._onDidKernelSocketChange.fire(e));
             session.onDidDispose(() => {
                 traceInfoIfCI(
                     `Kernel got disposed as a result of session.onDisposed (1) ${getDisplayPath(

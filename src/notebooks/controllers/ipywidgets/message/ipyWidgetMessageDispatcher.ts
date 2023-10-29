@@ -192,7 +192,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
         let oldKernelId = kernel.session.kernel?.id;
 
-        kernel.session.kernelSocket(() => {
+        kernel.session.onDidKernelSocketChange(() => {
             this.subscribeToKernelSocketImpl(kernel, oldKernelId);
             oldKernelId = kernel.session?.kernel?.id || '';
         });

@@ -371,7 +371,7 @@ export interface IBaseKernel extends IAsyncDisposable {
      * Provides access to the underlying Kernel (web) socket.
      * The socket changes upon restarting the kernel, hence the use of an observable.
      */
-    readonly kernelSocket: Event<void>;
+    readonly onDidKernelSocketChange: Event<void>;
     /**
      * Provides access to the underlying kernel.
      * The Jupyter kernel can be directly access via the `session.kernel` property.
@@ -578,7 +578,7 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     extends Session.ISessionConnection {
     readonly kind: T;
     readonly status: KernelMessage.Status;
-    readonly kernelSocket: Event<void>;
+    readonly onDidKernelSocketChange: Event<void>;
     disposeAsync(): Promise<void>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;

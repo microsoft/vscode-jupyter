@@ -154,7 +154,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         this.hookKernelEvents();
         this.kernel.onStarted(this.hookKernelEvents, this, this.disposables);
         this.kernel.onRestarted(this.hookKernelEvents, this, this.disposables);
-        this.kernel.kernelSocket(() => this.hookKernelEvents(), this, this.disposables);
+        this.kernel.onDidKernelSocketChange(() => this.hookKernelEvents(), this, this.disposables);
     }
     private hookKernelEvents() {
         const kernelConnection = this.kernel.session?.kernel;

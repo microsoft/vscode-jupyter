@@ -128,7 +128,7 @@ suite('Remote kernel connection handler', async () => {
         when(kernelConnection.id).thenReturn('_KernelId_');
         const subject = new EventEmitter<void>();
         disposables.push(subject);
-        when(kernel1.kernelSocket).thenReturn(subject.event);
+        when(kernel1.onDidKernelSocketChange).thenReturn(subject.event);
         const nbUri = Uri.file('a.ipynb');
         when(kernel1.resourceUri).thenReturn(nbUri);
         when(kernel1.disposed).thenReturn(false);

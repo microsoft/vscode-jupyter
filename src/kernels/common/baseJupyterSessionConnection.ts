@@ -110,10 +110,10 @@ export abstract class BaseJupyterSessionConnection<
     public get kernelId(): string | undefined {
         return this.session?.kernel?.id || '';
     }
-    protected _kernelSocket = new EventEmitter<void>();
+    protected _onDidKernelSocketChange = new EventEmitter<void>();
 
-    public get kernelSocket() {
-        return this._kernelSocket.event;
+    public get onDidKernelSocketChange() {
+        return this._onDidKernelSocketChange.event;
     }
     public abstract readonly status: KernelMessage.Status;
     protected previousAnyMessageHandler?: IDisposable;
@@ -177,7 +177,7 @@ export abstract class BaseJupyterSessionConnection<
 
         // Listen for session status changes
         this.session.kernel?.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
-        this._kernelSocket.fire();
+        this._onDidKernelSocketChange.fire();
     }
 
     private onPropertyChanged(_: unknown, value: 'path' | 'name' | 'type') {
