@@ -150,6 +150,7 @@ function createConfig(
                 'vscode-languageclient/node',
                 '@vscode/jupyter-lsp-middleware',
                 '@vscode/extension-telemetry',
+                '@vscode/lsp-notebook-concat',
                 '@jupyterlab/services',
                 '@jupyterlab/nbformat',
                 '@jupyterlab/services/lib/kernel/serialize',
@@ -310,6 +311,7 @@ async function buildDesktopBundle() {
                         '@vscode/extension-telemetry',
                         '@jupyterlab/services',
                         '@jupyterlab/nbformat',
+                        '@vscode/lsp-notebook-concat',
                         '@jupyterlab/services/lib/kernel/serialize',
                         '@jupyterlab/services/lib/kernel/nonSerializingKernel'
                     )
