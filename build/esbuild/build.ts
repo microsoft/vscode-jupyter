@@ -108,11 +108,22 @@ function createConfig(
     if (source.endsWith(path.join('data-explorer', 'index.tsx'))) {
         inject.push(path.join(__dirname, 'jquery.js'));
     }
+    const webExternals = ['os'];
+    const external = ['log4js', 'vscode', 'commonjs', 'node:crypto'].concat(
+        target === 'web' ? webExternals : []
+    );
+    const isPreRelease = isDevbuild || process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'true';
+    const releaseVersionScriptFile = isPreRelease ? 'release.pre-release.js' : 'release.stable.js';
+    const alias = {
+        moment: path.join(extensionFolder, 'build', 'webpack', 'moment.js'),
+        'vscode-jupyter-relese-version': path.join(__dirname, releaseVersionScriptFile)
+    };
+
     return {
         entryPoints: [source],
         outfile,
         bundle: true,
-        external: ['log4js', 'vscode', 'commonjs', 'node:crypto'].concat(target === 'web' ? ['os'] : []), // From webacpk scripts we had.
+        external,
         format: 'esm',
         define:
             target === 'desktop'
@@ -127,6 +138,7 @@ function createConfig(
         logLevel: 'info',
         sourcemap: isDevbuild,
         inject,
+        alias,
         plugins: target === 'desktop' ? [] : [style(), lessLoader()],
         loader: target === 'desktop' ? {} : loader
     };
