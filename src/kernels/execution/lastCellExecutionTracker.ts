@@ -6,7 +6,7 @@ import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platf
 import { Disposables } from '../../platform/common/utils';
 import { IKernel, ResumeCellExecutionInformation, isRemoteConnection } from '../types';
 import type { KernelMessage } from '@jupyterlab/services';
-import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
+import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { dispose } from '../../platform/common/helpers';
 import { Disposable, NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { swallowExceptions } from '../../platform/common/utils/misc';

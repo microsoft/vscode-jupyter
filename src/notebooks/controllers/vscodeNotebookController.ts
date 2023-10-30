@@ -84,7 +84,7 @@ import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelController } from '../../kernels/kernelController';
 import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyIndicator';
 import { LastCellExecutionTracker } from '../../kernels/execution/lastCellExecutionTracker';
-import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
+import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessageHandler';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
 

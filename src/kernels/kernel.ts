@@ -62,7 +62,7 @@ import { KernelProgressReporter } from '../platform/progress/kernelProgressRepor
 import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
 import dedent from 'dedent';
-import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
+import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getKernelInfo } from './kernelInfo';
 import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 

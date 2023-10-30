@@ -3,7 +3,7 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
-import { IIOPubMessage, IOPubMessageType } from '@jupyterlab/services/lib/kernel/messages';
+import type { IIOPubMessage, IOPubMessageType } from '@jupyterlab/services/lib/kernel/messages';
 import { injectable, inject } from 'inversify';
 import { Disposable, NotebookDocument, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
