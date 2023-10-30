@@ -165,8 +165,11 @@ function createConfig(
     const external = ['log4js', 'vscode', 'commonjs', 'node:crypto'].concat(
         target === 'web' ? webExternals : desktopExternals
     );
+    const isPreRelease = isDevbuild || process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'true';
+    const releaseVersionScriptFile = isPreRelease ? 'release.pre-release.js' : 'release.stable.js';
     const alias = {
-        moment: path.join(extensionFolder, 'build', 'webpack', 'moment.js')
+        moment: path.join(extensionFolder, 'build', 'webpack', 'moment.js'),
+        'vscode-jupyter-relese-version': path.join(__dirname, releaseVersionScriptFile)
     };
     return {
         entryPoints: [source],
