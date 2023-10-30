@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import cloneDeep from 'lodash/cloneDeep';
 import * as sinon from 'sinon';
 import * as path from '../../../platform/vscode-path/path';
 import * as vscode from 'vscode';
@@ -44,7 +43,7 @@ suite('Hover provider @lsp', async () => {
         api = await initialize();
         const configService = api.serviceManager.get<IConfigurationService>(IConfigurationService);
         dsSettings = configService.getSettings();
-        oldSetting = cloneDeep(dsSettings.variableTooltipFields);
+        oldSetting = JSON.parse(JSON.stringify(dsSettings.variableTooltipFields));
         dsSettings.variableTooltipFields = {
             python: {
                 Tensor: ['shape', 'dtype', 'device']

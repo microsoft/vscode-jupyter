@@ -3,7 +3,6 @@
 
 import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
-import cloneDeep from 'lodash/cloneDeep';
 import uuid from 'uuid/v4';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
@@ -286,7 +285,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     }
     public get spec(): Promise<KernelSpec.ISpecModel | undefined> {
         if (isUserRegisteredKernelSpecConnection(this.kernelConnectionMetadata)) {
-            const kernelSpec = cloneDeep(this.kernelConnectionMetadata.kernelSpec) as any;
+            const kernelSpec = JSON.parse(JSON.stringify(this.kernelConnectionMetadata.kernelSpec)) as any;
             const resources = 'resources' in kernelSpec ? kernelSpec.resources : {};
             return {
                 ...kernelSpec,

@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
-import cloneDeep from 'lodash/cloneDeep';
 import { Memento, Uri } from 'vscode';
 import { traceVerbose } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -50,8 +48,8 @@ export class PreferredRemoteKernelIdProvider {
         let requiresUpdate = false;
 
         // Don't update in memory representation.
-        const list: KernelIdListEntry[] = cloneDeep(
-            this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, [])
+        const list: KernelIdListEntry[] = JSON.parse(
+            JSON.stringify(this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []))
         );
         const fileHash = await this.crypto.createHash(uri.toString());
         const index = list.findIndex((l) => l.fileHash === fileHash);
