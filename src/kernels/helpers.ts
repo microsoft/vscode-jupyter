@@ -177,7 +177,9 @@ export function removeNotebookSuffixAddedByExtension(notebookPath: string) {
                 .search(guidRegEx) !== -1
         ) {
             const nbFile = notebookPath.substring(0, notebookPath.lastIndexOf(jvscIdentifier));
-            return nbFile.toLowerCase().endsWith('.ipynb') ? nbFile : `${nbFile}.ipynb`;
+            return nbFile.toLowerCase().endsWith('.ipynb') || nbFile.toLowerCase().endsWith('.py')
+                ? nbFile
+                : `${nbFile}.ipynb`;
         }
     }
     return notebookPath;
