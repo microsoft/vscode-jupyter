@@ -30,7 +30,6 @@ import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
 import { ITrustedKernelPaths } from './raw/finder/types';
 import { KernelStatusProvider } from './kernelStatusProvider';
-import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyterServerMruUpdate';
 import { KernelDependencyService } from './kernelDependencyService.web';
@@ -75,10 +74,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelAutoReconnectMonitor
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        KernelCompletionsPreWarmer
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

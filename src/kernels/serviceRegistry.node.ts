@@ -8,7 +8,6 @@ import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { Activation } from './jupyter/interpreter/activation.node';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
 import { PreferredRemoteKernelIdProvider } from './jupyter/connection/preferredRemoteKernelIdProvider';
 import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyterServerMruUpdate';
 import { ServerPreload } from './jupyter/launcher/serverPreload.node';
@@ -124,10 +123,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelStartupTelemetry
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        KernelCompletionsPreWarmer
     );
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<IThirdPartyKernelProvider>(IThirdPartyKernelProvider, ThirdPartyKernelProvider);
