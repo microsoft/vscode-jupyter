@@ -149,7 +149,11 @@ function createConfig(
                 'vscode-languageclient',
                 'vscode-languageclient/node',
                 '@vscode/jupyter-lsp-middleware',
-                '@vscode/extension-telemetry'
+                '@vscode/extension-telemetry',
+                '@jupyterlab/services',
+                '@jupyterlab/nbformat',
+                '@jupyterlab/services/lib/kernel/serialize',
+                '@jupyterlab/services/lib/kernel/nonSerializingKernel'
             ]
         );
     }
@@ -303,7 +307,11 @@ async function buildDesktopBundle() {
                         'vscode-languageclient/node',
                         '@vscode/jupyter-lsp-middleware',
                         'svg-to-pdfkit',
-                        '@vscode/extension-telemetry'
+                        '@vscode/extension-telemetry',
+                        '@jupyterlab/services',
+                        '@jupyterlab/nbformat',
+                        '@jupyterlab/services/lib/kernel/serialize',
+                        '@jupyterlab/services/lib/kernel/nonSerializingKernel'
                     )
                     .filter((module) => !['zeromq', 'zeromqold'].includes(module))
             )
