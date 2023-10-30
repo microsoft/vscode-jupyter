@@ -8,7 +8,7 @@ export const MillisecondsInADay = 24 * 60 * 60 * 1_000;
 export function isPreReleaseVersion() {
     try {
         return require('vscode-jupyter-relese-version').isPreRelesVersionOfJupyterExtension === true
-            ? 'true '
+            ? 'true'
             : 'false';
     } catch {
         // Dev version is treated as pre-release.
