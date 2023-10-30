@@ -7,7 +7,7 @@ import { green } from 'colors';
 import type { BuildOptions, Charset, Loader, Plugin, SameShape } from 'esbuild';
 import { lessLoader } from 'esbuild-plugin-less';
 import fs from 'fs-extra';
-import { getZeroMQPreBuildsFoldersToKeep } from '../webpack/common';
+import { getZeroMQPreBuildsFoldersToKeep, getBundleConfiguration, bundleConfiguration } from '../webpack/common';
 
 // These will not be in the main desktop bundle, but will be in the web bundle.
 // In desktop, we will bundle/copye each of these separately into the node_modules folder.
@@ -56,7 +56,7 @@ const commonExternals = [
 ];
 const webExternals = commonExternals.concat('os').concat(commonExternals);
 const desktopExternals = commonExternals.concat(deskTopNodeModulesToExternalize);
-
+const bundleConfig = getBundleConfiguration();
 const isDevbuild = !process.argv.includes('--production');
 const esbuildAll = process.argv.includes('--all');
 const isWatchMode = process.argv.includes('--watch');
@@ -275,16 +275,21 @@ async function buildAll() {
               )
             : Promise.resolve(),
         ,
-        build(
-            path.join(extensionFolder, 'src', 'extension.web.ts'),
-            path.join(extensionFolder, 'out', 'extension.web.bundle.js')
-        ),
-        build(
-            path.join(extensionFolder, 'src', 'extension.node.ts'),
-            path.join(extensionFolder, 'out', 'extension.node.js'),
-            { target: 'desktop', watch: isWatchMode }
-        ),
-        ...deskTopNodeModulesToExternalize
+        bundleConfig === 'desktop'
+            ? Promise.resolve()
+            : build(
+                  path.join(extensionFolder, 'src', 'extension.web.ts'),
+                  path.join(extensionFolder, 'out', 'extension.web.bundle.js')
+              ),
+        bundleConfig === 'web'
+            ? Promise.resolve()
+            : build(
+                  path.join(extensionFolder, 'src', 'extension.node.ts'),
+                  path.join(extensionFolder, 'out', 'extension.node.js'),
+                  { target: 'desktop', watch: isWatchMode }
+              ),
+
+        ...(bundleConfig === 'web' ? [] : deskTopNodeModulesToExternalize)
             // zeromq will be manually bundled.
             .filter((module) => !['zeromq', 'zeromqold'].includes(module))
 
@@ -295,10 +300,7 @@ async function buildAll() {
                     watch: isWatchMode
                 });
             }),
-        copyJQuery(),
-        copyAminya(),
-        copyZeroMQ(),
-        copyZeroMQOld()
+        ...(bundleConfig === 'web' ? [] : [copyJQuery(), copyAminya(), copyZeroMQ(), copyZeroMQOld()])
     ]);
 }
 
