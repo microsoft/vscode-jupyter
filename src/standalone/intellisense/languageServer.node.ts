@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Disposable, extensions, NotebookDocument, workspace, window, Uri, NotebookDocumentChangeEvent } from 'vscode';
-import {
+import type {
     ClientCapabilities,
     DynamicFeature,
     ExecuteCommandRegistrationOptions,
@@ -12,7 +12,6 @@ import {
     LanguageClientOptions,
     RegistrationData,
     RegistrationType,
-    RevealOutputChannelOn,
     ServerCapabilities,
     ServerOptions,
     StaticFeature
@@ -56,8 +55,10 @@ class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegist
     }
 
     public get registrationType(): RegistrationType<ExecuteCommandRegistrationOptions> {
-        return ExecuteCommandRequest.type;
+        return this.executeCommandRequest.type;
     }
+
+    constructor(private readonly executeCommandRequest: typeof ExecuteCommandRequest) {}
 
     public fillClientCapabilities(capabilities: ClientCapabilities): void {
         ensure(ensure(capabilities, 'workspace'), 'executeCommand').dynamicRegistration = true;
@@ -175,6 +176,9 @@ export class LanguageServer implements Disposable {
                 getNotebookHeader
             );
 
+            const { RevealOutputChannelOn, ExecuteCommandRequest, LanguageClient } = await import(
+                'vscode-languageclient/node'
+            );
             // Client options should be the same for all servers we support.
             const clientOptions: LanguageClientOptions = {
                 documentSelector: NOTEBOOK_SELECTOR,
@@ -199,7 +203,7 @@ export class LanguageServer implements Disposable {
             const minusCommands = features.filter(
                 (f) => (f as any).registrationType?.method != 'workspace/executeCommand'
             );
-            minusCommands.push(new NerfedExecuteCommandFeature());
+            minusCommands.push(new NerfedExecuteCommandFeature(ExecuteCommandRequest));
             (client as any)._features = minusCommands;
 
             // Then start (which will cause the initialize request to be sent to pylance)
