@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IOutput } from '@jupyterlab/nbformat';
+import type { IOutput } from '@jupyterlab/nbformat';
 import { NotebookCell, EventEmitter, notebooks, NotebookCellExecutionState, NotebookDocument, workspace } from 'vscode';
 import { NotebookCellKind } from 'vscode-languageserver-protocol';
 import { IApplicationShell } from '../platform/common/application/types';

@@ -7,7 +7,7 @@
 
 import * as path from '../platform/vscode-path/path';
 import * as uriPath from '../platform/vscode-path/resources';
-import * as nbformat from '@jupyterlab/nbformat';
+import type * as nbformat from '@jupyterlab/nbformat';
 import type { Kernel, KernelSpec } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep from 'lodash/cloneDeep';

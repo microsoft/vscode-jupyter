@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ServerConnection } from '@jupyterlab/services';
+import type { ServerConnection } from '@jupyterlab/services';
 import * as path from '../../platform/vscode-path/path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
@@ -136,6 +136,7 @@ export function createJupyterConnectionInfo(
         requestInit = { ...requestInit, agent: requestAgent };
     }
 
+    const { ServerConnection } = require('@jupyterlab/services');
     // This replaces the WebSocket constructor in jupyter lab services with our own implementation
     // See _createSocket here:
     // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts

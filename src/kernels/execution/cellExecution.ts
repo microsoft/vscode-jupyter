@@ -12,7 +12,7 @@ import {
     EventEmitter
 } from 'vscode';
 
-import { Kernel } from '@jupyterlab/services';
+import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';

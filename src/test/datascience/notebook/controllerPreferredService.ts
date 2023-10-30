@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { INotebookMetadata } from '@jupyterlab/nbformat';
+import type { INotebookMetadata } from '@jupyterlab/nbformat';
 import {
     CancellationToken,
     CancellationTokenSource,

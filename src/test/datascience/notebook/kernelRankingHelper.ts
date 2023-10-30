@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { CancellationToken } from 'vscode';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
-import * as nbformat from '@jupyterlab/nbformat';
+import type * as nbformat from '@jupyterlab/nbformat';
 import {
     createInterpreterKernelSpec,
     getKernelId,
@@ -981,7 +980,7 @@ export class KernelRankingHelper {
     public async rankKernels(
         resource: Resource,
         kernels: KernelConnectionMetadata[],
-        notebookMetadata?: INotebookMetadata | undefined,
+        notebookMetadata?: nbformat.INotebookMetadata | undefined,
         preferredInterpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata[] | undefined> {
@@ -1012,7 +1011,7 @@ export class KernelRankingHelper {
     public async isExactMatch(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        notebookMetadata: INotebookMetadata | undefined
+        notebookMetadata: nbformat.INotebookMetadata | undefined
     ): Promise<boolean> {
         const preferredRemoteKernelId =
             resource && this.preferredRemoteFinder

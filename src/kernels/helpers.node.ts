@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from '../platform/vscode-path/path';
-import * as nbformat from '@jupyterlab/nbformat';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { IJupyterKernelSpec, IKernelSession, isLocalConnection, KernelConnectionMetadata } from './types';
 import { Uri } from 'vscode';
 import { traceError, traceVerbose } from '../platform/logging';
