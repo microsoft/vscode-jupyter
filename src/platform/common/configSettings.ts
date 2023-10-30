@@ -25,10 +25,10 @@ import {
     Resource,
     WidgetCDNs
 } from './types';
-import { debounceSync } from './utils/decorators';
 import { ISystemVariables, ISystemVariablesConstructor } from './variables/types';
 import { ConfigMigration } from './configMigration';
 import { noop } from './utils/misc';
+import { debounce } from './decorators';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
@@ -286,7 +286,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         await configMigration.migrateSettings();
     }
 
-    @debounceSync(1)
+    @debounce(1)
     private debounceChangeNotification() {
         this._changeEmitter.fire();
     }
