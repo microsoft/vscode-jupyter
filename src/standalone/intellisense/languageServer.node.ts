@@ -7,8 +7,8 @@ import type {
     DynamicFeature,
     ExecuteCommandRegistrationOptions,
     ExecuteCommandRequest,
-    FeatureState,
     LanguageClient,
+    FeatureState,
     LanguageClientOptions,
     RegistrationData,
     RegistrationType,
@@ -18,7 +18,7 @@ import type {
 } from 'vscode-languageclient/node';
 import * as path from '../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
-import { createNotebookMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
+import type { NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import uuid from 'uuid/v4';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
@@ -53,6 +53,7 @@ class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegist
             registrations: true
         };
     }
+    constructor(private readonly executeCommandRequest: typeof ExecuteCommandRequest) {}
 
     public get registrationType(): RegistrationType<ExecuteCommandRegistrationOptions> {
         return this.executeCommandRequest.type;
@@ -167,6 +168,7 @@ export class LanguageServer implements Disposable {
             let languageClient: LanguageClient | undefined;
             const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
             const interpreterId = getComparisonKey(interpreter.uri);
+            const { createNotebookMiddleware } = await import('@vscode/jupyter-lsp-middleware');
             const middleware = createNotebookMiddleware(
                 () => languageClient,
                 () => noop, // Don't trace output. Slows things down too much
