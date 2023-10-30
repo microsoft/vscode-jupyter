@@ -48,9 +48,6 @@ extends:
         packageArch: x64
         vsceTarget: darwin-x64
       - name: Windows
-        packageArch: ia32
-        vsceTarget: win32-ia32
-      - name: Windows
         packageArch: x64
         vsceTarget: win32-x64
       - name: Windows

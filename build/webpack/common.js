@@ -75,14 +75,12 @@ function getZeroMQPreBuildsFoldersToKeep() {
     } else if (vsceTarget === 'web') {
         throw new Error('Not supported when targeting the Web');
     } else if (vsceTarget.includes('win32')) {
-        if (vsceTarget.includes('ia32')) {
-            return ['win32-ia32'];
-        } else if (vsceTarget.includes('x64')) {
+        if (vsceTarget.includes('x64')) {
             return ['win32-x64'];
         } else if (vsceTarget.includes('arm64')) {
             return ['win32-arm64'];
         } else {
-            return ['win32-ia32', 'win32-x64', 'win32-arm64'];
+            return ['win32-x64', 'win32-arm64'];
         }
     } else if (vsceTarget.includes('linux')) {
         if (vsceTarget.includes('arm64')) {
