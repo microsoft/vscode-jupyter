@@ -189,6 +189,13 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
         await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
+gulp.task('webpack-dependencies', async () => {
+    // No need to build dependencies for web.
+    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
+        return;
+    }
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
+});
 
 gulp.task('webpack-extension-node', async () => {
     // No need to build dependencies for web.
@@ -406,15 +413,20 @@ gulp.task('compile-webviews-dev', async () => {
     await spawnAsync('npm', ['run', 'compile-viewers'], webpackEnv);
 });
 
+gulp.task('build-esbuild', async () => {
+    await spawnAsync('npm', ['run', 'build-esbuild'], webpackEnv);
+});
+
 gulp.task(
     'prePublishBundle',
     gulp.series(
-        // Dependencies first
-        'compile-webviews-release',
-        // Then the two extensions
-        gulp.parallel('webpack-extension-node', 'webpack-extension-web'),
+        gulp.parallel('compile-webviews-release', 'webpack-extension-node', 'webpack-extension-web'),
         'updatePackageJsonForBundle'
     )
+);
+gulp.task(
+    'prePublishBundleESBuild',
+    gulp.parallel('build-esbuild', 'webpack-dependencies', 'updatePackageJsonForBundle')
 );
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 

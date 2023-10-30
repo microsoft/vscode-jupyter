@@ -18,7 +18,7 @@ import type {
 } from 'vscode-languageclient/node';
 import * as path from '../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
-import { createNotebookMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
+import type { NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import uuid from 'uuid/v4';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
@@ -167,6 +167,7 @@ export class LanguageServer implements Disposable {
             let languageClient: LanguageClient | undefined;
             const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
             const interpreterId = getComparisonKey(interpreter.uri);
+            const { createNotebookMiddleware } = await import('@vscode/jupyter-lsp-middleware');
             const middleware = createNotebookMiddleware(
                 () => languageClient,
                 () => noop, // Don't trace output. Slows things down too much
