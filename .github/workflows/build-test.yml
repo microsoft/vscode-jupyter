@@ -846,14 +846,16 @@ jobs:
           brew install libsodium gnutls
         shell: bash
 
-      - name: Install dependencies for native modules
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install libpango1.0-dev libgif-dev
-
+      # This is faster than running `npm ci`, we do not want to build zmq, etc.
+      # Let that happen in other jobs, this job needs to be fast
       - name: npm ci
-        uses: ./.github/actions/npm-ci
+        run: npm ci --ignore-scripts --prefer-offline --no-audit
+
+      # Run again, as the download of zmq binaries could have failed with 403 errors
+      - run: npm run postinstall
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
 
       - name: pip install system test requirements
         run: |
