@@ -139,6 +139,9 @@ function createConfig(
         '@azure/opentelemetry-instrumentation-azure-sdk',
         '@opentelemetry/instrumentation'
     ];
+    if (esbuildAll) {
+        desktopExternals.push('iconv-lite', 'font-kit');
+    }
     if (source.endsWith('extension.node.ts')) {
         // In other bundles these can get pulled in,
         // but in the main bundle we do not want to pull these in.
@@ -308,6 +311,7 @@ async function buildDesktopBundle() {
                         'vscode-languageclient/node',
                         '@vscode/jupyter-lsp-middleware',
                         'svg-to-pdfkit',
+                        'iconv-lite',
                         '@vscode/extension-telemetry',
                         '@jupyterlab/services',
                         '@jupyterlab/nbformat',
