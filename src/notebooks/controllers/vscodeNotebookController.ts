@@ -522,7 +522,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 new NotebookRendererScript(
                     Uri.joinPath(
                         this.context.extensionUri,
-                        'out',
+                        'dist',
                         'webviews',
                         'webview-side',
                         'widgetTester',

@@ -61,7 +61,7 @@ npm run compile
 npm run compile-viewers-watch # For Plot, Data Frame, Variable & IPyWidget Viewer
 ```
 
-Sometimes you will need to run `npm run clean` and even `rm -r out`.
+Sometimes you will need to run `npm run clean` and even `rm -r out dist`.
 This is especially true if you have added or removed files.
 
 ### Errors and Warnings

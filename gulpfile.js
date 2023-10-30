@@ -104,9 +104,9 @@ gulp.task('printTestResults', async (done) => {
 
 gulp.task('output:clean', () => del(['coverage']));
 
-gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out', '!out/test']));
+gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out', 'dist', '!out/test']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
-gulp.task('clean:out', () => del(['out/**', '!out', '!out/client_renderer/**', '!**/*nls.*.json']));
+gulp.task('clean:out', () => del(['out/**', 'dist/**', '!out', '!out/client_renderer/**', '!**/*nls.*.json']));
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
@@ -233,22 +233,22 @@ gulp.task('updatePackageJsonForBundle', async () => {
                 modifyJson(packageJsonFile, () => ['browser', undefined]);
             }
             if (!json.main) {
-                modifyJson(packageJsonFile, () => ['main', './out/extension.node.js']);
+                modifyJson(packageJsonFile, () => ['main', './dist/extension.node.js']);
             }
             break;
         }
         case common.bundleConfiguration.webAndDesktop: {
             if (!json.browser) {
-                modifyJson(packageJsonFile, () => ['browser', './out/extension.web.bundle.js']);
+                modifyJson(packageJsonFile, () => ['browser', './dist/extension.web.bundle.js']);
             }
             if (!json.main) {
-                modifyJson(packageJsonFile, () => ['main', './out/extension.node.js']);
+                modifyJson(packageJsonFile, () => ['main', './dist/extension.node.js']);
             }
             break;
         }
         case common.bundleConfiguration.web: {
             if (!json.browser) {
-                modifyJson(packageJsonFile, () => ['browser', './out/extension.web.bundle.js']);
+                modifyJson(packageJsonFile, () => ['browser', './dist/extension.web.bundle.js']);
             }
             if (json.main) {
                 modifyJson(packageJsonFile, () => ['main', undefined]);
@@ -372,7 +372,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/log4js/lib/appenders/index.js',
                 'WARNING in ./node_modules/log4js/lib/clustering.js',
                 'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
+                'WARNING in ./node_modules/applicationinsights/dist/AutoCollection/NativePerformance.js'
             ];
         case 'extension':
             return [
@@ -392,13 +392,13 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/Validation.js',
                 'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
+                'WARNING in ./node_modules/applicationinsights/dist/AutoCollection/NativePerformance.js'
             ];
         case 'debugAdapter':
             return [
                 'WARNING in ./node_modules/vscode-uri/lib/index.js',
                 'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
+                'WARNING in ./node_modules/applicationinsights/dist/AutoCollection/NativePerformance.js'
             ];
         default:
             throw new Error('Unknown WebPack Configuration');

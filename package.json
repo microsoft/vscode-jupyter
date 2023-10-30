@@ -58,8 +58,8 @@
         "onWebviewPanel:jupyter-variables",
         "onWebviewPanel:jupyter"
     ],
-    "main": "./out/extension.node.js",
-    "browser": "./out/extension.web.bundle.js",
+    "main": "./dist/extension.node.js",
+    "browser": "./dist/extension.web.bundle.js",
     "capabilities": {
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
@@ -1977,20 +1977,20 @@
                 "localResourceRoots": [
                     "./temp"
                 ],
-                "entrypoint": "./out/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
+                "entrypoint": "./dist/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
             },
             {
                 "type": "interactive",
                 "localResourceRoots": [
                     "./temp"
                 ],
-                "entrypoint": "./out/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
+                "entrypoint": "./dist/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
             }
         ],
         "notebookRenderer": [
             {
                 "id": "jupyter-ipywidget-renderer",
-                "entrypoint": "./out/webviews/webview-side/ipywidgetsRenderer/ipywidgetsRenderer.js",
+                "entrypoint": "./dist/webviews/webview-side/ipywidgetsRenderer/ipywidgetsRenderer.js",
                 "displayName": "%jupyter.notebookRenderer.IPyWidget.displayName%",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
@@ -2118,9 +2118,7 @@
         "validateTelemetry": "gulp validateTelemetry",
         "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
         "printTestResults": "gulp printTestResults",
-        "setup-precommit-hook": "husky install",
-        "webpack-analyze:node": "npx webpack --json --config build/webpack/webpack.extension.node.config.js > out/stats-node.json && yarn webpack-bundle-analyzer out/stats-node.json",
-        "webpack-analyze:web": "npx webpack --json --config build/webpack/webpack.extension.web.config.js > out/stats-web.json && yarn webpack-bundle-analyzer out/stats-web.json"
+        "setup-precommit-hook": "husky install"
     },
     "dependencies": {
         "@c4312/evt": "^0.1.1",

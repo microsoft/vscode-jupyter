@@ -254,29 +254,29 @@ async function buildAll() {
         ...[isWatchMode ? getLessBuilders(true) : []],
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'ipywidgets', 'kernel', 'index.ts'),
-            path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
+            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'ipywidgets', 'renderer', 'index.ts'),
-            path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'ipywidgetsRenderer', 'ipywidgetsRenderer.js')
+            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'ipywidgetsRenderer', 'ipywidgetsRenderer.js')
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'variable-view', 'index.tsx'),
-            path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'viewers', 'variableView.js')
+            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'variableView.js')
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'plot', 'index.tsx'),
-            path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'viewers', 'plotViewer.js')
+            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'plotViewer.js')
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'data-explorer', 'index.tsx'),
-            path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'viewers', 'dataExplorer.js')
+            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'dataExplorer.js')
         ),
         ,
         isDevbuild
             ? build(
                   path.join(extensionFolder, 'src', 'test', 'datascience', 'widgets', 'rendererUtils.ts'),
-                  path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'widgetTester', 'widgetTester.js')
+                  path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'widgetTester', 'widgetTester.js')
               )
             : Promise.resolve(),
         ,
@@ -284,13 +284,13 @@ async function buildAll() {
             ? Promise.resolve()
             : build(
                   path.join(extensionFolder, 'src', 'extension.web.ts'),
-                  path.join(extensionFolder, 'out', 'extension.web.bundle.js')
+                  path.join(extensionFolder, 'dist', 'extension.web.bundle.js')
               ),
         bundleConfig === 'web'
             ? Promise.resolve()
             : build(
                   path.join(extensionFolder, 'src', 'extension.node.ts'),
-                  path.join(extensionFolder, 'out', 'extension.node.js'),
+                  path.join(extensionFolder, 'dist', 'extension.node.js'),
                   { target: 'desktop', watch: isWatchMode }
               ),
 
@@ -300,7 +300,7 @@ async function buildAll() {
 
             .map(async (module) => {
                 const fullPath = require.resolve(module);
-                return build(fullPath, path.join(extensionFolder, 'out', 'node_modules', `${module}.js`), {
+                return build(fullPath, path.join(extensionFolder, 'dist', 'node_modules', `${module}.js`), {
                     target: 'desktop',
                     watch: isWatchMode
                 });
@@ -318,25 +318,25 @@ async function buildAll() {
  */
 async function copyJQuery() {
     const source = require.resolve('jquery').replace('jquery.js', 'jquery.min.js');
-    const target = path.join(extensionFolder, 'out', 'node_modules', 'jquery', 'out', 'jquery.min.js');
+    const target = path.join(extensionFolder, 'dist', 'node_modules', 'jquery', 'out', 'jquery.min.js');
     const license = require.resolve('jquery').replace(path.join('out', 'jquery.js'), 'LICENSE.txt');
     await fs.ensureDir(path.dirname(target));
     await Promise.all([
         fs.copyFile(source, target),
-        fs.copyFile(license, path.join(extensionFolder, 'out', 'node_modules', 'jquery', 'LICENSE.txt'))
+        fs.copyFile(license, path.join(extensionFolder, 'dist', 'node_modules', 'jquery', 'LICENSE.txt'))
     ]);
 }
 
 async function copyAminya() {
     const source = path.join(extensionFolder, 'node_modules', '@aminya/node-gyp-build');
-    const target = path.join(extensionFolder, 'out', 'node_modules', '@aminya/node-gyp-build');
+    const target = path.join(extensionFolder, 'dist', 'node_modules', '@aminya/node-gyp-build');
     await fs.ensureDir(path.dirname(target));
     await fs.ensureDir(target);
     await fs.copy(source, target, { recursive: true });
 }
 async function copyZeroMQ() {
     const source = path.join(extensionFolder, 'node_modules', 'zeromq');
-    const target = path.join(extensionFolder, 'out', 'node_modules', 'zeromq');
+    const target = path.join(extensionFolder, 'dist', 'node_modules', 'zeromq');
     await fs.ensureDir(target);
     await fs.copy(source, target, {
         recursive: true,
@@ -345,7 +345,7 @@ async function copyZeroMQ() {
 }
 async function copyZeroMQOld() {
     const source = path.join(extensionFolder, 'node_modules', 'zeromqold');
-    const target = path.join(extensionFolder, 'out', 'node_modules', 'zeromqold');
+    const target = path.join(extensionFolder, 'dist', 'node_modules', 'zeromqold');
     await fs.ensureDir(path.dirname(target));
     await fs.ensureDir(target);
     await fs.copy(source, target, {
@@ -355,7 +355,7 @@ async function copyZeroMQOld() {
 }
 async function buildVSCodeJsonRPC() {
     const source = path.join(extensionFolder, 'node_modules', 'vscode-jsonrpc');
-    const target = path.join(extensionFolder, 'out', 'node_modules', 'vscode-jsonrpc', 'index.js');
+    const target = path.join(extensionFolder, 'dist', 'node_modules', 'vscode-jsonrpc', 'index.js');
     await fs.ensureDir(path.dirname(target));
     const fullPath = require.resolve(source);
     const contents = `

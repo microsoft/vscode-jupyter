@@ -31,7 +31,8 @@
             "**/.vscode test/stable/**": true,
             "**/.vscode-test/insider/**": true,
             "**/.vscode-test/stable/**": true,
-            "**/out/**": true
+            "**/out/**": true,
+            "**/dist/**": true
         }
     },
     "launch": {
@@ -53,7 +54,8 @@
                     "${workspaceFolder:vscode-python}/out/**/*.js",
                     "!${workspaceFolder:vscode-python}/**/node_modules**/*",
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
-                    "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
+                    "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
+                    "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*",
                 ],
                 "skipFiles": ["<node_internals>/**"]
             },
@@ -78,6 +80,7 @@
                     "${workspaceFolder:vscode-python}/out/**/*.js",
                     "!${workspaceFolder:vscode-python}/**/node_modules**/*",
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
+                    "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
                     "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
                 ],
                 "skipFiles": ["<node_internals>/**"]
@@ -97,6 +100,7 @@
                     "${workspaceFolder:vscode-python}/out/**/*.js",
                     "!${workspaceFolder:vscode-python}/**/node_modules**/*",
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
+                    "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
                     "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*",
                     "${workspaceFolder:vscode-notebook-renderers}/out/**/*.js",
                     "!${workspaceFolder:vscode-notebook-renderers}/**/node_modules**/*"
@@ -115,6 +119,7 @@
                 "sourceMaps": true,
                 "outFiles": [
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
+                    "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
                     "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*",
                     "${workspaceFolder:vscode-jupyter-powertoys}/out/**/*.js",
                     "!${workspaceFolder:vscode-jupyter-powertoys}/**/node_modules**/*"
@@ -133,6 +138,7 @@
                 "sourceMaps": true,
                 "outFiles": [
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
+                    "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
                     "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*",
                     "${workspaceFolder:vscode-notebook-renderers}/out/**/*.js",
                     "!${workspaceFolder:vscode-notebook-renderers}/**/node_modules**/*"
@@ -164,6 +170,7 @@
                 "sourceMaps": true,
                 "outFiles": [
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
+                    "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
                     "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
                 ],
                 "skipFiles": ["<node_internals>/**"]
