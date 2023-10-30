@@ -112,7 +112,7 @@ function createConfig(
         entryPoints: [source],
         outfile,
         bundle: true,
-        external: ['log4js', 'vscode', 'commonjs'], // From webacpk scripts we had.
+        external: ['log4js', 'vscode', 'commonjs', 'node:crypto'].concat(target === 'web' ? ['os'] : []), // From webacpk scripts we had.
         format: 'esm',
         define:
             target === 'desktop'
@@ -211,6 +211,11 @@ async function buildAll() {
                   path.join(extensionFolder, 'out', 'webviews', 'webview-side', 'widgetTester', 'widgetTester.js')
               )
             : Promise.resolve(),
+        ,
+        build(
+            path.join(extensionFolder, 'src', 'extension.web.ts'),
+            path.join(extensionFolder, 'out', 'extension.web.js')
+        ),
         ...nodeModulesToExternalize.map(async (module) => {
             let fullPath = path.join(extensionFolder, 'node_modules', `${module}.js`);
             if (!fs.existsSync(fullPath)) {
