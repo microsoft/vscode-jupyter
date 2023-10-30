@@ -17,7 +17,7 @@ import { raceCancellation } from '../../platform/common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
-import { isNotebookCell } from '../../platform/common/utils/misc';
+import { isNotebookCell, noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IKernelSession, IKernelProvider } from '../../kernels/types';
 import { INotebookCompletionProvider, INotebookEditorProvider } from '../../notebooks/types';
@@ -26,6 +26,7 @@ import { isTestExecution, Settings } from '../../platform/common/constants';
 import { INotebookCompletion } from './types';
 import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
 import { raceTimeout } from '../../platform/common/utils/async';
+import { isPythonKernelConnection } from '../../kernels/helpers';
 
 let IntellisenseTimeout = Settings.IntellisenseTimeout;
 export function setIntellisenseTimeout(timeoutMs: number) {
@@ -52,6 +53,25 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         @inject(IConfigurationService) config: IConfigurationService,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
+        this.kernelProvider.onDidStartKernel(
+            (kernel) => {
+                if (kernel.session?.kernel && isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
+                    /**
+                     * Do not wait for completions,
+                     * If the completions request crashes then we don't get a response for this request,
+                     * Hence we end up waiting indefinitely.
+                     * https://github.com/microsoft/vscode-jupyter/issues/9014
+                     *
+                     * We send this request to ensure the completion provider in the kernel has bee pre-warmed.
+                     * This way things are faster when the user actually triggers a completion.
+                     */
+                    kernel.session.kernel.requestComplete({ code: '__file__.', cursor_pos: 9 }).catch(noop);
+                }
+            },
+            this,
+            disposables
+        );
+
         const triggerChars = config.getSettings().pythonCompletionTriggerCharacters;
         this.allowStringFilter =
             triggerChars != undefined && (triggerChars.includes("'") || triggerChars.includes('"'));
