@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, WorkspaceConfiguration } from 'vscode';
+import { Disposable, EventEmitter, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from './application/types';
 import { traceVerbose } from '../logging';
 import { launch } from './net/browser';
@@ -14,7 +14,6 @@ import {
     IFeatureSet,
     IPersistentStateFactory
 } from './types';
-import { Emitter } from 'vscode-jsonrpc';
 
 const deprecatedFeatures: DeprecatedFeatureInfo[] = [
     {
@@ -43,7 +42,7 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
  */
 @injectable()
 export class FeatureManager implements IFeaturesManager {
-    private _onDidChangeFeatures = new Emitter<void>();
+    private _onDidChangeFeatures = new EventEmitter<void>();
     readonly onDidChangeFeatures = this._onDidChangeFeatures.event;
     private _features: IFeatureSet = {};
     get features(): IFeatureSet {

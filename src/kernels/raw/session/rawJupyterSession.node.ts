@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { CancellationToken } from 'vscode-jsonrpc';
 import { traceVerbose, traceInfoIfCI } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { raceTimeout } from '../../../platform/common/utils/async';
@@ -12,6 +11,7 @@ import { waitForIdleOnSession } from '../../common/helpers';
 import { BaseJupyterSessionConnection } from '../../common/baseJupyterSessionConnection';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { RawSessionConnection } from './rawSessionConnection.node';
+import { CancellationToken } from 'vscode';
 
 /*
 RawJupyterSession is the implementation of IJupyterKernelConnectionSession that instead of
