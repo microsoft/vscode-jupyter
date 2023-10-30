@@ -406,6 +406,10 @@ gulp.task('compile-webviews-dev', async () => {
     await spawnAsync('npm', ['run', 'compile-viewers'], webpackEnv);
 });
 
+gulp.task('build-esbuild', async () => {
+    await spawnAsync('npm', ['run', 'build-esbuild'], webpackEnv);
+});
+
 gulp.task(
     'prePublishBundle',
     gulp.series(
@@ -416,6 +420,7 @@ gulp.task(
         'updatePackageJsonForBundle'
     )
 );
+gulp.task('prePublishBundleESBuild', gulp.series('build-esbuild', 'updatePackageJsonForBundle'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 
 gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-webviews-dev'));

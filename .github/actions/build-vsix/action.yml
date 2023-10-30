@@ -19,5 +19,6 @@ runs:
         GITHUB_TOKEN: ${{ github.token }}
       shell: bash
 
-    - run: npm run package
+    - run: npm run package-esbuild
+    # - run: npm run package
       shell: bash
