@@ -71,26 +71,26 @@ suite('Preferred Kernel Connection', () => {
         kernelModel: instance(mock<LiveKernelModel>()),
         serverProviderHandle: serverProviderHandle2
     });
-    const remoteLiveJavaKernelConnection = LiveRemoteKernelConnectionMetadata.create({
-        baseUrl: '',
-        id: 'liveRemoteJava',
-        kernelModel: {
-            lastActivityTime: new Date(),
-            model: {
-                id: 'xyz',
-                kernel: {
-                    name: 'java',
-                    id: 'xyz'
-                },
-                path: 'baz/sample.ipynb',
-                name: 'sample.ipynb',
-                type: 'notebook'
-            },
-            name: 'java',
-            numberOfConnections: 1
-        },
-        serverProviderHandle: serverProviderHandle2
-    });
+    // const remoteLiveJavaKernelConnection = LiveRemoteKernelConnectionMetadata.create({
+    //     baseUrl: '',
+    //     id: 'liveRemoteJava',
+    //     kernelModel: {
+    //         lastActivityTime: new Date(),
+    //         model: {
+    //             id: 'xyz',
+    //             kernel: {
+    //                 name: 'java',
+    //                 id: 'xyz'
+    //             },
+    //             path: 'baz/sample.ipynb',
+    //             name: 'sample.ipynb',
+    //             type: 'notebook'
+    //         },
+    //         name: 'java',
+    //         numberOfConnections: 1
+    //     },
+    //     serverProviderHandle: serverProviderHandle2
+    // });
     const remoteJavaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         baseUrl: '',
         id: 'remoteJavaKernelSpec',
