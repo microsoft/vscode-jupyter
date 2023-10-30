@@ -4,8 +4,8 @@
 import { injectable, inject } from 'inversify';
 import * as os from 'os';
 import * as vscode from 'vscode';
-import * as lspConcat from '@vscode/lsp-notebook-concat';
-import * as protocol from 'vscode-languageserver-protocol';
+import type * as lspConcat from '@vscode/lsp-notebook-concat';
+import type * as protocol from 'vscode-languageserver-protocol';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR, Commands, EditorContexts } from '../../platform/common/constants';
@@ -277,7 +277,8 @@ export class LogReplayService implements IExtensionSyncActivationService {
 
     private async getConverter() {
         if (!this.converter && this.activeNotebook) {
-            const converter = lspConcat.createConverter(
+            const { createConverter } = await import('@vscode/lsp-notebook-concat');
+            const converter = createConverter(
                 (_u) => this.getNotebookHeader(this.activeNotebook!.uri),
                 () => os.platform()
             );
