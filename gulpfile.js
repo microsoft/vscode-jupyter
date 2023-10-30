@@ -183,6 +183,9 @@ gulp.task('installPythonLibs', async () => {
 });
 
 gulp.task('compile-webextension', async () => {
+    if (isCI && process.env.VSC_JUPYTER_CI_SKIP_WEB_BUNDLE === '1') {
+        return;
+    }
     // No need to build dependencies for desktop.
     if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
         return;
