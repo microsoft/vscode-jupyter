@@ -7,8 +7,55 @@ import { green } from 'colors';
 import type { BuildOptions, Charset, Loader, Plugin, SameShape } from 'esbuild';
 import { lessLoader } from 'esbuild-plugin-less';
 import fs from 'fs-extra';
-import { nodeModulesToExternalize } from '../webpack/common';
 import { getZeroMQPreBuildsFoldersToKeep } from '../webpack/common';
+
+// These will not be in the main desktop bundle, but will be in the web bundle.
+// In desktop, we will bundle/copye each of these separately into the node_modules folder.
+const deskTopNodeModulesToExternalize = [
+    'pdfkit/js/pdfkit.standalone',
+    'crypto-js',
+    'fontkit',
+    'png-js',
+    'zeromq', // Copy, do not bundle
+    'zeromqold', // Copy, do not bundle
+    // Its lazy loaded by Jupyter lab code, & since this isn't used directly in our code
+    // there's no need to include into the main bundle.
+    'node-fetch',
+    // Its loaded by node-fetch, & since that is lazy loaded
+    // there's no need to include into the main bundle.
+    'iconv-lite',
+    // Its loaded by ivonv-lite, & since that is lazy loaded
+    // there's no need to include into the main bundle.
+    'fontkit',
+    'svg-to-pdfkit',
+    // jsonc-parser doesn't get bundled well with esbuild without any changes.
+    // Its possible the fix is very simple.
+    'jsonc-parser',
+    // Lazy loaded modules.
+    'vscode-languageclient/node',
+    '@vscode/jupyter-lsp-middleware',
+    '@vscode/extension-telemetry',
+    '@vscode/lsp-notebook-concat',
+    '@jupyterlab/services',
+    '@jupyterlab/nbformat',
+    '@jupyterlab/services/lib/kernel/serialize',
+    '@jupyterlab/services/lib/kernel/nonSerializingKernel',
+    'vscode-jsonrpc' // Used by a few modules, might as well pull this out, instead of duplicating it in separate bundles.
+];
+const commonExternals = [
+    'log4js',
+    'vscode',
+    'commonjs',
+    'node:crypto',
+    // Ignore telemetry specific packages that are not required.
+    'applicationinsights-native-metrics',
+    '@opentelemetry/tracing',
+    '@azure/opentelemetry-instrumentation-azure-sdk',
+    '@opentelemetry/instrumentation',
+    '@azure/functions-core'
+];
+const webExternals = commonExternals.concat('os').concat(commonExternals);
+const desktopExternals = commonExternals.concat(deskTopNodeModulesToExternalize);
 
 const isDevbuild = !process.argv.includes('--production');
 const esbuildAll = process.argv.includes('--all');
@@ -113,58 +160,7 @@ function createConfig(
     if (source.endsWith(path.join('data-explorer', 'index.tsx'))) {
         inject.push(path.join(__dirname, 'jquery.js'));
     }
-    const desktopExternals = [
-        'zeromq',
-        'zeromqold',
-        '@vscode/jupyter-ipywidgets7',
-        'pdfkit/js/pdfkit.standalone',
-        'crypto-js',
-        'fontkit',
-        'png-js',
-        'zeromq',
-        // Make this external,
-        // Its lazy loaded by Jupyter lab code.
-        // Thus if jupyterlab code is lazy loaded, this will be lazy loaded,
-        // Meaning a lot of the dependencies will be lazy loaded, leading to faster ext loading.
-        'node-fetch',
-        // Lazy load for faster ext loading.
-        'svg-to-pdfkit',
-        // jsonc-parser doesn't get bundled well with esbuild without any changes.
-        // Its possible the fix is very simple.
-        'jsonc-parser',
-        // Ignore telemetry specific packages that are not required.
-        '@opentelemetry/tracing',
-        'applicationinsights-native-metrics',
-        '@azure/functions-core',
-        '@azure/opentelemetry-instrumentation-azure-sdk',
-        '@opentelemetry/instrumentation'
-    ];
-    if (esbuildAll) {
-        desktopExternals.push('iconv-lite', 'font-kit');
-    }
-    if (source.endsWith('extension.node.ts')) {
-        // In other bundles these can get pulled in,
-        // but in the main bundle we do not want to pull these in.
-        // language client is lazy loaded in main bundle
-        // & required in lsp-middleware, etc
-        desktopExternals.push(
-            ...[
-                'vscode-languageclient',
-                'vscode-languageclient/node',
-                '@vscode/jupyter-lsp-middleware',
-                '@vscode/extension-telemetry',
-                '@vscode/lsp-notebook-concat',
-                '@jupyterlab/services',
-                '@jupyterlab/nbformat',
-                '@jupyterlab/services/lib/kernel/serialize',
-                '@jupyterlab/services/lib/kernel/nonSerializingKernel'
-            ]
-        );
-    }
-    const webExternals = ['os'];
-    const external = ['log4js', 'vscode', 'commonjs', 'node:crypto'].concat(
-        target === 'web' ? webExternals : desktopExternals
-    );
+    const external = target === 'web' ? webExternals : desktopExternals;
     const isPreRelease = isDevbuild || process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'true';
     const releaseVersionScriptFile = isPreRelease ? 'release.pre-release.js' : 'release.stable.js';
     const alias = {
@@ -283,60 +279,29 @@ async function buildAll() {
             path.join(extensionFolder, 'src', 'extension.web.ts'),
             path.join(extensionFolder, 'out', 'extension.web.bundle.js')
         ),
-        ...(esbuildAll
-            ? [buildDesktopBundle()]
-            : nodeModulesToExternalize.map(async (module) => {
-                  let fullPath = path.join(extensionFolder, 'node_modules', `${module}.js`);
-                  if (!fs.existsSync(fullPath)) {
-                      fullPath = require.resolve(path.join(extensionFolder, 'node_modules', module));
-                      console.error(fullPath);
-                  }
-                  return build(fullPath, fullPath.replace('node_modules', path.join('out', 'node_modules')), {
-                      target: 'desktop',
-                      watch: isWatchMode
-                  });
-              }))
-    ]);
-}
-
-async function buildDesktopBundle() {
-    await Promise.all([
         build(
             path.join(extensionFolder, 'src', 'extension.node.ts'),
             path.join(extensionFolder, 'out', 'extension.node.js'),
             { target: 'desktop', watch: isWatchMode }
         ),
-        ...Array.from(
-            new Set(
-                nodeModulesToExternalize
-                    .concat(
-                        'node-fetch',
-                        'vscode-languageclient/node',
-                        '@vscode/jupyter-lsp-middleware',
-                        'svg-to-pdfkit',
-                        'iconv-lite',
-                        '@vscode/extension-telemetry',
-                        '@jupyterlab/services',
-                        '@jupyterlab/nbformat',
-                        '@vscode/lsp-notebook-concat',
-                        '@jupyterlab/services/lib/kernel/serialize',
-                        '@jupyterlab/services/lib/kernel/nonSerializingKernel'
-                    )
-                    .filter((module) => !['zeromq', 'zeromqold'].includes(module))
-            )
-        ).map(async (module) => {
-            const fullPath = require.resolve(module);
-            return build(fullPath, path.join(extensionFolder, 'out', 'node_modules', `${module}.js`), {
-                target: 'desktop',
-                watch: isWatchMode
-            });
-        }),
+        ...deskTopNodeModulesToExternalize
+            // zeromq will be manually bundled.
+            .filter((module) => !['zeromq', 'zeromqold'].includes(module))
+
+            .map(async (module) => {
+                const fullPath = require.resolve(module);
+                return build(fullPath, path.join(extensionFolder, 'out', 'node_modules', `${module}.js`), {
+                    target: 'desktop',
+                    watch: isWatchMode
+                });
+            }),
         copyJQuery(),
         copyAminya(),
         copyZeroMQ(),
         copyZeroMQOld()
     ]);
 }
+
 /**
  * TODO: Who uses JQuery?
  * Possibly shipped for widgets.
