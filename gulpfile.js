@@ -393,7 +393,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
 }
 
 gulp.task('compile-release', async () => {
-    await spawnAsync('npm', ['run', 'compile-release'], webpackEnv);
+    await spawnAsync('npm', ['run', 'esbuild-release'], webpackEnv);
 });
 
 gulp.task('compile-dev', async () => {
