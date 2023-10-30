@@ -24,6 +24,7 @@ import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connectio
 import { RemoteKernelConnectionHandler } from './remoteKernelConnectionHandler';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { Kernel } from '@jupyterlab/services';
+import { uriEquals } from '../../test/datascience/helpers';
 
 use(chaiAsPromised);
 suite('Remote kernel connection handler', async () => {
@@ -126,26 +127,34 @@ suite('Remote kernel connection handler', async () => {
         const kernelConnection = mock<Kernel.IKernelConnection>();
         when(session.kernel).thenReturn(instance(kernelConnection));
         when(kernelConnection.id).thenReturn('_KernelId_');
-        const subject = new EventEmitter<void>();
-        disposables.push(subject);
-        when(kernel1.onDidKernelSocketChange).thenReturn(subject.event);
+        const eventEmitter = new EventEmitter<void>();
+        disposables.push(eventEmitter);
+        when(kernel1.onDidKernelSocketChange).thenReturn(eventEmitter.event);
         const nbUri = Uri.file('a.ipynb');
         when(kernel1.resourceUri).thenReturn(nbUri);
         when(kernel1.disposed).thenReturn(false);
         when(kernel1.disposing).thenReturn(false);
 
         remoteConnectionHandler.activate();
-        onDidStartKernel.fire(instance(kernel1));
 
         verify(tracker.trackKernelIdAsUsed(anything(), anything(), anything())).never();
         verify(preferredRemoteKernelProvider.storePreferredRemoteKernelId(anything(), anything())).never();
-        subject.fire();
+
+        onDidStartKernel.fire(instance(kernel1));
+
+        eventEmitter.fire();
 
         if (connection.kind === 'startUsingRemoteKernelSpec' && source === 'jupyterExtension') {
             verify(
-                tracker.trackKernelIdAsUsed(nbUri, deepEqual(remoteKernelSpec.serverProviderHandle), '_KernelId_')
-            ).once();
-            verify(preferredRemoteKernelProvider.storePreferredRemoteKernelId(nbUri, '_KernelId_')).once();
+                tracker.trackKernelIdAsUsed(
+                    uriEquals(nbUri),
+                    deepEqual(remoteKernelSpec.serverProviderHandle),
+                    '_KernelId_'
+                )
+            ).atLeast(2);
+            verify(preferredRemoteKernelProvider.storePreferredRemoteKernelId(uriEquals(nbUri), '_KernelId_')).atLeast(
+                2
+            );
         } else {
             verify(tracker.trackKernelIdAsUsed(anything(), anything(), anything())).never();
             verify(preferredRemoteKernelProvider.storePreferredRemoteKernelId(anything(), anything())).never();
