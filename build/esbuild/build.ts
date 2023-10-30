@@ -274,7 +274,7 @@ async function buildAll() {
         ,
         build(
             path.join(extensionFolder, 'src', 'extension.web.ts'),
-            path.join(extensionFolder, 'out', 'extension.web.js')
+            path.join(extensionFolder, 'out', 'extension.web.bundle.js')
         ),
         ...(esbuildAll
             ? [buildDesktopBundle()]
