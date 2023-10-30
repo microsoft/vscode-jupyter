@@ -22,7 +22,7 @@ import { DisplayOptions } from '../../kernels/displayOptions';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IExportedKernelServiceFactory } from './api';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { Session } from '@jupyterlab/services';
+import type { Session } from '@jupyterlab/services';
 
 @injectable()
 export class JupyterKernelServiceFactory implements IExportedKernelServiceFactory {
