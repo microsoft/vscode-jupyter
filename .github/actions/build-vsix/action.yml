@@ -9,9 +9,8 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: npm ci --prefer-offline --no-audit
-      env:
-        npm_config_build_from_source: true
+    # This is faster than running `npm ci`, we do not want to build zmq, as its already built by us.
+    - run: npm ci --ignore-scripts --prefer-offline --no-audit
       shell: bash
 
     # Run again, as the download of zmq binaries could have failed with 403 errors
