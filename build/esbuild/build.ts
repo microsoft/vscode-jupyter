@@ -30,7 +30,7 @@ const deskTopNodeModulesToExternalize = [
     'svg-to-pdfkit',
     // jsonc-parser doesn't get bundled well with esbuild without any changes.
     // Its possible the fix is very simple.
-    'jsonc-parser',
+    // 'jsonc-parser',
     // Lazy loaded modules.
     'vscode-languageclient/node',
     '@vscode/jupyter-lsp-middleware',
