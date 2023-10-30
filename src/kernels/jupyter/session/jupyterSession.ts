@@ -18,7 +18,6 @@ import {
 import { DisplayOptions } from '../../displayOptions';
 import { IJupyterKernelService } from '../types';
 import { noop } from '../../../platform/common/utils/misc';
-import * as path from '../../../platform/vscode-path/resources';
 import { getResourceType } from '../../../platform/common/utils';
 import { waitForIdleOnSession } from '../../common/helpers';
 import { BaseJupyterSessionConnection } from '../../common/baseJupyterSessionConnection';
