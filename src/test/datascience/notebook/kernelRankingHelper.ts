@@ -1011,7 +1011,7 @@ export class KernelRankingHelper {
     public async isExactMatch(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        notebookMetadata: INotebookMetadata | undefined
+        notebookMetadata: nbformat.INotebookMetadata | undefined
     ): Promise<boolean> {
         const preferredRemoteKernelId =
             resource && this.preferredRemoteFinder
