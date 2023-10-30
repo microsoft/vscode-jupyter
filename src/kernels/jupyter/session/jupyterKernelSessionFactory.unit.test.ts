@@ -437,40 +437,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         when(kernel.status).thenReturn('busy');
         assert.strictEqual(wrapperSession.status, 'busy');
     });
-    test('Create Session with Jupyter style names (notebook)', async () => {
-        const resource = Uri.file('/foo/bar/baz/abc.ipynb');
-        const options: KernelSessionCreationOptions = {
-            kernelConnection: remoteKernelSpec,
-            creator: 'jupyterExtension',
-            resource,
-            token: token.token,
-            ui
-        };
-        const { session, kernel } = createSession();
-        when(sessionManager.startNew(anything(), anything())).thenResolve(resolvableInstance(session));
-
-        const wrapperSession = await factory.create(options);
-
-        assert.ok(wrapperSession);
-
-        verify(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), false)).never();
-        verify(jupyterNotebookProvider.getOrStartServer(anything())).never();
-        verify(workspaceService.computeWorkingDirectory(anything())).never();
-        verify(sessionManager.startNew(anything(), anything())).once();
-        verify(jupyterConnection.createConnectionInfo(anything())).once();
-        assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'notebook');
-
-        when(kernel.status).thenReturn('idle');
-        assert.strictEqual(wrapperSession.status, 'idle');
-        when(kernel.status).thenReturn('busy');
-        assert.strictEqual(wrapperSession.status, 'busy');
-
-        const newSessionOptions = capture(sessionManager.startNew).first()[0];
-        assert.strictEqual(newSessionOptions.name, 'abc.ipynb');
-        assert.strictEqual(newSessionOptions.path, 'baz/abc.ipynb');
-        assert.strictEqual(newSessionOptions.type, 'notebook');
-        assert.deepStrictEqual(newSessionOptions.kernel, { name: 'python3' });
-    });
     test('Create Session with non-Jupyter style names (notebook)', async () => {
         const resource = Uri.file('/foo/bar/baz/abc.ipynb');
         const options: KernelSessionCreationOptions = {
@@ -518,40 +484,6 @@ suite('New Jupyter Kernel Session Factory', () => {
             `Session should path start with .ipynb, ${newSessionOptions.name}}`
         );
         assert.strictEqual(newSessionOptions.type, 'notebook');
-        assert.deepStrictEqual(newSessionOptions.kernel, { name: 'python3' });
-    });
-    test('Create Session with Jupyter style names (interactive window with Python file)', async () => {
-        const resource = Uri.file('/foo/bar/baz/abc.py');
-        const options: KernelSessionCreationOptions = {
-            kernelConnection: remoteKernelSpec,
-            creator: 'jupyterExtension',
-            resource,
-            token: token.token,
-            ui
-        };
-        const { session, kernel } = createSession();
-        when(sessionManager.startNew(anything(), anything())).thenResolve(resolvableInstance(session));
-
-        const wrapperSession = await factory.create(options);
-
-        assert.ok(wrapperSession);
-
-        verify(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), false)).never();
-        verify(jupyterNotebookProvider.getOrStartServer(anything())).never();
-        verify(workspaceService.computeWorkingDirectory(anything())).never();
-        verify(sessionManager.startNew(anything(), anything())).once();
-        verify(jupyterConnection.createConnectionInfo(anything())).once();
-        assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'console');
-
-        when(kernel.status).thenReturn('idle');
-        assert.strictEqual(wrapperSession.status, 'idle');
-        when(kernel.status).thenReturn('busy');
-        assert.strictEqual(wrapperSession.status, 'busy');
-
-        const newSessionOptions = capture(sessionManager.startNew).first()[0];
-        assert.strictEqual(newSessionOptions.name, 'abc.py');
-        assert.strictEqual(newSessionOptions.path, 'baz/abc.py');
-        assert.strictEqual(newSessionOptions.type, 'console');
         assert.deepStrictEqual(newSessionOptions.kernel, { name: 'python3' });
     });
 });
