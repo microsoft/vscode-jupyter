@@ -7,7 +7,7 @@ import uuid from 'uuid/v4';
 import { traceInfoIfCI, traceWarning } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { Telemetry } from '../../../telemetry';
-import { INewSessionWithSocket, KernelSocketInformation, LocalKernelConnectionMetadata } from '../../types';
+import { LocalKernelConnectionMetadata } from '../../types';
 import { IKernelLauncher } from '../types';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { noop } from '../../../platform/common/utils/misc';
@@ -21,7 +21,7 @@ RawSession class implements a jupyterlab ISession object
 This provides enough of the ISession interface so that our direct
 ZMQ Kernel connection can pretend to be a jupyterlab Session
 */
-export class RawSessionConnection implements INewSessionWithSocket {
+export class RawSessionConnection implements Session.ISessionConnection {
     public isDisposed: boolean = false;
     public readonly id: string;
     public readonly path: string;
@@ -91,18 +91,6 @@ export class RawSessionConnection implements INewSessionWithSocket {
     // Return the current kernel for this session
     get kernel(): Kernel.IKernelConnection | null {
         return this._kernel as Kernel.IKernelConnection | null;
-    }
-
-    get kernelSocketInformation(): KernelSocketInformation {
-        return {
-            socket: this._kernel.socket,
-            options: {
-                id: this._kernel.id,
-                clientId: this._kernel.clientId,
-                userName: this._kernel.username,
-                model: this._kernel.model
-            }
-        };
     }
 
     constructor(

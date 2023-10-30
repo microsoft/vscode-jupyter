@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, NotebookDocument } from 'vscode';
+import { NotebookDocument } from 'vscode';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
@@ -70,17 +70,19 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
             return;
         }
         const resource = kernel.resourceUri;
-        if (kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec') {
-            const serverId = kernel.kernelConnectionMetadata.serverProviderHandle;
-            const subscription = kernel.kernelSocket.subscribe((info) => {
-                const kernelId = info?.options.id;
-                if (!kernel.disposed && !kernel.disposing && kernelId) {
-                    traceVerbose(`Updating preferred kernel for remote notebook ${kernelId}`);
-                    this.preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(resource, kernelId).catch(noop);
-                    this.liveKernelTracker.trackKernelIdAsUsed(resource, serverId, kernelId);
-                }
-            });
-            this.disposables.push(new Disposable(() => subscription.unsubscribe()));
+        if (kernel.kernelConnectionMetadata.kind !== 'startUsingRemoteKernelSpec') {
+            return;
         }
+        const serverId = kernel.kernelConnectionMetadata.serverProviderHandle;
+        const storeKernelInfo = () => {
+            const kernelId = kernel.session?.kernel?.id;
+            if (!kernel.disposed && !kernel.disposing && kernelId) {
+                traceVerbose(`Updating preferred kernel for remote notebook ${kernelId}`);
+                this.preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(resource, kernelId).catch(noop);
+                this.liveKernelTracker.trackKernelIdAsUsed(resource, serverId, kernelId);
+            }
+        };
+        storeKernelInfo();
+        kernel.onDidKernelSocketChange(storeKernelInfo, this, this.disposables);
     }
 }

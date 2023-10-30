@@ -26,7 +26,6 @@ import {
     IJupyterSettings,
     ReadWrite
 } from '../../../../platform/common/types';
-import { noop } from '../../../../test/core';
 import { IWidgetScriptSourceProviderFactory, ILocalResourceUriConverter } from '../types';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptManagerFactory } from './ipyWidgetScriptManagerFactory.node';
@@ -65,15 +64,13 @@ suite('ipywidget - Widget Script Source Provider', () => {
         kernel = mock<IKernel>();
         const onStarted = new EventEmitter<void>();
         const onReStarted = new EventEmitter<void>();
+        const kernelSocket = new EventEmitter<void>();
         disposables.push(onStarted);
         disposables.push(onReStarted);
+        disposables.push(kernelSocket);
         when(kernel.onStarted).thenReturn(onStarted.event);
         when(kernel.onRestarted).thenReturn(onReStarted.event);
-        when(kernel.kernelSocket).thenReturn({
-            subscribe: () => ({
-                dispose: () => noop()
-            })
-        } as any);
+        when(kernel.onDidKernelSocketChange).thenReturn(kernelSocket.event);
         when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
             instance(userSelectedOkOrDoNotShowAgainInPrompt)
         );

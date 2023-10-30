@@ -16,7 +16,6 @@ import {
     KernelConnectionMetadata,
     IJupyterConnection,
     GetServerOptions,
-    IKernelSocket,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../types';
@@ -232,7 +231,6 @@ export interface IJupyterRequestCreator {
         getWebSocketProtocols?: () => string | string[] | undefined
     ): ClassType<WebSocket>;
     wrapWebSocketCtor(websocketCtor: ClassType<WebSocketIsomorphic>): ClassType<WebSocketIsomorphic>;
-    getWebsocket(id: string): IKernelSocket | undefined;
     getRequestInit(): RequestInit;
 }
 

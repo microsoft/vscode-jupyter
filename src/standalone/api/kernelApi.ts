@@ -2,37 +2,27 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { KernelConnectionWrapper } from './kernelConnectionWrapper';
+import { Event, EventEmitter, Uri } from 'vscode';
 import {
     IKernelProvider,
     KernelConnectionMetadata as IKernelKernelConnectionMetadata,
     IThirdPartyKernelProvider,
-    IBaseKernel,
     BaseKernelConnectionMetadata,
     IKernelFinder
 } from '../../kernels/types';
-import { dispose } from '../../platform/common/helpers';
 import { traceVerbose, traceInfoIfCI } from '../../platform/logging';
-import { IDisposable, IDisposableRegistry, IExtensions } from '../../platform/common/types';
+import { IDisposableRegistry, IExtensions } from '../../platform/common/types';
 import { PromiseChain } from '../../platform/common/utils/async';
-import { IKernelSocket as ExtensionKernelSocket } from '../../kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { ApiAccessService } from './apiAccessService';
-import {
-    ActiveKernel,
-    IExportedKernelService,
-    IKernelConnectionInfo,
-    IKernelSocket,
-    KernelConnectionMetadata,
-    WebSocketData
-} from '../../api';
+import { ActiveKernel, IExportedKernelService, KernelConnectionMetadata } from '../../api';
 import { JupyterNotebookView, Telemetry } from '../../platform/common/constants';
 import { KernelConnector } from '../../notebooks/controllers/kernelConnector';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IExportedKernelServiceFactory } from './api';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
+import type { Session } from '@jupyterlab/services';
 
 @injectable()
 export class JupyterKernelServiceFactory implements IExportedKernelServiceFactory {
@@ -106,7 +96,6 @@ class JupyterKernelService implements IExportedKernelService {
         return this._onDidChangeStatus.event;
     }
 
-    private static readonly wrappedKernelConnections = new WeakMap<IBaseKernel, IKernelConnectionInfo>();
     constructor(
         private readonly callingExtensionId: string,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
@@ -241,28 +230,27 @@ class JupyterKernelService implements IExportedKernelService {
         });
         return kernels;
     }
-    getKernel(uri: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined {
+    getKernel(uri: Uri): { metadata: KernelConnectionMetadata; connection: Session.ISessionConnection } | undefined {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernel'
         });
         const kernel = this.thirdPartyKernelProvider.get(uri) ?? this.kernelProvider.get(uri);
-        if (kernel?.session?.kernel) {
-            const connection = this.wrapKernelConnection(kernel);
+        if (kernel?.session) {
             return {
                 metadata: this.translateKernelConnectionMetadataToExportedType(kernel.kernelConnectionMetadata),
-                connection
+                connection: kernel.session
             };
         }
     }
-    async startKernel(spec: KernelConnectionMetadata, uri: Uri): Promise<IKernelConnectionInfo> {
+    async startKernel(spec: KernelConnectionMetadata, uri: Uri): Promise<Session.ISessionConnection> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'startKernel'
         });
         return this.startOrConnect(spec, uri);
     }
-    async connect(spec: ActiveKernel, uri: Uri): Promise<IKernelConnectionInfo> {
+    async connect(spec: ActiveKernel, uri: Uri): Promise<Session.ISessionConnection> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'connect'
@@ -272,7 +260,7 @@ class JupyterKernelService implements IExportedKernelService {
     private async startOrConnect(
         spec: KernelConnectionMetadata | ActiveKernel,
         uri: Uri
-    ): Promise<IKernelConnectionInfo> {
+    ): Promise<Session.ISessionConnection> {
         const connection = this.kernelFinder.kernels.find((item) => item.id === spec.id);
         if (!connection) {
             throw new Error('Not found');
@@ -285,25 +273,10 @@ class JupyterKernelService implements IExportedKernelService {
             this.disposables,
             '3rdPartyExtension'
         );
-        let wrappedConnection = JupyterKernelService.wrappedKernelConnections.get(kernel);
-        if (wrappedConnection) {
-            return wrappedConnection;
-        }
-        if (!kernel?.session?.kernel) {
+        if (!kernel?.session) {
             throw new Error('Not found');
         }
-        return this.wrapKernelConnection(kernel);
-    }
-    private wrapKernelConnection(kernel: IBaseKernel): IKernelConnectionInfo {
-        if (JupyterKernelService.wrappedKernelConnections.get(kernel)) {
-            return JupyterKernelService.wrappedKernelConnections.get(kernel)!;
-        }
-
-        const connection = new KernelConnectionWrapper(kernel, this.disposables);
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        const info = { connection, kernelSocket: new KernelSocketWrapper(kernel) };
-        JupyterKernelService.wrappedKernelConnections.set(kernel, info);
-        return info;
+        return kernel.session;
     }
     private translateKernelConnectionMetadataToExportedType(
         connection: Readonly<IKernelKernelConnectionMetadata>
@@ -321,74 +294,5 @@ class JupyterKernelService implements IExportedKernelService {
             this.translatedConnections.set(connection, translatedConnection);
         }
         return this.translatedConnections.get(connection)!;
-    }
-}
-
-/**
- * Helper class to wrap the IKernelSocket.
- * This way users of the API will not need to unbind/rebind the hooks and
- * listen to changes in the observable.
- * Also prevents the need for users of the API to depend on rxjs.
- */
-class KernelSocketWrapper implements IKernelSocket {
-    private socket?: ExtensionKernelSocket;
-    private readonly disposables: IDisposable[] = [];
-    private receiveHooks = new Set<(data: WebSocketData) => Promise<void>>();
-    private sendHooks = new Set<(data: unknown, cb?: (err?: Error) => void) => Promise<void>>();
-    private readonly _onDidSocketChange = new EventEmitter<void>();
-    public get ready(): boolean {
-        return !!this.socket;
-    }
-    public get onDidChange(): Event<void> {
-        return this._onDidSocketChange.event;
-    }
-    constructor(kernel: IBaseKernel) {
-        const subscription = kernel.kernelSocket.subscribe((socket) => {
-            this.removeHooks();
-            this.socket = socket?.socket;
-            this.addHooks();
-            this._onDidSocketChange.fire();
-        });
-        this.disposables.push(new Disposable(() => subscription.unsubscribe()));
-    }
-    public dispose() {
-        dispose(this.disposables);
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sendToRealKernel(data: any, cb?: (err?: Error) => void): void {
-        this.socket?.sendToRealKernel(data, cb);
-    }
-    addReceiveHook(hook: (data: WebSocketData) => Promise<void>): void {
-        this.receiveHooks.add(hook);
-    }
-    removeReceiveHook(hook: (data: WebSocketData) => Promise<void>): void {
-        this.receiveHooks.delete(hook);
-    }
-    addSendHook(
-        hook: (
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data: any,
-            cb?: (err?: Error) => void
-        ) => Promise<void>
-    ): void {
-        this.sendHooks.add(hook);
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
-        this.sendHooks.delete(hook);
-    }
-    private removeHooks() {
-        if (!this.socket) {
-            return;
-        }
-        this.receiveHooks.forEach((hook) => this.socket?.removeReceiveHook(hook));
-        this.sendHooks.forEach((hook) => this.socket?.removeSendHook(hook));
-    }
-    private addHooks() {
-        if (!this.socket) {
-            return;
-        }
-        this.receiveHooks.forEach((hook) => this.socket?.addReceiveHook(hook));
-        this.sendHooks.forEach((hook) => this.socket?.addSendHook(hook));
     }
 }

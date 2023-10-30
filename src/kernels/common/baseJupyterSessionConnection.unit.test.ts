@@ -4,40 +4,37 @@
 import { assert } from 'chai';
 import { ISignal, Signal } from '@lumino/signaling';
 import { IChangedArgs } from '@jupyterlab/coreutils';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { mock, when, instance, verify } from 'ts-mockito';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IDisposable } from '../../platform/common/types';
-import { IKernelSocket, INewSessionWithSocket, KernelSocketInformation } from '../types';
 import { noop } from '../../test/core';
 import { BaseJupyterSessionConnection } from './baseJupyterSessionConnection';
 import { dispose } from '../../platform/common/helpers';
 import { createEventHandler } from '../../test/common';
-import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 
 suite('Base Jupyter Session Connection', () => {
     const disposables: IDisposable[] = [];
-    let jupyterSession: BaseJupyterSessionConnection<INewSessionWithSocket, 'remoteJupyter'>;
-    let session: INewSessionWithSocket;
+    let jupyterSession: BaseJupyterSessionConnection<Session.ISessionConnection, 'remoteJupyter'>;
+    let session: Session.ISessionConnection;
     let kernel: Kernel.IKernelConnection;
     let token: CancellationTokenSource;
-    let sessionDisposed: Signal<INewSessionWithSocket, void>;
-    let kernelSocketInformation: KernelSocketInformation;
-    let sessionPropertyChanged: Signal<INewSessionWithSocket, 'path'>;
-    let sessionIOPubMessage: Signal<INewSessionWithSocket, KernelMessage.IIOPubMessage>;
+    let sessionDisposed: Signal<Session.ISessionConnection, void>;
+    let sessionPropertyChanged: Signal<Session.ISessionConnection, 'path'>;
+    let sessionIOPubMessage: Signal<Session.ISessionConnection, KernelMessage.IIOPubMessage>;
     let sessionKernelChanged: Signal<
-        INewSessionWithSocket,
+        Session.ISessionConnection,
         IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
     >;
-    let sessionUnhandledMessage: Signal<INewSessionWithSocket, KernelMessage.IMessage>;
-    let sessionConnectionStatusChanged: Signal<INewSessionWithSocket, Kernel.ConnectionStatus>;
-    let sessionAnyMessage: Signal<INewSessionWithSocket, Kernel.IAnyMessageArgs>;
-    class DummySessionClass extends BaseJupyterSessionConnection<INewSessionWithSocket, 'remoteJupyter'> {
+    let sessionUnhandledMessage: Signal<Session.ISessionConnection, KernelMessage.IMessage>;
+    let sessionConnectionStatusChanged: Signal<Session.ISessionConnection, Kernel.ConnectionStatus>;
+    let sessionAnyMessage: Signal<Session.ISessionConnection, Kernel.IAnyMessageArgs>;
+    class DummySessionClass extends BaseJupyterSessionConnection<Session.ISessionConnection, 'remoteJupyter'> {
         override waitForIdle(_timeout: number, _token: CancellationToken): Promise<void> {
             throw new Error('Method not implemented.');
         }
         public override status: Kernel.Status;
-        constructor(session: INewSessionWithSocket) {
+        constructor(session: Session.ISessionConnection) {
             super('remoteJupyter', session);
             this.initializeKernelSocket();
         }
@@ -75,29 +72,30 @@ suite('Base Jupyter Session Connection', () => {
         token = new CancellationTokenSource();
         disposables.push(token);
 
-        session = mock<INewSessionWithSocket>();
+        session = mock<Session.ISessionConnection>();
         kernel = createKernel();
         when(session.shutdown()).thenResolve();
         when(session.dispose()).thenReturn();
         when(session.kernel).thenReturn(instance(kernel));
-        sessionDisposed = new Signal<INewSessionWithSocket, void>(instance(session));
-        sessionPropertyChanged = new Signal<INewSessionWithSocket, 'path'>(instance(session));
-        sessionIOPubMessage = new Signal<INewSessionWithSocket, KernelMessage.IIOPubMessage>(instance(session));
+        sessionDisposed = new Signal<Session.ISessionConnection, void>(instance(session));
+        sessionPropertyChanged = new Signal<Session.ISessionConnection, 'path'>(instance(session));
+        sessionIOPubMessage = new Signal<Session.ISessionConnection, KernelMessage.IIOPubMessage>(instance(session));
         sessionKernelChanged = new Signal<
-            INewSessionWithSocket,
+            Session.ISessionConnection,
             IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
         >(instance(session));
-        sessionUnhandledMessage = new Signal<INewSessionWithSocket, KernelMessage.IMessage>(instance(session));
-        sessionConnectionStatusChanged = new Signal<INewSessionWithSocket, Kernel.ConnectionStatus>(instance(session));
-        sessionAnyMessage = new Signal<INewSessionWithSocket, Kernel.IAnyMessageArgs>(instance(session));
-        kernelSocketInformation = mock<KernelSocketInformation>();
-        when(kernelSocketInformation.socket).thenReturn(instance(mock<IKernelSocket>()));
+        sessionUnhandledMessage = new Signal<Session.ISessionConnection, KernelMessage.IMessage>(instance(session));
+        sessionConnectionStatusChanged = new Signal<Session.ISessionConnection, Kernel.ConnectionStatus>(
+            instance(session)
+        );
+        sessionAnyMessage = new Signal<Session.ISessionConnection, Kernel.IAnyMessageArgs>(instance(session));
         when(session.disposed).thenReturn(sessionDisposed);
         when(session.propertyChanged).thenReturn(sessionPropertyChanged);
-        when(session.kernelSocketInformation).thenReturn(instance(kernelSocketInformation));
         when(session.iopubMessage).thenReturn(sessionIOPubMessage);
         when(session.kernelChanged).thenReturn(sessionKernelChanged);
-        when(session.statusChanged).thenReturn(new Signal<INewSessionWithSocket, Kernel.Status>(instance(session)));
+        when(session.statusChanged).thenReturn(
+            new Signal<Session.ISessionConnection, Kernel.Status>(instance(session))
+        );
         when(session.unhandledMessage).thenReturn(sessionUnhandledMessage);
         when(session.connectionStatusChanged).thenReturn(sessionConnectionStatusChanged);
         when(session.anyMessage).thenReturn(sessionAnyMessage);
@@ -165,51 +163,5 @@ suite('Base Jupyter Session Connection', () => {
         await jupyterSession.restart();
 
         verify(kernel.restart()).once();
-    });
-    test('Kernel Socket information available on start', async () => {
-        let socketInfo: KernelSocketInformation | undefined;
-
-        jupyterSession.kernelSocket.subscribe((info) => (socketInfo = info));
-
-        assert.strictEqual(socketInfo?.socket, instance(kernelSocketInformation).socket);
-        assert.strictEqual(socketInfo?.options.clientId, 'some Client Id');
-        assert.strictEqual(socketInfo?.options.id, 'some Kernel Id');
-        assert.strictEqual(socketInfo?.options.userName, 'some User Name');
-        assert.strictEqual(socketInfo?.options.model.id, 'some Model Id');
-        assert.strictEqual(socketInfo?.options.model.name, 'some Model Name');
-    });
-    test('Kernel Socket information changes after restarting kernel', async () => {
-        const newKernelSocketInformation = mock<KernelSocketInformation>();
-        const newSocket = mock<IKernelSocket>();
-        when(newKernelSocketInformation.socket).thenReturn(instance(newSocket));
-
-        when(session.kernelSocketInformation).thenReturn(instance(newKernelSocketInformation));
-
-        let socketInfo: KernelSocketInformation | undefined;
-        jupyterSession.kernelSocket.subscribe((info) => (socketInfo = info));
-        await jupyterSession.restart();
-
-        assert.strictEqual(socketInfo?.socket, instance(newSocket));
-        assert.strictEqual(socketInfo?.options.clientId, 'some Client Id');
-        assert.strictEqual(socketInfo?.options.id, 'some Kernel Id');
-        assert.strictEqual(socketInfo?.options.userName, 'some User Name');
-        assert.strictEqual(socketInfo?.options.model.id, 'some Model Id');
-        assert.strictEqual(socketInfo?.options.model.name, 'some Model Name');
-    });
-    test('Wrap the Kernel.IKernelConnection only when necessary', async () => {
-        const wrapperKernel = jupyterSession.kernel as KernelConnectionWrapper;
-        assert.strictEqual(wrapperKernel.originalKernel, instance(kernel));
-
-        // If we restart, and the kernel is still the same, ensure we return the same instance of the kernel wrapper
-        await jupyterSession.restart();
-        assert.strictEqual(jupyterSession.kernel as KernelConnectionWrapper, wrapperKernel);
-        assert.strictEqual(wrapperKernel.originalKernel, instance(kernel));
-
-        // If there's a new kernel, then ensure we have a new wrapper returned.
-        const newKernel = createKernel();
-        when(session.kernel).thenReturn(instance(newKernel));
-
-        assert.notEqual(jupyterSession.kernel as KernelConnectionWrapper, wrapperKernel);
-        assert.strictEqual((jupyterSession.kernel as KernelConnectionWrapper).originalKernel, instance(newKernel));
     });
 });

@@ -4,7 +4,7 @@
 import { use } from 'chai';
 
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { Disposable, EventEmitter, NotebookDocument, Uri } from 'vscode';
+import { EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { ILiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/types';
 import { dispose } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
@@ -12,18 +12,19 @@ import chaiAsPromised from 'chai-as-promised';
 import {
     IKernel,
     IKernelProvider,
+    IKernelSession,
     isLocalConnection,
     KernelActionSource,
     KernelConnectionMetadata,
-    KernelSocketInformation,
     LiveRemoteKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { RemoteKernelConnectionHandler } from './remoteKernelConnectionHandler';
-import { Subject } from 'rxjs/Subject';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
+import { Kernel } from '@jupyterlab/services';
+import { uriEquals } from '../../test/datascience/helpers';
 
 use(chaiAsPromised);
 suite('Remote kernel connection handler', async () => {
@@ -121,42 +122,39 @@ suite('Remote kernel connection handler', async () => {
         const kernel1 = mock<IKernel>();
         when(kernel1.kernelConnectionMetadata).thenReturn(connection);
         when(kernel1.creator).thenReturn('jupyterExtension');
-        const subject = new Subject<KernelSocketInformation>();
-        disposables.push(new Disposable(() => subject.unsubscribe()));
-        when(kernel1.kernelSocket).thenReturn(subject);
+        const session = mock<IKernelSession>();
+        when(kernel1.session).thenReturn(instance(session));
+        const kernelConnection = mock<Kernel.IKernelConnection>();
+        when(session.kernel).thenReturn(instance(kernelConnection));
+        when(kernelConnection.id).thenReturn('_KernelId_');
+        const eventEmitter = new EventEmitter<void>();
+        disposables.push(eventEmitter);
+        when(kernel1.onDidKernelSocketChange).thenReturn(eventEmitter.event);
         const nbUri = Uri.file('a.ipynb');
         when(kernel1.resourceUri).thenReturn(nbUri);
         when(kernel1.disposed).thenReturn(false);
         when(kernel1.disposing).thenReturn(false);
 
         remoteConnectionHandler.activate();
-        onDidStartKernel.fire(instance(kernel1));
 
         verify(tracker.trackKernelIdAsUsed(anything(), anything(), anything())).never();
         verify(preferredRemoteKernelProvider.storePreferredRemoteKernelId(anything(), anything())).never();
 
-        const kernelInfo: KernelSocketInformation = {
-            options: {
-                clientId: '',
-                id: 'modelId1',
-                model: {
-                    id: 'modelId1',
-                    name: ''
-                },
-                userName: ''
-            }
-        };
-        subject.next(kernelInfo);
+        onDidStartKernel.fire(instance(kernel1));
+
+        eventEmitter.fire();
 
         if (connection.kind === 'startUsingRemoteKernelSpec' && source === 'jupyterExtension') {
             verify(
                 tracker.trackKernelIdAsUsed(
-                    nbUri,
+                    uriEquals(nbUri),
                     deepEqual(remoteKernelSpec.serverProviderHandle),
-                    kernelInfo.options.id
+                    '_KernelId_'
                 )
-            ).once();
-            verify(preferredRemoteKernelProvider.storePreferredRemoteKernelId(nbUri, kernelInfo.options.id)).once();
+            ).atLeast(2);
+            verify(preferredRemoteKernelProvider.storePreferredRemoteKernelId(uriEquals(nbUri), '_KernelId_')).atLeast(
+                2
+            );
         } else {
             verify(tracker.trackKernelIdAsUsed(anything(), anything(), anything())).never();
             verify(preferredRemoteKernelProvider.storePreferredRemoteKernelId(anything(), anything())).never();

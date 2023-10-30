@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { CancellationError, CancellationToken, Disposable } from 'vscode';
 import { dispose } from '../../platform/common/helpers';
 import { createDeferred, raceTimeout } from '../../platform/common/utils/async';
@@ -12,12 +12,12 @@ import { KernelProgressReporter } from '../../platform/progress/kernelProgressRe
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { IDisposable, Resource } from '../../platform/common/types';
-import { INewSessionWithSocket, KernelConnectionMetadata } from '../types';
+import { KernelConnectionMetadata } from '../types';
 
 export async function waitForIdleOnSession(
     kernelConnectionMetadata: KernelConnectionMetadata,
     resource: Resource,
-    session: INewSessionWithSocket,
+    session: Session.ISessionConnection,
     timeout: number,
     token: CancellationToken
 ): Promise<void> {

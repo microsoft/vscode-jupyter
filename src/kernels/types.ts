@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import type { KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
-import type { Observable } from 'rxjs/Observable';
 import type {
     CancellationToken,
     Disposable,
@@ -372,7 +371,7 @@ export interface IBaseKernel extends IAsyncDisposable {
      * Provides access to the underlying Kernel (web) socket.
      * The socket changes upon restarting the kernel, hence the use of an observable.
      */
-    readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    readonly onDidKernelSocketChange: Event<void>;
     /**
      * Provides access to the underlying kernel.
      * The Jupyter kernel can be directly access via the `session.kernel` property.
@@ -577,10 +576,9 @@ export enum InterruptResult {
  */
 export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
     extends Session.ISessionConnection {
-    readonly id: string;
     readonly kind: T;
     readonly status: KernelMessage.Status;
-    readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    readonly onDidKernelSocketChange: Event<void>;
     disposeAsync(): Promise<void>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
@@ -591,10 +589,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
 export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {}
 export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
-
-export interface INewSessionWithSocket extends Session.ISessionConnection {
-    kernelSocketInformation: KernelSocketInformation;
-}
 
 export interface IJupyterKernelSpec {
     /**
@@ -716,14 +710,6 @@ export interface IKernelSessionFactory {
 
 export interface IKernelSocket {
     /**
-     * These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
-     * As a result, we don't get any notification that messages were sent (on the anymessage signal).
-     * To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
-     */
-    onAnyMessage: Event<{ msg: string | KernelMessage.IMessage; direction: 'send' }>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
-    /**
      * Adds a listener to a socket that will be called before the socket's onMessage is called. This
      * allows waiting for a callback before processing messages
      * @param listener
@@ -775,18 +761,6 @@ export interface KernelSocketOptions {
         readonly name: string;
     };
 }
-export interface KernelSocketInformation {
-    /**
-     * Underlying socket used by jupyterlab/services to communicate with kernel.
-     * See jupyterlab/services/kernel/default.ts
-     */
-    readonly socket?: IKernelSocket;
-    /**
-     * Options used to clone a kernel.
-     */
-    readonly options: KernelSocketOptions;
-}
-
 /**
  * Response for installation of kernel dependencies such as ipykernel.
  * (these values are used in telemetry)

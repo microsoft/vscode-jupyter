@@ -27,8 +27,7 @@
 // import {
 //     IJupyterKernelConnectionSession,
 //     INotebook,
-//     INotebookProvider,
-//     KernelSocketInformation
+//     INotebookProvider
 // } from '../../../platform/datascience/types';
 // import { instance, mock, when } from 'ts-mockito';
 // import { Subject } from 'rxjs-compat/Subject';
@@ -118,7 +117,7 @@
 //         const observableResult = new Subject();
 //         observableResult.next();
 //         observableResult.complete();
-//         const kernelSocket = new Subject<KernelSocketInformation>();
+//         const kernelSocket = new Subject<void>();
 //         kernelSocket.next();
 //         kernelSocket.complete();
 //         // when(inotebook.kernelSocket).thenReturn(kernelSocket.asObservable());
