@@ -53,8 +53,6 @@ class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegist
             registrations: true
         };
     }
-    constructor(private readonly executeCommandRequest: typeof ExecuteCommandRequest) {}
-
     public get registrationType(): RegistrationType<ExecuteCommandRegistrationOptions> {
         return this.executeCommandRequest.type;
     }
