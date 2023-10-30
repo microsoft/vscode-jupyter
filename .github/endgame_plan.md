@@ -26,7 +26,6 @@
   Tip: You can use the dev containers in the this repo for testing against linux (just open the repo and use thd command `Dev Containers: Reopen in Container`)
   - [ ] Windows
     - [ ] win32-x64
-    - [ ] 
     - [ ] win32-arm64
   - [ ] macOS
     - [ ] darwin-x64
