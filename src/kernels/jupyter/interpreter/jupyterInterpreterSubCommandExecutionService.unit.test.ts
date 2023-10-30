@@ -5,7 +5,6 @@ import { assert, expect, use } from 'chai';
 import chaiPromise from 'chai-as-promised';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
@@ -26,6 +25,7 @@ import { JupyterInterpreterDependencyService } from './jupyterInterpreterDepende
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 import { JupyterInterpreterSubCommandExecutionService } from './jupyterInterpreterSubCommandExecutionService.node';
 import { noop } from '../../../test/core';
+import { createObservable } from '../../../platform/common/process/proc.node';
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -52,7 +52,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         notebookStartResult = {
             dispose: noop,
             proc: undefined,
-            out: new Subject<Output<string>>().asObservable()
+            out: createObservable<Output<string>>()
         };
         const jupyterPaths = mock<JupyterPaths>();
         when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(

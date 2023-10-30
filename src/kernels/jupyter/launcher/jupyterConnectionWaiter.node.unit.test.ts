@@ -10,7 +10,6 @@ import { CancellationToken, Uri } from 'vscode';
 import { IJupyterRequestAgentCreator, IJupyterRequestCreator, JupyterServerInfo } from '../types';
 import chaiAsPromised from 'chai-as-promised';
 import events from 'events';
-import { Subject } from 'rxjs/Subject';
 import sinon from 'sinon';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
@@ -23,9 +22,10 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { JupyterConnectionWaiter } from './jupyterConnectionWaiter.node';
 import { noop } from '../../../test/core';
+import { createObservable } from '../../../platform/common/process/proc.node';
 use(chaiAsPromised);
 suite('Jupyter Connection Waiter', async () => {
-    let observableOutput: Subject<Output<string>>;
+    let observableOutput: ReturnType<typeof createObservable<Output<string>>>;
     let launchResult: ObservableExecutionResult<string>;
     let getServerInfoStub: sinon.SinonStub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>;
     let configService: IConfigurationService;
@@ -73,7 +73,7 @@ suite('Jupyter Connection Waiter', async () => {
     const expectedServerInfo = dummyServerInfos[1];
 
     setup(() => {
-        observableOutput = new Subject<Output<string>>();
+        observableOutput = createObservable<Output<string>>();
         launchResult = {
             dispose: noop,
             out: observableOutput,
@@ -111,7 +111,7 @@ suite('Jupyter Connection Waiter', async () => {
     test('Successfully gets connection info', async () => {
         (<any>dsSettings).jupyterLaunchTimeout = 10_000;
         const waiter = createConnectionWaiter();
-        observableOutput.next({ source: 'stderr', out: 'Jupyter listening on http://localhost2:2' });
+        observableOutput.fire({ source: 'stderr', out: 'Jupyter listening on http://localhost2:2' });
 
         const connection = await waiter.ready;
 
@@ -133,7 +133,7 @@ suite('Jupyter Connection Waiter', async () => {
 
         const promise = waiter.ready;
         childProc.emit('exit', exitCode);
-        observableOutput.complete();
+        observableOutput.resolve();
 
         await assert.isRejected(promise, DataScience.jupyterServerCrashed(exitCode));
     });
