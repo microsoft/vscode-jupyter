@@ -75,6 +75,7 @@ import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPas
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
+import { isWeb } from '../../platform/vscode-path/platform';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
@@ -790,10 +791,14 @@ export class UserJupyterServerUriInput {
         initialErrorMessage: string = '',
         disposables: Disposable[]
     ): Promise<{ url: string; jupyterServerUri: IJupyterServerUri }> {
-        if (!initialValue) {
+        // In the browser, users are prompted to allow access to clipboard, and
+        // thats not a good UX, because as soon as user clicks kernel picker they get prompted to allow clipbpard access
+        if (!initialValue && !isWeb) {
             try {
                 const text = await this.clipboard.readText().catch(() => '');
-                const parsedUri = Uri.parse(text.trim(), true);
+                const parsedUri = text.trim().startsWith('https://github.com/')
+                    ? undefined
+                    : Uri.parse(text.trim(), true);
                 // Only display http/https uris.
                 initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : '';
             } catch {
