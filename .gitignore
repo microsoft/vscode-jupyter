@@ -58,7 +58,8 @@ src/test/datascience/.venv*
 *.nls.*.json
 *.i18n.json
 l10n/
-
+# Esbuild files
+**/*.esbuild.meta.json
 # Compilation of less to css
 src/webviews/webview-side/interactive-common/variableExplorerGrid.css
 src/webviews/webview-side/interactive-common/variableExplorerGrid.css.map

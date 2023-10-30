@@ -21,7 +21,6 @@ import { INotebookCompletionProvider, INotebookEditorProvider } from '../../note
 import { LanguageServer } from './languageServer.node';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { getComparisonKey } from '../../platform/vscode-path/resources';
-import { CompletionRequest } from 'vscode-languageclient';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
@@ -92,7 +91,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         const client = await this.getLanguageClient(notebook);
         if (client) {
             // Use provider so it gets translated by middleware
-            const feature = client.getFeature(CompletionRequest.method);
+            const feature = client.getFeature('textDocument/completion');
             const provider = feature.getProvider(document);
             if (provider) {
                 const results = await provider.provideCompletionItems(document, position, cancelToken, context);

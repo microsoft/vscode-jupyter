@@ -2,24 +2,23 @@
 // Licensed under the MIT License.
 
 import { Disposable, extensions, NotebookDocument, workspace, window, Uri, NotebookDocumentChangeEvent } from 'vscode';
-import {
+import type {
     ClientCapabilities,
     DynamicFeature,
     ExecuteCommandRegistrationOptions,
     ExecuteCommandRequest,
-    FeatureState,
     LanguageClient,
+    FeatureState,
     LanguageClientOptions,
     RegistrationData,
     RegistrationType,
-    RevealOutputChannelOn,
     ServerCapabilities,
     ServerOptions,
     StaticFeature
 } from 'vscode-languageclient/node';
 import * as path from '../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
-import { createNotebookMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
+import type { NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import uuid from 'uuid/v4';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
@@ -54,9 +53,10 @@ class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegist
             registrations: true
         };
     }
+    constructor(private readonly executeCommandRequest: typeof ExecuteCommandRequest) {}
 
     public get registrationType(): RegistrationType<ExecuteCommandRegistrationOptions> {
-        return ExecuteCommandRequest.type;
+        return this.executeCommandRequest.type;
     }
 
     public fillClientCapabilities(capabilities: ClientCapabilities): void {
@@ -166,6 +166,7 @@ export class LanguageServer implements Disposable {
             let languageClient: LanguageClient | undefined;
             const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
             const interpreterId = getComparisonKey(interpreter.uri);
+            const { createNotebookMiddleware } = await import('@vscode/jupyter-lsp-middleware');
             const middleware = createNotebookMiddleware(
                 () => languageClient,
                 () => noop, // Don't trace output. Slows things down too much
@@ -173,6 +174,10 @@ export class LanguageServer implements Disposable {
                 getFilePath(interpreter.uri),
                 (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
                 getNotebookHeader
+            );
+
+            const { RevealOutputChannelOn, LanguageClient, ExecuteCommandRequest } = await import(
+                'vscode-languageclient/node'
             );
 
             // Client options should be the same for all servers we support.
@@ -199,7 +204,7 @@ export class LanguageServer implements Disposable {
             const minusCommands = features.filter(
                 (f) => (f as any).registrationType?.method != 'workspace/executeCommand'
             );
-            minusCommands.push(new NerfedExecuteCommandFeature());
+            minusCommands.push(new NerfedExecuteCommandFeature(ExecuteCommandRequest));
             (client as any)._features = minusCommands;
 
             // Then start (which will cause the initialize request to be sent to pylance)

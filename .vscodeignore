@@ -1,5 +1,6 @@
 **/*.map
 **/*.analyzer.html
+**/*.esbuild.meta.json
 !out/webviews/webview-side/common/node_modules/**/*
 images/**
 docs/**
