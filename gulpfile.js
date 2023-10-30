@@ -201,14 +201,6 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
     }
 }
 
-gulp.task('webpack-dependencies', async () => {
-    // No need to build dependencies for web.
-    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
-        return;
-    }
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
-});
-
 gulp.task('webpack-extension-node', async () => {
     // No need to build dependencies for web.
     if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
@@ -429,9 +421,9 @@ gulp.task(
     'prePublishBundle',
     gulp.series(
         // Dependencies first
-        'webpack-dependencies',
+        'compile-webviews-release',
         // Then the two extensions
-        gulp.parallel('compile-webviews-release', 'webpack-extension-node', 'webpack-extension-web'),
+        gulp.parallel('webpack-extension-node', 'webpack-extension-web'),
         'updatePackageJsonForBundle'
     )
 );
