@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { BaseLanguageClient } from 'vscode-languageclient';
+import type { BaseLanguageClient } from 'vscode-languageclient';
 import { LocationWithReferenceKind, PylanceExtension, noop } from './common';
 
 export interface ILanguageServerFolder {
