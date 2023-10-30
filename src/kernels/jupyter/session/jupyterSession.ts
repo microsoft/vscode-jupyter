@@ -18,7 +18,6 @@ import {
 import { DisplayOptions } from '../../displayOptions';
 import { IJupyterKernelService } from '../types';
 import { noop } from '../../../platform/common/utils/misc';
-import * as path from '../../../platform/vscode-path/resources';
 import { getResourceType } from '../../../platform/common/utils';
 import { waitForIdleOnSession } from '../../common/helpers';
 import { BaseJupyterSessionConnection } from '../../common/baseJupyterSessionConnection';
@@ -196,27 +195,27 @@ export class JupyterSessionWrapper
 }
 
 export function getRemoteSessionOptions(
-    remoteConnection: IJupyterConnection,
-    resource?: Uri
+    _remoteConnection: IJupyterConnection,
+    _resource?: Uri
 ): Pick<Session.ISessionOptions, 'path' | 'name'> | undefined | void {
-    if (!resource || resource.scheme === 'untitled' || !remoteConnection.mappedRemoteNotebookDir) {
-        return;
-    }
-    // Get Uris of both, local and remote files.
-    // Convert Uris to strings to Uri again, as its possible the Uris are not always compatible.
-    // E.g. one could be dealing with custom file system providers.
-    const filePath = Uri.file(resource.path);
-    const mappedLocalPath = Uri.file(remoteConnection.mappedRemoteNotebookDir);
-    if (!path.isEqualOrParent(filePath, mappedLocalPath)) {
-        return;
-    }
-    const sessionPath = path.relativePath(mappedLocalPath, filePath);
-    // If we have mapped the local dir to the remote dir, then we need to use the name of the file.
-    const sessionName = path.basename(resource);
-    if (sessionName && sessionPath) {
-        return {
-            path: sessionPath,
-            name: sessionName
-        };
-    }
+    // if (!resource || resource.scheme === 'untitled' || !remoteConnection.mappedRemoteNotebookDir) {
+    //     return;
+    // }
+    // // Get Uris of both, local and remote files.
+    // // Convert Uris to strings to Uri again, as its possible the Uris are not always compatible.
+    // // E.g. one could be dealing with custom file system providers.
+    // const filePath = Uri.file(resource.path);
+    // const mappedLocalPath = Uri.file(remoteConnection.mappedRemoteNotebookDir);
+    // if (!path.isEqualOrParent(filePath, mappedLocalPath)) {
+    //     return;
+    // }
+    // const sessionPath = path.relativePath(mappedLocalPath, filePath);
+    // // If we have mapped the local dir to the remote dir, then we need to use the name of the file.
+    // const sessionName = path.basename(resource);
+    // if (sessionName && sessionPath) {
+    //     return {
+    //         path: sessionPath,
+    //         name: sessionName
+    //     };
+    // }
 }

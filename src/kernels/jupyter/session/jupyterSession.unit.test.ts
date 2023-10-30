@@ -45,7 +45,6 @@ suite('JupyterSession', () => {
     let kernelService: JupyterKernelService;
     function createJupyterSession(resource: Resource = undefined, kernelConnectionMetadata: KernelConnectionMetadata) {
         connection = mock<IJupyterConnection>();
-        when(connection.mappedRemoteNotebookDir).thenReturn(undefined);
         token = new CancellationTokenSource();
         disposables.push(token);
 
