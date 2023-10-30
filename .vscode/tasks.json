@@ -19,17 +19,6 @@
             }
         },
         {
-            "label": "Compile Viewers",
-            "type": "npm",
-            "script": "compile-viewers-watch",
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$esbuild-watch"]
-        },
-        {
             "label": "Compile Web Extension",
             "type": "npm",
             "script": "compile-web-watch",

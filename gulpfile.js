@@ -27,19 +27,6 @@ const { stripVTControlCharacters } = require('util');
 const common = require('./build/webpack/common');
 const jsonc = require('jsonc-parser');
 
-gulp.task('compile', async (done) => {
-    // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
-    try {
-        const stdout = await spawnAsync('tsc', ['-p', './'], {}, true);
-        if (stdout.toLowerCase().includes('error ts')) {
-            throw new Error(`Compile errors: \n${stdout}`);
-        }
-        done();
-    } catch (e) {
-        done(e);
-    }
-});
-
 gulp.task('createNycFolder', async (done) => {
     try {
         const fs = require('fs');
@@ -405,32 +392,19 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 
-gulp.task('compile-webviews-release', async () => {
-    await spawnAsync('npm', ['run', 'compile-viewers-release'], webpackEnv);
+gulp.task('compile-release', async () => {
+    await spawnAsync('npm', ['run', 'compile-release'], webpackEnv);
 });
 
-gulp.task('compile-webviews-dev', async () => {
-    await spawnAsync('npm', ['run', 'compile-viewers'], webpackEnv);
+gulp.task('compile-dev', async () => {
+    await spawnAsync('npm', ['run', 'compile-no-watch'], webpackEnv);
 });
 
-gulp.task('build-esbuild', async () => {
-    await spawnAsync('npm', ['run', 'build-esbuild'], webpackEnv);
-});
+gulp.task('prePublishBundle', gulp.parallel('compile-release', 'webpack-dependencies', 'updatePackageJsonForBundle'));
 
-gulp.task(
-    'prePublishBundle',
-    gulp.series(
-        gulp.parallel('compile-webviews-release', 'webpack-extension-node', 'webpack-extension-web'),
-        'updatePackageJsonForBundle'
-    )
-);
-gulp.task(
-    'prePublishBundleESBuild',
-    gulp.parallel('build-esbuild', 'webpack-dependencies', 'updatePackageJsonForBundle')
-);
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 
-gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-webviews-dev'));
+gulp.task('prePublishNonBundle', gulp.parallel('compile-dev', 'webpack-dependencies'));
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};
