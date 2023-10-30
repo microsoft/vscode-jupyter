@@ -15,7 +15,7 @@ import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { Output, ObservableExecutionResult } from '../../../platform/common/process/types.node';
-import { IConfigurationService, IJupyterSettings } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, IJupyterSettings } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { ServiceContainer } from '../../../platform/ioc/container';
@@ -23,6 +23,7 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { JupyterConnectionWaiter } from './jupyterConnectionWaiter.node';
 import { noop } from '../../../test/core';
 import { createObservable } from '../../../platform/common/process/proc.node';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 use(chaiAsPromised);
 suite('Jupyter Connection Waiter', async () => {
     let observableOutput: ReturnType<typeof createObservable<Output<string>>>;
@@ -35,6 +36,7 @@ suite('Jupyter Connection Waiter', async () => {
     const dsSettings: IJupyterSettings = { jupyterLaunchTimeout: 10_000 } as any;
     const childProc = new events.EventEmitter();
     const notebookDir = Uri.file('someDir');
+    const disposables: IDisposable[] = [];
     const dummyServerInfos: JupyterServerInfo[] = [
         {
             base_url: 'http://localhost1:1',
@@ -74,6 +76,7 @@ suite('Jupyter Connection Waiter', async () => {
 
     setup(() => {
         observableOutput = createObservable<Output<string>>();
+        disposables.push(observableOutput);
         launchResult = {
             dispose: noop,
             out: observableOutput,
@@ -96,6 +99,7 @@ suite('Jupyter Connection Waiter', async () => {
             instance(mock<IJupyterRequestAgentCreator>())
         );
     });
+    teardown(() => dispose(disposables));
 
     function createConnectionWaiter() {
         return new JupyterConnectionWaiter(
