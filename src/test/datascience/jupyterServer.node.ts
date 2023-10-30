@@ -16,7 +16,6 @@ import * as child_process from 'child_process';
 const uuidToHex = require('uuid-to-hex') as typeof import('uuid-to-hex');
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { dispose, splitLines } from '../../platform/common/helpers';
-import { Observable } from 'rxjs-compat/Observable';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 import { sleep } from '../core';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
@@ -51,9 +50,14 @@ type Output<T extends string | Buffer> = {
     out: T;
 };
 
-type ObservableExecutionResult<T extends string | Buffer> = {
+export interface ObservableOutput<T> {
+    onDidChange: Event<T>;
+    done: Promise<void>;
+}
+
+export type ObservableExecutionResult<T extends string | Buffer> = {
     proc: child_process.ChildProcess | undefined;
-    out: Observable<Output<T>>;
+    out: ObservableOutput<Output<T>>;
     dispose(): void;
 };
 

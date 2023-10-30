@@ -139,7 +139,7 @@ export class PythonKernelInterruptDaemon {
 
             await new Promise<void>((resolve, reject) => {
                 let started = false;
-                const subscription = proc.out.subscribe((out) => {
+                const subscription = proc.out.onDidChange((out) => {
                     traceInfoIfCI(
                         `Output from interrupt daemon started = ${started}, output (${out.source}) = ${out.out} ('END)`
                     );
@@ -208,7 +208,7 @@ export class PythonKernelInterruptDaemon {
                         }
                     }
                 });
-                this.disposableRegistry.push(new Disposable(() => subscription.unsubscribe()));
+                this.disposableRegistry.push(subscription);
             });
             this.disposableRegistry.push(new Disposable(() => swallowExceptions(() => proc.proc?.kill())));
             // Added for logging to see if this process dies.

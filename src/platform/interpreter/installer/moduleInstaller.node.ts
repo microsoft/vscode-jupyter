@@ -18,6 +18,8 @@ import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../errors/
 import { splitLines } from '../../common/helpers';
 import { IPythonExecutionFactory } from '../types.node';
 import { Environment } from '@vscode/python-extension';
+import { IDisposable } from '../../common/types';
+import { dispose } from '../../common/utils/lifecycle';
 
 export type ExecutionInstallArgs = {
     args: string[];
@@ -65,11 +67,16 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             token: CancellationToken
         ) => {
             const deferred = createDeferred();
+            const disposables: IDisposable[] = [];
             // When the progress is canceled notify caller
-            token.onCancellationRequested(() => {
-                cancelTokenSource.cancel();
-                deferred.resolve();
-            });
+            token.onCancellationRequested(
+                () => {
+                    cancelTokenSource.cancel();
+                    deferred.resolve();
+                },
+                this,
+                disposables
+            );
 
             let observable: ObservableExecutionResult<string> | undefined;
 
@@ -118,8 +125,8 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             const ticker = ['.', '..', '...'];
             let counter = 0;
             if (observable) {
-                observable.out.subscribe({
-                    next: (output) => {
+                observable.out.onDidChange(
+                    (output) => {
                         const suffix = ticker[counter % 3];
                         const trimmedOutput = output.out.trim();
                         counter += 1;
@@ -145,40 +152,46 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                             lastStdErr = output.out;
                         }
                     },
-                    complete: () => {
-                        if (observable?.proc?.exitCode !== 0) {
-                            // https://github.com/microsoft/vscode-jupyter/issues/12703
-                            // `ERROR: Could not install packages due to an OSError: [Errno 2] No such file or directory: 'C:\\Users\\donjayamanne\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\jedi\\third_party\\typeshed\\third_party\\2and3\\requests\\packages\\urllib3\\packages\\ssl_match_hostname\\_implementation.pyi'
-                            // HINT: This error might have occurred since this system does not have Windows Long Path support enabled. You can find information on how to enable this at https://pip.pypa.io/warnings/enable-long-paths`;
-                            // Remove the `[notice]` lines from the error messages
-                            if (
-                                couldNotInstallErr &&
-                                couldNotInstallErr.includes('https://pip.pypa.io/warnings/enable-long-paths')
-                            ) {
-                                couldNotInstallErr = splitLines(couldNotInstallErr, {
-                                    trim: true,
-                                    removeEmptyEntries: true
-                                })
-                                    .filter((line) => !line.startsWith('[notice]'))
-                                    .join(EOL);
-                                deferred.reject(
-                                    new PackageNotInstalledWindowsLongPathNotEnabledError(
-                                        productOrModuleName,
-                                        interpreter,
-                                        couldNotInstallErr
-                                    )
-                                );
+                    this,
+                    disposables
+                );
+                observable.out.done
+                    .then(
+                        () => {
+                            if (observable?.proc?.exitCode !== 0) {
+                                // https://github.com/microsoft/vscode-jupyter/issues/12703
+                                // `ERROR: Could not install packages due to an OSError: [Errno 2] No such file or directory: 'C:\\Users\\donjayamanne\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\jedi\\third_party\\typeshed\\third_party\\2and3\\requests\\packages\\urllib3\\packages\\ssl_match_hostname\\_implementation.pyi'
+                                // HINT: This error might have occurred since this system does not have Windows Long Path support enabled. You can find information on how to enable this at https://pip.pypa.io/warnings/enable-long-paths`;
+                                // Remove the `[notice]` lines from the error messages
+                                if (
+                                    couldNotInstallErr &&
+                                    couldNotInstallErr.includes('https://pip.pypa.io/warnings/enable-long-paths')
+                                ) {
+                                    couldNotInstallErr = splitLines(couldNotInstallErr, {
+                                        trim: true,
+                                        removeEmptyEntries: true
+                                    })
+                                        .filter((line) => !line.startsWith('[notice]'))
+                                        .join(EOL);
+                                    deferred.reject(
+                                        new PackageNotInstalledWindowsLongPathNotEnabledError(
+                                            productOrModuleName,
+                                            interpreter,
+                                            couldNotInstallErr
+                                        )
+                                    );
+                                } else {
+                                    deferred.reject(lastStdErr || observable?.proc?.exitCode);
+                                }
                             } else {
-                                deferred.reject(lastStdErr || observable?.proc?.exitCode);
+                                deferred.resolve();
                             }
-                        } else {
-                            deferred.resolve();
+                        },
+                        (err: unknown) => {
+                            deferred.reject(err);
                         }
-                    },
-                    error: (err: unknown) => {
-                        deferred.reject(err);
-                    }
-                });
+                    )
+                    .finally(() => dispose(disposables));
             }
             return deferred.promise;
         };
