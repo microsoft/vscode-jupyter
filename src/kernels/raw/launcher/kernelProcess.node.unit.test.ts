@@ -457,9 +457,11 @@ suite('Kernel Process', () => {
         processService = mock<IProcessService>();
         const instanceOfExecutionService = instance(processService);
         (instanceOfExecutionService as any).then = undefined;
+        const out = createObservable<Output<string>>();
+        disposables.push(out);
         const observableProc: ObservableExecutionResult<string> = {
             dispose: noop,
-            out: { subscribe: noop } as any,
+            out,
             proc: {
                 stdout: new EventEmitter(),
                 stderr: new EventEmitter(),
