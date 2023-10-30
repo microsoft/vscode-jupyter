@@ -30,7 +30,6 @@
 //     INotebookProvider
 // } from '../../../platform/datascience/types';
 // import { instance, mock, when } from 'ts-mockito';
-// import { Subject } from 'rxjs-compat/Subject';
 // import { EventEmitter, NotebookDocument } from 'vscode';
 // import { ServerStatus } from '../../../webviews/webview-side/interactive-common/mainState';
 // import { MockJupyterSession } from '../mockJupyterSession';

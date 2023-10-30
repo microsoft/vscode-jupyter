@@ -2,16 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-
 import { capturePerfTelemetry } from '../../../telemetry';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
-import debounce from 'lodash/debounce';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { Commands, EditorContexts, Telemetry } from '../../../platform/common/constants';
+import { debounce } from '../../../platform/common/decorators';
 
 @injectable()
 export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
@@ -82,7 +81,8 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
     // Refresh command is mapped to a keybinding. Refresh
     // is expensive. Ensure we debounce refresh requests
     // in case the user is mashing the refresh shortcut.
-    private refreshDataViewer = debounce(() => {
+    @debounce(1000)
+    private refreshDataViewer() {
         // Find the data viewer which is currently active
         for (const viewer of this.knownViewers) {
             if (viewer.active) {
@@ -90,5 +90,5 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
                 viewer.refreshData().then(noop, noop);
             }
         }
-    }, 1000);
+    }
 }

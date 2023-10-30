@@ -207,50 +207,48 @@ export class KernelProcess implements IKernelProcess {
         }
 
         let sawKernelConnectionFile = false;
-        exeObs.out.subscribe(
-            (output) => {
-                if (output.source === 'stderr') {
-                    output.out = stripUnwantedMessages(output.out);
-                    // Capture stderr, incase kernel doesn't start.
-                    stderr += output.out;
+        exeObs.out.onDidChange((output) => {
+            if (output.source === 'stderr') {
+                output.out = stripUnwantedMessages(output.out);
+                // Capture stderr, incase kernel doesn't start.
+                stderr += output.out;
 
-                    if (output.out.trim().length) {
-                        traceWarning(`StdErr from Kernel Process ${output.out.trim()}`);
-                    }
-                } else {
-                    stdout += output.out;
-                    // Strip unwanted stuff from the output, else it just chews up unnecessary space.
-                    if (!sawKernelConnectionFile) {
-                        stdout = stdout.replace(kernelOutputToNotLog, '');
-                        stdout = stdout.replace(kernelOutputToNotLog.split(/\r?\n/).join(os.EOL), '');
-                        // Strip the leading space, as we've removed some leading text.
-                        stdout = stdout.trimStart();
-                        const lines = splitLines(stdout, { trim: true, removeEmptyEntries: true });
-                        if (
-                            lines.length === 2 &&
-                            lines[0] === kernelOutputWithConnectionFile &&
-                            lines[1].startsWith('--existing') &&
-                            lines[1].endsWith('.json')
-                        ) {
-                            stdout = `${lines.join(' ')}${os.EOL}`;
-                        }
-                    }
-                    if (stdout.includes(kernelOutputWithConnectionFile)) {
-                        sawKernelConnectionFile = true;
-                    }
-                    traceVerbose(`Kernel Output: ${stdout}`);
+                if (output.out.trim().length) {
+                    traceWarning(`StdErr from Kernel Process ${output.out.trim()}`);
                 }
-                this.sendToOutput(output.out);
-            },
-            (error) => {
-                if (this.disposed) {
-                    traceWarning('Kernel died', error, stderr);
-                    return;
+            } else {
+                stdout += output.out;
+                // Strip unwanted stuff from the output, else it just chews up unnecessary space.
+                if (!sawKernelConnectionFile) {
+                    stdout = stdout.replace(kernelOutputToNotLog, '');
+                    stdout = stdout.replace(kernelOutputToNotLog.split(/\r?\n/).join(os.EOL), '');
+                    // Strip the leading space, as we've removed some leading text.
+                    stdout = stdout.trimStart();
+                    const lines = splitLines(stdout, { trim: true, removeEmptyEntries: true });
+                    if (
+                        lines.length === 2 &&
+                        lines[0] === kernelOutputWithConnectionFile &&
+                        lines[1].startsWith('--existing') &&
+                        lines[1].endsWith('.json')
+                    ) {
+                        stdout = `${lines.join(' ')}${os.EOL}`;
+                    }
                 }
-                traceError('Kernel died', error, stderr);
-                deferred.reject(error);
+                if (stdout.includes(kernelOutputWithConnectionFile)) {
+                    sawKernelConnectionFile = true;
+                }
+                traceVerbose(`Kernel Output: ${stdout}`);
             }
-        );
+            this.sendToOutput(output.out);
+        });
+        exeObs.out.done.catch((error) => {
+            if (this.disposed) {
+                traceWarning('Kernel died', error, stderr);
+                return;
+            }
+            traceError('Kernel died', error, stderr);
+            deferred.reject(error);
+        });
 
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
         try {

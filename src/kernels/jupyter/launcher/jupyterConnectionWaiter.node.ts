@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Subscription } from 'rxjs/Subscription';
 import { Disposable, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { traceError, traceWarning, traceVerbose } from '../../../platform/logging';
@@ -20,6 +19,7 @@ import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNot
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
 import { createJupyterConnectionInfo } from '../jupyterUtils';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 
 const urlMatcher = new RegExp(RegExpValues.UrlPatternRegEx);
 
@@ -30,7 +30,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     private startPromise = createDeferred<IJupyterConnection>();
     private launchTimeout: NodeJS.Timer | number;
     private output = '';
-    private subscriptions: Subscription[] = [];
+    private subscriptions: IDisposable[] = [];
     public readonly ready = this.startPromise.promise;
 
     constructor(
@@ -58,30 +58,29 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
         // Listen on stderr for its connection information
         this.subscriptions.push(
-            launchResult.out.subscribe(
-                (output: Output<string>) => {
-                    traceVerbose(output.out);
-                    this.output += output.out;
-                    if (RegExpValues.HttpPattern.exec(this.output) && !this.startPromise.completed) {
-                        // .then so that we can keep from pushing aync up to the subscribed observable function
-                        this.getServerInfo()
-                            .then((serverInfos) => this.getJupyterURL(serverInfos, this.output))
-                            .catch((ex) => traceWarning('Failed to get server info', ex));
-                    }
+            launchResult.out.onDidChange((output: Output<string>) => {
+                traceVerbose(output.out);
+                this.output += output.out;
+                if (RegExpValues.HttpPattern.exec(this.output) && !this.startPromise.completed) {
+                    // .then so that we can keep from pushing aync up to the subscribed observable function
+                    this.getServerInfo()
+                        .then((serverInfos) => this.getJupyterURL(serverInfos, this.output))
+                        .catch((ex) => traceWarning('Failed to get server info', ex));
+                }
 
-                    // Sometimes jupyter will return a 403 error. Not sure why. We used
-                    // to fail on this, but it looks like jupyter works with this error in place.
-                },
-                (e) => this.rejectStartPromise(e),
-                // If the process dies, we can't extract connection information.
-                () => this.rejectStartPromise(DataScience.jupyterServerCrashed(exitCode))
-            )
+                // Sometimes jupyter will return a 403 error. Not sure why. We used
+                // to fail on this, but it looks like jupyter works with this error in place.
+            })
         );
+        // If the process dies, we can't extract connection information.
+        launchResult.out.done
+            .then(() => this.rejectStartPromise(DataScience.jupyterServerCrashed(exitCode)))
+            .catch((e) => this.rejectStartPromise(e));
     }
     public dispose() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
-        this.subscriptions.forEach((d) => d.unsubscribe());
+        dispose(this.subscriptions);
     }
 
     // From a list of jupyter server infos try to find the matching jupyter that we launched

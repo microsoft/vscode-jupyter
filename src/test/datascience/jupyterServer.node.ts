@@ -13,10 +13,10 @@ import uuid from 'uuid/v4';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as child_process from 'child_process';
+import { Event, EventEmitter } from '@c4312/evt';
 const uuidToHex = require('uuid-to-hex') as typeof import('uuid-to-hex');
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { dispose, splitLines } from '../../platform/common/helpers';
-import { Observable } from 'rxjs-compat/Observable';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 import { sleep } from '../core';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
@@ -51,9 +51,14 @@ type Output<T extends string | Buffer> = {
     out: T;
 };
 
-type ObservableExecutionResult<T extends string | Buffer> = {
+export interface ObservableOutput<T> {
+    onDidChange: Event<T>;
+    done: Promise<void>;
+}
+
+export type ObservableExecutionResult<T extends string | Buffer> = {
     proc: child_process.ChildProcess | undefined;
-    out: Observable<Output<T>>;
+    out: ObservableOutput<Output<T>>;
     dispose(): void;
 };
 
@@ -286,7 +291,7 @@ export class JupyterServer {
                     }
                 };
                 let allOutput = '';
-                const subscription = result.out.subscribe((output) => {
+                const subscription = result.out.onDidChange((output) => {
                     allOutput += output.out;
 
                     // When debugging Web Tests using VSCode dfebugger, we'd like to see this info.
@@ -319,7 +324,7 @@ export class JupyterServer {
                     }
                 });
                 this._disposables.push(procDisposable);
-                this._disposables.push({ dispose: () => subscription.unsubscribe() });
+                this._disposables.push(subscription);
             } catch (ex) {
                 console.error(`Starting remote jupyter server failed`, ex);
                 reject(ex);
@@ -346,37 +351,36 @@ export class JupyterServer {
             }
         };
 
-        const output = new Observable<Output<string>>((subscriber) => {
-            const disposables: IDisposable[] = [];
+        const output = createObservable<Output<string>>();
+        const disposables: IDisposable[] = [];
 
-            const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
-                ee.on(name, fn as any);
-                disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
-            };
+        const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
+            ee.on(name, fn as any);
+            disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
+        };
 
-            const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-                const out = this.decoder.decode([data]);
-                subscriber.next({ source, out: out });
-            };
+        const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
+            const out = this.decoder.decode([data]);
+            output.fire({ source, out: out });
+        };
 
-            on(proc.stdout!, 'data', (data: Buffer) => sendOutput('stdout', data));
-            on(proc.stderr!, 'data', (data: Buffer) => sendOutput('stderr', data));
+        on(proc.stdout!, 'data', (data: Buffer) => sendOutput('stdout', data));
+        on(proc.stderr!, 'data', (data: Buffer) => sendOutput('stderr', data));
 
-            proc.once('close', () => {
-                procExited = true;
-                subscriber.complete();
-                disposables.forEach((d) => d.dispose());
-            });
-            proc.once('exit', () => {
-                procExited = true;
-                subscriber.complete();
-                disposables.forEach((d) => d.dispose());
-            });
-            proc.once('error', (ex) => {
-                procExited = true;
-                subscriber.error(ex);
-                disposables.forEach((d) => d.dispose());
-            });
+        proc.once('close', () => {
+            procExited = true;
+            output.resolve();
+            disposables.forEach((d) => d.dispose());
+        });
+        proc.once('exit', () => {
+            procExited = true;
+            output.reject();
+            disposables.forEach((d) => d.dispose());
+        });
+        proc.once('error', (ex) => {
+            procExited = true;
+            output.reject(ex);
+            disposables.forEach((d) => d.dispose());
         });
 
         return {
@@ -421,4 +425,28 @@ function genRandomString(length = 16) {
         .randomBytes(Math.ceil(length / 2))
         .toString('hex') /** convert to hexadecimal format */
         .slice(0, length); /** return required number of characters */
+}
+
+function createObservable<T>() {
+    const onDidChange = new EventEmitter<T>();
+    let resolve: () => void = noop;
+    let reject: (reason?: any) => void = noop;
+    const promise = new Promise<void>((rs, rj) => {
+        resolve = rs;
+        reject = rj;
+    });
+    return {
+        get onDidChange() {
+            return onDidChange.event;
+        },
+        get done() {
+            return promise;
+        },
+        resolve: resolve.bind(promise),
+        reject: reject.bind(promise),
+        fire: onDidChange.fire.bind(onDidChange),
+        dispose: () => {
+            onDidChange.dispose();
+        }
+    };
 }

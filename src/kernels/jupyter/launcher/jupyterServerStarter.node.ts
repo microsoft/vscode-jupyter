@@ -101,7 +101,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
             // Watch for premature exits
             if (launchResult.proc) {
                 launchResult.proc.on('exit', (c: number | null) => (exitCode = c));
-                launchResult.out.subscribe((out) => this.jupyterOutputChannel.append(out.out));
+                launchResult.out.onDidChange((out) => this.jupyterOutputChannel.append(out.out));
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.

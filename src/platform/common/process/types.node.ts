@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
-import { Observable } from 'rxjs/Observable';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Event } from 'vscode';
 
 import { BaseError } from '../../errors/types';
 import { IDisposable, Resource } from '../types';
@@ -17,9 +16,15 @@ export type Output<T extends string | Buffer> = {
     source: 'stdout' | 'stderr';
     out: T;
 };
+
+export interface ObservableOutput<T> {
+    onDidChange: Event<T>;
+    done: Promise<void>;
+}
+
 export type ObservableExecutionResult<T extends string | Buffer> = {
     proc: ChildProcess | undefined;
-    out: Observable<Output<T>>;
+    out: ObservableOutput<Output<T>>;
     dispose(): void;
 };
 
