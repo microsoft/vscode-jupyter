@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import cloneDeep from 'lodash/cloneDeep';
 import { Uri } from 'vscode';
 import { Resource } from '../common/types';
 import { ResourceSpecificTelemetryProperties } from '../../telemetry';
@@ -100,7 +99,7 @@ export async function getContextualPropsForTelemetry(resource: Resource): Promis
     }
     // Create a copy of this data as it gets updated later asynchronously for other events.
     // At the point of sending this telemetry we don't want it to change again.
-    const clonedData = cloneDeep(data[0]);
+    const clonedData = JSON.parse(JSON.stringify(data[0]));
     // Possible the Python package information is now available, update the properties accordingly.
     // We want to update both the data items with package information
     // 1. Data we track against the Uri.

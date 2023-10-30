@@ -9,8 +9,6 @@ import * as path from '../platform/vscode-path/path';
 import * as uriPath from '../platform/vscode-path/resources';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { Kernel, KernelSpec } from '@jupyterlab/services';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import cloneDeep from 'lodash/cloneDeep';
 import url from 'url-parse';
 import {
     KernelConnectionMetadata,
@@ -104,7 +102,7 @@ export function createInterpreterKernelSpecWithName(
 
 export function cleanEnvironment<T>(spec: T): T {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const copy = cloneDeep(spec) as unknown as { env?: any };
+    const copy = JSON.parse(JSON.stringify(spec)) as unknown as { env?: any };
 
     if (copy.env) {
         // Scrub the environment of the spec to make sure it has allowed values (they all must be strings)
