@@ -849,6 +849,12 @@ jobs:
       - name: npm ci
         run: npm ci --ignore-scripts --prefer-offline --no-audit
 
+      # Run again, as the download of zmq binaries could have failed with 403 errors
+      - run: npm run postinstall
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+
       - name: pip install system test requirements
         run: |
           python -m pip install --upgrade -r build/venv-test-requirements.txt
