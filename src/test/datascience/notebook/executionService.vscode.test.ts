@@ -47,7 +47,7 @@ import {
 import { isWeb, swallowExceptions } from '../../../platform/common/utils/misc';
 import { ProductNames } from '../../../platform/interpreter/installer/productNames';
 import { Product } from '../../../platform/interpreter/installer/types';
-import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import {
     areInterpreterPathsSame,
     getNormalizedInterpreterPath
@@ -58,7 +58,7 @@ import {
     hasErrorOutput,
     translateCellErrorOutput
 } from '../../../kernels/execution/helpers';
-import { IKernel, IKernelProvider, INotebookKernelExecution, NotebookCellRunState } from '../../../kernels/types';
+import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { noop } from '../../core';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
@@ -144,32 +144,6 @@ suite('Kernel Execution @kernelCore', function () {
         const uri = notebook.uri;
         // eslint-disable-next-line local-rules/dont-use-fspath
         await Promise.all([kernelExecution.executeCell(cell), waitForTextOutput(cell, `${uri.fsPath}`)]);
-    });
-    test.skip('Test exceptions have hrefs', async () => {
-        const ipythonVersionCell = await notebook.appendCodeCell(IPYTHON_VERSION_CODE);
-        assert.strictEqual(await kernelExecution.executeCell(ipythonVersionCell), NotebookCellRunState.Success);
-        const ipythonVersion = parseInt(getTextOutputValue(ipythonVersionCell!.outputs[0]));
-
-        const codeCell = await notebook.appendCodeCell('raise Exception("FOO")');
-        assert.strictEqual(await kernelExecution.executeCell(codeCell), NotebookCellRunState.Error);
-
-        // Parse the last cell's error output
-        const errorOutput = translateCellErrorOutput(codeCell.outputs[0]);
-        assert.ok(errorOutput, 'No error output found');
-
-        // Convert to html for easier parsing
-        const ansiToHtml = require('ansi-to-html') as typeof import('ansi-to-html');
-        const converter = new ansiToHtml();
-        const html = converter.toHtml(errorOutput.traceback.join('\n'));
-
-        // Should be more than 3 hrefs if ipython 8
-        if (ipythonVersion >= 8) {
-            const hrefs = /<a\s+href='(.*\?line=\d+)'/gm.exec(html);
-            assert.ok(
-                hrefs,
-                `Hrefs not found in traceback, HTML = ${html}, output = ${errorOutput.traceback.join('\n')}`
-            );
-        }
     });
     test('Leading whitespace not suppressed', async () => {
         const cell = await notebook.appendCodeCell('print("\tho")\nprint("\tho")\nprint("\tho")\n');

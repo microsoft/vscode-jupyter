@@ -167,7 +167,7 @@ suite('IPyWidget Script Manager @widgets', function () {
         const newFiles = (await fs.getFiles(nbExtensionsFolder)).map((item) => item.toString());
         assert.deepEqual(newFiles, files);
     });
-    test.skip('Get a list of Widgets and script paths', async () => {
+    test('Get a list of Widgets and script paths', async () => {
         const baseUrl = await scriptManager.getBaseUrl!()!;
         const moduleMappings = await scriptManager.getWidgetModuleMappings();
 
