@@ -154,7 +154,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         when(connection.dispose()).thenReturn();
         when(connection.getAuthHeader).thenReturn();
         when(connection.getWebsocketProtocols).thenReturn();
-        when(connection.mappedRemoteNotebookDir).thenReturn();
         when(connection.providerId).thenReturn('_builtin.something');
         when(connection.rootDirectory).thenReturn(Uri.file('someDir'));
         when(connection.token).thenReturn('1234');
@@ -439,7 +438,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         assert.strictEqual(wrapperSession.status, 'busy');
     });
     test('Create Session with Jupyter style names (notebook)', async () => {
-        when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar');
         const resource = Uri.file('/foo/bar/baz/abc.ipynb');
         const options: KernelSessionCreationOptions = {
             kernelConnection: remoteKernelSpec,
@@ -474,7 +472,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         assert.deepStrictEqual(newSessionOptions.kernel, { name: 'python3' });
     });
     test('Create Session with non-Jupyter style names (notebook)', async () => {
-        when(connection.mappedRemoteNotebookDir).thenReturn();
         const resource = Uri.file('/foo/bar/baz/abc.ipynb');
         const options: KernelSessionCreationOptions = {
             kernelConnection: remoteKernelSpec,
@@ -524,7 +521,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         assert.deepStrictEqual(newSessionOptions.kernel, { name: 'python3' });
     });
     test('Create Session with Jupyter style names (interactive window with Python file)', async () => {
-        when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar');
         const resource = Uri.file('/foo/bar/baz/abc.py');
         const options: KernelSessionCreationOptions = {
             kernelConnection: remoteKernelSpec,

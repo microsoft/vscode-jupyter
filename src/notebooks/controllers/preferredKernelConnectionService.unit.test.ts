@@ -178,7 +178,6 @@ suite('Preferred Kernel Connection', () => {
             instance(localPythonEnvFinder)
         ]);
         (instance(connection) as any).then = undefined;
-        when(connection.mappedRemoteNotebookDir).thenReturn(undefined);
         when(jupyterConnection.createConnectionInfo(anything())).thenResolve(instance(connection));
         preferredService = new PreferredKernelConnectionService(instance(jupyterConnection));
         disposables.push(preferredService);
@@ -218,7 +217,6 @@ suite('Preferred Kernel Connection', () => {
             assert.strictEqual(preferredKernel, remoteJavaKernelSpec);
         });
         test('Find existing session if there is an exact match for the notebook', async () => {
-            when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar/');
             notebook = new TestNotebookDocument(Uri.file('/foo/bar/baz/sample.ipynb'), 'jupyter-notebook', {
                 custom: { metadata: notebookMetadata }
             });
