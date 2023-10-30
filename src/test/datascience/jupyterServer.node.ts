@@ -339,6 +339,7 @@ export class JupyterServer {
     ): ObservableExecutionResult<string> {
         const proc = child_process.spawn(file, args, options);
         let procExited = false;
+        const disposables: IDisposable[] = [];
         const disposable: IDisposable = {
             // eslint-disable-next-line
             dispose: function () {
@@ -348,12 +349,12 @@ export class JupyterServer {
                 if (proc) {
                     proc.unref();
                 }
+                disposables.forEach((d) => d.dispose());
             }
         };
 
         const output = createObservable<Output<string>>();
-        const disposables: IDisposable[] = [];
-
+        disposables.push(output);
         const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
             ee.on(name, fn as any);
             disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
@@ -435,6 +436,8 @@ function createObservable<T>() {
         resolve = rs;
         reject = rj;
     });
+    // No dangling promises.
+    promise.catch(noop);
     return {
         get onDidChange() {
             return onDidChange.event;

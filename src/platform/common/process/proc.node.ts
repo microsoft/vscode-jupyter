@@ -20,6 +20,8 @@ import {
     StdErrError
 } from './types.node';
 import { logProcess } from './logger.node';
+import { dispose } from '../utils/lifecycle';
+import { noop } from '../utils/misc';
 
 export class BufferDecoder implements IBufferDecoder {
     public decode(buffers: Buffer[]): string {
@@ -81,6 +83,7 @@ export class ProcessService implements IProcessService {
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
         traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
+        const disposables: IDisposable[] = [];
         const disposable: IDisposable = {
             // eslint-disable-next-line
             dispose: function () {
@@ -90,12 +93,13 @@ export class ProcessService implements IProcessService {
                 if (proc) {
                     proc.unref();
                 }
+                dispose(disposables);
             }
         };
         this.processesToKill.add(disposable);
 
         const output = createObservable<Output<string>>();
-        const disposables: IDisposable[] = [];
+        disposables.push(output);
 
         const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
             ee.on(name, fn as any);
@@ -276,6 +280,8 @@ export class ProcessService implements IProcessService {
 export function createObservable<T>() {
     const onDidChange = new EventEmitter<T>();
     const promise = createDeferred<void>();
+    // No dangling promises.
+    promise.promise.catch(noop);
     return {
         get onDidChange() {
             return onDidChange.event;
