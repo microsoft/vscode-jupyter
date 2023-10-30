@@ -59,11 +59,10 @@
   * If released version is `YYYY.MM.100`, then hot fix will be `YYYY.MM.110`
   * If released version is `YYYY.MM.110`, then hot fix will be `YYYY.MM.120`
 - [ ] Verify all candidate issues
-- [ ] Sanity test release candidate VSIX against VS Code RC  
+- [ ] Sanity test release candidate VSIX against VS Code RC
   Tip: You can use the dev containers in the this repo for testing against linux (just open the repo and use thd command `Dev Containers: Reopen in Container`)
   - [ ] Windows
     - [ ] win32-x64
-    - [ ]
     - [ ] win32-arm64
   - [ ] macOS
     - [ ] darwin-x64
