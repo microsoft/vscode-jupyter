@@ -145,7 +145,12 @@ function createConfig(
         // language client is lazy loaded in main bundle
         // & required in lsp-middleware, etc
         desktopExternals.push(
-            ...['vscode-languageclient', 'vscode-languageclient/node', '@vscode/jupyter-lsp-middleware']
+            ...[
+                'vscode-languageclient',
+                'vscode-languageclient/node',
+                '@vscode/jupyter-lsp-middleware',
+                '@vscode/extension-telemetry'
+            ]
         );
     }
     const webExternals = ['os'];
@@ -297,7 +302,8 @@ async function buildDesktopBundle() {
                         'node-fetch',
                         'vscode-languageclient/node',
                         '@vscode/jupyter-lsp-middleware',
-                        'svg-to-pdfkit'
+                        'svg-to-pdfkit',
+                        '@vscode/extension-telemetry'
                     )
                     .filter((module) => !['zeromq', 'zeromqold'].includes(module))
             )
