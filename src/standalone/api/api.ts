@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ExtensionMode, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
+import { ExtensionMode, Uri, commands, window, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
-import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
 import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { IDisposable, IExtensionContext, IExtensions } from '../../platform/common/types';
@@ -88,12 +87,10 @@ export function buildApi(
             const apiProvider = serviceContainer.get<IPythonApiProvider>(IPythonApiProvider);
             apiProvider.setApi(pythonApi);
         },
-        async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
-            sendApiUsageTelemetry(extensions, 'showDataViewer');
-            const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
-            await dataViewerProviderService.create(dataProvider, title);
-        },
         registerRemoteServerProvider(provider: IJupyterUriProvider): IDisposable {
+            traceError(
+                'The API registerRemoteServerProvider has being deprecated and will be removed soon, please use createJupyterServerCollection.'
+            );
             sendApiUsageTelemetry(extensions, 'registerRemoteServerProvider');
             const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
             let disposeHook = noop;
@@ -118,16 +115,10 @@ export function buildApi(
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
         },
-        getSuggestedController: async (_providerId: string, _handle: string, _notebook: NotebookDocument) => {
-            traceError('The API getSuggestedController is being deprecated.');
-            if (context.extensionMode === ExtensionMode.Development || context.extensionMode === ExtensionMode.Test) {
-                window.showErrorMessage('The Jupyter API getSuggestedController is being deprecated.').then(noop, noop);
-                return;
-            }
-            sendApiUsageTelemetry(extensions, 'getSuggestedController');
-            return undefined;
-        },
         addRemoteJupyterServer: async (providerId: string, handle: string) => {
+            traceError(
+                'The API addRemoteJupyterServer has being deprecated and will be removed soon, please use createJupyterServerCollection.'
+            );
             sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');
             await new Promise<void>(async (resolve) => {
                 const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);

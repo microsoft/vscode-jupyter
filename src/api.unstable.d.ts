@@ -23,21 +23,6 @@ declare module './api' {
          */
         ready: Promise<void>;
         /**
-         * Launches Data Viewer component.
-         * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-         * @param {string} title Data Viewer title
-         */
-        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-        /**
-         * Returns the suggested controller for a give Jupyter server and notebook.
-         */
-        getSuggestedController(
-            providerId: string,
-            handle: string,
-            notebook: NotebookDocument
-        ): Promise<NotebookController | undefined>;
-
-        /**
          * Registers a remote server provider component that's used to pick remote jupyter server URIs
          * @param serverProvider object called back when picking jupyter server URI
          */
