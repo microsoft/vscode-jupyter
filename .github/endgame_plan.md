@@ -42,39 +42,40 @@
 
 ### Satelite extensions/npm packages
 - [ ] Reach out to the owners of each of these to coordinate the releases (if any).
-- JupyterHub (@DonJayamanne)
+    - If there are no releases for each of the following, then mark them as done.
+    - Else the ownsers of each to mark as done when they are done.
+- [ ] JupyterHub (@DonJayamanne)
     - No need to pin VS Code engine
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=521&_a=summary))
     - PreRelease directly from main branch manually ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=520))
-- Jupyter (Notebook) Renderers (@DonJayamanne)
+- [ ] Jupyter (Notebook) Renderers (@DonJayamanne)
     - No need to pin VS Code engine (unless you want to test something against VS Code insiders and not ship to stable users)
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=285))
-- Jupyter Powertoys (@DonJayamanne)
+- [ ] Jupyter Powertoys (@DonJayamanne)
     - No need to pin VS Code engine (unless you want to test something against VS Code insiders and not ship to stable users, e.g. depends on some new Jupyter Extension API)
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=305))
-- Jupyter Cell Tags (@rebornix)
+- [ ] Jupyter Cell Tags (@rebornix)
     - No need to pin VS Code engine
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=388))
-- Jupyter KeyMap (@rebornix)
+- [ ] Jupyter KeyMap (@rebornix)
     - No need to pin VS Code engine
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=260))
-- Tensorboard (@DonJayamanne)
+- [ ] Tensorboard (@DonJayamanne)
     - No need to pin VS Code engine
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=531))
     - PreRelease directly from main branch manually ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=530))
-- zeromq-prebuilt (@DonJayamanne)
+- [ ] zeromq-prebuilt (@DonJayamanne)
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=466))
     - Release by adding a git tag and pushing it upstream (e.g. 6.0.0-beta.16.8)
     - Can test bundles by manually running and publishing releases to github releases (download and test the bundles manually from github releases)
-- @vscode/zeromq (@DonJayamanne)
+- [ ] @vscode/zeromq (@DonJayamanne)
     - To be done after relesing `zeromq-prebuilt`
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=469))
-- @vscode/jupyter-extension (@DonJayamanne)
+- [ ] @vscode/jupyter-extension (@DonJayamanne)
     - Release directly from main/relese branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=519&_a=summary))
-- Gather (@DonJayamanne)
+- [ ] Gather (@DonJayamanne)
     - No need to pin VS Code engine
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=290))
--
 
 ## Tuesday
 - [ ] Make sure [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/191876) is happy
