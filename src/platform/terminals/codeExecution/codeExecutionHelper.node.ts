@@ -6,13 +6,14 @@ import { Uri } from 'vscode';
 
 import { traceError } from '../../logging';
 import * as internalScripts from '../../interpreter/internal/scripts/index.node';
-import { createDeferred } from '../../common/utils/async';
 import { getFilePath } from '../../common/platform/fs-paths';
 import { CodeExecutionHelperBase } from './codeExecutionHelper';
 import { IProcessServiceFactory } from '../../common/process/types.node';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { splitLines } from '../../common/helpers';
+import { IDisposable } from '../../common/types';
+import { dispose } from '../../common/utils/lifecycle';
 
 /**
  * Node version of the code execution helper. Node version is necessary because we can't create processes in the web version.
@@ -29,6 +30,7 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
     }
 
     public override async normalizeLines(code: string, resource?: Uri): Promise<string> {
+        const disposables: IDisposable[] = [];
         try {
             const codeTrimmed = code.trim();
             if (codeTrimmed.length === 0) {
@@ -49,20 +51,18 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
             const observable = processService.execObservable(getFilePath(interpreter?.uri) || 'python', args, {
                 throwOnStdErr: true
             });
-            const normalizeOutput = createDeferred<string>();
 
             // Read result from the normalization script from stdout, and resolve the promise when done.
             let normalized = '';
-            observable.out.subscribe({
-                next: (output) => {
+            observable.out.onDidChange(
+                (output) => {
                     if (output.source === 'stdout') {
                         normalized += output.out;
                     }
                 },
-                complete: () => {
-                    normalizeOutput.resolve(normalized);
-                }
-            });
+                this,
+                disposables
+            );
 
             // The normalization script expects a serialized JSON object, with the selection under the "code" key.
             // We're using a JSON object so that we don't have to worry about encoding, or escaping non-ASCII characters.
@@ -71,7 +71,8 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
             observable.proc?.stdin?.end();
 
             // We expect a serialized JSON object back, with the normalized code under the "normalized" key.
-            const result = await normalizeOutput.promise;
+            await observable.out.done;
+            const result = normalized;
             const object = JSON.parse(result);
 
             const normalizedLines = parse(object.normalized);
@@ -94,6 +95,8 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
         } catch (ex) {
             traceError(ex, 'Python: Failed to normalize code for execution in Interactive Window');
             return code;
+        } finally {
+            dispose(disposables);
         }
     }
 }

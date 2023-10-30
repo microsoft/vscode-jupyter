@@ -2168,8 +2168,6 @@
         "redux": "^4.0.4",
         "redux-logger": "^3.0.6",
         "reflect-metadata": "^0.1.12",
-        "rxjs": "^6.5.4",
-        "rxjs-compat": "^6.5.4",
         "safe-buffer": "^5.2.1",
         "sanitize-filename": "^1.6.3",
         "semver": "^5.7.2",

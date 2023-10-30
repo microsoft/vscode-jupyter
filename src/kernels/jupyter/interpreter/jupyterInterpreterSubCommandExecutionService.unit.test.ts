@@ -5,7 +5,6 @@ import { assert, expect, use } from 'chai';
 import chaiPromise from 'chai-as-promised';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
@@ -26,6 +25,9 @@ import { JupyterInterpreterDependencyService } from './jupyterInterpreterDepende
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 import { JupyterInterpreterSubCommandExecutionService } from './jupyterInterpreterSubCommandExecutionService.node';
 import { noop } from '../../../test/core';
+import { createObservable } from '../../../platform/common/process/proc.node';
+import { IDisposable } from '../../../platform/common/types';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -39,6 +41,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
     const activePythonInterpreter = createPythonInterpreter({ displayName: 'activePythonInterpreter' });
     let notebookStartResult: ObservableExecutionResult<string>;
+    const disposables: IDisposable[] = [];
     setup(() => {
         interpreterService = mock<IInterpreterService>();
         jupyterInterpreter = mock(JupyterInterpreterService);
@@ -49,10 +52,12 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(execService) as any).then = undefined;
         const output = new MockOutputChannel('');
+        const out = createObservable<Output<string>>();
+        disposables.push(out);
         notebookStartResult = {
             dispose: noop,
             proc: undefined,
-            out: new Subject<Output<string>>().asObservable()
+            out
         };
         const jupyterPaths = mock<JupyterPaths>();
         when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(
@@ -78,6 +83,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         when(interpreterService.getActiveInterpreter(undefined)).thenResolve(activePythonInterpreter);
     });
     teardown(() => {
+        dispose(disposables);
         sinon.restore();
     });
     // eslint-disable-next-line

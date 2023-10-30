@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 import { exec, execSync, spawn } from 'child_process';
-import { Observable } from 'rxjs/Observable';
-import { CancellationError, Disposable } from 'vscode';
+import { CancellationError, Disposable, EventEmitter } from 'vscode';
 import { ignoreLogging, traceDecoratorVerbose, traceInfoIfCI } from '../../logging';
 import { TraceOptions } from '../../logging/types';
-
 import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
@@ -22,6 +20,8 @@ import {
     StdErrError
 } from './types.node';
 import { logProcess } from './logger.node';
+import { dispose } from '../utils/lifecycle';
+import { noop } from '../utils/misc';
 
 export class BufferDecoder implements IBufferDecoder {
     public decode(buffers: Buffer[]): string {
@@ -83,6 +83,7 @@ export class ProcessService implements IProcessService {
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
         traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
+        const disposables: IDisposable[] = [];
         const disposable: IDisposable = {
             // eslint-disable-next-line
             dispose: function () {
@@ -92,56 +93,56 @@ export class ProcessService implements IProcessService {
                 if (proc) {
                     proc.unref();
                 }
+                dispose(disposables);
             }
         };
         this.processesToKill.add(disposable);
 
-        const output = new Observable<Output<string>>((subscriber) => {
-            const disposables: IDisposable[] = [];
+        const output = createObservable<Output<string>>();
+        disposables.push(output);
 
-            const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
-                ee.on(name, fn as any);
-                disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
-            };
+        const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
+            ee.on(name, fn as any);
+            disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
+        };
 
-            if (options.token) {
-                disposables.push(
-                    options.token.onCancellationRequested(() => {
-                        if (!procExited && !proc.killed) {
-                            ProcessService.kill(proc.pid);
-                            procExited = true;
-                        }
-                    })
-                );
+        if (options.token) {
+            disposables.push(
+                options.token.onCancellationRequested(() => {
+                    if (!procExited && !proc.killed) {
+                        ProcessService.kill(proc.pid);
+                        procExited = true;
+                    }
+                })
+            );
+        }
+
+        const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
+            const out = this.decoder.decode([data]);
+            if (source === 'stderr' && options.throwOnStdErr) {
+                output.reject(new StdErrError(out));
+            } else {
+                output.fire({ source, out: out });
             }
+        };
 
-            const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-                const out = this.decoder.decode([data]);
-                if (source === 'stderr' && options.throwOnStdErr) {
-                    subscriber.error(new StdErrError(out));
-                } else {
-                    subscriber.next({ source, out: out });
-                }
-            };
+        on(proc.stdout!, 'data', (data: Buffer) => sendOutput('stdout', data));
+        on(proc.stderr!, 'data', (data: Buffer) => sendOutput('stderr', data));
 
-            on(proc.stdout!, 'data', (data: Buffer) => sendOutput('stdout', data));
-            on(proc.stderr!, 'data', (data: Buffer) => sendOutput('stderr', data));
-
-            proc.once('close', () => {
-                procExited = true;
-                subscriber.complete();
-                disposables.forEach((d) => d.dispose());
-            });
-            proc.once('exit', () => {
-                procExited = true;
-                subscriber.complete();
-                disposables.forEach((d) => d.dispose());
-            });
-            proc.once('error', (ex) => {
-                procExited = true;
-                subscriber.error(ex);
-                disposables.forEach((d) => d.dispose());
-            });
+        proc.once('close', () => {
+            procExited = true;
+            output.resolve();
+            disposables.forEach((d) => d.dispose());
+        });
+        proc.once('exit', () => {
+            procExited = true;
+            output.resolve();
+            disposables.forEach((d) => d.dispose());
+        });
+        proc.once('error', (ex) => {
+            procExited = true;
+            output.reject(ex);
+            disposables.forEach((d) => d.dispose());
         });
 
         logProcess(file, args, options);
@@ -274,4 +275,25 @@ export class ProcessService implements IProcessService {
 
         return defaultOptions;
     }
+}
+
+export function createObservable<T>() {
+    const onDidChange = new EventEmitter<T>();
+    const promise = createDeferred<void>();
+    // No dangling promises.
+    promise.promise.catch(noop);
+    return {
+        get onDidChange() {
+            return onDidChange.event;
+        },
+        get done() {
+            return promise.promise;
+        },
+        resolve: promise.resolve.bind(promise),
+        reject: promise.reject.bind(promise),
+        fire: onDidChange.fire.bind(onDidChange),
+        dispose: () => {
+            onDidChange.dispose();
+        }
+    };
 }
