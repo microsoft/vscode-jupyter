@@ -396,7 +396,6 @@ gulp.task('compile-release', async () => {
     await spawnAsync('npm', ['run', 'compile-release'], webpackEnv);
 });
 
-
 gulp.task('prePublishBundle', async () => {
     await spawnAsync('npm', ['run', 'prePublishBundle'], webpackEnv);
 });

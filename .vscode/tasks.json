@@ -8,6 +8,24 @@
     },
     "tasks": [
         {
+            "label": "package.json.entry.out",
+            "type": "npm",
+            "script": "updatePackageJsonEntryTest",
+            "group": {
+                "kind": "none",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "package.json.entry.dist",
+            "type": "npm",
+            "script": "updatePackageJsonEntryDev",
+            "group": {
+                "kind": "none",
+                "isDefault": false
+            }
+        },
+        {
             "label": "Compile",
             "type": "npm",
             "script": "compile",

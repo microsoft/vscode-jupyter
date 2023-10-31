@@ -1482,7 +1482,7 @@
                         "debug",
                         "verbose"
                     ],
-                    "description": "%jupyter.configuration.jupyter.logging.level.description%","scope": "resource"
+                    "description": "%jupyter.configuration.jupyter.logging.level.description%"
                 },
                 "jupyter.experiments.optInto": {
                     "type": "array",
@@ -2116,7 +2116,9 @@
         "validateTelemetry": "gulp validateTelemetry",
         "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
         "printTestResults": "gulp printTestResults",
-        "setup-precommit-hook": "husky install"
+        "setup-precommit-hook": "husky install",
+        "updatePackageJsonEntryTest": "node .build/updatePackageJsonEntry.js --test",
+        "updatePackageJsonEntryDev": "node .build/updatePackageJsonEntry.js"
     },
     "dependencies": {
         "@c4312/evt": "^0.1.1",

@@ -60,9 +60,18 @@ const webExternals = commonExternals.concat('os').concat(commonExternals);
 const desktopExternals = commonExternals.concat(deskTopNodeModulesToExternalize);
 const bundleConfig = getBundleConfiguration();
 const isDevbuild = !process.argv.includes('--production');
-const esbuildAll = process.argv.includes('--all');
 const isWatchMode = process.argv.includes('--watch');
 const extensionFolder = path.join(__dirname, '..', '..');
+
+if (!isDevbuild) {
+    const packageJson = JSON.parse(fs.readFileSync(path.join(extensionFolder, 'package.json')).toString());
+    if (packageJson.main.includes('out')) {
+        throw new Error('`package.json` should not contain `out` in the `main` property');
+    }
+    if (packageJson.browser.includes('out')) {
+        throw new Error('`package.json` should not contain `out` in the `browser` property');
+    }
+}
 
 interface StylePluginOptions {
     /**
@@ -258,7 +267,14 @@ async function buildAll() {
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'ipywidgets', 'renderer', 'index.ts'),
-            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'ipywidgetsRenderer', 'ipywidgetsRenderer.js')
+            path.join(
+                extensionFolder,
+                'dist',
+                'webviews',
+                'webview-side',
+                'ipywidgetsRenderer',
+                'ipywidgetsRenderer.js'
+            )
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'variable-view', 'index.tsx'),
