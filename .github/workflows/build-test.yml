@@ -538,6 +538,7 @@ jobs:
           python -c "import sys;print(sys.executable)"
           python -m pip --disable-pip-version-check install -r build/venv-smoke-test-requirements.txt
           python ./pythonFiles/install_debugpy.py
+          python -m pip install jupyter notebook
           python -m ipykernel install --user
 
       - name: Install Jupyter Notebook and Lab
