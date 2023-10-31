@@ -17,7 +17,7 @@ import { CellExecutionCreator } from './cellExecutionCreator';
 import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';
 import { dispose } from '../../platform/common/helpers';
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
@@ -107,7 +107,7 @@ export class CellExecution implements IDisposable {
                 // If the cell is deleted, then dispose the request object.
                 // No point keeping it alive, just chewing resources.
                 if (e === this.cell.document) {
-                    traceVerbose(`Disposing request as the cell was deleted ${getDisplayPath(this.cell.notebook.uri)}`);
+                    traceInfo(`Disposing request as the cell (${this.cell.index}) was deleted ${getDisplayPath(this.cell.notebook.uri)}`);
                     try {
                         this.request?.dispose(); // NOSONAR
                     } catch (e) {
@@ -435,6 +435,8 @@ export class CellExecution implements IDisposable {
                 false,
                 metadata
             );
+            // Don't want dangling promises.
+            this.request.done.then(noop, noop);
         } catch (ex) {
             traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
             return this.completedWithErrors(ex);
