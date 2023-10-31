@@ -107,7 +107,11 @@ export class CellExecution implements IDisposable {
                 // If the cell is deleted, then dispose the request object.
                 // No point keeping it alive, just chewing resources.
                 if (e === this.cell.document) {
-                    traceInfo(`Disposing request as the cell (${this.cell.index}) was deleted ${getDisplayPath(this.cell.notebook.uri)}`);
+                    traceInfo(
+                        `Disposing request as the cell (${this.cell.index}) was deleted ${getDisplayPath(
+                            this.cell.notebook.uri
+                        )}`
+                    );
                     try {
                         this.request?.dispose(); // NOSONAR
                     } catch (e) {
