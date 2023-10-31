@@ -13,7 +13,9 @@ const zeromqModuleName = `${'zeromq'}`;
 export function getZeroMQ(): typeof import('zeromq') {
     try {
         const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
-        const zmq = requireFunc(zeromqModuleName);
+        const zmq: typeof import('zeromq') = requireFunc(zeromqModuleName);
+        // We do not want to block the process from exiting if there are any pending messages.
+        zmq.context.blocky = false;
         sendZMQTelemetry(false).catch(noop);
         return zmq;
     } catch (e) {
