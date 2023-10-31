@@ -8,59 +8,15 @@
     },
     "tasks": [
         {
-            "label": "package.json.entry.out",
-            "type": "npm",
-            "script": "updatePackageJsonEntryTest",
-            "group": {
-                "kind": "none",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "package.json.entry.dist",
-            "type": "npm",
-            "script": "updatePackageJsonEntryDev",
-            "group": {
-                "kind": "none",
-                "isDefault": false
-            }
-        },
-        {
             "label": "Compile",
             "type": "npm",
             "script": "compile",
             "isBackground": true,
-            "dependsOn": ["package.json.entry.dist"],
             "problemMatcher": ["$tsc-watch"],
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
-        },
-        {
-            "label": "Compile Web Extension",
-            "type": "npm",
-            "script": "compile-web-watch",
-            "dependsOn": ["package.json.entry.dist"],
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$ts-webpack-watch"]
-        },
-        {
-            "label": "compile-web-test",
-            "type": "npm",
-            "script": "compile-web-test",
-            "dependsOrder": "sequence",
-            "dependsOn": ["package.json.entry.out"],
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$ts-webpack-watch"]
         },
         {
             "label": "Run Unit Tests",
