@@ -149,7 +149,7 @@
                 "VSC_JUPYTER_CI_TEST_GREP": "Smoke Test"
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/dist/**/*.js", "${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"],
             "presentation": {
@@ -172,7 +172,7 @@
                 "VSC_JUPYTER_CI_TEST_GREP": "Language Server:"
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/dist/**/*.js", "${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "preTestJediLSP",
             "skipFiles": ["<node_internals>/**"],
             "presentation": {
@@ -209,7 +209,7 @@
                 // "VSC_JUPYTER_CI_IS_CONDA": "true" // Enable to run conda tests
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/dist/**/*.js", "${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"],
             "presentation": {
@@ -239,7 +239,7 @@
                 "VSC_JUPYTER_EXPOSE_SVC": "1"
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/dist/**/*.js", "${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "skipFiles": ["<node_internals>/**"],
             "presentation": {
                 "group": "2_tests",
@@ -268,7 +268,7 @@
                 "VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT": "true"
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/dist/**/*.js", "${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "skipFiles": ["<node_internals>/**"],
             "presentation": {
                 "group": "2_tests",

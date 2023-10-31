@@ -309,7 +309,13 @@ async function buildAll() {
                   path.join(extensionFolder, 'dist', 'extension.node.js'),
                   { target: 'desktop', watch: isWatchMode }
               ),
-
+        bundleConfig === 'web'
+            ? Promise.resolve()
+            : build(
+                  path.join(extensionFolder, 'src', 'extension.node.proxy.ts'),
+                  path.join(extensionFolder, 'dist', 'extension.node.proxy.js'),
+                  { target: 'desktop', watch: isWatchMode }
+              ),
         ...(bundleConfig === 'web' ? [] : deskTopNodeModulesToExternalize)
             // zeromq will be manually bundled.
             .filter((module) => !['zeromq', 'zeromqold', 'vscode-jsonrpc'].includes(module))

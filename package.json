@@ -58,7 +58,7 @@
         "onWebviewPanel:jupyter-variables",
         "onWebviewPanel:jupyter"
     ],
-    "main": "./dist/extension.node.js",
+    "main": "./dist/extension.node.proxy.js",
     "browser": "./dist/extension.web.bundle.js",
     "capabilities": {
         "virtualWorkspaces": true,
