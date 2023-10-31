@@ -81,7 +81,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler,
         @inject(IExtensionContext) readonly context: IExtensionContext
     ) {
-        const dataExplorerDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
+        const dataExplorerDir = joinPath(context.extensionUri, 'dist', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
             provider,

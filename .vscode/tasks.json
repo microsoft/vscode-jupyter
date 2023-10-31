@@ -19,41 +19,6 @@
             }
         },
         {
-            "label": "Compile Viewers",
-            "type": "npm",
-            "script": "compile-viewers-watch",
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$esbuild-watch"]
-        },
-        {
-            "label": "Compile Web Extension",
-            "type": "npm",
-            "script": "compile-web-watch",
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$ts-webpack-watch"]
-        },
-        {
-            "label": "compile-web-test",
-            "type": "npm",
-            "script": "compile-web-test",
-            "dependsOrder": "sequence",
-            "dependsOn": ["Compile"],
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$ts-webpack-watch"]
-        },
-        {
             "label": "Run Unit Tests",
             "type": "npm",
             "script": "test:unittests",
@@ -71,6 +36,7 @@
         {
             "type": "npm",
             "script": "launchWebExtension",
+            "dependsOn": ["package.json.entry.dist"],
             "problemMatcher": [],
             "label": "Launch Web Extension (Chrome)"
         },
@@ -78,6 +44,7 @@
             "type": "shell",
             "problemMatcher": [],
             "command": "npm",
+            "dependsOn": ["package.json.entry.dist"],
             "args": ["run", "launchWebExtension", "--", "--browser=webkit", "--port=3111"],
             "label": "Launch Web Extension (Safari)"
         },

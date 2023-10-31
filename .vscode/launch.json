@@ -10,7 +10,7 @@
             "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--enable-proposed-api"],
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": ["${workspaceFolder}/dist/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"],
             "env": {
@@ -34,7 +34,7 @@
             "debugWebWorkerHost": true,
             "request": "launch",
             "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionDevelopmentKind=web"],
-            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": ["${workspaceFolder}/dist/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile Web Extension",
             "presentation": {
                 "group": "1_extension",
@@ -47,7 +47,7 @@
             "debugWebWorkerHost": true,
             "request": "launch",
             "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionDevelopmentKind=web"],
-            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": ["${workspaceFolder}/dist/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "presentation": {
                 "group": "1_extension",
                 "order": 1
@@ -61,7 +61,7 @@
             "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--enable-proposed-api"],
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": ["${workspaceFolder}/dist/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "skipFiles": ["<node_internals>/**"],
             "env": {
                 // Disable this to turoff on redux & console logging during debugging
@@ -86,7 +86,7 @@
             "args": ["--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/data"],
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": ["${workspaceFolder}/dist/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
             "presentation": {
                 "group": "1_extension",
@@ -155,32 +155,6 @@
             "presentation": {
                 "group": "2_tests",
                 "order": 10
-            }
-        },
-        {
-            "name": "Perf Tests (*.perf.test.ts)",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "${workspaceFolder}/src/test/testMultiRootWkspc/perfTests",
-                "--enable-proposed-api",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
-            ],
-            "env": {
-                "CI_PYTHON_PATH": "<Python Path>",
-                "VSC_JUPYTER_PERF_TEST": "1",
-                "TEST_FILES_SUFFIX": "notebookCellExecution.perf.test",
-                "VSC_JUPYTER_TEST_TIMEOUT": "60000"
-            },
-            "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"],
-            "presentation": {
-                "group": "2_tests",
-                "order": 12
             }
         },
         {

@@ -58,8 +58,8 @@
         "onWebviewPanel:jupyter-variables",
         "onWebviewPanel:jupyter"
     ],
-    "main": "./out/extension.node.js",
-    "browser": "./out/extension.web.bundle.js",
+    "main": "./dist/extension.node.proxy.js",
+    "browser": "./dist/extension.web.bundle.js",
     "capabilities": {
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
@@ -1977,20 +1977,20 @@
                 "localResourceRoots": [
                     "./temp"
                 ],
-                "entrypoint": "./out/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
+                "entrypoint": "./dist/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
             },
             {
                 "type": "interactive",
                 "localResourceRoots": [
                     "./temp"
                 ],
-                "entrypoint": "./out/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
+                "entrypoint": "./dist/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
             }
         ],
         "notebookRenderer": [
             {
                 "id": "jupyter-ipywidget-renderer",
-                "entrypoint": "./out/webviews/webview-side/ipywidgetsRenderer/ipywidgetsRenderer.js",
+                "entrypoint": "./dist/webviews/webview-side/ipywidgetsRenderer/ipywidgetsRenderer.js",
                 "displayName": "%jupyter.notebookRenderer.IPyWidget.displayName%",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
@@ -2070,19 +2070,23 @@
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
         "prePublishBundleStable": "cross-env IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=false gulp prePublishBundle",
         "prePublishBundlePreRelease": "cross-env IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=true gulp prePublishBundle",
-        "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "createNycFolder": "gulp createNycFolder",
         "validateTranslationFiles": "gulp validateTranslationFiles",
-        "compile": "tsc -watch -p ./",
-        "compile-no-watch": "tsc -p ./",
-        "compiled": "deemon npm run compile",
-        "kill-compiled": "deemon --kill npm run compile",
-        "compile-web": "npm run compile-viewers",
+        "preprePublishBundle": "gulp clean",
+        "prePublishBundle": "concurrently npm:compile-release 'npx gulp updatePackageJsonForBundle'",
+        "preprePublishNonBundle": "gulp clean",
+        "prePublishNonBundle": "npm run compile-no-watch",
+        "compile": "concurrently 'tsc -watch -p ./' npm:webpack-dev 'npx tsx build/esbuild/build.ts --watch'",
+        "compile-no-watch": "concurrently npm:compile-out npm:webpack-dev npm:esbuild-all",
+        "compile-out": "tsc -p ./",
         "compile-web-test": "cross-env VSC_TEST_BUNDLE=true webpack --mode development --config ./build/webpack/webpack.extension.web.config.js",
         "compile-web-test-watch": "cross-env VSC_TEST_BUNDLE=true webpack --mode development --config ./build/webpack/webpack.extension.web.config.js --stats-error-details --watch --progress",
-        "compile-viewers": "npx tsx build/esbuild/build.ts",
-        "compile-viewers-release": "npx tsx build/esbuild/build.ts --production",
-        "compile-viewers-watch": "npx tsx build/esbuild/build.ts --watch",
+        "esbuild-all": "npx tsx build/esbuild/build.ts",
+        "compile-release": "concurrently npm:compile-out npm:esbuild-release npm:webpack-release",
+        "esbuild-release": "npx tsx build/esbuild/build.ts --production",
+        "webpack-dev": "gulp webpack-dependencies",
+        "webpack-release": "gulp webpack-dependencies",
+        "esbuild-watch": "npx tsx build/esbuild/build.ts --watch",
         "checkDependencies": "gulp checkDependencies",
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js",
         "installPythonLibs": "gulp installPythonLibs",
@@ -2114,9 +2118,7 @@
         "validateTelemetry": "gulp validateTelemetry",
         "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
         "printTestResults": "gulp printTestResults",
-        "setup-precommit-hook": "husky install",
-        "webpack-analyze:node": "npx webpack --json --config build/webpack/webpack.extension.node.config.js > out/stats-node.json && yarn webpack-bundle-analyzer out/stats-node.json",
-        "webpack-analyze:web": "npx webpack --json --config build/webpack/webpack.extension.web.config.js > out/stats-web.json && yarn webpack-bundle-analyzer out/stats-web.json"
+        "setup-precommit-hook": "husky install"
     },
     "dependencies": {
         "@c4312/evt": "^0.1.1",
@@ -2268,13 +2270,12 @@
         "clean-terminal-webpack-plugin": "^3.0.0",
         "codecov": "^3.7.1",
         "colors": "^1.4.0",
-        "concurrently": "^8.2.1",
+        "concurrently": "^8.2.2",
         "copy-webpack-plugin": "^11.0.0",
         "cross-env": "^7.0.3",
         "cross-spawn": "^7.0.3",
         "css-loader": "^6.8.1",
         "dedent": "^0.7.0",
-        "deemon": "^1.4.0",
         "del": "^3.0.0",
         "es-abstract": "^1.19.1",
         "es5-ext": "^0.10.53",
