@@ -30,6 +30,7 @@
             "type": "npm",
             "script": "compile",
             "isBackground": true,
+            "dependsOn": ["package.json.entry.dist"],
             "problemMatcher": ["$tsc-watch"],
             "group": {
                 "kind": "build",
@@ -40,6 +41,7 @@
             "label": "Compile Web Extension",
             "type": "npm",
             "script": "compile-web-watch",
+            "dependsOn": ["package.json.entry.dist"],
             "isBackground": true,
             "group": {
                 "kind": "build",
@@ -52,7 +54,7 @@
             "type": "npm",
             "script": "compile-web-test",
             "dependsOrder": "sequence",
-            "dependsOn": ["Compile"],
+            "dependsOn": ["package.json.entry.out"],
             "isBackground": true,
             "group": {
                 "kind": "build",
@@ -78,6 +80,7 @@
         {
             "type": "npm",
             "script": "launchWebExtension",
+            "dependsOn": ["package.json.entry.dist"],
             "problemMatcher": [],
             "label": "Launch Web Extension (Chrome)"
         },
@@ -85,6 +88,7 @@
             "type": "shell",
             "problemMatcher": [],
             "command": "npm",
+            "dependsOn": ["package.json.entry.dist"],
             "args": ["run", "launchWebExtension", "--", "--browser=webkit", "--port=3111"],
             "label": "Launch Web Extension (Safari)"
         },

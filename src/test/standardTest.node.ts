@@ -62,8 +62,8 @@ async function createTempDir() {
 function updatePackageJson() {
     const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'package.json');
     const packageJson = JSON.parse(fs.readFileSync(file).toString()) as { main: string; browser: string };
-    packageJson.main = './dist/extension.node.js';
-    packageJson.browser = './dist/extension.web.bundle.js';
+    packageJson.main = './out/extension.node.js';
+    packageJson.browser = './out/extension.web.bundle.js';
     fs.writeFileSync(file, JSON.stringify(packageJson, undefined, 4));
 }
 
