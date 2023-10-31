@@ -2119,8 +2119,8 @@
         "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
         "printTestResults": "gulp printTestResults",
         "setup-precommit-hook": "husky install",
-        "updatePackageJsonEntryTest": "node .build/updatePackageJsonEntry.js --test",
-        "updatePackageJsonEntryDev": "node .build/updatePackageJsonEntry.js"
+        "updatePackageJsonEntryTest": "node ./build/updatePackageJsonEntry.js --test",
+        "updatePackageJsonEntryDev": "node ./build/updatePackageJsonEntry.js"
     },
     "dependencies": {
         "@c4312/evt": "^0.1.1",
