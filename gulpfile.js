@@ -393,18 +393,19 @@ function getAllowedWarningsForWebPack(buildConfig) {
 }
 
 gulp.task('compile-release', async () => {
-    await spawnAsync('npm', ['run', 'esbuild-release'], webpackEnv);
+    await spawnAsync('npm', ['run', 'compile-release'], webpackEnv);
 });
 
-gulp.task('compile-dev', async () => {
-    await spawnAsync('npm', ['run', 'compile-no-watch'], webpackEnv);
-});
 
-gulp.task('prePublishBundle', gulp.parallel('compile-release', 'webpack-dependencies', 'updatePackageJsonForBundle'));
+gulp.task('prePublishBundle', async () => {
+    await spawnAsync('npm', ['run', 'prePublishBundle'], webpackEnv);
+});
 
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 
-gulp.task('prePublishNonBundle', gulp.parallel('compile-dev', 'webpack-dependencies'));
+gulp.task('prePublishNonBundle', async () => {
+    await spawnAsync('npm', ['run', 'prePublishNonBundle'], webpackEnv);
+});
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};

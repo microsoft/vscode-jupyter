@@ -58,8 +58,8 @@
         "onWebviewPanel:jupyter-variables",
         "onWebviewPanel:jupyter"
     ],
-    "main": "./dist/extension.node.js",
-    "browser": "./dist/extension.web.bundle.js",
+    "main": "./out/extension.node.js",
+    "browser": "./out/extension.web.bundle.js",
     "capabilities": {
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
@@ -1482,7 +1482,7 @@
                         "debug",
                         "verbose"
                     ],
-                    "description": "%jupyter.configuration.jupyter.logging.level.description%"
+                    "description": "%jupyter.configuration.jupyter.logging.level.description%","scope": "resource"
                 },
                 "jupyter.experiments.optInto": {
                     "type": "array",
@@ -2070,15 +2070,20 @@
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
         "prePublishBundleStable": "cross-env IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=false gulp prePublishBundle",
         "prePublishBundlePreRelease": "cross-env IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=true gulp prePublishBundle",
-        "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "createNycFolder": "gulp createNycFolder",
         "validateTranslationFiles": "gulp validateTranslationFiles",
-        "compile": "concurrently 'tsc -watch -p ./' 'npx gulp webpack-dependencies' 'npx tsx build/esbuild/build.ts --all --watch'",
-        "compile-no-watch": "concurrently 'tsc -p ./' 'npx gulp webpack-dependencies' 'npx tsx build/esbuild/build.ts --all'",
+        "prePublishBundle": "concurrently npm:compile-release 'npx gulp updatePackageJsonForBundle'",
+        "prePublishNonBundle": "gulp clean && npm run compile-no-watch",
+        "compile": "concurrently 'tsc -watch -p ./' npm:webpack-dev 'npx tsx build/esbuild/build.ts --all --watch'",
+        "compile-no-watch": "concurrently npm:compile-out npm:webpack-dev 'npx tsx build/esbuild/build.ts --all'",
+        "compile-out": "tsc -p ./",
         "compile-web-test": "cross-env VSC_TEST_BUNDLE=true webpack --mode development --config ./build/webpack/webpack.extension.web.config.js",
         "compile-web-test-watch": "cross-env VSC_TEST_BUNDLE=true webpack --mode development --config ./build/webpack/webpack.extension.web.config.js --stats-error-details --watch --progress",
         "esbuild-all": "npx tsx build/esbuild/build.ts --all",
+        "compile-release": "concurrently npm:compile-out npm:esbuild-release npm:webpack-release",
         "esbuild-release": "npx tsx build/esbuild/build.ts --all --production",
+        "webpack-dev": "gulp webpack-dependencies",
+        "webpack-release": "gulp webpack-dependencies",
         "esbuild-watch": "npx tsx build/esbuild/build.ts --all --watch",
         "checkDependencies": "gulp checkDependencies",
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js",
