@@ -2077,7 +2077,7 @@
         "preprePublishNonBundle": "gulp clean",
         "prePublishNonBundle": "npm run compile-no-watch",
         "compile": "concurrently 'tsc -watch -p ./' npm:webpack-dev 'npx tsx build/esbuild/build.ts --watch'",
-        "compile-no-watch": "concurrently npm:compile-out npm:webpack-dev 'npx tsx build/esbuild/build.ts'",
+        "compile-no-watch": "concurrently npm:compile-out npm:webpack-dev npm:esbuild-all",
         "compile-out": "tsc -p ./",
         "compile-web-test": "cross-env VSC_TEST_BUNDLE=true webpack --mode development --config ./build/webpack/webpack.extension.web.config.js",
         "compile-web-test-watch": "cross-env VSC_TEST_BUNDLE=true webpack --mode development --config ./build/webpack/webpack.extension.web.config.js --stats-error-details --watch --progress",
