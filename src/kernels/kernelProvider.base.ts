@@ -138,7 +138,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     protected disposeOldKernel(notebook: NotebookDocument) {
         const kernelToDispose = this.kernelsByNotebook.get(notebook);
         if (kernelToDispose) {
-            traceInfoIfCI(
+            traceVerbose(
                 `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${notebook.isClosed}`
             );
             this.kernelsById.delete(kernelToDispose.kernel.id);
@@ -201,7 +201,14 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
         private readonly notebook: IVSCodeNotebook
     ) {
         this.asyncDisposables.push(this);
-        this.notebook.onDidCloseNotebookDocument((e) => this.disposeOldKernel(e.uri), this, disposables);
+        this.notebook.onDidCloseNotebookDocument(
+            (e) => {
+                traceVerbose(`Notebook document ${getDisplayPath(e.uri)} got closed`);
+                this.disposeOldKernel(e.uri);
+            },
+            this,
+            disposables
+        );
         disposables.push(this._onDidDisposeKernel);
         disposables.push(this._onDidRestartKernel);
         disposables.push(this._onKernelStatusChanged);
