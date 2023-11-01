@@ -87,7 +87,6 @@ export class UserJupyterServerUrlProvider
     extends DisposableBase
     implements IExtensionSyncActivationService, IDisposable, JupyterServerProvider, JupyterServerCommandProvider
 {
-    readonly id: string = UserJupyterServerPickerProviderId;
     public readonly extensionId: string = JVSC_EXTENSION_ID;
     readonly documentation = Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer');
     readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName;
@@ -125,7 +124,10 @@ export class UserJupyterServerUrlProvider
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IJupyterServerProviderRegistry)
-        private readonly jupyterServerProviderRegistry: IJupyterServerProviderRegistry
+        private readonly jupyterServerProviderRegistry: IJupyterServerProviderRegistry,
+        @optional()
+        @inject(Date.now().toString()) // No such item to be injected
+        public readonly id: string = UserJupyterServerPickerProviderId
     ) {
         super();
         disposables.push(this);
