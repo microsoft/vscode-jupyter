@@ -169,7 +169,7 @@ function createConfig(
     const releaseVersionScriptFile = isPreRelease ? 'release.pre-release.js' : 'release.stable.js';
     const alias = {
         moment: path.join(extensionFolder, 'build', 'webpack', 'moment.js'),
-        'vscode-jupyter-relese-version': path.join(__dirname, releaseVersionScriptFile)
+        'vscode-jupyter-release-version': path.join(__dirname, releaseVersionScriptFile)
     };
     return {
         entryPoints: [source],

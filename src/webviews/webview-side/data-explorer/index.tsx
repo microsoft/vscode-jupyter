@@ -7,10 +7,6 @@ const jquery = require('slickgrid/lib/jquery-1.11.2.min');
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).$ = jquery;
 
-// This must be on top, do not change. Required by webpack.
-import '../common/main';
-// This must be on top, do not change. Required by webpack.
-
 // eslint-disable-next-line import/order
 import '../common/index.css';
 

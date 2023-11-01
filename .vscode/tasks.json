@@ -36,7 +36,6 @@
         {
             "type": "npm",
             "script": "launchWebExtension",
-            "dependsOn": ["package.json.entry.dist"],
             "problemMatcher": [],
             "label": "Launch Web Extension (Chrome)"
         },
@@ -44,7 +43,6 @@
             "type": "shell",
             "problemMatcher": [],
             "command": "npm",
-            "dependsOn": ["package.json.entry.dist"],
             "args": ["run", "launchWebExtension", "--", "--browser=webkit", "--port=3111"],
             "label": "Launch Web Extension (Safari)"
         },

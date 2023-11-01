@@ -24,9 +24,9 @@ import {
 } from 'vscode';
 
 import { IDocumentManager } from '../../platform/common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { MockDocument } from './mockDocument';
 import { MockEditor } from './mockTextEditor';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 
@@ -144,7 +144,7 @@ export class MockDocumentManager implements IDocumentManager {
 
     private saveDocument = (doc: TextDocument): Promise<boolean> => {
         // Create a new document with the contents of the doc passed in
-        this.addDocument(doc.getText(), path.join(EXTENSION_ROOT_DIR, 'baz.py'));
+        this.addDocument(doc.getText(), path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'baz.py'));
         return Promise.resolve(true);
     };
 }

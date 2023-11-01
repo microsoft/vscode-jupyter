@@ -19,7 +19,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { dispose, splitLines } from '../../platform/common/helpers';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 import { sleep } from '../core';
-import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { noop } from '../../platform/common/utils/misc';
 
 function getPythonPath(): string {
@@ -244,7 +243,7 @@ export class JupyterServer {
                 }
                 if (useCert) {
                     const pemFile = path.join(
-                        EXTENSION_ROOT_DIR,
+                        EXTENSION_ROOT_DIR_FOR_TESTS,
                         'src',
                         'test',
                         'datascience',
@@ -252,7 +251,7 @@ export class JupyterServer {
                         'jcert.pem'
                     );
                     const keyFile = path.join(
-                        EXTENSION_ROOT_DIR,
+                        EXTENSION_ROOT_DIR_FOR_TESTS,
                         'src',
                         'test',
                         'datascience',
