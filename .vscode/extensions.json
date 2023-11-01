@@ -7,6 +7,6 @@
         "editorconfig.editorconfig",
         "esbenp.prettier-vscode",
         "hbenl.vscode-mocha-test-adapter",
-        "ms-python.flake8"
+        "ms-python.black"
     ]
 }

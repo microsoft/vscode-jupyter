@@ -46,7 +46,9 @@
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
     "python.testing.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
-    "python.formatting.provider": "black",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingImports": "none",
+    },
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",
@@ -64,8 +66,5 @@
     "mochaExplorer.ui": "tdd",
     "mochaExplorer.nodeArgv": [
         "--enable-source-maps"
-    ],
-    "flake8.args": [
-        "--max-line-length=120"
     ]
 }

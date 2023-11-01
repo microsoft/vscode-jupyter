@@ -6,6 +6,7 @@
 # ingore flake8 undefined variable errors since it doesn't like these temporary imports
 # flake8: noqa: F821
 
+
 def __vsc_print_nbextension_widgets():
     import os as __vscode_os
     import site as __vscode_site
