@@ -20,8 +20,6 @@ import { waitForVariablesToMatch } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../platform/logging';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { Commands } from '../../../platform/common/constants';
 import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
@@ -34,7 +32,6 @@ suite('VariableView @variableViewer', function () {
     let vscodeNotebook: IVSCodeNotebook;
     let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
-    let activeInterpreter: PythonEnvironment;
     let kernelProvider: IKernelProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
@@ -51,10 +48,6 @@ suite('VariableView @variableViewer', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const interpreter = await api.serviceContainer
-            .get<IInterpreterService>(IInterpreterService)
-            .getActiveInterpreter();
-        activeInterpreter = interpreter!;
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
