@@ -557,10 +557,6 @@ suite('Kernel Execution @kernelCore', function () {
         ]);
     });
     test('More messages from background threads', async function () {
-        if (IS_REMOTE_NATIVE_TEST()) {
-            //https://github.com/microsoft/vscode-jupyter/issues/7620 test failing for remote, but seems to work in manual test
-            return this.skip();
-        }
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
         const cell = await notebook.appendCodeCell(
             dedent`
