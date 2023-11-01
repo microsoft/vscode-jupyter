@@ -95,7 +95,6 @@ export interface IJupyterSettings {
     readonly interactiveWindowViewColumn: InteractiveWindowViewColumn;
     readonly disableZMQSupport: boolean;
     readonly forceIPyKernelDebugger?: boolean;
-    readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
     readonly pythonCompletionTriggerCharacters?: string;
@@ -111,11 +110,6 @@ export interface IJupyterSettings {
     readonly formatStackTraces: boolean;
 }
 
-export interface IVariableTooltipFields {
-    [languageKey: string]: {
-        [typeNameKey: string]: string[]; // List of attributes
-    };
-}
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {
     readonly onDidChange: Event<void>;

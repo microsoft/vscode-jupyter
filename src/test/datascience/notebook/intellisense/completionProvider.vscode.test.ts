@@ -57,6 +57,9 @@ import { Settings } from '../../../../platform/common/constants';
             let previousJediSetting: boolean | undefined;
 
             suiteSetup(async function () {
+                if (IS_REMOTE_NATIVE_TEST()) {
+                    return this.skip();
+                }
                 traceInfo(`Start Suite Code Completion via Jupyter`);
                 this.timeout(120_000);
                 jupyterConfig = workspace.getConfiguration('jupyter', undefined);
@@ -67,10 +70,6 @@ import { Settings } from '../../../../platform/common/constants';
                 await jupyterConfig.update('enableExtendedKernelCompletions', useJedi, ConfigurationTarget.Global);
                 await jupyterConfig.update('pythonCompletionTriggerCharacters', '.%"\'', ConfigurationTarget.Global);
                 api = await initialize();
-                if (IS_REMOTE_NATIVE_TEST()) {
-                    // https://github.com/microsoft/vscode-jupyter/issues/6331
-                    return this.skip();
-                }
                 await startJupyterServer();
                 await prewarmNotebooks();
                 sinon.restore();
