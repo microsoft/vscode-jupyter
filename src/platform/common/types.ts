@@ -110,7 +110,6 @@ export interface IJupyterSettings {
     readonly formatStackTraces: boolean;
 }
 
-
 export interface IWatchableJupyterSettings extends IJupyterSettings {
     readonly onDidChange: Event<void>;
     createSystemVariables(resource: Resource): ISystemVariables;
