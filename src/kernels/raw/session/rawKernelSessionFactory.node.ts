@@ -6,116 +6,87 @@ import { injectable, inject } from 'inversify';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { IRawKernelSession, LocaLKernelSessionCreationOptions, LocalKernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawKernelSessionFactory } from '../types';
-import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
+import { isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
 import { RawJupyterSessionWrapper } from './rawJupyterSession.node';
 import { RawSessionConnection } from './rawSessionConnection.node';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 
-/**
- * Implements IRawNotebookProvider for raw kernel connections.
- */
 @injectable()
 export class RawKernelSessionFactory implements IRawKernelSessionFactory {
-    private sessions = new Set<Promise<IRawKernelSession>>();
+    private sessions = new Set<IRawKernelSession>();
+    private disposables: IDisposable[] = [];
     private disposed = false;
     constructor(
-        @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        this.asyncRegistry.push(this);
+        disposables.push(this);
     }
 
-    public async dispose(): Promise<void> {
+    public dispose() {
         if (!this.disposed) {
             this.disposed = true;
-            const notebooks = await Promise.all([...this.sessions.values()]);
-            await Promise.all(
-                notebooks.map((session) =>
-                    session
-                        .shutdown()
-                        .catch(noop)
-                        .finally(() => session.dispose())
-                )
+            Array.from(this.sessions.values()).map((session) =>
+                session
+                    .shutdown()
+                    .catch(noop)
+                    .finally(() => session.dispose())
             );
+            dispose(this.disposables);
         }
     }
 
     public async create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession> {
         traceVerbose(`Creating raw notebook for resource '${getDisplayPath(options.resource)}'`);
-        const sessionPromise = createDeferred<IRawKernelSession>();
-        this.trackDisposable(sessionPromise.promise);
-        let rawSession: RawJupyterSessionWrapper | undefined;
+        let session: RawSessionConnection | undefined;
 
-        try {
-            const [workingDirectory] = await Promise.all([
-                this.workspaceService.computeWorkingDirectory(options.resource).then((dir) => vscode.Uri.file(dir)),
+        const [workingDirectory] = await Promise.all([
+            raceCancellationError(
+                options.token,
+                this.workspaceService.computeWorkingDirectory(options.resource).then((dir) => vscode.Uri.file(dir))
+            ),
+            raceCancellationError(
+                options.token,
                 trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection })
-            ]);
-            Cancellation.throwIfCanceled(options.token);
-            const launchTimeout = this.configService.getSettings(options.resource).jupyterLaunchTimeout;
-            const session = new RawSessionConnection(
-                options.resource,
-                this.kernelLauncher,
-                workingDirectory,
-                options.kernelConnection as LocalKernelConnectionMetadata,
-                launchTimeout,
-                (options.resource?.path || '').toLowerCase().endsWith('.ipynb') ? 'notebook' : 'console'
-            );
-            try {
-                await raceCancellationError(options.token, session.startKernel(options));
-            } catch (error) {
-                if (isCancellationError(error) || options.token.isCancellationRequested) {
-                    traceVerbose('Starting of raw session cancelled by user');
-                } else {
-                    traceError(`Failed to connect raw kernel session: ${error}`);
-                }
-                throw error;
+            )
+        ]);
+        const launchTimeout = this.configService.getSettings(options.resource).jupyterLaunchTimeout;
+        session = new RawSessionConnection(
+            options.resource,
+            this.kernelLauncher,
+            workingDirectory,
+            options.kernelConnection as LocalKernelConnectionMetadata,
+            launchTimeout,
+            (options.resource?.path || '').toLowerCase().endsWith('.ipynb') ? 'notebook' : 'console'
+        );
+        try {
+            await raceCancellationError(options.token, session.startKernel(options));
+        } catch (error) {
+            if (isCancellationError(error) || options.token.isCancellationRequested) {
+                traceVerbose('Starting of raw session cancelled by user');
+            } else {
+                traceError(`Failed to connect raw kernel session: ${error}`);
             }
-
-            rawSession = new RawJupyterSessionWrapper(session, options.resource, options.kernelConnection);
-
-            if (options.token.isCancellationRequested) {
-                throw new vscode.CancellationError();
-            }
-            sessionPromise.resolve(rawSession);
-        } catch (ex) {
             // Make sure we shut down our session in case we started a process
-            rawSession
+            session
                 ?.shutdown()
-                .catch((error) => {
-                    traceError(`Failed to dispose of raw session on launch error: ${error} `);
-                })
-                .finally(() => rawSession?.dispose());
-            // If there's an error, then reject the promise that is returned.
-            // This original promise must be rejected as it is cached (check `setNotebook`).
-            sessionPromise.reject(ex);
+                .catch((error) => traceError(`Failed to dispose of raw session on launch error: ${error} `))
+                .finally(() => session?.dispose())
+                .catch(noop);
+            throw error;
         }
 
-        return sessionPromise.promise;
-    }
+        const rawSession = new RawJupyterSessionWrapper(session, options.resource, options.kernelConnection);
+        rawSession.onDidDispose(() => this.sessions.delete(rawSession), this, this.disposables);
 
-    private trackDisposable(sessionPromise: Promise<IRawKernelSession>) {
-        sessionPromise
-            .then((session) => {
-                session.onDidDispose(
-                    () => {
-                        this.sessions.delete(sessionPromise);
-                    },
-                    this,
-                    this.disposables
-                );
-            })
-            .catch(noop);
-
-        // Save the session
-        this.sessions.add(sessionPromise);
+        this.sessions.add(rawSession);
+        return rawSession;
     }
 }
