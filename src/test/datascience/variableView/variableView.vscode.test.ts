@@ -193,10 +193,6 @@ suite('VariableView @variableViewer', function () {
 
     // Test that we are working will a larger set of basic types
     test('VariableView basic types A (webview-test)', async function () {
-        if (activeInterpreter.version?.major === 3 && activeInterpreter.version.minor >= 10) {
-            // https://github.com/microsoft/vscode-jupyter/issues/8523
-            return this.skip();
-        }
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
