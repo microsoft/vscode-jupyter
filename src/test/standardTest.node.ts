@@ -59,14 +59,6 @@ async function createTempDir() {
     });
 }
 
-// function updatePackageJson() {
-//     const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'package.json');
-//     const packageJson = JSON.parse(fs.readFileSync(file).toString()) as { main: string; browser: string };
-//     packageJson.main = './out/extension.node.js';
-//     packageJson.browser = './out/extension.web.bundle.js';
-//     fs.writeFileSync(file, JSON.stringify(packageJson, undefined, 4));
-// }
-
 /**
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
@@ -167,7 +159,6 @@ async function getExtensionsDir(): Promise<string> {
 async function start() {
     console.log('*'.repeat(100));
     console.log('Start Standard tests');
-    // updatePackageJson();
     const platform = computePlatform();
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform);
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];

@@ -184,22 +184,6 @@ gulp.task('webpack-dependencies', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
 });
 
-gulp.task('webpack-extension-node', async () => {
-    // No need to build dependencies for web.
-    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
-        return;
-    }
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.node.config.js', 'extension');
-});
-
-gulp.task('webpack-extension-web', async () => {
-    // No need to build dependencies for desktop.
-    if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
-        return;
-    }
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js', 'extension');
-});
-
 function modifyJson(jsonFile, cb) {
     const json = fs.readFileSync(jsonFile).toString('utf-8');
     const [key, value] = cb(json);
@@ -391,10 +375,6 @@ function getAllowedWarningsForWebPack(buildConfig) {
             throw new Error('Unknown WebPack Configuration');
     }
 }
-
-gulp.task('compile-release', async () => {
-    await spawnAsync('npm', ['run', 'compile-release'], webpackEnv);
-});
 
 gulp.task('prePublishBundle', async () => {
     await spawnAsync('npm', ['run', 'prePublishBundle'], webpackEnv);

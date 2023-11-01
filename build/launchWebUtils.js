@@ -11,12 +11,17 @@ const { noop } = require('../out/test/core');
 const { isCI } = require('./constants');
 const extensionDevelopmentPath = path.resolve(__dirname, '../');
 const packageJsonFile = path.join(extensionDevelopmentPath, 'package.json');
-const yargs = require('yargs/yargs');
-const { hideBin } = require('yargs/helpers');
-const argv = yargs(hideBin(process.argv)).argv;
 
-const browserType = argv.browser || argv.browserType || 'chromium';
-const port = argv.port || 3000;
+const browserType =
+    process.argv
+        .filter((arg) => arg.startsWith('--browser'))
+        .map((arg) => arg.split('=')[1])
+        .pop() || 'chromium';
+const port =
+    process.argv
+        .filter((arg) => arg.startsWith('--port'))
+        .map((arg) => parseInt(arg.split('=')[1]))
+        .pop() || 3000;
 
 exports.launch = async function launch(launchTests) {
     let exitCode = 0;
