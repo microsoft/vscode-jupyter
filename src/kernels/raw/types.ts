@@ -61,6 +61,6 @@ export interface IRawNotebookSupportedService {
 }
 
 export const IRawKernelSessionFactory = Symbol('IRawKernelSessionFactory');
-export interface IRawKernelSessionFactory extends IAsyncDisposable {
+export interface IRawKernelSessionFactory {
     create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession>;
 }
