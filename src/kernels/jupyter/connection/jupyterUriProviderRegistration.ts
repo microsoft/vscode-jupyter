@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Disposable, EventEmitter, Memento, QuickPickItem } from 'vscode';
+import { EventEmitter, Memento, QuickPickItem } from 'vscode';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../../platform/common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
@@ -11,10 +11,10 @@ import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration, JupyterSe
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError, traceVerbose } from '../../../platform/logging';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCommand } from '../../../api';
-import { Disposables } from '../../../platform/common/utils';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { stripCodicons } from '../../../platform/common/helpers';
+import { DisposableBase } from '../../../platform/common/utils/lifecycle';
 
 export const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
 function getProviderId(extensionId: string, id: string) {
@@ -25,10 +25,10 @@ function getProviderId(extensionId: string, id: string) {
  */
 @injectable()
 export class JupyterUriProviderRegistration
-    extends Disposables
+    extends DisposableBase
     implements IJupyterUriProviderRegistration, IExtensionSyncActivationService
 {
-    private readonly _onProvidersChanged = new EventEmitter<void>();
+    private readonly _onProvidersChanged = this._register(new EventEmitter<void>());
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
     private _providers = new Map<string, JupyterUriProviderWrapper>();
     private extensionIdsThatHaveProviders = new Set<string>();
@@ -45,8 +45,6 @@ export class JupyterUriProviderRegistration
     ) {
         super();
         disposables.push(this);
-        this.disposables.push(this._onProvidersChanged);
-        this.disposables.push(new Disposable(() => this._providers.forEach((p) => p.dispose())));
     }
 
     public activate(): void {
@@ -83,12 +81,11 @@ export class JupyterUriProviderRegistration
 
         const disposable = {
             dispose: () => {
-                this._providers.get(id)?.dispose();
                 this._providers.delete(id);
                 this._onProvidersChanged.fire();
             }
         };
-        this.disposables.push(disposable);
+        this._register(disposable);
         return disposable;
     }
     public async getJupyterServerUri(
@@ -191,7 +188,7 @@ const handlesForWhichWeHaveSentTelemetry = new Set<string>();
  * This class wraps an IJupyterUriProvider provided by another extension. It allows us to show
  * extra data on the other extension's UI.
  */
-class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterUriProvider {
+class JupyterUriProviderWrapper implements IInternalJupyterUriProvider {
     public readonly id: string;
     public get displayName() {
         return stripCodicons(this.provider.displayName);
@@ -215,7 +212,6 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
         private readonly provider: IJupyterUriProvider,
         public extensionId: string
     ) {
-        super();
         this.id = this.provider.id;
 
         if (provider.getHandles) {

@@ -19,15 +19,15 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { PythonEnvironmentQuickPickItemProvider } from '../../../platform/interpreter/pythonEnvironmentQuickPickProvider.node';
-import { Disposables } from '../../../platform/common/utils';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { noop } from '../../../platform/common/utils/misc';
 import { findPreferredPythonEnvironment } from '../preferredKernelConnectionService.node';
 import { Commands } from '../../../platform/common/constants';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { traceError } from '../../../platform/logging';
+import { DisposableBase } from '../../../platform/common/utils/lifecycle';
 
-export class LocalPythonKernelSelector extends Disposables {
+export class LocalPythonKernelSelector extends DisposableBase {
     private readonly pythonEnvPicker: BaseProviderBasedQuickPick<Environment>;
     private readonly provider: PythonEnvironmentQuickPickItemProvider;
     private pythonApi?: PythonExtension;
@@ -43,15 +43,16 @@ export class LocalPythonKernelSelector extends Disposables {
         this.provider = ServiceContainer.instance
             .get<PythonEnvironmentQuickPickItemProvider>(PythonEnvironmentQuickPickItemProvider)
             .withFilter((item) => !filter.isPythonEnvironmentExcluded(item));
-        this.pythonEnvPicker = new BaseProviderBasedQuickPick(
-            Promise.resolve(this.provider),
-            pythonEnvironmentQuickPick,
-            getPythonEnvironmentCategory,
-            { supportsBack: true },
-            undefined,
-            DataScience.quickPickSelectPythonEnvironmentTitle
+        this.pythonEnvPicker = this._register(
+            new BaseProviderBasedQuickPick(
+                Promise.resolve(this.provider),
+                pythonEnvironmentQuickPick,
+                getPythonEnvironmentCategory,
+                { supportsBack: true },
+                undefined,
+                DataScience.quickPickSelectPythonEnvironmentTitle
+            )
         );
-        this.disposables.push(this.pythonEnvPicker);
         let creationCommandAdded = false;
         const addCreationCommand = () => {
             if (creationCommandAdded) {
@@ -67,14 +68,15 @@ export class LocalPythonKernelSelector extends Disposables {
             addCreationCommand();
         }
         let installPythonCommand = { dispose: noop };
-        const onDidChangeHandler = this.provider.onDidChange(() => {
-            if (this.provider.items.length) {
-                addCreationCommand();
-                installPythonCommand.dispose();
-                onDidChangeHandler.dispose();
-            }
-        });
-        this.disposables.push(onDidChangeHandler);
+        const onDidChangeHandler = this._register(
+            this.provider.onDidChange(() => {
+                if (this.provider.items.length) {
+                    addCreationCommand();
+                    installPythonCommand.dispose();
+                    onDidChangeHandler.dispose();
+                }
+            })
+        );
         this.provider
             .refresh()
             .finally(() => {
@@ -109,16 +111,17 @@ export class LocalPythonKernelSelector extends Disposables {
             }
             this.pythonApi = api;
             computePreferredEnv();
-            this.disposables.push(api.environments.onDidChangeActiveEnvironmentPath(computePreferredEnv));
-            this.disposables.push(api.environments.onDidChangeEnvironments(computePreferredEnv));
+            this._register(api.environments.onDidChangeActiveEnvironmentPath(computePreferredEnv));
+            this._register(api.environments.onDidChangeEnvironments(computePreferredEnv));
         };
         if (pythonExtensionChecker.isPythonExtensionInstalled) {
             pythonApiProvider.getNewApi().then(setupApi).catch(noop);
         } else {
-            pythonExtensionChecker.onPythonExtensionInstallationStatusChanged(
-                () => pythonApiProvider.getNewApi().then(setupApi),
-                this,
-                this.disposables
+            this._register(
+                pythonExtensionChecker.onPythonExtensionInstallationStatusChanged(
+                    () => pythonApiProvider.getNewApi().then(setupApi),
+                    this
+                )
             );
         }
 
@@ -175,8 +178,7 @@ export class LocalPythonKernelSelector extends Disposables {
             return;
         }
 
-        const creator = new PythonEnvKernelConnectionCreator(this.notebook, this.token);
-        this.disposables.push(creator);
+        const creator = this._register(new PythonEnvKernelConnectionCreator(this.notebook, this.token));
         const result = await creator.createPythonEnvFromKernelPicker();
         if (!result) {
             return InputFlowAction.cancel;

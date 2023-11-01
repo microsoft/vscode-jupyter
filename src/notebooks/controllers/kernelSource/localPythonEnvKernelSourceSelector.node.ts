@@ -10,7 +10,6 @@ import { IDisposable, IDisposableRegistry } from '../../../platform/common/types
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
-import { Disposables } from '../../../platform/common/utils';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { pythonEnvToJupyterEnv } from '../../../platform/api/pythonApi';
@@ -22,6 +21,7 @@ import { KernelFinder } from '../../../kernels/kernelFinder';
 import { LocalPythonKernelSelector } from './localPythonKernelSelector.node';
 import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { ILocalPythonNotebookKernelSourceSelector } from '../types';
+import { DisposableBase } from '../../../platform/common/utils/lifecycle';
 
 export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectionMetadata> = {
     notebook: NotebookDocument;
@@ -32,7 +32,7 @@ export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectio
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
 export class LocalPythonEnvNotebookKernelSourceSelector
-    extends Disposables
+    extends DisposableBase
     implements
         ILocalPythonNotebookKernelSourceSelector,
         IContributedKernelFinder<PythonKernelConnectionMetadata>,
@@ -42,12 +42,14 @@ export class LocalPythonEnvNotebookKernelSourceSelector
     id: string = ContributedKernelFinderKind.LocalPythonEnvironment;
     displayName: string = DataScience.localPythonEnvironments;
 
-    private _onDidChangeKernels = new EventEmitter<{
-        removed?: { id: string }[];
-    }>();
+    private _onDidChangeKernels = this._register(
+        new EventEmitter<{
+            removed?: { id: string }[];
+        }>()
+    );
     onDidChangeKernels = this._onDidChangeKernels.event;
     private _kernels = new Map<string, PythonKernelConnectionMetadata>();
-    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    private readonly _onDidChangeStatus = this._register(new EventEmitter<void>());
     private _status: 'idle' | 'discovering' = 'idle';
     public get status() {
         return this._status;
@@ -73,29 +75,26 @@ export class LocalPythonEnvNotebookKernelSourceSelector
     ) {
         super();
         disposables.push(this);
-        this.disposables.push(this._onDidChangeKernels);
-        this.disposables.push(this._onDidChangeStatus);
         kernelFinder.registerKernelFinder(this);
     }
     activate() {
-        this.promiseMonitor.onStateChange(
-            () => (this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering'),
-            this,
-            this.disposables
+        this._register(
+            this.promiseMonitor.onStateChange(
+                () => (this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering'),
+                this
+            )
         );
         if (this.checker.isPythonExtensionInstalled) {
             this.getKernelSpecsDir().catch(noop);
             this.hookupPythonApi().catch(noop);
         } else {
-            this.checker.onPythonExtensionInstallationStatusChanged(
-                () => {
+            this._register(
+                this.checker.onPythonExtensionInstallationStatusChanged(() => {
                     if (this.checker.isPythonExtensionInstalled) {
                         this.getKernelSpecsDir().catch(noop);
                         this.hookupPythonApi().catch(noop);
                     }
-                },
-                this,
-                this.disposables
+                }, this)
             );
         }
     }
@@ -162,8 +161,8 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             return;
         }
         api.environments.known.map((e) => this.buildDummyEnvironment(e).catch(noop));
-        api.environments.onDidChangeEnvironments(
-            (e) => {
+        this._register(
+            api.environments.onDidChangeEnvironments((e) => {
                 if (e.type === 'remove') {
                     const kernel = this._kernels.get(e.env.id);
                     if (kernel) {
@@ -173,9 +172,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
                 } else {
                     this.buildDummyEnvironment(e.env).catch(noop);
                 }
-            },
-            this,
-            this.disposables
+            }, this)
         );
     }
     private async buildDummyEnvironment(e: Environment) {

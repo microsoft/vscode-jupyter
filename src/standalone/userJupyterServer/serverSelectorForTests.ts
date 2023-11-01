@@ -9,15 +9,15 @@ import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSe
 import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { computeHash } from '../../platform/common/crypto';
-import { Disposables } from '../../platform/common/utils';
 import { IJupyterServerUri } from '../../api';
+import { DisposableBase } from '../../platform/common/utils/lifecycle';
 
 /**
  * Registers commands to allow the user to set the remote server URI.
  */
 @injectable()
 export class JupyterServerSelectorCommand
-    extends Disposables
+    extends DisposableBase
     implements IExtensionSyncActivationService, IInternalJupyterUriProvider
 {
     private handleMappings = new Map<string, { uri: Uri; server: IJupyterServerUri }>();
@@ -34,8 +34,8 @@ export class JupyterServerSelectorCommand
     public readonly displayName = 'Jupyter Server for Testing';
     public readonly onDidChangeHandles = this._onDidChangeHandles.event;
     public activate() {
-        this.disposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
-        this.disposables.push(commands.registerCommand('jupyter.selectjupyteruri', this.selectJupyterUri, this));
+        this._register(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
+        this._register(commands.registerCommand('jupyter.selectjupyteruri', this.selectJupyterUri, this));
     }
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         if (!this.handleMappings.has(handle)) {
