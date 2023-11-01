@@ -91,7 +91,7 @@ jobs:
               repo: context.repo.repo,
               assignees: ['amunger']
             })
-      - name: Tuesday (Rob)
+      - name: Tuesday (Aaron)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 1 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 2 && steps.hour.outputs.hour < 16)
         uses: actions/github-script@v6.4.1
         with:
@@ -101,7 +101,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['roblourens ']
+              assignees: ['amunger ']
             })
       - name: Wednesday (Don)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 2 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 3 && steps.hour.outputs.hour < 16)
