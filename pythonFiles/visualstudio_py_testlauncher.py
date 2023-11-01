@@ -23,12 +23,11 @@ import json
 import unittest
 import socket
 import traceback
-from types import CodeType, FunctionType
 import signal
 
 try:
     import thread
-except:
+except Exception:
     import _thread as thread
 
 
@@ -116,7 +115,7 @@ class _IpcChannel(object):
 
     def readSocket(self):
         try:
-            data = self.socket.recv(1024)
+            self.socket.recv(1024)
             self.callback()
         except OSError:
             if not self._closed:
@@ -191,10 +190,10 @@ class VsTestResult(unittest.TextTestResult):
 def stopTests():
     try:
         os.kill(os.getpid(), signal.SIGUSR1)
-    except:
+    except Exception:
         try:
             os.kill(os.getpid(), signal.SIGTERM)
-        except:
+        except Exception:
             pass
 
 
@@ -272,10 +271,10 @@ def main():
     if opts.result_port:
         try:
             signal.signal(signal.SIGUSR1, signal_handler)
-        except:
+        except Exception:
             try:
                 signal.signal(signal.SIGTERM, signal_handler)
-            except:
+            except Exception:
                 pass
         _channel = _IpcChannel(
             socket.create_connection(("127.0.0.1", opts.result_port)), stopTests
@@ -312,7 +311,7 @@ def main():
                 cov = coverage.coverage(opts.coverage)
                 cov.load()
                 cov.start()
-            except:
+            except Exception:
                 pass
         if opts.tests is None and opts.testFile is None:
             if opts.us is None:
@@ -343,8 +342,7 @@ def main():
                                 if testId == opts.tests[0]:
                                     tests = unittest.TestSuite([m])
                                     break
-                        except Exception as err:
-                            errorMessage = traceback.format_exception()
+                        except Exception:
                             pass
                 if tests is None:
                     tests = suite
@@ -381,11 +379,11 @@ def main():
         # prevent generation of the error 'Error in sys.exitfunc:'
         try:
             sys.stdout.close()
-        except:
+        except Exception:
             pass
         try:
             sys.stderr.close()
-        except:
+        except Exception:
             pass
 
 

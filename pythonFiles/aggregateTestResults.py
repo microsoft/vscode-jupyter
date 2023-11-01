@@ -1,10 +1,11 @@
 # %%
 import io
+import os
 import json
 import sys
 import zipfile
-
 import requests
+from datetime import date, datetime, timedelta
 
 authtoken = sys.argv[1]
 print("Using authtoken with prefix: " + authtoken[:4])
@@ -142,7 +143,7 @@ def flattenTestResultsToFile(runResults, filename):
 
 
 # %%
-from datetime import date, datetime, timedelta
+
 
 inputDate = ""
 if len(sys.argv) > 2:
@@ -170,8 +171,6 @@ resultFile = f'AggTestResults-{collectionDate.strftime("%Y-%m-%d")}.json'
 allTests = flattenTestResultsToFile(runResults, resultFile)
 
 # %%
-import os
-
 file_size = os.path.getsize(resultFile)
 print(f"Wrote {file_size} bytes to {resultFile}")
 

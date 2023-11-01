@@ -3,6 +3,9 @@
 
 # Source borrowed from site-packages/jupyter_core/paths.py
 
+# ingore flake8 undefined variable errors since it doesn't like these temporary imports
+# flake8: noqa: F821
+
 
 def __vsc_print_nbextension_widgets():
     import os as __vscode_os
@@ -192,11 +195,12 @@ def __vsc_print_nbextension_widgets():
                 __vscode_widget_folder = __vsc_file.replace(
                     __vsc_nbextension_Folder, ""
                 )
-                if not __vscode_widget_folder in __vsc_nbextension_widgets:
+                if __vscode_widget_folder not in __vsc_nbextension_widgets:
                     __vsc_nbextension_widgets.append(__vscode_widget_folder)
 
         print(__vsc_nbextension_widgets)
-    except:
+
+    except Exception:
         pass
 
     # We need to ensure these variables don't interfere with the variable viewer, hence delete them after use.
