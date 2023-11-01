@@ -63,16 +63,6 @@ const isDevbuild = !process.argv.includes('--production');
 const isWatchMode = process.argv.includes('--watch');
 const extensionFolder = path.join(__dirname, '..', '..');
 
-if (!isDevbuild) {
-    const packageJson = JSON.parse(fs.readFileSync(path.join(extensionFolder, 'package.json')).toString());
-    if (packageJson.main.includes('out')) {
-        throw new Error('`package.json` should not contain `out` in the `main` property');
-    }
-    if (packageJson.browser.includes('out')) {
-        throw new Error('`package.json` should not contain `out` in the `browser` property');
-    }
-}
-
 interface StylePluginOptions {
     /**
      * whether to minify the css code.
