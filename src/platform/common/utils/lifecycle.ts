@@ -181,6 +181,7 @@ export abstract class ObservableDisposable extends DisposableBase {
     constructor() {
         super();
         this._onDidDispose = new EventEmitter<void>();
+        this.onDidDispose = this._onDidDispose.event;
     }
 
     override dispose() {

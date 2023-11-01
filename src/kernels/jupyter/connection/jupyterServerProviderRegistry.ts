@@ -364,27 +364,16 @@ export class JupyterServerProviderRegistry extends DisposableBase implements IJu
         }
         const collection = new JupyterServerCollectionImpl(extensionId, id, label, serverProvider);
         this._collections.set(extId, collection);
-        let uriRegistration: IDisposable | undefined;
-        let adapter: JupyterUriProviderAdaptor | undefined;
-        this._register(
-            collection.onDidChangeProvider(() => {
-                if (collection.serverProvider) {
-                    adapter?.dispose();
-                    uriRegistration?.dispose();
-                    adapter = new JupyterUriProviderAdaptor(collection, extensionId, this.jupyterConnection);
-                    uriRegistration = this._register(
-                        this.jupyterUriProviderRegistration.registerProvider(adapter, extensionId)
-                    );
-                    this._onDidChangeCollections.fire({ added: [collection], removed: [] });
-                }
-            }, this)
+        const adapter = new JupyterUriProviderAdaptor(collection, extensionId, this.jupyterConnection);
+        const uriRegistration = this._register(
+            this.jupyterUriProviderRegistration.registerProvider(adapter, extensionId)
         );
-
+        this._onDidChangeCollections.fire({ added: [collection], removed: [] });
         this._register(
             collection.onDidDispose(() => {
+                this._collections.delete(extId);
                 adapter?.dispose();
                 uriRegistration?.dispose();
-                this._collections.delete(extId);
                 this._onDidChangeCollections.fire({ removed: [collection], added: [] });
             }, this)
         );

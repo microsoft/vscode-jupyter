@@ -27,7 +27,7 @@ import { JupyterInterpreterSubCommandExecutionService } from './jupyterInterpret
 import { noop } from '../../../test/core';
 import { createObservable } from '../../../platform/common/process/proc.node';
 import { IDisposable } from '../../../platform/common/types';
-import { dispose } from '../../../platform/common/utils/lifecycle';
+import { dispose } from '../../../platform/common/helpers';
 use(chaiPromise);
 
 /* eslint-disable  */
