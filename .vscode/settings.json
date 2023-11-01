@@ -56,7 +56,7 @@
         "source.fixAll.eslint": true,
         "source.fixAll.tslint": true
     },
-    "python.languageServer": "Jedi",
+    "python.languageServer": "Pylance",
     "python.analysis.logLevel": "Trace",
     "typescript.preferences.importModuleSpecifier": "relative",
     "mochaExplorer.files": "./out/test/**/*.unit.test.js",
