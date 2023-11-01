@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, EventEmitter } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { traceInfo, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
+import { traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
@@ -189,11 +189,6 @@ export class ContributedLocalKernelSpecFinder
         return kernels.filter(({ kernelSpec }) => {
             if (!kernelSpec) {
                 return true;
-            }
-            // Disable xeus python for now.
-            if (kernelSpec.argv[0].toLowerCase().endsWith('xpython')) {
-                traceInfo(`Hiding xeus kernelspec`);
-                return false;
             }
 
             return true;
