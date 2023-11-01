@@ -19,7 +19,6 @@ import {
     InteractiveWindowMode,
     InteractiveWindowViewColumn,
     IVariableQuery,
-    IVariableTooltipFields,
     IWatchableJupyterSettings,
     LoggingLevelSettingType,
     Resource,
@@ -100,12 +99,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public enableExtendedKernelCompletions: boolean = false;
     public useOldKernelResolve: boolean = false;
     public formatStackTraces: boolean = false;
-
-    public variableTooltipFields: IVariableTooltipFields = {
-        python: {
-            Tensor: ['shape', 'dtype', 'device']
-        }
-    };
     // Privates should start with _ so that they are not read from the settings.json
     private _changeEmitter = new EventEmitter<void>();
     private _workspaceRoot: Resource;
@@ -223,7 +216,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             // Configuration migration is asyncronous, so check the old configuration key if the new one isn't set
             const configValue = newKey && config.get(newKey) !== undefined ? config.get(newKey) : config.get(k);
             const val = systemVariables.resolveAny(configValue);
-            if (k !== 'variableTooltipFields' || val) {
+            if (val) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (<any>this)[k] = val;
             }
