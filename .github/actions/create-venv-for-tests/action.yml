@@ -3,9 +3,9 @@ description: 'Create Virtual Env for tests'
 
 inputs:
   IPyWidgetVersion:
-     description: 'Version of IPyWidgets'
-     required: false
-     default: '7'
+    description: 'Version of IPyWidgets'
+    required: false
+    default: '7'
 
 outputs:
   path:

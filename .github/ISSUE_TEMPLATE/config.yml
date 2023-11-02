@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: "Help and Support"
+  - name: 'Help and Support'
     url: https://github.com/microsoft/vscode-jupyter/discussions/categories/questions-and-answers
     about: "Need help getting something to work, but you're not sure it's worth of submitting an issue? Ask here."
-  - name: "Chat on Discord"
+  - name: 'Chat on Discord'
     url: https://aka.ms/python-discord
     about: 'You can ask for help or chat in the `#jupyter` channel of our microsoft-python Discord server'
