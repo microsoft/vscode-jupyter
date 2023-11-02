@@ -291,7 +291,6 @@
                 "--timeout=300000"
             ],
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"],
             "presentation": {
                 "group": "2_tests",

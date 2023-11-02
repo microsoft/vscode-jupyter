@@ -55,9 +55,13 @@ function waitForNotebookControllersCreationForServer(
     });
 }
 
-function sendApiUsageTelemetry(extensions: IExtensions, pemUsed: keyof IExtensionApi) {
-    extensions
-        .determineExtensionFromCallStack()
+function sendApiUsageTelemetry(
+    extensions: IExtensions,
+    pemUsed: keyof IExtensionApi,
+    extensionId?: string,
+    stack?: string
+) {
+    (extensionId ? Promise.resolve({ extensionId }) : extensions.determineExtensionFromCallStack(stack))
         .then((info) => {
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: info.extensionId,
@@ -79,9 +83,10 @@ export function buildApi(
         id: string,
         label: string,
         serverProvider: JupyterServerProvider,
+        stack?: string,
         extensionId?: string
     ) => {
-        sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
+        sendApiUsageTelemetry(extensions, 'createJupyterServerCollection', extensionId, stack);
         label = stripCodicons(label);
         let documentation: Uri | undefined;
         let commandProvider: JupyterServerCommandProvider | undefined;
@@ -128,8 +133,7 @@ export function buildApi(
         };
         extensionId = extensionId || '';
         (async () => {
-            sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
-            extensionId = extensionId || (await extensions.determineExtensionFromCallStack()).extensionId;
+            extensionId = extensionId || (await extensions.determineExtensionFromCallStack(stack)).extensionId;
             const registration = serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
             proxy = registration.createJupyterServerCollection(extensionId, id, label, serverProvider);
             proxy.label = label;
@@ -165,16 +169,18 @@ export function buildApi(
             sendApiUsageTelemetry(extensions, 'registerRemoteServerProvider');
 
             let disposeHook = noop;
+            const stack = new Error().stack;
             const register = async () => {
                 const extensions = serviceContainer.get<IExtensions>(IExtensions);
                 const extensionId = provider.id.startsWith('_builtin')
                     ? JVSC_EXTENSION_ID
-                    : (await extensions.determineExtensionFromCallStack()).extensionId;
+                    : (await extensions.determineExtensionFromCallStack(stack)).extensionId;
                 const { serverProvider, commandProvider } = jupyterServerUriToCollection(provider);
                 const collection = createJupyterServerCollection(
                     provider.id,
                     provider.displayName || provider.detail || provider.id,
                     serverProvider,
+                    stack,
                     extensionId
                 );
                 if (commandProvider) {
@@ -199,6 +205,7 @@ export function buildApi(
             traceError(
                 'The API addRemoteJupyterServer has being deprecated and will be removed soon, please use createJupyterServerCollection.'
             );
+            const stack = new Error().stack;
             sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');
             await new Promise<void>(async (resolve) => {
                 const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
@@ -208,7 +215,7 @@ export function buildApi(
                     { id: providerId, handle },
                     controllerRegistration
                 );
-                const extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
+                const extensionId = (await extensions.determineExtensionFromCallStack(stack)).extensionId;
 
                 await selector.addJupyterServer({ id: providerId, handle, extensionId });
                 await controllerCreatedPromise;
@@ -234,7 +241,7 @@ export function buildApi(
             return notebookEditor.notebook;
         },
         createJupyterServerCollection: (id: string, label: string, serverProvider: JupyterServerProvider) => {
-            return createJupyterServerCollection(id, label, serverProvider);
+            return createJupyterServerCollection(id, label, serverProvider, new Error().stack);
         }
     };
 
