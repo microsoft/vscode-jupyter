@@ -20,7 +20,7 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
-import { IJupyterUriProvider, JupyterServerCollection, JupyterServerProvider } from '../../api';
+import { JupyterServerCollection, JupyterServerProvider } from '../../api';
 import { IQuickPickItemProvider } from '../../platform/common/providerBasedQuickPick';
 
 export type JupyterServerInfo = {
@@ -117,9 +117,6 @@ export interface IJupyterServerProvider {
     getOrStartServer(options: GetServerOptions): Promise<IJupyterConnection>;
 }
 
-export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
-    readonly extensionId: string;
-}
 export type JupyterServerProviderHandle = {
     /**
      * Jupyter Server Provider Id.

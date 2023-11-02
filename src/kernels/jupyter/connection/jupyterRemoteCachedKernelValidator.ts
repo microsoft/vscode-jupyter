@@ -38,7 +38,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         }
         const token = new CancellationTokenSource();
         try {
-            const servers = await collection.serverProvider.provideJupyterServers(token.token);
+            const servers = await Promise.resolve(collection.serverProvider.provideJupyterServers(token.token));
             if (!servers) {
                 return false;
             }

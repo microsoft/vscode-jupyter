@@ -19,7 +19,7 @@ import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
 import { IExtensionApi } from './standalone/api/api';
-import { IExportedKernelService, IJupyterServerUri } from './api';
+import { IExportedKernelService } from './api';
 
 export * from './platform/telemetry/index';
 export type DurationMeasurement = {
@@ -3298,38 +3298,6 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         properties: {
             clientExtId: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'FeatureInsight'
-            },
-            pemUsed: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
-     * Telemetry sent when an Jupyter Server is returned by 3rd party extension.
-     */
-    [Telemetry.JupyterServerProviderResponseApi]: TelemetryEventInfo<{
-        providerId: string;
-        /**
-         * Extension Id that's attempting to use the API.
-         */
-        extensionId: string;
-        /**
-         * Name of the API member used.
-         */
-        pemUsed: (keyof IJupyterServerUri)[];
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            providerId: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'FeatureInsight'
-            },
-            extensionId: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },

@@ -66,9 +66,9 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platform/errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 import { fileToCommandArgument } from '../../platform/common/helpers';
-import { getJupyterDisplayName } from '../jupyter/connection/jupyterUriProviderRegistration';
 import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
 import { JupyterServerCollection } from '../../api';
+import { getJupyterDisplayName } from '../jupyter/connection/jupyterServerProviderRegistry';
 
 /***
  * Common code for handling errors.
@@ -269,7 +269,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
     ) {
         const token = new CancellationTokenSource();
         try {
-            const servers = await collection.serverProvider.provideJupyterServers(token.token);
+            const servers = await Promise.resolve(collection.serverProvider.provideJupyterServers(token.token));
             if (!servers) {
                 return true;
             }
@@ -356,7 +356,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
             }
             const baseUrl = err instanceof RemoteJupyterServerConnectionError ? err.baseUrl : '';
-            const serverName = await getJupyterDisplayName(
+            const serverName = getJupyterDisplayName(
                 err.serverProviderHandle,
                 this.jupyterUriProviderRegistration,
                 baseUrl

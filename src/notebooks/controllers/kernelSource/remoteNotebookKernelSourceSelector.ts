@@ -72,10 +72,6 @@ interface JupyterServerQuickPickItem extends QuickPickItem {
 }
 
 interface KernelProviderItemsQuickPickItem extends QuickPickItem {
-    /**
-     * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
-     */
-    default?: boolean;
     type: KernelFinderEntityQuickPickType.UriProviderQuickPick;
     provider: JupyterServerCollection;
     command: JupyterServerCommand;
@@ -298,7 +294,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         const items = quickPickServerItems.concat(quickPickCommandItems);
         const onDidChangeItems = new EventEmitter<typeof items>();
         let defaultSelection: (typeof items)[0] | undefined =
-            items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
+            items.length === 1 && 'command' in items[0] && items[0].command.canBeAutoSelected ? items[0] : undefined;
         if (serverProvider) {
             // If the only item is a server, then aut select that.
             const itemsWithoutSeparators = items.filter((i) => 'type' in i) as (
@@ -400,7 +396,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     });
                 }
 
-                const commands = await provider.commandProvider?.provideCommands(e, token);
+                const commands = await Promise.resolve(provider.commandProvider.provideCommands(e, token));
                 const newProviderItems: KernelProviderItemsQuickPickItem[] = (commands || []).map((i) => {
                     return {
                         ...i,

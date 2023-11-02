@@ -230,7 +230,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
 
         const token = new CancellationTokenSource();
         try {
-            const servers = await collection.serverProvider.provideJupyterServers(token.token);
+            const servers = await Promise.resolve(collection.serverProvider.provideJupyterServers(token.token));
             const handles = (servers || []).map((s) => s.id);
             if (!handles.includes(metadata.serverProviderHandle.handle)) {
                 await this.serverUriStorage.remove(metadata.serverProviderHandle);

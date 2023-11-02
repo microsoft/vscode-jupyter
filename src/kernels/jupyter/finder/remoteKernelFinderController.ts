@@ -178,7 +178,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
             if (!collectionProvider || !collectionProvider.serverProvider) {
                 return;
             }
-            const servers = await collectionProvider.serverProvider.provideJupyterServers(token.token);
+            const servers = await Promise.resolve(collectionProvider.serverProvider.provideJupyterServers(token.token));
             const displayName = servers?.find((s) => s.id === serverUri.provider.handle)?.label;
             if (displayName) {
                 this.createRemoteKernelFinder(serverUri.provider, displayName);
