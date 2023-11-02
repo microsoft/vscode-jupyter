@@ -12,7 +12,26 @@
             "type": "npm",
             "script": "compile",
             "isBackground": true,
-            "problemMatcher": ["$tsc-watch"],
+            "problemMatcher": [
+                {
+                    "applyTo": "closedDocuments",
+                    "fileLocation": "relative",
+                    "source": "esbuild + tsc",
+                    "pattern": [
+                        {
+                            "regexp": ": ([A-Za-z0-9]*) ([A-Za-z0-9]*): (.*)",
+                            "severity": 1,
+                            "message": 3
+                        },
+                        {
+                            "regexp": "\\[[0-9]*\\] (.*)\\(([0-9]*),([0-9]*)\\)",
+                            "file": 1,
+                            "line": 2,
+                            "column": 3
+                        }
+                    ]
+                }
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
