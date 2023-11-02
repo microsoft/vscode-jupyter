@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ExtensionMode, Uri, commands, window, workspace } from 'vscode';
+import { Disposable, ExtensionMode, Uri, commands, window, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
-import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
 import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { IDisposable, IExtensionContext, IExtensions } from '../../platform/common/types';
@@ -92,14 +92,13 @@ export function buildApi(
                 'The API registerRemoteServerProvider has being deprecated and will be removed soon, please use createJupyterServerCollection.'
             );
             sendApiUsageTelemetry(extensions, 'registerRemoteServerProvider');
-            const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
             let disposeHook = noop;
             const register = async () => {
                 const extensions = serviceContainer.get<IExtensions>(IExtensions);
                 const extensionId = provider.id.startsWith('_builtin')
                     ? JVSC_EXTENSION_ID
                     : (await extensions.determineExtensionFromCallStack()).extensionId;
-                const disposable = container.registerProvider(provider, extensionId);
+                const disposable = new Disposable(() => (extensionId ? noop() : noop()));
                 disposeHook = () => disposable.dispose();
             };
             register().catch(noop);

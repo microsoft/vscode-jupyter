@@ -20,7 +20,7 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCollection, JupyterServerProvider } from '../../api';
+import { IJupyterUriProvider, JupyterServerCollection, JupyterServerProvider } from '../../api';
 import { IQuickPickItemProvider } from '../../platform/common/providerBasedQuickPick';
 
 export type JupyterServerInfo = {
@@ -134,25 +134,6 @@ export type JupyterServerProviderHandle = {
      */
     extensionId: string;
 };
-
-export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
-
-export interface IJupyterUriProviderRegistration {
-    onDidChangeProviders: Event<void>;
-    readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
-    getProvider(extensionId: string, id: string): Promise<IInternalJupyterUriProvider | undefined>;
-    registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
-    /**
-     * Temporary, until the new API is finalized.
-     * We need a way to get the displayName of the Server.
-     */
-    getDisplayNameIfProviderIsLoaded(providerHandle: JupyterServerProviderHandle): Promise<string | undefined>;
-    getJupyterServerUri(
-        serverHandle: JupyterServerProviderHandle,
-        doNotPromptForAuthInfo?: boolean
-    ): Promise<IJupyterServerUri>;
-}
-
 /**
  * Entry into our list of saved servers
  */
@@ -275,6 +256,10 @@ export interface IRemoteKernelFinder
 export const IJupyterServerProviderRegistry = Symbol('IJupyterServerProviderRegistry');
 export interface IJupyterServerProviderRegistry {
     onDidChangeCollections: Event<{ added: JupyterServerCollection[]; removed: JupyterServerCollection[] }>;
+    activateThirdPartyExtensionAndFindCollection(
+        extensionId: string,
+        id: string
+    ): Promise<JupyterServerCollection | undefined>;
     readonly jupyterCollections: readonly JupyterServerCollection[];
     createJupyterServerCollection(
         extensionId: string,

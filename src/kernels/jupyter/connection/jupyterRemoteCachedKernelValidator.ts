@@ -6,10 +6,10 @@ import { traceWarning } from '../../../platform/logging';
 import { LiveRemoteKernelConnectionMetadata } from '../../types';
 import {
     IJupyterRemoteCachedKernelValidator,
-    IJupyterUriProviderRegistration,
+    IJupyterServerProviderRegistry,
     ILiveRemoteKernelConnectionUsageTracker
 } from '../types';
-import { noop } from '../../../platform/common/utils/misc';
+import { CancellationTokenSource } from 'vscode';
 
 /**
  * Used to verify remote jupyter connections from 3rd party URIs are still valid.
@@ -20,36 +20,47 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         @inject(ILiveRemoteKernelConnectionUsageTracker)
         private readonly liveKernelConnectionTracker: ILiveRemoteKernelConnectionUsageTracker,
 
-        @inject(IJupyterUriProviderRegistration) private readonly providerRegistration: IJupyterUriProviderRegistration
+        @inject(IJupyterServerProviderRegistry) private readonly providerRegistration: IJupyterServerProviderRegistry
     ) {}
     public async isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean> {
         // Only list live kernels that was used by the user,
         if (!this.liveKernelConnectionTracker.wasKernelUsed(kernel)) {
             return false;
         }
-        const provider = await this.providerRegistration
-            .getProvider(kernel.serverProviderHandle.extensionId, kernel.serverProviderHandle.id)
-            .catch(noop);
-        if (!provider) {
+        const collection = await this.providerRegistration.jupyterCollections.find(
+            (c) => c.extensionId === kernel.serverProviderHandle.extensionId && c.id === kernel.serverProviderHandle.id
+        );
+        if (!collection) {
             traceWarning(
-                `Extension may have been uninstalled for provider ${kernel.serverProviderHandle.id}, handle ${kernel.serverProviderHandle.handle}`
+                `Extension ${kernel.serverProviderHandle.extensionId} may have been uninstalled for provider ${kernel.serverProviderHandle.id}, handle ${kernel.serverProviderHandle.handle}`
             );
             return false;
         }
-        if (provider.getHandles) {
-            const handles = await provider.getHandles();
-            if (handles.includes(kernel.serverProviderHandle.handle)) {
+        const token = new CancellationTokenSource();
+        try {
+            const servers = await collection.serverProvider.provideJupyterServers(token.token);
+            if (!servers) {
+                return false;
+            }
+            if (servers.map((s) => s.id).includes(kernel.serverProviderHandle.handle)) {
                 return true;
             } else {
                 traceWarning(
-                    `Hiding remote kernel ${kernel.id} for ${provider.id} as the remote Jupyter Server ${kernel.serverProviderHandle.id}:${kernel.serverProviderHandle.handle} is no longer available`
+                    `Hiding remote kernel ${kernel.id} for ${collection.id} as the remote Jupyter Server ${kernel.serverProviderHandle.extensionId}:${kernel.serverProviderHandle.id}:${kernel.serverProviderHandle.handle} is no longer available`
                 );
                 // 3rd party extensions own these kernels, if these are no longer
                 // available, then just don't display them.
                 return false;
             }
+        } catch (ex) {
+            traceWarning(
+                `Failed to fetch remote servers from ${kernel.serverProviderHandle.extensionId}:${kernel.serverProviderHandle.id}`,
+                ex
+            );
+            return false;
+        } finally {
+            token.dispose();
         }
-
         // List this old cached kernel even if such a server matching this kernel no longer exists.
         // This way things don't just disappear from the kernel picker &
         // user will get notified when they attempt to re-use this kernel.

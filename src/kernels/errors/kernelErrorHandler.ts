@@ -46,10 +46,9 @@ import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { KernelDeadError } from './kernelDeadError';
 import { DisplayOptions } from '../displayOptions';
 import {
-    IInternalJupyterUriProvider,
     IJupyterInterpreterDependencyManager,
+    IJupyterServerProviderRegistry,
     IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration,
     JupyterInterpreterDependencyResponse,
     JupyterServerProviderHandle
 } from '../jupyter/types';
@@ -69,6 +68,7 @@ import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebo
 import { fileToCommandArgument } from '../../platform/common/helpers';
 import { getJupyterDisplayName } from '../jupyter/connection/jupyterUriProviderRegistration';
 import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
+import { JupyterServerCollection } from '../../api';
 
 /***
  * Common code for handling errors.
@@ -86,8 +86,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         private readonly kernelDependency: IKernelDependencyService | undefined,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
+        @inject(IJupyterServerProviderRegistry)
+        private readonly jupyterUriProviderRegistration: IJupyterServerProviderRegistry,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -265,21 +265,22 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
     }
     private async handleJupyterServerProviderConnectionError(
         serverHandle: JupyterServerProviderHandle,
-        provider: IInternalJupyterUriProvider
+        collection: JupyterServerCollection
     ) {
-        if (!provider.getHandles) {
-            return false;
-        }
-
+        const token = new CancellationTokenSource();
         try {
-            const handles = await provider.getHandles();
-
-            if (!handles.includes(serverHandle.handle)) {
+            const servers = await collection.serverProvider.provideJupyterServers(token.token);
+            if (!servers) {
+                return true;
+            }
+            if (!servers.find((s) => s.id === serverHandle.handle)) {
                 await this.serverUriStorage.remove(serverHandle).catch(noop);
             }
             return true;
         } catch (_ex) {
             return false;
+        } finally {
+            token.dispose();
         }
     }
     public async handleKernelError(
@@ -342,12 +343,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     : err instanceof RemoteJupyterServerConnectionError
                     ? err.originalError.message || ''
                     : err.originalError?.message || err.message;
-            const provider = await this.jupyterUriProviderRegistration
-                .getProvider(err.serverProviderHandle.extensionId, err.serverProviderHandle.id)
-                .catch(noop);
+
+            const extensionId = err.serverProviderHandle.extensionId;
+            const id = err.serverProviderHandle.id;
+            const collection = this.jupyterUriProviderRegistration.jupyterCollections.find(
+                (c) => c.extensionId === extensionId && c.id == id
+            );
             if (
-                !provider ||
-                (await this.handleJupyterServerProviderConnectionError(err.serverProviderHandle, provider))
+                !collection ||
+                (await this.handleJupyterServerProviderConnectionError(err.serverProviderHandle, collection))
             ) {
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
             }

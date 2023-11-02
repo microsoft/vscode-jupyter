@@ -15,8 +15,8 @@ import { DataScience, Common } from '../../platform/common/utils/localize';
 import { IKernelDependencyService } from '../types';
 import {
     IJupyterInterpreterDependencyManager,
-    IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration
+    IJupyterServerProviderRegistry,
+    IJupyterServerUriStorage
 } from '../jupyter/types';
 import * as path from '../../platform/vscode-path/resources';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
@@ -45,7 +45,7 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
         @inject(IsWebExtension) isWebExtension: boolean,
         @inject(IExtensions) extensions: IExtensions,
-        @inject(IJupyterUriProviderRegistration) jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
+        @inject(IJupyterServerProviderRegistry) jupyterUriProviderRegistration: IJupyterServerProviderRegistry,
         @inject(IReservedPythonNamedProvider) private readonly reservedPythonNames: IReservedPythonNamedProvider,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IInterpreterService) interpreterService: IInterpreterService

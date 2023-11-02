@@ -7,7 +7,7 @@ import {
     getKernelConnectionDisplayPath,
     getRemoteKernelSessionInformation
 } from '../../kernels/helpers';
-import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
@@ -30,8 +30,8 @@ export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProv
     constructor(
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
+        @inject(IJupyterServerProviderRegistry)
+        private readonly jupyterUriProviderRegistration: IJupyterServerProviderRegistry,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService
     ) {}

@@ -7,7 +7,8 @@ import {
     CancellationTokenSource,
     EventEmitter,
     QuickPickItem,
-    Uri
+    Uri,
+    extensions
 } from 'vscode';
 import {
     IJupyterServerUri,
@@ -18,15 +19,17 @@ import {
     JupyterServerCommandProvider,
     JupyterServerProvider
 } from '../../../api';
-import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../types';
+import { IJupyterServerProviderRegistry } from '../types';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { stripCodicons } from '../../../platform/common/helpers';
 import { traceError } from '../../../platform/logging';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { JupyterConnection } from './jupyterConnection';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { DisposableBase, ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
+import { noop } from '../../../platform/common/utils/misc';
+import { ServiceContainer } from '../../../platform/ioc/container';
 
 export class JupyterServerCollectionImpl extends ObservableDisposable implements JupyterServerCollection {
     private _commandProvider?: JupyterServerCommandProvider;
@@ -73,12 +76,13 @@ class JupyterUriProviderAdaptor extends DisposableBase implements IJupyterUriPro
     private providerChanges: IDisposable[] = [];
     getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
     private commands = new Map<string, JupyterServerCommand>();
+    private readonly jupyterConnection: JupyterConnection;
     constructor(
         private readonly provider: JupyterServerCollection,
-        public readonly extensionId: string,
-        private readonly jupyterConnection: JupyterConnection
+        public readonly extensionId: string
     ) {
         super();
+        this.jupyterConnection = ServiceContainer.instance.get<JupyterConnection>(JupyterConnection);
         this.id = provider.id;
         this.hookupProviders();
 
@@ -340,15 +344,30 @@ export class JupyterServerProviderRegistry extends DisposableBase implements IJu
     public get jupyterCollections(): readonly JupyterServerCollection[] {
         return Array.from(this._collections.values());
     }
-    constructor(
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
-        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
-    ) {
+    constructor() {
         super();
-        disposables.push(this);
+        ServiceContainer.instance.get<IDisposableRegistry>(IDisposableRegistry).push(this);
     }
+    public async activateThirdPartyExtensionAndFindCollection(
+        extensionId: string,
+        id: string
+    ): Promise<JupyterServerCollection | undefined> {
+        await this.loadExtension(extensionId, id).catch(noop);
+        return this.jupyterCollections.find((c) => c.extensionId === extensionId && c.id === id);
+    }
+    private async loadExtension(extensionId: string, providerId: string) {
+        if (extensionId === JVSC_EXTENSION_ID) {
+            return;
+        }
+        const ext = extensions.getExtension(extensionId);
+        if (!ext) {
+            throw new Error(`Extension '${extensionId}' that provides Jupyter Server '${providerId}' not found`);
+        }
+        if (!ext.isActive) {
+            await ext.activate().then(noop, noop);
+        }
+    }
+
     createJupyterServerCollection(
         extensionId: string,
         id: string,
@@ -364,16 +383,12 @@ export class JupyterServerProviderRegistry extends DisposableBase implements IJu
         }
         const collection = new JupyterServerCollectionImpl(extensionId, id, label, serverProvider);
         this._collections.set(extId, collection);
-        const adapter = new JupyterUriProviderAdaptor(collection, extensionId, this.jupyterConnection);
-        const uriRegistration = this._register(
-            this.jupyterUriProviderRegistration.registerProvider(adapter, extensionId)
-        );
+        const adapter = new JupyterUriProviderAdaptor(collection, extensionId);
         this._onDidChangeCollections.fire({ added: [collection], removed: [] });
         this._register(
             collection.onDidDispose(() => {
                 this._collections.delete(extId);
                 adapter?.dispose();
-                uriRegistration?.dispose();
                 this._onDidChangeCollections.fire({ removed: [collection], added: [] });
             }, this)
         );

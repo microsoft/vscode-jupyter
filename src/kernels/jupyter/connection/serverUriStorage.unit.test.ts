@@ -9,7 +9,6 @@ import { EventEmitter, Memento, Uri } from 'vscode';
 import {
     IJupyterServerUriEntry,
     IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration,
     JupyterServerProviderHandle
 } from '../../../kernels/jupyter/types';
 import { dispose } from '../../../platform/common/utils/lifecycle';
@@ -17,11 +16,10 @@ import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { JupyterServerUriStorage, StorageMRUItem } from './serverUriStorage';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import { IJupyterServerUri } from '../../../api';
 import { JVSC_EXTENSION_ID, Settings, UserJupyterServerPickerProviderId } from '../../../platform/common/constants';
 import { TestEventHandler, createEventHandler } from '../../../test/common';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
-import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
+import { uriEquals } from '../../../test/datascience/helpers';
 import { sleep } from '../../../test/core';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
@@ -31,7 +29,6 @@ suite('Server Uri Storage', async () => {
     let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
     let disposables: IDisposable[] = [];
     let encryptedStorage: IEncryptedStorage;
-    let jupyterPickerRegistration: IJupyterUriProviderRegistration;
     let fs: IFileSystem;
     let context: IExtensionContext;
     let globalStorageUri = Uri.file('GlobalStorage');
@@ -44,7 +41,6 @@ suite('Server Uri Storage', async () => {
     setup(() => {
         memento = mock<Memento>();
         encryptedStorage = mock<IEncryptedStorage>();
-        jupyterPickerRegistration = mock<IJupyterUriProviderRegistration>();
         fs = mock<IFileSystem>();
         context = mock<IExtensionContext>();
         onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
@@ -52,9 +48,6 @@ suite('Server Uri Storage', async () => {
         when(mockedVSCodeNamespaces.env.machineId).thenReturn(machineId);
         when(fs.delete(anything())).thenResolve();
         when(context.globalStorageUri).thenReturn(globalStorageUri);
-        when(jupyterPickerRegistration.getJupyterServerUri(anything(), anything())).thenResolve(
-            resolvableInstance(mock<IJupyterServerUri>())
-        );
         let dataInMemento: StorageMRUItem[] | undefined = undefined;
         when(memento.get(mementoKeyForStoringUsedJupyterProviders)).thenReturn(dataInMemento);
         when(memento.get(mementoKeyForStoringUsedJupyterProviders, anything())).thenCall(
@@ -211,17 +204,6 @@ suite('Server Uri Storage', async () => {
         const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId1', handle: 'NewHandle1', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9090',
-            displayName: 'NewDisplayName1',
-            token: 'NewToken1'
-        });
-
         await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID });
         const all = await serverUriStorage.getAll();
 
@@ -257,16 +239,6 @@ suite('Server Uri Storage', async () => {
         generateDummyData(2, true);
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId1', handle: 'NewHandle1', extensionId: JVSC_EXTENSION_ID })
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9090',
-            displayName: 'NewDisplayName1',
-            token: 'NewToken1'
-        });
-
         await serverUriStorage.add(
             { handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID },
             { time: 1234 }
@@ -279,36 +251,6 @@ suite('Server Uri Storage', async () => {
         const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId1', handle: 'NewHandle1', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9090',
-            displayName: 'NewDisplayName1',
-            token: 'NewToken1'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId2', handle: 'NewHandle2', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9092',
-            displayName: 'NewDisplayName2',
-            token: 'NewToken2'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId3', handle: 'NewHandle3', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9093',
-            displayName: 'NewDisplayName3',
-            token: 'NewToken3'
-        });
         await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID });
         await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: JVSC_EXTENSION_ID });
         await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: JVSC_EXTENSION_ID });
@@ -360,36 +302,6 @@ suite('Server Uri Storage', async () => {
         const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId1', handle: 'NewHandle1', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9090',
-            displayName: 'NewDisplayName1',
-            token: 'NewToken1'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId2', handle: 'NewHandle2', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9092',
-            displayName: 'NewDisplayName2',
-            token: 'NewToken2'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId3', handle: 'NewHandle3', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9093',
-            displayName: 'NewDisplayName3',
-            token: 'NewToken3'
-        });
         await Promise.all([
             serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID }),
             serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: JVSC_EXTENSION_ID }),
@@ -443,36 +355,6 @@ suite('Server Uri Storage', async () => {
         const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId1', handle: 'NewHandle1', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9090',
-            displayName: 'NewDisplayName1',
-            token: 'NewToken1'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId2', handle: 'NewHandle2', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9092',
-            displayName: 'NewDisplayName2',
-            token: 'NewToken2'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId3', handle: 'NewHandle3', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9093',
-            displayName: 'NewDisplayName3',
-            token: 'NewToken3'
-        });
         await Promise.all([
             serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID }),
             serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: JVSC_EXTENSION_ID }),
@@ -520,36 +402,6 @@ suite('Server Uri Storage', async () => {
         const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId1', handle: 'NewHandle1', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9090',
-            displayName: 'NewDisplayName1',
-            token: 'NewToken1'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId2', handle: 'NewHandle2', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9092',
-            displayName: 'NewDisplayName2',
-            token: 'NewToken2'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId3', handle: 'NewHandle3', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9093',
-            displayName: 'NewDisplayName3',
-            token: 'NewToken3'
-        });
         await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID });
         await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: JVSC_EXTENSION_ID });
         await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: JVSC_EXTENSION_ID });
@@ -595,36 +447,6 @@ suite('Server Uri Storage', async () => {
         generateDummyData(2, true);
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId1', handle: 'NewHandle1', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9090',
-            displayName: 'NewDisplayName1',
-            token: 'NewToken1'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId2', handle: 'NewHandle2', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9092',
-            displayName: 'NewDisplayName2',
-            token: 'NewToken2'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId3', handle: 'NewHandle3', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9093',
-            displayName: 'NewDisplayName3',
-            token: 'NewToken3'
-        });
         await Promise.all([
             serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID }),
             serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: JVSC_EXTENSION_ID }),
@@ -659,36 +481,6 @@ suite('Server Uri Storage', async () => {
         generateDummyData(2, true);
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId1', handle: 'NewHandle1', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9090',
-            displayName: 'NewDisplayName1',
-            token: 'NewToken1'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId2', handle: 'NewHandle2', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9092',
-            displayName: 'NewDisplayName2',
-            token: 'NewToken2'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId3', handle: 'NewHandle3', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9093',
-            displayName: 'NewDisplayName3',
-            token: 'NewToken3'
-        });
         await Promise.all([
             serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID }),
             serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: JVSC_EXTENSION_ID }),
@@ -717,36 +509,6 @@ suite('Server Uri Storage', async () => {
         generateDummyData(2, true);
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId1', handle: 'NewHandle1', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9090',
-            displayName: 'NewDisplayName1',
-            token: 'NewToken1'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId2', handle: 'NewHandle2', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9092',
-            displayName: 'NewDisplayName2',
-            token: 'NewToken2'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId3', handle: 'NewHandle3', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9093',
-            displayName: 'NewDisplayName3',
-            token: 'NewToken3'
-        });
         await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID });
         await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: JVSC_EXTENSION_ID });
         await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: JVSC_EXTENSION_ID });
@@ -778,36 +540,6 @@ suite('Server Uri Storage', async () => {
         generateDummyData(2, true);
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId1', handle: 'NewHandle1', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9090',
-            displayName: 'NewDisplayName1',
-            token: 'NewToken1'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId2', handle: 'NewHandle2', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9092',
-            displayName: 'NewDisplayName2',
-            token: 'NewToken2'
-        });
-        when(
-            jupyterPickerRegistration.getJupyterServerUri(
-                deepEqual({ id: 'NewId3', handle: 'NewHandle3', extensionId: JVSC_EXTENSION_ID }),
-                true
-            )
-        ).thenResolve(<IJupyterServerUri>{
-            baseUrl: 'http://localhost:9093',
-            displayName: 'NewDisplayName3',
-            token: 'NewToken3'
-        });
         await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID });
         await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: JVSC_EXTENSION_ID });
         await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: JVSC_EXTENSION_ID });
@@ -832,22 +564,6 @@ suite('Server Uri Storage', async () => {
         generateDummyData(8, true);
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        for (let index = 0; index < 20; index++) {
-            when(
-                jupyterPickerRegistration.getJupyterServerUri(
-                    deepEqual({
-                        id: `NewId${index}`,
-                        handle: `NewHandle${index}`,
-                        extensionId: JVSC_EXTENSION_ID
-                    }),
-                    true
-                )
-            ).thenResolve(<IJupyterServerUri>{
-                baseUrl: `http://localhost:909${index}`,
-                displayName: `NewDisplayName${index}`,
-                token: `NewToken${index}`
-            });
-        }
 
         await serverUriStorage.add({ handle: 'NewHandle9', id: 'NewId9', extensionId: JVSC_EXTENSION_ID });
         await serverUriStorage.add({ handle: 'NewHandle10', id: 'NewId10', extensionId: JVSC_EXTENSION_ID });
@@ -905,23 +621,6 @@ suite('Server Uri Storage', async () => {
         generateDummyData(8, true);
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        for (let index = 0; index < 20; index++) {
-            when(
-                jupyterPickerRegistration.getJupyterServerUri(
-                    deepEqual({
-                        id: `NewId${index}`,
-                        handle: `NewHandle${index}`,
-                        extensionId: JVSC_EXTENSION_ID
-                    }),
-                    true
-                )
-            ).thenResolve(<IJupyterServerUri>{
-                baseUrl: `http://localhost:909${index}`,
-                displayName: `NewDisplayName${index}`,
-                token: `NewToken${index}`
-            });
-        }
-
         // Should exist.
         const time = await (
             await serverUriStorage.getAll()

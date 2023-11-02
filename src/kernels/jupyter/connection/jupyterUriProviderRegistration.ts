@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
 import { EventEmitter, Memento, QuickPickItem } from 'vscode';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../../platform/common/constants';
-import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
+import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
-import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration, JupyterServerProviderHandle } from '../types';
+import { IInternalJupyterUriProvider, IJupyterServerProviderRegistry, JupyterServerProviderHandle } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { traceError, traceVerbose } from '../../../platform/logging';
+import { traceError } from '../../../platform/logging';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCommand } from '../../../api';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
@@ -23,11 +22,7 @@ function getProviderId(extensionId: string, id: string) {
 /**
  * Handles registration of 3rd party URI providers.
  */
-@injectable()
-export class JupyterUriProviderRegistration
-    extends DisposableBase
-    implements IJupyterUriProviderRegistration, IExtensionSyncActivationService
-{
+export class JupyterUriProviderRegistration extends DisposableBase implements IExtensionSyncActivationService {
     private readonly _onProvidersChanged = this._register(new EventEmitter<void>());
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
     private _providers = new Map<string, JupyterUriProviderWrapper>();
@@ -39,9 +34,9 @@ export class JupyterUriProviderRegistration
         return Array.from(this._providers.values());
     }
     constructor(
-        @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
+        private readonly extensions: IExtensions,
+        disposables: IDisposableRegistry,
+        private readonly globalMemento: Memento
     ) {
         super();
         disposables.push(this);
@@ -105,31 +100,6 @@ export class JupyterUriProviderRegistration
         const server = await provider.getServerUri(providerHandle.handle, doNotPromptForAuthInfo);
         this.cachedDisplayNames.set(generateIdFromRemoteProvider(providerHandle), server.displayName);
         return server;
-    }
-    /**
-     * Temporary, until the new API is finalized.
-     * We need a way to get the displayName of the Server.
-     */
-    public async getDisplayNameIfProviderIsLoaded(
-        providerHandle: JupyterServerProviderHandle
-    ): Promise<string | undefined> {
-        if (this.cachedDisplayNames.has(generateIdFromRemoteProvider(providerHandle))) {
-            return this.cachedDisplayNames.get(generateIdFromRemoteProvider(providerHandle))!;
-        }
-        const id = getProviderId(providerHandle.extensionId, providerHandle.id);
-        if (!this._providers.get(id)) {
-            await this.loadExtension(providerHandle.extensionId, providerHandle.id);
-        }
-        const provider = this._providers.get(id);
-        if (!provider) {
-            traceVerbose(
-                `Provider Id=${id} and handle=${providerHandle.handle} not registered. Extension ${providerHandle.extensionId} may not have yet loaded or provider not yet registered?`
-            );
-            return;
-        }
-        const server = await provider.getServerUri(providerHandle.handle, true);
-        this.cachedDisplayNames.set(generateIdFromRemoteProvider(providerHandle), server.displayName);
-        return server.displayName;
     }
     private async loadExtension(extensionId: string, providerId: string) {
         if (extensionId === JVSC_EXTENSION_ID) {
@@ -278,9 +248,11 @@ class JupyterUriProviderWrapper implements IInternalJupyterUriProvider {
 
 export async function getJupyterDisplayName(
     serverHandle: JupyterServerProviderHandle,
-    jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
+    jupyterUriProviderRegistration: IJupyterServerProviderRegistry,
     defaultValue?: string
 ) {
-    const displayName = await jupyterUriProviderRegistration.getDisplayNameIfProviderIsLoaded(serverHandle);
-    return displayName || defaultValue || `${serverHandle.id}:${serverHandle.handle}`;
+    const collection = jupyterUriProviderRegistration.jupyterCollections.find(
+        (c) => c.extensionId === serverHandle.extensionId && c.id === serverHandle.id
+    );
+    return collection?.label || defaultValue || `${serverHandle.id}:${serverHandle.handle}`;
 }

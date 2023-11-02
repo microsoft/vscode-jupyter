@@ -18,9 +18,7 @@ import { IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterServerUriStorage,
-    IInternalJupyterUriProvider,
     IRemoteKernelFinder,
-    IJupyterUriProviderRegistration,
     IJupyterServerProviderRegistry
 } from '../../../kernels/jupyter/types';
 import { IKernelFinder, KernelConnectionMetadata, RemoteKernelConnectionMetadata } from '../../../kernels/types';
@@ -51,7 +49,7 @@ import { PreferredKernelConnectionService } from '../preferredKernelConnectionSe
 import { traceError } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from '../../../kernels/jupyter/finder/types';
 import { raceCancellationError } from '../../../platform/common/cancellation';
-import { JupyterServer } from '../../../api';
+import { JupyterServer, JupyterServerCollection, JupyterServerCommand } from '../../../api';
 import { noop } from '../../../platform/common/utils/misc';
 
 enum KernelFinderEntityQuickPickType {
@@ -79,8 +77,8 @@ interface KernelProviderItemsQuickPickItem extends QuickPickItem {
      */
     default?: boolean;
     type: KernelFinderEntityQuickPickType.UriProviderQuickPick;
-    provider: IInternalJupyterUriProvider;
-    originalItem: QuickPickItem & { default?: boolean };
+    provider: JupyterServerCollection;
+    command: JupyterServerCommand;
 }
 
 function doesExtensionSupportRemovingAServer(extensionId: string) {
@@ -99,14 +97,12 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         @inject(IConnectionDisplayDataProvider) private readonly displayDataProvider: IConnectionDisplayDataProvider,
         @inject(IRemoteKernelFinderController)
         private readonly kernelFinderController: IRemoteKernelFinderController,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
         @inject(IJupyterServerProviderRegistry)
         private readonly jupyterServerRegistry: IJupyterServerProviderRegistry
     ) {}
     public async selectRemoteKernel(
         notebook: NotebookDocument,
-        provider: IInternalJupyterUriProvider
+        provider: JupyterServerCollection
     ): Promise<RemoteKernelConnectionMetadata | undefined> {
         // Reject if it's not our type
         if (notebook.notebookType !== JupyterNotebookView && notebook.notebookType !== InteractiveWindowView) {
@@ -144,7 +140,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         }
     }
     private async getRemoteServersFromProvider(
-        provider: IInternalJupyterUriProvider,
+        provider: JupyterServerCollection,
         token: CancellationToken,
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult
@@ -279,17 +275,17 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             });
 
         // Add the commands
-        if (provider.getQuickPickEntryItems && provider.handleQuickPick) {
-            const newProviderItems: KernelProviderItemsQuickPickItem[] = (await provider.getQuickPickEntryItems()).map(
-                (i) => {
-                    return {
-                        ...i,
-                        provider: provider,
-                        type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
-                        originalItem: i
-                    };
-                }
-            );
+        if (provider.commandProvider) {
+            const newProviderItems: KernelProviderItemsQuickPickItem[] = (
+                (await Promise.resolve(provider.commandProvider.provideCommands(undefined, token))) || []
+            ).map((i) => {
+                return {
+                    ...i,
+                    provider: provider,
+                    type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
+                    command: i
+                };
+            });
             if (quickPickServerItems.length > 0 && newProviderItems.length) {
                 quickPickCommandItems.push({
                     label: '',
@@ -393,7 +389,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 onDidChangeItems: onDidChangeItems.event
             });
             quickPick.onDidChangeValue(async (e) => {
-                if (!provider.getQuickPickEntryItems) {
+                if (!provider.commandProvider?.provideCommands) {
                     return;
                 }
                 const quickPickCommandItems: QuickPickItem[] = [];
@@ -404,13 +400,13 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     });
                 }
 
-                const commands = await provider.getQuickPickEntryItems(e);
-                const newProviderItems: KernelProviderItemsQuickPickItem[] = commands.map((i) => {
+                const commands = await provider.commandProvider?.provideCommands(e, token);
+                const newProviderItems: KernelProviderItemsQuickPickItem[] = (commands || []).map((i) => {
                     return {
                         ...i,
                         provider: provider,
                         type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
-                        originalItem: i
+                        command: i
                     };
                 });
                 quickPick.items = quickPickServerItems.concat(quickPickCommandItems).concat(newProviderItems);
@@ -504,33 +500,29 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         state: MultiStepResult,
         token: CancellationToken
     ): Promise<void> {
-        if (!selectedSource.provider.handleQuickPick || token.isCancellationRequested) {
+        if (!selectedSource.provider.commandProvider?.handleCommand || token.isCancellationRequested) {
             return;
         }
 
-        const handle = await selectedSource.provider.handleQuickPick(selectedSource.originalItem, true);
-        if (!handle || token.isCancellationRequested) {
-            throw new CancellationError();
-        }
-        if (handle === 'back') {
+        const server = await Promise.resolve(
+            selectedSource.provider.commandProvider.handleCommand(selectedSource.command, token)
+        );
+
+        if (!server) {
             throw InputFlowAction.back;
+        }
+        if (token.isCancellationRequested) {
+            throw new CancellationError();
         }
 
         const finderPromise = (async () => {
             const serverId = {
                 id: selectedSource.provider.id,
-                handle,
+                handle: server.id,
                 extensionId: selectedSource.provider.extensionId
             };
             await raceCancellationError(token, this.serverSelector.addJupyterServer(serverId));
-            const displayName = await raceCancellationError(
-                token,
-                this.jupyterPickerRegistration.getDisplayNameIfProviderIsLoaded(serverId)
-            );
-            return this.kernelFinderController.getOrCreateRemoteKernelFinder(
-                serverId,
-                displayName || selectedSource.originalItem.label
-            );
+            return this.kernelFinderController.getOrCreateRemoteKernelFinder(serverId, server.label);
         })();
 
         const result = await this.selectRemoteKernelFromPicker(state.notebook, finderPromise, token).catch((ex) =>
