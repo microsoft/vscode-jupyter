@@ -1,5 +1,5 @@
 name: 'Install dependencies (npm ci)'
-description: "npm install (with GITHUB_TOKEN to run postinstall step)"
+description: 'npm install (with GITHUB_TOKEN to run postinstall step)'
 
 runs:
   using: 'composite'

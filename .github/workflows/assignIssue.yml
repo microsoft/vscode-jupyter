@@ -17,16 +17,16 @@ jobs:
       - name: Created internally
         id: internal
         env:
-            ISSUE_OWNER: ${{github.event.issue.user.login}}
+          ISSUE_OWNER: ${{github.event.issue.user.login}}
         run: |
           echo result=$(node -p -e "['amunger', 'DonJayamanne', 'minsa110', 'rebornix', 'roblourens', 'kieferrm'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0") >> $GITHUB_OUTPUT
         shell: bash
       - name: Should we proceed
         id: proceed
         env:
-            ISSUE_LABELS: ${{toJson(github.event.issue.labels)}}
-            ISSUE_ASSIGNEES: ${{toJson(github.event.issue.assignees)}}
-            ISSUE_IS_INTERNAL: ${{steps.internal.outputs.result}}
+          ISSUE_LABELS: ${{toJson(github.event.issue.labels)}}
+          ISSUE_ASSIGNEES: ${{toJson(github.event.issue.assignees)}}
+          ISSUE_IS_INTERNAL: ${{steps.internal.outputs.result}}
         run: |
           echo result=$(node -p -e "process.env.ISSUE_IS_INTERNAL === '0' && JSON.parse(process.env.ISSUE_ASSIGNEES).length === 0 ? 1 : 0") >> $GITHUB_OUTPUT
         shell: bash

@@ -27,4 +27,4 @@ comment:
 
 fixes:
   # Remove prefix in coverage report
-  - "/home/runner/work/vscode-jupyter/::"
+  - '/home/runner/work/vscode-jupyter/::'
