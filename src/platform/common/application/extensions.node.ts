@@ -32,8 +32,10 @@ export class Extensions implements IExtensions {
     public getExtension(extensionId: any) {
         return extensions.getExtension(extensionId);
     }
-    public async determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }> {
-        const stack = new Error().stack;
+    public async determineExtensionFromCallStack(
+        stack?: string
+    ): Promise<{ extensionId: string; displayName: string }> {
+        stack = stack || new Error().stack;
         const syncId = this.determineExtensionFromCallStackSync(stack || '');
         if (stack) {
             const jupyterExtRoot = path.join(EXTENSION_ROOT_DIR.toLowerCase(), path.sep);

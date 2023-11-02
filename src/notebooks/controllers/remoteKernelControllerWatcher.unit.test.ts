@@ -8,8 +8,6 @@ import { Disposable, EventEmitter } from 'vscode';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import {
     IJupyterServerUriStorage,
-    IInternalJupyterUriProvider,
-    IJupyterUriProviderRegistration,
     IJupyterServerProviderRegistry,
     JupyterServerProviderHandle
 } from '../../kernels/jupyter/types';
@@ -25,14 +23,12 @@ import { RemoteKernelControllerWatcher } from './remoteKernelControllerWatcher';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
-import { waitForCondition } from '../../test/common';
-import { JupyterServerCollection } from '../../api';
+import { JupyterServer, JupyterServerCollection, JupyterServerProvider } from '../../api';
 import { noop } from '../../test/core';
 
 suite('RemoteKernelControllerWatcher', () => {
     let watcher: RemoteKernelControllerWatcher;
     let disposables: IDisposable[] = [];
-    let uriProviderRegistration: IJupyterUriProviderRegistration;
     let uriStorage: IJupyterServerUriStorage;
     let controllers: IControllerRegistration;
     let onDidChangeProviders: EventEmitter<void>;
@@ -42,8 +38,8 @@ suite('RemoteKernelControllerWatcher', () => {
         removed: JupyterServerCollection[];
     }>;
     let clock: fakeTimers.InstalledClock;
+
     setup(() => {
-        uriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         uriStorage = mock<IJupyterServerUriStorage>();
         controllers = mock<IControllerRegistration>();
         jupyterServerProviderRegistry = mock<IJupyterServerProviderRegistry>();
@@ -58,11 +54,9 @@ suite('RemoteKernelControllerWatcher', () => {
             onDidChangeJupyterServerCollections.event
         );
         when(jupyterServerProviderRegistry.jupyterCollections).thenReturn([]);
-        when(uriProviderRegistration.onDidChangeProviders).thenReturn(onDidChangeProviders.event);
         when(uriStorage.remove(anything())).thenResolve();
         watcher = new RemoteKernelControllerWatcher(
             disposables,
-            instance(uriProviderRegistration),
             instance(uriStorage),
             instance(controllers),
             instance(jupyterServerProviderRegistry)
@@ -79,32 +73,41 @@ suite('RemoteKernelControllerWatcher', () => {
         const provider1Handle1: string = 'provider1Handle1';
         const serverProviderHandle = { handle: provider1Handle1, id: provider1Id, extensionId: '1' };
         const remoteUriForProvider1 = generateIdFromRemoteProvider(serverProviderHandle);
-        let onDidChangeHandles: undefined | (() => Promise<void>);
-        const provider1 = mock<IInternalJupyterUriProvider>();
-        when(provider1.id).thenReturn(provider1Id);
-        when(provider1.extensionId).thenReturn('1');
-        when(provider1.getHandles!()).thenResolve([provider1Handle1]);
-        when(provider1.onDidChangeHandles).thenReturn(
-            (cb: Function, ctx: Object) => (onDidChangeHandles = cb.bind(ctx))
-        );
+        const collection1 = mock<JupyterServerCollection>();
+        when(collection1.id).thenReturn(provider1Id);
+        when(collection1.extensionId).thenReturn('1');
+        const server1 = mock<JupyterServer>();
+        when(server1.id).thenReturn(provider1Handle1);
+        const serverProvider1DidChange1 = new EventEmitter<void>();
+        disposables.push(serverProvider1DidChange1);
+        const serverProvider1 = mock<JupyterServerProvider>();
+        when(serverProvider1.provideJupyterServers(anything())).thenResolve([instance(server1)] as any);
+        when(serverProvider1.onDidChangeServers).thenReturn(serverProvider1DidChange1.event);
+        when(collection1.serverProvider).thenReturn(instance(serverProvider1));
 
-        const provider2 = mock<IInternalJupyterUriProvider>();
-        when(provider2.id).thenReturn('provider2');
-        when(provider2.getHandles).thenReturn(undefined);
-        when(provider2.onDidChangeHandles).thenReturn(undefined);
+        const collection2 = mock<JupyterServerCollection>();
+        when(collection2.id).thenReturn('provider2');
+        const serverProvider2 = mock<JupyterServerProvider>();
+        when(serverProvider2.provideJupyterServers(anything())).thenResolve([] as any);
+        when(collection2.serverProvider).thenReturn(instance(serverProvider2));
+        const serverProvider1DidChange2 = new EventEmitter<void>();
+        disposables.push(serverProvider1DidChange2);
+        when(serverProvider2.onDidChangeServers).thenReturn(serverProvider1DidChange2.event);
 
-        const provider3 = mock<IInternalJupyterUriProvider>();
-        let onDidChangeHandles3: undefined | (() => Promise<void>);
-        when(provider3.id).thenReturn('provider3');
-        when(provider3.getHandles!()).thenResolve(['provider3Handle1']);
-        when(provider3.onDidChangeHandles).thenReturn(
-            (cb: Function, ctx: Object) => (onDidChangeHandles3 = cb.bind(ctx))
-        );
-
-        when(uriProviderRegistration.providers).thenReturn([
-            instance(provider1),
-            instance(provider2),
-            instance(provider3)
+        const collection3 = mock<JupyterServerCollection>();
+        when(collection3.id).thenReturn('provider3');
+        const server3 = mock<JupyterServer>();
+        when(server3.id).thenReturn('provider3Handle1');
+        const serverProvider3 = mock<JupyterServerProvider>();
+        when(serverProvider3.provideJupyterServers(anything())).thenResolve([instance(server3)] as any);
+        when(collection3.serverProvider).thenReturn(instance(serverProvider3));
+        const serverProvider1DidChange3 = new EventEmitter<void>();
+        disposables.push(serverProvider1DidChange3);
+        when(serverProvider2.onDidChangeServers).thenReturn(serverProvider1DidChange3.event);
+        when(jupyterServerProviderRegistry.jupyterCollections).thenReturn([
+            instance(collection1),
+            instance(collection2),
+            instance(collection3)
         ]);
 
         const localKernel = createControllerForLocalKernelSpec('local1');
@@ -138,17 +141,9 @@ suite('RemoteKernelControllerWatcher', () => {
         when(uriStorage.add(anything())).thenResolve();
         when(uriStorage.add(anything(), anything())).thenResolve();
 
+        // const serversChanged = createEventHandler(instance(serverProvider1), 'onDidChangeServers');
         watcher.activate();
-
-        clock.runAllAsync().catch(noop);
-        await waitForCondition(
-            async () => {
-                verify(provider1.onDidChangeHandles).atLeast(1);
-                return true;
-            },
-            5_000,
-            'Timed out waiting for onDidChangeHandles to be called'
-        );
+        await clock.runAllAsync().catch(noop);
 
         // 1. Verify that none of the controllers were disposed.
         verify(localKernel.dispose()).never();
@@ -156,8 +151,9 @@ suite('RemoteKernelControllerWatcher', () => {
         verify(remoteLiveKernel.dispose()).never();
 
         // 2. When a provider triggers a change in its handles and we're not using its handles, then none of the controllers should get disposed.
-        when(provider1.getHandles!()).thenResolve([provider1Handle1]);
-        await onDidChangeHandles3!();
+        when(serverProvider1.provideJupyterServers(anything())).thenResolve([instance(server1)] as any);
+        serverProvider1DidChange1.fire();
+        await clock.runAllAsync();
 
         verify(localKernel.dispose()).never();
         verify(remoteKernelSpec.dispose()).never();
@@ -165,10 +161,10 @@ suite('RemoteKernelControllerWatcher', () => {
 
         // 3. When we trigger a change in the handles, but the same handles are still returned, then
         // Verify that none of the controllers were disposed.
-        when(provider1.getHandles!()).thenResolve([provider1Handle1]);
-        await onDidChangeHandles!();
+        when(serverProvider1.provideJupyterServers(anything())).thenResolve([instance(server1)] as any);
+        serverProvider1DidChange1.fire!();
+        await clock.runAllAsync();
 
-        assert.isOk(onDidChangeHandles, 'onDidChangeHandles should be defined');
         verify(uriStorage.remove(anything())).never();
         verify(localKernel.dispose()).never();
         verify(remoteKernelSpec.dispose()).never();
@@ -176,10 +172,12 @@ suite('RemoteKernelControllerWatcher', () => {
 
         // 4. When we trigger a change in the handles, & different handles are returned, then
         // Verify that the old controllers have been disposed.
-        when(provider1.getHandles!()).thenResolve(['somethingElse']);
-        await onDidChangeHandles!();
+        const server1A = mock<JupyterServer>();
+        when(server1A.id).thenReturn('somethingElse');
+        when(serverProvider1.provideJupyterServers(anything())).thenResolve([instance(server1A)] as any);
+        serverProvider1DidChange1.fire!();
+        await clock.runAllAsync();
 
-        assert.isOk(onDidChangeHandles, 'onDidChangeHandles should be defined');
         verify(uriStorage.remove(deepEqual(serverProviderHandle))).once();
         verify(localKernel.dispose()).never();
         verify(remoteKernelSpec.dispose()).once();
@@ -202,6 +200,7 @@ suite('RemoteKernelControllerWatcher', () => {
         serverProviderHandle: JupyterServerProviderHandle
     ) {
         const remoteKernelSpec = mock<IVSCodeNotebookController>();
+        when(remoteKernelSpec.id).thenReturn(id);
         when(remoteKernelSpec.dispose()).thenReturn();
         when(remoteKernelSpec.connection).thenReturn(
             RemoteKernelSpecConnectionMetadata.create({
@@ -231,7 +230,6 @@ suite('RemoteKernelControllerWatcher', () => {
         return remoteLiveKernel;
     }
     test('Dispose controllers associated with an Jupyter Collection', async () => {
-        when(uriProviderRegistration.providers).thenReturn([]);
         const localKernel = createControllerForLocalKernelSpec('local1');
         const remoteKernelSpecExt1Coll1Server1 = createControllerForRemoteKernelSpec('remote1', 'http://server1:8888', {
             extensionId: '1',

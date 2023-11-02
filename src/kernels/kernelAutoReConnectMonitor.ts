@@ -3,7 +3,14 @@
 
 import type { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import { Disposable, NotebookCell, NotebookCellExecutionState, notebooks, ProgressLocation } from 'vscode';
+import {
+    CancellationTokenSource,
+    Disposable,
+    NotebookCell,
+    NotebookCellExecutionState,
+    notebooks,
+    ProgressLocation
+} from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IApplicationShell } from '../platform/common/application/types';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
@@ -22,7 +29,7 @@ import {
     isRemoteConnection,
     RemoteKernelConnectionMetadata
 } from './types';
-import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
+import { IJupyterServerProviderRegistry, IJupyterServerUriStorage } from './jupyter/types';
 
 /**
  * In the case of Jupyter kernels, when a kernel dies Jupyter will automatically restart that kernel.
@@ -41,8 +48,8 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration
+        @inject(IJupyterServerProviderRegistry)
+        private readonly jupyterUriProviderRegistration: IJupyterServerProviderRegistry
     ) {}
     public activate(): void {
         this.kernelProvider.onDidStartKernel(this.onDidStartKernel, this, this.disposableRegistry);
@@ -213,25 +220,29 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         kernel: IKernel,
         metadata: RemoteKernelConnectionMetadata
     ): Promise<boolean> {
-        const provider = await this.jupyterUriProviderRegistration.getProvider(
-            metadata.serverProviderHandle.extensionId,
-            metadata.serverProviderHandle.id
+        const collection = this.jupyterUriProviderRegistration.jupyterCollections.find(
+            (c) =>
+                c.extensionId === metadata.serverProviderHandle.extensionId && c.id === metadata.serverProviderHandle.id
         );
-        if (!provider || !provider.getHandles) {
+        if (!collection) {
             return false;
         }
 
+        const token = new CancellationTokenSource();
         try {
-            const handles = await provider.getHandles();
-
+            const servers = await Promise.resolve(collection.serverProvider.provideJupyterServers(token.token));
+            const handles = (servers || []).map((s) => s.id);
             if (!handles.includes(metadata.serverProviderHandle.handle)) {
                 await this.serverUriStorage.remove(metadata.serverProviderHandle);
                 this.kernelReconnectProgress.get(kernel)?.dispose();
                 this.kernelReconnectProgress.delete(kernel);
+                return true;
             }
-            return true;
+            return false;
         } catch (_ex) {
             return false;
+        } finally {
+            token.dispose();
         }
     }
 }

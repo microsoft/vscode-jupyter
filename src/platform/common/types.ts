@@ -224,7 +224,7 @@ export interface IExtensions {
      * @return An extension or `undefined`.
      */
     getExtension<T>(extensionId: string): Extension<T> | undefined;
-    determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }>;
+    determineExtensionFromCallStack(stack?: string): Promise<{ extensionId: string; displayName: string }>;
 }
 
 export const IBrowserService = Symbol('IBrowserService');

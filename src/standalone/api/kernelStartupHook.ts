@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IKernel, IKernelProvider, IKernelSession, isRemoteConnection } from '../../kernels/types';
 import { IDisposableRegistry, IExtensions } from '../../platform/common/types';
-import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { CancellationError, CancellationToken } from 'vscode';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
@@ -20,8 +20,6 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterUrisRegistration: IJupyterUriProviderRegistration,
         @inject(IExtensions)
         private readonly extensions: IExtensions,
         @inject(IJupyterServerProviderRegistry)
@@ -63,40 +61,22 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                     // No hooks
                     return;
                 }
-                const onStartKernel = serverProvider.serverProvider.onStartKernel.bind(serverProvider.serverProvider);
-                const provider = this.jupyterUrisRegistration.providers.find(
-                    (p) =>
-                        p.extensionId === connection.serverProviderHandle.extensionId &&
-                        p.id === connection.serverProviderHandle.id
-                );
-                if (!provider) {
-                    // This is not possible
-                    traceError(
-                        `Unable to find Provider for ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
-                    );
-                    return;
-                }
-                const servers = provider.servers;
-                if (!servers) {
+                const servers = await Promise.resolve(serverProvider.serverProvider.provideJupyterServers(token));
+                const server = servers?.find((s) => s.id === connection.serverProviderHandle.handle);
+                if (!server) {
                     // This is not possible
                     traceError(
                         `Unable to find servers for kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
                     );
                     return;
                 }
-                const server = servers.find((s) => s.id === connection.serverProviderHandle.handle);
-                if (!server) {
-                    // This is not possible
-                    traceError(
-                        `Unable to find server for kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id} and handle ${connection.serverProviderHandle.id}}`
-                    );
-                    return;
-                }
+
+                const onStartKernel = serverProvider.serverProvider.onStartKernel.bind(serverProvider.serverProvider);
                 const time = Date.now();
                 try {
-                    const extension = this.extensions.getExtension(provider.extensionId);
+                    const extension = this.extensions.getExtension(serverProvider.extensionId);
                     const message = DataScience.runningKernelStartupHooksFor(
-                        extension?.packageJSON?.displayName || provider.extensionId
+                        extension?.packageJSON?.displayName || serverProvider.extensionId
                     );
                     await KernelProgressReporter.wrapAndReportProgress(kernel.resourceUri, message, () =>
                         raceCancellation(token, onStartKernel({ uri: kernel.uri, server, session }, token))

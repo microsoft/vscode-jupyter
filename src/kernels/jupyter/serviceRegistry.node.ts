@@ -19,7 +19,6 @@ import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertIn
 import { JupyterConnection } from './connection/jupyterConnection';
 import { JupyterKernelService } from './session/jupyterKernelService.node';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
-import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector.node';
 import { JupyterServerHelper } from './launcher/jupyterServerHelper.node';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector.node';
@@ -35,7 +34,6 @@ import {
     INbConvertExportToPythonService,
     IJupyterServerProvider,
     IJupyterInterpreterDependencyManager,
-    IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
     IJupyterKernelService,
     INotebookStarter,
@@ -94,11 +92,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IJupyterSubCommandExecutionService,
         JupyterInterpreterSubCommandExecutionService
     );
-    serviceManager.addSingleton<IJupyterUriProviderRegistration>(
-        IJupyterUriProviderRegistration,
-        JupyterUriProviderRegistration
-    );
-    serviceManager.addBinding(IJupyterUriProviderRegistration, IExtensionSyncActivationService);
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<INotebookStarter>(INotebookStarter, JupyterServerStarter);
     serviceManager.addSingleton<IJupyterServerConnector>(IJupyterServerConnector, JupyterServerConnector);

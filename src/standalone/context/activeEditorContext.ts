@@ -15,7 +15,7 @@ import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactiv
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { isPythonNotebook } from '../../kernels/helpers';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 
 /**
  * Tracks a lot of the context keys needed in the extension.
@@ -49,8 +49,8 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IControllerRegistration) private readonly controllers: IControllerRegistration,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration
+        @inject(IJupyterServerProviderRegistry)
+        private readonly jupyterUriProviderRegistration: IJupyterServerProviderRegistry
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -196,9 +196,11 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         }
 
         const connection = kernel.kernelConnectionMetadata;
-        const provider = await this.jupyterUriProviderRegistration
-            .getProvider(connection.serverProviderHandle.extensionId, connection.serverProviderHandle.id)
-            .catch(noop);
+        const provider = await this.jupyterUriProviderRegistration.jupyterCollections.find(
+            (c) =>
+                c.extensionId === connection.serverProviderHandle.extensionId &&
+                c.id === connection.serverProviderHandle.id
+        );
 
         if (!provider) {
             this.kernelSourceContext.set('').catch(noop);
