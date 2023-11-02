@@ -6,7 +6,7 @@ import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, 
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { ResourceTypeTelemetryProperty, sendTelemetryEvent, Telemetry } from '../../telemetry';

@@ -12,7 +12,7 @@ import {
     IJupyterUriProviderRegistration,
     JupyterServerProviderHandle
 } from '../../../kernels/jupyter/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { JupyterServerUriStorage, StorageMRUItem } from './serverUriStorage';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
@@ -29,7 +29,7 @@ suite('Server Uri Storage', async () => {
     let serverUriStorage: IJupyterServerUriStorage;
     let memento: Memento;
     let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let encryptedStorage: IEncryptedStorage;
     let jupyterPickerRegistration: IJupyterUriProviderRegistration;
     let fs: IFileSystem;
@@ -77,7 +77,7 @@ suite('Server Uri Storage', async () => {
         onDidAddEvent = createEventHandler(serverUriStorage, 'onDidAdd', disposables);
     });
     teardown(() => {
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
 
     test('Migrate data from old storage to new & get all', async () => {

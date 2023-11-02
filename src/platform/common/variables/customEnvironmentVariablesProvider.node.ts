@@ -11,7 +11,7 @@ import { IDisposableRegistry, Resource } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '../../logging';
-import { dispose } from '../helpers';
+import { dispose } from '../utils/lifecycle';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { noop } from '../utils/misc';
 

@@ -14,7 +14,7 @@ import {
     WorkspaceConfiguration
 } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
-import { dispose } from '../common/helpers';
+import { dispose } from '../common/utils/lifecycle';
 import { IPlatformService } from '../common/platform/types';
 import { IFileSystemNode } from '../common/platform/types.node';
 import { IDisposable } from '../common/types';
@@ -22,7 +22,7 @@ import { ignoreListSettingName, ReservedNamedProvider } from './reservedNamedPro
 import * as path from '../vscode-path/path';
 
 suite('Reserved Names Provider', () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let reservedNamedProvider: ReservedNamedProvider;
     let memento: Memento;
     let workspace: IWorkspaceService;
@@ -47,7 +47,7 @@ suite('Reserved Names Provider', () => {
         createProvider();
     });
     teardown(() => {
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
     function createProvider() {
         reservedNamedProvider = new ReservedNamedProvider(

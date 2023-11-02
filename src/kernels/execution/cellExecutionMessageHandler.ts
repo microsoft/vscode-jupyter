@@ -26,7 +26,7 @@ import {
 import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { concatMultilineString, formatStreamText, isJupyterNotebook } from '../../platform/common/utils';

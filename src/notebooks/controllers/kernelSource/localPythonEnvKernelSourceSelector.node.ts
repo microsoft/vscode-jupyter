@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationError, CancellationTokenSource, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { IKernelFinder, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { DataScience } from '../../../platform/common/utils/localize';

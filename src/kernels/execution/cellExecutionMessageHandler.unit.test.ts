@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import dedent from 'dedent';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { IKernelController } from '../types';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
@@ -33,7 +33,7 @@ import { JupyterRequestCreator } from '../jupyter/session/jupyterRequestCreator.
 import { waitForCondition } from '../../test/common';
 
 suite(`Cell Execution Message Handler`, () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let appShell: IApplicationShell;
     let controller: IKernelController;
     let context: IExtensionContext;
@@ -91,7 +91,7 @@ suite(`Cell Execution Message Handler`, () => {
         kernel = fakes.connection;
         fakeSocket = fakes.socket;
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
 
     suite('Display Updates', () => {
         const display_id = 'displayIdXYZ';

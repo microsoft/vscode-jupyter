@@ -10,7 +10,7 @@ import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { WIDGET_MIMETYPE } from '../../../platform/common/constants';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { traceVerbose } from '../../../platform/logging';

@@ -7,7 +7,7 @@ import { IMemento, GLOBAL_MEMENTO, IDisposable, IDisposableRegistry } from '../.
 import { BuiltInModules } from './constants';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IReservedPythonNamedProvider } from './types';
 import minimatch from 'minimatch';
 import { IFileSystemNode } from '../common/platform/types.node';

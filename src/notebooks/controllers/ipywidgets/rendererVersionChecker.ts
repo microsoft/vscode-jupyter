@@ -6,7 +6,7 @@ import { commands, extensions, NotebookDocumentChangeEvent, workspace } from 'vs
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { RendererExtension, WIDGET_MIMETYPE } from '../../../platform/common/constants';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { isJupyterNotebook } from '../../../platform/common/utils';
 import { Common, DataScience } from '../../../platform/common/utils/localize';

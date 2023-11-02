@@ -18,7 +18,7 @@ import {
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
 import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -45,7 +45,7 @@ suite('Kernel Connector', () => {
     let kernelProvider: IKernelProvider;
     let trustedKernels: ITrustedKernelPaths;
     let notebook: NotebookDocument;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let controller: IKernelController;
     let kernel: IKernel;
     let errorHandler: IDataScienceErrorHandler;
@@ -93,7 +93,7 @@ suite('Kernel Connector', () => {
         when(kernelProvider.getOrCreate(anything(), anything())).thenReturn(instance(kernel));
         controller = createKernelController(pythonConnection.id);
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     test('Can start a kernel', async () => {
         when(kernel.status).thenReturn('idle');
 

@@ -15,12 +15,12 @@ import { KernelProvider } from './kernelProvider.web';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import { IKernelSessionFactory, IKernelController, IStartupCodeProviders, KernelConnectionMetadata } from './types';
 import { ThirdPartyKernelProvider } from './kernelProvider.node';
-import { dispose } from '../platform/common/helpers';
+import { dispose } from '../platform/common/utils/lifecycle';
 import { noop } from '../test/core';
 
 suite('Jupyter Session', () => {
     suite('Web Kernel Provider', function () {
-        const disposables: IDisposable[] = [];
+        let disposables: IDisposable[] = [];
         const asyncDisposables: { dispose: () => Promise<unknown> }[] = [];
         let sessionCreator: IKernelSessionFactory;
         let configService: IConfigurationService;
@@ -81,7 +81,7 @@ suite('Jupyter Session', () => {
         }
         teardown(async () => {
             sinon.restore();
-            dispose(disposables);
+            disposables = dispose(disposables);
             await Promise.all(asyncDisposables.map((item) => item.dispose().catch(noop)));
             asyncDisposables.length = 0;
         });

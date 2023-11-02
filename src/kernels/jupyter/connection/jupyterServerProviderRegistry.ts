@@ -21,12 +21,12 @@ import {
 import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../types';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { inject, injectable } from 'inversify';
-import { dispose, stripCodicons } from '../../../platform/common/helpers';
+import { stripCodicons } from '../../../platform/common/helpers';
 import { traceError } from '../../../platform/logging';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { JupyterConnection } from './jupyterConnection';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { DisposableBase, ObservableDisposable } from '../../../platform/common/utils/lifecycle';
+import { DisposableBase, ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
 
 export class JupyterServerCollectionImpl extends ObservableDisposable implements JupyterServerCollection {
     private _commandProvider?: JupyterServerCommandProvider;
@@ -89,10 +89,10 @@ class JupyterUriProviderAdaptor extends DisposableBase implements IJupyterUriPro
     }
     override dispose() {
         super.dispose();
-        dispose(this.providerChanges);
+        this.providerChanges = dispose(this.providerChanges);
     }
     private hookupProviders() {
-        dispose(this.providerChanges);
+        this.providerChanges = dispose(this.providerChanges);
         if (this.provider.serverProvider?.onDidChangeServers) {
             this.provider.serverProvider.onDidChangeServers(
                 () => {

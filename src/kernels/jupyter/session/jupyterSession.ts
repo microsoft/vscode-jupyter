@@ -21,7 +21,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { getResourceType } from '../../../platform/common/utils';
 import { waitForIdleOnSession } from '../../common/helpers';
 import { BaseJupyterSessionConnection } from '../../common/baseJupyterSessionConnection';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 
 export class JupyterSessionWrapper
     extends BaseJupyterSessionConnection<Session.ISessionConnection, 'localJupyter' | 'remoteJupyter'>

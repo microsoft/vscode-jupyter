@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import { instance, mock, when } from 'ts-mockito';
 import { EventEmitter, NotebookDocument } from 'vscode';
 import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IConfigurationService, IDisposable } from '../../platform/common/types';
 import { CodeGenerator } from './codeGenerator';
 import { CodeGeneratorFactory } from './codeGeneratorFactory';
@@ -19,7 +19,7 @@ suite('CodeGeneratorFactory', () => {
     let docManager: IDocumentManager;
     let configService: IConfigurationService;
     let storageFactory: IGeneratedCodeStorageFactory;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let notebooks: IVSCodeNotebook;
     let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
     let clearMethodOnStorage: sinon.SinonSpy<[], void>;
@@ -42,7 +42,7 @@ suite('CodeGeneratorFactory', () => {
         clearMethodOnStorage = sinon.spy(GeneratedCodeStorage.prototype, 'clear');
     });
     teardown(() => {
-        dispose(disposables);
+        disposables = dispose(disposables);
         sinon.restore();
     });
     test('Return nothing for unknown notebooks', () => {

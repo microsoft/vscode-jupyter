@@ -11,7 +11,7 @@ import {
     IWorkspaceService
 } from '../../platform/common/application/types';
 import { ContextKey } from '../../platform/common/contextKey';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -55,8 +55,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         disposableRegistry.push(this);
         disposableRegistry.push(
             workspace.onDidGrantWorkspaceTrust(() => {
-                dispose(this.activeCodeWatchers);
-                this.activeCodeWatchers = [];
+                this.activeCodeWatchers = dispose(this.activeCodeWatchers);
                 this.didChangeCodeLenses.fire();
             })
         );

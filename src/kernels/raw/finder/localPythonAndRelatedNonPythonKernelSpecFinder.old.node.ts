@@ -16,7 +16,7 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, IDisposableRegistry, WORKSPACE_MEMENTO } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { ITrustedKernelPaths } from './types';
 import {
     GlobalPythonKernelSpecFinder,

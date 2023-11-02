@@ -35,7 +35,7 @@ import {
     IApplicationEnvironment
 } from '../../platform/common/application/types';
 import { noop } from '../../test/core';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { JVSC_EXTENSION_ID, Settings, UserJupyterServerPickerProviderId } from '../../platform/common/constants';
 import { assert } from 'chai';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
@@ -54,7 +54,7 @@ suite('User Uri Provider', () => {
     let encryptedStorage: IEncryptedStorage;
     let serverUriStorage: IJupyterServerUriStorage;
     let globalMemento: Memento;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let multiStepFactory: IMultiStepInputFactory;
     let asyncDisposables: IAsyncDisposable[] = [];
     let asyncDisposableRegistry: IAsyncDisposableRegistry = {
@@ -203,7 +203,7 @@ suite('User Uri Provider', () => {
     });
     teardown(async () => {
         sinon.restore();
-        dispose(disposables);
+        disposables = dispose(disposables);
         await asyncDisposableRegistry.dispose();
     });
 

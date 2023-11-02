@@ -7,7 +7,7 @@ import { assert, use } from 'chai';
 import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { JupyterConnection } from './jupyterConnection';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IJupyterRequestAgentCreator, IJupyterRequestCreator, IJupyterUriProviderRegistration } from '../types';
 import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
@@ -24,7 +24,7 @@ suite('Jupyter Connection', async () => {
     let appShell: IApplicationShell;
     let configService: IConfigurationService;
     let errorHandler: IDataScienceErrorHandler;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let requestAgentCreator: IJupyterRequestAgentCreator;
     let requestCreator: IJupyterRequestCreator;
 
@@ -60,7 +60,7 @@ suite('Jupyter Connection', async () => {
     });
     teardown(() => {
         sinon.restore();
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
     test('Validation will result in fetching kernels and kernelSpecs (Uri info provided)', async () => {
         when(sessionManager.dispose()).thenResolve();

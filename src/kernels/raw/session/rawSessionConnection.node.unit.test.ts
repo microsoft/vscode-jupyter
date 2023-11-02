@@ -11,7 +11,7 @@ import { noop } from '../../../test/core';
 import { assert } from 'chai';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { IDisposable, ReadWrite } from '../../../platform/common/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { resolvableInstance } from '../../../test/datascience/helpers';
 import { waitForCondition } from '../../../test/common';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
@@ -30,7 +30,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         reason?: string | undefined;
     }>;
     const launchTimeout = 1_000;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let kernelConnectionMetadata: LocalKernelSpecConnectionMetadata;
     const OldKernelConnectionClass = nonSerializingKernel.KernelConnection;
     const kernelInfo: KernelMessage.IInfoReply = {
@@ -183,7 +183,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
     teardown(async () => {
         nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
         sinon.reset();
-        dispose(disposables);
+        disposables = dispose(disposables);
         await session
             .shutdown()
             .catch(noop)

@@ -27,7 +27,7 @@ import { JupyterInterpreterSubCommandExecutionService } from './jupyterInterpret
 import { noop } from '../../../test/core';
 import { createObservable } from '../../../platform/common/process/proc.node';
 import { IDisposable } from '../../../platform/common/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -41,7 +41,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
     const activePythonInterpreter = createPythonInterpreter({ displayName: 'activePythonInterpreter' });
     let notebookStartResult: ObservableExecutionResult<string>;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     setup(() => {
         interpreterService = mock<IInterpreterService>();
         jupyterInterpreter = mock(JupyterInterpreterService);
@@ -83,7 +83,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         when(interpreterService.getActiveInterpreter(undefined)).thenResolve(activePythonInterpreter);
     });
     teardown(() => {
-        dispose(disposables);
+        disposables = dispose(disposables);
         sinon.restore();
     });
     // eslint-disable-next-line

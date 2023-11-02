@@ -7,7 +7,7 @@ import { IKernel, IKernelProvider } from '../kernels/types';
 import { IControllerRegistration } from '../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveWindowView } from '../platform/common/constants';
-import { dispose } from '../platform/common/helpers';
+import { dispose } from '../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 

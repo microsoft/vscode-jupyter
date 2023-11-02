@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -43,7 +43,7 @@ suite('Jupyter Interpreter Service', () => {
         sysPrefix: '',
         sysVersion: ''
     };
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
 
     setup(() => {
         interpreterSelector = mock(JupyterInterpreterSelector);
@@ -73,7 +73,7 @@ suite('Jupyter Interpreter Service', () => {
         jupyterInterpreterService.onDidChangeInterpreter((e) => (selectedInterpreterEventArgs = e));
         when(interpreterSelector.selectPythonInterpreter()).thenResolve(pythonInterpreter);
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
 
     test('Cancelling interpreter configuration is same as cancelling selection of an interpreter', async () => {
         when(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything())).thenResolve(

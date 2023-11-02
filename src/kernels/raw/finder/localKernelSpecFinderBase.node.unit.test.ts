@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, Uri } from 'vscode';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable } from '../../../platform/common/types';
 import { uriEquals } from '../../../test/datascience/helpers';
@@ -14,7 +14,7 @@ import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 
 suite('Local Kernel Spec Finder', () => {
     let finder: LocalKernelSpecFinder;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let fs: IFileSystemNode;
     let globalState: Memento;
     let cancellation: CancellationTokenSource;
@@ -28,7 +28,7 @@ suite('Local Kernel Spec Finder', () => {
         finder = new LocalKernelSpecFinder(instance(fs), instance(globalState), instance(jupyterPaths));
         disposables.push(finder);
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
 
     test('Load a kernel spec file', async () => {
         const kernelSpec: IJupyterKernelSpec = {

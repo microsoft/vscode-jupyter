@@ -23,7 +23,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { IDisposable, IJupyterSettings, IOutputChannel } from '../../../platform/common/types';
 import { CancellationTokenSource, Uri } from 'vscode';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { noop } from '../../../test/core';
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'stream';
@@ -62,7 +62,7 @@ suite('kernel Process', () => {
     let tempFileDisposable: IDisposable;
     let processService: IProcessService;
     let pythonProcess: IPythonExecutionService;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let observableOutput: ReturnType<typeof createObservable<Output<string>>>;
     let daemon: PythonKernelInterruptDaemon;
     let proc: ChildProcess;
@@ -147,7 +147,7 @@ suite('kernel Process', () => {
     });
     teardown(() => {
         rewiremock.disable();
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
     test('Ensure kernelspec json file is created & the temp file disposed (to prevent file handle being left open)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
@@ -419,7 +419,7 @@ suite('kernel Process', () => {
 suite('Kernel Process', () => {
     let processService: IProcessService;
     let pythonExecFactory: IPythonExecutionFactory;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let token: CancellationTokenSource;
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
@@ -445,7 +445,7 @@ suite('Kernel Process', () => {
         rewiremock.disable();
         sinon.restore();
         traceInfo(`End Test Complete ${this.currentTest?.title}`);
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
 
     function launchKernel(metadata: LocalKernelSpecConnectionMetadata, connectionFile: string) {

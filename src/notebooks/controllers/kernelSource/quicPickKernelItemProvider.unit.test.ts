@@ -9,7 +9,7 @@ import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../
 import { IDisposable } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
@@ -28,7 +28,7 @@ suite('Quick Pick Kernel Item Provider', () => {
             let onDidChangeKernels: EventEmitter<{ added?: any[]; removed?: any[]; updated?: any[] }>;
             let onDidChangeStatus: EventEmitter<void>;
             let jupyterConnection: JupyterConnection;
-            const disposables: IDisposable[] = [];
+            let disposables: IDisposable[] = [];
             let clock: fakeTimers.InstalledClock;
             const pythonEnvFilter = mock<PythonEnvironmentFilter>();
             when(pythonEnvFilter.isPythonEnvironmentExcluded(anything())).thenReturn(false);
@@ -75,7 +75,7 @@ suite('Quick Pick Kernel Item Provider', () => {
                     instance(jupyterConnection)
                 );
             }
-            teardown(() => dispose(disposables));
+            teardown(() => (disposables = dispose(disposables)));
             test('Verify title and status', async () => {
                 createProvider();
 

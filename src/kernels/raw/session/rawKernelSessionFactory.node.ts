@@ -14,7 +14,7 @@ import { isCancellationError, raceCancellationError } from '../../../platform/co
 import { noop } from '../../../platform/common/utils/misc';
 import { RawJupyterSessionWrapper } from './rawJupyterSession.node';
 import { RawSessionConnection } from './rawSessionConnection.node';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 
 @injectable()
 export class RawKernelSessionFactory implements IRawKernelSessionFactory {

@@ -5,7 +5,7 @@
 import * as sinon from 'sinon';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { IDisposable } from '../platform/common/types';
-import { dispose } from '../platform/common/helpers';
+import { dispose } from '../platform/common/utils/lifecycle';
 import { IApplicationShell } from '../platform/common/application/types';
 import {
     IKernel,
@@ -35,7 +35,7 @@ import { IJupyterServerUriEntry, IJupyterServerUriStorage, IJupyterUriProviderRe
 import { noop } from '../test/core';
 
 suite('Kernel ReConnect Progress Message', () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let monitor: KernelAutoReconnectMonitor;
     let appShell: IApplicationShell;
     let kernelProvider: IKernelProvider;
@@ -75,7 +75,7 @@ suite('Kernel ReConnect Progress Message', () => {
         );
         monitor.activate();
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     function createKernel() {
         const kernel = mock<IKernel>();
         const onRestarted = new EventEmitter<void>();
@@ -142,7 +142,7 @@ suite('Kernel ReConnect Progress Message', () => {
 });
 
 suite('Kernel ReConnect Failed Monitor', () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let monitor: KernelAutoReconnectMonitor;
     let appShell: IApplicationShell;
     let kernelProvider: IKernelProvider;
@@ -194,7 +194,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         );
         monitor.activate();
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     function createKernel(serverProviderHandle = { handle: '1234', id: '1234', extensionId: '' }) {
         const kernel = mock<IKernel>();
         const onPreExecute = new EventEmitter<NotebookCell>();

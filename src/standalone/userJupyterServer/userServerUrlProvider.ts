@@ -69,7 +69,7 @@ import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfC
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';

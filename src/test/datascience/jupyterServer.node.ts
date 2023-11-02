@@ -16,10 +16,11 @@ import * as child_process from 'child_process';
 import { Event, EventEmitter } from '@c4312/evt';
 const uuidToHex = require('uuid-to-hex') as typeof import('uuid-to-hex');
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
-import { dispose, splitLines } from '../../platform/common/helpers';
+import { splitLines } from '../../platform/common/helpers';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 import { sleep } from '../core';
 import { noop } from '../../platform/common/utils/misc';
+import { dispose } from '../../platform/common/utils/lifecycle';
 
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {

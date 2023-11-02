@@ -11,7 +11,7 @@ import { CancellationError, CancellationTokenSource, Disposable, Uri } from 'vsc
 import { LocalKernelSpecConnectionMetadata } from '../types';
 import { noop } from '../../test/core';
 import { IDisposable } from '../../platform/common/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { waitForIdleOnSession } from './helpers';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
@@ -23,7 +23,7 @@ suite('Kernel Common Helpers', () => {
     });
     let session: Session.ISessionConnection;
     let token: CancellationTokenSource;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let kernel: Kernel.IKernelConnection;
     let sessionDisposed: Signal<Session.ISessionConnection, void>;
 
@@ -82,7 +82,7 @@ suite('Kernel Common Helpers', () => {
         disposables.push(new Disposable(() => Signal.disconnectAll(instance(session))));
         disposables.push(new Disposable(() => Signal.disconnectAll(instance(kernel))));
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     test('Wait for Idle (kernel is already idle', async () => {
         when(kernel.status).thenReturn('idle');
 

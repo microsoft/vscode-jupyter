@@ -19,7 +19,7 @@ import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNot
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
 import { createJupyterConnectionInfo } from '../jupyterUtils';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 
 const urlMatcher = new RegExp(RegExpValues.UrlPatternRegEx);
 

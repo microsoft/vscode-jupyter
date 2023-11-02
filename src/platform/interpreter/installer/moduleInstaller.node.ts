@@ -19,7 +19,7 @@ import { splitLines } from '../../common/helpers';
 import { IPythonExecutionFactory } from '../types.node';
 import { Environment } from '@vscode/python-extension';
 import { IDisposable } from '../../common/types';
-import { dispose } from '../../common/helpers';
+import { dispose } from '../../common/utils/lifecycle';
 
 export type ExecutionInstallArgs = {
     args: string[];

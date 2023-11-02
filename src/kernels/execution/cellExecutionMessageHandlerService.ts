@@ -5,7 +5,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellExecution, NotebookDocument, workspace } from 'vscode';
 import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 

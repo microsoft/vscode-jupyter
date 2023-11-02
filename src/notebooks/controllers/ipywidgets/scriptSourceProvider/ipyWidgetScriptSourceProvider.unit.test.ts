@@ -15,7 +15,7 @@ import { ApplicationShell } from '../../../../platform/common/application/applic
 import { IApplicationShell, IWorkspaceService } from '../../../../platform/common/application/types';
 import { WorkspaceService } from '../../../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../../../platform/common/configuration/service.node';
-import { dispose } from '../../../../platform/common/helpers';
+import { dispose } from '../../../../platform/common/utils/lifecycle';
 import { HttpClient } from '../../../../platform/common/net/httpClient';
 import { PersistentState, PersistentStateFactory } from '../../../../platform/common/persistentState';
 import { IFileSystemNode } from '../../../../platform/common/platform/types.node';
@@ -50,7 +50,7 @@ suite('ipywidget - Widget Script Source Provider', () => {
     let context: IExtensionContext;
     let memento: Memento;
     let jupyterPaths: JupyterPaths;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     setup(() => {
         configService = mock(ConfigurationService);
         appShell = mock(ApplicationShell);
@@ -81,7 +81,7 @@ suite('ipywidget - Widget Script Source Provider', () => {
     });
     teardown(() => {
         sinon.restore();
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
     function createScripSourceProvider() {
         const httpClient = mock(HttpClient);

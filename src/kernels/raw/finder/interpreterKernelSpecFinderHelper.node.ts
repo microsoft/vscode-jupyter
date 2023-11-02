@@ -28,7 +28,7 @@ import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/in
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ITrustedKernelPaths } from './types';
 import { IDisposable } from '../../../platform/common/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { raceCancellation } from '../../../platform/common/cancellation';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';

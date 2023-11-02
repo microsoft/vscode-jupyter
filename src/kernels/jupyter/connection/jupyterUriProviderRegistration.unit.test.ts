@@ -11,7 +11,7 @@ import {
 } from './jupyterUriProviderRegistration';
 import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
 import { IDisposable, IExtensions } from '../../../platform/common/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { Disposable, EventEmitter, Memento, QuickPickItem } from 'vscode';
@@ -20,7 +20,7 @@ import { resolvableInstance } from '../../../test/datascience/helpers';
 use(chaiAsPromised);
 
 suite('Uri Provider Registration', () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let extensions: IExtensions;
     let globalMemento: Memento;
     let serviceContainer: IServiceContainer;
@@ -47,7 +47,7 @@ suite('Uri Provider Registration', () => {
         registration.activate();
         await clock.runAllAsync();
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     test('No Providers registered', async () => {
         assert.deepEqual(registration.providers, [], 'Providers should be empty');
 

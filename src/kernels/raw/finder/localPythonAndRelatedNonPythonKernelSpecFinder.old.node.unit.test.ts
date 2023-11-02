@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import { Disposable, Memento, Uri, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
@@ -38,7 +38,7 @@ suite(`Local Python and related kernels`, async () => {
     let extensionChecker: IPythonExtensionChecker;
     let kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder;
     let globalState: Memento;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let env: IApplicationEnvironment;
     let trustedKernels: ITrustedKernelPaths;
     let clock: fakeTimers.InstalledClock;

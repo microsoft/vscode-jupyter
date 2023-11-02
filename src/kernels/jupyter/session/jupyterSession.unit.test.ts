@@ -19,13 +19,13 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { JupyterKernelService } from '../../../kernels/jupyter/session/jupyterKernelService.node';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { resolvableInstance } from '../../../test/datascience/helpers';
 import { createEventHandler } from '../../../test/common';
 import { JupyterSessionWrapper } from './jupyterSession';
 
 suite('JupyterSession', () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let jupyterSession: JupyterSessionWrapper;
     let connection: IJupyterConnection;
     let session: Session.ISessionConnection;
@@ -107,7 +107,7 @@ suite('JupyterSession', () => {
     }
     teardown(async () => {
         await jupyterSession.disposeAsync().catch(noop);
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
 
     suite('Shutting down of sessions when disposing a session', () => {

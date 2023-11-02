@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IJupyterServerUriStorage } from '../types';

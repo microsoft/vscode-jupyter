@@ -19,7 +19,7 @@ import { InputFlowAction } from './utils/multiStepInput';
 import { Common, DataScience } from './utils/localize';
 import { noop } from './utils/misc';
 import { IDisposable } from './types';
-import { dispose } from './helpers';
+import { dispose } from './utils/lifecycle';
 import { DisposableBase } from './utils/lifecycle';
 
 abstract class BaseQuickPickItem implements QuickPickItem {
