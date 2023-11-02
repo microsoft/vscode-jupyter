@@ -76,6 +76,7 @@ import {
     isCI,
     isTestExecution,
     JUPYTER_OUTPUT_CHANNEL,
+    PylanceExtension,
     PythonExtension,
     STANDARD_OUTPUT_CHANNEL
 } from './platform/common/constants';
@@ -296,6 +297,12 @@ function addOutputChannel(context: IExtensionContext, serviceManager: IServiceMa
         standardOutputChannel.appendLine(`Python Extension Version: ${pythonExtension.packageJSON['version']}.`);
     } else {
         standardOutputChannel.appendLine('Python Extension not installed.');
+    }
+    const pylanceExtension = extensions.getExtension(PylanceExtension);
+    if (pylanceExtension) {
+        standardOutputChannel.appendLine(`Pylance Extension Version: ${pylanceExtension.packageJSON['version']}.`);
+    } else {
+        standardOutputChannel.appendLine('Pylance Extension not installed.');
     }
     standardOutputChannel.appendLine(`Platform: ${platform()} (${arch()}).`);
     if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
