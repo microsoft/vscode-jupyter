@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { Event, EventEmitter } from '@c4312/evt';
-import { traceWarning } from '../../logging';
 import { IDisposable } from '../types';
 import { once } from './functional';
 import { Iterable } from './iterable';
@@ -23,7 +22,7 @@ export function dispose<T extends IDisposable>(arg: T | Iterable<T> | undefined)
                 try {
                     d.dispose();
                 } catch (e) {
-                    traceWarning(`dispose() failed for ${d}`, e);
+                    console.warn(`dispose() failed for ${d}`, e);
                 }
             }
         }
