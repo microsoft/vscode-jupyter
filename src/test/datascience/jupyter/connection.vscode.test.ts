@@ -32,7 +32,7 @@ import {
     JupyterServerProviderHandle
 } from '../../../kernels/jupyter/types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento, workspace } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';

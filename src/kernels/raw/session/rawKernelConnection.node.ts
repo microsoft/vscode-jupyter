@@ -33,7 +33,7 @@ import {
     wrapCancellationTokens
 } from '../../../platform/common/cancellation';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { KernelSocketMap } from '../../kernelSocket';
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');

@@ -23,7 +23,7 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { JupyterConnectionWaiter } from './jupyterConnectionWaiter.node';
 import { noop } from '../../../test/core';
 import { createObservable } from '../../../platform/common/process/proc.node';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 use(chaiAsPromised);
 suite('Jupyter Connection Waiter', async () => {
     let observableOutput: ReturnType<typeof createObservable<Output<string>>>;
@@ -36,7 +36,7 @@ suite('Jupyter Connection Waiter', async () => {
     const dsSettings: IJupyterSettings = { jupyterLaunchTimeout: 10_000 } as any;
     const childProc = new events.EventEmitter();
     const notebookDir = Uri.file('someDir');
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     const dummyServerInfos: JupyterServerInfo[] = [
         {
             base_url: 'http://localhost1:1',
@@ -99,7 +99,7 @@ suite('Jupyter Connection Waiter', async () => {
             instance(mock<IJupyterRequestAgentCreator>())
         );
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
 
     function createConnectionWaiter() {
         return new JupyterConnectionWaiter(

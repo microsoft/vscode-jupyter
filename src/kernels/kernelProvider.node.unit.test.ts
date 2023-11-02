@@ -34,7 +34,7 @@ import {
     KernelConnectionMetadata,
     KernelOptions
 } from './types';
-import { dispose } from '../platform/common/helpers';
+import { dispose } from '../platform/common/utils/lifecycle';
 import { noop } from '../test/core';
 import { AsyncDisposableRegistry } from '../platform/common/asyncDisposableRegistry';
 import { JupyterNotebookView } from '../platform/common/constants';
@@ -43,7 +43,7 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 
 suite('Jupyter Session', () => {
     suite('Node Kernel Provider', function () {
-        const disposables: IDisposable[] = [];
+        let disposables: IDisposable[] = [];
         const asyncDisposables: { dispose: () => Promise<unknown> }[] = [];
         let sessionCreator: IKernelSessionFactory;
         let configService: IConfigurationService;
@@ -104,7 +104,7 @@ suite('Jupyter Session', () => {
         }
         teardown(async () => {
             sinon.restore();
-            dispose(disposables);
+            disposables = dispose(disposables);
             await Promise.all(asyncDisposables.map((item) => item.dispose().catch(noop)));
             asyncDisposables.length = 0;
         });
@@ -167,7 +167,7 @@ suite('Jupyter Session', () => {
     });
 
     suite('KernelProvider Node', () => {
-        const disposables: IDisposable[] = [];
+        let disposables: IDisposable[] = [];
         let asyncDisposables: AsyncDisposableRegistry;
         let kernelProvider: IKernelProvider;
         let thirdPartyKernelProvider: IThirdPartyKernelProvider;
@@ -260,7 +260,7 @@ suite('Jupyter Session', () => {
         teardown(async () => {
             when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
             CellOutputDisplayIdTracker.dispose();
-            dispose(disposables);
+            disposables = dispose(disposables);
             await asyncDisposables.dispose();
         });
         test('Test creation, getting current instance and triggering of events', async () => {

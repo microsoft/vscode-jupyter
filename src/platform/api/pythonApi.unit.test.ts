@@ -7,7 +7,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, WorkspaceFoldersChangeEvent } from 'vscode';
 import { createEventHandler } from '../../test/common';
 import { IWorkspaceService } from '../common/application/types';
-import { dispose } from '../common/helpers';
+import { dispose } from '../common/utils/lifecycle';
 import { IDisposable, IExtensionContext } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterService } from './pythonApi';
@@ -26,7 +26,7 @@ suite(`Interpreter Service`, () => {
     let extensionChecker: IPythonExtensionChecker;
     let workspace: IWorkspaceService;
     let context: IExtensionContext;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let onDidActivatePythonExtension: EventEmitter<void>;
     let onDidChangeWorkspaceFolders: EventEmitter<WorkspaceFoldersChangeEvent>;
     let onDidChangeActiveEnvironmentPath: EventEmitter<ActiveEnvironmentPathChangeEvent>;
@@ -67,7 +67,7 @@ suite(`Interpreter Service`, () => {
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     function createInterpreterService() {
         interpreterService = new InterpreterService(
             instance(apiProvider),

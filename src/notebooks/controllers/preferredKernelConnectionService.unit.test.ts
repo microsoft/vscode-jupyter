@@ -18,7 +18,7 @@ import {
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../kernels/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { NotebookMetadata } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -182,7 +182,7 @@ suite('Preferred Kernel Connection', () => {
         preferredService = new PreferredKernelConnectionService(instance(jupyterConnection));
         disposables.push(preferredService);
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     suite('Live Remote Kernels (preferred match)', () => {
         test('Find preferred kernel spec if there is no exact match for the live kernel connection (match kernel spec name)', async () => {
             when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(

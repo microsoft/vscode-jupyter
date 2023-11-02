@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IExtensions } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { Common } from '../../platform/common/utils/localize';
@@ -20,7 +20,7 @@ suite('Extension Recommendation', () => {
     ['kernelspec', 'language_info'].forEach((whereIsLanguageDefined) => {
         ['csharp', 'fsharp', 'powershell'].forEach((languageToBeTested) => {
             suite(`Notebook language '${languageToBeTested}' defined in ${whereIsLanguageDefined}`, () => {
-                const disposables: IDisposable[] = [];
+                let disposables: IDisposable[] = [];
                 let recommendation: ExtensionRecommendationService;
                 let vscNotebook: IVSCodeNotebook;
                 let memento: Memento;
@@ -65,7 +65,7 @@ suite('Extension Recommendation', () => {
                     when(memento.get(anything(), anything())).thenReturn([]);
                     recommendation.activate();
                 }
-                teardown(() => dispose(disposables));
+                teardown(() => (disposables = dispose(disposables)));
                 function createNotebook(language: string) {
                     const notebook = mock<NotebookDocument>();
                     const kernelSpecLanguage = whereIsLanguageDefined === 'kernelspec' ? language : undefined;

@@ -22,7 +22,7 @@ import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { JupyterConnection } from '../connection/jupyterConnection';

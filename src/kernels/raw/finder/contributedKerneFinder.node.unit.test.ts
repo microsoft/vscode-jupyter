@@ -30,7 +30,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
 import { CancellationTokenSource, Disposable, EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext, IExtensions } from '../../../platform/common/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import {
     BaseKernelConnectionMetadata,
     KernelConnectionMetadata,
@@ -63,7 +63,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
         let platformService: IPlatformService;
         let fs: FileSystem;
         let extensionChecker: IPythonExtensionChecker;
-        const disposables: IDisposable[] = [];
+        let disposables: IDisposable[] = [];
         let globalSpecPath: Uri | undefined;
         let tempDirForKernelSpecs: Uri;
         let jupyterPaths: JupyterPaths;
@@ -280,7 +280,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             pythonKernelFinderWrapper.activate();
         }
         teardown(() => {
-            dispose(disposables);
+            disposables = dispose(disposables);
             sinon.restore();
         });
 

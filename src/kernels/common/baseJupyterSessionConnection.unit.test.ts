@@ -10,11 +10,11 @@ import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IDisposable } from '../../platform/common/types';
 import { noop } from '../../test/core';
 import { BaseJupyterSessionConnection } from './baseJupyterSessionConnection';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { createEventHandler } from '../../test/common';
 
 suite('Base Jupyter Session Connection', () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let jupyterSession: BaseJupyterSessionConnection<Session.ISessionConnection, 'remoteJupyter'>;
     let session: Session.ISessionConnection;
     let kernel: Kernel.IKernelConnection;
@@ -103,7 +103,7 @@ suite('Base Jupyter Session Connection', () => {
         jupyterSession = new DummySessionClass(instance(session));
     });
 
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     test('Events are propagated', () => {
         const eventNames: (keyof typeof jupyterSession)[] = [
             'anyMessage',

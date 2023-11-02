@@ -20,8 +20,8 @@ import {
     StdErrError
 } from './types.node';
 import { logProcess } from './logger.node';
-import { dispose } from '../helpers';
 import { noop } from '../utils/misc';
+import { dispose } from '../utils/lifecycle';
 
 export class BufferDecoder implements IBufferDecoder {
     public decode(buffers: Buffer[]): string {

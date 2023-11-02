@@ -37,7 +37,7 @@ import { IWebviewCommunication } from '../../../../platform/webviews/types';
 import { swallowExceptions } from '../../../../platform/common/utils/decorators';
 import { CDNWidgetScriptSourceProvider } from '../scriptSourceProvider/cdnWidgetScriptSourceProvider';
 import { createDeferred } from '../../../../platform/common/utils/async';
-import { dispose } from '../../../../platform/common/helpers';
+import { dispose } from '../../../../platform/common/utils/lifecycle';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { isPythonKernelConnection } from '../../../../kernels/helpers';
 

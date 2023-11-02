@@ -14,7 +14,7 @@ import {
     RemoteKernelSpecConnectionMetadata,
     isRemoteConnection
 } from '../../kernels/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { getNotebookMetadata, translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';

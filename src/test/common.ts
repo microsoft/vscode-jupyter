@@ -7,7 +7,7 @@ import type { Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
-import { dispose } from '../platform/common/helpers';
+import { dispose } from '../platform/common/utils/lifecycle';
 import { isPromise } from '../platform/common/utils/async';
 import { computeHash } from '../platform/common/crypto';
 import { AsyncFunc, Func, Suite, Test } from 'mocha';

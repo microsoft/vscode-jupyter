@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { CancellationError, CancellationToken, CancellationTokenSource } from 'vscode';
-import { dispose } from './helpers';
 import { IDisposable } from './types';
 import { isPromiseLike } from './utils/async';
 import { Common } from './utils/localize';
+import { dispose } from './utils/lifecycle';
 
 export function isCancellationError(ex: Error, includeErrorsWithTheMessageCanceled = false) {
     if (typeof ex !== 'object' || !ex) {

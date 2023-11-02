@@ -15,7 +15,7 @@ import {
     QuickPickItemButtonEvent
 } from 'vscode';
 import { IApplicationShell } from '../application/types';
-import { dispose } from '../helpers';
+import { dispose } from '../utils/lifecycle';
 import { createDeferred } from './async';
 import { noop } from './misc';
 

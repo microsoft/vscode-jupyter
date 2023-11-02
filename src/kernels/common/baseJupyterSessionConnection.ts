@@ -6,7 +6,7 @@ import { Signal } from '@lumino/signaling';
 import { CancellationToken, EventEmitter } from 'vscode';
 import type { IChangedArgs } from '@jupyterlab/coreutils';
 import { IDisposable } from '../../platform/common/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { IBaseKernelSession, IKernelSocket } from '../types';
 import { KernelSocketMap } from '../kernelSocket';

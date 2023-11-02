@@ -6,7 +6,7 @@ import { SemVer } from 'semver';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterServerProvider } from './jupyterServerProvider.node';
@@ -36,7 +36,7 @@ suite('Jupyter Server Provider', () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python'
     };
-    const disposables: Disposable[] = [];
+    let disposables: Disposable[] = [];
     let source: CancellationTokenSource;
     setup(() => {
         jupyterServerHelper = mock<IJupyterServerHelper>();
@@ -51,7 +51,7 @@ suite('Jupyter Server Provider', () => {
         source = new CancellationTokenSource();
         disposables.push(source);
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
 
     test('Get Or Create', async () => {
         when(jupyterServerHelper.getUsableJupyterPython()).thenResolve(workingPython);

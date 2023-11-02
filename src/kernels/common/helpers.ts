@@ -3,7 +3,7 @@
 
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { CancellationError, CancellationToken, Disposable } from 'vscode';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { createDeferred, raceTimeout } from '../../platform/common/utils/async';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';

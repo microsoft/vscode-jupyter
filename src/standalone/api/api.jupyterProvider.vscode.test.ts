@@ -3,7 +3,7 @@
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IExtensions } from '../../platform/common/types';
 import { traceInfo } from '../../platform/logging';
 import { IExtensionTestApi, waitForCondition } from '../../test/common';

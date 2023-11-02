@@ -11,8 +11,9 @@ import { CodeExecutionHelperBase } from './codeExecutionHelper';
 import { IProcessServiceFactory } from '../../common/process/types.node';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { splitLines, dispose } from '../../common/helpers';
+import { splitLines } from '../../common/helpers';
 import { IDisposable } from '../../common/types';
+import { dispose } from '../../common/utils/lifecycle';
 
 /**
  * Node version of the code execution helper. Node version is necessary because we can't create processes in the web version.

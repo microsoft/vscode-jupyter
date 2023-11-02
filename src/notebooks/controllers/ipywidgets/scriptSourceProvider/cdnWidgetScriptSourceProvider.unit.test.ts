@@ -21,7 +21,7 @@ import {
 import { IWidgetScriptSourceProvider } from '../types';
 import { HttpClient } from '../../../../platform/common/net/httpClient';
 import { IApplicationShell } from '../../../../platform/common/application/types';
-import { dispose } from '../../../../platform/common/helpers';
+import { dispose } from '../../../../platform/common/utils/lifecycle';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { computeHash } from '../../../../platform/common/crypto';
 
@@ -38,7 +38,7 @@ suite('ipywidget - CDN', () => {
     let settings: JupyterSettings;
     let memento: Memento;
     let appShell: IApplicationShell;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     setup(() => {
         configService = mock(ConfigurationService);
         settings = { widgetScriptSources: [] } as any;
@@ -54,7 +54,7 @@ suite('ipywidget - CDN', () => {
         );
     });
 
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
 
     function createStreamFromString(str: string) {
         const readable = new Readable();

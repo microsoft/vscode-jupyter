@@ -23,7 +23,7 @@ import {
 } from '../../kernels/types';
 import { RemoteKernelControllerWatcher } from './remoteKernelControllerWatcher';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { waitForCondition } from '../../test/common';
 import { JupyterServerCollection } from '../../api';
@@ -31,7 +31,7 @@ import { noop } from '../../test/core';
 
 suite('RemoteKernelControllerWatcher', () => {
     let watcher: RemoteKernelControllerWatcher;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let uriProviderRegistration: IJupyterUriProviderRegistration;
     let uriStorage: IJupyterServerUriStorage;
     let controllers: IControllerRegistration;
@@ -71,7 +71,7 @@ suite('RemoteKernelControllerWatcher', () => {
         disposables.push(new Disposable(() => clock.uninstall()));
     });
     teardown(() => {
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
 
     test('Dispose controllers associated with an old handle', async () => {

@@ -25,7 +25,7 @@ import {
 } from '../../types';
 import { noop } from '../../../test/core';
 import { assert } from 'chai';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import {
     IAsyncDisposable,
     IConfigurationService,
@@ -57,7 +57,7 @@ suite('New Jupyter Kernel Session Factory', () => {
         id: '1234',
         kernelSpec: {} as any
     });
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let token: CancellationTokenSource;
     let ui: DisplayOptions;
     const jupyterLaunchTimeout = 1_000;
@@ -181,7 +181,7 @@ suite('New Jupyter Kernel Session Factory', () => {
     });
     teardown(async () => {
         sinon.restore();
-        dispose(disposables);
+        disposables = dispose(disposables);
         await Promise.all(asyncDisposables.map((d) => swallowExceptions(() => d.dispose().catch(noop))));
     });
     function createSession() {

@@ -13,7 +13,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { waitForCondition } from '../../common.node';
 import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

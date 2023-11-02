@@ -6,7 +6,7 @@ import * as path from '../../../platform/vscode-path/path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -22,7 +22,7 @@ import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder
 
 suite('Interpreter Kernel Spec Finder Helper', () => {
     let helper: GlobalPythonKernelSpecFinder;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let jupyterPaths: JupyterPaths;
     let kernelSpecFinder: LocalKernelSpecFinder;
     let interpreterService: IInterpreterService;
@@ -66,7 +66,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         };
         disposables.push(helper);
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
 
     test('No kernel specs in venv', async () => {
         const cancelToken = new CancellationTokenSource();

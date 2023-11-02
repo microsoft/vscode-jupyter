@@ -20,7 +20,7 @@ import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { IJupyterKernel } from '../types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec';
 import { noop } from '../../../platform/common/utils/misc';

@@ -13,7 +13,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { PythonKernelConnectionMetadata } from '../../types';
@@ -24,7 +24,7 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platf
 import { UsedPorts } from '../../common/usedPorts';
 
 suite('kernel Launcher', () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let kernelLauncher: KernelLauncher;
     let processExecutionFactory: IProcessServiceFactory;
     let fs: IFileSystemNode;
@@ -67,7 +67,7 @@ suite('kernel Launcher', () => {
             instance(platform)
         );
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     async function launchKernel() {
         const kernelSpec = PythonKernelConnectionMetadata.create({
             id: '1',

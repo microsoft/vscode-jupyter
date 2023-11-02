@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { dispose } from '../../common/helpers';
+import { dispose } from '../../common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../common/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../common/constants';

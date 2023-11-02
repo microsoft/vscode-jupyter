@@ -31,7 +31,7 @@ import {
     JVSC_EXTENSION_ID,
     JupyterNotebookView
 } from '../../../platform/common/constants';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import {
