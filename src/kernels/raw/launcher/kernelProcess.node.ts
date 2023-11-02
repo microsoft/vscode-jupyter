@@ -482,16 +482,6 @@ export class KernelProcess implements IKernelProcess {
     private addPythonConnectionArgs(connectionFile: Uri): string[] {
         const newConnectionArgs: string[] = [];
 
-        newConnectionArgs.push(`--ip=${this._connection.ip}`);
-        newConnectionArgs.push(`--stdin=${this._connection.stdin_port}`);
-        newConnectionArgs.push(`--control=${this._connection.control_port}`);
-        newConnectionArgs.push(`--hb=${this._connection.hb_port}`);
-        newConnectionArgs.push(`--Session.signature_scheme="${this._connection.signature_scheme}"`);
-        newConnectionArgs.push(`--Session.key=b"${this._connection.key}"`); // Note we need the 'b here at the start for a byte string
-        newConnectionArgs.push(`--shell=${this._connection.shell_port}`);
-        newConnectionArgs.push(`--transport="${this._connection.transport}"`);
-        newConnectionArgs.push(`--iopub=${this._connection.iopub_port}`);
-
         // Turn this on if you get desparate. It can cause crashes though as the
         // logging code isn't that robust.
         // if (isTestExecution()) {

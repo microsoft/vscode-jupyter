@@ -305,21 +305,7 @@ suite('kernel Process', () => {
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
-        const expectedArgs = [
-            `-m`,
-            `ipykernel`,
-            `--ip=${connection.ip}`,
-            `--stdin=${connection.stdin_port}`,
-            `--control=${connection.control_port}`,
-            `--hb=${connection.hb_port}`,
-            `--Session.signature_scheme="${connection.signature_scheme}"`,
-            `--Session.key=b"${connection.key}"`,
-            `--shell=${connection.shell_port}`,
-            `--transport="${connection.transport}"`,
-            `--iopub=${connection.iopub_port}`,
-            `--f="${expectedConnectionFile}"`,
-            `--debug`
-        ];
+        const expectedArgs = [`-m`, `ipykernel`, `--f="${expectedConnectionFile}"`, `--debug`];
         await kernelProcess.launch(__dirname, 0, token.token);
 
         verify(processService.execObservable(anything(), anything())).never();
@@ -353,21 +339,7 @@ suite('kernel Process', () => {
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
-        const expectedArgs = [
-            `-m`,
-            `ipykernel`,
-            `--ip=${connection.ip}`,
-            `--stdin=${connection.stdin_port}`,
-            `--control=${connection.control_port}`,
-            `--hb=${connection.hb_port}`,
-            `--Session.signature_scheme="${connection.signature_scheme}"`,
-            `--Session.key=b"${connection.key}"`,
-            `--shell=${connection.shell_port}`,
-            `--transport="${connection.transport}"`,
-            `--iopub=${connection.iopub_port}`,
-            `--f="${Uri.file(tempFile).fsPath}"`,
-            `--debug`
-        ];
+        const expectedArgs = [`-m`, `ipykernel`, `--f="${Uri.file(tempFile).fsPath}"`, `--debug`];
         await kernelProcess.launch(__dirname, 0, token.token);
 
         verify(processService.execObservable(anything(), anything())).never();
@@ -394,21 +366,7 @@ suite('kernel Process', () => {
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
-        const expectedArgs = [
-            `-m`,
-            `ipykernel`,
-            `--ip=${connection.ip}`,
-            `--stdin=${connection.stdin_port}`,
-            `--control=${connection.control_port}`,
-            `--hb=${connection.hb_port}`,
-            `--Session.signature_scheme="${connection.signature_scheme}"`,
-            `--Session.key=b"${connection.key}"`,
-            `--shell=${connection.shell_port}`,
-            `--transport="${connection.transport}"`,
-            `--iopub=${connection.iopub_port}`,
-            `--f=${Uri.file('connection.json').fsPath}`,
-            `--debug`
-        ];
+        const expectedArgs = [`-m`, `ipykernel`, `--f=${Uri.file('connection.json').fsPath}`, `--debug`];
         await kernelProcess.launch(__dirname, 0, token.token);
 
         verify(processService.execObservable(anything(), anything())).never();
