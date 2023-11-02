@@ -11,8 +11,9 @@ import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { traceInfo } from '../platform/logging';
 import { IKernelFinder } from './types';
-import { Disposables, isJupyterNotebook } from '../platform/common/utils';
+import { isJupyterNotebook } from '../platform/common/utils';
 import { noop } from '../platform/common/utils/misc';
+import { DisposableStore } from '../platform/common/utils/lifecycle';
 
 /**
  * Ensures we refresh the list of Python environments upon opening a Notebook.
@@ -122,7 +123,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             this.disposables
         );
 
-        let kernelProgress: Disposables | undefined;
+        let kernelProgress: DisposableStore | undefined;
         let id: string = '';
         const createProgressIndicator = () => {
             if (kernelProgress && !kernelProgress.isDisposed) {
@@ -130,7 +131,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             }
             id = Date.now().toString();
             traceInfo(`Start refreshing Kernel Picker (${id})`);
-            kernelProgress = new Disposables(
+            kernelProgress = new DisposableStore(
                 notebooks.createNotebookControllerDetectionTask(JupyterNotebookView),
                 notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)
             );

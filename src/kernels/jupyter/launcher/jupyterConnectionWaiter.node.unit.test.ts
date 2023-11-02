@@ -23,7 +23,7 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { JupyterConnectionWaiter } from './jupyterConnectionWaiter.node';
 import { noop } from '../../../test/core';
 import { createObservable } from '../../../platform/common/process/proc.node';
-import { dispose } from '../../../platform/common/utils/lifecycle';
+import { dispose } from '../../../platform/common/helpers';
 use(chaiAsPromised);
 suite('Jupyter Connection Waiter', async () => {
     let observableOutput: ReturnType<typeof createObservable<Output<string>>>;

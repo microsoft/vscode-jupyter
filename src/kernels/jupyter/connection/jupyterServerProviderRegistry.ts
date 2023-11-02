@@ -18,7 +18,6 @@ import {
     JupyterServerCommandProvider,
     JupyterServerProvider
 } from '../../../api';
-import { Disposables } from '../../../platform/common/utils';
 import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../types';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { inject, injectable } from 'inversify';
@@ -27,8 +26,9 @@ import { traceError } from '../../../platform/logging';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { JupyterConnection } from './jupyterConnection';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { DisposableBase, ObservableDisposable } from '../../../platform/common/utils/lifecycle';
 
-export class JupyterServerCollectionImpl extends Disposables implements JupyterServerCollection {
+export class JupyterServerCollectionImpl extends ObservableDisposable implements JupyterServerCollection {
     private _commandProvider?: JupyterServerCommandProvider;
     documentation?: Uri | undefined;
     private _onDidChangeProvider = new EventEmitter<void>();
@@ -55,7 +55,7 @@ export class JupyterServerCollectionImpl extends Disposables implements JupyterS
 // Ever 5 minutes we try to access the same connection, we need to validate it.
 const RemoteConnectionValidityPeriod = 5 * 60_000;
 
-class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvider {
+class JupyterUriProviderAdaptor extends DisposableBase implements IJupyterUriProvider {
     readonly id: string;
     public get displayName() {
         return this.provider.label;
@@ -328,7 +328,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
 }
 
 @injectable()
-export class JupyterServerProviderRegistry extends Disposables implements IJupyterServerProviderRegistry {
+export class JupyterServerProviderRegistry extends DisposableBase implements IJupyterServerProviderRegistry {
     private readonly _onDidChangeCollections = new EventEmitter<{
         added: JupyterServerCollection[];
         removed: JupyterServerCollection[];
@@ -364,32 +364,18 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
         }
         const collection = new JupyterServerCollectionImpl(extensionId, id, label, serverProvider);
         this._collections.set(extId, collection);
-        let uriRegistration: IDisposable | undefined;
-        let adapter: JupyterUriProviderAdaptor | undefined;
-        collection.onDidChangeProvider(
-            () => {
-                if (collection.serverProvider) {
-                    adapter?.dispose();
-                    uriRegistration?.dispose();
-                    adapter = new JupyterUriProviderAdaptor(collection, extensionId, this.jupyterConnection);
-                    uriRegistration = this.jupyterUriProviderRegistration.registerProvider(adapter, extensionId);
-                    this.disposables.push(uriRegistration);
-                    this._onDidChangeCollections.fire({ added: [collection], removed: [] });
-                }
-            },
-            this,
-            this.disposables
+        const adapter = new JupyterUriProviderAdaptor(collection, extensionId, this.jupyterConnection);
+        const uriRegistration = this._register(
+            this.jupyterUriProviderRegistration.registerProvider(adapter, extensionId)
         );
-
-        collection.onDidDispose(
-            () => {
+        this._onDidChangeCollections.fire({ added: [collection], removed: [] });
+        this._register(
+            collection.onDidDispose(() => {
+                this._collections.delete(extId);
                 adapter?.dispose();
                 uriRegistration?.dispose();
-                this._collections.delete(extId);
                 this._onDidChangeCollections.fire({ removed: [collection], added: [] });
-            },
-            this,
-            this.disposables
+            }, this)
         );
 
         return collection;

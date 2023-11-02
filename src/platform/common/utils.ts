@@ -4,7 +4,7 @@
 import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
-import { EventEmitter, NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
+import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
 import {
     InteractiveWindowView,
     jupyterLanguageToMonacoLanguageMapping,
@@ -13,8 +13,8 @@ import {
 } from './constants';
 import { traceError, traceInfo } from '../logging';
 
-import { ICell, IDisposable } from './types';
-import { dispose, splitLines } from './helpers';
+import { ICell } from './types';
+import { splitLines } from './helpers';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -411,40 +411,5 @@ export function parseSemVer(versionString: string): SemVer | undefined {
         const minor = parseInt(versionMatch[2], 10);
         const build = parseInt(versionMatch[3], 10);
         return parse(`${major}.${minor}.${build}`, true) ?? undefined;
-    }
-}
-
-/**
- * @deprecated Use exports from lifecycle.ts instead.
- */
-export class Disposables implements IDisposable {
-    /**
-     * @deprecated Use exports from lifecycle.ts instead.
-     */
-    public readonly disposables: IDisposable[] = [];
-    private _isDisposed: boolean = false;
-    private onDidDisposeEmitter = new EventEmitter<void>();
-    public readonly onDidDispose = this.onDidDisposeEmitter.event;
-    public get isDisposed(): boolean {
-        return this._isDisposed;
-    }
-    constructor(...disposables: IDisposable[]) {
-        this.disposables.push(...disposables);
-    }
-    /**
-     *@deprecated Use exports from lifecycle.ts instead.
-     */
-    protected _register<T extends IDisposable>(disposable: T): T {
-        this.disposables.push(disposable);
-        return disposable;
-    }
-    public dispose(): void {
-        if (this._isDisposed) {
-            return;
-        }
-        dispose(this.disposables);
-        this._isDisposed = true;
-        this.onDidDisposeEmitter.fire();
-        this.onDidDisposeEmitter.dispose();
     }
 }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { Event, EventEmitter } from '@c4312/evt';
 import { traceWarning } from '../../logging';
 import { IDisposable } from '../types';
 import { once } from './functional';
@@ -68,6 +69,10 @@ export class DisposableStore implements IDisposable {
     private readonly _toDispose = new Set<IDisposable>();
     private _isDisposed = false;
 
+    constructor(...disposables: IDisposable[]) {
+        disposables.forEach((disposable) => this.add(disposable));
+    }
+
     /**
      * Dispose of all registered disposables and mark this object as disposed.
      *
@@ -132,24 +137,57 @@ export class DisposableStore implements IDisposable {
 }
 
 /**
- * Abstract base class for a {@link IDisposable disposable} object.
+ * Abstract class for a {@link IDisposable disposable} object.
  *
  * Subclasses can {@linkcode _register} disposables that will be automatically cleaned up when this object is disposed of.
  */
-export abstract class Disposable implements IDisposable {
+export abstract class DisposableBase implements IDisposable {
     protected readonly _store = new DisposableStore();
+    private _isDisposed: boolean = false;
+
+    public get isDisposed(): boolean {
+        return this._isDisposed;
+    }
+
+    constructor(...disposables: IDisposable[]) {
+        disposables.forEach((disposable) => this._store.add(disposable));
+    }
+
     public dispose(): void {
         this._store.dispose();
+        this._isDisposed = true;
     }
 
     /**
      * Adds `o` to the collection of disposables managed by this object.
      */
     protected _register<T extends IDisposable>(o: T): T {
-        if ((o as unknown as Disposable) === this) {
+        if ((o as unknown as DisposableBase) === this) {
             throw new Error('Cannot register a disposable on itself!');
         }
         return this._store.add(o);
+    }
+}
+
+/**
+ * Abstract base class for a {@link IDisposable disposable} object.
+ *
+ * Subclasses can {@linkcode _register} disposables that will be automatically cleaned up when this object is disposed of.
+ */
+export abstract class ObservableDisposable extends DisposableBase {
+    private readonly _onDidDispose: EventEmitter<void>;
+    public readonly onDidDispose: Event<void>;
+
+    constructor() {
+        super();
+        this._onDidDispose = new EventEmitter<void>();
+        this.onDidDispose = this._onDidDispose.event;
+    }
+
+    override dispose() {
+        super.dispose();
+        this._onDidDispose.fire();
+        this._onDidDispose.dispose();
     }
 }
 

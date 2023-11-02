@@ -23,7 +23,7 @@ import {
     IQuickPickKernelItemProvider
 } from './types';
 import { IConnectionDisplayData, IConnectionDisplayDataProvider } from '../types';
-import { Disposables } from '../../../platform/common/utils';
+import { DisposableBase } from '../../../platform/common/utils/lifecycle';
 export type CompoundQuickPickItem =
     | CommandQuickPickItem
     | ConnectionQuickPickItem
@@ -75,7 +75,7 @@ export type CreateAndSelectItemFromQuickPick = (options: {
  */
 class SomeOtherActionError extends Error {}
 
-export class BaseKernelSelector extends Disposables implements IDisposable {
+export class BaseKernelSelector extends DisposableBase implements IDisposable {
     protected readonly displayDataProvider: IConnectionDisplayDataProvider;
     protected readonly recommendedItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
     protected existingItems = new Set<ConnectionQuickPickItem>();
@@ -151,8 +151,8 @@ export class BaseKernelSelector extends Disposables implements IDisposable {
             quickPick.busy = true;
         }
         let timeout: NodeJS.Timer | undefined;
-        this.provider.onDidChangeStatus(
-            () => {
+        this._register(
+            this.provider.onDidChangeStatus(() => {
                 timeout && clearTimeout(timeout);
                 switch (this.provider.status) {
                     case 'discovering':
@@ -160,18 +160,16 @@ export class BaseKernelSelector extends Disposables implements IDisposable {
                         break;
                     case 'idle':
                         timeout = setTimeout(() => (quickPick.busy = false), 500);
-                        this.disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
+                        this._register(new Disposable(() => timeout && clearTimeout(timeout)));
                         break;
                 }
-            },
-            this,
-            this.disposables
+            }, this)
         );
 
         this.updateRecommended(quickPick);
         this.updateQuickPickItems(quickPick);
-        this.provider.onDidChangeRecommended(() => this.updateRecommended(quickPick), this, this.disposables);
-        this.provider.onDidChange(() => this.updateQuickPickItems(quickPick), this, this.disposables);
+        this._register(this.provider.onDidChangeRecommended(() => this.updateRecommended(quickPick), this));
+        this._register(this.provider.onDidChange(() => this.updateQuickPickItems(quickPick), this));
 
         const result = await selection;
         if (this.token.isCancellationRequested) {
@@ -359,7 +357,7 @@ export class BaseKernelSelector extends Disposables implements IDisposable {
             connection: connection
         };
         setData(info, displayData, connection);
-        displayData.onDidChange((e) => setData(info, e, connection), this, this.disposables);
+        this._register(displayData.onDidChange((e) => setData(info, e, connection), this));
         return info;
     }
 }

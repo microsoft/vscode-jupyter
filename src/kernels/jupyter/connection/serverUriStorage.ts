@@ -16,7 +16,7 @@ import { IJupyterServerUriEntry, IJupyterServerUriStorage, JupyterServerProvider
 import { IFileSystem } from '../../../platform/common/platform/types';
 import * as path from '../../../platform/vscode-path/resources';
 import { noop } from '../../../platform/common/utils/misc';
-import { Disposables } from '../../../platform/common/utils';
+import { DisposableBase } from '../../../platform/common/utils/lifecycle';
 
 export type StorageMRUItem = {
     displayName: string;
@@ -41,20 +41,20 @@ export type StorageMRUItem = {
  * Class for storing Jupyter Server URI values, also manages the MRU list of the servers/urls.
  */
 @injectable()
-export class JupyterServerUriStorage extends Disposables implements IJupyterServerUriStorage {
-    private _onDidLoad = new EventEmitter<void>();
+export class JupyterServerUriStorage extends DisposableBase implements IJupyterServerUriStorage {
+    private _onDidLoad = this._register(new EventEmitter<void>());
     public get onDidLoad() {
         return this._onDidLoad.event;
     }
-    private _onDidChangeUri = new EventEmitter<void>();
+    private _onDidChangeUri = this._register(new EventEmitter<void>());
     public get onDidChange() {
         return this._onDidChangeUri.event;
     }
-    private _onDidRemoveUris = new EventEmitter<JupyterServerProviderHandle[]>();
+    private _onDidRemoveUris = this._register(new EventEmitter<JupyterServerProviderHandle[]>());
     public get onDidRemove() {
         return this._onDidRemoveUris.event;
     }
-    private _onDidAddUri = new EventEmitter<IJupyterServerUriEntry>();
+    private _onDidAddUri = this._register(new EventEmitter<IJupyterServerUriEntry>());
     public get onDidAdd() {
         return this._onDidAddUri.event;
     }
@@ -81,21 +81,16 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.oldStorage = new OldStorage(encryptedStorage, globalMemento);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.newStorage = new NewStorage(fs, storageFile, this.oldStorage, globalMemento);
-        this.disposables.push(this._onDidLoad);
-        this.disposables.push(this._onDidAddUri);
-        this.disposables.push(this._onDidChangeUri);
-        this.disposables.push(this._onDidRemoveUris);
-        this.disposables.push(this.newStorage);
+        this.newStorage = this._register(new NewStorage(fs, storageFile, this.oldStorage, globalMemento));
     }
     private hookupStorageEvents() {
         if (this.storageEventsHooked) {
             return;
         }
         this.storageEventsHooked = true;
-        this.newStorage.onDidAdd((e) => this._onDidAddUri.fire(e), this, this.disposables);
-        this.newStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this, this.disposables);
-        this.newStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this, this.disposables);
+        this._register(this.newStorage.onDidAdd((e) => this._onDidAddUri.fire(e), this));
+        this._register(this.newStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this));
+        this._register(this.newStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this));
     }
     public async getAll(): Promise<IJupyterServerUriEntry[]> {
         this.hookupStorageEvents();

@@ -20,7 +20,7 @@ import {
     StdErrError
 } from './types.node';
 import { logProcess } from './logger.node';
-import { dispose } from '../utils/lifecycle';
+import { dispose } from '../helpers';
 import { noop } from '../utils/misc';
 
 export class BufferDecoder implements IBufferDecoder {
