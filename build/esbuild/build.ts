@@ -177,7 +177,7 @@ function createConfig(
         bundle: true,
         external,
         alias,
-        format: target === 'desktop' ? 'cjs' : 'esm',
+        format: target === 'desktop' || source.endsWith('extension.web.ts') ? 'cjs' : 'esm',
         metafile: isDevbuild && !isWatchMode,
         define:
             target === 'desktop'
@@ -253,7 +253,8 @@ async function buildAll() {
         ...[isWatchMode ? getLessBuilders(true) : []],
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'ipywidgets', 'kernel', 'index.ts'),
-            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
+            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
+            { target: 'web', watch: isWatchMode }
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'ipywidgets', 'renderer', 'index.ts'),
@@ -264,25 +265,30 @@ async function buildAll() {
                 'webview-side',
                 'ipywidgetsRenderer',
                 'ipywidgetsRenderer.js'
-            )
+            ),
+            { target: 'web', watch: isWatchMode }
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'variable-view', 'index.tsx'),
-            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'variableView.js')
+            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'variableView.js'),
+            { target: 'web', watch: isWatchMode }
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'plot', 'index.tsx'),
-            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'plotViewer.js')
+            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'plotViewer.js'),
+            { target: 'web', watch: isWatchMode }
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'data-explorer', 'index.tsx'),
-            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'dataExplorer.js')
+            path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'dataExplorer.js'),
+            { target: 'web', watch: isWatchMode }
         ),
         ,
         isDevbuild
             ? build(
                   path.join(extensionFolder, 'src', 'test', 'datascience', 'widgets', 'rendererUtils.ts'),
-                  path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'widgetTester', 'widgetTester.js')
+                  path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'widgetTester', 'widgetTester.js'),
+                  { target: 'web', watch: isWatchMode }
               )
             : Promise.resolve(),
         ,
@@ -290,7 +296,8 @@ async function buildAll() {
             ? Promise.resolve()
             : build(
                   path.join(extensionFolder, 'src', 'extension.web.ts'),
-                  path.join(extensionFolder, 'dist', 'extension.web.bundle.js')
+                  path.join(extensionFolder, 'dist', 'extension.web.bundle.js'),
+                  { target: 'web', watch: isWatchMode }
               ),
         bundleConfig === 'web'
             ? Promise.resolve()
