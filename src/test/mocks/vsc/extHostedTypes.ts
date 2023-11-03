@@ -357,10 +357,8 @@ export namespace vscMockExtHostedTypes {
         with(change: { line?: number; character?: number }): Position;
         // @ts-ignore
         with(line?: number, character?: number): Position;
-        with(
-            lineOrChange: number | { line?: number; character?: number },
-            character: number = this.character
-        ): Position {
+        with(lineOrChange: number | { line?: number; character?: number }, character?: number): Position {
+            character = character ?? this.character;
             if (lineOrChange === null || character === null) {
                 throw illegalArgument();
             }
@@ -499,7 +497,8 @@ export namespace vscMockExtHostedTypes {
         with(change: { start?: Position; end?: Position }): Range;
         // @ts-ignore
         with(start?: Position, end?: Position): Range;
-        with(startOrChange: Position | { start?: Position; end?: Position }, end: Position = this.end): Range {
+        with(startOrChange: Position | { start?: Position; end?: Position }, end?: Position): Range {
+            end = end || this.end;
             if (startOrChange === null || end === null) {
                 throw illegalArgument();
             }
@@ -904,16 +903,15 @@ export namespace vscMockExtHostedTypes {
             return this;
         }
 
-        appendTabstop(number: number = this._tabstop++): SnippetString {
+        appendTabstop(number?: number): SnippetString {
+            number = number ?? this._tabstop++;
             this.value += '$';
             this.value += number;
             return this;
         }
 
-        appendPlaceholder(
-            value: string | ((snippet: SnippetString) => any),
-            number: number = this._tabstop++
-        ): SnippetString {
+        appendPlaceholder(value: string | ((snippet: SnippetString) => any), number?: number): SnippetString {
+            number = number ?? this._tabstop++;
             if (typeof value === 'function') {
                 const nested = new SnippetString();
                 nested._tabstop = this._tabstop;
@@ -933,7 +931,8 @@ export namespace vscMockExtHostedTypes {
             return this;
         }
 
-        appendChoice(values: string[], number: number = this._tabstop++): SnippetString {
+        appendChoice(values:d string[], number?: number): SnippetString {
+            number = number ?? this._tabstop++;
             const value = SnippetString._escape(values.toString());
 
             this.value += '${';
