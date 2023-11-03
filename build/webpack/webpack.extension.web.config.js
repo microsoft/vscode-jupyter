@@ -130,7 +130,7 @@ const config = {
     },
     output: {
         filename: '[name].web.bundle.js',
-        path: path.resolve(constants.ExtensionRootDir, 'out'),
+        path: path.resolve(constants.ExtensionRootDir, process.env.VSC_TEST_BUNDLE ? 'out' : 'dist'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate: '../[resource-path]'
     },
