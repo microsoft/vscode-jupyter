@@ -931,7 +931,7 @@ export namespace vscMockExtHostedTypes {
             return this;
         }
 
-        appendChoice(values:d string[], number?: number): SnippetString {
+        appendChoice(values: string[], number?: number): SnippetString {
             number = number ?? this._tabstop++;
             const value = SnippetString._escape(values.toString());
 
