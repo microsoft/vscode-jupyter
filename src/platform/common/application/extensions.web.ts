@@ -27,9 +27,7 @@ export class Extensions implements IExtensions {
     public getExtension(extensionId: any) {
         return extensions.getExtension(extensionId);
     }
-    public async determineExtensionFromCallStack(
-        stack?: string
-    ): Promise<{ extensionId: string; displayName: string }> {
+    public determineExtensionFromCallStack(stack?: string): { extensionId: string; displayName: string } {
         stack = stack || new Error().stack;
         if (stack) {
             const jupyterExtRoot = this.getExtension(JVSC_EXTENSION_ID)!.extensionUri.toString().toLowerCase();

@@ -11,7 +11,6 @@ import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { noop } from '../../platform/common/utils/misc';
 import { isRemoteConnection } from '../../kernels/types';
 import {
     Jupyter,
@@ -55,21 +54,6 @@ function waitForNotebookControllersCreationForServer(
     });
 }
 
-function sendApiUsageTelemetry(
-    extensions: IExtensions,
-    pemUsed: keyof IExtensionApi,
-    extensionId?: string,
-    stack?: string
-) {
-    (extensionId ? Promise.resolve({ extensionId }) : extensions.determineExtensionFromCallStack(stack))
-        .then((info) => {
-            sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
-                clientExtId: info.extensionId,
-                pemUsed
-            });
-        })
-        .catch(noop);
-}
 export function buildApi(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ready: Promise<any>,
@@ -83,70 +67,50 @@ export function buildApi(
         id: string,
         label: string,
         serverProvider: JupyterServerProvider,
-        stack?: string,
-        extensionId?: string
+        extensionId: string
     ) => {
-        sendApiUsageTelemetry(extensions, 'createJupyterServerCollection', extensionId, stack);
-        label = stripCodicons(label);
-        let documentation: Uri | undefined;
-        let commandProvider: JupyterServerCommandProvider | undefined;
-        let isDisposed = false;
-        let proxy: JupyterServerCollection | undefined;
+        sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
+            clientExtId: extensionId,
+            pemUsed: 'createJupyterServerCollection'
+        });
+        const registration = serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
+        const collection = registration.createJupyterServerCollection(
+            extensionId,
+            id,
+            stripCodicons(label),
+            serverProvider
+        );
+
         // Omit PEMS that are only used for internal usage.
         // I.e. remove the unwanted PEMS and return the valid API to the extension.
-        const collection: Omit<JupyterServerCollection, 'onDidChangeProvider' | 'serverProvider' | 'extensionId'> = {
+        const proxy: Omit<JupyterServerCollection, 'onDidChangeProvider' | 'serverProvider' | 'extensionId'> = {
             dispose: () => {
-                isDisposed = true;
-                proxy?.dispose();
+                collection?.dispose();
             },
             get id() {
                 return id;
             },
             set label(value: string) {
-                label = stripCodicons(value);
-                label = value;
-                if (proxy) {
-                    proxy.label = value;
-                }
+                collection.label = stripCodicons(value);
             },
             get label() {
-                return label;
+                return collection.label;
             },
             set documentation(value: Uri | undefined) {
-                documentation = value;
-                if (proxy) {
-                    proxy.documentation = value;
-                }
+                collection.documentation = value;
             },
             get documentation() {
-                return documentation;
+                return collection.documentation;
             },
             set commandProvider(value: JupyterServerCommandProvider | undefined) {
-                commandProvider = value;
-                if (proxy) {
-                    proxy.commandProvider = value;
-                }
+                collection.commandProvider = value;
             },
             get commandProvider() {
-                return commandProvider;
+                return collection.commandProvider;
             }
         };
-        extensionId = extensionId || '';
-        (async () => {
-            extensionId = extensionId || (await extensions.determineExtensionFromCallStack(stack)).extensionId;
-            const registration = serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
-            proxy = registration.createJupyterServerCollection(extensionId, id, label, serverProvider);
-            proxy.label = label;
-            proxy.documentation = documentation;
-            proxy.commandProvider = commandProvider;
-            if (isDisposed) {
-                proxy.dispose();
-            }
-        })().catch((ex) =>
-            traceError(`Failed to create Jupyter Server Collection for ${id}:${label} & extension ${extensionId}`, ex)
-        );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return collection as any;
+        return proxy as any;
     };
     const api: IExtensionApi = {
         // 'ready' will propagate the exception, but we must log it here first.
@@ -166,37 +130,36 @@ export function buildApi(
             traceError(
                 'The API registerRemoteServerProvider has being deprecated and will be removed soon, please use createJupyterServerCollection.'
             );
-            sendApiUsageTelemetry(extensions, 'registerRemoteServerProvider');
 
-            let disposeHook = noop;
-            const stack = new Error().stack;
-            const register = async () => {
-                const extensions = serviceContainer.get<IExtensions>(IExtensions);
-                const extensionId = provider.id.startsWith('_builtin')
-                    ? JVSC_EXTENSION_ID
-                    : (await extensions.determineExtensionFromCallStack(stack)).extensionId;
-                const { serverProvider, commandProvider } = jupyterServerUriToCollection(provider);
-                const collection = createJupyterServerCollection(
-                    provider.id,
-                    provider.displayName || provider.detail || provider.id,
-                    serverProvider,
-                    stack,
-                    extensionId
-                );
-                if (commandProvider) {
-                    collection.commandProvider = commandProvider;
-                }
-                disposeHook = () => collection.dispose();
-            };
-            register().catch(noop);
+            const extensions = serviceContainer.get<IExtensions>(IExtensions);
+            const extensionId = provider.id.startsWith('_builtin')
+                ? JVSC_EXTENSION_ID
+                : extensions.determineExtensionFromCallStack().extensionId;
+            sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
+                clientExtId: extensionId,
+                pemUsed: 'registerRemoteServerProvider'
+            });
+            const { serverProvider, commandProvider } = jupyterServerUriToCollection(provider);
+            const collection = createJupyterServerCollection(
+                provider.id,
+                provider.displayName || provider.detail || provider.id,
+                serverProvider,
+                extensionId
+            );
+            if (commandProvider) {
+                collection.commandProvider = commandProvider;
+            }
             return {
                 dispose: () => {
-                    disposeHook();
+                    collection.dispose();
                 }
             };
         },
         getKernelService: async () => {
-            sendApiUsageTelemetry(extensions, 'getKernelService');
+            sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
+                clientExtId: extensions.determineExtensionFromCallStack().extensionId,
+                pemUsed: 'registerRemoteServerProvider'
+            });
             const kernelServiceFactory =
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
@@ -205,25 +168,27 @@ export function buildApi(
             traceError(
                 'The API addRemoteJupyterServer has being deprecated and will be removed soon, please use createJupyterServerCollection.'
             );
-            const stack = new Error().stack;
-            sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');
-            await new Promise<void>(async (resolve) => {
-                const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-
-                const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-                const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
-                    { id: providerId, handle },
-                    controllerRegistration
-                );
-                const extensionId = (await extensions.determineExtensionFromCallStack(stack)).extensionId;
-
-                await selector.addJupyterServer({ id: providerId, handle, extensionId });
-                await controllerCreatedPromise;
-                resolve();
+            const extensionId = extensions.determineExtensionFromCallStack().extensionId;
+            sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
+                clientExtId: extensionId,
+                pemUsed: 'addRemoteJupyterServer'
             });
+
+            const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
+
+            const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+            const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
+                { id: providerId, handle },
+                controllerRegistration
+            );
+            await selector.addJupyterServer({ id: providerId, handle, extensionId });
+            await controllerCreatedPromise;
         },
         openNotebook: async (uri: Uri, kernelId: string) => {
-            sendApiUsageTelemetry(extensions, 'openNotebook');
+            sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
+                clientExtId: extensions.determineExtensionFromCallStack().extensionId,
+                pemUsed: 'openNotebook'
+            });
             const controllers = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
             const id = controllers.all.find((controller) => controller.id === kernelId)?.id;
             if (!id) {
@@ -241,7 +206,12 @@ export function buildApi(
             return notebookEditor.notebook;
         },
         createJupyterServerCollection: (id: string, label: string, serverProvider: JupyterServerProvider) => {
-            return createJupyterServerCollection(id, label, serverProvider, new Error().stack);
+            return createJupyterServerCollection(
+                id,
+                label,
+                serverProvider,
+                extensions.determineExtensionFromCallStack().extensionId
+            );
         }
     };
 
