@@ -177,7 +177,7 @@ function createConfig(
         bundle: true,
         external,
         alias,
-        format: target === 'desktop' ? 'cjs' : 'esm',
+        format: target === 'desktop' || source.endsWith('extension.web.ts') ? 'cjs' : 'esm',
         metafile: isDevbuild && !isWatchMode,
         define:
             target === 'desktop'
@@ -292,13 +292,13 @@ async function buildAll() {
               )
             : Promise.resolve(),
         ,
-        // bundleConfig === 'desktop'
-        //     ? Promise.resolve()
-        //     : build(
-        //           path.join(extensionFolder, 'src', 'extension.web.ts'),
-        //           path.join(extensionFolder, 'dist', 'extension.web.bundle.js'),
-        //           { target: 'web', watch: isWatchMode }
-        //       ),
+        bundleConfig === 'desktop'
+            ? Promise.resolve()
+            : build(
+                  path.join(extensionFolder, 'src', 'extension.web.ts'),
+                  path.join(extensionFolder, 'dist', 'extension.web.bundle.js'),
+                  { target: 'web', watch: isWatchMode }
+              ),
         bundleConfig === 'web'
             ? Promise.resolve()
             : build(
