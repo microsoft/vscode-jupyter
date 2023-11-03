@@ -64,7 +64,7 @@ suite('Jupyter Provider Tests', function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon
             .stub(api.serviceContainer.get<IExtensions>(IExtensions), 'determineExtensionFromCallStack')
-            .resolves({ extensionId: 'GitHub', displayName: 'Sample Extension' });
+            .returns({ extensionId: 'GitHub', displayName: 'Sample Extension' });
         const registerKernelSourceActionProviderStub = sinon
             .stub(notebooks, 'registerKernelSourceActionProvider')
             .callsFake((notebookType, provider) => {
