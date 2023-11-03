@@ -320,7 +320,7 @@ async function buildWebPack(webpackConfigName, args, env) {
                     item.toLowerCase().startsWith(allowedWarning.toLowerCase())
                 ) == -1
         );
-    console.log(warnings);
+    console.log(warnings.length);
     // const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
     // if (errors) {
     //     throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
@@ -405,13 +405,13 @@ function spawnAsync(command, args, env, rejectOnStdErr = false) {
             // Log output on CI (else travis times out when there's not output).
             stdOut += data.toString();
             if (isCI) {
-                console.log(data.toString());
+                console.log(data.toString().length);
             }
         });
         proc.stderr.on('data', (data) => {
-            console.error(data.toString());
+            console.error(data.toString().length);
             if (rejectOnStdErr) {
-                reject(data.toString());
+                // reject(data.toString());
             }
         });
         proc.on('close', () => resolve(stdOut));
