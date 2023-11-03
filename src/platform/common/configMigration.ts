@@ -17,6 +17,7 @@ export class ConfigMigration {
         enableAutoMoveToNextCell: 'interactiveWindow.textEditor.autoMoveToNextCell',
         newCellOnRunLast: 'interactiveWindow.textEditor.autoAddNewCell',
         pythonCellFolding: 'interactiveWindow.textEditor.cellFolding',
+        splitRunFileIntoCells: 'jupyter.interactiveWindow.SplitRunFileIntoCells',
 
         enableCellCodeLens: 'interactiveWindow.codeLens.enable',
         addGotoCodeLenses: 'interactiveWindow.codeLens.enableGotoCell',

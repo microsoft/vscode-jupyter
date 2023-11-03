@@ -1595,6 +1595,12 @@
                     "description": "%jupyter.configuration.jupyter.normalizeSelectionForInteractiveWindow.description%",
                     "scope": "resource"
                 },
+                "jupyter.interactiveWindow.SplitRunFileIntoCells": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%jupyter.configuration.jupyter.SplitRunFileIntoCells.description%",
+                    "scope": "resource"
+                },
                 "jupyter.variableExplorerExclude": {
                     "type": "string",
                     "default": "module;function;builtin_function_or_method;ABCMeta;type;ModelMetaclass",
