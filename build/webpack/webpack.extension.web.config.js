@@ -8,14 +8,23 @@ const webpack = require('webpack');
 const constants = require('../constants');
 const common = require('./common');
 
+const devEntry = {
+    extension: './src/extension.web.ts'
+};
+const testEntry = {
+    extension: './src/test/web/index.ts' // source of the web extension test runner
+};
+
+// When running web tests, the entry point for the tests and extension are the same.
+// Also, when building the production VSIX there's no need to compile the tests (faster build pipline).
+const entry = process.env.VSC_TEST_BUNDLE === 'true' ? testEntry : devEntry;
+
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.extension.web.json');
 const config = {
-    mode: 'development',
+    mode: process.env.VSC_TEST_BUNDLE ? 'development' : 'none',
     target: 'webworker',
-    entry: {
-        extension: './src/test/web/index.ts' // source of the web extension test runner
-    },
+    entry,
     devtool: 'nosources-source-map', // create a source map that points to the original source file
     node: {
         __dirname: false,
