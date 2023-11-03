@@ -12,12 +12,12 @@ let realEntryPoint: {
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     const entryPoint = context.extensionMode === ExtensionMode.Test ? '../out/extension.node' : './extension.node';
     try {
-        realEntryPoint = await import(entryPoint);
+        realEntryPoint = eval('require')(entryPoint);
         return realEntryPoint.activate(context);
     } catch (ex) {
         console.error('Failed to activate extension, falling back to `./extension.node`', ex);
         // In smoke tests, we do not want to load the out/extension.node.
-        realEntryPoint = await import('./extension.node');
+        realEntryPoint = eval('require')('./extension.node');
         return realEntryPoint.activate(context);
     }
 }
