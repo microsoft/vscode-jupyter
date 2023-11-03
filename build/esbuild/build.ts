@@ -188,7 +188,7 @@ function createConfig(
                   },
         target: target === 'desktop' ? 'node18' : 'es2018',
         platform: target === 'desktop' ? 'node' : 'browser',
-        minify: !isDevbuild,
+        minify: target === 'desktop' ? !isDevbuild : false,
         logLevel: 'info',
         sourcemap: isDevbuild,
         inject,
