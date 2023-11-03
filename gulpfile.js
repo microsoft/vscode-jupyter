@@ -183,13 +183,6 @@ gulp.task('webpack-dependencies', async () => {
     }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
 });
-gulp.task('webpack-web', async () => {
-    // // No need to build dependencies for web.
-    // if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
-    //     return;
-    // }
-    // await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js', 'production');
-});
 
 function modifyJson(jsonFile, cb) {
     const json = fs.readFileSync(jsonFile).toString('utf-8');
