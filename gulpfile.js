@@ -183,7 +183,7 @@ gulp.task('webpack-dependencies', async () => {
     }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
 });
-gulp.task('webpack-dependencies', async () => {
+gulp.task('webpack-web', async () => {
     // No need to build dependencies for web.
     if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
         return;
@@ -320,16 +320,15 @@ async function buildWebPack(webpackConfigName, args, env) {
                     item.toLowerCase().startsWith(allowedWarning.toLowerCase())
                 ) == -1
         );
-    console.log(warnings.length);
-    // const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
-    // if (errors) {
-    //     throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
-    // }
-    // if (warnings.length > 0) {
-    //     throw new Error(
-    //         `Warnings in ${webpackConfigName}, Check gulpfile.js to see if the warning should be allowed., \n\n${stdOut}`
-    //     );
-    // }
+    const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
+    if (errors) {
+        throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
+    }
+    if (warnings.length > 0) {
+        throw new Error(
+            `Warnings in ${webpackConfigName}, Check gulpfile.js to see if the warning should be allowed., \n\n${stdOut}`
+        );
+    }
 }
 function getAllowedWarningsForWebPack(buildConfig) {
     switch (buildConfig) {
@@ -405,13 +404,13 @@ function spawnAsync(command, args, env, rejectOnStdErr = false) {
             // Log output on CI (else travis times out when there's not output).
             stdOut += data.toString();
             if (isCI) {
-                console.log(data.toString().length);
+                console.log(data.toString());
             }
         });
         proc.stderr.on('data', (data) => {
-            console.error(data.toString().length);
+            console.error(data.toString());
             if (rejectOnStdErr) {
-                // reject(data.toString());
+                reject(data.toString());
             }
         });
         proc.on('close', () => resolve(stdOut));
