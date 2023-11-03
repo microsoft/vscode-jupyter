@@ -3232,30 +3232,6 @@ export class IEventNamePropertyMapping {
     /**
      * Telemetry sent when an extension uses our 3rd party Kernel API.
      */
-    [Telemetry.ExtensionCallerIdentification]: TelemetryEventInfo<{
-        /**
-         * Extension Id that's attempting to use the API.
-         */
-        extensionId: string;
-        result: 'WorkedInBoth' | 'WorkedOnlyInSync' | 'WorkedOnlyInAsync';
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            extensionId: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'FeatureInsight'
-            },
-            result: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
-     * Telemetry sent when an extension uses our 3rd party Kernel API.
-     */
     [Telemetry.JupyterKernelApiUsage]: TelemetryEventInfo<{
         /**
          * Extension Id that's attempting to use the API.

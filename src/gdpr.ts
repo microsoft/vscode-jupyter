@@ -374,17 +374,6 @@
      ]
    }
  */
-//Telemetry.ExtensionCallerIdentification
-/* __GDPR__
-   "DATASCIENCE.JUPYTER_EXTENSION_CALLER_IDENTIFICATION" : {
-     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
-     "result": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.JupyterKernelApiAccess
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS" : {
