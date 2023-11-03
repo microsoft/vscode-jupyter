@@ -1595,10 +1595,10 @@
                     "description": "%jupyter.configuration.jupyter.normalizeSelectionForInteractiveWindow.description%",
                     "scope": "resource"
                 },
-                "jupyter.interactiveWindow.SplitRunFileIntoCells": {
+                "jupyter.interactiveWindow.splitRunFileIntoCells": {
                     "type": "boolean",
                     "default": true,
-                    "description": "%jupyter.configuration.jupyter.SplitRunFileIntoCells.description%",
+                    "description": "%jupyter.configuration.jupyter.splitRunFileIntoCells.description%",
                     "scope": "resource"
                 },
                 "jupyter.variableExplorerExclude": {
