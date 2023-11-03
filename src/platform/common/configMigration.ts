@@ -10,6 +10,7 @@ export class ConfigMigration {
     public static readonly migratedSettings: Record<string, string> = {
         interactiveWindowMode: 'interactiveWindow.creationMode',
         interactiveWindowViewColumn: 'interactiveWindow.viewColumn',
+        splitRunFileIntoCells: 'interactiveWindow.splitRunFileIntoCells',
 
         sendSelectionToInteractiveWindow: 'interactiveWindow.textEditor.executeSelection',
         normalizeSelectionForInteractiveWindow: 'interactiveWindow.textEditor.normalizeSelection',
@@ -17,7 +18,6 @@ export class ConfigMigration {
         enableAutoMoveToNextCell: 'interactiveWindow.textEditor.autoMoveToNextCell',
         newCellOnRunLast: 'interactiveWindow.textEditor.autoAddNewCell',
         pythonCellFolding: 'interactiveWindow.textEditor.cellFolding',
-        splitRunFileIntoCells: 'jupyter.interactiveWindow.splitRunFileIntoCells',
 
         enableCellCodeLens: 'interactiveWindow.codeLens.enable',
         addGotoCodeLenses: 'interactiveWindow.codeLens.enableGotoCell',
