@@ -179,6 +179,7 @@
     "jupyter.configuration.jupyter.jupyterInterruptTimeout.description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
     "jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.description": "When pressing shift+enter, send selected code in a Python file to the Jupyter interactive window as opposed to the Python terminal.",
     "jupyter.configuration.jupyter.normalizeSelectionForInteractiveWindow.description": "Selected text will be normalized before it is executed in the Interactive Window.",
+    "jupyter.configuration.jupyter.splitRunFileIntoCells.description": "A file run in the Interactive Window will be run in individual cells if it has them.",
     "jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.executeSelection.",
     "jupyter.configuration.jupyter.variableExplorerExclude.description": "Types to exclude from showing in the Interactive variable explorer",
     "jupyter.configuration.jupyter.codeRegularExpression.description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell.",

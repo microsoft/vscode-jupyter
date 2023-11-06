@@ -52,6 +52,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public searchForJupyter: boolean = false;
     public sendSelectionToInteractiveWindow: boolean = false;
     public normalizeSelectionForInteractiveWindow: boolean = true;
+    public splitRunFileIntoCells: boolean = true;
     public markdownRegularExpression: string = '';
     public codeRegularExpression: string = '';
     public errorBackgroundColor: string = '';
@@ -216,7 +217,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             // Configuration migration is asyncronous, so check the old configuration key if the new one isn't set
             const configValue = newKey && config.get(newKey) !== undefined ? config.get(newKey) : config.get(k);
             const val = systemVariables.resolveAny(configValue);
-            if (val) {
+            if (val !== undefined) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (<any>this)[k] = val;
             }
