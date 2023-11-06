@@ -212,6 +212,9 @@ export function buildApi(
                 serverProvider,
                 extensions.determineExtensionFromCallStack().extensionId
             );
+        },
+        getKernelApi() {
+            return Promise.resolve(undefined);
         }
     };
 
