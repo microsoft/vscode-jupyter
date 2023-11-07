@@ -316,6 +316,27 @@ export async function createEmptyPythonNotebook(
     return { notebook, editor: vscodeNotebook.activeNotebookEditor! };
 }
 
+export async function createEmptyNotebook(
+    disposables: IDisposable[] = [],
+    rootFolder?: Uri,
+    kernelSpec: nbformat.IKernelspecMetadata = { display_name: 'Python 3', name: 'python3' },
+    langauge = PYTHON_LANGUAGE
+) {
+    traceInfoIfCI('Creating an empty notebook');
+    const { serviceContainer } = await getServices();
+    const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    // Don't use same file (due to dirty handling, we might save in dirty.)
+    // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+    const nbFile = await createTemporaryNotebook([], disposables, kernelSpec, rootFolder, langauge, langauge);
+    // Open a python notebook and use this for all tests in this test suite.
+    await openAndShowNotebook(nbFile);
+    assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+    await deleteAllCellsAndWait();
+    const notebook = vscodeNotebook.activeNotebookEditor!.notebook;
+    traceVerbose(`Empty notebook created ${getDisplayPath(notebook.uri)}`);
+    return { notebook, editor: vscodeNotebook.activeNotebookEditor! };
+}
+
 async function shutdownAllNotebooks() {
     traceVerbose('Shutting down all kernels');
     const api = await initialize();
@@ -612,10 +633,69 @@ export async function getDefaultKernelConnection() {
         ? getDefaultPythonRemoteKernelConnectionForActiveInterpreter()
         : getActiveInterpreterKernelConnection();
 }
-export function selectDefaultController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
-    return IS_REMOTE_NATIVE_TEST() || isWeb()
-        ? selectPythonRemoteKernelConnectionForActiveInterpreter(notebookEditor, timeout)
-        : selectActiveInterpreterController(notebookEditor, timeout);
+export function selectDefaultController(
+    notebookEditor: NotebookEditor,
+    timeout = defaultNotebookTestTimeout,
+    language = PYTHON_LANGUAGE
+) {
+    if (language === PYTHON_LANGUAGE) {
+        return IS_REMOTE_NATIVE_TEST() || isWeb()
+            ? selectPythonRemoteKernelConnectionForActiveInterpreter(notebookEditor, timeout)
+            : selectActiveInterpreterController(notebookEditor, timeout);
+    } else {
+        return IS_REMOTE_NATIVE_TEST() || isWeb()
+            ? selectKernelSpec(notebookEditor, timeout, 'remote', language)
+            : selectKernelSpec(notebookEditor, timeout, 'local', language);
+    }
+}
+async function selectKernelSpec(
+    notebookEditor: NotebookEditor,
+    timeout = defaultNotebookTestTimeout,
+    localOrRemote: 'local' | 'remote',
+    language: string
+) {
+    const { controllerRegistration } = await getServices();
+
+    // Find the kernel id that matches the name we want
+    const controller = await waitForCondition(
+        () =>
+            controllerRegistration.registered.find((k) => {
+                if (k.viewType !== notebookEditor.notebook.notebookType) {
+                    return false;
+                }
+                if (
+                    k.connection.kind !== 'startUsingRemoteKernelSpec' &&
+                    k.connection.kind !== 'startUsingLocalKernelSpec'
+                ) {
+                    return false;
+                }
+                if (localOrRemote === 'remote' && k.connection.kind !== 'startUsingRemoteKernelSpec') {
+                    return false;
+                }
+                if (localOrRemote === 'local' && k.connection.kind !== 'startUsingLocalKernelSpec') {
+                    return false;
+                }
+                return k.connection.kernelSpec.language?.toLowerCase() === language.toLowerCase();
+            }),
+        timeout,
+        `No matching controller found for language ${language}`
+    );
+    if (!controller) {
+        throw new Error(`No matching controller found for language ${language}`);
+    }
+    await commands.executeCommand('notebook.selectKernel', {
+        id: controller.id,
+        extension: JVSC_EXTENSION_ID
+    });
+    await waitForCondition(
+        () => controllerRegistration.getSelected(notebookEditor.notebook)?.id === controller.id,
+        timeout,
+        `Controller ${
+            controller.id
+        } not selected for ${notebookEditor.notebook.uri.toString()}, currently selected ${controllerRegistration.getSelected(
+            notebookEditor.notebook
+        )?.id} (2)`
+    );
 }
 async function selectActiveInterpreterController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
     const { controllerRegistration, interpreterService } = await getServices();

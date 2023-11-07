@@ -41,5 +41,6 @@ async function main() {
         fs.mkdirSync(kernleSpecFolder);
     }
     fs.writeFileSync(kernelSpecFile, JSON.stringify(kernelSpecJson, undefined, 4));
+    console.log(`Deno kernel.json created at ${kernelSpecFile}`);
 }
 main();

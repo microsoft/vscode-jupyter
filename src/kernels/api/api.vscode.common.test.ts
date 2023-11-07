@@ -27,7 +27,7 @@ import {
 import { IS_REMOTE_NATIVE_TEST } from '../../test/constants';
 import {
     closeNotebooksAndCleanUpAfterTests,
-    createEmptyPythonNotebook,
+    createEmptyNotebook,
     prewarmNotebooks,
     runCell,
     selectDefaultController,
@@ -52,8 +52,10 @@ suiteMandatory('Remote Tests', function () {
         await initialize();
         await startJupyterServer();
         await prewarmNotebooks();
-        editor = (await createEmptyPythonNotebook(disposables, undefined, true)).editor;
-        await selectDefaultController(editor);
+        editor = (
+            await createEmptyNotebook(disposables, undefined, { display_name: 'Deno', name: 'deno' }, 'typescript')
+        ).editor;
+        await selectDefaultController(editor, 120_000, 'typescript');
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
