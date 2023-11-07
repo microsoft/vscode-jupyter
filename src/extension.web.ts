@@ -143,7 +143,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             openNotebook: () => Promise.reject(),
             createJupyterServerCollection: () => {
                 throw new Error('Not Implemented');
-            }
+            },
+            getKernelApi: () => Promise.resolve(undefined)
         };
     }
 }
