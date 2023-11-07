@@ -20,7 +20,6 @@ import {
     createEventHandler,
     initialize,
     startJupyterServer,
-    suiteMandatory,
     testMandatory,
     waitForCondition
 } from '../../test/common';
@@ -37,7 +36,7 @@ import { raceTimeoutError } from '../../platform/common/utils/async';
 import { ExecutionResult } from '../../api';
 import { dispose } from '../../platform/common/utils/lifecycle';
 
-suiteMandatory('Remote Tests', function () {
+suite('Remote Tests @mandatory @nonPython', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
