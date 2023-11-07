@@ -28,7 +28,6 @@ import { IS_REMOTE_NATIVE_TEST } from '../../test/constants';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyNotebook,
-    prewarmNotebooks,
     runCell,
     selectDefaultController,
     waitForExecutionCompletedSuccessfully
@@ -45,23 +44,15 @@ suiteMandatory('Remote Tests', function () {
     this.retries(1);
     let editor: NotebookEditor;
     suiteSetup(async function () {
-        if (!IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
         this.timeout(120_000);
         await initialize();
-        await startJupyterServer();
-        await prewarmNotebooks();
+        if (IS_REMOTE_NATIVE_TEST()) {
+            await startJupyterServer();
+        }
         editor = (
             await createEmptyNotebook(disposables, undefined, { display_name: 'Deno', name: 'deno' }, 'typescript')
         ).editor;
         await selectDefaultController(editor, 120_000, 'typescript');
-    });
-    // Use same notebook without starting kernel in every single test (use one for whole suite).
-    setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
-        await startJupyterServer();
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
