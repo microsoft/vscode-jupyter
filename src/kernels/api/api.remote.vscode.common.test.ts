@@ -1,0 +1,144 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+import { assert } from 'chai';
+import {
+    CancellationTokenSource,
+    NotebookCellData,
+    NotebookCellKind,
+    NotebookCellOutputItem,
+    NotebookEdit,
+    NotebookEditor,
+    NotebookRange,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
+import { traceInfo } from '../../platform/logging';
+import { IDisposable } from '../../platform/common/types';
+import {
+    captureScreenShot,
+    createEventHandler,
+    initialize,
+    startJupyterServer,
+    suiteMandatory,
+    testMandatory,
+    waitForCondition
+} from '../../test/common';
+import { IS_REMOTE_NATIVE_TEST } from '../../test/constants';
+import {
+    closeNotebooksAndCleanUpAfterTests,
+    createEmptyPythonNotebook,
+    prewarmNotebooks,
+    runCell,
+    selectDefaultController,
+    waitForExecutionCompletedSuccessfully
+} from '../../test/datascience/notebook/helper';
+import { getKernelsApi } from './api';
+import { raceTimeoutError } from '../../platform/common/utils/async';
+import { ExecutionResult } from '../../api';
+import { dispose } from '../../platform/common/utils/lifecycle';
+
+suiteMandatory('Remote Tests', function () {
+    const disposables: IDisposable[] = [];
+    this.timeout(120_000);
+    // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
+    this.retries(1);
+    let editor: NotebookEditor;
+    suiteSetup(async function () {
+        if (!IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
+        }
+        this.timeout(120_000);
+        await initialize();
+        await startJupyterServer();
+        await prewarmNotebooks();
+        editor = (await createEmptyPythonNotebook(disposables, undefined, true)).editor;
+        await selectDefaultController(editor);
+    });
+    // Use same notebook without starting kernel in every single test (use one for whole suite).
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+        await startJupyterServer();
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+    });
+    teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this);
+        }
+        // await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+    });
+    suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+    testMandatory('Get Kernel and execute code', async function () {
+        const nbEdit = NotebookEdit.replaceCells(new NotebookRange(0, editor.notebook.cellCount), [
+            new NotebookCellData(NotebookCellKind.Code, 'print("Hello World")', 'python')
+        ]);
+        const edit = new WorkspaceEdit();
+        edit.set(editor.notebook.uri, [nbEdit]);
+        await workspace.applyEdit(edit);
+
+        const cell = editor.notebook.cellAt(0)!;
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
+
+        const kernel = getKernelsApi().findKernel({ uri: editor.notebook.uri });
+        if (!kernel) {
+            throw new Error('Kernel not found');
+        }
+        const statusChange = createEventHandler(kernel, 'onDidChangeStatus', disposables);
+
+        // Verify we can execute code using the kernel.
+        const token = new CancellationTokenSource();
+        await waitForOutput(kernel.executeCode('1234', token.token), NotebookCellOutputItem.stdout('').mime, '1234');
+        // Wait for kernel to be idle.
+        await waitForCondition(
+            () => kernel.status === 'idle',
+            5_000,
+            `Kernel did not become idle, current status is ${kernel.status}`
+        );
+
+        // Verify state transition.
+        assert.deepEqual(statusChange.all, ['busy', 'idle'], 'State transition is incorrect');
+
+        // Verify we can execute code using the kernel in parallel.
+        await Promise.all([
+            waitForOutput(kernel.executeCode('1', token.token), NotebookCellOutputItem.stdout('').mime, '1'),
+            waitForOutput(kernel.executeCode('2', token.token), NotebookCellOutputItem.stdout('').mime, '2'),
+            waitForOutput(kernel.executeCode('3', token.token), NotebookCellOutputItem.stdout('').mime, '3')
+        ]);
+
+        // Wait for kernel to be idle.
+        await waitForCondition(
+            () => kernel.status === 'idle',
+            5_000,
+            `Kernel did not become idle, current status is ${kernel.status}`
+        );
+    });
+    async function waitForOutput(executionResult: ExecutionResult, expectedOutput: string, expectedMimetype: string) {
+        const disposables: IDisposable[] = [];
+        const outputPromise = new Promise<void>((resolve, reject) => {
+            executionResult.onDidEmitOutput(
+                (e) => {
+                    e.forEach((item) => {
+                        if (item.mime === expectedMimetype) {
+                            const output = new TextDecoder().decode(item.data).trim();
+                            if (output === expectedOutput) {
+                                resolve();
+                            } else {
+                                reject(new Error(`Unexpected output ${output}`));
+                            }
+                        } else {
+                            reject(new Error(`Unexpected output ${item.mime}`));
+                        }
+                    });
+                },
+                undefined,
+                disposables
+            );
+        });
+
+        await raceTimeoutError(30_000, new Error('Timed out waiting for output'), outputPromise).finally(() =>
+            dispose(disposables)
+        );
+    }
+});
