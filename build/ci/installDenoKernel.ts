@@ -36,7 +36,7 @@ async function main() {
     };
 
     const kernleSpecFolder = await getKernelSpecPath();
-    const kernelSpecFile = path.join(kernleSpecFolder, 'kernels.json');
+    const kernelSpecFile = path.join(kernleSpecFolder, 'kernel.json');
     if (!fs.existsSync(kernleSpecFolder)) {
         fs.mkdirSync(kernleSpecFolder);
     }

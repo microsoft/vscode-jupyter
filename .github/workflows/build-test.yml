@@ -636,7 +636,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
-          
+
       # Always install, as this is very fast.
       - name: Install Deno Kernel
         shell: bash
