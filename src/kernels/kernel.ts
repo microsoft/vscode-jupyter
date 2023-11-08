@@ -283,7 +283,9 @@ abstract class BaseKernel implements IBaseKernel {
 
         traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
         if (result === InterruptResult.TimedOut) {
-            const message = DataScience.restartKernelAfterInterruptMessage;
+            const message = DataScience.restartKernelAfterInterruptMessage(
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+            );
             const yes = DataScience.restartKernelMessageYes;
             const v = await this.appShell.showInformationMessage(message, { modal: true }, yes);
             if (v === yes) {
