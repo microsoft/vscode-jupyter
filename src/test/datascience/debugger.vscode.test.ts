@@ -121,7 +121,7 @@ suite('Run By Line @debugger', function () {
         try {
             tempWatcher = fs.watch(os.tmpdir(), (_event, filename) => {
                 // The folder ipykernel creates is always in tmp starting with ipykernel_
-                if (filename.startsWith('ipykernel_')) {
+                if (filename?.startsWith('ipykernel_')) {
                     folderName = filename;
                 }
             });
