@@ -28,7 +28,7 @@ import { ServiceContainer } from '../../platform/ioc/container';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
 
-suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
+suiteMandatory('Kernel API Tests @mandatory @python', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     let kernelProvider: IKernelProvider;
