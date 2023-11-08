@@ -66,7 +66,9 @@ export class KernelStatusProvider implements IExtensionSyncActivationService {
             async () => {
                 const progress = KernelProgressReporter.createProgressReporter(
                     kernel.resourceUri,
-                    DataScience.interruptKernelStatus
+                    DataScience.interruptKernelStatus(
+                        getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+                    )
                 );
                 this.interruptProgress.set(kernel, progress);
             },
