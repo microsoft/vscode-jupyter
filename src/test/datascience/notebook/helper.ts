@@ -644,45 +644,20 @@ export function selectDefaultController(
             : selectActiveInterpreterController(notebookEditor, timeout);
     } else {
         return IS_REMOTE_NATIVE_TEST() || isWeb()
-            ? selectKernelSpec(notebookEditor, timeout, 'remote', language)
-            : selectKernelSpec(notebookEditor, timeout, 'local', language);
+            ? selectKernelSpec(notebookEditor, timeout, language)
+            : selectKernelSpec(notebookEditor, timeout, language);
     }
 }
+
 async function selectKernelSpec(
     notebookEditor: NotebookEditor,
     timeout = defaultNotebookTestTimeout,
-    localOrRemote: 'local' | 'remote',
     language: string
 ) {
     const { controllerRegistration } = await getServices();
 
-    // Find the kernel id that matches the name we want
-    const controller = await waitForCondition(
-        () =>
-            controllerRegistration.registered.find((k) => {
-                if (k.viewType !== notebookEditor.notebook.notebookType) {
-                    return false;
-                }
-                if (
-                    k.connection.kind !== 'startUsingRemoteKernelSpec' &&
-                    k.connection.kind !== 'startUsingLocalKernelSpec'
-                ) {
-                    return false;
-                }
-                if (localOrRemote === 'remote' && k.connection.kind !== 'startUsingRemoteKernelSpec') {
-                    return false;
-                }
-                if (localOrRemote === 'local' && k.connection.kind !== 'startUsingLocalKernelSpec') {
-                    return false;
-                }
-                return k.connection.kernelSpec.language?.toLowerCase() === language.toLowerCase();
-            }),
-        timeout,
-        `No matching controller found for language ${language}`
-    );
-    if (!controller) {
-        throw new Error(`No matching controller found for language ${language}`);
-    }
+    // Find the requried controller
+    const controller = await getControllerForKernelSpec(timeout, { language });
     await commands.executeCommand('notebook.selectKernel', {
         id: controller.id,
         extension: JVSC_EXTENSION_ID
@@ -697,9 +672,10 @@ async function selectKernelSpec(
         )?.id} (2)`
     );
 }
+
 export async function getControllerForKernelSpec(
     timeout = defaultNotebookTestTimeout,
-    query: { language: string; name: string },
+    query: { language: string; kernelSpecName?: string },
     localOrRemote: 'local' | 'remote' = IS_REMOTE_NATIVE_TEST() ? 'remote' : 'local'
 ) {
     const { controllerRegistration } = await getServices();
@@ -720,10 +696,10 @@ export async function getControllerForKernelSpec(
                 if (localOrRemote === 'local' && k.connection.kind !== 'startUsingLocalKernelSpec') {
                     return false;
                 }
-                return (
-                    k.connection.kernelSpec.language?.toLowerCase() === query.language.toLowerCase() &&
-                    k.connection.kernelSpec.name?.toLowerCase() === query.name.toLowerCase()
-                );
+                return k.connection.kernelSpec.language?.toLowerCase() === query.language.toLowerCase() &&
+                    query.kernelSpecName
+                    ? k.connection.kernelSpec.name?.toLowerCase() === query.kernelSpecName.toLowerCase()
+                    : true;
             }),
         timeout,
         `No matching controller found for query ${JSON.stringify(query)}`

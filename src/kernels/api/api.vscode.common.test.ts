@@ -51,7 +51,7 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
-        controller = await getControllerForKernelSpec(30_000, { language: 'typescript', name: 'deno' });
+        controller = await getControllerForKernelSpec(30_000, { language: 'typescript', kernelSpecName: 'deno' });
         sinon
             .stub(ServiceContainer.instance.get<IVSCodeNotebook>(IVSCodeNotebook), 'notebookDocuments')
             .get(() => [notebook]);
