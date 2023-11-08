@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { l10n, CancellationToken, Event, EventEmitter, ProgressLocation, extensions, window } from 'vscode';
+import { l10n, CancellationToken, Event, EventEmitter, ProgressLocation, extensions, window, Disposable } from 'vscode';
 import { ExecutionResult, Kernel } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
@@ -14,7 +14,12 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
+import { traceInfo, traceVerbose } from '../../platform/logging';
 
+function getExtensionDisplayName(extensionId: string) {
+    const extensionDisplayName = extensions.getExtension(extensionId)?.packageJSON.displayName;
+    return extensionDisplayName ? `${extensionDisplayName} (${extensionId})` : extensionId;
+}
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.
  * We need this to notify users when execution takes place for:
@@ -22,42 +27,51 @@ import { once } from '../../platform/common/utils/events';
  * 2. If users experience delays in kernel execution within notebooks, then they have an idea why this might be the case.
  */
 class KernelExecutionProgressIndicator {
-    private readonly extensionDisplayName: string;
     private readonly controllerDisplayName: string;
     private deferred?: Deferred<void>;
-    constructor(extensionId: string, kernel: IKernel) {
-        const extensionDisplayName = extensions.getExtension(extensionId)?.packageJSON.displayName;
-        this.extensionDisplayName = extensionDisplayName ? `${extensionDisplayName} (${extensionId})` : extensionId;
+    private disposable?: IDisposable;
+    private readonly title: string;
+    constructor(
+        private readonly extensionDisplayName: string,
+        kernel: IKernel
+    ) {
         this.controllerDisplayName = getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata);
-    }
-    dispose() {
-        this.hide();
-    }
-
-    show() {
-        if (this.deferred && !this.deferred.completed) {
-            return;
-        }
-        const deferred = (this.deferred = createDeferred<void>());
-        const title = l10n.t(
+        this.title = l10n.t(
             `Executing code against kernel '{0}' on behalf of the extension {1}`,
             this.controllerDisplayName,
             this.extensionDisplayName
         );
-        // Give a grace period of 500ms to avoid too many progress indicators.
-        sleep(500)
-            .then(() => {
-                if (!deferred || deferred.completed) {
-                    return;
-                }
-                window
-                    .withProgress({ location: ProgressLocation.Notification, title }, async () => deferred.promise)
-                    .then(noop, noop);
-            })
-            .then(noop, noop);
     }
-    hide() {
-        this.deferred?.resolve();
+    dispose() {
+        this.disposable?.dispose();
+    }
+
+    show() {
+        if (this.deferred && !this.deferred.completed) {
+            const oldDeferred = this.deferred;
+            this.deferred = createDeferred<void>();
+            oldDeferred.resolve();
+            return (this.disposable = new Disposable(() => this.deferred?.resolve()));
+        }
+
+        this.showProgress().catch(noop);
+
+        this.deferred = createDeferred<void>();
+        return (this.disposable = new Disposable(() => this.deferred?.resolve()));
+    }
+    private async showProgress() {
+        // Give a grace period of 500ms to avoid too many progress indicators.
+        await sleep(500);
+        if (!this.deferred || this.deferred.completed) {
+            return;
+        }
+        await window.withProgress({ location: ProgressLocation.Notification, title: this.title }, async () => {
+            let deferred = this.deferred;
+            while (deferred && !deferred.completed) {
+                await deferred.promise;
+                deferred = this.deferred;
+            }
+        });
     }
 }
 
@@ -73,17 +87,21 @@ class WrappedKernelPerExtension implements Kernel {
         return this.kernel.onStatusChanged;
     }
 
+    private readonly extensionDisplayName: string;
     private readonly progress: KernelExecutionProgressIndicator;
+    private previousProgress?: IDisposable;
     constructor(
         private readonly extensionId: string,
         private readonly kernel: IKernel,
         private readonly execution: INotebookKernelExecution
     ) {
-        this.progress = new KernelExecutionProgressIndicator(extensionId, kernel);
+        this.extensionDisplayName = getExtensionDisplayName(extensionId);
+        this.progress = new KernelExecutionProgressIndicator(this.extensionDisplayName, kernel);
         once(kernel.onDisposed)(() => this.progress.dispose());
     }
 
     executeCode(code: string, token: CancellationToken): ExecutionResult {
+        this.previousProgress?.dispose();
         let completed = false;
         const measures = {
             requestHandledAfter: 0,
@@ -118,16 +136,17 @@ class WrappedKernelPerExtension implements Kernel {
             throw new Error('Kernel connection not available to execute 3rd party code');
         }
 
-        this.progress.show();
         const disposables: IDisposable[] = [];
         const onDidEmitOutput = new EventEmitter<{ mime: string; data: Uint8Array }[]>();
+        const progress = (this.previousProgress = this.progress.show());
+        disposables.push(progress);
         disposables.push(onDidEmitOutput);
         disposables.push({
             dispose: () => {
                 measures.duration = stopwatch.elapsedTime;
                 properties.mimeTypes = Array.from(mimeTypes).join(',');
                 completed = true;
-                this.progress.hide();
+                traceVerbose(`Kernel execution completed in ${measures.duration}ms, ${this.extensionDisplayName}.`);
             }
         });
         const request = executeSilentlyAndEmitOutput(this.kernel.session.kernel, code, (output) => {
@@ -157,6 +176,7 @@ class WrappedKernelPerExtension implements Kernel {
                 measures.interruptedAfter = stopwatch.elapsedTime;
                 properties.interruptedBeforeHandled = !properties.requestHandled;
                 if (properties.requestHandled) {
+                    traceInfo(`Kernel Interrupted by extension ${this.extensionDisplayName}`);
                     this.kernel.interrupt().catch(() => request.dispose());
                 } else {
                     request.dispose();
