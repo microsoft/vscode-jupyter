@@ -14,11 +14,11 @@ import {
     testMandatory,
     waitForCondition
 } from '../../test/common';
-import { IS_REMOTE_NATIVE_TEST } from '../../test/constants';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     insertCodeCell,
+    prewarmNotebooks,
     runCell,
     waitForExecutionCompletedSuccessfully
 } from '../../test/datascience/notebook/helper';
@@ -29,7 +29,7 @@ import { dispose } from '../../platform/common/utils/lifecycle';
 import { IKernel, IKernelProvider } from '../types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 
-suiteMandatory('Kernel API Tests @mandatory @python', function () {
+suiteMandatory('Kernel API Tests @python', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     let kernelProvider: IKernelProvider;
@@ -39,12 +39,15 @@ suiteMandatory('Kernel API Tests @mandatory @python', function () {
     let controllerRegistration: IControllerRegistration;
     suiteSetup(async function () {
         this.timeout(120_000);
+        traceInfo('Suite Setup, Step 1');
         const api = await initialize();
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-        if (IS_REMOTE_NATIVE_TEST()) {
-            await startJupyterServer();
-        }
+        traceInfo('Suite Setup, Step 2');
+        await startJupyterServer();
+        traceInfo('Suite Setup, Step 3');
+        await prewarmNotebooks();
+        traceInfo('Suite Setup (completed)');
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
