@@ -709,6 +709,7 @@ export async function getControllerForKernelSpec(
                     resolve(controller);
                 }
             };
+            findController();
             controllerRegistration.onDidChange(() => findController(), undefined, disposables);
         })
     ).finally(() => dispose(disposables));
