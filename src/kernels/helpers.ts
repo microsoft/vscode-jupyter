@@ -725,6 +725,7 @@ export function executeSilentlyAndEmitOutput(
     );
     request.onIOPub = (msg) => {
         if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+            traceInfoIfCI(`Got io pub message (stream), ${splitLines(msg.content.text.substr(0, 100)).join('\\n')}`);
             onOutput(
                 cellOutputToVSCCellOutput({
                     output_type: 'stream',
@@ -733,6 +734,7 @@ export function executeSilentlyAndEmitOutput(
                 }).items
             );
         } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+            traceInfoIfCI(`Got io pub message (execresult)}`);
             onOutput(
                 cellOutputToVSCCellOutput({
                     output_type: 'execute_result',
@@ -744,6 +746,7 @@ export function executeSilentlyAndEmitOutput(
                 }).items
             );
         } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+            traceInfoIfCI(`Got io pub message (displaydata)}`);
             onOutput(
                 cellOutputToVSCCellOutput({
                     output_type: 'display_data',
@@ -754,6 +757,12 @@ export function executeSilentlyAndEmitOutput(
                 }).items
             );
         } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+            traceInfoIfCI(
+                `Got io pub message (error), ${msg.content.ename},${msg.content.evalue}, ${msg.content.traceback
+                    .join()
+                    .substring(0, 100)}}`
+            );
+
             onOutput(
                 cellOutputToVSCCellOutput({
                     output_type: 'error',
@@ -763,7 +772,7 @@ export function executeSilentlyAndEmitOutput(
                 }).items
             );
         } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg) || jupyterLab.KernelMessage.isStatusMsg(msg)) {
-            //
+            traceInfoIfCI(`Got io pub message (${msg.header.msg_type})`);
         } else {
             traceWarning(`Got unexpected io pub message when executing code sillenty (${msg.header.msg_type})`);
         }
