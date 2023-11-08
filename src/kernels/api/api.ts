@@ -88,12 +88,13 @@ export function getKernelsApi(): Kernels {
             if (!kernel || !kernel.startedAtLeastOnce) {
                 return;
             }
-            // For local kernels, execution count must be greater than 0,
-            // As we pre-warms kernels (start kernels) even though the user may not have executed any code.
             if (
                 !isRemoteConnection(kernel.kernelConnectionMetadata) &&
                 kernelProvider.getKernelExecution(kernel).executionCount === 0
             ) {
+                // For local kernels, execution count must be greater than 0,
+                // As we pre-warms kernels (i.e. we start kernels even though the user may not have executed any code).
+                // The only way to determine whether users executed code is to look at the execution count
                 return;
             }
             let wrappedKernel = kernelCache.get(kernel) || new WrappedKernel(kernel);
