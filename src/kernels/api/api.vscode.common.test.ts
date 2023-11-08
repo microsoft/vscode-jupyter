@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import * as sinon from 'sinon';
-import { CancellationTokenSource, NotebookCellKind, NotebookCellOutputItem } from 'vscode';
+import { CancellationTokenSource, NotebookCellOutputItem, NotebookDocument } from 'vscode';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import {
@@ -16,64 +15,58 @@ import {
     waitForCondition
 } from '../../test/common';
 import { IS_REMOTE_NATIVE_TEST } from '../../test/constants';
-import { getControllerForKernelSpec } from '../../test/datascience/notebook/helper';
+import {
+    closeNotebooksAndCleanUpAfterTests,
+    createEmptyPythonNotebook,
+    insertCodeCell,
+    runCell,
+    waitForExecutionCompletedSuccessfully
+} from '../../test/datascience/notebook/helper';
 import { getKernelsApi } from './api';
 import { raceTimeoutError } from '../../platform/common/utils/async';
 import { ExecutionResult } from '../../api';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { createMockedNotebookDocument } from '../../test/datascience/editor-integration/helpers';
 import { IKernel, IKernelProvider } from '../types';
-import { noop } from '../../test/core';
-import { ServiceContainer } from '../../platform/ioc/container';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 
 suiteMandatory('Kernel API Tests @mandatory @python', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     let kernelProvider: IKernelProvider;
-    const kernelsToDispose: IKernel[] = [];
-    const notebook = createMockedNotebookDocument([
-        { kind: NotebookCellKind.Code, languageId: 'python', value: 'print(1234)' }
-    ]);
+    let notebook: NotebookDocument;
     let controller: IVSCodeNotebookController;
     let realKernel: IKernel;
+    let controllerRegistration: IControllerRegistration;
     suiteSetup(async function () {
         this.timeout(120_000);
         const api = await initialize();
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         if (IS_REMOTE_NATIVE_TEST()) {
             await startJupyterServer();
         }
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
-        controller = await getControllerForKernelSpec(30_000, { language: 'python' });
-        sinon
-            .stub(ServiceContainer.instance.get<IVSCodeNotebook>(IVSCodeNotebook), 'notebookDocuments')
-            .get(() => [notebook]);
+        const notebookEditor = (await createEmptyPythonNotebook(disposables)).editor;
+        notebook = notebookEditor.notebook;
+        await insertCodeCell('print("1234")', { index: 0 });
+        controller = controllerRegistration.getSelected(notebook)!;
         realKernel = kernelProvider.getOrCreate(notebook, {
             controller: controller.controller,
             metadata: controller.connection,
             resourceUri: notebook.uri
         });
-        kernelsToDispose.push(realKernel);
-
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        sinon.restore();
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
 
-        if (!IS_REMOTE_NATIVE_TEST()) {
-            // Do not shutdown kernels when running on remote.
-            await Promise.all(kernelsToDispose.map((p) => p.dispose().catch(noop)));
-        }
-        kernelsToDispose.length = 0;
+        await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('No kernel returned if no code has been executed', async function () {
@@ -85,12 +78,15 @@ suiteMandatory('Kernel API Tests @mandatory @python', function () {
         // No kernel unless we execute code against this kernel.
         assert.isUndefined(getKernelsApi().findKernel({ uri: notebook.uri }));
 
+        // Even after starting a kernel the API should not return anyting,
+        // as no code has been executed against this kernel.
         await realKernel.start();
-
         getKernelsApi().findKernel({ uri: notebook.uri });
 
         // Ensure user has executed some code against this kernel.
-        sinon.stub(kernelProvider.getKernelExecution(realKernel), 'executionCount').get(() => 1);
+        const cell = notebook.cellAt(0)!;
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
+
         const kernel = getKernelsApi().findKernel({ uri: notebook.uri });
         if (!kernel) {
             throw new Error('Kernel not found');
