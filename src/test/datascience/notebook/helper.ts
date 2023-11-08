@@ -682,36 +682,38 @@ export async function getControllerForKernelSpec(
     const disposables: IDisposable[] = [];
 
     // Find the kernel id that matches the name we want
+    const promise = new Promise<IVSCodeNotebookController>((resolve) => {
+        const findController = () => {
+            const controller = controllerRegistration.registered.find((k) => {
+                if (
+                    k.connection.kind !== 'startUsingRemoteKernelSpec' &&
+                    k.connection.kind !== 'startUsingLocalKernelSpec'
+                ) {
+                    return false;
+                }
+                if (localOrRemote === 'remote' && k.connection.kind !== 'startUsingRemoteKernelSpec') {
+                    return false;
+                }
+                if (localOrRemote === 'local' && k.connection.kind !== 'startUsingLocalKernelSpec') {
+                    return false;
+                }
+                return k.connection.kernelSpec.language?.toLowerCase() === query.language.toLowerCase() &&
+                    query.kernelSpecName
+                    ? k.connection.kernelSpec.name?.toLowerCase() === query.kernelSpecName.toLowerCase()
+                    : true;
+            });
+            if (controller) {
+                resolve(controller);
+            }
+        };
+        findController();
+        controllerRegistration.onDidChange(() => findController(), undefined, disposables);
+    });
+
     return raceTimeoutError(
         timeout,
         new Error(`No matching controller found for query ${JSON.stringify(query)}`),
-        new Promise<IVSCodeNotebookController>((resolve) => {
-            const findController = () => {
-                const controller = controllerRegistration.registered.find((k) => {
-                    if (
-                        k.connection.kind !== 'startUsingRemoteKernelSpec' &&
-                        k.connection.kind !== 'startUsingLocalKernelSpec'
-                    ) {
-                        return false;
-                    }
-                    if (localOrRemote === 'remote' && k.connection.kind !== 'startUsingRemoteKernelSpec') {
-                        return false;
-                    }
-                    if (localOrRemote === 'local' && k.connection.kind !== 'startUsingLocalKernelSpec') {
-                        return false;
-                    }
-                    return k.connection.kernelSpec.language?.toLowerCase() === query.language.toLowerCase() &&
-                        query.kernelSpecName
-                        ? k.connection.kernelSpec.name?.toLowerCase() === query.kernelSpecName.toLowerCase()
-                        : true;
-                });
-                if (controller) {
-                    resolve(controller);
-                }
-            };
-            findController();
-            controllerRegistration.onDidChange(() => findController(), undefined, disposables);
-        })
+        promise
     ).finally(() => dispose(disposables));
 }
 async function selectActiveInterpreterController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
