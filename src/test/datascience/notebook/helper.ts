@@ -697,6 +697,42 @@ async function selectKernelSpec(
         )?.id} (2)`
     );
 }
+export async function getControllerForKernelSpec(
+    timeout = defaultNotebookTestTimeout,
+    query: { language: string; name: string },
+    localOrRemote: 'local' | 'remote' = IS_REMOTE_NATIVE_TEST() ? 'remote' : 'local',
+) {
+    const { controllerRegistration } = await getServices();
+
+    // Find the kernel id that matches the name we want
+    const controller = await waitForCondition(
+        () =>
+            controllerRegistration.registered.find((k) => {
+                if (
+                    k.connection.kind !== 'startUsingRemoteKernelSpec' &&
+                    k.connection.kind !== 'startUsingLocalKernelSpec'
+                ) {
+                    return false;
+                }
+                if (localOrRemote === 'remote' && k.connection.kind !== 'startUsingRemoteKernelSpec') {
+                    return false;
+                }
+                if (localOrRemote === 'local' && k.connection.kind !== 'startUsingLocalKernelSpec') {
+                    return false;
+                }
+                return (
+                    k.connection.kernelSpec.language?.toLowerCase() === query.language.toLowerCase() &&
+                    k.connection.kernelSpec.name?.toLowerCase() === query.name.toLowerCase()
+                );
+            }),
+        timeout,
+        `No matching controller found for query ${JSON.stringify(query)}`
+    );
+    if (!controller) {
+        throw new Error(`No matching controller found for query ${JSON.stringify(query)}`);
+    }
+    return controller;
+}
 async function selectActiveInterpreterController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
     const { controllerRegistration, interpreterService } = await getServices();
 

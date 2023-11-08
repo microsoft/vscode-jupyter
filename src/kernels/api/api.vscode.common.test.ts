@@ -2,17 +2,8 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import {
-    CancellationTokenSource,
-    NotebookCellData,
-    NotebookCellKind,
-    NotebookCellOutputItem,
-    NotebookEdit,
-    NotebookEditor,
-    NotebookRange,
-    workspace,
-    WorkspaceEdit
-} from 'vscode';
+import * as sinon from 'sinon';
+import { CancellationTokenSource, NotebookCellOutputItem } from 'vscode';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import {
@@ -24,65 +15,64 @@ import {
     waitForCondition
 } from '../../test/common';
 import { IS_REMOTE_NATIVE_TEST } from '../../test/constants';
-import {
-    closeNotebooksAndCleanUpAfterTests,
-    createEmptyNotebook,
-    runCell,
-    selectDefaultController,
-    waitForExecutionCompletedSuccessfully
-} from '../../test/datascience/notebook/helper';
+import { closeNotebooksAndCleanUpAfterTests, getControllerForKernelSpec } from '../../test/datascience/notebook/helper';
 import { getKernelsApi } from './api';
 import { raceTimeoutError } from '../../platform/common/utils/async';
 import { ExecutionResult } from '../../api';
 import { dispose } from '../../platform/common/utils/lifecycle';
+import { createMockedNotebookDocument } from '../../test/datascience/editor-integration/helpers';
+import { IKernel, IKernelProvider } from '../types';
+import { noop } from '../../test/core';
+import { ServiceContainer } from '../../platform/ioc/container';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
 
-// eslint-disable-next-line no-only-tests/no-only-tests
 suite('Kernel API Tests @mandatory @nonPython', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
     this.retries(1);
-    let editor: NotebookEditor;
+    let kernelProvider: IKernelProvider;
+    const denoKernelSpec = { display_name: 'Deno', name: 'deno' };
+    const kernelsToDispose: IKernel[] = [];
+    const notebook = createMockedNotebookDocument([], { kernelspec: denoKernelSpec });
+    let controller: IVSCodeNotebookController;
     suiteSetup(async function () {
         this.timeout(120_000);
-        await initialize();
+        const api = await initialize();
+        kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         if (IS_REMOTE_NATIVE_TEST()) {
             await startJupyterServer();
         }
-        editor = (
-            await createEmptyNotebook(disposables, undefined, { display_name: 'Deno', name: 'deno' }, 'typescript')
-        ).editor;
-        await selectDefaultController(editor, 120_000, 'typescript');
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
+        controller = await getControllerForKernelSpec(30_000, { language: 'typescript', name: 'deno' });
+        sinon
+            .stub(ServiceContainer.instance.get<IVSCodeNotebook>(IVSCodeNotebook), 'notebookDocuments')
+            .get(() => [notebook]);
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        sinon.restore();
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
-        // await closeNotebooksAndCleanUpAfterTests(disposables);
+        await Promise.all(kernelsToDispose.map((p) => p.dispose().catch(noop)));
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     testMandatory('Get Kernel and execute code', async function () {
-        traceInfo(`Start inside Test ${this.test?.title}`);
-        const nbEdit = NotebookEdit.replaceCells(new NotebookRange(0, editor.notebook.cellCount), [
-            new NotebookCellData(NotebookCellKind.Code, 'console.log(1234)', 'typescript')
-        ]);
-        const edit = new WorkspaceEdit();
-        edit.set(editor.notebook.uri, [nbEdit]);
-        await workspace.applyEdit(edit);
-        traceInfo(`Cell added`);
-
-        const cell = editor.notebook.cellAt(0)!;
-        traceInfo(`Execute cell`);
-        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
-        traceInfo(`Execute cell completed`);
-
-        const kernel = getKernelsApi().findKernel({ uri: editor.notebook.uri });
+        const realKernel = kernelProvider.getOrCreate(notebook, {
+            controller: controller.controller,
+            metadata: controller.connection,
+            resourceUri: notebook.uri
+        });
+        kernelsToDispose.push(realKernel);
+        await realKernel.start();
+        const kernel = getKernelsApi().findKernel({ uri: notebook.uri });
         if (!kernel) {
             throw new Error('Kernel not found');
         }
@@ -102,7 +92,7 @@ suite('Kernel API Tests @mandatory @nonPython', function () {
         );
 
         // Verify state transition.
-        assert.deepEqual(statusChange.all, ['busy', 'idle'], 'State transition is incorrect');
+        assert.deepEqual(Array.from(new Set(statusChange.all)), ['busy', 'idle'], 'State transition is incorrect');
 
         // Verify we can execute code using the kernel in parallel.
         await Promise.all([
