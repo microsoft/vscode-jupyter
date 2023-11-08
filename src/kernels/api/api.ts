@@ -49,11 +49,11 @@ class WrappedKernel implements Kernel {
                 onDidEmitOutput.fire(output);
             }
         });
-        // const oldIOPub = request.onIOPub;
-        // request.onIOPub = (msg) => {
-        //     requestHandled = true;
-        //     return oldIOPub(msg);
-        // };
+        const oldIOPub = request.onIOPub;
+        request.onIOPub = (msg) => {
+            requestHandled = true;
+            return oldIOPub(msg);
+        };
         request.onReply = () => {
             requestHandled = true;
         };
