@@ -113,7 +113,7 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
         );
 
         // Verify state transition.
-        assert.deepEqual(Array.from(new Set(statusChange.all)), ['busy', 'idle'], 'State transition is incorrect');
+        assert.deepEqual(Array.from(new Set(statusChange.all)), ['busy', 'idle'], 'States are incorrect');
 
         // Verify we can execute code using the kernel in parallel.
         await Promise.all([
