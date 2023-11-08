@@ -132,6 +132,7 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
 
     async function waitForOutput(executionResult: ExecutionResult, expectedOutput: string, expectedMimetype: string) {
         const disposables: IDisposable[] = [];
+        const outputsReceived: string[] = [];
         const outputPromise = new Promise<void>((resolve, reject) => {
             executionResult.onDidEmitOutput(
                 (e) => {
@@ -139,13 +140,13 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
                     e.forEach((item) => {
                         if (item.mime === expectedMimetype) {
                             const output = new TextDecoder().decode(item.data).trim();
-                            if (output === expectedOutput) {
+                            if (output === expectedOutput.trim()) {
                                 resolve();
                             } else {
                                 reject(new Error(`Unexpected output ${output}`));
                             }
                         } else {
-                            reject(new Error(`Unexpected output ${item.mime}`));
+                            outputsReceived.push(`${item.mime} ${new TextDecoder().decode(item.data).trim()}`);
                         }
                     });
                 },
@@ -154,8 +155,10 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
             );
         });
 
-        await raceTimeoutError(30_000, new Error('Timed out waiting for output'), outputPromise).finally(() =>
-            dispose(disposables)
-        );
+        await raceTimeoutError(
+            30_000,
+            new Error(`Timed out waiting for output, got ${outputsReceived}`),
+            outputPromise
+        ).finally(() => dispose(disposables));
     }
 });

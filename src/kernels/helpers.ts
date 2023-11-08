@@ -116,6 +116,7 @@ export function cleanEnvironment<T>(spec: T): T {
         });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return copy as any;
 }
 
