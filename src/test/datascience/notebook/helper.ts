@@ -700,7 +700,7 @@ async function selectKernelSpec(
 export async function getControllerForKernelSpec(
     timeout = defaultNotebookTestTimeout,
     query: { language: string; name: string },
-    localOrRemote: 'local' | 'remote' = IS_REMOTE_NATIVE_TEST() ? 'remote' : 'local',
+    localOrRemote: 'local' | 'remote' = IS_REMOTE_NATIVE_TEST() ? 'remote' : 'local'
 ) {
     const { controllerRegistration } = await getServices();
 
