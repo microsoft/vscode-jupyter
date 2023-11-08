@@ -451,9 +451,11 @@ export namespace DataScience {
     export const exportPythonQuickPickLabel = l10n.t('Python Script');
     export const exportHTMLQuickPickLabel = l10n.t('HTML');
     export const exportPDFQuickPickLabel = l10n.t('PDF');
-    export const restartKernelAfterInterruptMessage = l10n.t(
-        'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.'
-    );
+    export const restartKernelAfterInterruptMessage = (displayName: string) =>
+        l10n.t(
+            "Interrupting the kernel '{0}' timed out. Do you want to restart the kernel instead? All variables will be lost.",
+            displayName
+        );
     export const documentMismatch = (fileName: string) =>
         l10n.t('Cannot run cells, duplicate documents for {0} found.', fileName);
     export const jupyterGetVariablesBadResults = l10n.t('Failed to fetch variable info from the Jupyter Server.');
