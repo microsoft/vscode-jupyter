@@ -16,7 +16,7 @@ import {
     waitForCondition
 } from '../../test/common';
 import { IS_REMOTE_NATIVE_TEST } from '../../test/constants';
-import { closeNotebooksAndCleanUpAfterTests, getControllerForKernelSpec } from '../../test/datascience/notebook/helper';
+import { getControllerForKernelSpec } from '../../test/datascience/notebook/helper';
 import { getKernelsApi } from './api';
 import { raceTimeoutError } from '../../platform/common/utils/async';
 import { ExecutionResult } from '../../api';
@@ -67,7 +67,6 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
         await Promise.all(kernelsToDispose.map((p) => p.dispose().catch(noop)));
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     test('No kernel returned if no code has been executed', async function () {
         const realKernel = kernelProvider.getOrCreate(notebook, {
             controller: controller.controller,
