@@ -36,7 +36,8 @@ import { raceTimeoutError } from '../../platform/common/utils/async';
 import { ExecutionResult } from '../../api';
 import { dispose } from '../../platform/common/utils/lifecycle';
 
-suite('Remote Tests @mandatory @nonPython', function () {
+// eslint-disable-next-line no-only-tests/no-only-tests
+suite.only('Remote Tests @mandatory @nonPython', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
