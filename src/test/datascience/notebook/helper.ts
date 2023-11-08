@@ -83,7 +83,7 @@ import { dispose } from '../../../platform/common/utils/lifecycle';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IMemento, IsWebExtension } from '../../../platform/common/types';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeoutError, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isWeb } from '../../../platform/common/utils/misc';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
@@ -679,35 +679,39 @@ export async function getControllerForKernelSpec(
     localOrRemote: 'local' | 'remote' = IS_REMOTE_NATIVE_TEST() ? 'remote' : 'local'
 ) {
     const { controllerRegistration } = await getServices();
+    const disposables: IDisposable[] = [];
 
     // Find the kernel id that matches the name we want
-    const controller = await waitForCondition(
-        () =>
-            controllerRegistration.registered.find((k) => {
-                if (
-                    k.connection.kind !== 'startUsingRemoteKernelSpec' &&
-                    k.connection.kind !== 'startUsingLocalKernelSpec'
-                ) {
-                    return false;
-                }
-                if (localOrRemote === 'remote' && k.connection.kind !== 'startUsingRemoteKernelSpec') {
-                    return false;
-                }
-                if (localOrRemote === 'local' && k.connection.kind !== 'startUsingLocalKernelSpec') {
-                    return false;
-                }
-                return k.connection.kernelSpec.language?.toLowerCase() === query.language.toLowerCase() &&
-                    query.kernelSpecName
-                    ? k.connection.kernelSpec.name?.toLowerCase() === query.kernelSpecName.toLowerCase()
-                    : true;
-            }),
+    return raceTimeoutError(
         timeout,
-        `No matching controller found for query ${JSON.stringify(query)}`
-    );
-    if (!controller) {
-        throw new Error(`No matching controller found for query ${JSON.stringify(query)}`);
-    }
-    return controller;
+        new Error(`No matching controller found for query ${JSON.stringify(query)}`),
+        new Promise<IVSCodeNotebookController>((resolve) => {
+            const findController = () => {
+                const controller = controllerRegistration.registered.find((k) => {
+                    if (
+                        k.connection.kind !== 'startUsingRemoteKernelSpec' &&
+                        k.connection.kind !== 'startUsingLocalKernelSpec'
+                    ) {
+                        return false;
+                    }
+                    if (localOrRemote === 'remote' && k.connection.kind !== 'startUsingRemoteKernelSpec') {
+                        return false;
+                    }
+                    if (localOrRemote === 'local' && k.connection.kind !== 'startUsingLocalKernelSpec') {
+                        return false;
+                    }
+                    return k.connection.kernelSpec.language?.toLowerCase() === query.language.toLowerCase() &&
+                        query.kernelSpecName
+                        ? k.connection.kernelSpec.name?.toLowerCase() === query.kernelSpecName.toLowerCase()
+                        : true;
+                });
+                if (controller) {
+                    resolve(controller);
+                }
+            };
+            controllerRegistration.onDidChange(() => findController(), undefined, disposables);
+        })
+    ).finally(() => dispose(disposables));
 }
 async function selectActiveInterpreterController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
     const { controllerRegistration, interpreterService } = await getServices();
