@@ -369,7 +369,7 @@ export namespace DataScience {
             if (numberOfConnections === 1) {
                 return l10n.t('1 connection');
             }
-            return l10n.t('{1} connections', numberOfConnections.toString());
+            return l10n.t('{0} connections', numberOfConnections.toString());
         }
         if (numberOfConnections === 0) {
             return l10n.t('Last activity {0}', fromNow(time, true, false, false));
@@ -447,7 +447,8 @@ export namespace DataScience {
             "'Kernelspec' module not installed in the selected interpreter ({0}).\n Please re-install or update 'jupyter'.",
             pythonExecFileName
         );
-    export const interruptKernelStatus = l10n.t('Interrupting Jupyter Kernel');
+    export const interruptKernelStatus = (kernelDisplayName: string) =>
+        l10n.t('Interrupting Kernel {0}', kernelDisplayName);
     export const exportPythonQuickPickLabel = l10n.t('Python Script');
     export const exportHTMLQuickPickLabel = l10n.t('HTML');
     export const exportPDFQuickPickLabel = l10n.t('PDF');
