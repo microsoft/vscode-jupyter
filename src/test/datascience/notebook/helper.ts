@@ -316,27 +316,6 @@ export async function createEmptyPythonNotebook(
     return { notebook, editor: vscodeNotebook.activeNotebookEditor! };
 }
 
-export async function createEmptyNotebook(
-    disposables: IDisposable[] = [],
-    rootFolder?: Uri,
-    kernelSpec: nbformat.IKernelspecMetadata = { display_name: 'Python 3', name: 'python3' },
-    langauge = PYTHON_LANGUAGE
-) {
-    traceInfoIfCI('Creating an empty notebook');
-    const { serviceContainer } = await getServices();
-    const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    // Don't use same file (due to dirty handling, we might save in dirty.)
-    // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-    const nbFile = await createTemporaryNotebook([], disposables, kernelSpec, rootFolder, langauge, langauge);
-    // Open a python notebook and use this for all tests in this test suite.
-    await openAndShowNotebook(nbFile);
-    assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
-    await deleteAllCellsAndWait();
-    const notebook = vscodeNotebook.activeNotebookEditor!.notebook;
-    traceVerbose(`Empty notebook created ${getDisplayPath(notebook.uri)}`);
-    return { notebook, editor: vscodeNotebook.activeNotebookEditor! };
-}
-
 async function shutdownAllNotebooks() {
     traceVerbose('Shutting down all kernels');
     const api = await initialize();
