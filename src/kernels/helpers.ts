@@ -762,8 +762,10 @@ export function executeSilentlyAndEmitOutput(
                     traceback: msg.content.traceback
                 }).items
             );
+        } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg) || jupyterLab.KernelMessage.isStatusMsg(msg)) {
+            //
         } else {
-            traceWarning(`Got io pub message (${msg.header.msg_type})`);
+            traceWarning(`Got unexpected io pub message when executing code sillenty (${msg.header.msg_type})`);
         }
     };
     return request;
