@@ -617,7 +617,6 @@ export function selectDefaultController(notebookEditor: NotebookEditor, timeout 
         ? selectPythonRemoteKernelConnectionForActiveInterpreter(notebookEditor, timeout)
         : selectActiveInterpreterController(notebookEditor, timeout);
 }
-
 async function selectActiveInterpreterController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
     const { controllerRegistration, interpreterService } = await getServices();
 
