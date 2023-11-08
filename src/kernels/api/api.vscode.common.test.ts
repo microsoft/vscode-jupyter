@@ -73,24 +73,24 @@ suiteMandatory('Kernel API Tests @python', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('No kernel returned if no code has been executed', async function () {
-        const kernel = getKernelsApi().findKernel({ uri: notebook.uri });
+        const kernel = getKernelsApi('').findKernel({ uri: notebook.uri });
 
         assert.isUndefined(kernel, 'Kernel should not be returned as no code was executed');
     });
     testMandatory('Get Kernel and execute code', async function () {
         // No kernel unless we execute code against this kernel.
-        assert.isUndefined(getKernelsApi().findKernel({ uri: notebook.uri }));
+        assert.isUndefined(getKernelsApi('').findKernel({ uri: notebook.uri }));
 
         // Even after starting a kernel the API should not return anyting,
         // as no code has been executed against this kernel.
         await realKernel.start();
-        getKernelsApi().findKernel({ uri: notebook.uri });
+        getKernelsApi('').findKernel({ uri: notebook.uri });
 
         // Ensure user has executed some code against this kernel.
         const cell = notebook.cellAt(0)!;
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
 
-        const kernel = getKernelsApi().findKernel({ uri: notebook.uri });
+        const kernel = getKernelsApi('').findKernel({ uri: notebook.uri });
         if (!kernel) {
             throw new Error('Kernel not found');
         }
