@@ -439,6 +439,37 @@
      ]
    }
  */
+//Telemetry.NewJupyterKernelApiExecution
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_NEW_KERNEL_API_EXEC" : {
+     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "interrupted": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the execution was interrupted or not.","owner":"donjayamanne"},
+     "requestHandled": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the kernel acknowledged the request.","owner":"donjayamanne"},
+     "interruptedBeforeHandled": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the execution was interrupted before it was handled by the kernel.","owner":"donjayamanne"},
+     "mimeTypes": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Mime types in the output.","owner":"donjayamanne"},
+     "executionCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Gives us an idea how many cells were executed by user before a 3rd party accessed this kernel.","owner":"donjayamanne","isMeasurement":true},
+     "interruptedAfter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How long after execution was started, was the execution interrupted.","owner":"donjayamanne","isMeasurement":true},
+     "requestHandledAfter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How long after execution was started, was the request acknowledged by the kernel.","owner":"donjayamanne","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.NewJupyterKernelApiUsage
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_NEW_KERNEL_API_USAGE" : {
+     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
+     "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the API member used.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "executionCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Gives us an idea how many cells were executed by user before a 3rd party accessed this kernel.","owner":"donjayamanne","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.KernelCrash
 /* __GDPR__
    "DATASCIENCE.KERNEL_CRASH" : {

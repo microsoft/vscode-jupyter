@@ -19,7 +19,7 @@ import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
 import { IExtensionApi } from './standalone/api/api';
-import { IExportedKernelService } from './api';
+import { IExportedKernelService, Kernel } from './api';
 
 export * from './platform/telemetry/index';
 export type DurationMeasurement = {
@@ -3253,6 +3253,156 @@ export class IEventNamePropertyMapping {
             pemUsed: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
+     * Telemetry sent when an extension uses our 3rd party Kernel Execution API.
+     */
+    [Telemetry.NewJupyterKernelApiUsage]: TelemetryEventInfo<{
+        /**
+         * Extension Id that's attempting to use the API.
+         */
+        extensionId: string;
+        /**
+         * Name of the API member used.
+         */
+        pemUsed: keyof Kernel;
+        /**
+         * Hash of the Kernel Connection id.
+         * Common to most of the events.
+         */
+        kernelId: string;
+        /**
+         * Gives us an idea how many cells were executed by user before a 3rd party accessed this kernel.
+         */
+        executionCount: number;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        measures: {
+            executionCount: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            }
+        },
+        properties: {
+            extensionId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            pemUsed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
+     * Telemetry sent when an extension uses our 3rd party Kernel Execution API.
+     */
+    [Telemetry.NewJupyterKernelApiExecution]: TelemetryEventInfo<{
+        /**
+         * Extension Id that's attempting to use the API.
+         */
+        extensionId: string;
+        /**
+         * Hash of the Kernel Connection id.
+         * Common to most of the events.
+         */
+        kernelId: string;
+        /**
+         * Gives us an idea how many cells were executed by user before a 3rd party accessed this kernel.
+         */
+        executionCount: number;
+        /**
+         * Total duraction (ms) for execution of this block of code.
+         */
+        duration: number;
+        /**
+         * Whether the execution was interrupted or not.
+         */
+        interrupted: boolean;
+        /**
+         * How long after execution was started, was the execution interrupted.
+         */
+        interruptedAfter: number;
+        /**
+         * Whether the execution was interrupted before it was handled by the kernel.
+         */
+        interruptedBeforeHandled: boolean;
+        /**
+         * Mime types in the output.
+         */
+        mimeTypes: string;
+        /**
+         * Whether the kernel acknowledged the request.
+         */
+        requestHandled: boolean;
+        /**
+         * How long after execution was started, was the request acknowledged by the kernel.
+         */
+        requestHandledAfter: number;
+        /**
+         * Whether the request was never sent (kernel is dead or the like).
+         */
+        failed: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        measures: {
+            executionCount: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            },
+            interruptedAfter: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            },
+            requestHandledAfter: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            },
+            ...commonClassificationForDurationProperties()
+        },
+        properties: {
+            extensionId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            interrupted: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            requestHandled: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            interruptedBeforeHandled: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            mimeTypes: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            failed: {
+                classification: 'PublicNonPersonalData',
+                comment: '',
+                purpose: 'PerformanceAndHealth'
             }
         }
     };
