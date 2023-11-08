@@ -632,17 +632,6 @@ jobs:
             using Pkg
             Pkg.add("IJulia")'
 
-      # Always install, as this is very fast.
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-
-      # Always install, as this is very fast.
-      - name: Install Deno Kernel
-        shell: bash
-        run: |
-          deno run -A build/ci/installDenoKernel.ts
-
       - name: Install Dot.net
         if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
         uses: actions/setup-dotnet@v3.2.0
