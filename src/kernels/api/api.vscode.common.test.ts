@@ -31,8 +31,6 @@ import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
 suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
-    // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
-    this.retries(1);
     let kernelProvider: IKernelProvider;
     const denoKernelSpec = { display_name: 'Deno', name: 'deno' };
     const kernelsToDispose: IKernel[] = [];
@@ -136,6 +134,7 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
             `Kernel did not become idle, current status is ${kernel.status}`
         );
     });
+
     async function waitForOutput(executionResult: ExecutionResult, expectedOutput: string, expectedMimetype: string) {
         const disposables: IDisposable[] = [];
         const outputPromise = new Promise<void>((resolve, reject) => {
