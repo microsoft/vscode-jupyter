@@ -6,8 +6,6 @@ import { IDisposable } from '../types';
 
 /**
  * Given an event, returns another event which only fires once.
- *
- * @param event The event source for the new event.
  */
 export function once<T>(event: Event<T>): Event<T> {
     return (listener, thisArgs = null, disposables?) => {
@@ -36,4 +34,11 @@ export function once<T>(event: Event<T>): Event<T> {
 
         return result;
     };
+}
+
+/**
+ * Creates a promise out of an event, using the once helper.
+ */
+export function toPromise<T>(event: Event<T>): Promise<T> {
+    return new Promise((resolve) => once(event)(resolve));
 }
