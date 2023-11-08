@@ -32,12 +32,10 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     let kernelProvider: IKernelProvider;
-    const denoKernelSpec = { display_name: 'Deno', name: 'deno' };
     const kernelsToDispose: IKernel[] = [];
-    const notebook = createMockedNotebookDocument(
-        [{ kind: NotebookCellKind.Code, languageId: 'typescript', value: '1234' }],
-        { kernelspec: denoKernelSpec }
-    );
+    const notebook = createMockedNotebookDocument([
+        { kind: NotebookCellKind.Code, languageId: 'python', value: 'print(1234)' }
+    ]);
     let controller: IVSCodeNotebookController;
     let realKernel: IKernel;
     suiteSetup(async function () {
@@ -50,7 +48,7 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
-        controller = await getControllerForKernelSpec(30_000, { language: 'typescript', kernelSpecName: 'deno' });
+        controller = await getControllerForKernelSpec(30_000, { language: 'python' });
         sinon
             .stub(ServiceContainer.instance.get<IVSCodeNotebook>(IVSCodeNotebook), 'notebookDocuments')
             .get(() => [notebook]);
@@ -103,7 +101,7 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
         traceInfo(`Execute code silently`);
         const expectedMime = NotebookCellOutputItem.stdout('').mime;
         const token = new CancellationTokenSource();
-        await waitForOutput(kernel.executeCode('console.log(1234)', token.token), '1234', expectedMime);
+        await waitForOutput(kernel.executeCode('print(1234)', token.token), '1234', expectedMime);
         traceInfo(`Execute code silently completed`);
         // Wait for kernel to be idle.
         await waitForCondition(
@@ -117,9 +115,9 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
 
         // Verify we can execute code using the kernel in parallel.
         await Promise.all([
-            waitForOutput(kernel.executeCode('console.log(1)', token.token), '1', expectedMime),
-            waitForOutput(kernel.executeCode('console.log(2)', token.token), '2', expectedMime),
-            waitForOutput(kernel.executeCode('console.log(3)', token.token), '3', expectedMime)
+            waitForOutput(kernel.executeCode('print(1)', token.token), '1', expectedMime),
+            waitForOutput(kernel.executeCode('print(2)', token.token), '2', expectedMime),
+            waitForOutput(kernel.executeCode('print(3)', token.token), '3', expectedMime)
         ]);
 
         // Wait for kernel to be idle.
