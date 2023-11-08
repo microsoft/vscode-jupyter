@@ -64,7 +64,7 @@ suite('Remote Tests @mandatory @nonPython', function () {
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     testMandatory('Get Kernel and execute code', async function () {
         const nbEdit = NotebookEdit.replaceCells(new NotebookRange(0, editor.notebook.cellCount), [
-            new NotebookCellData(NotebookCellKind.Code, 'print("Hello World")', 'python')
+            new NotebookCellData(NotebookCellKind.Code, 'console.log(1234)', 'typescript')
         ]);
         const edit = new WorkspaceEdit();
         edit.set(editor.notebook.uri, [nbEdit]);
@@ -80,8 +80,9 @@ suite('Remote Tests @mandatory @nonPython', function () {
         const statusChange = createEventHandler(kernel, 'onDidChangeStatus', disposables);
 
         // Verify we can execute code using the kernel.
+        const expectedMime = NotebookCellOutputItem.stdout('').mime;
         const token = new CancellationTokenSource();
-        await waitForOutput(kernel.executeCode('1234', token.token), NotebookCellOutputItem.stdout('').mime, '1234');
+        await waitForOutput(kernel.executeCode('console.log(1234)', token.token), '1234', expectedMime);
         // Wait for kernel to be idle.
         await waitForCondition(
             () => kernel.status === 'idle',
@@ -94,9 +95,9 @@ suite('Remote Tests @mandatory @nonPython', function () {
 
         // Verify we can execute code using the kernel in parallel.
         await Promise.all([
-            waitForOutput(kernel.executeCode('1', token.token), NotebookCellOutputItem.stdout('').mime, '1'),
-            waitForOutput(kernel.executeCode('2', token.token), NotebookCellOutputItem.stdout('').mime, '2'),
-            waitForOutput(kernel.executeCode('3', token.token), NotebookCellOutputItem.stdout('').mime, '3')
+            waitForOutput(kernel.executeCode('console.log(1)', token.token), '1', expectedMime),
+            waitForOutput(kernel.executeCode('console.log(2)', token.token), '2', expectedMime),
+            waitForOutput(kernel.executeCode('console.log(3)', token.token), '3', expectedMime)
         ]);
 
         // Wait for kernel to be idle.
