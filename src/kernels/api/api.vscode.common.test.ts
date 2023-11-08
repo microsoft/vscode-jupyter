@@ -39,6 +39,7 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
         { kernelspec: denoKernelSpec }
     );
     let controller: IVSCodeNotebookController;
+    let realKernel: IKernel;
     suiteSetup(async function () {
         this.timeout(120_000);
         const api = await initialize();
@@ -53,6 +54,13 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
         sinon
             .stub(ServiceContainer.instance.get<IVSCodeNotebook>(IVSCodeNotebook), 'notebookDocuments')
             .get(() => [notebook]);
+        realKernel = kernelProvider.getOrCreate(notebook, {
+            controller: controller.controller,
+            metadata: controller.connection,
+            resourceUri: notebook.uri
+        });
+        kernelsToDispose.push(realKernel);
+
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
 
@@ -67,28 +75,15 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
             // Do not shutdown kernels when running on remote.
             await Promise.all(kernelsToDispose.map((p) => p.dispose().catch(noop)));
         }
+        kernelsToDispose.length = 0;
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('No kernel returned if no code has been executed', async function () {
-        const realKernel = kernelProvider.getOrCreate(notebook, {
-            controller: controller.controller,
-            metadata: controller.connection,
-            resourceUri: notebook.uri
-        });
-        kernelsToDispose.push(realKernel);
-
         const kernel = getKernelsApi().findKernel({ uri: notebook.uri });
 
         assert.isUndefined(kernel, 'Kernel should not be returned as no code was executed');
     });
     testMandatory('Get Kernel and execute code', async function () {
-        const realKernel = kernelProvider.getOrCreate(notebook, {
-            controller: controller.controller,
-            metadata: controller.connection,
-            resourceUri: notebook.uri
-        });
-        kernelsToDispose.push(realKernel);
-
         // No kernel unless we execute code against this kernel.
         assert.isUndefined(getKernelsApi().findKernel({ uri: notebook.uri }));
 
