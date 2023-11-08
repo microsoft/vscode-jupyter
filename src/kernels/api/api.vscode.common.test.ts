@@ -64,7 +64,11 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
-        await Promise.all(kernelsToDispose.map((p) => p.dispose().catch(noop)));
+
+        if (!IS_REMOTE_NATIVE_TEST()) {
+            // Do not shutdown kernels when running on remote.
+            await Promise.all(kernelsToDispose.map((p) => p.dispose().catch(noop)));
+        }
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('No kernel returned if no code has been executed', async function () {
