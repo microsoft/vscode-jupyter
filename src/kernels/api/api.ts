@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, EventEmitter, Uri, workspace } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { ExecutionResult, Kernel, Kernels } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
-import { IKernel, IKernelProvider } from '../types';
+import { IKernel, IKernelProvider, isRemoteConnection } from '../types';
 import { executeSilentlyAndEmitOutput } from '../helpers';
 import { IDisposable } from '../../platform/common/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { noop } from '../../platform/common/utils/misc';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
 
 const kernelCache = new WeakMap<IKernel, Kernel>();
 
@@ -49,8 +50,10 @@ class WrappedKernel implements Kernel {
                 onDidEmitOutput.fire(output);
             }
         });
-        request.onIOPub = () => {
+        const oldIOPub = request.onIOPub;
+        request.onIOPub = (msg) => {
             requestHandled = true;
+            return oldIOPub(msg);
         };
         request.onReply = () => {
             requestHandled = true;
@@ -75,12 +78,23 @@ class WrappedKernel implements Kernel {
 }
 
 export function getKernelsApi(): Kernels {
-    const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
     return {
         findKernel(query: { uri: Uri }) {
-            const notebook = workspace.notebookDocuments.find((item) => item.uri.toString() === query.uri.toString());
+            const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
+            const notebooks = ServiceContainer.instance.get<IVSCodeNotebook>(IVSCodeNotebook);
+            const notebook = notebooks.notebookDocuments.find((item) => item.uri.toString() === query.uri.toString());
             const kernel = kernelProvider.get(notebook || query.uri);
-            if (!kernel) {
+            // We are only interested in returning kernels that have been started by the user.
+            if (!kernel || !kernel.startedAtLeastOnce) {
+                return;
+            }
+            if (
+                !isRemoteConnection(kernel.kernelConnectionMetadata) &&
+                kernelProvider.getKernelExecution(kernel).executionCount === 0
+            ) {
+                // For local kernels, execution count must be greater than 0,
+                // As we pre-warms kernels (i.e. we start kernels even though the user may not have executed any code).
+                // The only way to determine whether users executed code is to look at the execution count
                 return;
             }
             let wrappedKernel = kernelCache.get(kernel) || new WrappedKernel(kernel);

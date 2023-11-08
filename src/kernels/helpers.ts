@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-// Helper functions for dealing with kernels and kernelspecs
-
 import * as path from '../platform/vscode-path/path';
 import * as uriPath from '../platform/vscode-path/resources';
 import type * as nbformat from '@jupyterlab/nbformat';
@@ -120,6 +116,7 @@ export function cleanEnvironment<T>(spec: T): T {
         });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return copy as any;
 }
 
@@ -762,8 +759,10 @@ export function executeSilentlyAndEmitOutput(
                     traceback: msg.content.traceback
                 }).items
             );
+        } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg) || jupyterLab.KernelMessage.isStatusMsg(msg)) {
+            //
         } else {
-            traceWarning(`Got io pub message (${msg.header.msg_type})`);
+            traceWarning(`Got unexpected io pub message when executing code sillenty (${msg.header.msg_type})`);
         }
     };
     return request;
