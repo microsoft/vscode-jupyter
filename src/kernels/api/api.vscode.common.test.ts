@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, NotebookCellOutputItem } from 'vscode';
+import { CancellationTokenSource, NotebookCellKind, NotebookCellOutputItem } from 'vscode';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import {
@@ -36,7 +36,10 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
     let kernelProvider: IKernelProvider;
     const denoKernelSpec = { display_name: 'Deno', name: 'deno' };
     const kernelsToDispose: IKernel[] = [];
-    const notebook = createMockedNotebookDocument([], { kernelspec: denoKernelSpec });
+    const notebook = createMockedNotebookDocument(
+        [{ kind: NotebookCellKind.Code, languageId: 'typescript', value: '1234' }],
+        { kernelspec: denoKernelSpec }
+    );
     let controller: IVSCodeNotebookController;
     suiteSetup(async function () {
         this.timeout(120_000);
@@ -84,7 +87,16 @@ suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
             resourceUri: notebook.uri
         });
         kernelsToDispose.push(realKernel);
+
+        // No kernel unless we execute code against this kernel.
+        assert.isUndefined(getKernelsApi().findKernel({ uri: notebook.uri }));
+
         await realKernel.start();
+
+        getKernelsApi().findKernel({ uri: notebook.uri });
+
+        // Ensure user has executed some code against this kernel.
+        sinon.stub(kernelProvider.getKernelExecution(realKernel), 'executionCount').get(() => 1);
         const kernel = getKernelsApi().findKernel({ uri: notebook.uri });
         if (!kernel) {
             throw new Error('Kernel not found');
