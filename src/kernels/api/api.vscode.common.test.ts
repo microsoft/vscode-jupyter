@@ -11,6 +11,7 @@ import {
     createEventHandler,
     initialize,
     startJupyterServer,
+    suiteMandatory,
     testMandatory,
     waitForCondition
 } from '../../test/common';
@@ -27,7 +28,7 @@ import { ServiceContainer } from '../../platform/ioc/container';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
 
-suite('Kernel API Tests @mandatory @nonPython', function () {
+suiteMandatory('Kernel API Tests @mandatory @nonPython', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
@@ -64,6 +65,18 @@ suite('Kernel API Tests @mandatory @nonPython', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+    test('No kernel returned if no code has been executed', async function () {
+        const realKernel = kernelProvider.getOrCreate(notebook, {
+            controller: controller.controller,
+            metadata: controller.connection,
+            resourceUri: notebook.uri
+        });
+        kernelsToDispose.push(realKernel);
+
+        const kernel = getKernelsApi().findKernel({ uri: notebook.uri });
+
+        assert.isUndefined(kernel, 'Kernel should not be returned as no code was executed');
+    });
     testMandatory('Get Kernel and execute code', async function () {
         const realKernel = kernelProvider.getOrCreate(notebook, {
             controller: controller.controller,

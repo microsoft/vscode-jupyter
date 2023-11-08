@@ -87,6 +87,10 @@ export function getKernelsApi(): Kernels {
             if (!kernel) {
                 return;
             }
+            // We are only interested in returning kernels that have been started by the user.
+            if (kernelProvider.getKernelExecution(kernel).executionCount === 0) {
+                return;
+            }
             let wrappedKernel = kernelCache.get(kernel) || new WrappedKernel(kernel);
             kernelCache.set(kernel, wrappedKernel);
             return wrappedKernel;
