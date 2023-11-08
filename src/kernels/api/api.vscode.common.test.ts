@@ -53,6 +53,10 @@ suite('Remote Tests @mandatory @nonPython', function () {
         ).editor;
         await selectDefaultController(editor, 120_000, 'typescript');
     });
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+    });
+
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
@@ -63,15 +67,19 @@ suite('Remote Tests @mandatory @nonPython', function () {
     });
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     testMandatory('Get Kernel and execute code', async function () {
+        traceInfo(`Start inside Test ${this.test?.title}`);
         const nbEdit = NotebookEdit.replaceCells(new NotebookRange(0, editor.notebook.cellCount), [
             new NotebookCellData(NotebookCellKind.Code, 'console.log(1234)', 'typescript')
         ]);
         const edit = new WorkspaceEdit();
         edit.set(editor.notebook.uri, [nbEdit]);
         await workspace.applyEdit(edit);
+        traceInfo(`Cell added`);
 
         const cell = editor.notebook.cellAt(0)!;
+        traceInfo(`Execute cell`);
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
+        traceInfo(`Execute cell completed`);
 
         const kernel = getKernelsApi().findKernel({ uri: editor.notebook.uri });
         if (!kernel) {
@@ -80,9 +88,11 @@ suite('Remote Tests @mandatory @nonPython', function () {
         const statusChange = createEventHandler(kernel, 'onDidChangeStatus', disposables);
 
         // Verify we can execute code using the kernel.
+        traceInfo(`Execute code silently`);
         const expectedMime = NotebookCellOutputItem.stdout('').mime;
         const token = new CancellationTokenSource();
         await waitForOutput(kernel.executeCode('console.log(1234)', token.token), '1234', expectedMime);
+        traceInfo(`Execute code silently completed`);
         // Wait for kernel to be idle.
         await waitForCondition(
             () => kernel.status === 'idle',
@@ -112,6 +122,7 @@ suite('Remote Tests @mandatory @nonPython', function () {
         const outputPromise = new Promise<void>((resolve, reject) => {
             executionResult.onDidEmitOutput(
                 (e) => {
+                    traceInfo(`Output received ${e.length} & mime types are ${e.map((item) => item.mime).join(', ')}}`);
                     e.forEach((item) => {
                         if (item.mime === expectedMimetype) {
                             const output = new TextDecoder().decode(item.data).trim();
