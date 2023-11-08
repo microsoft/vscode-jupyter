@@ -15,6 +15,12 @@ import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
 
+/**
+ * Displays a progress indicator when 3rd party extensions execute code against a kernel.
+ * We need this to notify users when execution takes place for:
+ * 1. Transparency
+ * 2. If users experience delays in kernel execution within notebooks, then they have an idea why this might be the case.
+ */
 class KernelExecutionProgressIndicator {
     private readonly extensionDisplayName: string;
     private readonly controllerDisplayName: string;
