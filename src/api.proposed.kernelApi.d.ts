@@ -4,12 +4,7 @@
 import type { Event, Uri } from 'vscode';
 
 declare module './api' {
-    export interface Kernel {
-        status: 'unknown' | 'starting' | 'idle' | 'busy' | 'terminating' | 'restarting' | 'autorestarting' | 'dead';
-        onDidChangeStatus: Event<
-            'unknown' | 'starting' | 'idle' | 'busy' | 'terminating' | 'restarting' | 'autorestarting' | 'dead'
-        >;
-    }
+    export interface Kernel {}
     export interface Kernels {
         /**
          * Finds a kernel for a given resource.
