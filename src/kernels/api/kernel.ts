@@ -100,13 +100,13 @@ class KernelExecutionProgressIndicator {
  */
 class WrappedKernelPerExtension implements Kernel {
     get status(): 'unknown' | 'starting' | 'idle' | 'busy' | 'terminating' | 'restarting' | 'autorestarting' | 'dead' {
-        sendApiTelemetry(this.extensionId, this.kernel, 'status', this.execution.executionCount).catch(noop);
+        // sendApiTelemetry(this.extensionId, this.kernel, 'status', this.execution.executionCount).catch(noop);
         return this.kernel.status;
     }
     get onDidChangeStatus(): Event<
         'unknown' | 'starting' | 'idle' | 'busy' | 'terminating' | 'restarting' | 'autorestarting' | 'dead'
     > {
-        sendApiTelemetry(this.extensionId, this.kernel, 'onDidChangeStatus', this.execution.executionCount).catch(noop);
+        // sendApiTelemetry(this.extensionId, this.kernel, 'onDidChangeStatus', this.execution.executionCount).catch(noop);
         return this.kernel.onStatusChanged;
     }
 
