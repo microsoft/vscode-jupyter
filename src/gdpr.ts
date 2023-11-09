@@ -444,13 +444,16 @@
    "DATASCIENCE.JUPYTER_NEW_KERNEL_API_EXEC" : {
      "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
-     "interrupted": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the execution was interrupted or not.","owner":"donjayamanne"},
-     "requestHandled": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the kernel acknowledged the request.","owner":"donjayamanne"},
-     "interruptedBeforeHandled": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the execution was interrupted before it was handled by the kernel.","owner":"donjayamanne"},
+     "cancelled": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the execution was cancelled or not.","owner":"donjayamanne"},
+     "requestAcknowledged": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the kernel acknowledged the request.","owner":"donjayamanne"},
+     "requestSent": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the request ws sent to the kernel.","owner":"donjayamanne"},
+     "cancelledBeforeRequestAcknowledged": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the execution was cancelled before it was handled by the kernel.","owner":"donjayamanne"},
+     "cancelledBeforeRequestSent": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the execution was cancelled before the request was sent to the kernel.","owner":"donjayamanne"},
      "mimeTypes": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Mime types in the output.","owner":"donjayamanne"},
      "executionCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Gives us an idea how many cells were executed by user before a 3rd party accessed this kernel.","owner":"donjayamanne","isMeasurement":true},
-     "interruptedAfter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How long after execution was started, was the execution interrupted.","owner":"donjayamanne","isMeasurement":true},
-     "requestHandledAfter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How long after execution was started, was the request acknowledged by the kernel.","owner":"donjayamanne","isMeasurement":true},
+     "cancelledAfter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How long after execution was started, was the execution cancelled.","owner":"donjayamanne","isMeasurement":true},
+     "requestAcknowledgedAfter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How long after execution was started, was the request acknowledged by the kernel.","owner":"donjayamanne","isMeasurement":true},
+     "requestSentAfter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How long did it take to send this request to the kernel.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 

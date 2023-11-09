@@ -3325,29 +3325,41 @@ export class IEventNamePropertyMapping {
          */
         duration: number;
         /**
-         * Whether the execution was interrupted or not.
+         * Whether the execution was cancelled or not.
          */
-        interrupted: boolean;
+        cancelled: boolean;
         /**
-         * How long after execution was started, was the execution interrupted.
+         * How long after execution was started, was the execution cancelled.
          */
-        interruptedAfter: number;
+        cancelledAfter: number;
         /**
-         * Whether the execution was interrupted before it was handled by the kernel.
+         * Whether the execution was cancelled before the request was sent to the kernel.
          */
-        interruptedBeforeHandled: boolean;
+        cancelledBeforeRequestSent: boolean;
+        /**
+         * Whether the execution was cancelled before it was handled by the kernel.
+         */
+        cancelledBeforeRequestAcknowledged: boolean;
         /**
          * Mime types in the output.
          */
         mimeTypes: string;
         /**
+         * Whether the request ws sent to the kernel.
+         */
+        requestSent: boolean;
+        /**
+         * How long did it take to send this request to the kernel.
+         */
+        requestSentAfter: number;
+        /**
          * Whether the kernel acknowledged the request.
          */
-        requestHandled: boolean;
+        requestAcknowledged: boolean;
         /**
          * How long after execution was started, was the request acknowledged by the kernel.
          */
-        requestHandledAfter: number;
+        requestAcknowledgedAfter: number;
         /**
          * Whether the request was never sent (kernel is dead or the like).
          */
@@ -3362,12 +3374,17 @@ export class IEventNamePropertyMapping {
                 isMeasurement: true,
                 purpose: 'FeatureInsight'
             },
-            interruptedAfter: {
+            cancelledAfter: {
                 classification: 'SystemMetaData',
                 isMeasurement: true,
                 purpose: 'FeatureInsight'
             },
-            requestHandledAfter: {
+            requestAcknowledgedAfter: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            },
+            requestSentAfter: {
                 classification: 'SystemMetaData',
                 isMeasurement: true,
                 purpose: 'FeatureInsight'
@@ -3383,15 +3400,23 @@ export class IEventNamePropertyMapping {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },
-            interrupted: {
+            cancelled: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },
-            requestHandled: {
+            requestAcknowledged: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },
-            interruptedBeforeHandled: {
+            requestSent: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            cancelledBeforeRequestAcknowledged: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            cancelledBeforeRequestSent: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },

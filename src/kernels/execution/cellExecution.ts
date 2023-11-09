@@ -36,6 +36,7 @@ import { NotebookCellStateTracker, traceCellMessage } from './helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import { isKernelSessionDead } from '../kernel';
+import { ICellExecution } from './types';
 
 /**
  * Factory for CellExecution objects.
@@ -66,7 +67,8 @@ export class CellExecutionFactory {
  * Further details here https://github.com/microsoft/vscode-jupyter/issues/232 & https://github.com/jupyter/jupyter_client/issues/297
  *
  */
-export class CellExecution implements IDisposable {
+export class CellExecution implements ICellExecution, IDisposable {
+    public readonly type = 'cell';
     public get result(): Promise<NotebookCellRunState> {
         return this._result.promise;
     }
@@ -156,7 +158,7 @@ export class CellExecution implements IDisposable {
     public async start(session: IKernelSession) {
         this.session = session;
         if (this.resumeExecution?.msg_id) {
-            return this.resume(session, this.resumeExecution);
+            return this.resume(session, this.resumeExecution).then(noop);
         }
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
@@ -184,7 +186,7 @@ export class CellExecution implements IDisposable {
             traceCellMessage(this.cell, 'Cell has already been started yet CellExecution.Start invoked again');
             traceError(`Cell has already been started yet CellExecution.Start invoked again ${this.cell.index}`);
             // TODO: Send telemetry this should never happen, if it does we have problems.
-            return this.result;
+            return this.result.then(noop);
         }
         this.started = true;
 

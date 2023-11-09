@@ -5,7 +5,7 @@ import { l10n, CancellationToken, Event, EventEmitter, ProgressLocation, extensi
 import { ExecutionResult, Kernel } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
-import { executeSilentlyAndEmitOutput, getDisplayNameOrNameOfKernelConnection } from '../helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { IDisposable } from '../../platform/common/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { noop } from '../../platform/common/utils/misc';
@@ -14,7 +14,7 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
-import { traceInfo, traceVerbose } from '../../platform/logging';
+import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
 
 function getExtensionDisplayName(extensionId: string) {
     const extensionDisplayName = extensions.getExtension(extensionId)?.packageJSON.displayName;
@@ -127,17 +127,20 @@ class WrappedKernelPerExtension implements Kernel {
         this.previousProgress?.dispose();
         let completed = false;
         const measures = {
-            requestHandledAfter: 0,
             executionCount: this.execution.executionCount,
-            interruptedAfter: 0,
+            requestSentAfter: 0,
+            requestAcknowledgedAfter: 0,
+            cancelledAfter: 0,
             duration: 0
         };
         const properties = {
-            requestHandled: false,
-            extensionId: this.extensionId,
             kernelId: '',
-            interruptedBeforeHandled: false,
-            interrupted: false,
+            extensionId: this.extensionId,
+            cancelled: false,
+            requestSent: false,
+            requestAcknowledged: false,
+            cancelledBeforeRequestSent: false,
+            cancelledBeforeRequestAcknowledged: false,
             mimeTypes: '',
             failed: false
         };
@@ -160,57 +163,82 @@ class WrappedKernelPerExtension implements Kernel {
         }
 
         const disposables: IDisposable[] = [];
+        const done = createDeferred<void>();
         const onDidEmitOutput = new EventEmitter<{ mime: string; data: Uint8Array }[]>();
-        const progress = (this.previousProgress = this.progress.show());
-        disposables.push(progress);
         disposables.push(onDidEmitOutput);
         disposables.push({
             dispose: () => {
                 measures.duration = stopwatch.elapsedTime;
                 properties.mimeTypes = Array.from(mimeTypes).join(',');
                 completed = true;
+                done.resolve();
+                sendApiExecTelemetry(this.kernel, measures, properties).catch(noop);
                 traceVerbose(`Kernel execution completed in ${measures.duration}ms, ${this.extensionDisplayName}.`);
             }
         });
-        const request = executeSilentlyAndEmitOutput(this.kernel.session.kernel, code, (output) => {
-            if (output.length) {
-                properties.requestHandled = true;
-                measures.requestHandledAfter = stopwatch.elapsedTime;
-                output.forEach((item) => mimeTypes.add(item.mime));
-                onDidEmitOutput.fire(output);
-            }
-        });
-        const oldIOPub = request.onIOPub;
-        request.onIOPub = (msg) => {
-            properties.requestHandled = true;
-            measures.requestHandledAfter = stopwatch.elapsedTime;
-            return oldIOPub(msg);
-        };
-        request.onReply = () => {
-            properties.requestHandled = true;
-            measures.requestHandledAfter = stopwatch.elapsedTime;
-        };
+        const kernelExecution = ServiceContainer.instance
+            .get<IKernelProvider>(IKernelProvider)
+            .getKernelExecution(this.kernel);
+        kernelExecution
+            .executeCode(code, this.extensionId, token)
+            .then((codeExecution) => {
+                codeExecution.result.finally(() => dispose(disposables)).catch(noop);
+                codeExecution.onRequestSent(
+                    () => {
+                        if (token.isCancellationRequested) {
+                            return;
+                        }
+                        const progress = (this.previousProgress = this.progress.show());
+                        disposables.push(progress);
+
+                        properties.requestSent = true;
+                        measures.requestSentAfter = stopwatch.elapsedTime;
+                    },
+                    this,
+                    disposables
+                );
+                codeExecution.onRequestAcknowledged(
+                    () => {
+                        if (token.isCancellationRequested) {
+                            return;
+                        }
+                        properties.requestAcknowledged = true;
+                        measures.requestAcknowledgedAfter = stopwatch.elapsedTime;
+                    },
+                    this,
+                    disposables
+                );
+                codeExecution.onDidEmitOutput(
+                    (e) => {
+                        e.forEach((item) => mimeTypes.add(item.mime));
+                        onDidEmitOutput.fire(e);
+                    },
+                    this,
+                    disposables
+                );
+            })
+            .catch((ex) => {
+                traceError(
+                    `Extension ${this.extensionId} failed to execute code in kernel ${this.extensionDisplayName}`,
+                    ex
+                );
+            });
         token.onCancellationRequested(
             () => {
                 if (completed) {
                     return;
                 }
-                properties.interrupted = true;
-                measures.interruptedAfter = stopwatch.elapsedTime;
-                properties.interruptedBeforeHandled = !properties.requestHandled;
-                this.wasKernelInterruptedSinceLastExec = true;
-                traceInfo(`Kernel Interrupted by extension ${this.extensionDisplayName}`);
-                this.kernel
-                    .interrupt()
-                    .catch(noop)
-                    .finally(() => request.dispose());
+                properties.cancelled = true;
+                measures.cancelledAfter = stopwatch.elapsedTime;
+                properties.cancelledBeforeRequestSent = !properties.requestSent;
+                properties.cancelledBeforeRequestAcknowledged = !properties.requestAcknowledged;
+                traceInfo(`Code execution cancelled by extension ${this.extensionDisplayName}`);
             },
             this,
             disposables
         );
-        request.done.finally(() => dispose(disposables)).catch(noop);
         return {
-            done: new Promise((resolve, reject) => request.done.then(() => resolve(), reject)),
+            done: done.promise,
             onDidEmitOutput: onDidEmitOutput.event
         };
     }
@@ -223,17 +251,20 @@ async function sendApiTelemetry(extensionId: string, kernel: IKernel, pemUsed: k
 async function sendApiExecTelemetry(
     kernel: IKernel,
     measures: {
-        requestHandledAfter: number;
         executionCount: number;
-        interruptedAfter: number;
+        requestSentAfter: number;
+        requestAcknowledgedAfter: number;
+        cancelledAfter: number;
         duration: number;
     },
     properties: {
-        requestHandled: boolean;
-        extensionId: string;
         kernelId: string;
-        interruptedBeforeHandled: boolean;
-        interrupted: boolean;
+        extensionId: string;
+        requestSent: boolean;
+        cancelled: boolean;
+        requestAcknowledged: boolean;
+        cancelledBeforeRequestSent: boolean;
+        cancelledBeforeRequestAcknowledged: boolean;
         mimeTypes: string;
         failed: boolean;
     }
