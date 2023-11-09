@@ -75,6 +75,29 @@ class KernelExecutionProgressIndicator {
     }
 }
 
+/**
+ * Design guidelines for separate kernel per extension.
+ * Asseume extrension A & B use the same kernel and use this API.
+ * Both can send code and so can the user via a notebook/iw.
+ * Assume user executes code via notebook/iw and that is busy.
+ * 1. Extension A executes code `1` agaist kernel,
+ * 2. Laster extension A excecutes another block of code `2` against the kernel.
+ * When executing code `2`, extension A would like to cancel the first request `1`.
+ * However the kernel is busy running user code, extension A should not be aware of this knowledge.
+ * We should keep track of this, and prevent Extension A from interrupting user code.
+ * Once user code is done, then `1` will get picked up by the kernel and when we get an ack back from kernel
+ * then we can interrupt the kernel.
+ * Similarly, while `2` is busy executing, if Extension B comes in, they have to wait till `2` is done.
+ * They have no way of knowing that `2` is busy executing via Extension A (or whether its user code).
+ *
+ * Basically Extensions should never be allowed to interrupt user code or other extensions code.
+ * The Jupyter extension is the only one that can police this.
+ *
+ * Unfortunately what this means is we need a queue of requests, and the queue should apply to all extensions.
+ * This way, when A cancels all requests and it was never sent to the kernel, all we need to do is
+ * ensure those requests never get sent to the kernel.
+ * While the requests from Extension B that are still in the queue can still get processed even after A cancels all of its requests.
+ */
 class WrappedKernelPerExtension implements Kernel {
     get status(): 'unknown' | 'starting' | 'idle' | 'busy' | 'terminating' | 'restarting' | 'autorestarting' | 'dead' {
         sendApiTelemetry(this.extensionId, this.kernel, 'status', this.execution.executionCount).catch(noop);
@@ -175,12 +198,12 @@ class WrappedKernelPerExtension implements Kernel {
                 properties.interrupted = true;
                 measures.interruptedAfter = stopwatch.elapsedTime;
                 properties.interruptedBeforeHandled = !properties.requestHandled;
-                if (properties.requestHandled) {
-                    traceInfo(`Kernel Interrupted by extension ${this.extensionDisplayName}`);
-                    this.kernel.interrupt().catch(() => request.dispose());
-                } else {
-                    request.dispose();
-                }
+                this.wasKernelInterruptedSinceLastExec = true;
+                traceInfo(`Kernel Interrupted by extension ${this.extensionDisplayName}`);
+                this.kernel
+                    .interrupt()
+                    .catch(noop)
+                    .finally(() => request.dispose());
             },
             this,
             disposables
