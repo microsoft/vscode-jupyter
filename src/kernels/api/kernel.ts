@@ -185,23 +185,18 @@ class WrappedKernelPerExtension implements Kernel {
                 codeExecution.result.finally(() => dispose(disposables)).catch(noop);
                 codeExecution.onRequestSent(
                     () => {
-                        if (token.isCancellationRequested) {
-                            return;
-                        }
-                        const progress = (this.previousProgress = this.progress.show());
-                        disposables.push(progress);
-
                         properties.requestSent = true;
                         measures.requestSentAfter = stopwatch.elapsedTime;
+                        if (!token.isCancellationRequested) {
+                            const progress = (this.previousProgress = this.progress.show());
+                            disposables.push(progress);
+                        }
                     },
                     this,
                     disposables
                 );
                 codeExecution.onRequestAcknowledged(
                     () => {
-                        if (token.isCancellationRequested) {
-                            return;
-                        }
                         properties.requestAcknowledged = true;
                         measures.requestAcknowledgedAfter = stopwatch.elapsedTime;
                     },

@@ -5,11 +5,11 @@
  * Tracks wall clock time. Start time is set at contruction.
  */
 export class StopWatch {
-    private started = new Date().getTime();
+    private started = Date.now();
     public get elapsedTime() {
-        return new Date().getTime() - this.started;
+        return Date.now() - this.started;
     }
     public reset() {
-        this.started = new Date().getTime();
+        this.started = Date.now();
     }
 }
