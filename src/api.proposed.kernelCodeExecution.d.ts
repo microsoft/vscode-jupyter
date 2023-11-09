@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { CancellationToken, Event } from 'vscode';
+import type { CancellationToken } from 'vscode';
 
 declare module './api' {
     interface OutputItem {
@@ -14,28 +14,16 @@ declare module './api' {
          */
         data: Uint8Array;
     }
-
-    interface ExecutionResult {
-        /**
-         * Resolves when the execution has completed.
-         */
-        done: Promise<void>;
-
-        /**
-         * Event fired with the output items emitted as a result of the execution.
-         */
-        onDidEmitOutput: Event<OutputItem[]>;
-    }
     export interface Kernel {
         /**
          * Executes code in the kernel.
          * The code executed will not result in changes to the execution count
          * & will not show up in the Kernel execution history.
          *
-         * @param {string} code Code to be executed.
-         * @param {CancellationToken} token Triggers the cancellation of the execution.
-         * @return {*}  {ExecutionResult}
+         * @param code Code to be executed.
+         * @param token Triggers the cancellation of the execution.
+         * @returns Async iterable of output items, that completes when the execution is complete.
          */
-        executeCode(code: string, token: CancellationToken): ExecutionResult;
+        executeCode(code: string, token: CancellationToken): AsyncIterable<OutputItem[]>;
     }
 }

@@ -24,10 +24,10 @@ import {
 } from '../../test/datascience/notebook/helper';
 import { getKernelsApi } from './api';
 import { raceTimeoutError } from '../../platform/common/utils/async';
-import { ExecutionResult } from '../../api';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IKernel, IKernelProvider } from '../types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { OutputItem } from '../../api';
 
 suiteMandatory('Kernel API Tests @python', function () {
     const disposables: IDisposable[] = [];
@@ -127,29 +127,28 @@ suiteMandatory('Kernel API Tests @python', function () {
         );
     });
 
-    async function waitForOutput(executionResult: ExecutionResult, expectedOutput: string, expectedMimetype: string) {
+    async function waitForOutput(
+        executionResult: AsyncIterable<OutputItem[]>,
+        expectedOutput: string,
+        expectedMimetype: string
+    ) {
         const disposables: IDisposable[] = [];
         const outputsReceived: string[] = [];
-        const outputPromise = new Promise<void>((resolve, reject) => {
-            executionResult.onDidEmitOutput(
-                (e) => {
-                    traceInfo(`Output received ${e.length} & mime types are ${e.map((item) => item.mime).join(', ')}}`);
-                    e.forEach((item) => {
-                        if (item.mime === expectedMimetype) {
-                            const output = new TextDecoder().decode(item.data).trim();
-                            if (output === expectedOutput.trim()) {
-                                resolve();
-                            } else {
-                                reject(new Error(`Unexpected output ${output}`));
-                            }
+        const outputPromise = new Promise<void>(async (resolve, reject) => {
+            for await (const items of executionResult) {
+                items.forEach((item) => {
+                    if (item.mime === expectedMimetype) {
+                        const output = new TextDecoder().decode(item.data).trim();
+                        if (output === expectedOutput.trim()) {
+                            resolve();
                         } else {
-                            outputsReceived.push(`${item.mime} ${new TextDecoder().decode(item.data).trim()}`);
+                            reject(new Error(`Unexpected output ${output}`));
                         }
-                    });
-                },
-                undefined,
-                disposables
-            );
+                    } else {
+                        outputsReceived.push(`${item.mime} ${new TextDecoder().decode(item.data).trim()}`);
+                    }
+                });
+            }
         });
 
         await raceTimeoutError(

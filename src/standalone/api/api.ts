@@ -213,8 +213,8 @@ export function buildApi(
                 extensions.determineExtensionFromCallStack().extensionId
             );
         },
-        getKernelApi() {
-            return Promise.resolve(undefined);
+        requestKernelAccess() {
+            return Promise.reject(new Error('Not Implemeted'));
         }
     };
 

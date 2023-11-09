@@ -20,6 +20,7 @@ export function getKernelsApi(extensionId: string): Kernels {
     }
 
     api = {
+        isRevoked: false,
         findKernel(query: { uri: Uri }) {
             const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
             const notebooks = ServiceContainer.instance.get<IVSCodeNotebook>(IVSCodeNotebook);
