@@ -5,7 +5,7 @@ import { l10n, CancellationToken, Event, EventEmitter, ProgressLocation, extensi
 import { ExecutionResult, Kernel } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
-import { executeSilentlyAndEmitOutput, getDisplayNameOrNameOfKernelConnection } from '../helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { IDisposable } from '../../platform/common/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { noop } from '../../platform/common/utils/misc';
@@ -14,7 +14,7 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
-import { traceInfo, traceVerbose } from '../../platform/logging';
+import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
 
 function getExtensionDisplayName(extensionId: string) {
     const extensionDisplayName = extensions.getExtension(extensionId)?.packageJSON.displayName;
@@ -75,6 +75,29 @@ class KernelExecutionProgressIndicator {
     }
 }
 
+/**
+ * Design guidelines for separate kernel per extension.
+ * Asseume extrension A & B use the same kernel and use this API.
+ * Both can send code and so can the user via a notebook/iw.
+ * Assume user executes code via notebook/iw and that is busy.
+ * 1. Extension A executes code `1` agaist kernel,
+ * 2. Laster extension A excecutes another block of code `2` against the kernel.
+ * When executing code `2`, extension A would like to cancel the first request `1`.
+ * However the kernel is busy running user code, extension A should not be aware of this knowledge.
+ * We should keep track of this, and prevent Extension A from interrupting user code.
+ * Once user code is done, then `1` will get picked up by the kernel and when we get an ack back from kernel
+ * then we can interrupt the kernel.
+ * Similarly, while `2` is busy executing, if Extension B comes in, they have to wait till `2` is done.
+ * They have no way of knowing that `2` is busy executing via Extension A (or whether its user code).
+ *
+ * Basically Extensions should never be allowed to interrupt user code or other extensions code.
+ * The Jupyter extension is the only one that can police this.
+ *
+ * Unfortunately what this means is we need a queue of requests, and the queue should apply to all extensions.
+ * This way, when A cancels all requests and it was never sent to the kernel, all we need to do is
+ * ensure those requests never get sent to the kernel.
+ * While the requests from Extension B that are still in the queue can still get processed even after A cancels all of its requests.
+ */
 class WrappedKernelPerExtension implements Kernel {
     get status(): 'unknown' | 'starting' | 'idle' | 'busy' | 'terminating' | 'restarting' | 'autorestarting' | 'dead' {
         sendApiTelemetry(this.extensionId, this.kernel, 'status', this.execution.executionCount).catch(noop);
@@ -104,17 +127,20 @@ class WrappedKernelPerExtension implements Kernel {
         this.previousProgress?.dispose();
         let completed = false;
         const measures = {
-            requestHandledAfter: 0,
             executionCount: this.execution.executionCount,
-            interruptedAfter: 0,
+            requestSentAfter: 0,
+            requestAcknowledgedAfter: 0,
+            cancelledAfter: 0,
             duration: 0
         };
         const properties = {
-            requestHandled: false,
-            extensionId: this.extensionId,
             kernelId: '',
-            interruptedBeforeHandled: false,
-            interrupted: false,
+            extensionId: this.extensionId,
+            cancelled: false,
+            requestSent: false,
+            requestAcknowledged: false,
+            cancelledBeforeRequestSent: false,
+            cancelledBeforeRequestAcknowledged: false,
             mimeTypes: '',
             failed: false
         };
@@ -137,57 +163,77 @@ class WrappedKernelPerExtension implements Kernel {
         }
 
         const disposables: IDisposable[] = [];
+        const done = createDeferred<void>();
         const onDidEmitOutput = new EventEmitter<{ mime: string; data: Uint8Array }[]>();
-        const progress = (this.previousProgress = this.progress.show());
-        disposables.push(progress);
         disposables.push(onDidEmitOutput);
         disposables.push({
             dispose: () => {
                 measures.duration = stopwatch.elapsedTime;
                 properties.mimeTypes = Array.from(mimeTypes).join(',');
                 completed = true;
+                done.resolve();
+                sendApiExecTelemetry(this.kernel, measures, properties).catch(noop);
                 traceVerbose(`Kernel execution completed in ${measures.duration}ms, ${this.extensionDisplayName}.`);
             }
         });
-        const request = executeSilentlyAndEmitOutput(this.kernel.session.kernel, code, (output) => {
-            if (output.length) {
-                properties.requestHandled = true;
-                measures.requestHandledAfter = stopwatch.elapsedTime;
-                output.forEach((item) => mimeTypes.add(item.mime));
-                onDidEmitOutput.fire(output);
-            }
-        });
-        const oldIOPub = request.onIOPub;
-        request.onIOPub = (msg) => {
-            properties.requestHandled = true;
-            measures.requestHandledAfter = stopwatch.elapsedTime;
-            return oldIOPub(msg);
-        };
-        request.onReply = () => {
-            properties.requestHandled = true;
-            measures.requestHandledAfter = stopwatch.elapsedTime;
-        };
+        const kernelExecution = ServiceContainer.instance
+            .get<IKernelProvider>(IKernelProvider)
+            .getKernelExecution(this.kernel);
+        kernelExecution
+            .executeCode(code, this.extensionId, token)
+            .then((codeExecution) => {
+                codeExecution.result.finally(() => dispose(disposables)).catch(noop);
+                codeExecution.onRequestSent(
+                    () => {
+                        properties.requestSent = true;
+                        measures.requestSentAfter = stopwatch.elapsedTime;
+                        if (!token.isCancellationRequested) {
+                            const progress = (this.previousProgress = this.progress.show());
+                            disposables.push(progress);
+                        }
+                    },
+                    this,
+                    disposables
+                );
+                codeExecution.onRequestAcknowledged(
+                    () => {
+                        properties.requestAcknowledged = true;
+                        measures.requestAcknowledgedAfter = stopwatch.elapsedTime;
+                    },
+                    this,
+                    disposables
+                );
+                codeExecution.onDidEmitOutput(
+                    (e) => {
+                        e.forEach((item) => mimeTypes.add(item.mime));
+                        onDidEmitOutput.fire(e);
+                    },
+                    this,
+                    disposables
+                );
+            })
+            .catch((ex) => {
+                traceError(
+                    `Extension ${this.extensionId} failed to execute code in kernel ${this.extensionDisplayName}`,
+                    ex
+                );
+            });
         token.onCancellationRequested(
             () => {
                 if (completed) {
                     return;
                 }
-                properties.interrupted = true;
-                measures.interruptedAfter = stopwatch.elapsedTime;
-                properties.interruptedBeforeHandled = !properties.requestHandled;
-                if (properties.requestHandled) {
-                    traceInfo(`Kernel Interrupted by extension ${this.extensionDisplayName}`);
-                    this.kernel.interrupt().catch(() => request.dispose());
-                } else {
-                    request.dispose();
-                }
+                properties.cancelled = true;
+                measures.cancelledAfter = stopwatch.elapsedTime;
+                properties.cancelledBeforeRequestSent = !properties.requestSent;
+                properties.cancelledBeforeRequestAcknowledged = !properties.requestAcknowledged;
+                traceInfo(`Code execution cancelled by extension ${this.extensionDisplayName}`);
             },
             this,
             disposables
         );
-        request.done.finally(() => dispose(disposables)).catch(noop);
         return {
-            done: new Promise((resolve, reject) => request.done.then(() => resolve(), reject)),
+            done: done.promise,
             onDidEmitOutput: onDidEmitOutput.event
         };
     }
@@ -200,17 +246,20 @@ async function sendApiTelemetry(extensionId: string, kernel: IKernel, pemUsed: k
 async function sendApiExecTelemetry(
     kernel: IKernel,
     measures: {
-        requestHandledAfter: number;
         executionCount: number;
-        interruptedAfter: number;
+        requestSentAfter: number;
+        requestAcknowledgedAfter: number;
+        cancelledAfter: number;
         duration: number;
     },
     properties: {
-        requestHandled: boolean;
-        extensionId: string;
         kernelId: string;
-        interruptedBeforeHandled: boolean;
-        interrupted: boolean;
+        extensionId: string;
+        requestSent: boolean;
+        cancelled: boolean;
+        requestAcknowledged: boolean;
+        cancelledBeforeRequestSent: boolean;
+        cancelledBeforeRequestAcknowledged: boolean;
         mimeTypes: string;
         failed: boolean;
     }

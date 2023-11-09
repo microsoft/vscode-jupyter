@@ -9,7 +9,8 @@ import {
     notebooks,
     NotebookCellExecutionState,
     NotebookDocument,
-    workspace
+    workspace,
+    CancellationToken
 } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
@@ -33,6 +34,7 @@ import {
     ResumeCellExecutionInformation
 } from './types';
 import { SessionDisposedError } from '../platform/errors/sessionDisposedError';
+import { ICodeExecution } from './execution/types';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -147,6 +149,24 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         traceVerbose(`Cell ${cell.index} executed with state ${result[0]}`);
 
         return result[0];
+    }
+    public async executeCode(code: string, extensionId: string, token: CancellationToken): Promise<ICodeExecution> {
+        traceVerbose(`NotebookKernelExecution.executeCode (1), ${code.substring(0, 50)}... from ${extensionId}`);
+
+        traceVerbose(`NotebookKernelExecution.executeCode, ${code.substring(0, 50)}... from ${extensionId}`);
+        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+            this.kernel.resourceUri,
+            this.kernel.kernelConnectionMetadata
+        );
+        sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell);
+        const sessionPromise = this.kernel.start(new DisplayOptions(false));
+
+        // If we're restarting, wait for it to finish
+        await this.kernel.restarting;
+
+        traceVerbose(`NotebookKernelExecution.executeCode (2), ${code.substring(0, 50)}... from ${extensionId}`);
+        const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
+        return executionQueue.queueCode(code, extensionId, token);
     }
     executeHidden(code: string): Promise<IOutput[]> {
         const sessionPromise = this.kernel.start();

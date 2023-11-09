@@ -30,6 +30,7 @@ import { splitLines } from '../platform/common/helpers';
 import { getPythonEnvironmentName } from '../platform/interpreter/helpers';
 import { cellOutputToVSCCellOutput } from './execution/helpers';
 import { handleTensorBoardDisplayDataOutput } from './execution/executionHelpers';
+import { once } from '../platform/common/utils/functional';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -702,6 +703,7 @@ export async function executeSilently(
 export function executeSilentlyAndEmitOutput(
     kernelConnection: Kernel.IKernelConnection,
     code: string,
+    onStarted: () => void,
     onOutput: (outputs: NotebookCellOutputItem[]) => void
 ) {
     traceVerbose(
@@ -715,12 +717,14 @@ export function executeSilentlyAndEmitOutput(
             code: code.replace(/\r\n/g, '\n'),
             silent: false,
             stop_on_error: false,
-            allow_stdin: true,
+            allow_stdin: false,
             store_history: false
         },
         true
     );
+    const started = once(onStarted);
     request.onIOPub = (msg) => {
+        started();
         if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
             onOutput(
                 cellOutputToVSCCellOutput({

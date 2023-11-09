@@ -31,6 +31,7 @@ import {
 } from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { generateIdFromRemoteProvider } from './jupyter/jupyterUtils';
+import { ICodeExecution } from './execution/types';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -446,6 +447,10 @@ export interface INotebookKernelExecution {
      * @param codeOverride Override the code to execute
      */
     executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
+    /**
+     * Executes 3rd party code against the kernel.
+     */
+    executeCode(code: string, extensionId: string, token: CancellationToken): Promise<ICodeExecution>;
     /**
      * Given the cell execution message Id and the like , this will resume the execution of a cell from a detached state.
      * E.g. assume user re-loads VS Code, we need to resume the execution of the cell.
