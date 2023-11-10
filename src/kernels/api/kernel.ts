@@ -37,11 +37,7 @@ class KernelExecutionProgressIndicator {
         kernel: IKernel
     ) {
         this.controllerDisplayName = getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata);
-        this.title = l10n.t(
-            `Executing code against kernel '{0}' on behalf of the extension {1}`,
-            this.controllerDisplayName,
-            this.extensionDisplayName
-        );
+        this.title = l10n.t(`Executing code in {0} from {1}`, this.controllerDisplayName, this.extensionDisplayName);
     }
     dispose() {
         this.disposable?.dispose();
