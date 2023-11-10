@@ -8,7 +8,7 @@ declare module './api' {
     export interface Jupyter {
         /**
          * Request access to Kernels.
-         * As Kernels can be used to execute code on local or remote machines, user concent will be required.
+         * As Kernels can be used to execute code on local or remote machines, user consent will be required.
          */
         requestKernelAccess(): Thenable<Kernels>;
     }
