@@ -31,16 +31,13 @@ class KernelExecutionProgressIndicator {
     private deferred?: Deferred<void>;
     private disposable?: IDisposable;
     private readonly title: string;
+    private displayInProgress?: boolean;
     constructor(
         private readonly extensionDisplayName: string,
         kernel: IKernel
     ) {
         this.controllerDisplayName = getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata);
-        this.title = l10n.t(
-            `Executing code against kernel '{0}' on behalf of the extension {1}`,
-            this.controllerDisplayName,
-            this.extensionDisplayName
-        );
+        this.title = l10n.t(`Executing code in {0} from {1}`, this.controllerDisplayName, this.extensionDisplayName);
     }
     dispose() {
         this.disposable?.dispose();
@@ -54,17 +51,17 @@ class KernelExecutionProgressIndicator {
             return (this.disposable = new Disposable(() => this.deferred?.resolve()));
         }
 
-        this.showProgress().catch(noop);
-
         this.deferred = createDeferred<void>();
+        this.showProgress().catch(noop);
         return (this.disposable = new Disposable(() => this.deferred?.resolve()));
     }
     private async showProgress() {
         // Give a grace period of 500ms to avoid too many progress indicators.
         await sleep(500);
-        if (!this.deferred || this.deferred.completed) {
+        if (!this.deferred || this.deferred.completed || this.displayInProgress) {
             return;
         }
+        this.displayInProgress = true;
         await window.withProgress({ location: ProgressLocation.Notification, title: this.title }, async () => {
             let deferred = this.deferred;
             while (deferred && !deferred.completed) {
@@ -72,6 +69,7 @@ class KernelExecutionProgressIndicator {
                 deferred = this.deferred;
             }
         });
+        this.displayInProgress = false;
     }
 }
 

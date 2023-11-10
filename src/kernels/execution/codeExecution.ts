@@ -168,6 +168,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             this.request.done.then(noop, noop);
         } catch (ex) {
             traceError(`Code execution failed without request, for exec ${this.executionId}`, ex);
+            this._completed = true;
             this._done.resolve();
             return;
         }
@@ -182,9 +183,11 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             // Solution is to wait for all messages to get processed.
             traceExecMessage(this.executionId, 'Wait for jupyter execution');
             await this.request!.done.catch(noop);
+            this._completed = true;
             this._done.resolve();
             traceExecMessage(this.executionId, 'Executed successfully');
         } catch (ex) {
+            this._completed = true;
             if (this.cancelHandled) {
                 return;
             }
