@@ -4,6 +4,9 @@
 import type { Event, Uri } from 'vscode';
 
 declare module './api' {
+    /**
+     * Represents a Jupyter Kernel.
+     */
     export interface Kernel {}
     export interface Kernels {
         /**
