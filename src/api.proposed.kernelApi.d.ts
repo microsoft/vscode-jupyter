@@ -13,7 +13,7 @@ declare module './api' {
     export interface Kernels {
         /**
          * Whether the access to the Kernels has been revoked.
-         * This happens when the user has not provided concent to API being used by the requesting extension.
+         * This happens when the user has not provided consent to the API being used by the requesting extension.
          */
         isRevoked: boolean;
         /**
