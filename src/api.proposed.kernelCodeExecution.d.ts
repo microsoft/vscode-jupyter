@@ -16,7 +16,7 @@ declare module './api' {
     }
     export interface Kernel {
         /**
-         * Executes code in the kernel without effecting the the execution count & execution history.
+         * Executes code in the kernel without affecting the execution count & execution history.
          *
          * @param code Code to be executed.
          * @param token Triggers the cancellation of the execution.
