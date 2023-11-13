@@ -79,7 +79,8 @@ suite('Experimentation service', () => {
                 extensionVersion,
                 tasClient.TargetPopulation.Public,
                 sinon.match.any,
-                globalMemento
+                globalMemento,
+                sinon.match.any
             );
         });
 
@@ -103,7 +104,8 @@ suite('Experimentation service', () => {
                 extensionVersion,
                 tasClient.TargetPopulation.Insiders,
                 sinon.match.any,
-                globalMemento
+                globalMemento,
+                sinon.match.any
             );
         });
 
