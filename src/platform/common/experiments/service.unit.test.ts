@@ -73,14 +73,13 @@ suite('Experimentation service', () => {
                 globalMemento
             );
 
-            sinon.assert.calledWithExactly(
+            sinon.assert.calledWithMatch(
                 getExperimentationServiceStub,
                 JVSC_EXTENSION_ID_FOR_TESTS,
                 extensionVersion,
                 tasClient.TargetPopulation.Public,
                 sinon.match.any,
-                globalMemento,
-                sinon.match.any
+                globalMemento
             );
         });
 
@@ -98,14 +97,13 @@ suite('Experimentation service', () => {
                 globalMemento
             );
 
-            sinon.assert.calledWithExactly(
+            sinon.assert.calledWithMatch(
                 getExperimentationServiceStub,
                 JVSC_EXTENSION_ID_FOR_TESTS,
                 extensionVersion,
                 tasClient.TargetPopulation.Insiders,
                 sinon.match.any,
-                globalMemento,
-                sinon.match.any
+                globalMemento
             );
         });
 
