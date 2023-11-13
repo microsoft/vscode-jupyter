@@ -60,7 +60,8 @@ const webExternals = commonExternals.concat('os').concat(commonExternals);
 const desktopExternals = commonExternals.concat(deskTopNodeModulesToExternalize);
 const bundleConfig = getBundleConfiguration();
 const isDevbuild = !process.argv.includes('--production');
-const isWatchMode = process.argv.includes('--watch');
+const watchAll = process.argv.includes('--watch-all');
+const isWatchMode = watchAll || process.argv.includes('--watch');
 const extensionFolder = path.join(__dirname, '..', '..');
 
 interface StylePluginOptions {
@@ -152,7 +153,8 @@ function style({ minify = true, charset = 'utf8' }: StylePluginOptions = {}): Pl
 function createConfig(
     source: string,
     outfile: string,
-    target: 'desktop' | 'web'
+    target: 'desktop' | 'web',
+    watch: boolean
 ): SameShape<BuildOptions, BuildOptions> {
     const inject: string[] = [];
     if (target === 'web') {
@@ -178,7 +180,7 @@ function createConfig(
         external,
         alias,
         format: target === 'desktop' || source.endsWith('extension.web.ts') ? 'cjs' : 'esm',
-        metafile: isDevbuild && !isWatchMode,
+        metafile: isDevbuild && !watch,
         define:
             target === 'desktop'
                 ? undefined
@@ -196,16 +198,12 @@ function createConfig(
         loader: target === 'desktop' ? {} : loader
     };
 }
-async function build(
-    source: string,
-    outfile: string,
-    options: { watch: boolean; target: 'desktop' | 'web' } = { watch: isWatchMode, target: 'web' }
-) {
+async function build(source: string, outfile: string, options: { watch: boolean; target: 'desktop' | 'web' }) {
     if (options.watch) {
-        const context = await esbuild.context(createConfig(source, outfile, options.target));
+        const context = await esbuild.context(createConfig(source, outfile, options.target, options.watch));
         await context.watch();
     } else {
-        const result = await esbuild.build(createConfig(source, outfile, options.target));
+        const result = await esbuild.build(createConfig(source, outfile, options.target, options.watch));
         const size = fs.statSync(outfile).size;
         const relativePath = `./${path.relative(extensionFolder, outfile)}`;
         console.log(`asset ${green(relativePath)} size: ${(size / 1024).toFixed()} KiB`);
@@ -238,23 +236,30 @@ async function buildAll() {
                     'webview-side',
                     'interactive-common',
                     'variableExplorerGrid.css'
-                )
+                ),
+                { watch, target: 'web' }
             ),
             build(
                 path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'react-common', 'seti', 'seti.less'),
-                path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'react-common', 'seti', 'seti.css')
+                path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'react-common', 'seti', 'seti.css'),
+                { watch, target: 'web' }
             )
         ];
     };
     await Promise.all(getLessBuilders(false));
 
-    await Promise.all([
+    const builders: Promise<void>[] = [];
+
+    if (watchAll) {
         // Run less builders again, in case we are in watch mode.
-        ...[isWatchMode ? getLessBuilders(true) : []],
+        builders.push(...getLessBuilders(true));
+    }
+    // WebViews, widgets, etc
+    builders.push(
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'ipywidgets', 'kernel', 'index.ts'),
             path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
-            { target: 'web', watch: isWatchMode }
+            { target: 'web', watch: watchAll }
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'ipywidgets', 'renderer', 'index.ts'),
@@ -266,68 +271,77 @@ async function buildAll() {
                 'ipywidgetsRenderer',
                 'ipywidgetsRenderer.js'
             ),
-            { target: 'web', watch: isWatchMode }
+            { target: 'web', watch: watchAll }
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'variable-view', 'index.tsx'),
             path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'variableView.js'),
-            { target: 'web', watch: isWatchMode }
+            { target: 'web', watch: watchAll }
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'plot', 'index.tsx'),
             path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'plotViewer.js'),
-            { target: 'web', watch: isWatchMode }
+            { target: 'web', watch: watchAll }
         ),
         build(
             path.join(extensionFolder, 'src', 'webviews', 'webview-side', 'data-explorer', 'index.tsx'),
             path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'viewers', 'dataExplorer.js'),
-            { target: 'web', watch: isWatchMode }
-        ),
-        ,
-        isDevbuild
-            ? build(
-                  path.join(extensionFolder, 'src', 'test', 'datascience', 'widgets', 'rendererUtils.ts'),
-                  path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'widgetTester', 'widgetTester.js'),
-                  { target: 'web', watch: isWatchMode }
-              )
-            : Promise.resolve(),
-        ,
-        bundleConfig === 'desktop'
-            ? Promise.resolve()
-            : build(
-                  path.join(extensionFolder, 'src', 'extension.web.ts'),
-                  path.join(extensionFolder, 'dist', 'extension.web.bundle.js'),
-                  { target: 'web', watch: isWatchMode }
-              ),
-        bundleConfig === 'web'
-            ? Promise.resolve()
-            : build(
-                  path.join(extensionFolder, 'src', 'extension.node.ts'),
-                  path.join(extensionFolder, 'dist', 'extension.node.js'),
-                  { target: 'desktop', watch: isWatchMode }
-              ),
-        bundleConfig === 'web'
-            ? Promise.resolve()
-            : build(
-                  path.join(extensionFolder, 'src', 'extension.node.proxy.ts'),
-                  path.join(extensionFolder, 'dist', 'extension.node.proxy.js'),
-                  { target: 'desktop', watch: isWatchMode }
-              ),
-        ...(bundleConfig === 'web' ? [] : deskTopNodeModulesToExternalize)
-            // zeromq will be manually bundled.
-            .filter((module) => !['zeromq', 'zeromqold', 'vscode-jsonrpc'].includes(module))
+            { target: 'web', watch: watchAll }
+        )
+    );
 
-            .map(async (module) => {
-                const fullPath = require.resolve(module);
-                return build(fullPath, path.join(extensionFolder, 'dist', 'node_modules', `${module}.js`), {
-                    target: 'desktop',
-                    watch: isWatchMode
-                });
-            }),
-        ...(bundleConfig === 'web'
-            ? []
-            : [copyJQuery(), copyAminya(), copyZeroMQ(), copyZeroMQOld(), buildVSCodeJsonRPC()])
-    ]);
+    if (isDevbuild) {
+        builders.push(
+            build(
+                path.join(extensionFolder, 'src', 'test', 'datascience', 'widgets', 'rendererUtils.ts'),
+                path.join(extensionFolder, 'dist', 'webviews', 'webview-side', 'widgetTester', 'widgetTester.js'),
+                { target: 'web', watch: watchAll }
+            )
+        );
+    }
+    if (bundleConfig !== 'desktop') {
+        builders.push(
+            build(
+                path.join(extensionFolder, 'src', 'extension.web.ts'),
+                path.join(extensionFolder, 'dist', 'extension.web.bundle.js'),
+                { target: 'web', watch: watchAll }
+            )
+        );
+    }
+    if (bundleConfig !== 'web') {
+        builders.push(
+            build(
+                path.join(extensionFolder, 'src', 'extension.node.ts'),
+                path.join(extensionFolder, 'dist', 'extension.node.js'),
+                { target: 'desktop', watch: isWatchMode }
+            )
+        );
+        builders.push(
+            build(
+                path.join(extensionFolder, 'src', 'extension.node.proxy.ts'),
+                path.join(extensionFolder, 'dist', 'extension.node.proxy.js'),
+                // This file almost never ever changes, hence no need to watch this.
+                { target: 'desktop', watch: false }
+            )
+        );
+        builders.push(
+            ...deskTopNodeModulesToExternalize
+                // zeromq will be manually bundled.
+                .filter((module) => !['zeromq', 'zeromqold', 'vscode-jsonrpc'].includes(module))
+
+                .map(async (module) => {
+                    const fullPath = require.resolve(module);
+                    return build(fullPath, path.join(extensionFolder, 'dist', 'node_modules', `${module}.js`), {
+                        target: 'desktop',
+                        // These almost never change, easier to re-run copmilation if packges change.
+                        watch: false
+                    });
+                })
+        );
+        builders.push(copyJQuery(), copyAminya(), copyZeroMQ(), copyZeroMQOld(), buildVSCodeJsonRPC());
+    }
+
+    await Promise.all(builders);
 }
 
 /**
@@ -388,7 +402,7 @@ module.exports = require('./index');`;
     await fs.writeFile(path.join(path.dirname(target), 'node.js'), contents);
     return build(fullPath, target, {
         target: 'desktop',
-        watch: isWatchMode
+        watch: false
     });
 }
 
