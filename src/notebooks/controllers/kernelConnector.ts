@@ -250,12 +250,6 @@ export class KernelConnector {
         disposables: IDisposable[],
         onAction: (action: KernelAction, kernel: IBaseKernel | IKernel) => void = () => noop()
     ): Promise<IBaseKernel | IKernel> {
-        traceVerbose(
-            `${initialContext} the kernel, options.disableUI=${options.disableUI} for ${getDisplayPath(
-                'notebook' in notebookResource ? notebookResource.notebook.uri : notebookResource.resource
-            )}`
-        );
-
         let currentPromise = this.getKernelInfo(notebookResource);
         if (!options.disableUI && currentPromise?.options.disableUI) {
             currentPromise.options.disableUI = false;
@@ -283,6 +277,12 @@ export class KernelConnector {
                 disposables
             );
         }
+
+        traceVerbose(
+            `${initialContext} the kernel, options.disableUI=${options.disableUI} for ${getDisplayPath(
+                'notebook' in notebookResource ? notebookResource.notebook.uri : notebookResource.resource
+            )}`
+        );
 
         const promise = KernelConnector.wrapKernelMethodImpl(
             metadata,

@@ -706,15 +706,13 @@ export function executeSilentlyAndEmitOutput(
     onStarted: () => void,
     onOutput: (outputs: NotebookCellOutputItem[]) => void
 ) {
-    traceVerbose(
-        `Executing silently Code (${kernelConnection.status}) = ${splitLines(code.substring(0, 100)).join('\\n')}`
-    );
+    code = code.replace(/\r\n/g, '\n');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
     const request = kernelConnection.requestExecute(
         {
-            code: code.replace(/\r\n/g, '\n'),
+            code,
             silent: false,
             stop_on_error: false,
             allow_stdin: false,
