@@ -5,7 +5,7 @@ import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
 
 import type { Kernel } from '@jupyterlab/services';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceError, traceInfoIfCI } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
@@ -16,7 +16,7 @@ import { executeSilentlyAndEmitOutput } from '../helpers';
 import { EventEmitter, NotebookCellOutputItem } from 'vscode';
 
 function traceExecMessage(executionId: string, message: string) {
-    traceInfoIfCI(`Execution Id:${executionId}. ${message}.`);
+    traceVerbose(`Execution Id:${executionId}. ${message}.`);
 }
 
 const extensionIdsPerExtension = new Map<string, number>();
@@ -135,7 +135,9 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             return;
         }
         this.disposed = true;
-        traceExecMessage(this.executionId, 'Execution disposed');
+        if (!this._completed) {
+            traceExecMessage(this.executionId, 'Execution disposed');
+        }
         dispose(this.disposables);
     }
 
@@ -181,7 +183,6 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             // When the request finishes we are done
             // request.done resolves even before all iopub messages have been sent through.
             // Solution is to wait for all messages to get processed.
-            traceExecMessage(this.executionId, 'Wait for jupyter execution');
             await this.request!.done.catch(noop);
             this._completed = true;
             this._done.resolve();

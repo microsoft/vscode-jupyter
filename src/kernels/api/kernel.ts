@@ -14,7 +14,7 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
-import { traceError, traceInfo } from '../../platform/logging';
+import { traceError, traceVerbose } from '../../platform/logging';
 
 function getExtensionDisplayName(extensionId: string) {
     const extensionDisplayName = extensions.getExtension(extensionId)?.packageJSON.displayName;
@@ -224,7 +224,7 @@ class WrappedKernelPerExtension implements Kernel {
                 measures.cancelledAfter = stopwatch.elapsedTime;
                 properties.cancelledBeforeRequestSent = !properties.requestSent;
                 properties.cancelledBeforeRequestAcknowledged = !properties.requestAcknowledged;
-                traceInfo(`Code execution cancelled by extension ${this.extensionDisplayName}`);
+                traceVerbose(`Code execution cancelled by extension ${this.extensionDisplayName}`);
             },
             this,
             disposables
