@@ -19,7 +19,8 @@ import { raceTimeoutError } from '../../platform/common/utils/async';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IKernel, IKernelProvider } from '../types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
-import { OutputItem } from '../../api';
+import { Kernels, OutputItem } from '../../api';
+import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../test/constants';
 
 suiteMandatory('Kernel API Tests @python', function () {
     const disposables: IDisposable[] = [];
@@ -28,6 +29,7 @@ suiteMandatory('Kernel API Tests @python', function () {
     let notebook: NotebookDocument;
     let controller: IVSCodeNotebookController;
     let realKernel: IKernel;
+    let kernels: Kernels;
     let controllerRegistration: IControllerRegistration;
     suiteSetup(async function () {
         this.timeout(120_000);
@@ -39,6 +41,8 @@ suiteMandatory('Kernel API Tests @python', function () {
         await startJupyterServer();
         traceInfo('Suite Setup, Step 3');
         await prewarmNotebooks();
+        traceInfo('Suite Setup, Step 4');
+        kernels = await Promise.resolve(getKernelsApi(JVSC_EXTENSION_ID_FOR_TESTS));
         traceInfo('Suite Setup (completed)');
     });
     setup(async function () {
@@ -65,24 +69,24 @@ suiteMandatory('Kernel API Tests @python', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('No kernel returned if no code has been executed', async function () {
-        const kernel = getKernelsApi('').findKernel({ uri: notebook.uri });
+        const kernel = kernels.findKernel(notebook.uri);
 
         assert.isUndefined(kernel, 'Kernel should not be returned as no code was executed');
     });
     testMandatory('Get Kernel and execute code', async function () {
         // No kernel unless we execute code against this kernel.
-        assert.isUndefined(getKernelsApi('').findKernel({ uri: notebook.uri }));
+        assert.isUndefined(kernels.findKernel(notebook.uri));
 
         // Even after starting a kernel the API should not return anyting,
         // as no code has been executed against this kernel.
         await realKernel.start();
-        getKernelsApi('').findKernel({ uri: notebook.uri });
+        await kernels.findKernel(notebook.uri);
 
         // Ensure user has executed some code against this kernel.
         const cell = notebook.cellAt(0)!;
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
 
-        const kernel = getKernelsApi('').findKernel({ uri: notebook.uri });
+        const kernel = await kernels.findKernel(notebook.uri);
         if (!kernel) {
             throw new Error('Kernel not found');
         }
