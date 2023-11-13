@@ -109,7 +109,6 @@ export class CellExecutionQueue implements Disposable {
             this.disposables.push(codeExecution);
             this.queueOfItemsToExecute.push(codeExecution);
             this.disposables.push(once(token.onCancellationRequested)(() => codeExecution.cancel()));
-            traceVerbose(`Extension ${extensionId} queued code for execution`);
         }
         // Start executing the cells.
         this.startExecutingCells();
@@ -198,10 +197,8 @@ export class CellExecutionQueue implements Disposable {
     private async executeQueuedCells() {
         let notebookClosed: boolean | undefined;
         const kernelConnection = await this.session;
-        this.queueOfItemsToExecute.forEach((exec) =>
-            exec.type === 'cell'
-                ? traceCellMessage(exec.cell, 'Ready to execute')
-                : traceVerbose(`Ready to execute code ${exec.code.substring(0, 50)}...`)
+        this.queueOfItemsToExecute.forEach(
+            (exec) => exec.type === 'cell' && traceCellMessage(exec.cell, 'Ready to execute')
         );
         while (this.queueOfItemsToExecute.length) {
             // Dispose the previous cell execution.

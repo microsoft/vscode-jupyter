@@ -53,7 +53,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
     private readonly disposables: IDisposable[] = [];
     private session?: IKernelSession;
     private cancelRequested?: boolean;
-    private readonly executionId: string;
+    public readonly executionId: string;
     private constructor(
         public readonly code: string,
         public readonly extensionId: string
@@ -61,7 +61,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
         let executionId = extensionIdsPerExtension.get(extensionId) || 0;
         executionId += 1;
         extensionIdsPerExtension.set(extensionId, executionId);
-        this.executionId = `${extensionId}-${extensionId}`;
+        this.executionId = `${extensionId}-${executionId}`;
         this.disposables.push(this._onDidEmitOutput);
     }
 

@@ -17,6 +17,7 @@ export interface ICellExecution {
 
 export interface ICodeExecution {
     type: 'code';
+    executionId: string;
     code: string;
     result: Promise<NotebookCellRunState>;
     onRequestSent: Event<void>;
