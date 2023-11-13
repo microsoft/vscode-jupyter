@@ -2083,6 +2083,7 @@
         "updatePackageJsonForBundle": "gulp updatePackageJsonForBundle",
         "prePublishNonBundle": "npm run compile-no-watch",
         "compile": "concurrently \"tsc -watch -p ./\" npm:webpack-dev \"npx tsx build/esbuild/build.ts --watch\"",
+        "compile-watch-all": "concurrently \"tsc -watch -p ./\" npm:webpack-dev \"npx tsx build/esbuild/build.ts --watch-all\"",
         "compile-no-watch": "concurrently npm:compile-out npm:webpack-dev npm:esbuild-all",
         "compile-out": "tsc -p ./",
         "compile-web-test": "webpack --mode development --config ./build/webpack/webpack.extension.web.config.js",
