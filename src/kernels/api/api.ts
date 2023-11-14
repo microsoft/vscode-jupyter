@@ -13,6 +13,7 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 // Each extension gets its own instance of the API.
 const apiCache = new Map<string, Promise<boolean>>();
 const kernelCache = new WeakMap<IKernel, Kernel>();
+const mappedKernelId = new WeakMap<Kernel, string>();
 
 // This is only temporary for testing purposes. Even with the prompt other extensions will not be allowed to use this API.
 // By the end of the iteartion we will have a proposed API and this will be removed.
@@ -20,11 +21,11 @@ const allowedAccessToProposedApi = new Set(['ms-toolsai.datawrangler', 'donjayam
 
 export function getKernelsApi(extensionId: string): Kernels {
     return {
-        async findKernel(uri: Uri) {
+        async getKernel(uri: Uri) {
             const accessAllowed = await requestKernelAccess(extensionId);
             sendTelemetryEvent(Telemetry.NewJupyterKernelsApiUsage, undefined, {
                 extensionId,
-                pemUsed: 'findKernel',
+                pemUsed: 'getKernel',
                 accessAllowed
             });
             if (!accessAllowed) {
@@ -48,9 +49,14 @@ export function getKernelsApi(extensionId: string): Kernels {
             }
             let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
             kernelCache.set(kernel, wrappedKernel);
+            mappedKernelId.set(wrappedKernel, kernel.id);
             return wrappedKernel;
         }
     };
+}
+
+export function getKernelId(kernel: Kernel) {
+    return mappedKernelId.get(kernel);
 }
 
 async function requestKernelAccess(extensionId: string): Promise<boolean> {
