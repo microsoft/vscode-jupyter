@@ -19,7 +19,7 @@ import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
 import { IExtensionApi } from './standalone/api/api';
-import { IExportedKernelService, Kernel } from './api';
+import { IExportedKernelService, Kernel, Kernels } from './api';
 
 export * from './platform/telemetry/index';
 export type DurationMeasurement = {
@@ -3298,6 +3298,41 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             kernelId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
+     * Telemetry sent when an extension uses our 3rd party Kernels API.
+     */
+    [Telemetry.NewJupyterKernelsApiUsage]: TelemetryEventInfo<{
+        /**
+         * Extension Id that's attempting to use the API.
+         */
+        extensionId: string;
+        /**
+         * Name of the API member used.
+         */
+        pemUsed: keyof Kernels;
+        /**
+         * Whether 3rd party extension was allowed to use the API.
+         */
+        accessAllowed: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            accessAllowed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            extensionId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            pemUsed: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             }

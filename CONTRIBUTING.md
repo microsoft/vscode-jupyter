@@ -56,7 +56,11 @@ npx gulp prePublishNonBundle
 For incremental builds you can use the following commands depending on your needs:
 
 ```shell
+# This will compile everthing, but only watch for changes to the desktop bundle.
 npm run compile
+# This watches changes to all files, webviews, web version of extension, node version of extension, etc
+# This can be resource intensive, as there are a number of bundles created, thus requiring monitoring of files for each of these numerous bundles.
+npm run compile-watch-all
 ```
 
 Sometimes you will need to run `npm run clean` and even `rm -r out dist`.

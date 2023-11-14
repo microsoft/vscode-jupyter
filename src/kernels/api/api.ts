@@ -6,20 +6,64 @@ import { Kernel, Kernels } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { createKernelApiForExetnsion } from './kernel';
+import { createKernelApiForExetnsion as createKernelApiForExtension } from './kernel';
+import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../test/constants';
+import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 
 // Each extension gets its own instance of the API.
-const apiCache = new Map<string, Promise<Kernels>>();
+const apiCache = new Map<string, Promise<boolean>>();
 const kernelCache = new WeakMap<IKernel, Kernel>();
 
-const allowedAccessToProposedApi = new Set(['ms-toolsai.datawrangler']);
+// This is only temporary for testing purposes. Even with the prompt other extensions will not be allowed to use this API.
+// By the end of the iteartion we will have a proposed API and this will be removed.
+const allowedAccessToProposedApi = new Set(['ms-toolsai.datawrangler', 'donjayamanne.python-environment-manager']);
 
-export async function requestKernelAccess(extensionId: string): Promise<Kernels> {
+export function getKernelsApi(extensionId: string): Kernels {
+    return {
+        async findKernel(uri: Uri) {
+            const accessAllowed = await requestKernelAccess(extensionId);
+            sendTelemetryEvent(Telemetry.NewJupyterKernelsApiUsage, undefined, {
+                extensionId,
+                pemUsed: 'findKernel',
+                accessAllowed
+            });
+            if (!accessAllowed) {
+                return;
+            }
+
+            const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
+            const notebooks = ServiceContainer.instance.get<IVSCodeNotebook>(IVSCodeNotebook);
+            const notebook = notebooks.notebookDocuments.find((item) => item.uri.toString() === uri.toString());
+            const kernel = kernelProvider.get(notebook || uri);
+            // We are only interested in returning kernels that have been started by the user.
+            if (!kernel || !kernel.startedAtLeastOnce) {
+                return;
+            }
+            const execution = kernelProvider.getKernelExecution(kernel);
+            if (!isRemoteConnection(kernel.kernelConnectionMetadata) && execution.executionCount === 0) {
+                // For local kernels, execution count must be greater than 0,
+                // As we pre-warms kernels (i.e. we start kernels even though the user may not have executed any code).
+                // The only way to determine whether users executed code is to look at the execution count
+                return;
+            }
+            let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
+            kernelCache.set(kernel, wrappedKernel);
+            return wrappedKernel;
+        }
+    };
+}
+
+async function requestKernelAccess(extensionId: string): Promise<boolean> {
+    if (extensionId === JVSC_EXTENSION_ID_FOR_TESTS) {
+        // Our own extension can use this API (used in tests)
+        return true;
+    }
     const promise = apiCache.get(extensionId) || requestKernelAccessImpl(extensionId);
     apiCache.set(extensionId, promise);
     return promise;
 }
-export async function requestKernelAccessImpl(extensionId: string): Promise<Kernels> {
+
+async function requestKernelAccessImpl(extensionId: string) {
     if (!allowedAccessToProposedApi.has(extensionId)) {
         throw new Error(`Extension ${extensionId} does not have access to proposed API`);
     }
@@ -35,38 +79,5 @@ export async function requestKernelAccessImpl(extensionId: string): Promise<Kern
         'Yes',
         'No'
     );
-    if (result === 'No') {
-        return {
-            isRevoked: true,
-            findKernel: () => undefined
-        };
-    }
-    return getKernelsApi(extensionId);
-}
-
-export function getKernelsApi(extensionId: string): Kernels {
-    // Each extension gets its own instance of the API.
-    return {
-        isRevoked: false,
-        findKernel(query: { uri: Uri }) {
-            const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
-            const notebooks = ServiceContainer.instance.get<IVSCodeNotebook>(IVSCodeNotebook);
-            const notebook = notebooks.notebookDocuments.find((item) => item.uri.toString() === query.uri.toString());
-            const kernel = kernelProvider.get(notebook || query.uri);
-            // We are only interested in returning kernels that have been started by the user.
-            if (!kernel || !kernel.startedAtLeastOnce) {
-                return;
-            }
-            const execution = kernelProvider.getKernelExecution(kernel);
-            if (!isRemoteConnection(kernel.kernelConnectionMetadata) && execution.executionCount === 0) {
-                // For local kernels, execution count must be greater than 0,
-                // As we pre-warms kernels (i.e. we start kernels even though the user may not have executed any code).
-                // The only way to determine whether users executed code is to look at the execution count
-                return;
-            }
-            let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExetnsion(extensionId, kernel);
-            kernelCache.set(kernel, wrappedKernel);
-            return wrappedKernel;
-        }
-    };
+    return result === 'Yes';
 }
