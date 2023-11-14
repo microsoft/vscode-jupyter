@@ -473,7 +473,7 @@ async function postStartKernel(
 
     // Attempt to get kernel to respond to requests (this is what jupyter does today).
     // Kinda warms up the kernel communication & ensure things are in the right state.
-    traceVerbose(`Kernel status before requesting kernel info and after ready is ${kernel?.status}`);
+    traceVerbose(`Kernel status is '${kernel?.status}' before requesting kernel info and after ready`);
     // Lets wait for the response (max of 3s), like jupyter (python code) & jupyter client (jupyter lab npm) does.
     // Lets not wait for full timeout, we don't want to slow kernel startup.
     // Note: in node_modules/@jupyterlab/services/lib/kernel/default.js we only wait for 3s.
@@ -612,7 +612,7 @@ async function waitForReady(
     kernelConnectionMetadata: LocalKernelConnectionMetadata,
     launchTimeout: number
 ): Promise<void> {
-    traceVerbose(`Waiting for Raw session to be ready, currently ${kernel.connectionStatus}`);
+    traceVerbose(`Waiting for Raw session to be ready, status: ${kernel.connectionStatus}`);
     // When our kernel connects and gets a status message it triggers the ready promise
     const deferred = createDeferred<'connected'>();
     const handler = (_: unknown, status: Kernel.ConnectionStatus) => {
@@ -629,10 +629,10 @@ async function waitForReady(
         deferred.resolve(kernel.connectionStatus);
     }
 
-    traceVerbose('Waiting for Raw session to be ready for 30s');
+    traceVerbose('Waiting for Raw session to be ready');
     const result = await raceTimeout(launchTimeout, deferred.promise);
     kernel.connectionStatusChanged.disconnect(handler);
-    traceVerbose(`Waited for Raw session to be ready & got ${result}`);
+    traceVerbose(`Waited for Raw session to be ready & got status: ${result}`);
 
     if (result !== 'connected') {
         throw new KernelConnectionTimeoutError(kernelConnectionMetadata);
