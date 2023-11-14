@@ -6,8 +6,9 @@ import { Kernel, Kernels } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { createKernelApiForExetnsion } from './kernel';
+import { createKernelApiForExetnsion as createKernelApiForExtension } from './kernel';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../test/constants';
+import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 
 // Each extension gets its own instance of the API.
 const apiCache = new Map<string, Promise<boolean>>();
@@ -21,6 +22,11 @@ export function getKernelsApi(extensionId: string): Kernels {
     return {
         async findKernel(uri: Uri) {
             const accessAllowed = await requestKernelAccess(extensionId);
+            sendTelemetryEvent(Telemetry.NewJupyterKernelsApiUsage, undefined, {
+                extensionId,
+                pemUsed: 'findKernel',
+                accessAllowed
+            });
             if (!accessAllowed) {
                 return;
             }
@@ -40,7 +46,7 @@ export function getKernelsApi(extensionId: string): Kernels {
                 // The only way to determine whether users executed code is to look at the execution count
                 return;
             }
-            let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExetnsion(extensionId, kernel);
+            let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
             kernelCache.set(kernel, wrappedKernel);
             return wrappedKernel;
         }
