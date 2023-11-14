@@ -11,14 +11,7 @@ import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, raceCancellationError } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import {
-    ignoreLogging,
-    logValue,
-    traceDecoratorVerbose,
-    traceInfo,
-    traceVerbose,
-    traceWarning
-} from '../../../platform/logging';
+import { traceVerbose, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
@@ -42,7 +35,6 @@ import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEve
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { TraceOptions } from '../../../platform/logging/types';
 import { getResourceType } from '../../../platform/common/utils';
 import { format, splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
@@ -111,14 +103,12 @@ export class KernelLauncher implements IKernelLauncher {
         }
     }
 
-    @traceDecoratorVerbose('Kernel Launcher. launch', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async launch(
-        @logValue<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>('id')
         kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        @ignoreLogging() cancelToken: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
         const stopWatch = new StopWatch();
         const promise = (async () => {
@@ -181,13 +171,13 @@ export class KernelLauncher implements IKernelLauncher {
                 .map((s) => s.trim())
                 .filter((s) => s.length > 0);
             if (outputs.length === 2) {
-                traceInfo(
+                traceVerbose(
                     `ipykernel version & path ${outputs[0]}, ${getDisplayPathFromLocalFile(
                         outputs[1]
                     )} for ${displayInterpreterPath}`
                 );
             } else {
-                traceInfo(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
+                traceVerbose(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
             }
         }
         if (output.stderr) {

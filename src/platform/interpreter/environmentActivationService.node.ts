@@ -295,11 +295,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         // Ensure the first path in PATH variable points to the directory of python executable.
         // We need to add this to ensure kernels start and work correctly, else things can fail miserably.
-        traceVerbose(
-            `Prepend PATH with python bin for ${getDisplayPath(environment.path)}, \n    PATH value is ${
-                env.PATH
-            } and \n    Path value is ${env.Path}`
-        );
+        traceVerbose(`Prepend PATH with python bin for ${getDisplayPath(environment.path)}`);
         // This way all executables from that env are used.
         // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
         // Also applies to `!java` where java could be an executable in the conda bin directory.

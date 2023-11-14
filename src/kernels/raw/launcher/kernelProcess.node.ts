@@ -32,7 +32,6 @@ import {
     traceVerbose,
     traceWarning,
     traceInfoIfCI,
-    traceDecoratorVerbose,
     ignoreLogging
 } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
@@ -46,7 +45,6 @@ import { KernelPortNotUsedTimeoutError } from '../../errors/kernelPortNotUsedTim
 import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { Interrupter, PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
-import { TraceOptions } from '../../../platform/logging/types';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
@@ -54,6 +52,7 @@ import pidtree from 'pidtree';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
 import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -186,10 +185,7 @@ export class KernelProcess implements IKernelProcess {
 
         if (exeObs.proc) {
             exeObs.proc.stdout?.on('data', (data: Buffer | string) => {
-                // We get these from execObs.out.subscribe.
-                // Hence log only using traceLevel = verbose.
-                // But only useful if daemon doesn't start for any reason.
-                traceVerbose(`KernelProcess output: ${(data || '').toString()}`);
+                traceVerbose(`Kernel output: ${(data || '').toString()}`);
                 this.sendToOutput((data || '').toString());
             });
 
@@ -237,7 +233,6 @@ export class KernelProcess implements IKernelProcess {
                 if (stdout.includes(kernelOutputWithConnectionFile)) {
                     sawKernelConnectionFile = true;
                 }
-                traceVerbose(`Kernel Output: ${stdout}`);
             }
             this.sendToOutput(output.out);
         });
@@ -497,10 +492,15 @@ export class KernelProcess implements IKernelProcess {
         return newConnectionArgs;
     }
 
-    @traceDecoratorVerbose('Launching kernel in kernelProcess.ts', TraceOptions.Arguments | TraceOptions.BeforeCall)
     private async launchAsObservable(workingDirectory: string, @ignoreLogging() cancelToken: CancellationToken) {
         let exeObs: ObservableExecutionResult<string>;
-
+        traceVerbose(
+            `Launching kernel ${this.kernelConnectionMetadata.id} for ${getDisplayPath(
+                this.resource
+            )} in ${getDisplayPath(workingDirectory)} with ports ${this.connection.control_port}, ${
+                this.connection.hb_port
+            }, ${this.connection.iopub_port}, ${this.connection.shell_port}, ${this.connection.stdin_port}`
+        );
         if (
             this.isPythonKernel &&
             this.extensionChecker.isPythonExtensionInstalled &&
