@@ -7,7 +7,7 @@ import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
-import { traceError } from '../../../platform/logging';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelSocket } from '../../types';
@@ -213,6 +213,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         const message: KernelMessage.IMessage = this.closed
             ? {}
             : (wireProtocol.decode(data, this.connection.key, this.connection.signature_scheme) as any);
+        traceVerbose(`Incoming Socket Message: ${JSON.stringify(message)}`);
 
         // Make sure it has a channel on it
         message.channel = channel as any;
@@ -248,6 +249,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
 
     private sendMessage(msg: KernelMessage.IMessage, bypassHooking: boolean) {
+        traceVerbose(`Outgoing Socket Message: ${JSON.stringify(msg)}`);
         // First encode the message.
         const data = wireProtocol.encode(msg as any, this.connection.key, this.connection.signature_scheme);
 
