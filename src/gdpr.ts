@@ -473,6 +473,18 @@
      ]
    }
  */
+//Telemetry.NewJupyterKernelsApiUsage
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_NEW_KERNELS_API_USAGE" : {
+     "accessAllowed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether 3rd party extension was allowed to use the API.","owner":"donjayamanne"},
+     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
+     "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the API member used.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.KernelCrash
 /* __GDPR__
    "DATASCIENCE.KERNEL_CRASH" : {
