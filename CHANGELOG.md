@@ -6,6 +6,13 @@ This changelog is deprecated. Here is where you can find details about the lates
 - Highlighted features for the latest release are described in the VS Code release notes, under the "Contributions to extensions" section: https://code.visualstudio.com/updates
 - All issues and code changes can be found by searching our Github repo under the latest milestone. [Example from November 2022](https://github.com/microsoft/vscode-jupyter/issues?q=is%3Aclosed+milestone%3A%22November+2022%22+)
 
+
+## 2023.10.1100000000
+
+### Fixes
+
+1. Fixed vulnerability described in [CVE-2023-36018](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2023-36018)
+
 ## 2022.10.110 (2 November 2022)
 
 ### Enhancements
