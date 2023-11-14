@@ -1,68 +1,37 @@
 {
     "folders": [
         {
-            "path": ".",
-            "name": "vscode-jupyter"
+            "name": "vscode-jupyter",
+            "path": "."
         },
         {
-            "path": "pythonFiles"
-        },
-        {
-            "path": "src/ipywidgets"
-        },
-        {
-            "name": "vscode-notebook-renderers",
-            "path": "../vscode-notebook-renderers"
-        },
-        {
-            "name": "vscode-python",
-            "path": "../vscode-python"
-        },
-        {
-            "name": "vscode-jupyter-powertoys",
-            "path": "../vscode-jupyter-powertoys"
+            "name": "vscode-python-manager",
+            "path": "../vscode-python-manager"
         }
     ],
-    "settings": {
-        "typescript.tsdk": "./node_modules/typescript/lib",
-        "search.exclude": {
-            "**/node_modules/**": true,
-            "**/.vscode test/insider/**": true,
-            "**/.vscode test/stable/**": true,
-            "**/.vscode-test/insider/**": true,
-            "**/.vscode-test/stable/**": true,
-            "**/out/**": true,
-            "**/dist/**": true
-        }
-    },
     "launch": {
+        "compounds": [],
         "configurations": [
-            // This configuration allows one to debug multiple extensions at a time.
-            // The assumption here is that vscode-notebook-renderers is in the same folder as the python extension.
-            // User is expected to start the compile tasks for both extensions before using this launch config.
             {
-                "type": "extensionHost",
-                "request": "launch",
-                "name": "Jupyter + Python Extension",
                 "args": [
                     "--enable-proposed-api",
-                    "--extensionDevelopmentPath=${workspaceFolder:vscode-python}",
-                    "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}"
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-python-manager}"
                 ],
-                "sourceMaps": true,
+                "name": "Jupyter + EnvManager Extension",
                 "outFiles": [
-                    "${workspaceFolder:vscode-python}/out/**/*.js",
-                    "!${workspaceFolder:vscode-python}/**/node_modules**/*",
+                    "${workspaceFolder:vscode-python-manager}/out/**/*.js",
+                    "!${workspaceFolder:vscode-python-manager}/**/node_modules**/*",
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
                     "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
-                    "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*",
+                    "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
                 ],
-                "skipFiles": ["<node_internals>/**"]
+                "request": "launch",
+                "skipFiles": ["<node_internals>/**"],
+                "sourceMaps": true,
+                "type": "extensionHost"
             },
             {
-                "type": "extensionHost",
-                "request": "launch",
-                "name": "Jupyter + Python Smoke Tests",
                 "args": [
                     "${workspaceFolder:vscode-jupyter}/src/test/testMultiRootWkspc/smokeTests",
                     "--enable-proposed-api",
@@ -72,10 +41,10 @@
                 ],
                 "env": {
                     "CI_PYTHON_PATH": "<PythonPath>",
-                    "VSC_JUPYTER_SMOKE_TEST": "1",
-                    "VSC_JUPYTER_CI_TEST_GREP": "Smoke Test"
+                    "VSC_JUPYTER_CI_TEST_GREP": "Smoke Test",
+                    "VSC_JUPYTER_SMOKE_TEST": "1"
                 },
-                "sourceMaps": true,
+                "name": "Jupyter + Python Smoke Tests",
                 "outFiles": [
                     "${workspaceFolder:vscode-python}/out/**/*.js",
                     "!${workspaceFolder:vscode-python}/**/node_modules**/*",
@@ -83,19 +52,19 @@
                     "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
                     "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
                 ],
-                "skipFiles": ["<node_internals>/**"]
+                "request": "launch",
+                "skipFiles": ["<node_internals>/**"],
+                "sourceMaps": true,
+                "type": "extensionHost"
             },
             {
-                "type": "extensionHost",
-                "request": "launch",
-                "name": "Jupyter + Python + Renderer Extension",
                 "args": [
                     "--enable-proposed-api",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-python}",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-notebook-renderers}"
                 ],
-                "sourceMaps": true,
+                "name": "Jupyter + Python + Renderer Extension",
                 "outFiles": [
                     "${workspaceFolder:vscode-python}/out/**/*.js",
                     "!${workspaceFolder:vscode-python}/**/node_modules**/*",
@@ -105,18 +74,18 @@
                     "${workspaceFolder:vscode-notebook-renderers}/out/**/*.js",
                     "!${workspaceFolder:vscode-notebook-renderers}/**/node_modules**/*"
                 ],
-                "skipFiles": ["<node_internals>/**"]
+                "request": "launch",
+                "skipFiles": ["<node_internals>/**"],
+                "sourceMaps": true,
+                "type": "extensionHost"
             },
             {
-                "type": "extensionHost",
-                "request": "launch",
-                "name": "Jupyter + Powertoys Extension",
                 "args": [
                     "--enable-proposed-api",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter-powertoys}"
                 ],
-                "sourceMaps": true,
+                "name": "Jupyter + Powertoys Extension",
                 "outFiles": [
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
                     "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
@@ -124,18 +93,18 @@
                     "${workspaceFolder:vscode-jupyter-powertoys}/out/**/*.js",
                     "!${workspaceFolder:vscode-jupyter-powertoys}/**/node_modules**/*"
                 ],
-                "skipFiles": ["<node_internals>/**"]
+                "request": "launch",
+                "skipFiles": ["<node_internals>/**"],
+                "sourceMaps": true,
+                "type": "extensionHost"
             },
             {
-                "type": "extensionHost",
-                "request": "launch",
-                "name": "Jupyter + Renderer Extension",
                 "args": [
                     "--enable-proposed-api",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-notebook-renderers}"
                 ],
-                "sourceMaps": true,
+                "name": "Jupyter + Renderer Extension",
                 "outFiles": [
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
                     "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
@@ -143,12 +112,12 @@
                     "${workspaceFolder:vscode-notebook-renderers}/out/**/*.js",
                     "!${workspaceFolder:vscode-notebook-renderers}/**/node_modules**/*"
                 ],
-                "skipFiles": ["<node_internals>/**"]
+                "request": "launch",
+                "skipFiles": ["<node_internals>/**"],
+                "sourceMaps": true,
+                "type": "extensionHost"
             },
             {
-                "name": "Native Notebook Tests (Jupyter+Python Extension)",
-                "type": "extensionHost",
-                "request": "launch",
                 "args": [
                     "${workspaceFolder:vscode-jupyter}/src/test/datascience",
                     "--enable-proposed-api",
@@ -157,25 +126,39 @@
                     "--extensionTestsPath=${workspaceFolder:vscode-jupyter}/out/test"
                 ],
                 "env": {
+                    "CI_PYTHON_PATH": "<PythonPath>", // Update with path to real python interpereter used for testing.
+                    "TEST_FILES_SUFFIX": "*.vscode.test,*.vscode.common.test",
+                    "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
                     "VSC_JUPYTER_CI_TEST_GREP": "VSCode Notebook", // Leave as `VSCode Notebook` to run only Notebook tests.
                     "VSC_JUPYTER_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
-                    "CI_PYTHON_PATH": "<PythonPath>", // Update with path to real python interpereter used for testing.
-                    "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
-                    "TEST_FILES_SUFFIX": "*.vscode.test,*.vscode.common.test",
-                    "VSC_JUPYTER_REMOTE_NATIVE_TEST": "false", // Change to `true` to run the Native Notebook tests with remote jupyter connections.
                     "VSC_JUPYTER_NON_RAW_NATIVE_TEST": "false", // Change to `true` to run the Native Notebook tests with non-raw kernels (i.e. local jupyter server).
+                    "VSC_JUPYTER_REMOTE_NATIVE_TEST": "false", // Change to `true` to run the Native Notebook tests with remote jupyter connections.
                     "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1",
                     "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML": "1" //Enable to get full coverage repor (in coverage folder).
                 },
-                "sourceMaps": true,
+                "name": "Native Notebook Tests (Jupyter+Python Extension)",
                 "outFiles": [
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
                     "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
                     "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
                 ],
-                "skipFiles": ["<node_internals>/**"]
+                "request": "launch",
+                "skipFiles": ["<node_internals>/**"],
+                "sourceMaps": true,
+                "type": "extensionHost"
             }
-        ],
-        "compounds": []
+        ]
+    },
+    "settings": {
+        "search.exclude": {
+            "**/.vscode test/insider/**": true,
+            "**/.vscode test/stable/**": true,
+            "**/.vscode-test/insider/**": true,
+            "**/.vscode-test/stable/**": true,
+            "**/dist/**": true,
+            "**/node_modules/**": true,
+            "**/out/**": true
+        },
+        "typescript.tsdk": "./node_modules/typescript/lib"
     }
 }

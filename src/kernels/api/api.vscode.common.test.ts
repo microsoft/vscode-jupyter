@@ -69,7 +69,7 @@ suiteMandatory('Kernel API Tests @python', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('No kernel returned if no code has been executed', async function () {
-        const kernel = kernels.findKernel(notebook.uri);
+        const kernel = await kernels.findKernel(notebook.uri);
 
         assert.isUndefined(kernel, 'Kernel should not be returned as no code was executed');
     });
