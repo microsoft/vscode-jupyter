@@ -1,7 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { l10n, CancellationToken, ProgressLocation, extensions, window, Disposable, Event } from 'vscode';
+import {
+    l10n,
+    CancellationToken,
+    ProgressLocation,
+    extensions,
+    window,
+    Disposable,
+    Event,
+    workspace,
+    NotebookDocument
+} from 'vscode';
 import { Kernel, OutputItem } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
@@ -25,21 +35,28 @@ function getExtensionDisplayName(extensionId: string) {
  * We need this to notify users when execution takes place for:
  * 1. Transparency
  * 2. If users experience delays in kernel execution within notebooks, then they have an idea why this might be the case.
+ * Display the progress indicator only when the notebook is visible.
  */
 class KernelExecutionProgressIndicator {
     private readonly controllerDisplayName: string;
+    private readonly notebook?: NotebookDocument;
     private deferred?: Deferred<void>;
     private disposable?: IDisposable;
+    private eventHandler: IDisposable;
     private readonly title: string;
     private displayInProgress?: boolean;
+    private shouldDisplayProgress?: boolean;
     constructor(
         private readonly extensionDisplayName: string,
         kernel: IKernel
     ) {
+        this.notebook = workspace.notebookDocuments.find((n) => n.uri.toString() === kernel.resourceUri?.toString());
         this.controllerDisplayName = getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata);
         this.title = l10n.t(`Executing code in {0} from {1}`, this.controllerDisplayName, this.extensionDisplayName);
+        this.eventHandler = window.onDidChangeVisibleNotebookEditors(this.showProgressImpl, this);
     }
     dispose() {
+        this.eventHandler.dispose();
         this.disposable?.dispose();
     }
 
@@ -56,20 +73,34 @@ class KernelExecutionProgressIndicator {
         return (this.disposable = new Disposable(() => this.deferred?.resolve()));
     }
     private async showProgress() {
-        // Give a grace period of 500ms to avoid too many progress indicators.
+        // Give a grace period of 500ms to avoid displaying progress indicators too aggressively.
         await sleep(500);
         if (!this.deferred || this.deferred.completed || this.displayInProgress) {
             return;
         }
+        this.shouldDisplayProgress = true;
+        await Promise.all([this.showProgressImpl(), this.waitUntilCompleted()]);
+        this.shouldDisplayProgress = false;
+    }
+    private async showProgressImpl() {
+        if (!this.notebook || !this.shouldDisplayProgress) {
+            return;
+        }
+        if (!window.visibleNotebookEditors.some((e) => e.notebook === this.notebook)) {
+            return;
+        }
         this.displayInProgress = true;
-        await window.withProgress({ location: ProgressLocation.Notification, title: this.title }, async () => {
-            let deferred = this.deferred;
-            while (deferred && !deferred.completed) {
-                await deferred.promise;
-                deferred = this.deferred;
-            }
-        });
+        await window.withProgress({ location: ProgressLocation.Notification, title: this.title }, async () =>
+            this.waitUntilCompleted()
+        );
         this.displayInProgress = false;
+    }
+    private async waitUntilCompleted() {
+        let deferred = this.deferred;
+        while (deferred && !deferred.completed) {
+            await deferred.promise;
+            deferred = this.deferred;
+        }
     }
 }
 
