@@ -18,12 +18,11 @@ import {
     IJupyterUriProvider,
     JupyterServerCollection,
     JupyterServerCommandProvider,
-    JupyterServerProvider,
-    Kernel
+    JupyterServerProvider
 } from '../../api';
 import { stripCodicons } from '../../platform/common/helpers';
 import { jupyterServerUriToCollection } from '../../kernels/jupyter/connection/jupyterServerProviderRegistry';
-import { getKernelId, getKernelsApi } from '../../kernels/api/api';
+import { getKernelsApi } from '../../kernels/api/api';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -186,15 +185,11 @@ export function buildApi(
             await selector.addJupyterServer({ id: providerId, handle, extensionId });
             await controllerCreatedPromise;
         },
-        openNotebook: async (uri: Uri, kernelIdOrKernel: string | Kernel) => {
+        openNotebook: async (uri: Uri, kernelId: string) => {
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: extensions.determineExtensionFromCallStack().extensionId,
                 pemUsed: 'openNotebook'
             });
-            const kernelId = typeof kernelIdOrKernel === 'string' ? kernelIdOrKernel : getKernelId(kernelIdOrKernel);
-            if (!kernelId) {
-                throw new Error(`Kernel instance ${kernelId} not found.`);
-            }
             const controllers = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
             const id = controllers.all.find((controller) => controller.id === kernelId)?.id;
             if (!id) {

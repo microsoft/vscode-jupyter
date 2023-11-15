@@ -13,7 +13,6 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 // Each extension gets its own instance of the API.
 const apiCache = new Map<string, Promise<boolean>>();
 const kernelCache = new WeakMap<IKernel, Kernel>();
-const mappedKernelId = new WeakMap<Kernel, string>();
 
 // This is only temporary for testing purposes. Even with the prompt other extensions will not be allowed to use this API.
 // By the end of the iteartion we will have a proposed API and this will be removed.
@@ -49,6 +48,7 @@ export function getKernelsApi(extensionId: string): Kernels {
                 });
                 return;
             }
+            // Check and prompt for access only if we know we have a kernel.
             accessAllowed = await requestKernelAccess(extensionId);
             sendTelemetryEvent(Telemetry.NewJupyterKernelsApiUsage, undefined, {
                 extensionId,
@@ -61,14 +61,9 @@ export function getKernelsApi(extensionId: string): Kernels {
 
             let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
             kernelCache.set(kernel, wrappedKernel);
-            mappedKernelId.set(wrappedKernel, kernel.id);
             return wrappedKernel;
         }
     };
-}
-
-export function getKernelId(kernel: Kernel) {
-    return mappedKernelId.get(kernel);
 }
 
 async function requestKernelAccess(extensionId: string): Promise<boolean> {
