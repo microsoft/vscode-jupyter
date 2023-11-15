@@ -3318,7 +3318,7 @@ export class IEventNamePropertyMapping {
         /**
          * Whether 3rd party extension was allowed to use the API.
          */
-        accessAllowed: boolean;
+        accessAllowed?: boolean;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
