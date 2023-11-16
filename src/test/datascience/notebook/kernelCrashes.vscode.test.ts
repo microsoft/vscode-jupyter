@@ -53,6 +53,7 @@ import { instance, mock, when } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ConnectionDisplayDataProvider } from '../../../notebooks/controllers/connectionDisplayData.node';
+import { IJupyterVariables } from '../../../kernels/variables/types';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -95,6 +96,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
             const platform = api.serviceContainer.get<IPlatformService>(IPlatformService);
             const interpreters = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+            const jupyterVariables = api.serviceContainer.get<IJupyterVariables>(IJupyterVariables);
             kernelConnectionMetadata = await getDefaultKernelConnection();
             const displayDataProvider = new ConnectionDisplayDataProvider(
                 platform,
@@ -140,7 +142,8 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 configuration,
                 extensionChecker,
                 api.serviceContainer,
-                displayDataProvider
+                displayDataProvider,
+                jupyterVariables
             );
             disposables.push(interpreterController);
 
