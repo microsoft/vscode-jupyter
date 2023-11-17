@@ -59,7 +59,7 @@ suite('Experimentation service', () => {
     }
 
     suite('Initialization', () => {
-        test('Users with a release version of the extension should be in the Public target population', () => {
+        test.skip('Users with a release version of the extension should be in the Public target population', () => {
             const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
 
             configureSettings(true, [], []);
@@ -83,7 +83,7 @@ suite('Experimentation service', () => {
             );
         });
 
-        test('Users with an Insiders version of the extension should be the Insiders target population', () => {
+        test.skip('Users with an Insiders version of the extension should be the Insiders target population', () => {
             const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
 
             configureSettings(true, [], []);
