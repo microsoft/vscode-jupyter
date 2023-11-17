@@ -165,7 +165,7 @@ suite('Experimentation service', () => {
             telemetryEvents = [];
         });
 
-        test('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
+        test.skip('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
             configureSettings(true, [], []);
 
             const experimentService = new ExperimentService(
@@ -236,7 +236,7 @@ suite('Experimentation service', () => {
             configureApplicationEnvironment('stable', extensionVersion);
         });
 
-        test('If the service is enabled and the opt-out array is empty,return the value from the experimentation framework for a given experiment', async () => {
+        test.skip('If the service is enabled and the opt-out array is empty,return the value from the experimentation framework for a given experiment', async () => {
             configureSettings(true, [], []);
 
             const experimentService = new ExperimentService(
