@@ -1,24 +1,44 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Event, Uri } from 'vscode';
+import type { CancellationToken, Event, Uri } from 'vscode';
 
 declare module './api' {
+    interface OutputItem {
+        /**
+         * The mime type of the output
+         */
+        mime: string;
+        /**
+         * The data of this output item.
+         */
+        data: Uint8Array;
+    }
     /**
      * Represents a Jupyter Kernel.
      */
-    export interface Kernel {}
+    export interface Kernel {
+        /**
+         * Executes code in the kernel without affecting the execution count & execution history.
+         *
+         * @param code Code to be executed.
+         * @param token Triggers the cancellation of the execution.
+         * @returns Async iterable of output items, that completes when the execution is complete.
+         */
+        executeCode(code: string, token: CancellationToken): AsyncIterable<OutputItem[]>;
+    }
     export interface Kernels {
         /**
-         * Whether the access to the Kernels has been revoked.
-         * This happens when the user has not provided consent to the API being used by the requesting extension.
+         * Gets an the kernel associated with a given resource.
+         * For instance if the resource is a notebook, then get the kernel associated with the given Notebook document.
+         * Only kernels which have already been started by the user will be returned.
          */
-        isRevoked: boolean;
+        getKernel(uri: Uri): Thenable<Kernel | undefined>;
+    }
+    export interface Jupyter {
         /**
-         * Finds a kernel for a given resource.
-         * For instance if the resource is a notebook, then look for a kernel associated with the given Notebook document.
-         * Only kernels which have already been started by the will be returned.
+         * Access to the Jupyter Kernels API.
          */
-        findKernel(query: { uri: Uri }): Kernel | undefined;
+        readonly kernels: Kernels;
     }
 }

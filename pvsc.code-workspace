@@ -55,7 +55,7 @@
                     "!${workspaceFolder:vscode-python}/**/node_modules**/*",
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
                     "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
-                    "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*",
+                    "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
                 ],
                 "skipFiles": ["<node_internals>/**"]
             },

@@ -17,6 +17,8 @@ import { dispose } from '../../../../platform/common/utils/lifecycle';
 
 const REQUIRE_PATTERNS = [
     'require.config({',
+    'requirejs?.config({', // from anywidget
+    'window.requirejs?.config({', // from anywidget
     'requirejs.config({',
     '["require"].config({',
     "['require'].config({",

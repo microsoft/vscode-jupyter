@@ -35,6 +35,8 @@ import {
 } from './types';
 import { SessionDisposedError } from '../platform/errors/sessionDisposedError';
 import { ICodeExecution } from './execution/types';
+import { StopWatch } from '../platform/common/utils/stopWatch';
+import { noop } from '../platform/common/utils/misc';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -151,9 +153,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         return result[0];
     }
     public async executeCode(code: string, extensionId: string, token: CancellationToken): Promise<ICodeExecution> {
-        traceVerbose(`NotebookKernelExecution.executeCode (1), ${code.substring(0, 50)}... from ${extensionId}`);
-
-        traceVerbose(`NotebookKernelExecution.executeCode, ${code.substring(0, 50)}... from ${extensionId}`);
+        const stopWatch = new StopWatch();
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
             this.kernel.resourceUri,
             this.kernel.kernelConnectionMetadata
@@ -164,9 +164,17 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         // If we're restarting, wait for it to finish
         await this.kernel.restarting;
 
-        traceVerbose(`NotebookKernelExecution.executeCode (2), ${code.substring(0, 50)}... from ${extensionId}`);
         const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
-        return executionQueue.queueCode(code, extensionId, token);
+        const result = executionQueue.queueCode(code, extensionId, token);
+        traceVerbose(`Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`);
+        result.result
+            .finally(
+                () =>
+                    !token.isCancellationRequested &&
+                    traceInfo(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`)
+            )
+            .catch(noop);
+        return result;
     }
     executeHidden(code: string): Promise<IOutput[]> {
         const sessionPromise = this.kernel.start();
