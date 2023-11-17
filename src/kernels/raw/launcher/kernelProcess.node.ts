@@ -53,6 +53,7 @@ import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
 import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -251,6 +252,7 @@ export class KernelProcess implements IKernelProcess {
                 await deferred.promise;
             }
             const tcpPortUsed = (await import('tcp-port-used')).default;
+            const stopwtach = new StopWatch();
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
             // Kernel must be connected to bo Shell & IoPub channels for kernel communication to work.
@@ -265,6 +267,7 @@ export class KernelProcess implements IKernelProcess {
                 // Throw an error we recognize.
                 return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
             });
+            console.error(`Waited ${stopwtach.elapsedTime}ms for kernel to start`);
             await raceCancellationError(cancelToken, portsUsed, deferred.promise);
         } catch (e) {
             const stdErrToLog = (stderrProc || stderr || '').trim();

@@ -483,25 +483,53 @@ async function postStartKernel(
     // Lets try this and see (hence the telemetry to see the cost of this check).
     // We know 10s is way too slow, see https://github.com/microsoft/vscode-jupyter/issues/8917
     const gotIoPubMessage = createDeferred<boolean>();
+    const kernelInfoRequestHandled = createDeferred<boolean>();
     const iopubHandler = () => gotIoPubMessage.resolve(true);
     kernel.iopubMessage.connect(iopubHandler);
+    const sendKernelInfoRequestOnControlChannel = () => {
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+        const msg = jupyterLab.KernelMessage.createMessage({
+            msgType: 'kernel_info_request',
+            // Cast to Shell, js code only allows sending kernel info request on shell channel
+            // However the Python code sends on both shell and control channels.
+            // And when a response is received on either channel, then thats considered a success.
+            channel: 'control' as unknown as 'shell',
+            username: kernel.username,
+            session: kernel.clientId,
+            content: {}
+        });
+        kernel
+            .sendControlMessage(msg as any, true, true)
+            .done.then(() => kernelInfoRequestHandled.resolve(true))
+            .catch(noop);
+    };
+    const sendKernelInfoRequestOnShellChannel = () => {
+        kernel
+            .requestKernelInfo()
+            .then(() => kernelInfoRequestHandled.resolve(true))
+            .catch(noop);
+    };
     try {
         const stopWatch = new StopWatch();
-        let attempts = 1;
-        for (let attempts = 1; attempts <= 2; attempts++) {
+        let attempts = 0;
+        while (stopWatch.elapsedTime < launchTimeout * 1000) {
+            attempts += 1;
             try {
                 traceVerbose('Sending request for kernelInfo');
+                sendKernelInfoRequestOnControlChannel();
+                sendKernelInfoRequestOnShellChannel();
                 await raceCancellationError(
                     token,
-                    Promise.all([kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                    sleep(Math.min(launchTimeout, 1_500)).then(noop)
+                    Promise.all([gotIoPubMessage.promise, kernelInfoRequestHandled.promise]),
+                    // Jupyter lab too waits for 500ms before trying again.
+                    sleep(Math.min(launchTimeout, 500)).then(noop)
                 );
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);
                 throw ex;
             }
 
-            if (gotIoPubMessage.completed) {
+            if (gotIoPubMessage.completed && kernelInfoRequestHandled.completed) {
                 traceVerbose(`Got response for requestKernelInfo`);
                 break;
             } else {
@@ -509,17 +537,21 @@ async function postStartKernel(
                 continue;
             }
         }
-        if (gotIoPubMessage.completed) {
-            traceVerbose('Successfully completed postStartRawSession');
+        if (gotIoPubMessage.completed && kernelInfoRequestHandled.completed) {
+            traceVerbose(
+                `Successfully completed postStartRawSession after ${attempts} attempt(s) in ${stopWatch.elapsedTime}ms`
+            );
         } else {
-            traceWarning(`Didn't get response for requestKernelInfo after ${stopWatch.elapsedTime}ms.`);
+            traceWarning(
+                `Didn't get response for requestKernelInfo after ${attempts} attempt(s) in ${stopWatch.elapsedTime}ms.`
+            );
         }
         sendKernelTelemetryEvent(
             resource,
             Telemetry.RawKernelInfoResponse,
             { duration: stopWatch.elapsedTime, attempts },
             {
-                timedout: !gotIoPubMessage.completed
+                timedout: !gotIoPubMessage.completed || !kernelInfoRequestHandled.completed
             }
         );
     } finally {
