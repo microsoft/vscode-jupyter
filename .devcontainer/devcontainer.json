@@ -1,0 +1,6 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {https://codespaces.new/microsoft/vscode-jupyter/pull/14738?quickstart=1&devcontainer_path=.devcontainer%2Fdev%2Fdevcontainer.json
+    
+  }
+}
