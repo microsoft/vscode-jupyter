@@ -6,6 +6,17 @@ import { IDisposable } from '../types';
 import { once } from './functional';
 import { Iterable } from './iterable';
 
+let disposableTracker: IDisposable[] | null = null;
+
+export function setDisposableTracker(tracker: IDisposable[] | null): void {
+    disposableTracker = tracker;
+}
+
+export function trackDisposable<T extends IDisposable>(x: T): T {
+    disposableTracker?.push(x);
+    return x;
+}
+
 /**
  * Disposes of the value(s) passed in.
  */
@@ -46,12 +57,10 @@ export function combinedDisposable(...disposables: IDisposable[]): IDisposable {
  *
  * @param fn Clean up function, guaranteed to be called only **once**.
  */
-export function toDisposable(fn: () => void): IDisposable {
-    const self = {
-        dispose: once(() => {
-            fn();
-        })
-    };
+function toDisposable(fn: () => void): IDisposable {
+    const self = trackDisposable({
+        dispose: once(() => fn())
+    });
     return self;
 }
 
@@ -70,6 +79,7 @@ export class DisposableStore implements IDisposable {
 
     constructor(...disposables: IDisposable[]) {
         disposables.forEach((disposable) => this.add(disposable));
+        trackDisposable(this);
     }
 
     /**
@@ -150,6 +160,7 @@ export abstract class DisposableBase implements IDisposable {
 
     constructor(...disposables: IDisposable[]) {
         disposables.forEach((disposable) => this._store.add(disposable));
+        trackDisposable(this);
     }
 
     public dispose(): void {

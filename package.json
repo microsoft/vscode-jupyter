@@ -256,6 +256,11 @@
                 "enablement": "jupyter.development"
             },
             {
+                "command": "jupyter.manageAccessToKernels",
+                "title": "%jupyter.command.manageAccessToKernels%",
+                "category": "Jupyter"
+            },
+            {
                 "command": "dataScience.ClearUserProviderJupyterServerCache",
                 "title": "%jupyter.command.dataScience.clearUserProviderJupyterServerCache.title%",
                 "category": "Jupyter (Dev)",
@@ -1052,6 +1057,10 @@
                     "command": "jupyter.replayPylanceLog",
                     "title": "%jupyter.commandPalette.jupyter.replayPylanceLog.title%",
                     "when": "jupyter.development && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.manageAccessToKernels",
+                    "title": "%jupyter.command.manageAccessToKernels%"
                 },
                 {
                     "command": "jupyter.interactive.copyCell",

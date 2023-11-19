@@ -153,6 +153,7 @@
     "jupyter.command.jupyter.openVariableView.shorttitle": "Variables",
     "jupyter.command.jupyter.openOutlineView.title": "Show Table Of Contents (Outline View)",
     "jupyter.command.jupyter.openOutlineView.shorttitle": "Outline",
+    "jupyter.command.manageAccessToKernels": "Manage Access To Jupyter Kernels",
     "jupyter.commandPalette.jupyter.replayPylanceLog.title": "Replay Pylance Log",
     "jupyter.notebookRenderer.IPyWidget.displayName": "Jupyter IPyWidget Renderer",
     "jupyter.notebookRenderer.Error.displayName": "Jupyter Error Renderer",
