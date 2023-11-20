@@ -12,6 +12,9 @@ import { noop } from '../../platform/common/utils/misc';
 
 const extensionApiAccess = new Map<string, Promise<{ accessAllowed: boolean }>>();
 
+export function clearApiAccess() {
+    extensionApiAccess.clear();
+}
 export async function requestApiAccess(extensionId: string): Promise<{ accessAllowed: boolean }> {
     if (!workspace.isTrusted) {
         return { accessAllowed: false };
@@ -85,9 +88,9 @@ async function getAccessForExtensionsFromStore(ignoreCache: boolean = false): Pr
     once(() => {
         const disposables = ServiceContainer.instance.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(
-            context.secrets.onDidChange((e) =>
-                e.key === apiAccessSecretKey ? (cachedAccessInfo = undefined) : undefined
-            )
+            context.secrets.onDidChange((e) => {
+                e.key === apiAccessSecretKey ? (cachedAccessInfo = undefined) : undefined;
+            })
         );
     })();
 
@@ -110,8 +113,8 @@ async function getAccessForExtensionsFromStore(ignoreCache: boolean = false): Pr
 
 // Chain the updates, as we do not want to lose any transient updates/changes.
 let updatePromise = Promise.resolve();
-export async function udpateListOfExtensionsAllowedToAccessApi(extensionIds: string[]) {
-    updatePromise = updatePromise.finally(async () => {
+export async function updateListOfExtensionsAllowedToAccessApi(extensionIds: string[]) {
+    return (updatePromise = updatePromise.then(async () => {
         await Promise.all(
             Array.from(extensionApiAccess.entries()).map(async ([extensionId, promise]) => {
                 const access = await promise;
@@ -124,20 +127,18 @@ export async function udpateListOfExtensionsAllowedToAccessApi(extensionIds: str
             return;
         }
         try {
-            await context.secrets.store(apiAccessSecretKey, JSON.stringify(cachedAccessInfo));
+            await context.secrets.store(apiAccessSecretKey, JSON.stringify(Object.fromEntries(cachedAccessInfo)));
         } catch (ex) {
-            traceError(`Failed to update API access information ${JSON.stringify(cachedAccessInfo)}`, ex);
+            traceError(
+                `Failed to update API access information ${JSON.stringify(Object.fromEntries(cachedAccessInfo))}`,
+                ex
+            );
         }
-    });
+    }));
 }
 
 async function updateIndividualExtensionAccessInStore(extensionId: string, accessAllowed: boolean) {
-    updatePromise = updatePromise.finally(async () => {
-        const promise = extensionApiAccess.get(extensionId);
-        if (promise) {
-            const access = await promise;
-            access.accessAllowed = accessAllowed;
-        }
+    return (updatePromise = updatePromise.then(async () => {
         const context = ServiceContainer.instance.get<IExtensionContext>(IExtensionContext);
         if (context.extensionMode === ExtensionMode.Test) {
             return;
@@ -157,5 +158,5 @@ async function updateIndividualExtensionAccessInStore(extensionId: string, acces
         } catch (ex) {
             traceError(`Failed to store API access information ${JSON.stringify(Object.fromEntries(apiAccess))}`, ex);
         }
-    });
+    }));
 }
