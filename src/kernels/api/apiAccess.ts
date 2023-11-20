@@ -56,7 +56,7 @@ async function requestKernelAccessImpl(extensionId: string) {
     await updateIndividualExtensionAccessInStore(extensionId, accessAllowed);
 
     if (result === Common.learnMore) {
-        env.openExternal(Uri.parse('http://aka.ms/vscode-jupyter-api-access')).then(noop, noop);
+        env.openExternal(Uri.parse('https://aka.ms/vscodeJupyterKernelApiAccess')).then(noop, noop);
     }
     return accessAllowed;
 }
