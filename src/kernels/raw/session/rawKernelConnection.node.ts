@@ -516,6 +516,9 @@ async function postStartKernel(
             attempts += 1;
             try {
                 traceVerbose('Sending request for kernelInfo');
+                // In jupyter_server/services/kernels/connection/channels.py,
+                // the request for kernel information is sent on both channels
+                // To ensure max compatibility, we'll do the same.
                 sendKernelInfoRequestOnControlChannel();
                 sendKernelInfoRequestOnShellChannel();
                 await raceCancellationError(
