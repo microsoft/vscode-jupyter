@@ -27,6 +27,10 @@
         ".vscode-test": true,
         ".vscode test": true
     },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.fixAll.tslint": "explicit"
+    },
     "[python]": {
         "editor.formatOnSave": true
     },
@@ -40,32 +44,19 @@
     },
     "git.branchProtection": ["main", "release*"],
     "git.branchProtectionPrompt": "alwaysCommitToNewBranch",
+    "javascript.preferences.quoteStyle": "single",
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
+    "typescript.preferences.quoteStyle": "single",
+    "typescript.preferences.importModuleSpecifier": "relative",
     "python.testing.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
     "python.analysis.diagnosticSeverityOverrides": {
         "reportMissingImports": "none"
     },
-    "typescript.preferences.quoteStyle": "single",
-    "javascript.preferences.quoteStyle": "single",
-    "typescriptHero.imports.stringQuoteStyle": "'",
     "prettier.printWidth": 120,
     "prettier.singleQuote": true,
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit",
-        "source.fixAll.tslint": "explicit"
-    },
-    "python.languageServer": "Pylance",
-    "python.analysis.logLevel": "Trace",
-    "typescript.preferences.importModuleSpecifier": "relative",
     "mochaExplorer.files": "./out/test/**/*.unit.test.js",
     "mochaExplorer.configFile": "./build/.mocha.unittests.js.json",
     "mochaExplorer.ui": "tdd",
-    "mochaExplorer.nodeArgv": ["--enable-source-maps"],
-    "workbench.colorCustomizations": {
-        "activityBar.background": "#F37726",
-        "activityBar.foreground": "#000",
-        "titleBar.activeBackground": "#F37726",
-        "titleBar.activeForeground": "#000000"
-    }
+    "mochaExplorer.nodeArgv": ["--enable-source-maps"]
 }
