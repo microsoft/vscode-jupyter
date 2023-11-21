@@ -124,6 +124,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
 
 class KernelSpecificCompletionProvider extends DisposableBase implements CompletionItemProvider {
     private cellCompletionProviders = new WeakMap<TextDocument, NotebookCellSpecificKernelCompletionProvider>();
+    private readonly monacoLanguage: string;
     private readonly kernelLanguage: string;
     private completionProvider?: IDisposable;
     constructor(
@@ -132,7 +133,8 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
         private readonly notebookEditorProvider: INotebookEditorProvider
     ) {
         super();
-        this.kernelLanguage = getKernelLanguageAsMonacoLanguage(kernel);
+        this.kernelLanguage = getKernelLanguage(kernel);
+        this.monacoLanguage = getKernelLanguageAsMonacoLanguage(kernel);
         this.registerCompletionProvider();
         this._register(
             workspace.onDidChangeConfiguration((e) => {
@@ -147,17 +149,28 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
     private registerCompletionProvider() {
         const triggerCharacters = this.getCompletionTriggerCharacter();
         if (triggerCharacters.length === 0) {
-            traceWarning(
-                l10n.t(
-                    `Kernel completions not enabled for '{0}'. \nTo enable Kernel completion for this language please add the following setting \njupyter.completionTriggerCharacters = {1}: [<List of characters that will trigger completions>]}. \nFor more information please see https://aka.ms/vscodeJupyterCompletion`,
-                    getDisplayNameOrNameOfKernelConnection(this.kernel.kernelConnectionMetadata),
-                    `{${this.kernelLanguage}`
-                )
-            );
+            if (this.kernelLanguage.toLowerCase() === this.monacoLanguage.toLowerCase()) {
+                traceWarning(
+                    l10n.t(
+                        `Kernel completions not enabled for '{0}'. \nTo enable Kernel completion for this language please add the following setting \njupyter.completionTriggerCharacters = {1}: [<List of characters that will trigger completions>]}. \nFor more information please see https://aka.ms/vscodeJupyterCompletion`,
+                        getDisplayNameOrNameOfKernelConnection(this.kernel.kernelConnectionMetadata),
+                        `{${this.kernelLanguage}`
+                    )
+                );
+            } else {
+                traceWarning(
+                    l10n.t(
+                        `Kernel completions not enabled for '{0}'. \nTo enable Kernel completion for this language please add the following setting \njupyter.completionTriggerCharacters = {1}: [<List of characters that will trigger completions>]}. \n or the following: \njupyter.completionTriggerCharacters = {2}: [<List of characters that will trigger completions>]}. \nFor more information please see https://aka.ms/vscodeJupyterCompletion`,
+                        getDisplayNameOrNameOfKernelConnection(this.kernel.kernelConnectionMetadata),
+                        `{${this.kernelLanguage}`,
+                        `{${this.monacoLanguage}`
+                    )
+                );
+            }
             return;
         }
         this.completionProvider = languages.registerCompletionItemProvider(
-            this.kernelLanguage,
+            this.monacoLanguage,
             this,
             ...triggerCharacters
         );
@@ -168,9 +181,21 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
             .get<Record<string, string[]>>('completionTriggerCharacters');
 
         // Check if object, as this used to be a different setting a few years ago (when it was specific to Python).
-        if (triggerCharacters && typeof triggerCharacters === 'object' && this.kernelLanguage in triggerCharacters) {
+        if (!triggerCharacters || typeof triggerCharacters !== 'object') {
+            return [];
+        }
+        // Always use the kernel language first, then the monaco language.
+        // Thats because kernel language could be something like `bash`
+        // However there's no such language in vscode (monoca), and those get treated as `shellscript`
+        // Such the kernel language `bash` ends up getting translated to the monaco language `shellscript`.
+        // But we need to give preference to the language the users see in their kernelspecs and thats `bash`
+        if (this.kernelLanguage in triggerCharacters) {
             // Possible a user still has some old setting.
             return Array.isArray(triggerCharacters[this.kernelLanguage]) ? triggerCharacters[this.kernelLanguage] : [];
+        }
+        if (this.monacoLanguage in triggerCharacters) {
+            // Possible a user still has some old setting.
+            return Array.isArray(triggerCharacters[this.monacoLanguage]) ? triggerCharacters[this.monacoLanguage] : [];
         }
         return [];
     }
@@ -200,7 +225,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
                 {
                     kernelId: this.kernelId,
                     kernelConnectionType: this.kernel.kernelConnectionMetadata.kind,
-                    kernelLanguage: this.kernelLanguage,
+                    kernelLanguage: this.monacoLanguage,
                     cancelled: token.isCancellationRequested
                 }
             );
@@ -247,6 +272,9 @@ export class NonPythonKernelCompletionProvider extends DisposableBase implements
 }
 
 function getKernelLanguageAsMonacoLanguage(kernel: IKernel) {
+    return translateKernelLanguageToMonaco(getKernelLanguage(kernel));
+}
+function getKernelLanguage(kernel: IKernel) {
     let kernelSpecLanguage: string | undefined = '';
     switch (kernel.kernelConnectionMetadata.kind) {
         case 'connectToLiveRemoteKernel':
@@ -266,5 +294,5 @@ function getKernelLanguageAsMonacoLanguage(kernel: IKernel) {
         return '';
     }
 
-    return translateKernelLanguageToMonaco(kernelSpecLanguage);
+    return kernelSpecLanguage.toLowerCase();
 }
