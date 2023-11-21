@@ -2308,7 +2308,7 @@
         "@types/memoize-one": "^4.1.1",
         "@types/mocha": "^9.1.0",
         "@types/nock": "^10.0.3",
-        "@types/node": "^16.18.6",
+        "@types/node": "^18.15.0",
         "@types/node-fetch": "^2.5.7",
         "@types/pdfkit": "^0.11.0",
         "@types/promisify-node": "^0.4.0",
