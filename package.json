@@ -256,6 +256,11 @@
                 "enablement": "jupyter.development"
             },
             {
+                "command": "jupyter.manageAccessToKernels",
+                "title": "%jupyter.command.manageAccessToKernels%",
+                "category": "Jupyter"
+            },
+            {
                 "command": "dataScience.ClearUserProviderJupyterServerCache",
                 "title": "%jupyter.command.dataScience.clearUserProviderJupyterServerCache.title%",
                 "category": "Jupyter (Dev)",
@@ -1052,6 +1057,10 @@
                     "command": "jupyter.replayPylanceLog",
                     "title": "%jupyter.commandPalette.jupyter.replayPylanceLog.title%",
                     "when": "jupyter.development && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.manageAccessToKernels",
+                    "title": "%jupyter.command.manageAccessToKernels%"
                 },
                 {
                     "command": "jupyter.interactive.copyCell",
@@ -1959,6 +1968,68 @@
                     "default": false,
                     "description": "Experimental feature to enable execution analysis in notebooks",
                     "scope": "application"
+                },
+                "jupyter.completionTriggerCharacters": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^[A-Za-z_][A-Za-z0-9]*": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "default": {
+                        "bash": [
+                            "$",
+                            "{"
+                        ],
+                        "java": [
+                            ".",
+                            "@",
+                            "#"
+                        ],
+                        "javascript": [
+                            ".",
+                            "\"",
+                            "'",
+                            "/",
+                            "@"
+                        ],
+                        "julia": [
+                            "."
+                        ],
+                        "python": [
+                            ".",
+                            "%",
+                            "'",
+                            "\""
+                        ],
+                        "typescript": [
+                            ".",
+                            "\"",
+                            "'",
+                            "/",
+                            "@",
+                            "<"
+                        ],
+                        "rust": [
+                            ".",
+                            ":"
+                        ],
+                        "scala": [
+                            "."
+                        ],
+                        "xonsh": [
+                            " ",
+                            ".",
+                            "%",
+                            "'",
+                            "\""
+                        ]
+                    },
+                    "markdownDescription": "%jupyter.configuration.jupyter.completionTriggerCharacters.markdownDescription%",
+                    "scope": "machine-overridable"
                 }
             }
         },

@@ -1,22 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Uri, extensions, window } from 'vscode';
+import { Uri } from 'vscode';
 import { Kernel, Kernels } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { createKernelApiForExetnsion as createKernelApiForExtension } from './kernel';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../test/constants';
+import { createKernelApiForExtension as createKernelApiForExtension } from './kernel';
 import { Telemetry, sendTelemetryEvent } from '../../telemetry';
+import { requestApiAccess } from './apiAccess';
 
-// Each extension gets its own instance of the API.
-const apiCache = new Map<string, Promise<boolean>>();
 const kernelCache = new WeakMap<IKernel, Kernel>();
-
-// This is only temporary for testing purposes. Even with the prompt other extensions will not be allowed to use this API.
-// By the end of the iteartion we will have a proposed API and this will be removed.
-const allowedAccessToProposedApi = new Set(['ms-toolsai.datawrangler', 'donjayamanne.python-environment-manager']);
 
 export function getKernelsApi(extensionId: string): Kernels {
     return {
@@ -49,7 +43,8 @@ export function getKernelsApi(extensionId: string): Kernels {
                 return;
             }
             // Check and prompt for access only if we know we have a kernel.
-            accessAllowed = await requestKernelAccess(extensionId);
+            const access = await requestApiAccess(extensionId);
+            accessAllowed = access.accessAllowed;
             sendTelemetryEvent(Telemetry.NewJupyterKernelsApiUsage, undefined, {
                 extensionId,
                 pemUsed: 'getKernel',
@@ -59,38 +54,9 @@ export function getKernelsApi(extensionId: string): Kernels {
                 return;
             }
 
-            let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
+            let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel, access);
             kernelCache.set(kernel, wrappedKernel);
             return wrappedKernel;
         }
     };
-}
-
-async function requestKernelAccess(extensionId: string): Promise<boolean> {
-    if (extensionId === JVSC_EXTENSION_ID_FOR_TESTS) {
-        // Our own extension can use this API (used in tests)
-        return true;
-    }
-    const promise = apiCache.get(extensionId) || requestKernelAccessImpl(extensionId);
-    apiCache.set(extensionId, promise);
-    return promise;
-}
-
-async function requestKernelAccessImpl(extensionId: string) {
-    if (!allowedAccessToProposedApi.has(extensionId)) {
-        throw new Error(`Extension ${extensionId} does not have access to proposed API`);
-    }
-    const displayName = extensions.getExtension(extensionId)?.packageJSON?.displayName || extensionId;
-    // Not localized for now, as no one can use this except us (& DW).
-    // Will work on a formal API access separately.
-    const result = await window.showInformationMessage(
-        `Grant extension ${displayName} (${extensionId}) access to kernels?`,
-        {
-            modal: true,
-            detail: 'This allows the extension to execute arbitrary code against both local and remote kernels.'
-        },
-        'Yes',
-        'No'
-    );
-    return result === 'Yes';
 }
