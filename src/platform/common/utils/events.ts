@@ -39,6 +39,7 @@ export function once<T>(event: Event<T>): Event<T> {
 /**
  * Creates a promise out of an event, using the once helper.
  */
-export function toPromise<T>(event: Event<T>): Promise<T> {
-    return new Promise((resolve) => once(event)(resolve));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function toPromise<T>(event: Event<T>, thisArgs: any = null, disposables?: IDisposable[]): Promise<T> {
+    return new Promise((resolve) => once(event)(resolve, thisArgs, disposables));
 }

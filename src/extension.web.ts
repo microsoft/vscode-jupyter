@@ -101,6 +101,7 @@ import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
+import { setDisposableTracker } from './platform/common/utils/lifecycle';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -114,6 +115,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 // public functions
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
+    setDisposableTracker(context.subscriptions);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
         let api: IExtensionApi;

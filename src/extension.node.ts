@@ -97,6 +97,7 @@ import {
     activate as activateExecutionAnalysis,
     deactivate as deactivateExecutionAnalysis
 } from './standalone/executionAnalysis/extension';
+import { setDisposableTracker } from './platform/common/utils/lifecycle';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -110,6 +111,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 // public functions
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
+    setDisposableTracker(context.subscriptions);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
         let api: IExtensionApi;

@@ -65,6 +65,7 @@ export function initialize() {
     generateMock('scm');
     generateMock('notebooks');
     generateMock('commands');
+    generateMock('extensions');
 
     when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
     when(mockedVSCodeNamespaces.window.visibleNotebookEditors).thenReturn([]);
