@@ -109,6 +109,12 @@ export interface IJupyterSettings {
      */
     readonly useOldKernelResolve: boolean;
     readonly formatStackTraces: boolean;
+    /**
+     * Trigger characters for Jupyter completion, per language.
+     * This excludes the trigger characters for python.
+     * TODO: in debt to merge the two settings.
+     */
+    readonly completionTriggerCharacters?: Record<string, string[]>;
 }
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {
