@@ -2028,7 +2028,7 @@
                             "\""
                         ]
                     },
-                    "markdownDescription": "Hello",
+                    "markdownDescription": "%jupyter.configuration.jupyter.completionTriggerCharacters.markdownDescription%",
                     "scope": "machine-overridable"
                 }
             }
