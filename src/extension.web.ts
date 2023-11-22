@@ -91,7 +91,8 @@ import {
     JUPYTER_OUTPUT_CHANNEL,
     PylanceExtension,
     PythonExtension,
-    STANDARD_OUTPUT_CHANNEL
+    STANDARD_OUTPUT_CHANNEL,
+    Telemetry
 } from './platform/common/constants';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
@@ -102,6 +103,7 @@ import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
+import { sendTelemetryEvent } from './telemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -325,7 +327,10 @@ async function activateLegacy(
     // Await here to keep the register method sync
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
     // This must be done first, this guarantees all experiment information has loaded & all telemetry will contain experiment info.
+    const stopWatch = new StopWatch();
     await experimentService.activate();
+    const duration = stopWatch.elapsedTime;
+    sendTelemetryEvent(Telemetry.ExperimentLoad, { duration });
 
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);

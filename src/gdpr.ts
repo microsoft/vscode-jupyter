@@ -1113,6 +1113,15 @@
      ]
    }
  */
+//Telemetry.ExperimentLoad
+/* __GDPR__
+   "DS_INTERNAL.EXPERIMENT_LOAD" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.GetActivatedEnvironmentVariables
 /* __GDPR__
    "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES" : {
@@ -1787,6 +1796,7 @@
 /* __GDPR__
    "EXTENSION.LOAD" : {
      "totalActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Time taken to activate the extension.","owner":"donjayamanne","isMeasurement":true},
+     "codeLoadingTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total time to load the modules.","owner":"donjayamanne","isMeasurement":true},
      "workspaceFolderCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Number of workspace folders opened","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
