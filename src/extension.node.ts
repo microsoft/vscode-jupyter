@@ -59,7 +59,7 @@ import {
     IsWebExtension,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
-import { createDeferred } from './platform/common/utils/async';
+import { createDeferred, sleep } from './platform/common/utils/async';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
@@ -185,6 +185,8 @@ function activateUnsafe(
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
         const activationPromise = (async () => {
+            await sleep(0);
+
             initializeTelemetryGlobals((interpreter) =>
                 serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
             );
@@ -212,7 +214,6 @@ function activateUnsafe(
         }
     }
 }
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function displayProgress(promise: Promise<any>) {
     const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension };
