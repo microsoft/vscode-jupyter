@@ -110,7 +110,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 /////////////////////////////
 // public functions
 
-export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
+export function activate(context: IExtensionContext): IExtensionApi {
     setDisposableTracker(context.subscriptions);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
@@ -124,11 +124,13 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             // Run in the background.
             .catch(noop);
         // await ready;
+        console.error('Extension Activation', stopWatch.elapsedTime);
+        console.error('Extension Activation', durations);
         return api;
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
-        await handleError(ex, durations);
+        handleError(ex, durations).catch(noop);
         traceError('Failed to active the Jupyter Extension', ex);
         // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
         // Return a dummy object, to ensure other extension do not fall over.
