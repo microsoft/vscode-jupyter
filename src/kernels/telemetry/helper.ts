@@ -116,8 +116,8 @@ export async function trackKernelResourceInformation(
             'kernelSpec' in kernelConnection && kernelConnection.kernelSpec.specFile
                 ? getTelemetrySafeHashedString(kernelConnection.kernelSpec.specFile)
                 : Promise.resolve('');
-        [currentData.kernelLanguage, currentData.kernelId, currentData.kernelSpecHash] = await Promise.all([
-            language,
+        currentData.kernelLanguage = language;
+        [currentData.kernelId, currentData.kernelSpecHash] = await Promise.all([
             getTelemetrySafeHashedString(kernelConnection.id),
             kernelSpecHash
         ]);

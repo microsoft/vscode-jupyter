@@ -3230,6 +3230,59 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
+     * Telemetry sent with the total time taken to provide completions from a kernel.
+     */
+    [Telemetry.KernelCodeCompletion]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * Hash of the Kernel Connection id.
+             */
+            kernelId: string;
+            /**
+             * What kind of kernel spec did we fail to create.
+             */
+            kernelConnectionType:
+                | 'startUsingPythonInterpreter'
+                | 'startUsingLocalKernelSpec'
+                | 'startUsingRemoteKernelSpec'
+                | 'connectToLiveRemoteKernel';
+            /**
+             * Language of the kernel spec.
+             */
+            kernelLanguage: string | undefined;
+            /**
+             * Whether the completion request was cancelled or not.
+             */
+            cancelled: boolean;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties()
+        },
+        properties: {
+            kernelConnectionType: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelLanguage: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            cancelled: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+
+    /**
      * Telemetry sent when an extension uses our 3rd party Kernel API.
      */
     [Telemetry.JupyterKernelApiUsage]: TelemetryEventInfo<{
