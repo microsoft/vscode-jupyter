@@ -16,8 +16,8 @@ import {
     workspace
 } from 'vscode';
 import { raceCancellation } from '../../platform/common/cancellation';
-import { traceVerbose, traceWarning } from '../../platform/logging';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { traceInfo, traceVerbose, traceWarning } from '../../platform/logging';
+import { Experiments, IDisposable, IDisposableRegistry, IExperimentService } from '../../platform/common/types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IKernelProvider, IKernel } from '../../kernels/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
@@ -73,7 +73,12 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             })
         );
         traceVerbose(`Jupyter completion time: ${stopWatch.elapsedTime}`);
-        if (!kernelCompletions || !kernelCompletions.content || kernelCompletions.content.status !== 'ok') {
+        if (
+            token.isCancellationRequested ||
+            !kernelCompletions ||
+            !kernelCompletions.content ||
+            kernelCompletions.content.status !== 'ok'
+        ) {
             return [];
         }
         if (kernelCompletions.content.matches.length === 0) {
@@ -169,6 +174,11 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
             }
             return;
         }
+        traceInfo(
+            `Registering Kernel Completion Provider from kernel ${getDisplayNameOrNameOfKernelConnection(
+                this.kernel.kernelConnectionMetadata
+            )} for language ${this.monacoLanguage}`
+        );
         this.completionProvider = languages.registerCompletionItemProvider(
             this.monacoLanguage,
             this,
@@ -245,6 +255,10 @@ export class NonPythonKernelCompletionProvider extends DisposableBase implements
     }
     public activate(): void {
         const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
+        const experimentService = ServiceContainer.instance.get<IExperimentService>(IExperimentService);
+        if (!experimentService.inExperiment(Experiments.KernelCompletions)) {
+            return;
+        }
         this._register(
             kernelProvider.onDidStartKernel(async (e) => {
                 const kernelId = await getTelemetrySafeHashedString(e.kernelConnectionMetadata.id);
