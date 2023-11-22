@@ -123,7 +123,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
             // Run in the background.
             .catch(noop);
-        await ready;
+        // await ready;
         return api;
     } catch (ex) {
         // We want to completely handle the error
