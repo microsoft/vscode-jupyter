@@ -160,8 +160,10 @@ async function getExtensionsDir(): Promise<string> {
 async function start() {
     console.log('*'.repeat(100));
     console.log('Start Standard tests');
+    console.time('Downloaded VS Code');
     const platform = computePlatform();
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform, undefined, true);
+    console.timeEnd('Downloaded VS Code');
     console.log(`VS Code executable ${vscodeExecutablePath} exists = ${fs.existsSync(vscodeExecutablePath)}`);
     console.log(
         `Files in folder ${path.dirname(vscodeExecutablePath)} => ${glob
