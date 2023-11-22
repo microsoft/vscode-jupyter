@@ -1497,9 +1497,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "KernelCompletions"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
                     "scope": "application"
@@ -1508,9 +1506,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "KernelCompletions"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
                     "scope": "application"
@@ -1973,6 +1969,13 @@
                     "description": "Experimental feature to enable execution analysis in notebooks",
                     "scope": "application"
                 },
+                "jupyter.enableKernelCompletions": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable Non-Python Kernel Completions",
+                    "markdownDescription": "%jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription%",
+                    "scope": "application"
+                },
                 "jupyter.completionTriggerCharacters": {
                     "type": "object",
                     "patternProperties": {
@@ -2308,7 +2311,7 @@
         "@types/memoize-one": "^4.1.1",
         "@types/mocha": "^9.1.0",
         "@types/nock": "^10.0.3",
-        "@types/node": "^16.18.6",
+        "@types/node": "^18.15.0",
         "@types/node-fetch": "^2.5.7",
         "@types/pdfkit": "^0.11.0",
         "@types/promisify-node": "^0.4.0",
