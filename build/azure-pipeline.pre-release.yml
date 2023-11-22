@@ -68,6 +68,12 @@ extends:
       - script: npm i -g npm@9.5.0
         displayName: npm 9.5.0
 
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.8'
+          addToPath: true
+          architecture: 'x64'
+
       - script: npm ci --foreground-scripts
         displayName: npm ci
         env:
@@ -76,12 +82,6 @@ extends:
 
       - script: npm run clean
         displayName: Clean
-
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: '3.8'
-          addToPath: true
-          architecture: 'x64'
 
       - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
         displayName: Install Python libs
