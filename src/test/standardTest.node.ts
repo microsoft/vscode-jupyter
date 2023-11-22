@@ -161,10 +161,12 @@ async function start() {
     console.log('Start Standard tests');
     const platform = computePlatform();
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform);
+    console.log(`VS Code executable ${vscodeExecutablePath} exists = ${fs.existsSync(vscodeExecutablePath)}`);
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
     const userDataDirectory = await createSettings();
     const extensionsDir = await getExtensionsDir();
     await installPythonExtension(vscodeExecutablePath, extensionsDir, platform);
+    console.log(`VS Code executable ${vscodeExecutablePath} exists = ${fs.existsSync(vscodeExecutablePath)}`);
     await runTests({
         vscodeExecutablePath,
         extensionDevelopmentPath: extensionDevelopmentPath,
