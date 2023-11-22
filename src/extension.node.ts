@@ -114,10 +114,8 @@ export function activate(context: IExtensionContext): IExtensionApi {
     setDisposableTracker(context.subscriptions);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
-        let api: IExtensionApi;
-        let ready: Promise<void>;
-        let serviceContainer: IServiceContainer;
-        [api, ready, serviceContainer] = activateUnsafe(context, new StopWatch(), durations);
+        console.error('Before Extension Activation', Date.now() - stopWatch);
+        let { api, activationPromise: ready, serviceContainer } = activateUnsafe(context, new StopWatch(), durations);
         // Send the "success" telemetry only if activation did not fail.
         // Otherwise Telemetry is send via the error handler.
         sendStartupTelemetry(ready, durations, new StopWatch(), serviceContainer)
@@ -175,7 +173,8 @@ function activateUnsafe(
         startActivateTime: number;
         endActivateTime: number;
     }
-): [IExtensionApi, Promise<void>, IServiceContainer] {
+): { api: IExtensionApi; activationPromise: Promise<void>; serviceContainer: IServiceContainer } {
+    const stopWatch = new StopWatch();
     const activationDeferred = createDeferred<void>();
     try {
         displayProgress(activationDeferred.promise);
@@ -183,9 +182,9 @@ function activateUnsafe(
 
         //===============================================
         // activation starts here
-        const stopWatch = new StopWatch();
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
+        console.error('activateComponents.0', stopWatch.elapsedTime);
         const activationPromise = (async () => {
             await sleep(0);
 
@@ -193,7 +192,7 @@ function activateUnsafe(
                 serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
             );
             const activationPromise = activateComponents(context, serviceManager, serviceContainer);
-            console.error('activateComponents', stopWatch.elapsedTime);
+            console.error('activateComponents.1', stopWatch.elapsedTime);
             return activationPromise;
             //===============================================
         })().catch(noop);
@@ -207,8 +206,8 @@ function activateUnsafe(
         activateExecutionAnalysis(context).then(noop, noop);
 
         const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
-        console.error('activateComponents 2', stopWatch.elapsedTime);
-        return [api, activationPromise, serviceContainer];
+        console.error('activateComponents.2', stopWatch.elapsedTime);
+        return { api, activationPromise, serviceContainer };
     } finally {
         // Make sure that we clear our status message
         if (!activationDeferred.completed) {
