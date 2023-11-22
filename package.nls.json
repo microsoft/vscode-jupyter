@@ -275,7 +275,8 @@
             "{Locked='PYTHONPATH'}"
         ]
     },
-    "jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Jupyter kernels (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
+    "jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Python Jupyter kernels for Python (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
+    "jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription": "Enables support for auto completion in non-Python Notebooks and Interactive Windows using the associated Jupyter Kernel.  \n\nWarning: This can greatly impact cell execution performance. Use with caution.",
     "DataScience.exportDialogTitle": {
         "message": "Export to Jupyter Notebook",
         "comment": [

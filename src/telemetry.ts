@@ -3254,13 +3254,26 @@ export class IEventNamePropertyMapping {
              * Whether the completion request was cancelled or not.
              */
             cancelled: boolean;
+            /**
+             * Time taken to resolve the documentation.
+             */
+            resolveDuration: number;
+            /**
+             * Whether we resolved the documentation or not.
+             */
+            resolved?: boolean;
         }
     > = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         measures: {
-            ...commonClassificationForDurationProperties()
+            ...commonClassificationForDurationProperties(),
+            resolveDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            }
         },
         properties: {
             kernelConnectionType: {
@@ -3276,6 +3289,51 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             cancelled: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            resolved: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+
+    /**
+     * Telemetry sent when we the kernel does not reply back with a response for requestInspect message.
+     * The requestInspect request is used to resolve completion items in auto complete lists.
+     */
+    [Telemetry.KernelCodeCompletionCannotResolve]: TelemetryEventInfo<{
+        /**
+         * Hash of the Kernel Connection id.
+         */
+        kernelId: string;
+        /**
+         * What kind of kernel spec did we fail to create.
+         */
+        kernelConnectionType:
+            | 'startUsingPythonInterpreter'
+            | 'startUsingLocalKernelSpec'
+            | 'startUsingRemoteKernelSpec'
+            | 'connectToLiveRemoteKernel';
+        /**
+         * Language of the kernel spec.
+         */
+        kernelLanguage: string | undefined;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            kernelConnectionType: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelLanguage: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelId: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             }

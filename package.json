@@ -1497,9 +1497,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "KernelCompletions"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
                     "scope": "application"
@@ -1508,9 +1506,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "KernelCompletions"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
                     "scope": "application"
@@ -1971,6 +1967,13 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Experimental feature to enable execution analysis in notebooks",
+                    "scope": "application"
+                },
+                "jupyter.enableKernelCompletions": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable Non-Python Kernel Completions",
+                    "markdownDescription": "%jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription%",
                     "scope": "application"
                 },
                 "jupyter.completionTriggerCharacters": {
