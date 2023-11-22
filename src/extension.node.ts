@@ -100,7 +100,7 @@ import {
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
-
+console.error(`Code loading time`, durations.codeLoadingTime);
 //===============================================
 // loading ends here
 
@@ -181,14 +181,14 @@ function activateUnsafe(
 
         //===============================================
         // activation starts here
-
+        const stopWatch = new StopWatch();
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
         initializeTelemetryGlobals((interpreter) =>
             serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
         );
         const activationPromise = activateComponents(context, serviceManager, serviceContainer);
-
+        console.error('activateComponents', stopWatch.elapsedTime);
         //===============================================
         // activation ends here
 
@@ -200,6 +200,7 @@ function activateUnsafe(
         activateExecutionAnalysis(context).then(noop, noop);
 
         const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
+        console.error('activateComponents 2', stopWatch.elapsedTime);
         return [api, activationPromise, serviceContainer];
     } finally {
         // Make sure that we clear our status message

@@ -34,6 +34,8 @@ export async function sendStartupTelemetry(
         durations.totalActivateTime = stopWatch.elapsedTime;
         await updateActivationTelemetryProps(serviceContainer, durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations);
+        console.error('Extension Loading', durations);
+        console.error('Extension Loading', JSON.stringify(durations));
     } catch (ex) {
         traceError('sendStartupTelemetry() failed.', ex);
     }
