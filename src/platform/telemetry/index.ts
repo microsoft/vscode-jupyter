@@ -122,18 +122,20 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (isTestExecution()) {
         return;
     }
-    isTelemetrySupported().then((supported) => {
-        if (!supported){
-            return;
-        }
-        return sendTelemetryEventInternal(
-            eventName as any,
-            // Because of exactOptionalPropertyTypes we have to cast.
-            measures as unknown as Record<string, number> | undefined,
-            properties,
-            ex
-        );
-    }).catch(noop);
+    isTelemetrySupported()
+        .then((supported) => {
+            if (!supported) {
+                return;
+            }
+            return sendTelemetryEventInternal(
+                eventName as any,
+                // Because of exactOptionalPropertyTypes we have to cast.
+                measures as unknown as Record<string, number> | undefined,
+                properties,
+                ex
+            );
+        })
+        .catch(noop);
 }
 
 async function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
