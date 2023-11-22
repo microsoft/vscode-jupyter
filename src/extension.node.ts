@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+const stopWatch = Date.now();
 // reflect-metadata is needed by inversify, this must come before any inversify references
 import './platform/ioc/reflectMetadata';
 
@@ -21,7 +22,6 @@ const durations = {
 };
 import { StopWatch } from './platform/common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
-const stopWatch = new StopWatch();
 
 //===============================================
 // loading starts here
@@ -59,7 +59,7 @@ import {
     IsWebExtension,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
-import { createDeferred } from './platform/common/utils/async';
+import { createDeferred, sleep } from './platform/common/utils/async';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
@@ -99,8 +99,8 @@ import {
 } from './standalone/executionAnalysis/extension';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 
-durations.codeLoadingTime = stopWatch.elapsedTime;
-
+durations.codeLoadingTime = Date.now() - stopWatch;
+console.error(`Code loading time`, durations.codeLoadingTime);
 //===============================================
 // loading ends here
 
@@ -110,25 +110,25 @@ let activatedServiceContainer: IServiceContainer | undefined;
 /////////////////////////////
 // public functions
 
-export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
+export function activate(context: IExtensionContext): IExtensionApi {
     setDisposableTracker(context.subscriptions);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
-        let api: IExtensionApi;
-        let ready: Promise<void>;
-        let serviceContainer: IServiceContainer;
-        [api, ready, serviceContainer] = await activateUnsafe(context, stopWatch, durations);
+        console.error('Before Extension Activation', Date.now() - stopWatch);
+        let { api, activationPromise: ready, serviceContainer } = activateUnsafe(context, new StopWatch(), durations);
         // Send the "success" telemetry only if activation did not fail.
         // Otherwise Telemetry is send via the error handler.
-        sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
+        sendStartupTelemetry(ready, durations, new StopWatch(), serviceContainer)
             // Run in the background.
             .catch(noop);
-        await ready;
+        // await ready;
+        console.error('Extension Activation', Date.now() - stopWatch);
+        console.error('Extension Activation', durations);
         return api;
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
-        await handleError(ex, durations);
+        handleError(ex, durations).catch(noop);
         traceError('Failed to active the Jupyter Extension', ex);
         // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
         // Return a dummy object, to ensure other extension do not fall over.
@@ -166,14 +166,15 @@ export function deactivate(): Thenable<void> {
 // activation helpers
 
 // eslint-disable-next-line
-async function activateUnsafe(
+function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
     startupDurations: {
         startActivateTime: number;
         endActivateTime: number;
     }
-): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
+): { api: IExtensionApi; activationPromise: Promise<void>; serviceContainer: IServiceContainer } {
+    const stopWatch = new StopWatch();
     const activationDeferred = createDeferred<void>();
     try {
         displayProgress(activationDeferred.promise);
@@ -181,15 +182,20 @@ async function activateUnsafe(
 
         //===============================================
         // activation starts here
-
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
-        initializeTelemetryGlobals((interpreter) =>
-            serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
-        );
-        const activationPromise = activateComponents(context, serviceManager, serviceContainer);
+        console.error('activateComponents.0', stopWatch.elapsedTime);
+        const activationPromise = (async () => {
+            await sleep(0);
 
-        //===============================================
+            initializeTelemetryGlobals((interpreter) =>
+                serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
+            );
+            const activationPromise = activateComponents(context, serviceManager, serviceContainer);
+            console.error('activateComponents.1', stopWatch.elapsedTime);
+            return activationPromise;
+            //===============================================
+        })().catch(noop);
         // activation ends here
 
         startupDurations.endActivateTime = startupStopWatch.elapsedTime;
@@ -200,7 +206,8 @@ async function activateUnsafe(
         activateExecutionAnalysis(context).then(noop, noop);
 
         const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
-        return [api, activationPromise, serviceContainer];
+        console.error('activateComponents.2', stopWatch.elapsedTime);
+        return { api, activationPromise, serviceContainer };
     } finally {
         // Make sure that we clear our status message
         if (!activationDeferred.completed) {
@@ -208,7 +215,6 @@ async function activateUnsafe(
         }
     }
 }
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function displayProgress(promise: Promise<any>) {
     const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension };
@@ -370,7 +376,7 @@ async function activateLegacy(
     // Await here to keep the register method sync
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
     // This must be done first, this guarantees all experiment information has loaded & all telemetry will contain experiment info.
-    await experimentService.activate();
+    experimentService.activate().catch(noop);
 
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);

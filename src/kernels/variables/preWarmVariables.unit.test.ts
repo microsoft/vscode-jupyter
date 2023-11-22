@@ -40,7 +40,7 @@ suite('PreWarm Env Vars', () => {
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
         when(extensionChecker.isPythonExtensionActive).thenReturn(true);
         zmqSupported = mock<IRawNotebookSupportedService>();
-        when(zmqSupported.isSupported).thenReturn(false);
+        when(zmqSupported.isSupported).thenReturn(Promise.resolve(false));
         activationService = new PreWarmActivatedJupyterEnvironmentVariables(
             instance(envActivationService),
             instance(jupyterInterpreter),
@@ -85,7 +85,7 @@ suite('PreWarm Env Vars', () => {
     });
     test('Should not pre-warm env variables if ZMQ is supported', async () => {
         const envActivated = createDeferred<string>();
-        when(zmqSupported.isSupported).thenReturn(true);
+        when(zmqSupported.isSupported).thenReturn(Promise.resolve(true));
         when(envActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenCall(() => {
             envActivated.reject(new Error('Environment Activated when it should not have been!'));
             return Promise.resolve();

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { findNodeAtLocation, getLocation, getNodeValue, parseTree } from 'jsonc-parser';
+// import { findNodeAtLocation, getLocation, getNodeValue, parseTree } from 'jsonc-parser';
 import { CancellationToken, CompletionItem, CompletionItemProvider, Position, TextDocument, languages } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { IDisposableRegistry } from '../../common/types';
@@ -67,6 +67,7 @@ export class PythonEnvFilterCompletionProvider implements CompletionItemProvider
         if (path.basename(document.uri.fsPath) !== 'settings.json') {
             return false;
         }
+        const { getLocation } = require('jsonc-parser');
         const location = getLocation(document.getText(), document.offsetAt(position));
         // Cursor must be inside the configurations array and not in any nested items.
         // Hence path[0] = array, path[1] = array element index.
@@ -74,6 +75,7 @@ export class PythonEnvFilterCompletionProvider implements CompletionItemProvider
     }
     private getCurrentItemsInList(document: TextDocument, position: Position): string[] {
         try {
+            const { findNodeAtLocation, getLocation, getNodeValue, parseTree } = require('jsonc-parser');
             const settings = document.getText();
             const location = getLocation(settings, document.offsetAt(position));
             const root = parseTree(settings);

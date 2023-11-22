@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IJupyterRequestCreator } from '../types';
-import * as nodeFetch from 'node-fetch';
+import type * as nodeFetch from 'node-fetch';
 import { ClassType } from '../../../platform/ioc/types';
 import WebSocketIsomorphic from 'isomorphic-ws';
 import { traceError } from '../../../platform/logging';
@@ -17,6 +17,7 @@ import { KernelSocketMap } from '../../kernelSocket';
 @injectable()
 export class JupyterRequestCreator implements IJupyterRequestCreator {
     public getRequestCtor(_cookieString?: string, _allowUnauthorized?: boolean, getAuthHeader?: () => any) {
+        const nodeFetch = require('node-fetch');
         // Only need the authorizing part. Cookie and rejectUnauthorized are set in the websocket ctor for node.
         class AuthorizingRequest extends nodeFetch.Request {
             constructor(input: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) {
@@ -31,7 +32,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
 
                 // Rewrite the 'append' method for the headers to disallow 'authorization' after this point
                 const origAppend = origHeaders.append.bind(origHeaders);
-                origHeaders.append = (k, v) => {
+                origHeaders.append = (k: any, v: any) => {
                     if (k.toLowerCase() !== 'authorization') {
                         origAppend(k, v);
                     }
@@ -159,11 +160,11 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
     }
 
     public getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response> {
-        return nodeFetch.default as any;
+        return require('node-fetch');
     }
 
     public getHeadersCtor(): ClassType<Headers> {
-        return nodeFetch.Headers as any;
+        return require('node-fetch').Headers as any;
     }
 
     public getRequestInit(): RequestInit {

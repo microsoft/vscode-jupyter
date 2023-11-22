@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type * as jupyterlabService from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../../platform/logging';
 import {
@@ -36,7 +35,6 @@ export class IPyWidgetScriptSource {
         payload: any;
     }>();
     private kernel?: IKernel;
-    private jupyterLab?: typeof jupyterlabService;
     private scriptProvider?: IPyWidgetScriptSourceProvider;
     private allWidgetScriptsSent?: boolean;
     private disposables: IDisposable[] = [];
@@ -112,12 +110,6 @@ export class IPyWidgetScriptSource {
         }
     }
     public initialize() {
-        if (!this.jupyterLab) {
-            // Lazy load jupyter lab for faster extension loading.
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            this.jupyterLab = require('@jupyterlab/services') as typeof jupyterlabService; // NOSONAR
-        }
-
         if (!this.kernel) {
             this.kernel = this.kernelProvider.get(this.document);
         }

@@ -35,6 +35,7 @@ import {
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { KernelSocketMap } from '../../kernelSocket';
+import { getZeroMQ } from './zeromq.node';
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -153,7 +154,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 throw new CancellationError();
             }
             this.hookupKernelProcessExitHandler(kernelProcess);
-            const result = newRawKernel(this.kernelProcess, this.clientId, this.username, this.model);
+            const result = await newRawKernel(this.kernelProcess, this.clientId, this.username, this.model);
             this.kernelProcess = result.kernelProcess;
             this.realKernel = result.realKernel;
             this.socket = result.socket;
@@ -560,7 +561,10 @@ async function postStartKernel(
         */
 }
 
-function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username: string, model: Kernel.IModel) {
+async function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username: string, model: Kernel.IModel) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const zmq = await getZeroMQ();
+
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize =
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
@@ -570,7 +574,7 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
     let socketInstance: IKernelSocket & IWebSocketLike & IDisposable;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(kernelProcess.connection, jupyterLabSerialize.serialize);
+            super(kernelProcess.connection, jupyterLabSerialize.serialize, zmq);
             socketInstance = this;
         }
     }

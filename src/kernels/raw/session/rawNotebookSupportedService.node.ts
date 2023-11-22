@@ -13,13 +13,13 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
     constructor(@inject(IConfigurationService) private readonly configuration: IConfigurationService) {}
 
     // Check to see if we have all that we need for supporting raw kernel launch
-    public get isSupported(): boolean {
+    public get isSupported(): Promise<boolean> {
         return this.isSupportedForLocalLaunch();
     }
 
-    private isSupportedForLocalLaunch(): boolean {
+    private async isSupportedForLocalLaunch(): Promise<boolean> {
         // Save the ZMQ support for last, since it's probably the slowest part
-        return !this.isZQMDisabled() && this.zmqSupported();
+        return !this.isZQMDisabled() && (await this.zmqSupported());
     }
 
     // Check to see if our hidden setting has been turned on to disable local ZMQ support
@@ -28,7 +28,7 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
     }
 
     // Check to see if this machine supports our local ZMQ launching
-    private zmqSupported(): boolean {
+    private async zmqSupported(): Promise<boolean> {
         if (typeof this._isSupported === 'boolean') {
             return this._isSupported;
         }
@@ -36,7 +36,7 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
             return false;
         }
         try {
-            getZeroMQ();
+            await getZeroMQ();
             this._isSupported = true;
         } catch (e) {
             this._isSupported = false;

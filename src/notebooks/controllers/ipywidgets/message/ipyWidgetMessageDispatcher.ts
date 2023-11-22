@@ -32,7 +32,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         return this._postMessageEmitter.event;
     }
     private readonly commTargetsRegistered = new Set<string>();
-    private jupyterLab?: typeof import('@jupyterlab/services');
     private pendingTargetNames = new Set<string>();
     private kernel?: IKernel;
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
@@ -89,9 +88,12 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.mirrorSend = this.mirrorSend.bind(this);
         this.onKernelSocketMessage = this.onKernelSocketMessage.bind(this);
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const jupyterLabSerialize =
-            require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
-        this.deserialize = jupyterLabSerialize.deserialize;
+        this.deserialize = (data) => {
+            const jupyterLabSerialize =
+                require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
+
+            return jupyterLabSerialize.deserialize(data);
+        };
     }
     public dispose() {
         // Send overhead telemetry for our message hooking
@@ -163,12 +165,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     public initialize() {
-        if (!this.jupyterLab) {
-            // Lazy load jupyter lab for faster extension loading.
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            this.jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
-        }
-
         // If we have any pending targets, register them now
         const kernel = this.getKernel();
         if (kernel) {

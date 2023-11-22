@@ -26,20 +26,28 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSy
         @inject(CondaService) private readonly condaService: CondaService
     ) {}
     public activate() {
-        // Don't prewarm global interpreter if running with ZMQ
-        if (!this.rawNotebookSupported.isSupported) {
-            this.disposables.push(
-                this.jupyterInterpreterService.onDidChangeInterpreter(() =>
-                    this.preWarmInterpreterVariables().catch(noop)
-                )
-            );
-            this.preWarmInterpreterVariables().catch(noop);
-            this.apiProvider.onDidActivatePythonExtension(this.preWarmInterpreterVariables, this, this.disposables);
-        }
-        if (this.extensionChecker.isPythonExtensionInstalled) {
-            this.condaService.getCondaFile().catch(noop);
-            this.condaService.getCondaVersion().catch(noop);
-        }
+        this.rawNotebookSupported.isSupported
+            .then((isSupported) => {
+                // Don't prewarm global interpreter if running with ZMQ
+                if (!isSupported) {
+                    this.disposables.push(
+                        this.jupyterInterpreterService.onDidChangeInterpreter(() =>
+                            this.preWarmInterpreterVariables().catch(noop)
+                        )
+                    );
+                    this.preWarmInterpreterVariables().catch(noop);
+                    this.apiProvider.onDidActivatePythonExtension(
+                        this.preWarmInterpreterVariables,
+                        this,
+                        this.disposables
+                    );
+                }
+                if (this.extensionChecker.isPythonExtensionInstalled) {
+                    this.condaService.getCondaFile().catch(noop);
+                    this.condaService.getCondaVersion().catch(noop);
+                }
+            })
+            .catch(noop);
     }
 
     private async preWarmInterpreterVariables() {
