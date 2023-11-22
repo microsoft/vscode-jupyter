@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+const stopWatch = Date.now();
 // reflect-metadata is needed by inversify, this must come before any inversify references
 import './platform/ioc/reflectMetadata';
 
@@ -21,7 +22,6 @@ const durations = {
 };
 import { StopWatch } from './platform/common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
-const stopWatch = new StopWatch();
 
 //===============================================
 // loading starts here
@@ -99,7 +99,7 @@ import {
 } from './standalone/executionAnalysis/extension';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 
-durations.codeLoadingTime = stopWatch.elapsedTime;
+durations.codeLoadingTime = Date.now() - stopWatch;
 console.error(`Code loading time`, durations.codeLoadingTime);
 //===============================================
 // loading ends here
@@ -117,14 +117,14 @@ export function activate(context: IExtensionContext): IExtensionApi {
         let api: IExtensionApi;
         let ready: Promise<void>;
         let serviceContainer: IServiceContainer;
-        [api, ready, serviceContainer] = activateUnsafe(context, stopWatch, durations);
+        [api, ready, serviceContainer] = activateUnsafe(context, new StopWatch(), durations);
         // Send the "success" telemetry only if activation did not fail.
         // Otherwise Telemetry is send via the error handler.
-        sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
+        sendStartupTelemetry(ready, durations, new StopWatch(), serviceContainer)
             // Run in the background.
             .catch(noop);
         // await ready;
-        console.error('Extension Activation', stopWatch.elapsedTime);
+        console.error('Extension Activation', Date.now() - stopWatch);
         console.error('Extension Activation', durations);
         return api;
     } catch (ex) {
