@@ -63,7 +63,6 @@ export function buildApi(
     context: IExtensionContext
 ): IExtensionApi {
     let registered = false;
-    const extensions = serviceContainer.get<IExtensions>(IExtensions);
     const createJupyterServerCollection = (
         id: string,
         label: string,
@@ -157,6 +156,8 @@ export function buildApi(
             };
         },
         getKernelService: async () => {
+            const extensions = serviceContainer.get<IExtensions>(IExtensions);
+
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: extensions.determineExtensionFromCallStack().extensionId,
                 pemUsed: 'registerRemoteServerProvider'
@@ -166,6 +167,8 @@ export function buildApi(
             return kernelServiceFactory.getService();
         },
         addRemoteJupyterServer: async (providerId: string, handle: string) => {
+            const extensions = serviceContainer.get<IExtensions>(IExtensions);
+
             traceError(
                 'The API addRemoteJupyterServer has being deprecated and will be removed soon, please use createJupyterServerCollection.'
             );
@@ -186,6 +189,8 @@ export function buildApi(
             await controllerCreatedPromise;
         },
         openNotebook: async (uri: Uri, kernelId: string) => {
+            const extensions = serviceContainer.get<IExtensions>(IExtensions);
+
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: extensions.determineExtensionFromCallStack().extensionId,
                 pemUsed: 'openNotebook'
@@ -207,6 +212,8 @@ export function buildApi(
             return notebookEditor.notebook;
         },
         createJupyterServerCollection: (id: string, label: string, serverProvider: JupyterServerProvider) => {
+            const extensions = serviceContainer.get<IExtensions>(IExtensions);
+
             return createJupyterServerCollection(
                 id,
                 label,
@@ -215,6 +222,8 @@ export function buildApi(
             );
         },
         get kernels() {
+            const extensions = serviceContainer.get<IExtensions>(IExtensions);
+
             return getKernelsApi(extensions.determineExtensionFromCallStack().extensionId);
         }
     };

@@ -184,12 +184,15 @@ function activateUnsafe(
         const stopWatch = new StopWatch();
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
-        initializeTelemetryGlobals((interpreter) =>
-            serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
-        );
-        const activationPromise = activateComponents(context, serviceManager, serviceContainer);
-        console.error('activateComponents', stopWatch.elapsedTime);
-        //===============================================
+        const activationPromise = (async () => {
+            initializeTelemetryGlobals((interpreter) =>
+                serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
+            );
+            const activationPromise = activateComponents(context, serviceManager, serviceContainer);
+            console.error('activateComponents', stopWatch.elapsedTime);
+            return activationPromise;
+            //===============================================
+        })().catch(noop);
         // activation ends here
 
         startupDurations.endActivateTime = startupStopWatch.elapsedTime;
