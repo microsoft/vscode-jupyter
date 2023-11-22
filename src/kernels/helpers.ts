@@ -613,7 +613,7 @@ export async function executeSilently(
         `Executing silently Code (${kernelConnection.status}) = ${splitLines(code.substring(0, 100)).join('\\n')}`
     );
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+    const jupyterLab = await import('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
     const request = kernelConnection.requestExecute(
         {
@@ -700,7 +700,7 @@ export async function executeSilently(
     return outputs;
 }
 
-export function executeSilentlyAndEmitOutput(
+export async function executeSilentlyAndEmitOutput(
     kernelConnection: Kernel.IKernelConnection,
     code: string,
     onStarted: () => void,
@@ -708,7 +708,7 @@ export function executeSilentlyAndEmitOutput(
 ) {
     code = code.replace(/\r\n/g, '\n');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+    const jupyterLab = await import('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
     const request = kernelConnection.requestExecute(
         {

@@ -60,7 +60,7 @@ suite('Kernel Dependency Service', () => {
         when(cmdManager.executeCommand('notebook.selectKernel', anything())).thenResolve();
         when(notebooks.notebookDocuments).thenReturn([]);
         const rawSupport = mock<IRawNotebookSupportedService>();
-        when(rawSupport.isSupported).thenReturn(true);
+        when(rawSupport.isSupported).thenReturn(Promise.resolve(Promise.resolve(true)));
         dependencyService = new KernelDependencyService(
             instance(appShell),
             instance(installer),

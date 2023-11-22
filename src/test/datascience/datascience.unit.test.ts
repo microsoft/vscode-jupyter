@@ -49,7 +49,7 @@ suite('Tests', () => {
         when(settings.onDidChange).thenReturn(onDidChangeSettings);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(docManager.onDidChangeActiveTextEditor).thenReturn(onDidChangeActiveTextEditor);
-        when(rawNotebookSupported.isSupported).thenReturn(true);
+        when(rawNotebookSupported.isSupported).thenReturn(Promise.resolve(true));
     });
 
     suite('Activate', () => {

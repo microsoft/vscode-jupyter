@@ -156,7 +156,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             traceExecMessage(this.executionId, `Execution Request Sent to Kernel`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
-            this.request = executeSilentlyAndEmitOutput(
+            this.request = await executeSilentlyAndEmitOutput(
                 kernelConnection,
                 code,
                 () => this._onRequestAcknowledge.fire(),

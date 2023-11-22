@@ -25,7 +25,7 @@ export class KernelSessionFactory implements IKernelSessionFactory {
     public async create(options: KernelSessionCreationOptions): Promise<IKernelSession> {
         const kernelConnection = options.kernelConnection;
         if (
-            this.rawKernelSupported.isSupported &&
+            (await this.rawKernelSupported.isSupported) &&
             isLocalConnection(kernelConnection) &&
             this.newRawKernelSessionFactory
         ) {

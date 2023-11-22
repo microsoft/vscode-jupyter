@@ -32,21 +32,25 @@ export class Activation implements IExtensionSyncActivationService {
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
     }
 
-    private onDidOpenNotebookEditor(e: NotebookDocument) {
+    private async onDidOpenNotebookEditor(e: NotebookDocument) {
         if (!isJupyterNotebook(e)) {
             return;
         }
         this.notebookOpened = true;
         sendTelemetryEvent(Telemetry.OpenNotebookAll, getNotebookFormat(e));
 
-        if (!this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
+        if (!(await this.rawSupported.isSupported) && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension
             this.jupyterInterpreterService.setInitialInterpreter().catch(noop);
         }
     }
 
-    private onDidChangeInterpreter() {
-        if (this.notebookOpened && !this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
+    private async onDidChangeInterpreter() {
+        if (
+            this.notebookOpened &&
+            !(await this.rawSupported.isSupported) &&
+            this.extensionChecker.isPythonExtensionInstalled
+        ) {
             // Warm up our selected interpreter for the extension
             this.jupyterInterpreterService.setInitialInterpreter().catch(noop);
         }

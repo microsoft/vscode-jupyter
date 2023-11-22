@@ -23,14 +23,14 @@ export { JupyterCommands, Telemetry } from '../common/constants';
  * Its possible this function gets called within Debug Adapter, vscode isn't available in there.
  * Within DA, there's a completely different way to send telemetry.
  */
-function isTelemetrySupported(): boolean {
+async function isTelemetrySupported(): Promise<boolean> {
     try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const vsc = require('vscode');
+        const vsc = await import('vscode');
         if (vsc === undefined) {
             return false;
         }
-        return getTelemetryReporter() !== undefined;
+        return (await getTelemetryReporter()) !== undefined;
     } catch {
         return false;
     }
@@ -72,11 +72,11 @@ export function _resetSharedProperties(): void {
 }
 
 let telemetryReporter: TelemetryReporter | undefined;
-export function getTelemetryReporter(): TelemetryReporter {
+export async function getTelemetryReporter(): Promise<TelemetryReporter> {
     if (telemetryReporter) {
         return telemetryReporter;
     }
-    const TelemetryReporrerClass = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
+    const TelemetryReporrerClass = (await import('@vscode/extension-telemetry')).default as typeof TelemetryReporter;
     return (telemetryReporter = new TelemetryReporrerClass(AppinsightsKey));
 }
 
@@ -119,25 +119,30 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         : undefined | undefined,
     ex?: Error
 ) {
-    if (isTestExecution() || !isTelemetrySupported()) {
+    if (isTestExecution()) {
         return;
     }
-    sendTelemetryEventInternal(
-        eventName as any,
-        // Because of exactOptionalPropertyTypes we have to cast.
-        measures as unknown as Record<string, number> | undefined,
-        properties,
-        ex
-    );
+    isTelemetrySupported().then((supported) => {
+        if (!supported){
+            return;
+        }
+        return sendTelemetryEventInternal(
+            eventName as any,
+            // Because of exactOptionalPropertyTypes we have to cast.
+            measures as unknown as Record<string, number> | undefined,
+            properties,
+            ex
+        );
+    }).catch(noop);
 }
 
-function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
+async function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     measures?: Record<string, number>,
     properties?: P[E],
     ex?: Error
 ) {
-    const reporter = getTelemetryReporter();
+    const reporter = await getTelemetryReporter();
     let customProperties: Record<string, string> = {};
     let eventNameSent = eventName as string;
 

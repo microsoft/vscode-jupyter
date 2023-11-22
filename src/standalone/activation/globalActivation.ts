@@ -55,7 +55,7 @@ export class GlobalActivation implements IExtensionSyncActivationService {
         this.onChangedActiveTextEditor();
 
         // Figure out the ZMQ available context key
-        this.computeZmqAvailable();
+        this.computeZmqAvailable().catch(noop);
 
         if (this.commandListeners) {
             this.commandListeners.forEach((c) => c.register(this.commandManager));
@@ -76,9 +76,9 @@ export class GlobalActivation implements IExtensionSyncActivationService {
         editorContext.set(ownsSelection).catch(noop);
     };
 
-    private computeZmqAvailable() {
+    private async computeZmqAvailable() {
         const zmqContext = new ContextKey(EditorContexts.ZmqAvailable, this.commandManager);
-        zmqContext.set(this.rawSupported ? this.rawSupported.isSupported : false).then(noop, noop);
+        zmqContext.set(this.rawSupported ? await this.rawSupported.isSupported : false).then(noop, noop);
     }
 
     private onChangedActiveTextEditor() {

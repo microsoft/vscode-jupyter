@@ -57,7 +57,7 @@ export interface IKernelProcess extends IAsyncDisposable {
 // Provides a service to determine if raw notebook is supported or not
 export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
 export interface IRawNotebookSupportedService {
-    isSupported: boolean;
+    isSupported: Promise<boolean>;
 }
 
 export const IRawKernelSessionFactory = Symbol('IRawKernelSessionFactory');

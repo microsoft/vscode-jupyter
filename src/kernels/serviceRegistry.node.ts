@@ -50,6 +50,7 @@ import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
 import { KernelApi } from './api/accessManagement';
+import { noop } from '../platform/common/utils/misc';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
@@ -146,7 +147,9 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         isPythonExtensionInstalled.isPythonExtensionInstalled ? 'true' : 'false'
     );
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
-    setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
+    rawService.isSupported
+        .then((supported) => setSharedProperty('rawKernelSupported', supported ? 'true' : 'false'))
+        .catch(noop);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         CellOutputDisplayIdTracker

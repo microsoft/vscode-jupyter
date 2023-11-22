@@ -40,7 +40,7 @@ import { KernelApi } from './api/accessManagement';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
-    isSupported: boolean = false;
+    isSupported: Promise<boolean> = Promise.resolve(false);
 }
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
@@ -55,8 +55,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         'isPythonExtensionInstalled',
         isPythonExtensionInstalled.isPythonExtensionInstalled ? 'true' : 'false'
     );
-    const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
-    setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
+    setSharedProperty('rawKernelSupported', 'false');
     serviceManager.addSingleton<IStartupCodeProviders>(IStartupCodeProviders, KernelStartupCodeProviders);
     serviceManager.addSingleton<IKernelVariableRequester>(
         IKernelVariableRequester,

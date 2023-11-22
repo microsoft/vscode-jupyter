@@ -49,7 +49,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
     constructor(
         private connection: IKernelConnection,
-        private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer
+        private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
+        private readonly zmq: Awaited<ReturnType<typeof getZeroMQ>>
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
@@ -141,9 +142,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
 
     private generateChannels(connection: IKernelConnection): IChannels {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const zmq = getZeroMQ();
-
         // Need a routing id for them to share.
         const routingId = uuid();
 
@@ -153,7 +151,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 connection,
                 'iopub',
                 () =>
-                    new zmq.Subscriber({
+                    new this.zmq.Subscriber({
                         maxMessageSize: -1,
                         // If we get messages too fast and we're too slow in reading/handling the messages,
                         // then Node will stop reading messages from the stream & we'll stop getting the messages.
@@ -170,7 +168,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 connection,
                 'shell',
                 () =>
-                    new zmq.Dealer({
+                    new this.zmq.Dealer({
                         routingId,
                         sendHighWaterMark: 0,
                         receiveHighWaterMark: 0,
@@ -181,7 +179,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 connection,
                 'control',
                 () =>
-                    new zmq.Dealer({
+                    new this.zmq.Dealer({
                         routingId,
                         sendHighWaterMark: 0,
                         receiveHighWaterMark: 0,
@@ -192,7 +190,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 connection,
                 'stdin',
                 () =>
-                    new zmq.Dealer({
+                    new this.zmq.Dealer({
                         routingId,
                         sendHighWaterMark: 0,
                         receiveHighWaterMark: 0,

@@ -128,7 +128,7 @@ export class KernelConnector {
 
         // Raw notebook provider is not available in web
         const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookSupportedService>(IRawNotebookSupportedService);
-        const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;
+        const rawLocalKernel = (rawNotebookProvider ? await rawNotebookProvider.isSupported : false) && isLocal;
         if (rawLocalKernel && errorContext === 'start') {
             sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
                 reason: handleResult

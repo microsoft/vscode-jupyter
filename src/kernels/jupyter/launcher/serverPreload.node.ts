@@ -73,7 +73,7 @@ export class ServerPreload implements IExtensionSyncActivationService {
     }
 
     private async createServerIfNecessary() {
-        if (!this.workspace.isTrusted || this.rawKernelSupport.isSupported) {
+        if (!this.workspace.isTrusted || (await this.rawKernelSupport.isSupported)) {
             return;
         }
         const source = new CancellationTokenSource();

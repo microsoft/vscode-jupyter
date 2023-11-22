@@ -10,9 +10,9 @@ import { noop } from '../../../platform/common/utils/misc';
 import { DistroInfo, getDistroInfo } from '../../../platform/common/platform/linuxDistro.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 const zeromqModuleName = `${'zeromq'}`;
-export function getZeroMQ(): typeof import('zeromq') {
+export async function getZeroMQ(): Promise<typeof import('zeromq')> {
     try {
-        const zmq: typeof import('zeromq') = require(zeromqModuleName);
+        const zmq: typeof import('zeromq') = await import(zeromqModuleName);
         // We do not want to block the process from exiting if there are any pending messages.
         zmq.context.blocky = false;
         sendZMQTelemetry(false).catch(noop);
