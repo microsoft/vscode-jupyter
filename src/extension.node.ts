@@ -117,7 +117,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         let api: IExtensionApi;
         let ready: Promise<void>;
         let serviceContainer: IServiceContainer;
-        [api, ready, serviceContainer] = await activateUnsafe(context, stopWatch, durations);
+        [api, ready, serviceContainer] = activateUnsafe(context, stopWatch, durations);
         // Send the "success" telemetry only if activation did not fail.
         // Otherwise Telemetry is send via the error handler.
         sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
@@ -166,14 +166,14 @@ export function deactivate(): Thenable<void> {
 // activation helpers
 
 // eslint-disable-next-line
-async function activateUnsafe(
+function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
     startupDurations: {
         startActivateTime: number;
         endActivateTime: number;
     }
-): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
+): [IExtensionApi, Promise<void>, IServiceContainer] {
     const activationDeferred = createDeferred<void>();
     try {
         displayProgress(activationDeferred.promise);
