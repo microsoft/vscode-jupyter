@@ -462,6 +462,10 @@ export class IEventNamePropertyMapping {
          * Time taken to activate the extension.
          */
         totalActivateTime: number;
+        /**
+         * Total time to load the modules.
+         */
+        codeLoadingTime: number;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -472,12 +476,26 @@ export class IEventNamePropertyMapping {
                 purpose: 'PerformanceAndHealth',
                 isMeasurement: true
             },
+            codeLoadingTime: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
             workspaceFolderCount: {
                 classification: 'SystemMetaData',
                 purpose: 'PerformanceAndHealth',
                 isMeasurement: true
             }
         }
+    };
+    /**
+     * Telemetry event sent with perf measures related to loading experiments.
+     */
+    public [Telemetry.ExperimentLoad]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables.
