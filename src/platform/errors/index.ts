@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { FetchError } from 'node-fetch';
 import * as stackTrace from 'stack-trace';
 import { getTelemetrySafeHashedString } from '../telemetry/helpers';
 import { getErrorTags } from './errors';
@@ -10,6 +9,7 @@ import { getErrorCategory, TelemetryErrorProperties, BaseError, WrappedError } f
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProperties>, error: Error) {
+    const { FetchError } = require('node-fetch');
     props.failed = true;
     // Don't blow away what we already have.
     props.failureCategory = props.failureCategory || getErrorCategory(error);
