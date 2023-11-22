@@ -370,7 +370,7 @@ async function activateLegacy(
     // Await here to keep the register method sync
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
     // This must be done first, this guarantees all experiment information has loaded & all telemetry will contain experiment info.
-    await experimentService.activate();
+    experimentService.activate().catch(noop);
 
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
