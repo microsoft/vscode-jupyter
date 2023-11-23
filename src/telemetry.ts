@@ -47,7 +47,7 @@ type Feature =
     | 'KernelPicker'
     | 'Import-Export'
     | 'VariableViewer';
-type EventTag = 'Cell Execution' | 'Remote' | 'Widgets' | 'KernelStartup' | 'IntelliSense';
+type EventTag = 'Cell Execution' | 'Remote' | 'Widgets' | 'KernelStartup' | 'IntelliSense' | 'Code Execution';
 type EventSource = 'User Action' | 'N/A';
 type IGdprEventData = {
     owner: Owner;
@@ -2580,14 +2580,42 @@ export class IEventNamePropertyMapping {
     /**
      * Sent when a user executes a cell.
      */
-    [Telemetry.ExecuteCell]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+    [Telemetry.ExecuteCell]: TelemetryEventInfo<DurationMeasurement & ResourceSpecificTelemetryProperties> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         source: 'User Action',
         tags: ['Cell Execution'],
+        measures: commonClassificationForDurationProperties(),
         properties: {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties,
             ...commonClassificationForErrorProperties()
+        }
+    };
+
+    /**
+     * Sent when a some code is executed against the kernel
+     */
+    [Telemetry.ExecuteCode]: TelemetryEventInfo<
+        DurationMeasurement &
+            ResourceSpecificTelemetryProperties & {
+                /**
+                 * Extension Id that's attempting to use the API.
+                 */
+                extensionId: string;
+            }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'User Action',
+        tags: ['Code Execution'],
+        measures: commonClassificationForDurationProperties(),
+        properties: {
+            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
+            ...commonClassificationForErrorProperties(),
+            extensionId: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
         }
     };
 
@@ -3273,13 +3301,29 @@ export class IEventNamePropertyMapping {
              */
             cancelled: boolean;
             /**
-             * Time taken to resolve the documentation.
+             * Whether we send the request to resolve the completion item.
              */
-            resolveDuration: number;
+            requestSent: boolean;
             /**
-             * Whether we resolved the documentation or not.
+             * Whether we completed the request.
              */
-            resolved?: boolean;
+            completed: boolean;
+            /**
+             * Number of items returned.
+             */
+            completionItems: number;
+            /**
+             * Total time taken to complete the request.
+             */
+            requestDuration: number;
+            /**
+             * Status of the kernel at the time we make a request for the resolve completion information
+             */
+            kernelStatusBeforeRequest?: string;
+            /**
+             * Status of the kernel at the time we make a request for the resolve completion information
+             */
+            kernelStatusAfterRequest?: string;
         }
     > = {
         owner: 'donjayamanne',
@@ -3287,7 +3331,12 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         measures: {
             ...commonClassificationForDurationProperties(),
-            resolveDuration: {
+            requestDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            completionItems: {
                 classification: 'SystemMetaData',
                 purpose: 'PerformanceAndHealth',
                 isMeasurement: true
@@ -3310,7 +3359,122 @@ export class IEventNamePropertyMapping {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },
-            resolved: {
+            completed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelStatusAfterRequest: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelStatusBeforeRequest: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            requestSent: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
+     * Telemetry sent with the total time taken to provide completions from a kernel.
+     */
+    [Telemetry.KernelCodeCompletionResolve]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * Hash of the Kernel Connection id.
+             */
+            kernelId: string;
+            /**
+             * What kind of kernel spec did we fail to create.
+             */
+            kernelConnectionType:
+                | 'startUsingPythonInterpreter'
+                | 'startUsingLocalKernelSpec'
+                | 'startUsingRemoteKernelSpec'
+                | 'connectToLiveRemoteKernel';
+            /**
+             * Language of the kernel spec.
+             */
+            kernelLanguage: string | undefined;
+            /**
+             * Whether we timedout waiting for the request to complete.
+             */
+            requestTimedout?: boolean;
+            /**
+             * Whether the completion request was cancelled or not.
+             */
+            cancelled?: boolean;
+            /**
+             * Whether we send the request to resolve the completion item.
+             */
+            requestSent: boolean;
+            /**
+             * Whether we resolved the documentation or not.
+             */
+            completed: boolean;
+            /**
+             * Total time taken to resolve the documentation.
+             */
+            requestDuration: number;
+            /**
+             * Whether the kernel completion resolve request returned any data.
+             */
+            completedWithData?: boolean;
+            /**
+             * Status of the kernel at the time we make a request for the resolve completion information
+             */
+            kernelStatusBeforeRequest?: string;
+            /**
+             * Status of the kernel at the time we make a request for the resolve completion information
+             */
+            kernelStatusAfterRequest?: string;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            requestDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            }
+        },
+        properties: {
+            kernelConnectionType: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelLanguage: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            cancelled: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            kernelStatusBeforeRequest: { classification: 'PublicNonPersonalData', purpose: 'FeatureInsight' },
+            kernelStatusAfterRequest: { classification: 'PublicNonPersonalData', purpose: 'FeatureInsight' },
+            requestTimedout: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            completedWithData: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            requestSent: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            completed: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             }

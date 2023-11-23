@@ -19,14 +19,19 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { isNotebookCell, noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { IKernelSession, IKernelProvider } from '../../kernels/types';
+import { IKernelSession, IKernelProvider, IKernel } from '../../kernels/types';
 import { INotebookCompletionProvider, INotebookEditorProvider } from '../../notebooks/types';
 import { mapJupyterKind } from './conversion';
-import { isTestExecution, Settings } from '../../platform/common/constants';
+import { isTestExecution, PYTHON_LANGUAGE, Settings, Telemetry } from '../../platform/common/constants';
 import { INotebookCompletion } from './types';
 import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
 import { raceTimeout } from '../../platform/common/utils/async';
 import { isPythonKernelConnection } from '../../kernels/helpers';
+import { sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
+import { generateSortString } from './helpers';
+import { resolveCompletionItem } from './resolveCompletionItem';
+import { DisposableStore } from '../../platform/common/utils/lifecycle';
 
 let IntellisenseTimeout = Settings.IntellisenseTimeout;
 export function setIntellisenseTimeout(timeoutMs: number) {
@@ -44,6 +49,18 @@ export type JupyterCompletionItem = CompletionItem & {
 @injectable()
 export class PythonKernelCompletionProvider implements CompletionItemProvider {
     private allowStringFilter = false;
+    private readonly toDispose = new DisposableStore();
+    private completionItemsSent = new WeakMap<
+        CompletionItem,
+        {
+            documentRef: WeakRef<TextDocument>;
+            kernelRef: WeakRef<IKernel>;
+            duration: number;
+            kernelId: string;
+            position: Position;
+        }
+    >();
+
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -53,6 +70,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         @inject(IConfigurationService) config: IConfigurationService,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
+        disposables.push(this.toDispose);
         this.kernelProvider.onDidStartKernel(
             (kernel) => {
                 if (kernel.session?.kernel && isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
@@ -93,6 +111,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         token: CancellationToken,
         context: CompletionContext
     ): Promise<CompletionItem[]> {
+        const stopWatch = new StopWatch();
         if (!isNotebookCell(document)) {
             return [];
         }
@@ -109,12 +128,13 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         }
         // Allow slower timeouts for CI (testing).
         traceInfoIfCI(`Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
-        const [result, pylanceResults] = await Promise.all([
+        const [result, pylanceResults, kernelId] = await Promise.all([
             raceTimeout(
                 IntellisenseTimeout,
                 this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token)
             ),
-            raceTimeout(IntellisenseTimeout, this.getPylanceCompletions(document, position, context, token))
+            raceTimeout(IntellisenseTimeout, this.getPylanceCompletions(document, position, context, token)),
+            getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id)
         ]);
         if (!result) {
             traceInfoIfCI(`Notebook completions not found.`);
@@ -166,7 +186,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         }
 
         // Filter the list based on where we are in a cell (and the type of cell)
-        return filterCompletions(
+        completions = filterCompletions(
             context.triggerCharacter,
             this.allowStringFilter,
             completions,
@@ -174,7 +194,56 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
             document,
             position
         );
+        const documentRef = new WeakRef(document);
+        const kernelRef = new WeakRef(kernel);
+        const duration = stopWatch.elapsedTime;
+        completions.forEach((item) =>
+            this.completionItemsSent.set(item, {
+                documentRef,
+                kernelRef,
+                duration,
+                kernelId,
+                position
+            })
+        );
+        sendTelemetryEvent(
+            Telemetry.KernelCodeCompletion,
+            { duration, completionItems: completions.length, requestDuration: duration },
+            {
+                kernelId,
+                kernelConnectionType: kernel.kernelConnectionMetadata.kind,
+                kernelLanguage: PYTHON_LANGUAGE,
+                cancelled: token.isCancellationRequested,
+                completed: true,
+                requestSent: true,
+                kernelStatusAfterRequest: kernel.status
+            }
+        );
+        return completions;
     }
+    async resolveCompletionItem(item: CompletionItem, token: CancellationToken): Promise<CompletionItem> {
+        const info = this.completionItemsSent.get(item);
+        if (!info) {
+            return item;
+        }
+        const { kernelId, kernelRef, documentRef, position } = info;
+        const document = documentRef.deref();
+        const kernel = kernelRef.deref();
+        if (!document || !kernel || !kernel.session?.kernel) {
+            return item;
+        }
+        return resolveCompletionItem(
+            item,
+            token,
+            kernel,
+            kernelId,
+            PYTHON_LANGUAGE,
+            document,
+            position,
+            this.toDispose
+        );
+    }
+
     public async getJupyterCompletion(
         session: IKernelSession,
         cellCode: string,
@@ -252,21 +321,6 @@ function positionInsideString(line: string, position: Position) {
     const index = indexDoubleQuote >= 0 ? indexDoubleQuote : indexSingleQuote;
     const lastIndex = lastIndexDoubleQuote >= 0 ? lastIndexDoubleQuote : lastIndexSingleQuote;
     return index >= 0 && position.character > index && position.character <= lastIndex;
-}
-
-export function generateSortString(index: number) {
-    // If its 0, then use AA, if 25, then use ZZ
-    // This will give us the ability to sort first 700 items (thats more than enough).
-    // To keep things fast we'll only sort the first 300.
-    if (index >= 300) {
-        return 'ZZZZZZZ';
-    }
-    if (index <= 25) {
-        return `A${String.fromCharCode(65 + index)}`;
-    }
-    const firstChar = String.fromCharCode(65 + Math.ceil(index / 25));
-    const secondChar = String.fromCharCode(65 + (index % 25));
-    return `${firstChar}${secondChar}`;
 }
 
 // Exported for unit testing

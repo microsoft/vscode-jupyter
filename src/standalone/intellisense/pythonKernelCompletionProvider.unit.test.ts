@@ -3,8 +3,9 @@
 
 import { assert } from 'chai';
 import * as vscode from 'vscode';
-import { JupyterCompletionItem, generateSortString, filterCompletions } from './pythonKernelCompletionProvider';
+import { JupyterCompletionItem, filterCompletions } from './pythonKernelCompletionProvider';
 import { MockDocument } from '../../test/datascience/mockDocument';
+import { generateSortString } from './helpers';
 
 suite('Jupyter Completion Unit Tests', () => {
     let mockDocument: MockDocument;

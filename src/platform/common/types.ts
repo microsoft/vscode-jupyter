@@ -296,7 +296,8 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
 }
 
 export enum Experiments {
-    DataViewerContribution = 'DataViewerContribution'
+    DataViewerContribution = 'DataViewerContribution',
+    KernelCompletions = 'KernelCompletions'
 }
 
 /**
