@@ -1,0 +1,9 @@
+```python  
+ArithmeticError(self, /, *args, **kwargs)  
+```  
+----------  
+## Docstring:  
+Base class for arithmetic errors.  
+Type:           type  
+## Subclasses:  
+FloatingPointError, OverflowError, ZeroDivisionError, DecimalException

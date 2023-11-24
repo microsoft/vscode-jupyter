@@ -468,6 +468,7 @@
      "requestSent": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we send the request to resolve the completion item.","owner":"donjayamanne"},
      "completed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we resolved the documentation or not.","owner":"donjayamanne"},
      "requestDuration": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total time taken to resolve the documentation.","owner":"donjayamanne","isMeasurement":true},
+     "pendingRequests": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of pending requests.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 

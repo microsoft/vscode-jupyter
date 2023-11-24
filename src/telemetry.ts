@@ -3419,6 +3419,10 @@ export class IEventNamePropertyMapping {
              */
             requestDuration: number;
             /**
+             * Total number of pending requests.
+             */
+            pendingRequests: number;
+            /**
              * Whether the kernel completion resolve request returned any data.
              */
             completedWithData?: boolean;
@@ -3438,6 +3442,11 @@ export class IEventNamePropertyMapping {
         measures: {
             ...commonClassificationForDurationProperties(),
             requestDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            pendingRequests: {
                 classification: 'SystemMetaData',
                 purpose: 'PerformanceAndHealth',
                 isMeasurement: true
