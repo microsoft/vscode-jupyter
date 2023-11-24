@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
+import { EOL } from 'os';
 // eslint-disable-next-line local-rules/node-imports
 import * as path from 'path';
 import * as fs from 'fs-extra';
@@ -46,9 +47,12 @@ suite('Jupyter Completion Documentation Formatter', () => {
         const converted = convertDocumentationToMarkdown(documentation, language);
         // fs.writeFileSync(expectedOutputFile, typeof converted === 'string' ? converted : converted.value);
         if (typeof converted === 'string') {
-            assert.strictEqual(converted, expected);
+            compareIgnoreLineBreaks(converted, expected);
         } else {
-            assert.strictEqual(converted.value, expected);
+            compareIgnoreLineBreaks(converted.value, expected);
         }
+    }
+    function compareIgnoreLineBreaks(a: string, b: string) {
+        assert.strictEqual(a.replace(/\r?\n/g, EOL), b.replace(/\r?\n/g, EOL));
     }
 });
