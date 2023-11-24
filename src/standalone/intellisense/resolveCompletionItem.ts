@@ -8,11 +8,14 @@ import { Telemetry, TelemetryMeasures, TelemetryProperties, sendTelemetryEvent }
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { raceTimeoutError } from '../../platform/common/utils/async';
 import { raceCancellation } from '../../platform/common/cancellation';
-import { DisposableStore } from '../../platform/common/utils/lifecycle';
+import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { traceWarning } from '../../platform/logging';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { Settings } from '../../platform/common/constants';
+import { convertDocumentationToMarkdown } from './completionDocumentationFormatter';
+import { once } from '../../platform/common/utils/events';
+import { IDisposable } from '../../platform/common/types';
 
 // Not all kernels support requestInspect method.
 // E.g. deno does not support this, hence waiting for this to complete is poinless.
@@ -20,6 +23,7 @@ import { Settings } from '../../platform/common/constants';
 // If we have n consecutive attempts where the response never comes back in 1s,
 // then we'll always ignore `requestInspect` method for this kernel.
 export const MAX_ATTEMPTS_BEFORE_IGNORING_RESOLVE_COMPLETION = 5;
+export const MAX_PENDING_REQUESTS = 5;
 const MAX_TIMEOUT_WAITING_FOR_RESOLVE_COMPLETION = Settings.IntellisenseTimeout;
 
 const kernelIdsThatToNotSupportCompletionResolveOrAreTooSlowToReply = new Set<string>();
@@ -53,6 +57,7 @@ export async function resolveCompletionItem(
     const stopWatch = new StopWatch();
     const measures: TelemetryMeasures<Telemetry.KernelCodeCompletionResolve> = {
         duration: 0,
+        pendingRequests: 0,
         requestDuration: 0
     };
     const properties: TelemetryProperties<Telemetry.KernelCodeCompletionResolve> = {
@@ -73,10 +78,11 @@ export async function resolveCompletionItem(
         return item;
     }
     properties.requestSent = true;
-    const request = sendInspectRequest(item, document, position, kernel.session.kernel);
+    const message = generateInspectRequestMessage(item, document, position);
+    const request = sendInspectRequest(message, kernel.session.kernel, token, properties, measures, toDispose);
 
     try {
-        const msg = await raceTimeoutError(
+        const content = await raceTimeoutError(
             MAX_TIMEOUT_WAITING_FOR_RESOLVE_COMPLETION,
             new RequestTimedoutError(),
             raceCancellation(token, request)
@@ -86,25 +92,22 @@ export async function resolveCompletionItem(
         properties.cancelled = token.isCancellationRequested;
         properties.completed = !token.isCancellationRequested;
         measures.duration = stopWatch.elapsedTime;
-        measures.requestDuration = properties.completed ? stopWatch.elapsedTime : 0;
 
-        if (!properties.cancelled && msg?.content?.status === 'ok' && msg?.content?.found) {
-            const documentation = stripAnsi(msg.content.data['text/plain'] as string);
-            item.documentation = documentation;
+        if (!properties.cancelled && content?.status === 'ok' && content?.found) {
+            const documentation =
+                content &&
+                typeof content === 'object' &&
+                content.data &&
+                typeof content.data === 'object' &&
+                'text/plain' in content.data
+                    ? stripAnsi(content.data['text/plain'] as string)
+                    : '';
+            item.documentation = convertDocumentationToMarkdown(documentation, monacoLanguage);
             properties.completedWithData = documentation.length > 0;
         }
     } catch (ex) {
         properties.requestTimedout = ex instanceof RequestTimedoutError;
         handleKernelRequestTimeout(kernel, monacoLanguage);
-    }
-    if (properties.cancelled || properties.requestTimedout) {
-        checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
-            request,
-            stopWatch,
-            properties,
-            measures,
-            toDispose
-        );
     }
 
     sendTelemetryEvent(Telemetry.KernelCodeCompletionResolve, measures, properties);
@@ -135,12 +138,44 @@ function handleKernelRequestTimeout(kernel: IKernel, monacoLanguage: string) {
     }
 }
 
-function sendInspectRequest(
+/**
+ * We do not want to flood the kernel with too many pending requests.
+ * Thats bad, as that can slow the kernel down.
+ * Instead we will wait until there are only a max of 5 pending requests.
+ */
+async function sendInspectRequest(
+    message: Parameters<Kernel.IKernelConnection['requestInspect']>[0],
+    kernel: Kernel.IKernelConnection,
+    token: CancellationToken,
+    properties: TelemetryProperties<Telemetry.KernelCodeCompletionResolve>,
+    measures: TelemetryMeasures<Telemetry.KernelCodeCompletionResolve>,
+    toDispose: DisposableStore
+): Promise<KernelMessage.IInspectReplyMsg['content']> {
+    measures.pendingRequests = getPendingRequestCount(kernel);
+    if (doesKernelHaveTooManyPendingRequests(kernel)) {
+        await raceCancellation(token, waitForKernelToBeReadyToHandleRequest(kernel, token));
+    }
+    if (token.isCancellationRequested) {
+        return Promise.resolve({ data: {}, found: false, status: 'ok', metadata: {} });
+    }
+    const counter = incrementPendingCounter(kernel);
+    const stopWatch = new StopWatch();
+    const request = kernel.requestInspect(message).finally(() => {
+        properties.completed = true;
+        measures.requestDuration = stopWatch.elapsedTime;
+        properties.kernelStatusAfterRequest = kernel.status;
+        counter.dispose();
+    });
+    checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(request, stopWatch, properties, measures, toDispose);
+    // No need to raceCancel with the token, thats expected in the calling code.
+    return request.then(({ content }) => content);
+}
+
+function generateInspectRequestMessage(
     item: CompletionItem,
     document: TextDocument,
-    position: Position,
-    kernel: Kernel.IKernelConnection
-): Promise<KernelMessage.IInspectReplyMsg> {
+    position: Position
+): KernelMessage.IInspectRequestMsg['content'] {
     const code = document.getText();
     const insertText =
         (typeof item.insertText === 'string' ? item.insertText : item.insertText?.value) ||
@@ -154,12 +189,12 @@ function sendInspectRequest(
         detail_level: 0
     };
 
-    return kernel.requestInspect(contents);
+    return contents;
 }
 function checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
     request: Promise<unknown>,
     stopWatch: StopWatch,
-    telemetryInfo: TelemetryProperties<Telemetry.KernelCodeCompletionResolve>,
+    properties: TelemetryProperties<Telemetry.KernelCodeCompletionResolve>,
     measures: TelemetryMeasures<Telemetry.KernelCodeCompletionResolve>,
     toDispose: DisposableStore
 ) {
@@ -167,20 +202,90 @@ function checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
     // Some kernels do not support this request, this will give
     // an indication that they never work.
     const timeout = setTimeout(() => {
-        telemetryInfo.requestTimedout = true;
+        properties.requestTimedout = true;
         measures.requestDuration = stopWatch.elapsedTime;
-        sendTelemetryEvent(Telemetry.KernelCodeCompletionResolve, measures, telemetryInfo);
+        sendTelemetryEvent(Telemetry.KernelCodeCompletionResolve, measures, properties);
     }, MAX_TIMEOUT_WAITING_FOR_RESOLVE_COMPLETION * 10);
     const timeoutDisposable = new Disposable(() => clearTimeout(timeout));
-    toDispose.add(new Disposable(() => clearTimeout(timeout)));
+    toDispose.add(timeoutDisposable);
 
     void request.finally(() => {
+        // We do not care if the request didn't time out or it was not cancelled.
+        if (!properties.cancelled || !properties.requestTimedout) {
+            return;
+        }
         timeoutDisposable.dispose();
+        properties.completed = true;
         measures.requestDuration = stopWatch.elapsedTime;
         // Wait for completion and send the total time taken
         // Its possible that user may have cancelled this operation,
         // but kernel is still busy processing this request.
         // With this data we will know that completions take too long and can slow the kernel down.
-        sendTelemetryEvent(Telemetry.KernelCodeCompletionResolve, measures, telemetryInfo);
+        sendTelemetryEvent(Telemetry.KernelCodeCompletionResolve, measures, properties);
     });
+}
+
+const pendingInspectRequests = new WeakMap<Kernel.IKernelConnection, { count: number }>();
+
+function doesKernelHaveTooManyPendingRequests(kernel: Kernel.IKernelConnection) {
+    if (!pendingInspectRequests.has(kernel)) {
+        pendingInspectRequests.set(kernel, { count: 0 });
+    }
+    return (pendingInspectRequests.get(kernel)?.count || 0) >= MAX_PENDING_REQUESTS;
+}
+function getPendingRequestCount(kernel: Kernel.IKernelConnection) {
+    if (!pendingInspectRequests.has(kernel)) {
+        pendingInspectRequests.set(kernel, { count: 0 });
+    }
+    return pendingInspectRequests.get(kernel)?.count || 0;
+}
+
+function incrementPendingCounter(kernel: Kernel.IKernelConnection) {
+    const counter = pendingInspectRequests.get(kernel) || { count: 0 };
+    pendingInspectRequests.set(kernel, counter);
+    counter.count += 1;
+    return {
+        dispose: () => {
+            counter.count -= 1;
+        }
+    };
+}
+
+async function waitForKernelToBeReadyToHandleRequest(
+    kernel: Kernel.IKernelConnection,
+    token: CancellationToken
+): Promise<void> {
+    const disposables: IDisposable[] = [];
+    await raceCancellation(
+        token,
+        new Promise<void>((resolve) => {
+            const statusChangeHandler = () => {
+                if (!doesKernelHaveTooManyPendingRequests(kernel)) {
+                    resolve();
+                    dispose(disposables);
+                }
+            };
+            const interval = setInterval(() => {
+                if (!doesKernelHaveTooManyPendingRequests(kernel)) {
+                    resolve();
+                    dispose(disposables);
+                }
+            }, 50);
+            once(token.onCancellationRequested)(
+                () => {
+                    resolve();
+                    kernel.statusChanged.disconnect(statusChangeHandler);
+                },
+                undefined,
+                disposables
+            );
+            kernel.statusChanged.connect(statusChangeHandler);
+            disposables.push({
+                dispose: () => {
+                    clearInterval(interval);
+                    kernel.statusChanged.disconnect(statusChangeHandler);
+                }
+            });
+        })
+    );
 }

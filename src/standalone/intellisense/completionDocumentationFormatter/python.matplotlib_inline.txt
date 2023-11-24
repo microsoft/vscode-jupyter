@@ -1,0 +1,4 @@
+Type:        module
+String form: <module 'matplotlib_inline' from '/Users/donjayamanne/demo/.venv/lib/python3.11/site-packages/matplotlib_inline/__init__.py'>
+File:        ~/demo/.venv/lib/python3.11/site-packages/matplotlib_inline/__init__.py
+Docstring:   <no docstring>

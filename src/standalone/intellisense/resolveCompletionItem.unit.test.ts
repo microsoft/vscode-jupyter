@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
+import { Signal } from '@lumino/signaling';
 import uuid from 'uuid/v4';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { Kernel } from '@jupyterlab/services';
@@ -13,15 +14,20 @@ import {
     CancellationTokenSource,
     CompletionItem,
     Disposable,
+    MarkdownString,
     Position,
     Range,
     TextDocument,
     Uri
 } from 'vscode';
-import { MAX_ATTEMPTS_BEFORE_IGNORING_RESOLVE_COMPLETION, resolveCompletionItem } from './resolveCompletionItem';
+import {
+    MAX_ATTEMPTS_BEFORE_IGNORING_RESOLVE_COMPLETION,
+    MAX_PENDING_REQUESTS,
+    resolveCompletionItem
+} from './resolveCompletionItem';
 import { IDisposable } from '../../platform/common/types';
 import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
-import { createDeferred } from '../../platform/common/utils/async';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { IInspectReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { sleep } from '../../test/core';
 
@@ -47,6 +53,10 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         const session = mock<IKernelSession>();
         when(kernel.session).thenReturn(instance(session));
         when(session.kernel).thenReturn(instance(kernelConnection));
+        const kernelStatusChangedSignal = new Signal<Kernel.IKernelConnection, Kernel.Status>(
+            instance(kernelConnection)
+        );
+        when(kernelConnection.statusChanged).thenReturn(kernelStatusChangedSignal);
         document = createMockedDocument('foo.', Uri.parse('a.ipynb'), 1, true);
 
         tokenSource = new CancellationTokenSource();
@@ -56,6 +66,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         clock = fakeTimers.install();
 
         disposables.push(new Disposable(() => clock.uninstall()));
+        disposables.push(new Disposable(() => Signal.disconnectAll(instance(kernelConnection))));
         disposables.push(tokenSource);
         disposables.push(toDispose);
     });
@@ -133,7 +144,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
         assert.isUndefined(result.documentation);
     });
-    test('Return the sam item if kernel does not reply in time', async () => {
+    test('Return the sam item if kernel does not reply in time (test timeout)', async () => {
         completionItem = new CompletionItem('One');
         completionItem.range = new Range(0, 4, 0, 4);
         when(kernel.status).thenReturn('idle');
@@ -188,7 +199,39 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             toDispose
         );
         const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
-        assert.strictEqual(result.documentation, 'Some documentation');
+        assert.strictEqual((result.documentation as MarkdownString).value, 'Some documentation');
+    });
+    test('Resolve & leave documentation as is when nothing is returned from the kernel', async () => {
+        completionItem = new CompletionItem('One');
+        completionItem.range = new Range(0, 4, 0, 4);
+        when(kernel.status).thenReturn('idle');
+        const deferred = createDeferred<IInspectReplyMsg>();
+        deferred.resolve({
+            channel: 'shell',
+            content: {
+                status: 'ok',
+                data: {},
+                found: false,
+                metadata: {}
+            },
+            header: {} as any,
+            metadata: {} as any,
+            parent_header: {} as any
+        });
+        when(kernelConnection.requestInspect(anything())).thenReturn(deferred.promise);
+
+        const resultPromise = resolveCompletionItem(
+            completionItem,
+            token,
+            instance(kernel),
+            kernelId,
+            'python',
+            document,
+            new Position(0, 4),
+            toDispose
+        );
+        const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
+        assert.isUndefined(result.documentation);
     });
     test('Resolve the documentation, even if it takes a few ms (less than timeout)', async () => {
         completionItem = new CompletionItem('One');
@@ -222,7 +265,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             toDispose
         );
         const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
-        assert.strictEqual(result.documentation, 'Some documentation');
+        assert.strictEqual((result.documentation as MarkdownString).value, 'Some documentation');
     });
     test('Never make any requests if we fail to get a response n times', async () => {
         completionItem = new CompletionItem('One');
@@ -262,5 +305,72 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
         assert.strictEqual(result.documentation, completionItem.documentation);
         verify(kernelConnection.requestInspect(anything())).never();
+    });
+    test('Never queue more than 5 requests', async () => {
+        completionItem = new CompletionItem('One');
+        completionItem.range = new Range(0, 4, 0, 4);
+        when(kernel.status).thenReturn('idle');
+        const requests: Deferred<IInspectReplyMsg>[] = [];
+        when(kernelConnection.requestInspect(anything())).thenCall(() => {
+            const deferred = createDeferred<IInspectReplyMsg>();
+            requests.push(deferred);
+            disposables.push(new Disposable(() => deferred.resolve())); // No dangling promises.
+            return deferred.promise;
+        });
+
+        const sendRequest = () =>
+            resolveCompletionItem(
+                completionItem,
+                token,
+                instance(kernel),
+                kernelId,
+                'python',
+                document,
+                new Position(0, 4),
+                toDispose
+            );
+        for (let index = 0; index < MAX_PENDING_REQUESTS; index++) {
+            void sendRequest();
+        }
+        // const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
+        // assert.strictEqual(result.documentation, completionItem.documentation);
+        verify(kernelConnection.requestInspect(anything())).times(5);
+        assert.strictEqual(requests.length, MAX_PENDING_REQUESTS);
+
+        await clock.tickAsync(500); // Wait for 500ms (lets see if the back off strategy works & does not send any requests)
+        verify(kernelConnection.requestInspect(anything())).times(5);
+        assert.strictEqual(requests.length, MAX_PENDING_REQUESTS);
+
+        // Asking for resolving another completion will not send a new request, as there are too many
+        void sendRequest();
+        await clock.tickAsync(500); // Wait for 500ms (lets see if the back off strategy works & does not send any requests)
+        verify(kernelConnection.requestInspect(anything())).times(5);
+        assert.strictEqual(requests.length, MAX_PENDING_REQUESTS);
+
+        // Complete one of the requests, this should allow another request to be sent
+        requests.pop()?.resolve({ content: { status: 'ok', data: {}, found: false, metadata: {} } } as any);
+        await clock.tickAsync(500); // Wait for backoff strategy to work.
+        verify(kernelConnection.requestInspect(anything())).times(6);
+
+        // Asking for resolving another completion will not send a new request, as there are too many
+        void sendRequest();
+        await clock.tickAsync(500); // Wait for 500ms (lets see if the back off strategy works & does not send any requests)
+        verify(kernelConnection.requestInspect(anything())).times(6);
+        assert.strictEqual(requests.length, MAX_PENDING_REQUESTS);
+
+        // Complete one of the requests, this should allow another request to be sent
+        requests.pop()?.resolve({ content: { status: 'ok', data: {}, found: false, metadata: {} } } as any);
+        await clock.tickAsync(500); // Wait for backoff strategy to work.
+        verify(kernelConnection.requestInspect(anything())).times(7);
+
+        // Even if the token is cancelled, the pending requests queue should not be cleared.
+        // This is because we want to ensure we don't send too many requests to the kernel.
+        void sendRequest();
+        void sendRequest();
+        void sendRequest();
+        void sendRequest();
+        tokenSource.cancel();
+        await clock.tickAsync(500); // Wait for backoff strategy to work.
+        verify(kernelConnection.requestInspect(anything())).times(7);
     });
 });

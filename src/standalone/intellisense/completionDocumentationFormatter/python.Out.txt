@@ -1,0 +1,18 @@
+Type:        dict
+String form:
+{1:            A         B         C         D
+           8   0.850914 -0.172997 -0.004023 -1.525100
+           22 -0.9 <...>  -1.030907
+           46  2.676466  1.302830 -0.504599  0.894148
+           45  0.752718 -0.864930 -0.292536 -0.223329}
+Length:      1
+Docstring:
+dict() -> new empty dictionary
+dict(mapping) -> new dictionary initialized from a mapping object's
+    (key, value) pairs
+dict(iterable) -> new dictionary initialized as if via:
+    d = {}
+    for k, v in iterable:
+        d[k] = v
+dict(**kwargs) -> new dictionary initialized with the name=value pairs
+    in the keyword argument list.  For example:  dict(one=1, two=2)
