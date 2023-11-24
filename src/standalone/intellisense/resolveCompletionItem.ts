@@ -169,7 +169,8 @@ async function sendInspectRequest(
     }
     const counter = incrementPendingCounter(kernel);
     const stopWatch = new StopWatch();
-    traceVerbose(`Inspecting code ${splitLines(message.code).reverse()[0]} in kernel ${kernel.id}`);
+    const codeForLogging = splitLines(message.code).reverse()[0].trim();
+    traceVerbose(`Inspecting code ${codeForLogging}`);
     const request = kernel.requestInspect(message).finally(() => {
         properties.completed = true;
         measures.requestDuration = stopWatch.elapsedTime;
@@ -178,7 +179,10 @@ async function sendInspectRequest(
     });
     checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(request, stopWatch, properties, measures, toDispose);
     // No need to raceCancel with the token, thats expected in the calling code.
-    return request.then(({ content }) => content);
+    return request.then(({ content }) => {
+        traceVerbose(`Inspected code ${splitLines(message.code).reverse()[0]} in ${stopWatch.elapsedTime}ms`);
+        return content;
+    });
 }
 
 function generateInspectRequestMessage(
