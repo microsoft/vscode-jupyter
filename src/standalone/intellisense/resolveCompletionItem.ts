@@ -128,7 +128,7 @@ function handleKernelRequestTimeout(kernel: IKernel, monacoLanguage: string) {
     totalNumberOfTimeoutsWaitingForResolveCompletionPerKernel.set(kernelId, numberOfFailedAttempts);
     if (numberOfFailedAttempts >= MAX_ATTEMPTS_BEFORE_IGNORING_RESOLVE_COMPLETION) {
         traceWarning(
-            `Failed to resolve completion items for kernel ${getDisplayNameOrNameOfKernelConnection(
+            `Failed to inspect code in kernel ${getDisplayNameOrNameOfKernelConnection(
                 kernel.kernelConnectionMetadata
             )} ${numberOfFailedAttempts} times.}`
         );
@@ -177,10 +177,17 @@ async function sendInspectRequest(
         properties.kernelStatusAfterRequest = kernel.status;
         counter.dispose();
     });
-    checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(request, stopWatch, properties, measures, toDispose);
+    checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
+        request,
+        kernel,
+        stopWatch,
+        properties,
+        measures,
+        toDispose
+    );
     // No need to raceCancel with the token, thats expected in the calling code.
     return request.then(({ content }) => {
-        traceVerbose(`Inspected code ${splitLines(message.code).reverse()[0]} in ${stopWatch.elapsedTime}ms`);
+        traceVerbose(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms`);
         return content;
     });
 }
@@ -207,6 +214,7 @@ function generateInspectRequestMessage(
 }
 function checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
     request: Promise<unknown>,
+    kernel: Kernel.IKernelConnection,
     stopWatch: StopWatch,
     properties: TelemetryProperties<Telemetry.KernelCodeCompletionResolve>,
     measures: TelemetryMeasures<Telemetry.KernelCodeCompletionResolve>,
@@ -219,6 +227,8 @@ function checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
         properties.requestTimedout = true;
         measures.requestDuration = stopWatch.elapsedTime;
         sendTelemetryEvent(Telemetry.KernelCodeCompletionResolve, measures, properties);
+
+        traceWarning(`Timeout waiting to inspect code in kernel ${kernel.id}`);
     }, MAX_TIMEOUT_WAITING_FOR_RESOLVE_COMPLETION * 10);
     const timeoutDisposable = new Disposable(() => clearTimeout(timeout));
     toDispose.add(timeoutDisposable);
