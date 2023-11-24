@@ -24,7 +24,12 @@ import { splitLines } from '../../platform/common/helpers';
 // If we have n consecutive attempts where the response never comes back in 1s,
 // then we'll always ignore `requestInspect` method for this kernel.
 export const MAX_ATTEMPTS_BEFORE_IGNORING_RESOLVE_COMPLETION = 5;
-export const MAX_PENDING_REQUESTS = 5;
+/**
+ * Based on my (Don) findings with a local Python Kernel, the max number of pending requests I had was just 1.
+ * Hence its fair to assume that having 3 is unlikely and not a scenario we want to run into.
+ * I.e. 3 requests waiting for a response from the kernel is bad.
+ */
+export const MAX_PENDING_REQUESTS = 3;
 const MAX_TIMEOUT_WAITING_FOR_RESOLVE_COMPLETION = Settings.IntellisenseTimeout;
 
 const kernelIdsThatToNotSupportCompletionResolveOrAreTooSlowToReply = new Set<string>();

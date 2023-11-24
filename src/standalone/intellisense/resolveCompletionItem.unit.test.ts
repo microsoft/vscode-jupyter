@@ -20,11 +20,7 @@ import {
     TextDocument,
     Uri
 } from 'vscode';
-import {
-    MAX_ATTEMPTS_BEFORE_IGNORING_RESOLVE_COMPLETION,
-    MAX_PENDING_REQUESTS,
-    resolveCompletionItem
-} from './resolveCompletionItem';
+import { MAX_PENDING_REQUESTS, resolveCompletionItem } from './resolveCompletionItem';
 import { IDisposable } from '../../platform/common/types';
 import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
@@ -144,7 +140,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
         assert.isUndefined(result.documentation);
     });
-    test('Return the sam item if kernel does not reply in time (test timeout)', async () => {
+    test('Return the same item if kernel does not reply in time (test timeout)', async () => {
         completionItem = new CompletionItem('One');
         completionItem.range = new Range(0, 4, 0, 4);
         when(kernel.status).thenReturn('idle');
@@ -273,9 +269,8 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         when(kernel.status).thenReturn('idle');
         const deferred = createDeferred<IInspectReplyMsg>();
         when(kernelConnection.requestInspect(anything())).thenReturn(deferred.promise);
-
-        for (let index = 0; index < MAX_ATTEMPTS_BEFORE_IGNORING_RESOLVE_COMPLETION; index++) {
-            const resultPromise = resolveCompletionItem(
+        const sendRequest = () =>
+            resolveCompletionItem(
                 completionItem,
                 token,
                 instance(kernel),
@@ -285,10 +280,19 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
                 new Position(0, 4),
                 toDispose
             );
+
+        for (let index = 0; index < MAX_PENDING_REQUESTS; index++) {
+            const resultPromise = sendRequest();
             const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
             assert.strictEqual(result.documentation, completionItem.documentation);
-            verify(kernelConnection.requestInspect(anything())).atLeast(index + 1);
+            verify(kernelConnection.requestInspect(anything())).times(index + 1);
         }
+
+        // Lets try to send a lot more & verify this is a noop.
+        for (let index = 0; index < 100; index++) {
+            void sendRequest();
+        }
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS);
 
         reset(kernelConnection);
         when(kernelConnection.requestInspect(anything())).thenReturn(deferred.promise);
@@ -334,34 +338,34 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         }
         // const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
         // assert.strictEqual(result.documentation, completionItem.documentation);
-        verify(kernelConnection.requestInspect(anything())).times(5);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS);
         assert.strictEqual(requests.length, MAX_PENDING_REQUESTS);
 
         await clock.tickAsync(500); // Wait for 500ms (lets see if the back off strategy works & does not send any requests)
-        verify(kernelConnection.requestInspect(anything())).times(5);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS);
         assert.strictEqual(requests.length, MAX_PENDING_REQUESTS);
 
         // Asking for resolving another completion will not send a new request, as there are too many
         void sendRequest();
         await clock.tickAsync(500); // Wait for 500ms (lets see if the back off strategy works & does not send any requests)
-        verify(kernelConnection.requestInspect(anything())).times(5);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS);
         assert.strictEqual(requests.length, MAX_PENDING_REQUESTS);
 
         // Complete one of the requests, this should allow another request to be sent
         requests.pop()?.resolve({ content: { status: 'ok', data: {}, found: false, metadata: {} } } as any);
         await clock.tickAsync(500); // Wait for backoff strategy to work.
-        verify(kernelConnection.requestInspect(anything())).times(6);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 1);
 
         // Asking for resolving another completion will not send a new request, as there are too many
         void sendRequest();
         await clock.tickAsync(500); // Wait for 500ms (lets see if the back off strategy works & does not send any requests)
-        verify(kernelConnection.requestInspect(anything())).times(6);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 1);
         assert.strictEqual(requests.length, MAX_PENDING_REQUESTS);
 
         // Complete one of the requests, this should allow another request to be sent
         requests.pop()?.resolve({ content: { status: 'ok', data: {}, found: false, metadata: {} } } as any);
         await clock.tickAsync(500); // Wait for backoff strategy to work.
-        verify(kernelConnection.requestInspect(anything())).times(7);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 2);
 
         // Even if the token is cancelled, the pending requests queue should not be cleared.
         // This is because we want to ensure we don't send too many requests to the kernel.
@@ -371,6 +375,6 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         void sendRequest();
         tokenSource.cancel();
         await clock.tickAsync(500); // Wait for backoff strategy to work.
-        verify(kernelConnection.requestInspect(anything())).times(7);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 2);
     });
 });
