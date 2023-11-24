@@ -63,7 +63,7 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
         // if after 100s, the token isn't cancelled, then send the request.
         const version = document.version;
         await sleep(100);
-        if (token.isCancellationRequested || version !== document.version) {
+        if (token.isCancellationRequested || version !== document.version || !this.kernel.session?.kernel) {
             return [];
         }
         const stopWatch = new StopWatch();
@@ -84,7 +84,7 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
         // No point sending completions if we're not connected.
         // Even if we're busy restarting, then no point, by the time it starts, the user would have typed something else
         // Hence no point sending requests that would unnecessarily slow things down.
-        if (this.kernel.status !== 'idle' || !this.kernel.session?.kernel) {
+        if (this.kernel.status !== 'idle') {
             sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
             return [];
         }
