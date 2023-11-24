@@ -2009,11 +2009,12 @@
                         "julia": [
                             "."
                         ],
-                        "python": [
+                        "rust": [
                             ".",
-                            "%",
-                            "'",
-                            "\""
+                            ":"
+                        ],
+                        "scala": [
+                            "."
                         ],
                         "typescript": [
                             ".",
@@ -2022,20 +2023,6 @@
                             "/",
                             "@",
                             "<"
-                        ],
-                        "rust": [
-                            ".",
-                            ":"
-                        ],
-                        "scala": [
-                            "."
-                        ],
-                        "xonsh": [
-                            " ",
-                            ".",
-                            "%",
-                            "'",
-                            "\""
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.completionTriggerCharacters.markdownDescription%",
@@ -2066,14 +2053,6 @@
                         {
                             "julia": [
                                 "."
-                            ]
-                        },
-                        {
-                            "python": [
-                                ".",
-                                "%",
-                                "'",
-                                "\""
                             ]
                         },
                         {
