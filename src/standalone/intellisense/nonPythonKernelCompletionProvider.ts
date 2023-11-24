@@ -101,6 +101,7 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
         );
         traceVerbose(`Jupyter completion time: ${stopWatch.elapsedTime}`);
         properties.cancelled = token.isCancellationRequested;
+        properties.completed = !token.isCancellationRequested;
         properties.kernelStatusAfterRequest = this.kernel.status;
         measures.requestDuration = token.isCancellationRequested ? 0 : stopWatch.elapsedTime;
 

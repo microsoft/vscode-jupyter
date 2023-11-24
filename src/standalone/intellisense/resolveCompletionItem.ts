@@ -10,12 +10,13 @@ import { raceTimeoutError } from '../../platform/common/utils/async';
 import { raceCancellation } from '../../platform/common/cancellation';
 import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
 import { stripAnsi } from '../../platform/common/utils/regexp';
-import { traceWarning } from '../../platform/logging';
+import { traceInfo, traceVerbose, traceWarning } from '../../platform/logging';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { Settings } from '../../platform/common/constants';
 import { convertDocumentationToMarkdown } from './completionDocumentationFormatter';
 import { once } from '../../platform/common/utils/events';
 import { IDisposable } from '../../platform/common/types';
+import { splitLines } from '../../platform/common/helpers';
 
 // Not all kernels support requestInspect method.
 // E.g. deno does not support this, hence waiting for this to complete is poinless.
@@ -94,14 +95,7 @@ export async function resolveCompletionItem(
         measures.duration = stopWatch.elapsedTime;
 
         if (!properties.cancelled && content?.status === 'ok' && content?.found) {
-            const documentation =
-                content &&
-                typeof content === 'object' &&
-                content.data &&
-                typeof content.data === 'object' &&
-                'text/plain' in content.data
-                    ? stripAnsi(content.data['text/plain'] as string)
-                    : '';
+            const documentation = getDocumentation(content);
             item.documentation = convertDocumentationToMarkdown(documentation, monacoLanguage);
             properties.completedWithData = documentation.length > 0;
         }
@@ -112,6 +106,16 @@ export async function resolveCompletionItem(
 
     sendTelemetryEvent(Telemetry.KernelCodeCompletionResolve, measures, properties);
     return item;
+}
+
+function getDocumentation(content: KernelMessage.IInspectReply) {
+    if (!content || content.status !== 'ok' || !content.found) {
+        return ';';
+    }
+    if (!content.data || typeof content.data !== 'object') {
+        return '';
+    }
+    return 'text/plain' in content.data ? stripAnsi(content.data['text/plain'] as string) : '';
 }
 
 function handleKernelRequestTimeout(kernel: IKernel, monacoLanguage: string) {
@@ -153,6 +157,11 @@ async function sendInspectRequest(
 ): Promise<KernelMessage.IInspectReplyMsg['content']> {
     measures.pendingRequests = getPendingRequestCount(kernel);
     if (doesKernelHaveTooManyPendingRequests(kernel)) {
+        traceInfo(
+            `Too many pending requests ${getPendingRequestCount(kernel)} for kernel ${
+                kernel.id
+            }, waiting for it to be ready.`
+        );
         await raceCancellation(token, waitForKernelToBeReadyToHandleRequest(kernel, token));
     }
     if (token.isCancellationRequested) {
@@ -160,6 +169,7 @@ async function sendInspectRequest(
     }
     const counter = incrementPendingCounter(kernel);
     const stopWatch = new StopWatch();
+    traceVerbose(`Inspecting code ${splitLines(message.code).reverse()[0]} in kernel ${kernel.id}`);
     const request = kernel.requestInspect(message).finally(() => {
         properties.completed = true;
         measures.requestDuration = stopWatch.elapsedTime;
