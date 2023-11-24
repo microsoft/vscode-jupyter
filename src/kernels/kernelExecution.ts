@@ -124,6 +124,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
     }
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<NotebookCellRunState> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
+        const stopWatch = new StopWatch();
         if (cell.kind == NotebookCellKind.Markup) {
             return NotebookCellRunState.Success;
         }
@@ -133,7 +134,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             this.kernel.resourceUri,
             this.kernel.kernelConnectionMetadata
         );
-        sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell);
         const sessionPromise = this.kernel.start(new DisplayOptions(false));
 
         // If we're restarting, wait for it to finish
@@ -149,6 +149,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
         );
         traceVerbose(`Cell ${cell.index} executed with state ${result[0]}`);
+        sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell, { duration: stopWatch.elapsedTime });
 
         return result[0];
     }
@@ -158,7 +159,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             this.kernel.resourceUri,
             this.kernel.kernelConnectionMetadata
         );
-        sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell);
         const sessionPromise = this.kernel.start(new DisplayOptions(false));
 
         // If we're restarting, wait for it to finish
@@ -168,11 +168,16 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         const result = executionQueue.queueCode(code, extensionId, token);
         traceVerbose(`Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`);
         result.result
-            .finally(
-                () =>
-                    !token.isCancellationRequested &&
-                    traceInfo(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`)
-            )
+            .finally(() => {
+                !token.isCancellationRequested &&
+                    traceInfo(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`);
+                sendKernelTelemetryEvent(
+                    this.kernel.resourceUri,
+                    Telemetry.ExecuteCode,
+                    { duration: stopWatch.elapsedTime },
+                    { extensionId }
+                );
+            })
             .catch(noop);
         return result;
     }

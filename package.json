@@ -1497,7 +1497,9 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": []
+                        "enum": [
+                            "KernelCompletions"
+                        ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
                     "scope": "application"
@@ -1506,7 +1508,9 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": []
+                        "enum": [
+                            "KernelCompletions"
+                        ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
                     "scope": "application"
@@ -1971,8 +1975,7 @@
                 },
                 "jupyter.enableKernelCompletions": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Enable Non-Python Kernel Completions",
+                    "default": true,
                     "markdownDescription": "%jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription%",
                     "scope": "application"
                 },
@@ -2036,7 +2039,74 @@
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.completionTriggerCharacters.markdownDescription%",
-                    "scope": "machine-overridable"
+                    "scope": "machine-overridable",
+                    "examples": [
+                        {
+                            "bash": [
+                                "$",
+                                "{"
+                            ]
+                        },
+                        {
+                            "java": [
+                                ".",
+                                "@",
+                                "#"
+                            ]
+                        },
+                        {
+                            "javascript": [
+                                ".",
+                                "\"",
+                                "'",
+                                "/",
+                                "@"
+                            ]
+                        },
+                        {
+                            "julia": [
+                                "."
+                            ]
+                        },
+                        {
+                            "python": [
+                                ".",
+                                "%",
+                                "'",
+                                "\""
+                            ]
+                        },
+                        {
+                            "typescript": [
+                                ".",
+                                "\"",
+                                "'",
+                                "/",
+                                "@",
+                                "<"
+                            ]
+                        },
+                        {
+                            "rust": [
+                                ".",
+                                ":"
+                            ]
+                        },
+                        {
+                            "scala": [
+                                "."
+                            ]
+                        },
+                        {
+                            "xonsh": [
+                                " ",
+                                ".",
+                                "%",
+                                "'",
+                                "\""
+                            ]
+                        }
+                    ]
                 }
             }
         },

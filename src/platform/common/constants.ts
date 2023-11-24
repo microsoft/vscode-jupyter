@@ -386,6 +386,7 @@ export enum Telemetry {
     CellOutputMimeType = 'DS_INTERNAL.CELL_OUTPUT_MIME_TYPE',
     JupyterApiUsage = 'DATASCIENCE.JUPYTER_API_USAGE',
     KernelCodeCompletion = 'DATASCIENCE.JUPYTER_KERNEL_CODE_COMPLETION',
+    KernelCodeCompletionResolve = 'DATASCIENCE.JUPYTER_KERNEL_CODE_COMPLETION_RESOLVE',
     KernelCodeCompletionCannotResolve = 'DATASCIENCE.JUPYTER_KERNEL_CODE_COMPLETION_CANNOT_RESOLVE',
     JupyterKernelApiUsage = 'DATASCIENCE.JUPYTER_KERNEL_API_USAGE',
     NewJupyterKernelApiUsage = 'DATASCIENCE.JUPYTER_NEW_KERNEL_API_USAGE',
@@ -446,6 +447,7 @@ export enum Telemetry {
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
     KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
     ExecuteCell = 'DATASCIENCE.EXECUTE_CELL',
+    ExecuteCode = 'DATASCIENCE.EXECUTE_CODE',
     ResumeCellExecution = 'DATASCIENCE.RESUME_EXECUTE_CELL',
     /**
      * Sent when a command we register is executed.
