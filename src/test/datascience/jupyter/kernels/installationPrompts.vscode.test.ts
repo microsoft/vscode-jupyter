@@ -68,6 +68,7 @@ import { isUri } from '../../../../platform/common/utils/misc';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../kernels/execution/helpers';
 import { BaseKernelError } from '../../../../kernels/errors/types';
 import { IControllerRegistration } from '../../../../notebooks/controllers/types';
+import { traceVerbose } from '../../../../platform/logging';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('Install IPyKernel (install) @kernelInstall', function () {
@@ -562,7 +563,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath, venvNoRegPath, 'DoNotInstallIPyKernel');
     });
     // https://github.com/microsoft/vscode-jupyter/issues/12766
-    test.skip('Should be prompted to re-install ipykernel when restarting a kernel from which ipykernel was uninstalled (VSCode Notebook)', async function () {
+    test('Should be prompted to re-install ipykernel when restarting a kernel from which ipykernel was uninstalled (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
@@ -578,16 +579,25 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
 
         // Confirm message is displayed.
         installerSpy = sinon.spy(installer, 'install');
-        const promptToInstall = await clickInstallFromIPyKernelPrompt();
+        // Confirm message is displayed.
+        let installedIPyKernel = false;
+
+        // First hookup the prompt for restarting the kernel;
+        const restartPrompt = await clickOKForRestartPrompt();
+        restartPrompt.displayed
+            .then(async () => {
+                restartPrompt.dispose();
+                // Next  hookup the prompt for re-install ipykernel.
+                const selectionPrompt = await clickInstallFromIPyKernelPrompt();
+                installedIPyKernel = await selectionPrompt.displayed;
+            })
+            .catch(noop);
+
         await Promise.all([
             commandManager.executeCommand(Commands.RestartKernel, {
                 notebookEditor: { notebookUri: nbFile }
             }),
-            waitForCondition(
-                async () => promptToInstall.displayed.then(() => true),
-                delayForUITest,
-                'Prompt not displayed'
-            ),
+            waitForCondition(async () => installedIPyKernel, delayForUITest, 'Prompt not displayed'),
             waitForIPyKernelToGetInstalled()
         ]);
     });
@@ -607,19 +617,29 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         assert.ok(startController);
 
         // Confirm message is displayed.
-        const promptToInstall = await selectKernelFromIPyKernelPrompt();
-        const { kernelSelected } = hookupKernelSelected(promptToInstall, venvNoRegPath);
+        let promptToInstallDisplayed = false;
+        let kernelSelected = false;
 
+        // First hookup the prompt for restarting the kernel;
+        const restartPrompt = await clickOKForRestartPrompt();
+        restartPrompt.displayed
+            .then(async () => {
+                restartPrompt.dispose();
+                // Next  hookup the prompt for re-install ipykernel.
+                const selectionPrompt = await selectKernelFromIPyKernelPrompt();
+                traceVerbose('Hooked prompt to change kernel');
+                promptToInstallDisplayed = await selectionPrompt.displayed;
+                traceVerbose('Displayed and handled prompt to change kernel', promptToInstallDisplayed);
+                // Next  hookup the prompt for selecting a kernel
+                kernelSelected = await hookupKernelSelected(restartPrompt, venvNoRegPath).kernelSelected;
+                traceVerbose('Hooked prompt to select a new kernel', kernelSelected);
+            })
+            .catch(noop);
+        traceVerbose('Waiting For all');
         await Promise.all([
-            commandManager.executeCommand(Commands.RestartKernel, {
-                notebookEditor: { notebookUri: nbFile }
-            }),
-            waitForCondition(
-                async () => promptToInstall.displayed.then(() => true),
-                delayForUITest,
-                'Prompt not displayed'
-            ),
-            waitForCondition(async () => kernelSelected, delayForUITest, 'New kernel not selected'),
+            commandManager.executeCommand(Commands.RestartKernel, { notebookEditor: { notebookUri: nbFile } }),
+            waitForCondition(() => promptToInstallDisplayed, delayForUITest, 'Prompt not displayed'),
+            waitForCondition(() => kernelSelected, delayForUITest, 'New kernel not selected'),
             // Verify the new kernel associated with this notebook is different.
             waitForCondition(
                 async () => {
@@ -752,6 +772,14 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
             { result: DataScience.selectKernel, clickImmediately: true },
+            disposables
+        );
+    }
+    async function clickOKForRestartPrompt() {
+        return hijackPrompt(
+            'showInformationMessage',
+            { contains: DataScience.restartKernelMessage },
+            { result: DataScience.restartKernelMessageYes, clickImmediately: true },
             disposables
         );
     }
