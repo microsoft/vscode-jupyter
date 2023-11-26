@@ -5,8 +5,22 @@
             "name": "vscode-jupyter"
         },
         {
-            "name": "vscode-data-wrangler",
-            "path": "/Users/donjayamanne/Desktop/development/vsc/vscode-data-wrangler-internal/vscode-data-wrangler"
+            "path": "pythonFiles"
+        },
+        {
+            "path": "src/ipywidgets"
+        },
+        {
+            "name": "vscode-notebook-renderers",
+            "path": "../vscode-notebook-renderers"
+        },
+        {
+            "name": "vscode-python",
+            "path": "../vscode-python"
+        },
+        {
+            "name": "vscode-jupyter-powertoys",
+            "path": "../vscode-jupyter-powertoys"
         }
     ],
     "settings": {
@@ -29,16 +43,16 @@
             {
                 "type": "extensionHost",
                 "request": "launch",
-                "name": "Jupyter + DW Extension",
+                "name": "Jupyter + Python Extension",
                 "args": [
                     "--enable-proposed-api",
-                    "--extensionDevelopmentPath=${workspaceFolder:vscode-data-wrangler}",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-python}",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}"
                 ],
                 "sourceMaps": true,
                 "outFiles": [
-                    "${workspaceFolder:vscode-data-wrangler}/out/**/*.js",
-                    "!${workspaceFolder:vscode-data-wrangler}/**/node_modules**/*",
+                    "${workspaceFolder:vscode-python}/out/**/*.js",
+                    "!${workspaceFolder:vscode-python}/**/node_modules**/*",
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
                     "${workspaceFolder:vscode-jupyter}/dist/**/*.js",
                     "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
