@@ -260,6 +260,8 @@
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
      "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "pendingInspectRequestsBefore": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of inspect requests (before the cell was executed).","owner":"donjayamanne","isMeasurement":true},
+     "pendingInspectRequestsAfter": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of inspect requests (after the cell was executed).","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 

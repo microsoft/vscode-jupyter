@@ -2580,12 +2580,36 @@ export class IEventNamePropertyMapping {
     /**
      * Sent when a user executes a cell.
      */
-    [Telemetry.ExecuteCell]: TelemetryEventInfo<DurationMeasurement & ResourceSpecificTelemetryProperties> = {
+    [Telemetry.ExecuteCell]: TelemetryEventInfo<
+        DurationMeasurement &
+            ResourceSpecificTelemetryProperties & {
+                /**
+                 * Total number of inspect requests (before the cell was executed).
+                 */
+                pendingInspectRequestsBefore: number;
+                /**
+                 * Total number of inspect requests (after the cell was executed).
+                 */
+                pendingInspectRequestsAfter: number;
+            }
+    > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         source: 'User Action',
         tags: ['Cell Execution'],
-        measures: commonClassificationForDurationProperties(),
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            pendingInspectRequestsBefore: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            pendingInspectRequestsAfter: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            }
+        },
         properties: {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties,
             ...commonClassificationForErrorProperties()
