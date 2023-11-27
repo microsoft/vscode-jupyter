@@ -12,46 +12,30 @@
             "type": "npm",
             "script": "compile",
             "isBackground": true,
-            "problemMatcher": ["$tsc-watch"],
+            "problemMatcher": [
+                {
+                    "applyTo": "closedDocuments",
+                    "fileLocation": "relative",
+                    "source": "esbuild + tsc",
+                    "pattern": [
+                        {
+                            "regexp": ": ([A-Za-z0-9]*) ([A-Za-z0-9]*): (.*)",
+                            "severity": 1,
+                            "message": 3
+                        },
+                        {
+                            "regexp": "\\[[0-9]*\\] (.*)\\(([0-9]*),([0-9]*)\\)",
+                            "file": 1,
+                            "line": 2,
+                            "column": 3
+                        }
+                    ]
+                }
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
-        },
-        {
-            "label": "Compile Viewers",
-            "type": "npm",
-            "script": "compile-viewers-watch",
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$esbuild-watch"]
-        },
-        {
-            "label": "Compile Web Extension",
-            "type": "npm",
-            "script": "compile-web-watch",
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$ts-webpack-watch"]
-        },
-        {
-            "label": "compile-web-test",
-            "type": "npm",
-            "script": "compile-web-test",
-            "dependsOrder": "sequence",
-            "dependsOn": ["Compile"],
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$ts-webpack-watch"]
         },
         {
             "label": "Run Unit Tests",

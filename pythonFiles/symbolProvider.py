@@ -26,12 +26,10 @@ class Visitor(ast.NodeVisitor):
                 pass
 
     def visitDef(self, node, namespace=""):
-        end_position = self.getEndPosition(node)
         symbol = "functions" if namespace == "" else "methods"
         self.symbols[symbol].append(self.getDataObject(node, namespace))
 
     def visitClassDef(self, node, namespace=""):
-        end_position = self.getEndPosition(node)
         self.symbols["classes"].append(self.getDataObject(node, namespace))
 
         if len(namespace) > 0:

@@ -4,75 +4,75 @@ labels: [bug]
 assignees:
   - octocat
 body:
-- type: markdown
-  attributes:
-    value: |
-      ## Before submitting a bug, you may want to check out...
-      * Troubleshooting on [our wiki](https://github.com/microsoft/vscode-jupyter/wiki)
-      * Our [Discussions Forum](https://github.com/microsoft/vscode-jupyter/discussions)
-- type: markdown
-  attributes:
-    value: |
-      ## Bug Form
-- type: checkboxes
-  id: feature-focus
-  attributes:
-    label: Applies To
-    options:
-      - label: Notebooks (.ipynb files)
-      - label: Interactive Window and\/or Cell Scripts (.py files with \#%% markers)
-- type: textarea
-  id: what-happened
-  attributes:
-    label: What happened?
-    placeholder: Tell us the steps you took, what you *expected* to happen and what *actually* happened.
-  validations:
-    required: true
-- type: input
-  id: vscode-version
-  attributes:
-    label: VS Code Version
-    description: You can copy the contents of Help > About and paste here.
-  validations:
-    required: true
-- type: input
-  id: jupyter-version
-  attributes:
-    label: Jupyter Extension Version
-    description: The version can be found at the top of the extension's description in the extensions sidebar.
-  validations:
-    required: true
-- type: textarea
-  id: logs
-  attributes:
-    label: Jupyter logs
-    description: Copy and paste all of the text in the Jupyter Output panel available via the ```Jupyter Show Output``` command. This is often critical to help us understand and fix what may have gone wrong!
-    render: shell
-- type: markdown
-  attributes:
-    value: |
-      ## The following fields are optional but can help us make a better determination of what may have gone wrong.
-- type: input
-  id: code-and-runtime
-  attributes:
-    label: Coding Language and Runtime Version
-    placeholder: Python v3.8.2, vJulia 1.6, R, etc.
-- type: input
-  id: lang-extension-version
-  attributes:
-    label: Language Extension Version (if applicable)
-    description: Ex. Python Extension. The extension version can be found at the top of the extension's description in the extensions sidebar.
-- type: input
-  id: anaconda-version
-  attributes:
-    label: Anaconda Version (if applicable)
-    description: If applicable, what version of the Anaconda are you using?
-- type: dropdown
-  id: local-remote
-  attributes:
-    label: Running Jupyter locally or remotely?
-    multiple:
-    options:
-      - Local
-      - Remote
-      - N/A or Not sure
+  - type: markdown
+    attributes:
+      value: |
+        ## Before submitting a bug, you may want to check out...
+        * Troubleshooting on [our wiki](https://github.com/microsoft/vscode-jupyter/wiki)
+        * Our [Discussions Forum](https://github.com/microsoft/vscode-jupyter/discussions)
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Form
+  - type: checkboxes
+    id: feature-focus
+    attributes:
+      label: Applies To
+      options:
+        - label: Notebooks (.ipynb files)
+        - label: Interactive Window and\/or Cell Scripts (.py files with \#%% markers)
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      placeholder: Tell us the steps you took, what you *expected* to happen and what *actually* happened.
+    validations:
+      required: true
+  - type: input
+    id: vscode-version
+    attributes:
+      label: VS Code Version
+      description: You can copy the contents of Help > About and paste here.
+    validations:
+      required: true
+  - type: input
+    id: jupyter-version
+    attributes:
+      label: Jupyter Extension Version
+      description: The version can be found at the top of the extension's description in the extensions sidebar.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Jupyter logs
+      description: Copy and paste all of the text in the Jupyter Output panel available via the ```Jupyter Show Output``` command. This is often critical to help us understand and fix what may have gone wrong!
+      render: shell
+  - type: markdown
+    attributes:
+      value: |
+        ## The following fields are optional but can help us make a better determination of what may have gone wrong.
+  - type: input
+    id: code-and-runtime
+    attributes:
+      label: Coding Language and Runtime Version
+      placeholder: Python v3.8.2, vJulia 1.6, R, etc.
+  - type: input
+    id: lang-extension-version
+    attributes:
+      label: Language Extension Version (if applicable)
+      description: Ex. Python Extension. The extension version can be found at the top of the extension's description in the extensions sidebar.
+  - type: input
+    id: anaconda-version
+    attributes:
+      label: Anaconda Version (if applicable)
+      description: If applicable, what version of the Anaconda are you using?
+  - type: dropdown
+    id: local-remote
+    attributes:
+      label: Running Jupyter locally or remotely?
+      multiple:
+      options:
+        - Local
+        - Remote
+        - N/A or Not sure

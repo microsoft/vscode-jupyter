@@ -223,7 +223,8 @@ let widgetManagerPromise: Promise<WidgetManager> | undefined;
 async function getWidgetManager(): Promise<WidgetManager> {
     if (!widgetManagerPromise) {
         function reInitializeWidgetManager(resolve?: (value: WidgetManager) => void) {
-            WidgetManager.instance.subscribe((wm) => {
+            function initializeInstance() {
+                const wm = WidgetManager.instance;
                 if (wm) {
                     const oldDispose = wm.dispose.bind(wm);
                     wm.dispose = () => {
@@ -237,7 +238,9 @@ async function getWidgetManager(): Promise<WidgetManager> {
                     }
                     widgetManagerPromise = Promise.resolve(wm);
                 }
-            });
+            }
+            initializeInstance();
+            WidgetManager.onDidChangeInstance(initializeInstance);
         }
         // eslint-disable-next-line , @typescript-eslint/no-explicit-any
         widgetManagerPromise = new Promise((resolve) => reInitializeWidgetManager(resolve as any));

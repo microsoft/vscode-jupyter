@@ -6,26 +6,16 @@ const path = require('path');
 const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const webpack = require('webpack');
 const constants = require('../constants');
-const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
 const common = require('./common');
-
-const devEntry = {
-    extension: './src/extension.web.ts'
-};
-const testEntry = {
-    extension: './src/test/web/index.ts' // source of the web extension test runner
-};
-
-// When running web tests, the entry point for the tests and extension are the same.
-// Also, when building the production VSIX there's no need to compile the tests (faster build pipline).
-const entry = process.env.VSC_TEST_BUNDLE === 'true' ? testEntry : devEntry;
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.extension.web.json');
 const config = {
-    mode: process.env.VSC_TEST_BUNDLE ? 'development' : 'none',
+    mode: 'development',
     target: 'webworker',
-    entry,
+    entry: {
+        extension: './src/test/web/index.ts' // source of the web extension test runner
+    },
     devtool: 'nosources-source-map', // create a source map that points to the original source file
     node: {
         __dirname: false,
@@ -104,16 +94,10 @@ const config = {
             process: {
                 platform: JSON.stringify('web')
             },
-            IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
-                typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
-                    ? process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
-                    : 'true'
-            ),
             VSC_JUPYTER_CI_TEST_GREP: JSON.stringify(
                 typeof process.env.VSC_JUPYTER_CI_TEST_GREP === 'string' ? process.env.VSC_JUPYTER_CI_TEST_GREP : ''
             )
         }),
-        new CleanTerminalPlugin(),
         new webpack.optimize.LimitChunkCountPlugin({
             maxChunks: 1
         })
@@ -127,10 +111,9 @@ const config = {
         alias: {
             // provides alternate implementation for node module and source files
             fs: './fs-empty.js',
+            'vscode-jupyter-release-version': path.join(__dirname, 'vscode-jupyter-release-version.js'),
             moment: path.join(__dirname, 'moment.js'),
-            ...(process.env.VSC_TEST_BUNDLE === 'true'
-                ? { sinon: path.join(constants.ExtensionRootDir, 'node_modules', 'sinon', 'lib', 'sinon.js') }
-                : {})
+            sinon: path.join(constants.ExtensionRootDir, 'node_modules', 'sinon', 'lib', 'sinon.js')
         },
         fallback: {
             os: require.resolve('os-browserify')

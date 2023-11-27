@@ -36,7 +36,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         @inject(IExtensionContext) readonly context: IExtensionContext
     ) {
         const startupTimer = new StopWatch();
-        const plotDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
+        const plotDir = joinPath(context.extensionUri, 'dist', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
             provider,

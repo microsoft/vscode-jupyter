@@ -59,7 +59,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly extensions: IExtensions,
         private readonly experiments: IExperimentService
     ) {
-        const variableViewDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
+        const variableViewDir = joinPath(context.extensionUri, 'dist', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
             workspaceService,

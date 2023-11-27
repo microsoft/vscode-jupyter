@@ -27,19 +27,6 @@ const { stripVTControlCharacters } = require('util');
 const common = require('./build/webpack/common');
 const jsonc = require('jsonc-parser');
 
-gulp.task('compile', async (done) => {
-    // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
-    try {
-        const stdout = await spawnAsync('tsc', ['-p', './'], {}, true);
-        if (stdout.toLowerCase().includes('error ts')) {
-            throw new Error(`Compile errors: \n${stdout}`);
-        }
-        done();
-    } catch (e) {
-        done(e);
-    }
-});
-
 gulp.task('createNycFolder', async (done) => {
     try {
         const fs = require('fs');
@@ -104,9 +91,9 @@ gulp.task('printTestResults', async (done) => {
 
 gulp.task('output:clean', () => del(['coverage']));
 
-gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out', '!out/test']));
+gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out', 'dist', '!out/test']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
-gulp.task('clean:out', () => del(['out/**', '!out', '!out/client_renderer/**', '!**/*nls.*.json']));
+gulp.task('clean:out', () => del(['out/**', 'dist/**', '!out', '!out/client_renderer/**', '!**/*nls.*.json']));
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
@@ -189,21 +176,12 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
         await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
-
-gulp.task('webpack-extension-node', async () => {
+gulp.task('webpack-dependencies', async () => {
     // No need to build dependencies for web.
     if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
         return;
     }
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.node.config.js', 'extension');
-});
-
-gulp.task('webpack-extension-web', async () => {
-    // No need to build dependencies for desktop.
-    if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
-        return;
-    }
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js', 'extension');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
 });
 
 function modifyJson(jsonFile, cb) {
@@ -226,22 +204,22 @@ gulp.task('updatePackageJsonForBundle', async () => {
                 modifyJson(packageJsonFile, () => ['browser', undefined]);
             }
             if (!json.main) {
-                modifyJson(packageJsonFile, () => ['main', './out/extension.node.js']);
+                modifyJson(packageJsonFile, () => ['main', './dist/extension.node.js']);
             }
             break;
         }
         case common.bundleConfiguration.webAndDesktop: {
             if (!json.browser) {
-                modifyJson(packageJsonFile, () => ['browser', './out/extension.web.bundle.js']);
+                modifyJson(packageJsonFile, () => ['browser', './dist/extension.web.bundle.js']);
             }
             if (!json.main) {
-                modifyJson(packageJsonFile, () => ['main', './out/extension.node.js']);
+                modifyJson(packageJsonFile, () => ['main', './dist/extension.node.js']);
             }
             break;
         }
         case common.bundleConfiguration.web: {
             if (!json.browser) {
-                modifyJson(packageJsonFile, () => ['browser', './out/extension.web.bundle.js']);
+                modifyJson(packageJsonFile, () => ['browser', './dist/extension.web.bundle.js']);
             }
             if (json.main) {
                 modifyJson(packageJsonFile, () => ['main', undefined]);
@@ -365,7 +343,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/log4js/lib/appenders/index.js',
                 'WARNING in ./node_modules/log4js/lib/clustering.js',
                 'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
+                'WARNING in ./node_modules/applicationinsights/dist/AutoCollection/NativePerformance.js'
             ];
         case 'extension':
             return [
@@ -385,40 +363,28 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/Validation.js',
                 'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
+                'WARNING in ./node_modules/applicationinsights/dist/AutoCollection/NativePerformance.js'
             ];
         case 'debugAdapter':
             return [
                 'WARNING in ./node_modules/vscode-uri/lib/index.js',
                 'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
+                'WARNING in ./node_modules/applicationinsights/dist/AutoCollection/NativePerformance.js'
             ];
         default:
             throw new Error('Unknown WebPack Configuration');
     }
 }
 
-gulp.task('compile-webviews-release', async () => {
-    await spawnAsync('npm', ['run', 'compile-viewers-release'], webpackEnv);
+gulp.task('prePublishBundle', async () => {
+    await spawnAsync('npm', ['run', 'prePublishBundle'], webpackEnv);
 });
 
-gulp.task('compile-webviews-dev', async () => {
-    await spawnAsync('npm', ['run', 'compile-viewers'], webpackEnv);
-});
-
-gulp.task(
-    'prePublishBundle',
-    gulp.series(
-        // Dependencies first
-        'compile-webviews-release',
-        // Then the two extensions
-        gulp.parallel('webpack-extension-node', 'webpack-extension-web'),
-        'updatePackageJsonForBundle'
-    )
-);
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 
-gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-webviews-dev'));
+gulp.task('prePublishNonBundle', async () => {
+    await spawnAsync('npm', ['run', 'prePublishNonBundle'], webpackEnv);
+});
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};

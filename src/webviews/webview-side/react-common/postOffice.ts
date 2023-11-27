@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
 import { VSCodeEvent } from 'vscode-notebook-renderer/events';
 import { WebviewMessage } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
@@ -154,14 +152,7 @@ export type KernelMessagingApi = {
 export class PostOffice implements IDisposable {
     private messageApi: IMessageApi | undefined;
     private handlers: IMessageHandler[] = [];
-    private readonly subject = new Subject<PostOfficeMessage>();
-    private readonly observable: Observable<PostOfficeMessage>;
-    constructor(private readonly kernelMessagingApi?: KernelMessagingApi) {
-        this.observable = this.subject.asObservable();
-    }
-    public asObservable(): Observable<PostOfficeMessage> {
-        return this.observable;
-    }
+    constructor(private readonly kernelMessagingApi?: KernelMessagingApi) {}
     public dispose() {
         if (this.messageApi) {
             this.messageApi.dispose();
@@ -225,7 +216,6 @@ export class PostOffice implements IDisposable {
     private async handleMessage(msg: WebviewMessage) {
         if (this.handlers) {
             if (msg) {
-                this.subject.next({ type: msg.type, payload: msg.payload });
                 this.handlers.forEach((h: IMessageHandler | null) => {
                     if (h) {
                         h.handleMessage(msg.type, msg.payload);

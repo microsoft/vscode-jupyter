@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, EventEmitter } from 'vscode';
+import { EventEmitter } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { traceInfo, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
+import { traceDecoratorError, traceError } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
@@ -14,13 +14,12 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../internalTypes';
-import { PYTHON_LANGUAGE, isUnitTestExecution } from '../../../platform/common/constants';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo, isUserRegisteredKernelSpecConnection } from '../../helpers';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -56,7 +55,6 @@ export class ContributedLocalKernelSpecFinder
     private wasPythonInstalledWhenFetchingControllers = false;
 
     private cache: LocalKernelConnectionMetadata[] = [];
-    private cacheLoggingTimeout?: NodeJS.Timer | number;
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(OldLocalPythonAndRelatedNonPythonKernelSpecFinder)
@@ -190,11 +188,6 @@ export class ContributedLocalKernelSpecFinder
             if (!kernelSpec) {
                 return true;
             }
-            // Disable xeus python for now.
-            if (kernelSpec.argv[0].toLowerCase().endsWith('xpython')) {
-                traceInfo(`Hiding xeus kernelspec`);
-                return false;
-            }
 
             return true;
         });
@@ -224,30 +217,6 @@ export class ContributedLocalKernelSpecFinder
         this.cache = values;
         if (added.length || updated.length || removed.length) {
             this._onDidChangeKernels.fire({ removed });
-        }
-
-        if (values.length) {
-            if (this.cacheLoggingTimeout) {
-                clearTimeout(this.cacheLoggingTimeout);
-            }
-            // Reduce the logging, as this can get written a lot,
-            this.cacheLoggingTimeout = setTimeout(
-                () => {
-                    traceVerbose(
-                        `Updating cache with Local kernels ${values
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}, Added = ${added
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}, Updated = ${updated
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}, Removed = ${removed
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}`
-                    );
-                },
-                isUnitTestExecution() ? 0 : 15_000
-            );
-            this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
         }
     }
 }

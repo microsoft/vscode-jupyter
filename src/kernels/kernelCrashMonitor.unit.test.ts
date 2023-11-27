@@ -6,7 +6,7 @@ import { KernelMessage } from '@jupyterlab/services';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
-import { dispose } from '../platform/common/helpers';
+import { dispose } from '../platform/common/utils/lifecycle';
 import { IDisposable } from '../platform/common/types';
 import { createKernelController, TestNotebookDocument } from '../test/datascience/notebook/executionHelper';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
@@ -26,7 +26,7 @@ import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 
 suite('Kernel Crash Monitor', () => {
     let kernelProvider: IKernelProvider;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let kernel: IKernel;
     let appShell: IApplicationShell;
     let kernelCrashMonitor: KernelCrashMonitor;
@@ -99,7 +99,7 @@ suite('Kernel Crash Monitor', () => {
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
 
     test('Error message displayed and Cell output updated with error message (raw kernel)', async () => {
         when(kernelSession.kind).thenReturn('localRaw');

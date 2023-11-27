@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { IDisposable } from './types';
-
 /**
  * Split a string using the cr and lf characters and return them as an array.
  * By default lines are trimmed and empty lines are removed.
@@ -55,19 +53,6 @@ export function trimQuotes(value: string): string {
         return value;
     }
     return value.replace(/(^['"])|(['"]$)/g, '');
-}
-
-export function dispose(disposables: IDisposable[] = []) {
-    while (disposables.length) {
-        const disposable = disposables.shift();
-        if (disposable) {
-            try {
-                disposable.dispose();
-            } catch {
-                // Don't care.
-            }
-        }
-    }
 }
 
 /**

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { dispose, splitLines, trimQuotes } from '../../../../platform/common/helpers';
+import { splitLines, trimQuotes } from '../../../../platform/common/helpers';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceWarning } from '../../../../platform/logging';
@@ -13,9 +13,12 @@ import stripComments from 'strip-comments';
 import { IIPyWidgetScriptManager } from '../types';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { isCI } from '../../../../platform/common/constants';
+import { dispose } from '../../../../platform/common/utils/lifecycle';
 
 const REQUIRE_PATTERNS = [
     'require.config({',
+    'requirejs?.config({', // from anywidget
+    'window.requirejs?.config({', // from anywidget
     'requirejs.config({',
     '["require"].config({',
     "['require'].config({",

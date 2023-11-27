@@ -2,12 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    IJupyterServerUriStorage,
-    IInternalJupyterUriProvider,
-    IJupyterUriProviderRegistration,
-    IJupyterServerProviderRegistry
-} from '../../kernels/jupyter/types';
+import { IJupyterServerUriStorage, IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 import { isLocalConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
@@ -24,25 +19,20 @@ import { swallowExceptions } from '../../platform/common/utils/decorators';
  */
 @injectable()
 export class RemoteKernelControllerWatcher implements IExtensionSyncActivationService {
-    private readonly handledProviders = new WeakSet<IInternalJupyterUriProvider>();
-    private readonly handledCollections = new WeakSet<JupyterServerCollection>();
     private readonly handledServerProviderChanges = new WeakSet<JupyterServerProvider>();
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IJupyterUriProviderRegistration) private readonly providerRegistry: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage,
         @inject(IControllerRegistration) private readonly controllers: IControllerRegistration,
         @inject(IJupyterServerProviderRegistry) private readonly serverProviderRegistry: IJupyterServerProviderRegistry
     ) {}
     activate(): void {
-        this.providerRegistry.onDidChangeProviders(this.addProviderHandlers, this, this.disposables);
-        this.addProviderHandlers();
         this.serverProviderRegistry.jupyterCollections.forEach((collection) =>
-            this.checkJupyterServerProviderHandlers(collection)
+            this.checkExpiredServersInJupyterCollection(collection)
         );
         this.serverProviderRegistry.onDidChangeCollections(
             ({ added, removed }) => {
-                added.forEach((collection) => this.checkJupyterServerProviderHandlers(collection));
+                added.forEach((collection) => this.checkExpiredServersInJupyterCollection(collection));
 
                 removed.forEach((collection) =>
                     this.removeControllersBelongingToDisposedProvider(collection.extensionId, collection.id)
@@ -52,38 +42,15 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
             this.disposables
         );
     }
-    @swallowExceptions('Failed to check what servers were shutdown in a Jupyter Collection in Controller Watcher')
-    private async checkJupyterServerProviderHandlers(collection: JupyterServerCollection) {
-        if (this.handledCollections.has(collection)) {
-            collection.onDidChangeProvider(
-                () =>
-                    collection.serverProvider
-                        ? this.checkExpiredServersInJupyterCollection(collection, collection.serverProvider).catch(noop)
-                        : undefined,
-                this,
-                this.disposables
-            );
-        }
-        if (collection.serverProvider) {
-            await this.checkExpiredServersInJupyterCollection(collection, collection.serverProvider);
-        }
-    }
     @swallowExceptions('Failed to check what servers were shutdown in Controller Watcher')
-    private async checkExpiredServersInJupyterCollection(
-        collection: JupyterServerCollection,
-        serverProvider: JupyterServerProvider
-    ) {
-        if (!this.handledServerProviderChanges.has(serverProvider) && serverProvider.onDidChangeServers) {
-            const serverProviderChangeHandler = serverProvider.onDidChangeServers(
-                () => {
-                    if (collection.serverProvider === serverProvider) {
-                        this.checkExpiredServersInJupyterCollection(collection, serverProvider).catch(noop);
-                    } else {
-                        // Server Provider has changed and this is no longer valid.
-                        serverProviderChangeHandler.dispose();
-                        this.handledServerProviderChanges.delete(serverProvider);
-                    }
-                },
+    private async checkExpiredServersInJupyterCollection(collection: JupyterServerCollection) {
+        if (
+            !this.handledServerProviderChanges.has(collection.serverProvider) &&
+            collection.serverProvider.onDidChangeServers
+        ) {
+            this.handledServerProviderChanges.add(collection.serverProvider);
+            collection.serverProvider.onDidChangeServers(
+                () => this.checkExpiredServersInJupyterCollection(collection).catch(noop),
                 this,
                 this.disposables
             );
@@ -91,7 +58,9 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         const tokenSource = new CancellationTokenSource();
         this.disposables.push(tokenSource);
         try {
-            const currentServers = await Promise.resolve(serverProvider.provideJupyterServers(tokenSource.token));
+            const currentServers = await Promise.resolve(
+                collection.serverProvider.provideJupyterServers(tokenSource.token)
+            );
             await this.removeControllersAndUriStorageBelongingToInvalidServers(
                 collection.extensionId,
                 collection.id,
@@ -101,27 +70,6 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
             tokenSource.dispose();
         }
     }
-    private addProviderHandlers() {
-        this.providerRegistry.providers.forEach((provider) => {
-            if (this.handledProviders.has(provider)) {
-                return;
-            }
-            this.handledProviders.add(provider);
-            // clear out any old handlers
-            this.onProviderHandlesChanged(provider).catch(noop);
-            if (provider.onDidChangeHandles) {
-                provider.onDidChangeHandles(() => this.onProviderHandlesChanged(provider), this, this.disposables);
-            }
-        });
-    }
-    private async onProviderHandlesChanged(provider: IInternalJupyterUriProvider) {
-        if (!provider.getHandles) {
-            return;
-        }
-        const handles = await provider.getHandles();
-        await this.removeControllersAndUriStorageBelongingToInvalidServers(provider.extensionId, provider.id, handles);
-    }
-
     private async removeControllersAndUriStorageBelongingToInvalidServers(
         extensionId: string,
         providerId: string,

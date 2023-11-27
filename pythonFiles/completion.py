@@ -1,7 +1,6 @@
 import os
 import os.path
 import io
-import re
 import sys
 import json
 import traceback
@@ -105,7 +104,7 @@ class JediCompletion(object):
             call_signatures = script.call_signatures()
         except KeyError:
             call_signatures = []
-        except:
+        except Exception:
             call_signatures = []
         for signature in call_signatures:
             for pos, param in enumerate(signature.params):
@@ -230,7 +229,7 @@ class JediCompletion(object):
             completions = script.completions()
         except KeyError:
             completions = []
-        except:
+        except Exception:
             completions = []
         for completion in completions:
             try:
@@ -342,7 +341,7 @@ class JediCompletion(object):
                 "end_line": end_line,
                 "end_column": end_column,
             }
-        except Exception as e:
+        except Exception:
             return {
                 "start_line": definition.line - 1,
                 "start_column": definition.column,
@@ -419,7 +418,7 @@ class JediCompletion(object):
                     "signature": self._generate_signature(definition),
                 }
                 _definitions.append(_definition)
-            except Exception as e:
+            except Exception:
                 pass
         return _definitions
 
@@ -465,7 +464,7 @@ class JediCompletion(object):
                         "raw_docstring": rawdocstring,
                     }
                     _definitions.append(_definition)
-            except Exception as e:
+            except Exception:
                 pass
         return json.dumps({"id": identifier, "results": _definitions})
 
@@ -610,14 +609,14 @@ class JediCompletion(object):
                     defs = self._get_definitionsx(
                         script.goto_definitions(), request["id"], True
                     )
-                except:
+                except Exception:
                     pass
                 try:
                     if len(defs) == 0:
                         defs = self._get_definitionsx(
                             script.goto_assignments(), request["id"], True
                         )
-                except:
+                except Exception:
                     pass
                 return json.dumps({"id": request["id"], "results": defs})
             else:
@@ -625,7 +624,7 @@ class JediCompletion(object):
                     return self._serialize_tooltip(
                         script.goto_definitions(), request["id"]
                     )
-                except:
+                except Exception:
                     return json.dumps({"id": request["id"], "results": []})
         elif lookup == "arguments":
             return self._serialize_arguments(script, request["id"])

@@ -9,7 +9,7 @@ import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
 import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
 import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
 import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
@@ -101,7 +101,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
             // Watch for premature exits
             if (launchResult.proc) {
                 launchResult.proc.on('exit', (c: number | null) => (exitCode = c));
-                launchResult.out.subscribe((out) => this.jupyterOutputChannel.append(out.out));
+                launchResult.out.onDidChange((out) => this.jupyterOutputChannel.append(out.out));
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.

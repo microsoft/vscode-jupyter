@@ -5,7 +5,7 @@
 import * as sinon from 'sinon';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { IDisposable } from '../platform/common/types';
-import { dispose } from '../platform/common/helpers';
+import { dispose } from '../platform/common/utils/lifecycle';
 import { IApplicationShell } from '../platform/common/application/types';
 import {
     IKernel,
@@ -31,16 +31,17 @@ import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { CellExecutionCreator, NotebookCellExecutionWrapper } from './execution/cellExecutionCreator';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 import { JupyterNotebookView } from '../platform/common/constants';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
+import { IJupyterServerProviderRegistry, IJupyterServerUriEntry, IJupyterServerUriStorage } from './jupyter/types';
 import { noop } from '../test/core';
+import { JupyterServer, JupyterServerCollection, JupyterServerProvider } from '../api';
 
 suite('Kernel ReConnect Progress Message', () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let monitor: KernelAutoReconnectMonitor;
     let appShell: IApplicationShell;
     let kernelProvider: IKernelProvider;
     let jupyterServerUriStorage: IJupyterServerUriStorage;
-    let jupyterUriProviderRegistration: IJupyterUriProviderRegistration;
+    let jupyterUriProviderRegistration: IJupyterServerProviderRegistry;
     let onDidStartKernel: EventEmitter<IKernel>;
     let onDidDisposeKernel: EventEmitter<IKernel>;
     let onDidRestartKernel: EventEmitter<IKernel>;
@@ -63,8 +64,8 @@ suite('Kernel ReConnect Progress Message', () => {
         clock = fakeTimers.install();
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         when(jupyterServerUriStorage.getAll()).thenResolve([]);
-        jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
-
+        jupyterUriProviderRegistration = mock<IJupyterServerProviderRegistry>();
+        when(jupyterUriProviderRegistration.jupyterCollections).thenReturn([]);
         disposables.push(new Disposable(() => clock.uninstall()));
         monitor = new KernelAutoReconnectMonitor(
             instance(appShell),
@@ -75,7 +76,7 @@ suite('Kernel ReConnect Progress Message', () => {
         );
         monitor.activate();
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     function createKernel() {
         const kernel = mock<IKernel>();
         const onRestarted = new EventEmitter<void>();
@@ -142,12 +143,12 @@ suite('Kernel ReConnect Progress Message', () => {
 });
 
 suite('Kernel ReConnect Failed Monitor', () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let monitor: KernelAutoReconnectMonitor;
     let appShell: IApplicationShell;
     let kernelProvider: IKernelProvider;
     let jupyterServerUriStorage: IJupyterServerUriStorage;
-    let jupyterUriProviderRegistration: IJupyterUriProviderRegistration;
+    let jupyterUriProviderRegistration: IJupyterServerProviderRegistry;
     let onDidStartKernel: EventEmitter<IKernel>;
     let onDidDisposeKernel: EventEmitter<IKernel>;
     let onDidRestartKernel: EventEmitter<IKernel>;
@@ -171,7 +172,8 @@ suite('Kernel ReConnect Failed Monitor', () => {
         when(kernelProvider.getKernelExecution(anything())).thenReturn(instance(kernelExecution));
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         when(jupyterServerUriStorage.getAll()).thenResolve([]);
-        jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
+        jupyterUriProviderRegistration = mock<IJupyterServerProviderRegistry>();
+        when(jupyterUriProviderRegistration.jupyterCollections).thenReturn([]);
         monitor = new KernelAutoReconnectMonitor(
             instance(appShell),
             disposables,
@@ -194,7 +196,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         );
         monitor.activate();
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     function createKernel(serverProviderHandle = { handle: '1234', id: '1234', extensionId: '' }) {
         const kernel = mock<IKernel>();
         const onPreExecute = new EventEmitter<NotebookCell>();
@@ -324,24 +326,28 @@ suite('Kernel ReConnect Failed Monitor', () => {
             time: 1234,
             provider: {
                 handle: '1',
-                id: '1',
-                extensionId: ''
+                id: 'remoteUriProvider',
+                extensionId: 'ms-python.python'
             }
         };
         const kernel = createKernel(server.provider);
         when(jupyterServerUriStorage.getAll()).thenResolve([server]);
-        when(jupyterUriProviderRegistration.getProvider(anything(), anything())).thenResolve({
-            id: 'remoteUriProvider',
-            extensionId: 'ms-python.python',
-            getServerUri: (_handle) =>
-                Promise.resolve({
-                    baseUrl: '<baseUrl>',
-                    token: '<token>',
-                    authorizationHeader: {},
-                    displayName: 'Remote Uri Provider server 1'
-                }),
-            getHandles: () => Promise.resolve(['1'])
+        const item = mock<JupyterServer>();
+        when(item.id).thenReturn('someOtherServer');
+        when(item.label).thenReturn('Hello Server');
+        when(item.connectionInformation).thenReturn({
+            baseUrl: Uri.parse('http://localhost:1234/'),
+            token: ''
         });
+        const collection = mock<JupyterServerCollection>();
+        when(collection.extensionId).thenReturn('');
+        when(collection.id).thenReturn('remoteUriProvider');
+        when(collection.extensionId).thenReturn('ms-python.python');
+        when(collection.label).thenReturn('Remote Uri Provider server 1');
+        const serverProvider = mock<JupyterServerProvider>();
+        when(serverProvider.provideJupyterServers(anything())).thenResolve([instance(item)] as any);
+        when(collection.serverProvider).thenReturn(instance(serverProvider));
+        when(jupyterUriProviderRegistration.jupyterCollections).thenReturn([instance(collection)]);
 
         onDidStartKernel.fire(instance(kernel.kernel));
 

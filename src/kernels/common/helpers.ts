@@ -3,7 +3,7 @@
 
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { CancellationError, CancellationToken, Disposable } from 'vscode';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { createDeferred, raceTimeout } from '../../platform/common/utils/async';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
@@ -31,7 +31,7 @@ export async function waitForIdleOnSession(
         disposables.push(progress);
     }
     try {
-        traceVerbose(`Waiting for ${timeout}ms idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+        traceVerbose(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
         // When our kernel connects and gets a status message it triggers the ready promise
         const kernelStatus = createDeferred<string>();

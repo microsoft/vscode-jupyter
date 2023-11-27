@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Event, extensions, NotebookEditor, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { RendererExtension } from '../../../platform/common/constants';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { PlotViewHandler } from './plotViewHandler';

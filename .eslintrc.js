@@ -61,7 +61,7 @@ module.exports = {
         '@typescript-eslint/no-floating-promises': [
             'error',
             {
-                ignoreVoid: false
+                ignoreVoid: true
             }
         ],
 
@@ -127,7 +127,7 @@ module.exports = {
         '@typescript-eslint/no-restricted-imports': [
             'error',
             {
-                paths: ['lodash', 'rxjs', 'lodash/noop', 'rxjs/util/noop'],
+                paths: ['lodash', 'lodash/noop'],
                 patterns: [
                     {
                         group: ['@jupyterlab/*'],

@@ -12,12 +12,12 @@ import { CancellationTokenSource, Uri, WorkspaceConfiguration } from 'vscode';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Product } from '../../../platform/interpreter/installer/types';
 import { IDisposable } from '../../../platform/common/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { ChildProcess } from 'child_process';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/interpreter/types.node';
 import { noop } from '../../../test/core';
+import { createObservable } from '../../common/process/proc.node';
 
 suite('Pip installer', async () => {
     let serviceContainer: IServiceContainer;
@@ -25,8 +25,8 @@ suite('Pip installer', async () => {
     let pipInstaller: PipInstaller;
     let pythonExecutionService: IPythonExecutionService;
     let proc: ChildProcess;
-    const disposables: IDisposable[] = [];
-    let subject: ReplaySubject<Output<string>>;
+    let disposables: IDisposable[] = [];
+    let subject: ReturnType<typeof createObservable<Output<string>>>;
     setup(() => {
         serviceContainer = mock<IServiceContainer>();
         pythonExecutionFactory = mock<IPythonExecutionFactory>();
@@ -55,7 +55,8 @@ suite('Pip installer', async () => {
         when(workspaceConfig.get('proxy', '')).thenReturn('');
 
         proc = mock<ChildProcess>();
-        subject = new ReplaySubject<Output<string>>();
+        subject = createObservable<Output<string>>();
+        disposables.push(subject);
         when(pythonExecutionService.execObservable(anything(), anything())).thenReturn({
             dispose: noop,
             out: subject,
@@ -64,7 +65,7 @@ suite('Pip installer', async () => {
 
         pipInstaller = new PipInstaller(instance(serviceContainer));
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     test('Installer name is Pip', () => {
         expect(pipInstaller.name).to.equal('Pip');
     });
@@ -141,8 +142,8 @@ suite('Pip installer', async () => {
                     new Error('Unable to check if module is installed')
                 );
                 when(proc.exitCode).thenReturn(0);
-                subject.next({ out: '', source: 'stdout' });
-                subject.complete();
+                subject.fire({ out: '', source: 'stdout' });
+                subject.resolve();
 
                 const cancellationToken = new CancellationTokenSource();
                 disposables.push(cancellationToken);

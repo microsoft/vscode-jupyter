@@ -11,12 +11,17 @@ const { noop } = require('../out/test/core');
 const { isCI } = require('./constants');
 const extensionDevelopmentPath = path.resolve(__dirname, '../');
 const packageJsonFile = path.join(extensionDevelopmentPath, 'package.json');
-const yargs = require('yargs/yargs');
-const { hideBin } = require('yargs/helpers');
-const argv = yargs(hideBin(process.argv)).argv;
 
-const browserType = argv.browser || argv.browserType || 'chromium';
-const port = argv.port || 3000;
+const browserType =
+    process.argv
+        .filter((arg) => arg.startsWith('--browser'))
+        .map((arg) => arg.split('=')[1])
+        .pop() || 'chromium';
+const port =
+    process.argv
+        .filter((arg) => arg.startsWith('--port'))
+        .map((arg) => parseInt(arg.split('=')[1]))
+        .pop() || 3000;
 
 exports.launch = async function launch(launchTests) {
     let exitCode = 0;
@@ -27,19 +32,34 @@ exports.launch = async function launch(launchTests) {
             server = (await startJupyter()).server;
             testServer = await startReportServer();
         }
-        const bundlePath = path.join(extensionDevelopmentPath, 'out', 'extension.web.bundle');
+        const bundlePath = path.join(extensionDevelopmentPath, launchTests ? 'out' : 'dist', 'extension.web.bundle');
 
         // Changing the logging level to be read from workspace settings file.
         // This way we can enable verbose logging and get the logs for web tests.
-        const settingsJson = fs.readFileSync(packageJsonFile).toString();
-        const edits = jsonc.modify(
+        // Changing the logging level to be read from workspace settings file.
+        // This way we can enable verbose logging and get the logs for web tests.
+        let settingsJson = fs.readFileSync(packageJsonFile).toString();
+        settingsJson = jsonc.applyEdits(
             settingsJson,
-            ['contributes', 'configuration', 'properties', 'jupyter.logging.level', 'scope'],
-            'resource',
-            {}
+            jsonc.modify(
+                settingsJson,
+                ['contributes', 'configuration', 'properties', 'jupyter.logging.level', 'scope'],
+                'resource',
+                {}
+            )
         );
-        const updatedSettingsJson = jsonc.applyEdits(settingsJson, edits);
-        fs.writeFileSync(packageJsonFile, updatedSettingsJson);
+        // Tests scripts are in the 'out' folder.
+        if (launchTests) {
+            settingsJson = jsonc.applyEdits(
+                settingsJson,
+                jsonc.modify(settingsJson, ['main'], './out/extension.node.js', {})
+            );
+            settingsJson = jsonc.applyEdits(
+                settingsJson,
+                jsonc.modify(settingsJson, ['browser'], './out/extension.web.bundle.js', {})
+            );
+        }
+        fs.writeFileSync(packageJsonFile, settingsJson);
         const options = {
             browserType,
             verbose: true,

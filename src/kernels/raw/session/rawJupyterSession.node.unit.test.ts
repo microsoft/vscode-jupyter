@@ -10,7 +10,7 @@ import { RawJupyterSessionWrapper } from './rawJupyterSession.node';
 import { LocalKernelSpecConnectionMetadata } from '../../types';
 import { noop } from '../../../test/core';
 import { assert } from 'chai';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { RawSessionConnection } from './rawSessionConnection.node';
 
@@ -21,7 +21,7 @@ suite('Raw Jupyter Session Wrapper', () => {
         id: '1234',
         kernelSpec: {} as any
     });
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     setup(() => {
         session = mock<RawSessionConnection>();
         const kernel = mock<Kernel.IKernelConnection>();
@@ -73,7 +73,7 @@ suite('Raw Jupyter Session Wrapper', () => {
             kernelConnectionMetadata
         );
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     test('Shutdown', async () => {
         when(session.dispose()).thenReturn();
         const statuses: (typeof sessionWrapper.status)[] = [];

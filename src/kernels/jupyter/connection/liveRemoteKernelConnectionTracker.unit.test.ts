@@ -8,7 +8,7 @@ import { assert, use } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
 import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../../../kernels/jupyter/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
 import {
@@ -25,7 +25,7 @@ suite('Live kernel Connection Tracker', async () => {
     let memento: Memento;
     let tracker: LiveRemoteKernelConnectionUsageTracker;
     let onDidRemoveServers: EventEmitter<JupyterServerProviderHandle[]>;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     const serverProviderHandle = { handle: 'handle2', id: 'id2', extensionId: '' };
     const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'baseUrl',
@@ -103,7 +103,7 @@ suite('Live kernel Connection Tracker', async () => {
         );
     });
     teardown(() => {
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
 
     test('Ensure event handler is added', () => {

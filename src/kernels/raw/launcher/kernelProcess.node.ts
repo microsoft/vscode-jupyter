@@ -32,7 +32,6 @@ import {
     traceVerbose,
     traceWarning,
     traceInfoIfCI,
-    traceDecoratorVerbose,
     ignoreLogging
 } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
@@ -46,7 +45,6 @@ import { KernelPortNotUsedTimeoutError } from '../../errors/kernelPortNotUsedTim
 import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { Interrupter, PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
-import { TraceOptions } from '../../../platform/logging/types';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
@@ -54,6 +52,7 @@ import pidtree from 'pidtree';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
 import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -186,10 +185,7 @@ export class KernelProcess implements IKernelProcess {
 
         if (exeObs.proc) {
             exeObs.proc.stdout?.on('data', (data: Buffer | string) => {
-                // We get these from execObs.out.subscribe.
-                // Hence log only using traceLevel = verbose.
-                // But only useful if daemon doesn't start for any reason.
-                traceVerbose(`KernelProcess output: ${(data || '').toString()}`);
+                traceVerbose(`Kernel output: ${(data || '').toString()}`);
                 this.sendToOutput((data || '').toString());
             });
 
@@ -207,50 +203,47 @@ export class KernelProcess implements IKernelProcess {
         }
 
         let sawKernelConnectionFile = false;
-        exeObs.out.subscribe(
-            (output) => {
-                if (output.source === 'stderr') {
-                    output.out = stripUnwantedMessages(output.out);
-                    // Capture stderr, incase kernel doesn't start.
-                    stderr += output.out;
+        exeObs.out.onDidChange((output) => {
+            if (output.source === 'stderr') {
+                output.out = stripUnwantedMessages(output.out);
+                // Capture stderr, incase kernel doesn't start.
+                stderr += output.out;
 
-                    if (output.out.trim().length) {
-                        traceWarning(`StdErr from Kernel Process ${output.out.trim()}`);
-                    }
-                } else {
-                    stdout += output.out;
-                    // Strip unwanted stuff from the output, else it just chews up unnecessary space.
-                    if (!sawKernelConnectionFile) {
-                        stdout = stdout.replace(kernelOutputToNotLog, '');
-                        stdout = stdout.replace(kernelOutputToNotLog.split(/\r?\n/).join(os.EOL), '');
-                        // Strip the leading space, as we've removed some leading text.
-                        stdout = stdout.trimStart();
-                        const lines = splitLines(stdout, { trim: true, removeEmptyEntries: true });
-                        if (
-                            lines.length === 2 &&
-                            lines[0] === kernelOutputWithConnectionFile &&
-                            lines[1].startsWith('--existing') &&
-                            lines[1].endsWith('.json')
-                        ) {
-                            stdout = `${lines.join(' ')}${os.EOL}`;
-                        }
-                    }
-                    if (stdout.includes(kernelOutputWithConnectionFile)) {
-                        sawKernelConnectionFile = true;
-                    }
-                    traceVerbose(`Kernel Output: ${stdout}`);
+                if (output.out.trim().length) {
+                    traceWarning(`StdErr from Kernel Process ${output.out.trim()}`);
                 }
-                this.sendToOutput(output.out);
-            },
-            (error) => {
-                if (this.disposed) {
-                    traceWarning('Kernel died', error, stderr);
-                    return;
+            } else {
+                stdout += output.out;
+                // Strip unwanted stuff from the output, else it just chews up unnecessary space.
+                if (!sawKernelConnectionFile) {
+                    stdout = stdout.replace(kernelOutputToNotLog, '');
+                    stdout = stdout.replace(kernelOutputToNotLog.split(/\r?\n/).join(os.EOL), '');
+                    // Strip the leading space, as we've removed some leading text.
+                    stdout = stdout.trimStart();
+                    const lines = splitLines(stdout, { trim: true, removeEmptyEntries: true });
+                    if (
+                        lines.length === 2 &&
+                        lines[0] === kernelOutputWithConnectionFile &&
+                        lines[1].startsWith('--existing') &&
+                        lines[1].endsWith('.json')
+                    ) {
+                        stdout = `${lines.join(' ')}${os.EOL}`;
+                    }
                 }
-                traceError('Kernel died', error, stderr);
-                deferred.reject(error);
+                if (stdout.includes(kernelOutputWithConnectionFile)) {
+                    sawKernelConnectionFile = true;
+                }
             }
-        );
+            this.sendToOutput(output.out);
+        });
+        exeObs.out.done.catch((error) => {
+            if (this.disposed) {
+                traceWarning('Kernel died', error, stderr);
+                return;
+            }
+            traceError('Kernel died', error, stderr);
+            deferred.reject(error);
+        });
 
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
         try {
@@ -482,16 +475,6 @@ export class KernelProcess implements IKernelProcess {
     private addPythonConnectionArgs(connectionFile: Uri): string[] {
         const newConnectionArgs: string[] = [];
 
-        newConnectionArgs.push(`--ip=${this._connection.ip}`);
-        newConnectionArgs.push(`--stdin=${this._connection.stdin_port}`);
-        newConnectionArgs.push(`--control=${this._connection.control_port}`);
-        newConnectionArgs.push(`--hb=${this._connection.hb_port}`);
-        newConnectionArgs.push(`--Session.signature_scheme="${this._connection.signature_scheme}"`);
-        newConnectionArgs.push(`--Session.key=b"${this._connection.key}"`); // Note we need the 'b here at the start for a byte string
-        newConnectionArgs.push(`--shell=${this._connection.shell_port}`);
-        newConnectionArgs.push(`--transport="${this._connection.transport}"`);
-        newConnectionArgs.push(`--iopub=${this._connection.iopub_port}`);
-
         // Turn this on if you get desparate. It can cause crashes though as the
         // logging code isn't that robust.
         // if (isTestExecution()) {
@@ -509,10 +492,15 @@ export class KernelProcess implements IKernelProcess {
         return newConnectionArgs;
     }
 
-    @traceDecoratorVerbose('Launching kernel in kernelProcess.ts', TraceOptions.Arguments | TraceOptions.BeforeCall)
     private async launchAsObservable(workingDirectory: string, @ignoreLogging() cancelToken: CancellationToken) {
         let exeObs: ObservableExecutionResult<string>;
-
+        traceVerbose(
+            `Launching kernel ${this.kernelConnectionMetadata.id} for ${getDisplayPath(
+                this.resource
+            )} in ${getDisplayPath(workingDirectory)} with ports ${this.connection.control_port}, ${
+                this.connection.hb_port
+            }, ${this.connection.iopub_port}, ${this.connection.shell_port}, ${this.connection.stdin_port}`
+        );
         if (
             this.isPythonKernel &&
             this.extensionChecker.isPythonExtensionInstalled &&

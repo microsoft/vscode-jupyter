@@ -16,9 +16,7 @@
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.title": "Select a Jupyter kernel",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.description": {
         "message": "Click Select Kernel at the top right of the notebook and choose the environment in which to run your kernel. Or, with a notebook opened and in focus, open the [Command Palette](command:workbench.action.showCommands) and run the command: \n``Notebook: Select Notebook Kernel``. \n[Open Command Palette to Select a Jupyter Kernel](command:workbench.action.showCommands)",
-        "comment": [
-            "{Locked='command:workbench.action.showCommands'}"
-        ]
+        "comment": ["{Locked='command:workbench.action.showCommands'}"]
     },
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.media.altText": "Selecting or changing a notebook kernel",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.title": "Explore data and debug",
@@ -52,15 +50,11 @@
     "jupyter.command.jupyter.runallcells.title": "Run All Cells",
     "jupyter.command.jupyter.notebookeditor.expandallcells.title": {
         "message": "Expand All Notebook Cells",
-        "comment": [
-            "{Locked='Notebook'}"
-        ]
+        "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.notebookeditor.collapseallcells.title": {
         "message": "Collapse All Notebook Cells",
-        "comment": [
-            "{Locked='Notebook'}"
-        ]
+        "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.runallcellsabove.title": "Run Above",
     "jupyter.command.jupyter.runcellandallbelow.title": "Run Below",
@@ -94,40 +88,28 @@
     "jupyter.command.jupyter.createnewinteractive.title": "Create Interactive Window",
     "jupyter.command.jupyter.importnotebook.title": {
         "message": "Import Jupyter Notebook",
-        "comment": [
-            "{Locked='Notebook'}"
-        ]
+        "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.importnotebookfile.title": "Import Notebook to Script",
     "jupyter.command.jupyter.exportoutputasnotebook.title": {
         "message": "Export Interactive Window as Jupyter Notebook",
-        "comment": [
-            "{Locked='Notebook'}"
-        ]
+        "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.exportfileasnotebook.title": {
         "message": "Export Current Python File as Jupyter Notebook",
-        "comment": [
-            "{Locked='Notebook'}"
-        ]
+        "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.exportfileandoutputasnotebook.title": {
         "message": "Export Current Python File and Output as Jupyter Notebook",
-        "comment": [
-            "{Locked='Notebook'}"
-        ]
+        "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.notebookeditor.removeallcells.title": {
         "message": "Delete All Notebook Editor Cells",
-        "comment": [
-            "{Locked='Notebook'}"
-        ]
+        "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.notebookeditor.addcellbelow.title": {
         "message": "Add Empty Cell to Notebook File",
-        "comment": [
-            "{Locked='Notebook'}"
-        ]
+        "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.interruptkernel.title": "Interrupt Kernel",
     "jupyter.command.jupyter.interruptkernel.shorttitle": "Interrupt",
@@ -153,6 +135,7 @@
     "jupyter.command.jupyter.openVariableView.shorttitle": "Variables",
     "jupyter.command.jupyter.openOutlineView.title": "Show Table Of Contents (Outline View)",
     "jupyter.command.jupyter.openOutlineView.shorttitle": "Outline",
+    "jupyter.command.manageAccessToKernels": "Manage Access To Jupyter Kernels",
     "jupyter.commandPalette.jupyter.replayPylanceLog.title": "Replay Pylance Log",
     "jupyter.notebookRenderer.IPyWidget.displayName": "Jupyter IPyWidget Renderer",
     "jupyter.notebookRenderer.Error.displayName": "Jupyter Error Renderer",
@@ -179,6 +162,7 @@
     "jupyter.configuration.jupyter.jupyterInterruptTimeout.description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
     "jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.description": "When pressing shift+enter, send selected code in a Python file to the Jupyter interactive window as opposed to the Python terminal.",
     "jupyter.configuration.jupyter.normalizeSelectionForInteractiveWindow.description": "Selected text will be normalized before it is executed in the Interactive Window.",
+    "jupyter.configuration.jupyter.splitRunFileIntoCells.description": "A file run in the Interactive Window will be run in individual cells if it has them.",
     "jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.executeSelection.",
     "jupyter.configuration.jupyter.variableExplorerExclude.description": "Types to exclude from showing in the Interactive variable explorer",
     "jupyter.configuration.jupyter.codeRegularExpression.description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell.",
@@ -210,74 +194,53 @@
     "jupyter.configuration.jupyter.disableJupyterAutoStart.description": "When true, disables Jupyter from being automatically started for you. You must instead run a cell to start Jupyter.",
     "jupyter.configuration.jupyter.addGotoCodeLenses.description": {
         "message": "After running a cell, add a 'Goto' code lens on the cell. Note, disabling all code lenses disables this code lens as well.",
-        "comment": [
-            "{Locked='Goto'}"
-        ]
+        "comment": ["{Locked='Goto'}"]
     },
     "jupyter.configuration.jupyter.addGotoCodeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.enableGotoCell.",
     "jupyter.configuration.jupyter.variableQueries.markdownDescription": {
         "message": "Language to query mapping for returning the list of active variables in a Jupyter kernel. Used by the Variable Explorer in both the Interactive Window and Notebooks. Example:\n```\n[\n  {\n    \"language\": \"python\",\n    \"query\": \"%who_ls\",\n    \"parseExpr\": \"'(\\\\w+)'\"\n  }\n]\n```",
-        "comment": [
-            "{Locked='language\": \"python\",\n    \"query\": \"%who_ls\",\n    \"parseExpr'}"
-        ]
+        "comment": ["{Locked='language\": \"python\",\n    \"query\": \"%who_ls\",\n    \"parseExpr'}"]
     },
     "jupyter.configuration.jupyter.variableQueries.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
     "jupyter.configuration.jupyter.kernels.filter.markdownDescription": "List of Python environments to be excluded from the Kernel picker.",
     "jupyter.configuration.jupyter.interactiveWindowMode.description": {
         "message": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
-        "comment": [
-            "{Locked='perFile'}",
-            "{Locked=\"'single'\"}",
-            "{Locked=\"'multiple'\"}"
-        ]
+        "comment": ["{Locked='perFile'}", "{Locked=\"'single'\"}", "{Locked=\"'multiple'\"}"]
     },
     "jupyter.configuration.jupyter.interactiveWindowMode.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.creationMode.",
     "jupyter.configuration.jupyter.pythonCellFolding.description": "Enable folding regions for code cells in Python files. This setting requires a reload of VS Code.",
     "jupyter.configuration.jupyter.pythonCellFolding.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.cellFolding.",
     "jupyter.configuration.jupyter.interactiveWindowViewColumn.description": {
         "message": "Where to open an Interactive Window that is not associated with a python file. 'beside' will open the interactive window to the right of the active editor. 'active' will open the interactive window in place of the active editor. 'secondGroup' will open the interactive window in the second editor group.",
-        "comment": [
-            "{Locked='beside'}",
-            "{Locked=\"'active'\"}",
-            "{Locked=\"'secondGroup'\"}"
-        ]
+        "comment": ["{Locked='beside'}", "{Locked=\"'active'\"}", "{Locked=\"'secondGroup'\"}"]
     },
     "jupyter.configuration.jupyter.interactiveWindowViewColumn.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.viewColumn.",
     "jupyter.configuration.jupyter.magicCommandsAsComments.description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
     "jupyter.configuration.jupyter.magicCommandsAsComments.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.magicCommandsAsComments.",
     "jupyter.configuration.jupyter.pythonExportMethod.description": {
         "message": "The method to use when exporting a notebook to a Python file. 'direct' will copy over the code directly as is. 'commentMagics' will comment out lines starting with line magics (%), cell magics (%%), and shell commands(!). 'nbconvert' will install nbconvert and use that for the conversion which can translate iPython syntax into Python syntax.",
-        "comment": [
-            "{Locked=\"'direct'\"}",
-            "{Locked=\"'commentMagics'\"}",
-            "{Locked=\"'nbconvert'\"}"
-        ]
+        "comment": ["{Locked=\"'direct'\"}", "{Locked=\"'commentMagics'\"}", "{Locked=\"'nbconvert'\"}"]
     },
     "jupyter.configuration.jupyter.runStartupCommands.description": {
         "message": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
-        "comment": [
-            "{Locked='%load_ext autoreload\\n%autoreload 2'}"
-        ]
+        "comment": ["{Locked='%load_ext autoreload\\n%autoreload 2'}"]
     },
     "jupyter.configuration.jupyter.debugJustMyCode.description": "When debugging, only step through user-written code. Disable this to allow stepping into library code.",
     "jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description": "Show the Outline button in the Jupyter notebook toolbar.",
     "jupyter.configuration.jupyter.newCellOnRunLast.description": "Append a new empty cell to an interactive window file on running the currently last cell.",
     "jupyter.configuration.jupyter.newCellOnRunLast.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.autoAddNewCell.",
     "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description": "Characters which trigger auto completion on a python jupyter kernel.",
+    "jupyter.configuration.jupyter.completionTriggerCharacters.markdownDescription": "Mapping of characters which trigger auto completion in a Jupyter Kernel language. Following is an example of trigger characters for rust and julia kernel languages:\n```json \n{\n  \"julia\": [\".\"],\n  \"rust\": [\".\",\":\"] \n}\n```",
     "jupyter.configuration.jupyter.logKernelOutputSeparately.description": "Creates separate output panels for kernels/jupyter server console output",
     "jupyter.configuration.jupyter.excludeUserSitePackages.description": {
         "message": "Add PYTHONNOUSERSITE to kernels before starting. This prevents global/user site-packages from being used in the PYTHONPATH of the kernel.",
-        "comment": [
-            "{Locked='PYTHONNOUSERSITE'}",
-            "{Locked='PYTHONPATH'}"
-        ]
+        "comment": ["{Locked='PYTHONNOUSERSITE'}", "{Locked='PYTHONPATH'}"]
     },
-    "jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Jupyter kernels (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
+    "jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Python Jupyter kernels for Python (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
+    "jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription": "Enable code completions in Notebooks and Interactive Windows using results from the associated Jupyter Kernel.",
     "DataScience.exportDialogTitle": {
         "message": "Export to Jupyter Notebook",
-        "comment": [
-            "{Locked='Notebook'}"
-        ]
+        "comment": ["{Locked='Notebook'}"]
     },
     "DataScience.notebookExport": "Export",
     "DataScience.exportAsNotebook.shorttitle": "Save",

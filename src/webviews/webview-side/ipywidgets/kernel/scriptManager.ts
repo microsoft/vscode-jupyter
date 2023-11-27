@@ -12,7 +12,7 @@ import { IJupyterExtraSettings } from '../../../../platform/webviews/types';
 import { isCDNReachable } from './helper';
 import { noop } from '../../../../platform/common/utils/misc';
 import { IDisposable } from '../../../../platform/common/types';
-import { dispose } from '../../../../platform/common/helpers';
+import { dispose } from '../../../../platform/common/utils/lifecycle';
 import { WidgetScriptSource } from '../../../../notebooks/controllers/ipywidgets/types';
 import { warnAboutWidgetVersionsThatAreNotSupported } from './incompatibleWidgetHandler';
 import { registerScripts, undefineModule } from './requirejsRegistry';

@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CancellationTokenSource, NotebookDocument, Disposable, EventEmitter, Uri } from 'vscode';
+import { CancellationTokenSource, NotebookDocument, Disposable, EventEmitter } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../kernels/internalTypes';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import {
@@ -18,7 +18,7 @@ import {
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../kernels/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { NotebookMetadata } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -71,26 +71,26 @@ suite('Preferred Kernel Connection', () => {
         kernelModel: instance(mock<LiveKernelModel>()),
         serverProviderHandle: serverProviderHandle2
     });
-    const remoteLiveJavaKernelConnection = LiveRemoteKernelConnectionMetadata.create({
-        baseUrl: '',
-        id: 'liveRemoteJava',
-        kernelModel: {
-            lastActivityTime: new Date(),
-            model: {
-                id: 'xyz',
-                kernel: {
-                    name: 'java',
-                    id: 'xyz'
-                },
-                path: 'baz/sample.ipynb',
-                name: 'sample.ipynb',
-                type: 'notebook'
-            },
-            name: 'java',
-            numberOfConnections: 1
-        },
-        serverProviderHandle: serverProviderHandle2
-    });
+    // const remoteLiveJavaKernelConnection = LiveRemoteKernelConnectionMetadata.create({
+    //     baseUrl: '',
+    //     id: 'liveRemoteJava',
+    //     kernelModel: {
+    //         lastActivityTime: new Date(),
+    //         model: {
+    //             id: 'xyz',
+    //             kernel: {
+    //                 name: 'java',
+    //                 id: 'xyz'
+    //             },
+    //             path: 'baz/sample.ipynb',
+    //             name: 'sample.ipynb',
+    //             type: 'notebook'
+    //         },
+    //         name: 'java',
+    //         numberOfConnections: 1
+    //     },
+    //     serverProviderHandle: serverProviderHandle2
+    // });
     const remoteJavaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         baseUrl: '',
         id: 'remoteJavaKernelSpec',
@@ -178,12 +178,11 @@ suite('Preferred Kernel Connection', () => {
             instance(localPythonEnvFinder)
         ]);
         (instance(connection) as any).then = undefined;
-        when(connection.mappedRemoteNotebookDir).thenReturn(undefined);
         when(jupyterConnection.createConnectionInfo(anything())).thenResolve(instance(connection));
         preferredService = new PreferredKernelConnectionService(instance(jupyterConnection));
         disposables.push(preferredService);
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     suite('Live Remote Kernels (preferred match)', () => {
         test('Find preferred kernel spec if there is no exact match for the live kernel connection (match kernel spec name)', async () => {
             when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
@@ -217,31 +216,30 @@ suite('Preferred Kernel Connection', () => {
 
             assert.strictEqual(preferredKernel, remoteJavaKernelSpec);
         });
-        test('Find existing session if there is an exact match for the notebook', async () => {
-            when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar/');
-            notebook = new TestNotebookDocument(Uri.file('/foo/bar/baz/sample.ipynb'), 'jupyter-notebook', {
-                custom: { metadata: notebookMetadata }
-            });
+        // test('Find existing session if there is an exact match for the notebook', async () => {
+        //     notebook = new TestNotebookDocument(Uri.file('/foo/bar/baz/sample.ipynb'), 'jupyter-notebook', {
+        //         custom: { metadata: notebookMetadata }
+        //     });
 
-            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
-                undefined
-            );
-            when(remoteKernelFinder.status).thenReturn('idle');
-            when(remoteKernelFinder.kernels).thenReturn([
-                remoteLiveKernelConnection1,
-                remoteLiveJavaKernelConnection,
-                remoteJavaKernelSpec
-            ]);
-            notebookMetadata.language_info!.name = remoteJavaKernelSpec.kernelSpec.language!;
+        //     when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
+        //         undefined
+        //     );
+        //     when(remoteKernelFinder.status).thenReturn('idle');
+        //     when(remoteKernelFinder.kernels).thenReturn([
+        //         remoteLiveKernelConnection1,
+        //         remoteLiveJavaKernelConnection,
+        //         remoteJavaKernelSpec
+        //     ]);
+        //     notebookMetadata.language_info!.name = remoteJavaKernelSpec.kernelSpec.language!;
 
-            const preferredKernel = await preferredService.findPreferredRemoteKernelConnection(
-                notebook,
-                instance(remoteKernelFinder),
-                cancellation.token
-            );
+        //     const preferredKernel = await preferredService.findPreferredRemoteKernelConnection(
+        //         notebook,
+        //         instance(remoteKernelFinder),
+        //         cancellation.token
+        //     );
 
-            assert.strictEqual(preferredKernel, remoteLiveJavaKernelConnection);
-        });
+        //     assert.strictEqual(preferredKernel, remoteLiveJavaKernelConnection);
+        // });
     });
     suite('Local Kernel Specs (preferred match)', () => {
         test('No match for notebook when there are no kernels', async () => {

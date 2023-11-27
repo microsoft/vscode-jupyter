@@ -131,6 +131,20 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     );
 }
 
+export type TelemetryProperties<
+    E extends keyof P,
+    P extends IEventNamePropertyMapping = IEventNamePropertyMapping
+> = P[E] extends TelemetryEventInfo<infer R>
+    ? ExcludeType<R, number> extends never | undefined
+        ? undefined
+        : ExcludeType<R, number>
+    : undefined | undefined;
+
+export type TelemetryMeasures<
+    E extends keyof P,
+    P extends IEventNamePropertyMapping = IEventNamePropertyMapping
+> = P[E] extends TelemetryEventInfo<infer R> ? PickType<UnionToIntersection<R>, number> : undefined;
+
 function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     measures?: Record<string, number>,

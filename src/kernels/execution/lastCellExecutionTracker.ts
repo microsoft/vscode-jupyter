@@ -3,18 +3,18 @@
 
 import { injectable, inject } from 'inversify';
 import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platform/common/types';
-import { Disposables } from '../../platform/common/utils';
 import { IKernel, ResumeCellExecutionInformation, isRemoteConnection } from '../types';
 import type { KernelMessage } from '@jupyterlab/services';
 import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
-import { dispose } from '../../platform/common/helpers';
-import { Disposable, NotebookCell, NotebookDocument, Uri } from 'vscode';
+import { dispose } from '../../platform/common/utils/lifecycle';
+import { NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { swallowExceptions } from '../../platform/common/utils/misc';
 import { getParentHeaderMsgId } from './cellExecutionMessageHandler';
 import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { generateIdFromRemoteProvider } from '../jupyter/jupyterUtils';
+import { DisposableBase } from '../../platform/common/utils/lifecycle';
 
 const MAX_TRACKING_TIME = 1_000 * 60 * 60 * 24 * 2; // 2 days
 type CellExecutionInfo = Omit<ResumeCellExecutionInformation, 'token'> & { kernelId: string; cellIndex: number };
@@ -24,7 +24,7 @@ type StorageExecutionInfo = CellExecutionInfo & { serverId: string; sessionId: s
  * Keeps track of the last cell that was executed for a notebook along with the time and execution count.
  */
 @injectable()
-export class LastCellExecutionTracker extends Disposables implements IExtensionSyncActivationService {
+export class LastCellExecutionTracker extends DisposableBase implements IExtensionSyncActivationService {
     private readonly executedCells = new WeakMap<NotebookCell, Partial<CellExecutionInfo>>();
     private chainedPromises = Promise.resolve();
     private readonly storageFile: Uri;
@@ -43,7 +43,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
         this.storageFile = Uri.joinPath(this.context.globalStorageUri, 'lastExecutedRemoteCell.json');
     }
     public activate(): void {
-        this.serverStorage.onDidRemove(this.onDidRemoveServers, this, this.disposables);
+        this._register(this.serverStorage.onDidRemove(this.onDidRemoveServers, this));
     }
     public async getLastTrackedCellExecution(
         notebook: NotebookDocument,
@@ -78,7 +78,6 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
         }
         this.executedCells.delete(cell);
 
-        let disposable: IDisposable | undefined;
         const disposables: IDisposable[] = [];
         const anyMessageHandler = (_: unknown, msg: IAnyMessageArgs) => {
             if (msg.direction === 'send') {
@@ -135,10 +134,9 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
                 return;
             }
             session.anyMessage.connect(anyMessageHandler);
-            disposable = new Disposable(() =>
-                swallowExceptions(() => session.anyMessage?.disconnect(anyMessageHandler))
-            );
-            disposables.push(disposable);
+            disposables.push({
+                dispose: () => swallowExceptions(() => session.anyMessage?.disconnect(anyMessageHandler))
+            });
         };
         kernel.onStarted(() => hookUpSession(), disposables);
         if (kernel.session) {

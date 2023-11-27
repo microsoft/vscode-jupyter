@@ -13,7 +13,7 @@ import {
     WidgetScriptSource
 } from '../types';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
-import { dispose } from '../../../../platform/common/helpers';
+import { dispose } from '../../../../platform/common/utils/lifecycle';
 import { Disposable } from 'vscode';
 import type { IAnyMessageArgs, IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 import type { ICommOpenMsg } from '@jupyterlab/services/lib/kernel/messages';

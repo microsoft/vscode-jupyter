@@ -9,17 +9,17 @@ import { createJupyterConnectionInfo, handleExpiredCertsError, handleSelfCertsEr
 import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
-    IJupyterUriProviderRegistration,
+    IJupyterServerProviderRegistry,
     JupyterServerProviderHandle
 } from '../types';
-import { IJupyterServerUri } from '../../../api';
+import { IJupyterServerUri, JupyterServer } from '../../../api';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { IConfigurationService } from '../../../platform/common/types';
+import { IConfigurationService, ReadWrite } from '../../../platform/common/types';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
-import { Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { JupyterLabHelper } from '../session/jupyterLabHelper';
 
 /**
@@ -28,8 +28,8 @@ import { JupyterLabHelper } from '../session/jupyterLabHelper';
 @injectable()
 export class JupyterConnection {
     constructor(
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
+        @inject(IJupyterServerProviderRegistry)
+        private readonly jupyterPickerRegistration: IJupyterServerProviderRegistry,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IDataScienceErrorHandler)
@@ -42,7 +42,23 @@ export class JupyterConnection {
     ) {}
 
     public async createConnectionInfo(serverId: JupyterServerProviderHandle) {
-        const serverUri = await this.getJupyterServerUri(serverId);
+        const server = await this.getJupyterServerUri(serverId);
+        if (!server) {
+            throw new Error(
+                `Unable to get resolved server information for ${serverId.extensionId}:${serverId.id}:${serverId.handle}`
+            );
+        }
+        const serverUri: IJupyterServerUri = {
+            baseUrl: server.connectionInformation!.baseUrl.toString(true),
+            displayName: server.label,
+            token: server.connectionInformation!.token || '',
+            authorizationHeader: server.connectionInformation!.headers || {},
+            fetch: server.connectionInformation!.fetch,
+            mappedRemoteNotebookDir: undefined,
+            WebSocket: server.connectionInformation!.WebSocket,
+            webSocketProtocols: server.connectionInformation?.webSocketProtocols
+        };
+
         return createJupyterConnectionInfo(
             serverId,
             serverUri,
@@ -59,7 +75,25 @@ export class JupyterConnection {
         doNotDisplayUnActionableMessages?: boolean
     ): Promise<void> {
         let sessionManager: JupyterLabHelper | undefined = undefined;
-        serverUri = serverUri || (await this.getJupyterServerUri(provider));
+        if (!serverUri) {
+            const server = await this.getJupyterServerUri(provider);
+            if (server) {
+                serverUri = {
+                    baseUrl: server.connectionInformation!.baseUrl.toString(true),
+                    displayName: server.label,
+                    token: server.connectionInformation!.token || '',
+                    authorizationHeader: server.connectionInformation!.headers || {},
+                    fetch: server.connectionInformation!.fetch,
+                    mappedRemoteNotebookDir: undefined,
+                    WebSocket: server.connectionInformation!.WebSocket,
+                    webSocketProtocols: server.connectionInformation?.webSocketProtocols
+                };
+            } else {
+                throw new Error(
+                    `Unable to get resolved server information for ${provider.extensionId}:${provider.id}:${provider.handle}`
+                );
+            }
+        }
         const connection = createJupyterConnectionInfo(
             provider,
             serverUri,
@@ -103,13 +137,43 @@ export class JupyterConnection {
     }
 
     private async getJupyterServerUri(provider: JupyterServerProviderHandle) {
+        const token = new CancellationTokenSource();
         try {
-            return await this.jupyterPickerRegistration.getJupyterServerUri(provider);
+            const collection =
+                this.jupyterPickerRegistration.jupyterCollections.find(
+                    (c) => c.extensionId === provider.extensionId && c.id === provider.id
+                ) ||
+                (await this.jupyterPickerRegistration.activateThirdPartyExtensionAndFindCollection(
+                    provider.extensionId,
+                    provider.id
+                ));
+            if (!collection) {
+                return;
+            }
+            const servers = await Promise.resolve(collection.serverProvider.provideJupyterServers(token.token));
+            const server = servers?.find((c) => c.id === provider.handle);
+            if (!server) {
+                return;
+            }
+            if (server.connectionInformation) {
+                return server;
+            }
+            const resolvedServer = await Promise.resolve(
+                collection.serverProvider.resolveJupyterServer(server, token.token)
+            );
+            if (!resolvedServer?.connectionInformation) {
+                return;
+            }
+            const serverInfo: ReadWrite<JupyterServer> = Object.assign({}, server);
+            serverInfo.connectionInformation = resolvedServer.connectionInformation;
+            return serverInfo;
         } catch (ex) {
             if (ex instanceof BaseError) {
                 throw ex;
             }
             throw new RemoteJupyterServerUriProviderError(provider, ex);
+        } finally {
+            token.dispose();
         }
     }
 }

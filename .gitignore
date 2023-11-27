@@ -1,5 +1,6 @@
 .DS_Store
 .huskyrc.json
+dist
 out
 *.exe
 log.log
@@ -31,8 +32,8 @@ bin/**
 logs/**
 obj/**
 .pytest_cache
-temp/
-tmp/
+temp
+tmp
 src/test/datascience/tmp/**
 src/test/datascience/temp/**
 .python-version
@@ -58,7 +59,8 @@ src/test/datascience/.venv*
 *.nls.*.json
 *.i18n.json
 l10n/
-
+# Esbuild files
+**/*.esbuild.meta.json
 # Compilation of less to css
 src/webviews/webview-side/interactive-common/variableExplorerGrid.css
 src/webviews/webview-side/interactive-common/variableExplorerGrid.css.map

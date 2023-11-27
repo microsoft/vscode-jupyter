@@ -1,11 +1,11 @@
 name: 'Set Python'
-description: "Sets python to a specific version"
+description: 'Sets python to a specific version'
 
 inputs:
   PYTHON_VERSION:
-     description: 'Version of python'
-     required: true
-     default: python
+    description: 'Version of python'
+    required: true
+    default: python
 outputs:
   CI_PYTHON_PATH:
     description: 'Path to the python'

@@ -8,7 +8,7 @@ import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, ExtensionContext, Memento, Uri } from 'vscode';
 import { CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, JupyterPaths } from './jupyterPaths.node';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IDisposable } from '../../../platform/common/types';
 import { isWeb } from '../../../platform/common/utils/misc';
@@ -21,7 +21,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../test/constants.node';
 import { uriEquals } from '../../../test/datascience/helpers';
 
 suite('Jupyter Paths', () => {
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let jupyterPaths: JupyterPaths;
     let platformService: IPlatformService;
     let envVarsProvider: ICustomEnvironmentVariablesProvider;
@@ -81,7 +81,7 @@ suite('Jupyter Paths', () => {
         delete process.env['ALLUSERSPROFILE'];
     });
     teardown(async () => {
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
     suiteTeardown(() => {
         process.env['JUPYTER_PATH'] = oldJUPYTER_PATH;

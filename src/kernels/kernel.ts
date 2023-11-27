@@ -23,7 +23,7 @@ import {
 } from '../platform/common/constants';
 import { IApplicationShell } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
-import { dispose, splitLines } from '../platform/common/helpers';
+import { splitLines } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
@@ -62,6 +62,7 @@ import dedent from 'dedent';
 import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getKernelInfo } from './kernelInfo';
 import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
+import { dispose } from '../platform/common/utils/lifecycle';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**
@@ -282,7 +283,9 @@ abstract class BaseKernel implements IBaseKernel {
 
         traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
         if (result === InterruptResult.TimedOut) {
-            const message = DataScience.restartKernelAfterInterruptMessage;
+            const message = DataScience.restartKernelAfterInterruptMessage(
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+            );
             const yes = DataScience.restartKernelMessageYes;
             const v = await this.appShell.showInformationMessage(message, { modal: true }, yes);
             if (v === yes) {
@@ -814,7 +817,7 @@ abstract class BaseKernel implements IBaseKernel {
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
-                traceVerbose(`Determined IPyWidgets Version as ${newVersion} and event fired`);
+                traceVerbose(`Determined IPyWidgets Version as ${newVersion}`);
                 // If user does not have ipywidgets installed, then this event will never get fired.
                 this._ipywidgetsVersion == newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);

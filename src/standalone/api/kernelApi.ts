@@ -39,7 +39,7 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {}
     public async getService() {
-        const info = await this.extensions.determineExtensionFromCallStack();
+        const info = this.extensions.determineExtensionFromCallStack();
         const accessInfo = await this.chainedApiAccess.chainFinally(() => this.apiAccess.getAccessInformation(info));
         if (!accessInfo.accessAllowed) {
             return;

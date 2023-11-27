@@ -89,8 +89,10 @@ import {
     isCI,
     isTestExecution,
     JUPYTER_OUTPUT_CHANNEL,
+    PylanceExtension,
     PythonExtension,
-    STANDARD_OUTPUT_CHANNEL
+    STANDARD_OUTPUT_CHANNEL,
+    Telemetry
 } from './platform/common/constants';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
@@ -100,6 +102,8 @@ import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
+import { setDisposableTracker } from './platform/common/utils/lifecycle';
+import { sendTelemetryEvent } from './telemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -113,6 +117,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 // public functions
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
+    setDisposableTracker(context.subscriptions);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
         let api: IExtensionApi;
@@ -142,7 +147,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             openNotebook: () => Promise.reject(),
             createJupyterServerCollection: () => {
                 throw new Error('Not Implemented');
-            }
+            },
+            kernels: { getKernel: () => Promise.resolve(undefined) }
         };
     }
 }
@@ -264,6 +270,12 @@ function addOutputChannel(context: IExtensionContext, serviceManager: IServiceMa
     } else {
         standardOutputChannel.appendLine('Python Extension not installed.');
     }
+    const pylanceExtension = extensions.getExtension(PylanceExtension);
+    if (pylanceExtension) {
+        standardOutputChannel.appendLine(`Pylance Extension Version: ${pylanceExtension.packageJSON['version']}.`);
+    } else {
+        standardOutputChannel.appendLine('Pylance Extension not installed.');
+    }
     if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
         standardOutputChannel.appendLine(`No workspace folder opened.`);
     } else {
@@ -315,7 +327,10 @@ async function activateLegacy(
     // Await here to keep the register method sync
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
     // This must be done first, this guarantees all experiment information has loaded & all telemetry will contain experiment info.
+    const stopWatch = new StopWatch();
     await experimentService.activate();
+    const duration = stopWatch.elapsedTime;
+    sendTelemetryEvent(Telemetry.ExperimentLoad, { duration });
 
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);

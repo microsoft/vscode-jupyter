@@ -12,7 +12,7 @@ import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
 import { traceError } from '../logging';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { dispose } from '../common/helpers';
+import { dispose } from '../common/utils/lifecycle';
 
 @injectable()
 export class PythonEnvironmentQuickPickItemProvider

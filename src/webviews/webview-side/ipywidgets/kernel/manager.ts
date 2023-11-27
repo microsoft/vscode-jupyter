@@ -7,8 +7,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { Widget } from '@lumino/widgets';
 import fastDeepEqual from 'fast-deep-equal';
-import { Observable } from 'rxjs/Observable';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { EventEmitter, Event } from '@c4312/evt';
 import { logMessage, setLogger } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { create as createKernel } from './kernel';
@@ -29,10 +28,11 @@ import { noop } from '../../../../platform/common/utils/misc';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
-    public static get instance(): Observable<WidgetManager | undefined> {
-        return WidgetManager._instance;
+    public static get onDidChangeInstance(): Event<WidgetManager | undefined> {
+        return WidgetManager._onDidChangeInstance.event;
     }
-    private static _instance = new ReplaySubject<WidgetManager | undefined>();
+    private static _onDidChangeInstance = new EventEmitter<WidgetManager | undefined>();
+    public static instance: WidgetManager | undefined;
     private manager?: IJupyterLabWidgetManager;
     private proxyKernel?: Kernel.IKernelConnection;
     private options?: KernelSocketOptions;
@@ -105,7 +105,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.manager = undefined;
             this.proxyKernel?.dispose(); // NOSONAR
             this.proxyKernel = undefined;
-            WidgetManager._instance.next(undefined);
+            WidgetManager.instance = undefined;
+            WidgetManager._onDidChangeInstance.fire(undefined);
         } else if (!this.proxyKernel) {
             logMessage(`Received some pending message ${message}`);
             this.pendingMessages.push({ message, payload });
@@ -237,7 +238,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.manager.onUnhandledIOPubMessage.connect(this.handleUnhandledIOPubMessage.bind(this));
 
             // Tell the observable about our new manager
-            WidgetManager._instance.next(this);
+            WidgetManager.instance = this;
+            WidgetManager._onDidChangeInstance.fire(this);
         } catch (ex) {
             // eslint-disable-next-line no-console
             console.error('Failed to initialize WidgetManager', ex);

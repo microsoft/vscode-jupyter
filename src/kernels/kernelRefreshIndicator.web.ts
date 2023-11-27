@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { notebooks } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
-import { dispose } from '../platform/common/helpers';
+import { dispose } from '../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { traceInfo } from '../platform/logging';
 import { IKernelFinder } from './types';

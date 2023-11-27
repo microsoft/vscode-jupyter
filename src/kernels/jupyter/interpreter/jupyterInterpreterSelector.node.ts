@@ -20,7 +20,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { PythonEnvironmentQuickPickItemProvider } from '../../../platform/interpreter/pythonEnvironmentQuickPickProvider.node';
 import { IDisposable } from '../../../platform/common/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { isCondaEnvironmentWithoutPython } from '../../../platform/interpreter/helpers';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBasedQuickPick';

@@ -135,8 +135,9 @@ export class CodeWatcher implements ICodeWatcher {
         this.closeDocumentDisposable?.dispose(); // NOSONAR
         this.updateRequiredDisposable?.dispose(); // NOSONAR
     }
+
     @captureUsageTelemetry(Telemetry.RunAllCells)
-    public async runAllCells() {
+    public async runAllCells(debug?: boolean) {
         const iw = await this.getActiveInteractiveWindow();
         const runCellCommands = this.codeLenses.filter(
             (c) =>
@@ -168,7 +169,7 @@ export class CodeWatcher implements ICodeWatcher {
 
                 // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
                 // or if we do not we need to start it up as these commands are all expected to start a new history if needed
-                finished = this.addCode(iw, code, this.document.uri, range.start.line);
+                finished = this.addCode(iw, code, this.document.uri, range.start.line, debug);
             }
         }
 
@@ -176,18 +177,26 @@ export class CodeWatcher implements ICodeWatcher {
 
         // If there are no codelenses, just run all of the code as a single cell
         if (runCellCommands.length === 0) {
-            return this.runFileInteractiveInternal(false);
+            return this.runFileAsOneCell(debug ?? false);
         }
     }
 
     @captureUsageTelemetry(Telemetry.RunFileInteractive)
     public async runFileInteractive() {
-        return this.runFileInteractiveInternal(false);
+        if (this.document && this.configService.getSettings(this.document?.uri).splitRunFileIntoCells) {
+            return this.runAllCells();
+        } else if (this.document) {
+            return this.runFileAsOneCell(false);
+        }
     }
 
     @captureUsageTelemetry(Telemetry.DebugFileInteractive)
     public async debugFileInteractive() {
-        return this.runFileInteractiveInternal(true);
+        if (this.document && this.configService.getSettings(this.document?.uri).splitRunFileIntoCells) {
+            return this.runAllCells(true);
+        } else if (this.document) {
+            return this.runFileAsOneCell(true);
+        }
     }
 
     // Run all cells up to the cell containing this start line and character
@@ -1104,23 +1113,12 @@ export class CodeWatcher implements ICodeWatcher {
         return undefined;
     }
 
-    private async runFileInteractiveInternal(debug: boolean) {
+    private async runFileAsOneCell(debug: boolean) {
         if (this.document) {
             const iw = await this.getActiveInteractiveWindow();
             const code = this.document.getText();
 
-            // Split code into cells
-            const ranges = this.cells;
-            if (ranges && ranges.length) {
-                // Adds should get started in order with the map call, so just await
-                // all of them
-                const adds = ranges.map((r) =>
-                    this.addCode(iw, this.document!.getText(r.range), this.document!.uri, r.range.start.line, debug)
-                );
-                await Promise.all(adds);
-            } else {
-                await this.addCode(iw, code, this.document.uri, 0, debug);
-            }
+            await this.addCode(iw, code, this.document.uri, 0, debug);
         }
     }
 

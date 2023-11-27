@@ -32,7 +32,7 @@ import {
     JupyterServerProviderHandle
 } from '../../../kernels/jupyter/types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento, workspace } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
@@ -42,6 +42,7 @@ import assert from 'assert';
 import { createDeferred, createDeferredFromPromise } from '../../../platform/common/utils/async';
 import { IMultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { IFileSystem } from '../../../platform/common/platform/types';
+import { UserJupyterServerPickerProviderId } from '../../../platform/common/constants';
 
 suite('Connect to Remote Jupyter Servers @mandatory', function () {
     // On conda these take longer for some reason.
@@ -207,7 +208,8 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
             api.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator),
             api.serviceContainer.get<IExtensionContext>(IExtensionContext),
             api.serviceContainer.get<IFileSystem>(IFileSystem),
-            api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry)
+            api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry),
+            `${UserJupyterServerPickerProviderId}_test` // Give a different Id, as this class is already loaded in extension.
         );
         userUriProvider.activate();
 

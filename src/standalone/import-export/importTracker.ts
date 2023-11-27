@@ -14,7 +14,7 @@ import { ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemet
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { EventName } from '../../platform/telemetry/constants';

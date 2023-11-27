@@ -3,7 +3,7 @@
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IExtensions } from '../../platform/common/types';
 import { traceInfo } from '../../platform/logging';
 import { IExtensionTestApi, waitForCondition } from '../../test/common';
@@ -64,7 +64,7 @@ suite('Jupyter Provider Tests', function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon
             .stub(api.serviceContainer.get<IExtensions>(IExtensions), 'determineExtensionFromCallStack')
-            .resolves({ extensionId: 'GitHub', displayName: 'Sample Extension' });
+            .returns({ extensionId: 'GitHub', displayName: 'Sample Extension' });
         const registerKernelSourceActionProviderStub = sinon
             .stub(notebooks, 'registerKernelSourceActionProvider')
             .callsFake((notebookType, provider) => {

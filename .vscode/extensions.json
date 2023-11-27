@@ -2,10 +2,10 @@
     // See https://go.microsoft.com/fwlink/?LinkId=827846
     // for the documentation about the extensions.json format
     "recommendations": [
-        "amodio.tsl-problem-matcher",
         "dbaeumer.vscode-eslint",
         "editorconfig.editorconfig",
         "esbenp.prettier-vscode",
-        "hbenl.vscode-mocha-test-adapter"
+        "hbenl.vscode-mocha-test-adapter",
+        "ms-python.black"
     ]
 }

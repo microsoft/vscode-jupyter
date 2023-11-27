@@ -260,6 +260,35 @@
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
      "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "pendingInspectRequestsBefore": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of inspect requests (before the cell was executed).","owner":"donjayamanne","isMeasurement":true},
+     "pendingInspectRequestsAfter": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of inspect requests (after the cell was executed).","owner":"donjayamanne","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.ExecuteCode
+/* __GDPR__
+   "DATASCIENCE.EXECUTE_CODE" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "extensionId": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -374,17 +403,6 @@
      ]
    }
  */
-//Telemetry.ExtensionCallerIdentification
-/* __GDPR__
-   "DATASCIENCE.JUPYTER_EXTENSION_CALLER_IDENTIFICATION" : {
-     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
-     "result": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.JupyterKernelApiAccess
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS" : {
@@ -401,6 +419,58 @@
    "DATASCIENCE.JUPYTER_KERNEL_API_USAGE" : {
      "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
      "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the API member used.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.KernelCodeCompletion
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_KERNEL_CODE_COMPLETION" : {
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"What kind of kernel spec did we fail to create.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Language of the kernel spec.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id.","owner":"donjayamanne"},
+     "cancelled": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the completion request was cancelled or not.","owner":"donjayamanne"},
+     "completed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we completed the request.","owner":"donjayamanne"},
+     "kernelStatusAfterRequest": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Status of the kernel at the time we make a request for the resolve completion information","owner":"donjayamanne"},
+     "kernelStatusBeforeRequest": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Status of the kernel at the time we make a request for the resolve completion information","owner":"donjayamanne"},
+     "requestSent": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we send the request to resolve the completion item.","owner":"donjayamanne"},
+     "requestDuration": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total time taken to complete the request.","owner":"donjayamanne","isMeasurement":true},
+     "completionItems": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Number of items returned.","owner":"donjayamanne","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.KernelCodeCompletionCannotResolve
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_KERNEL_CODE_COMPLETION_CANNOT_RESOLVE" : {
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"What kind of kernel spec did we fail to create.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Language of the kernel spec.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.KernelCodeCompletionResolve
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_KERNEL_CODE_COMPLETION_RESOLVE" : {
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"What kind of kernel spec did we fail to create.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Language of the kernel spec.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id.","owner":"donjayamanne"},
+     "cancelled": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the completion request was cancelled or not.","owner":"donjayamanne"},
+     "kernelStatusBeforeRequest": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Status of the kernel at the time we make a request for the resolve completion information","owner":"donjayamanne"},
+     "kernelStatusAfterRequest": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Status of the kernel at the time we make a request for the resolve completion information","owner":"donjayamanne"},
+     "requestTimedout": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we timedout waiting for the request to complete.","owner":"donjayamanne"},
+     "completedWithData": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the kernel completion resolve request returned any data.","owner":"donjayamanne"},
+     "requestSent": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we send the request to resolve the completion item.","owner":"donjayamanne"},
+     "completed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we resolved the documentation or not.","owner":"donjayamanne"},
+     "requestDuration": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total time taken to resolve the documentation.","owner":"donjayamanne","isMeasurement":true},
+     "pendingRequests": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of pending requests.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 
@@ -450,10 +520,44 @@
      ]
    }
  */
-//Telemetry.JupyterServerProviderResponseApi
+//Telemetry.NewJupyterKernelApiExecution
 /* __GDPR__
-   "DATASCIENCE.JUPYTER_SERVER_PROVIDER_RESPONSE_API" : {
-     "providerId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
+   "DATASCIENCE.JUPYTER_NEW_KERNEL_API_EXEC" : {
+     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "cancelled": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the execution was cancelled or not.","owner":"donjayamanne"},
+     "requestAcknowledged": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the kernel acknowledged the request.","owner":"donjayamanne"},
+     "requestSent": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the request ws sent to the kernel.","owner":"donjayamanne"},
+     "cancelledBeforeRequestAcknowledged": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the execution was cancelled before it was handled by the kernel.","owner":"donjayamanne"},
+     "cancelledBeforeRequestSent": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the execution was cancelled before the request was sent to the kernel.","owner":"donjayamanne"},
+     "mimeTypes": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Mime types in the output.","owner":"donjayamanne"},
+     "executionCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Gives us an idea how many cells were executed by user before a 3rd party accessed this kernel.","owner":"donjayamanne","isMeasurement":true},
+     "cancelledAfter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How long after execution was started, was the execution cancelled.","owner":"donjayamanne","isMeasurement":true},
+     "requestAcknowledgedAfter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How long after execution was started, was the request acknowledged by the kernel.","owner":"donjayamanne","isMeasurement":true},
+     "requestSentAfter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How long did it take to send this request to the kernel.","owner":"donjayamanne","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.NewJupyterKernelApiUsage
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_NEW_KERNEL_API_USAGE" : {
+     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
+     "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the API member used.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "executionCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Gives us an idea how many cells were executed by user before a 3rd party accessed this kernel.","owner":"donjayamanne","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.NewJupyterKernelsApiUsage
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_NEW_KERNELS_API_USAGE" : {
+     "accessAllowed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether 3rd party extension was allowed to use the API.","owner":"donjayamanne"},
      "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
      "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the API member used.","owner":"donjayamanne"},
      "${include}": [
@@ -1071,6 +1175,15 @@
    "DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS" : {
      "codeLensUpdateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Average time taken to aquire code lenses for a document without using the cache","owner":"amunger","isMeasurement":true},
      "maxCellCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Maximum number of code lenses returned for the document","owner":"amunger","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.ExperimentLoad
+/* __GDPR__
+   "DS_INTERNAL.EXPERIMENT_LOAD" : {
      "${include}": [
        "${F1}"
 
@@ -1751,6 +1864,7 @@
 /* __GDPR__
    "EXTENSION.LOAD" : {
      "totalActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Time taken to activate the extension.","owner":"donjayamanne","isMeasurement":true},
+     "codeLoadingTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total time to load the modules.","owner":"donjayamanne","isMeasurement":true},
      "workspaceFolderCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Number of workspace folders opened","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"

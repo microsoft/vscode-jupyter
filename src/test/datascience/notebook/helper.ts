@@ -79,7 +79,7 @@ import {
     PYTHON_LANGUAGE,
     defaultNotebookFormat
 } from '../../../platform/common/constants';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IMemento, IsWebExtension } from '../../../platform/common/types';

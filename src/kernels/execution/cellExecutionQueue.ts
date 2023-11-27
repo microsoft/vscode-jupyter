@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, NotebookCell } from 'vscode';
+import { CancellationToken, Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
-import { CellExecution, CellExecutionFactory } from './cellExecution';
+import { CellExecutionFactory } from './cellExecution';
 import {
     IKernelSession,
     KernelConnectionMetadata,
@@ -13,6 +13,9 @@ import {
     ResumeCellExecutionInformation
 } from '../../kernels/types';
 import { Resource } from '../../platform/common/types';
+import { ICellExecution, ICodeExecution } from './types';
+import { CodeExecution } from './codeExecution';
+import { once } from '../../platform/common/utils/events';
 
 /**
  * A queue responsible for execution of cells.
@@ -20,18 +23,21 @@ import { Resource } from '../../platform/common/types';
  * All cells queued using `queueCell` are added to the queue and processed in order they were added/queued.
  */
 export class CellExecutionQueue implements Disposable {
-    private readonly queueOfCellsToExecute: CellExecution[] = [];
+    private readonly queueOfItemsToExecute: (ICellExecution | ICodeExecution)[] = [];
+    private get queueOfCellsToExecute(): ICellExecution[] {
+        return this.queueOfItemsToExecute.filter((c) => c.type === 'cell').map((c) => c as ICellExecution);
+    }
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     private readonly _onPostExecute = new EventEmitter<NotebookCell>();
     private disposables: Disposable[] = [];
-    private lastCellExecution?: CellExecution;
+    private lastCellExecution?: ICellExecution | ICodeExecution;
     /**
      * Whether all cells have completed processing or cancelled, or some completed & others cancelled.
      */
     public get isEmpty(): boolean {
-        return this.queueOfCellsToExecute.length === 0;
+        return this.queueOfItemsToExecute.length === 0;
     }
     /**
      * Whether cells have been cancelled (as a result of interrupt or some have failed).
@@ -67,20 +73,46 @@ export class CellExecutionQueue implements Disposable {
      * Queue the cell for execution & start processing it immediately.
      */
     public queueCell(cell: NotebookCell, codeOverride?: string): void {
-        const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
-        if (existingCellExecution) {
-            traceCellMessage(cell, 'Use existing cell execution');
-            return;
+        this.enqueue({ cell, codeOverride });
+    }
+    /**
+     * Queue the code for execution & start processing it immediately.
+     */
+    public queueCode(code: string, extensionId: string, token: CancellationToken): ICodeExecution {
+        const item = this.enqueue({ code, extensionId, token });
+        return item as ICodeExecution;
+    }
+    private enqueue(
+        options:
+            | { cell: NotebookCell; codeOverride?: string }
+            | { code: string; extensionId: string; token: CancellationToken }
+    ) {
+        let executionItem: ICellExecution | ICodeExecution;
+        if ('cell' in options) {
+            const { cell, codeOverride } = options;
+            const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
+            if (existingCellExecution) {
+                traceCellMessage(cell, 'Use existing cell execution');
+                return existingCellExecution;
+            }
+            const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
+            executionItem = cellExecution;
+            this.disposables.push(cellExecution);
+            cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
+            this.queueOfItemsToExecute.push(cellExecution);
+
+            traceCellMessage(cell, 'User queued cell for execution');
+        } else {
+            const { code, extensionId, token } = options;
+            const codeExecution = CodeExecution.fromCode(code, extensionId);
+            executionItem = codeExecution;
+            this.disposables.push(codeExecution);
+            this.queueOfItemsToExecute.push(codeExecution);
+            this.disposables.push(once(token.onCancellationRequested)(() => codeExecution.cancel()));
         }
-        const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
-        this.disposables.push(cellExecution);
-        cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
-        this.queueOfCellsToExecute.push(cellExecution);
-
-        traceCellMessage(cell, 'User queued cell for execution');
-
         // Start executing the cells.
         this.startExecutingCells();
+        return executionItem;
     }
 
     /**
@@ -94,7 +126,7 @@ export class CellExecutionQueue implements Disposable {
         }
         const cellExecution = this.executionFactory.create(cell, '', this.metadata, info);
         this.disposables.push(cellExecution);
-        this.queueOfCellsToExecute.push(cellExecution);
+        this.queueOfItemsToExecute.push(cellExecution);
 
         traceCellMessage(cell, 'User queued cell for execution');
 
@@ -112,9 +144,21 @@ export class CellExecutionQueue implements Disposable {
     public async cancel(forced?: boolean): Promise<void> {
         this.cancelledOrCompletedWithErrors = true;
         traceVerbose('Cancel pending cells');
-        await Promise.all(this.queueOfCellsToExecute.map((item) => item.cancel(forced)));
+        await Promise.all(this.queueOfItemsToExecute.map((item) => item.cancel(forced)));
         this.lastCellExecution?.dispose();
-        this.queueOfCellsToExecute.splice(0, this.queueOfCellsToExecute.length);
+        this.queueOfItemsToExecute.splice(0, this.queueOfItemsToExecute.length);
+    }
+    /**
+     * Cancel all queued cells, but not any 3rd party execution.
+     */
+    private async cancelQueuedCells(): Promise<void> {
+        this.cancelledOrCompletedWithErrors = true;
+        traceVerbose('Cancel pending cells');
+        await Promise.all(this.queueOfCellsToExecute.map((item) => item.cancel()));
+        if (this.lastCellExecution?.type === 'cell') {
+            this.lastCellExecution?.dispose();
+        }
+        this.queueOfItemsToExecute.push(...this.queueOfItemsToExecute.filter((item) => item.type === 'code'));
     }
     /**
      * Wait for cells to complete (for for the queue of cells to be processed)
@@ -125,7 +169,7 @@ export class CellExecutionQueue implements Disposable {
         const cellsToCheck =
             Array.isArray(cells) && cells.length > 0
                 ? this.queueOfCellsToExecute.filter((item) => cells.includes(item.cell))
-                : this.queueOfCellsToExecute;
+                : this.queueOfItemsToExecute;
 
         return Promise.all(cellsToCheck.map((cell) => cell.result));
     }
@@ -147,14 +191,16 @@ export class CellExecutionQueue implements Disposable {
             // Also we in `waitForCompletion` we wait on the `this.completion` promise.
             this.cancelledOrCompletedWithErrors = true;
             // If something goes wrong in execution of cells or one cell, then cancel the remaining cells.
-            await this.cancel();
+            await this.cancelQueuedCells();
         }
     }
     private async executeQueuedCells() {
         let notebookClosed: boolean | undefined;
         const kernelConnection = await this.session;
-        this.queueOfCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
-        while (this.queueOfCellsToExecute.length) {
+        this.queueOfItemsToExecute.forEach(
+            (exec) => exec.type === 'cell' && traceCellMessage(exec.cell, 'Ready to execute')
+        );
+        while (this.queueOfItemsToExecute.length) {
             // Dispose the previous cell execution.
             // We should keep the last cell execution alive, as we could get messages even after
             // cell execution has completed, leaving it alive, allows it to process the messages.
@@ -165,32 +211,38 @@ export class CellExecutionQueue implements Disposable {
             // Take the first item from the queue, this way we maintain order of cell executions.
             // Remove from the queue only after we process it
             // This way we don't accidentally end up queueing the same cell again (we know its in the queue).
-            const cellToExecute = this.queueOfCellsToExecute[0];
-            this.lastCellExecution = cellToExecute;
-            traceCellMessage(cellToExecute.cell, 'Before Execute individual cell');
+            const itemToExecute = this.queueOfItemsToExecute[0];
+            this.lastCellExecution = itemToExecute;
+            if (itemToExecute.type === 'cell') {
+                traceCellMessage(itemToExecute.cell, 'Before Execute individual cell');
+            }
 
             let executionResult: NotebookCellRunState | undefined;
             try {
-                if (cellToExecute.cell.notebook.isClosed) {
+                if (itemToExecute.type === 'cell' && itemToExecute.cell.notebook.isClosed) {
                     notebookClosed = true;
-                } else if (this.cancelledOrCompletedWithErrors) {
+                } else if (itemToExecute.type === 'cell' && this.cancelledOrCompletedWithErrors) {
                     // Noop.
                 } else {
-                    await cellToExecute.start(kernelConnection);
-                    executionResult = await cellToExecute.result;
+                    await itemToExecute.start(kernelConnection);
+                    executionResult = await itemToExecute.result;
                 }
             } finally {
-                // Once the cell has completed execution, remove it from the queue.
-                traceCellMessage(cellToExecute.cell, `After Execute individual cell ${executionResult}`);
-                const index = this.queueOfCellsToExecute.indexOf(cellToExecute);
+                if (itemToExecute.type === 'cell') {
+                    // Once the cell has completed execution, remove it from the queue.
+                    traceCellMessage(itemToExecute.cell, `After Execute individual cell ${executionResult}`);
+                }
+                const index = this.queueOfItemsToExecute.indexOf(itemToExecute);
                 if (index >= 0) {
-                    this.queueOfCellsToExecute.splice(index, 1);
+                    this.queueOfItemsToExecute.splice(index, 1);
                 }
 
-                this._onPostExecute.fire(cellToExecute.cell);
+                if (itemToExecute.type === 'cell') {
+                    this._onPostExecute.fire(itemToExecute.cell);
+                }
             }
 
-            // If notebook was closed or a cell has failed the get out.
+            // If notebook was closed or a cell has failed then bail out.
             if (
                 notebookClosed ||
                 this.cancelledOrCompletedWithErrors ||
@@ -210,9 +262,32 @@ export class CellExecutionQueue implements Disposable {
                 if (reasons.length === 0) {
                     reasons.push('an unknown reason');
                 }
-                traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
-                await this.cancel();
-                break;
+                if (
+                    this.queueOfCellsToExecute.length > 0 &&
+                    this.queueOfCellsToExecute.length === this.queueOfItemsToExecute.length
+                ) {
+                    // Only dealing with cells
+                    // Cancel evertyting and stop execution.
+                    traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
+                    await this.cancel();
+                    break;
+                } else if (
+                    this.queueOfCellsToExecute.length > 0 &&
+                    this.queueOfCellsToExecute.length !== this.queueOfItemsToExecute.length
+                ) {
+                    // Dealing with some cells and some code
+                    // Cancel execution of cells and
+                    // Continue with the execution of code.
+                    traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
+                    await this.cancelQueuedCells();
+                } else if (notebookClosed) {
+                    // Code execution failed, as its not related to a cell
+                    // there's no need to cancel anything.
+                    // Unless the notebook was closed.
+                    traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
+                    await this.cancel();
+                    break;
+                }
             }
             // If the kernel is dead, then no point trying the rest.
             if (kernelConnection.status === 'dead' || kernelConnection.status === 'terminating') {

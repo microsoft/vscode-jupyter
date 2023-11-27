@@ -25,10 +25,10 @@ import {
     IExtensionContext,
     IWatchableJupyterSettings
 } from '../../platform/common/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -53,11 +53,11 @@ suite(`Notebook Controller`, function () {
     let appShell: IApplicationShell;
     let browser: IBrowserService;
     let serviceContainer: IServiceContainer;
-    let providerRegistry: IJupyterUriProviderRegistration;
+    let providerRegistry: IJupyterServerProviderRegistry;
     let platform: IPlatformService;
     let kernelProvider: IKernelProvider;
     let extensionChecker: IPythonExtensionChecker;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let onDidChangeSelectedNotebooks: EventEmitter<{
         readonly notebook: NotebookDocument;
         readonly selected: boolean;
@@ -82,7 +82,7 @@ suite(`Notebook Controller`, function () {
         appShell = mock<IApplicationShell>();
         browser = mock<IBrowserService>();
         serviceContainer = mock<IServiceContainer>();
-        providerRegistry = mock<IJupyterUriProviderRegistration>();
+        providerRegistry = mock<IJupyterServerProviderRegistry>();
         platform = mock<IPlatformService>();
         kernelProvider = mock<IKernelProvider>();
         extensionChecker = mock<IPythonExtensionChecker>();
@@ -146,7 +146,7 @@ suite(`Notebook Controller`, function () {
             instance(interpreterService)
         );
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     function createController(viewType: 'jupyter-notebook' | 'interactive') {
         new VSCodeNotebookController(
             instance(kernelConnection),

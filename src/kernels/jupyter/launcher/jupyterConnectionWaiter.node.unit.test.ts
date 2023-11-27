@@ -10,22 +10,23 @@ import { CancellationToken, Uri } from 'vscode';
 import { IJupyterRequestAgentCreator, IJupyterRequestCreator, JupyterServerInfo } from '../types';
 import chaiAsPromised from 'chai-as-promised';
 import events from 'events';
-import { Subject } from 'rxjs/Subject';
 import sinon from 'sinon';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { Output, ObservableExecutionResult } from '../../../platform/common/process/types.node';
-import { IConfigurationService, IJupyterSettings } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, IJupyterSettings } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { JupyterConnectionWaiter } from './jupyterConnectionWaiter.node';
 import { noop } from '../../../test/core';
+import { createObservable } from '../../../platform/common/process/proc.node';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 use(chaiAsPromised);
 suite('Jupyter Connection Waiter', async () => {
-    let observableOutput: Subject<Output<string>>;
+    let observableOutput: ReturnType<typeof createObservable<Output<string>>>;
     let launchResult: ObservableExecutionResult<string>;
     let getServerInfoStub: sinon.SinonStub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>;
     let configService: IConfigurationService;
@@ -35,6 +36,7 @@ suite('Jupyter Connection Waiter', async () => {
     const dsSettings: IJupyterSettings = { jupyterLaunchTimeout: 10_000 } as any;
     const childProc = new events.EventEmitter();
     const notebookDir = Uri.file('someDir');
+    let disposables: IDisposable[] = [];
     const dummyServerInfos: JupyterServerInfo[] = [
         {
             base_url: 'http://localhost1:1',
@@ -73,7 +75,8 @@ suite('Jupyter Connection Waiter', async () => {
     const expectedServerInfo = dummyServerInfos[1];
 
     setup(() => {
-        observableOutput = new Subject<Output<string>>();
+        observableOutput = createObservable<Output<string>>();
+        disposables.push(observableOutput);
         launchResult = {
             dispose: noop,
             out: observableOutput,
@@ -96,6 +99,7 @@ suite('Jupyter Connection Waiter', async () => {
             instance(mock<IJupyterRequestAgentCreator>())
         );
     });
+    teardown(() => (disposables = dispose(disposables)));
 
     function createConnectionWaiter() {
         return new JupyterConnectionWaiter(
@@ -111,7 +115,7 @@ suite('Jupyter Connection Waiter', async () => {
     test('Successfully gets connection info', async () => {
         (<any>dsSettings).jupyterLaunchTimeout = 10_000;
         const waiter = createConnectionWaiter();
-        observableOutput.next({ source: 'stderr', out: 'Jupyter listening on http://localhost2:2' });
+        observableOutput.fire({ source: 'stderr', out: 'Jupyter listening on http://localhost2:2' });
 
         const connection = await waiter.ready;
 
@@ -133,7 +137,7 @@ suite('Jupyter Connection Waiter', async () => {
 
         const promise = waiter.ready;
         childProc.emit('exit', exitCode);
-        observableOutput.complete();
+        observableOutput.resolve();
 
         await assert.isRejected(promise, DataScience.jupyterServerCrashed(exitCode));
     });

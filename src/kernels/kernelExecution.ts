@@ -9,7 +9,8 @@ import {
     notebooks,
     NotebookCellExecutionState,
     NotebookDocument,
-    workspace
+    workspace,
+    CancellationToken
 } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
@@ -33,6 +34,15 @@ import {
     ResumeCellExecutionInformation
 } from './types';
 import { SessionDisposedError } from '../platform/errors/sessionDisposedError';
+import { ICodeExecution } from './execution/types';
+import { StopWatch } from '../platform/common/utils/stopWatch';
+import { noop } from '../platform/common/utils/misc';
+
+// Disable ES Lint rule for now, as this is only for telemetry (hence not a layer breaking change)
+import {
+    pendingInspectRequests
+    // eslint-disable-next-line import/no-restricted-paths
+} from '../standalone/intellisense/resolveCompletionItem';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -120,6 +130,10 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
     }
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<NotebookCellRunState> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
+        const pendingInspectRequestsBefore = this.kernel.session?.kernel
+            ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
+            : 0;
+        const stopWatch = new StopWatch();
         if (cell.kind == NotebookCellKind.Markup) {
             return NotebookCellRunState.Success;
         }
@@ -129,7 +143,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             this.kernel.resourceUri,
             this.kernel.kernelConnectionMetadata
         );
-        sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell);
         const sessionPromise = this.kernel.start(new DisplayOptions(false));
 
         // If we're restarting, wait for it to finish
@@ -145,8 +158,44 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
         );
         traceVerbose(`Cell ${cell.index} executed with state ${result[0]}`);
+        const pendingInspectRequestsAfter = this.kernel.session?.kernel
+            ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
+            : 0;
+        sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell, {
+            duration: stopWatch.elapsedTime,
+            pendingInspectRequestsAfter,
+            pendingInspectRequestsBefore
+        });
 
         return result[0];
+    }
+    public async executeCode(code: string, extensionId: string, token: CancellationToken): Promise<ICodeExecution> {
+        const stopWatch = new StopWatch();
+        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+            this.kernel.resourceUri,
+            this.kernel.kernelConnectionMetadata
+        );
+        const sessionPromise = this.kernel.start(new DisplayOptions(false));
+
+        // If we're restarting, wait for it to finish
+        await this.kernel.restarting;
+
+        const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
+        const result = executionQueue.queueCode(code, extensionId, token);
+        traceVerbose(`Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`);
+        result.result
+            .finally(() => {
+                !token.isCancellationRequested &&
+                    traceInfo(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`);
+                sendKernelTelemetryEvent(
+                    this.kernel.resourceUri,
+                    Telemetry.ExecuteCode,
+                    { duration: stopWatch.elapsedTime },
+                    { extensionId }
+                );
+            })
+            .catch(noop);
+        return result;
     }
     executeHidden(code: string): Promise<IOutput[]> {
         const sessionPromise = this.kernel.start();

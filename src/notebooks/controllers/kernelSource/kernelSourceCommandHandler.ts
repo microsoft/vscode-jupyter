@@ -16,7 +16,7 @@ import {
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { isPythonKernelConnection, isUserRegisteredKernelSpecConnection } from '../../../kernels/helpers';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
-import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
+import { IJupyterServerProviderRegistry } from '../../../kernels/jupyter/types';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
 import { sendKernelTelemetryEvent } from '../../../kernels/telemetry/sendKernelTelemetryEvent';
 import {
@@ -32,7 +32,7 @@ import {
     Telemetry,
     TestingKernelPickerProviderId
 } from '../../../platform/common/constants';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
@@ -46,13 +46,14 @@ import {
     IRemoteNotebookKernelSourceSelector,
     IVSCodeNotebookController
 } from '../types';
+import { JupyterServerCollection } from '../../../api';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
     private localDisposables: IDisposable[] = [];
     private readonly providerMappings = new Map<
         string,
-        { disposables: IDisposable[]; provider: IInternalJupyterUriProvider }
+        { disposables: IDisposable[]; provider: JupyterServerCollection }
     >();
     private kernelSpecsSourceRegistered = false;
     constructor(
@@ -156,20 +157,18 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         this.localDisposables.push(
             commands.registerCommand('jupyter.kernel.selectJupyterServerKernel', this.onSelectRemoteKernel, this)
         );
-        const uriRegistration = ServiceContainer.instance.get<IJupyterUriProviderRegistration>(
-            IJupyterUriProviderRegistration
-        );
-        uriRegistration.onDidChangeProviders(this.registerUriCommands, this, this.localDisposables);
+        const uriRegistration =
+            ServiceContainer.instance.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
+        uriRegistration.onDidChangeCollections(this.registerUriCommands, this, this.localDisposables);
         this.registerUriCommands();
     }
     private registerUriCommands() {
-        const uriRegistration = ServiceContainer.instance.get<IJupyterUriProviderRegistration>(
-            IJupyterUriProviderRegistration
-        );
+        const uriRegistration =
+            ServiceContainer.instance.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
         const existingItems = new Set<string>();
-        uriRegistration.providers.map((provider) => {
-            const id = `${provider.extensionId}:${provider.id}`;
-            if (provider.id === TestingKernelPickerProviderId) {
+        uriRegistration.jupyterCollections.map((collection) => {
+            const id = `${collection.extensionId}:${collection.id}`;
+            if (collection.id === TestingKernelPickerProviderId) {
                 return;
             }
             existingItems.add(id);
@@ -181,18 +180,15 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     return [
                         {
                             get label() {
-                                return (
-                                    provider.displayName ??
-                                    (provider.detail ? `${provider.detail} (${provider.id})` : provider.id)
-                                );
+                                return collection.label;
                             },
                             get documentation() {
-                                return provider.documentation;
+                                return collection.documentation;
                             },
                             command: {
                                 command: 'jupyter.kernel.selectJupyterServerKernel',
-                                arguments: [provider.extensionId, provider.id],
-                                title: provider.displayName ?? provider.id
+                                arguments: [collection.extensionId, collection.id],
+                                title: collection.label
                             }
                         }
                     ];
@@ -203,20 +199,15 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     return [
                         {
                             get label() {
-                                return (
-                                    provider.displayName ??
-                                    (provider.detail
-                                        ? `${provider.detail} (${provider.id}) ${Date.now()}`
-                                        : provider.id)
-                                );
+                                return collection.label;
                             },
                             get documentation() {
-                                return provider.documentation;
+                                return collection.documentation;
                             },
                             command: {
                                 command: 'jupyter.kernel.selectJupyterServerKernel',
-                                arguments: [provider.extensionId, provider.id],
-                                title: provider.displayName ?? provider.id
+                                arguments: [collection.extensionId, collection.id],
+                                title: collection.label
                             }
                         }
                     ];
@@ -224,7 +215,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
             });
             this.localDisposables.push(providerItemNb);
             this.localDisposables.push(providerItemIW);
-            this.providerMappings.set(id, { disposables: [providerItemNb, providerItemIW], provider });
+            this.providerMappings.set(id, { disposables: [providerItemNb, providerItemIW], provider: collection });
         });
         this.providerMappings.forEach(({ disposables }, id) => {
             if (!existingItems.has(id)) {

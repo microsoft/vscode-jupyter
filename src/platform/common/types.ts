@@ -60,6 +60,7 @@ export interface IJupyterSettings {
     readonly enablePythonKernelLogging: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly normalizeSelectionForInteractiveWindow: boolean;
+    readonly splitRunFileIntoCells: boolean;
     readonly markdownRegularExpression: string;
     readonly codeRegularExpression: string;
     readonly errorBackgroundColor: string;
@@ -95,7 +96,6 @@ export interface IJupyterSettings {
     readonly interactiveWindowViewColumn: InteractiveWindowViewColumn;
     readonly disableZMQSupport: boolean;
     readonly forceIPyKernelDebugger?: boolean;
-    readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
     readonly pythonCompletionTriggerCharacters?: string;
@@ -109,12 +109,12 @@ export interface IJupyterSettings {
      */
     readonly useOldKernelResolve: boolean;
     readonly formatStackTraces: boolean;
-}
-
-export interface IVariableTooltipFields {
-    [languageKey: string]: {
-        [typeNameKey: string]: string[]; // List of attributes
-    };
+    /**
+     * Trigger characters for Jupyter completion, per language.
+     * This excludes the trigger characters for python.
+     * TODO: in debt to merge the two settings.
+     */
+    readonly completionTriggerCharacters?: Record<string, string[]>;
 }
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {
@@ -231,7 +231,7 @@ export interface IExtensions {
      * @return An extension or `undefined`.
      */
     getExtension<T>(extensionId: string): Extension<T> | undefined;
-    determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }>;
+    determineExtensionFromCallStack(stack?: string): { extensionId: string; displayName: string };
 }
 
 export const IBrowserService = Symbol('IBrowserService');
@@ -296,7 +296,8 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
 }
 
 export enum Experiments {
-    DataViewerContribution = 'DataViewerContribution'
+    DataViewerContribution = 'DataViewerContribution',
+    KernelCompletions = 'KernelCompletions'
 }
 
 /**

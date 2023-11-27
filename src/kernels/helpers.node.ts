@@ -12,6 +12,7 @@ import { trackKernelResourceInformation } from './telemetry/helper';
 import { areInterpreterPathsSame } from '../platform/pythonEnvironments/info/interpreter';
 import { executeSilently, isPythonKernelConnection } from './helpers';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
+import { StopWatch } from '../platform/common/utils/stopWatch';
 
 export async function sendTelemetryForPythonKernelExecutable(
     session: IKernelSession,
@@ -33,8 +34,8 @@ export async function sendTelemetryForPythonKernelExecutable(
     ) {
         return;
     }
+    const stopWatch = new StopWatch();
     try {
-        traceVerbose('Begin sendTelemetryForPythonKernelExecutable');
         const outputs = await executeSilently(
             session.kernel,
             'import sys as _VSCODE_sys\nprint(_VSCODE_sys.executable); del _VSCODE_sys'
@@ -51,9 +52,9 @@ export async function sendTelemetryForPythonKernelExecutable(
         const match = areInterpreterPathsSame(kernelConnection.interpreter.uri, Uri.file(sysExecutable));
         await trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
     } catch (ex) {
-        traceError('Failed to compare interpreters', ex);
+        traceError(`Failed to compare interpreters after ${stopWatch.elapsedTime}ms`, ex);
     }
-    traceVerbose('End sendTelemetryForPythonKernelExecutable');
+    traceVerbose(`End sendTelemetryForPythonKernelExecutable after ${stopWatch.elapsedTime}ms`);
 }
 
 /**

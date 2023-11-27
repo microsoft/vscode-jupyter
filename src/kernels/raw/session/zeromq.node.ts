@@ -12,14 +12,14 @@ import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 const zeromqModuleName = `${'zeromq'}`;
 export function getZeroMQ(): typeof import('zeromq') {
     try {
-        const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
-        const zmq = requireFunc(zeromqModuleName);
+        const zmq: typeof import('zeromq') = require(zeromqModuleName);
+        // We do not want to block the process from exiting if there are any pending messages.
+        zmq.context.blocky = false;
         sendZMQTelemetry(false).catch(noop);
         return zmq;
     } catch (e) {
         try {
-            const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
-            const zmq = requireFunc(path.join(EXTENSION_ROOT_DIR, 'out', 'node_modules', 'zeromqold'));
+            const zmq = require(path.join(EXTENSION_ROOT_DIR, 'dist', 'node_modules', 'zeromqold'));
             traceInfo('ZMQ loaded via fallback mechanism.');
             sendZMQTelemetry(false, true, e.message || e.toString()).catch(noop);
             return zmq;
@@ -38,8 +38,8 @@ export function getZeroMQ(): typeof import('zeromq') {
  */
 async function getLocalZmqBinaries() {
     try {
-        const zmqFolder = path.join(EXTENSION_ROOT_DIR, 'out', 'node_modules', 'zeromq', 'prebuilds');
-        if (!(await fs.pathExists(path.join(EXTENSION_ROOT_DIR, 'out', 'node_modules')))) {
+        const zmqFolder = path.join(EXTENSION_ROOT_DIR, 'dist', 'node_modules', 'zeromq', 'prebuilds');
+        if (!(await fs.pathExists(path.join(EXTENSION_ROOT_DIR, 'dist', 'node_modules')))) {
             // We're in dev mode.
             return;
         }

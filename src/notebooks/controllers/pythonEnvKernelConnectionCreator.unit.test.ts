@@ -14,7 +14,7 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
@@ -36,7 +36,7 @@ suite('Python Environment Kernel Connection Creator', () => {
         removed?: PythonKernelConnectionMetadata[];
         updated?: PythonKernelConnectionMetadata[];
     }>;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let notebook: NotebookDocument;
     let controllerRegistration: IControllerRegistration;
     let onControllerSelected: EventEmitter<{ notebook: NotebookDocument; controller: IVSCodeNotebookController }>;
@@ -113,7 +113,7 @@ suite('Python Environment Kernel Connection Creator', () => {
         pythonEnvKernelConnectionCreator = new PythonEnvKernelConnectionCreator(notebook, cancellation.token);
         disposables.push(pythonEnvKernelConnectionCreator);
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     test('Not does create a Python Env when Python extension fails to create it', async () => {
         when(mockedVSCodeNamespaces.commands.executeCommand('python.createEnvironment', anything())).thenResolve(
             undefined

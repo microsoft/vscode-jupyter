@@ -16,11 +16,11 @@ import {
     window
 } from 'vscode';
 import { InputFlowAction } from './utils/multiStepInput';
-import { Disposables } from './utils';
 import { Common, DataScience } from './utils/localize';
 import { noop } from './utils/misc';
 import { IDisposable } from './types';
-import { dispose } from './helpers';
+import { dispose } from './utils/lifecycle';
+import { DisposableBase } from './utils/lifecycle';
 
 abstract class BaseQuickPickItem implements QuickPickItem {
     label: string;
@@ -65,7 +65,7 @@ interface CommandQuickPickItem<T extends { id: string }> extends QuickPickItem {
     execute(): Promise<T | undefined | typeof InputFlowAction.back>;
 }
 
-export class BaseProviderBasedQuickPick<T extends { id: string }> extends Disposables {
+export class BaseProviderBasedQuickPick<T extends { id: string }> extends DisposableBase {
     private readonly categories = new Map<QuickPickItem, Set<SelectorQuickPickItem<T>>>();
     private quickPickItems: QuickPickItem[] = [];
     private quickPick?: QuickPick<QuickPickItem>;
@@ -194,7 +194,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
             })
             .catch(noop);
 
-        this.disposables.push(...disposables);
+        disposables.forEach((d) => this._register(d));
         return { quickPick, disposables };
     }
     private isCommandQuickPickItem(item: QuickPickItem): item is CommandQuickPickItem<T> {

@@ -9,14 +9,12 @@ import { IKernelSessionFactory } from '../types';
 import { JupyterConnection } from './connection/jupyterConnection';
 import { JupyterKernelService } from './session/jupyterKernelService.web';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
-import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
 import { JupyterServerProvider } from './launcher/jupyterServerProvider.web';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
 import { JupyterServerSelector } from './connection/serverSelector';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.web';
 import {
-    IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
     IJupyterKernelService,
     IJupyterServerProvider,
@@ -34,11 +32,6 @@ import { IRemoteKernelFinderController } from './finder/types';
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<JupyterServerSelector>(JupyterServerSelector, JupyterServerSelector);
     serviceManager.addSingleton<IJupyterKernelService>(IJupyterKernelService, JupyterKernelService);
-    serviceManager.addSingleton<IJupyterUriProviderRegistration>(
-        IJupyterUriProviderRegistration,
-        JupyterUriProviderRegistration
-    );
-    serviceManager.addBinding(IJupyterUriProviderRegistration, IExtensionSyncActivationService);
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<IKernelSessionFactory>(IKernelSessionFactory, KernelSessionFactory);
     serviceManager.addSingleton<JupyterKernelSessionFactory>(JupyterKernelSessionFactory, JupyterKernelSessionFactory);

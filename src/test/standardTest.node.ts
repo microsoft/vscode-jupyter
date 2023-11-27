@@ -43,7 +43,7 @@ function computePlatform() {
         case 'darwin':
             return 'darwin';
         case 'win32':
-            return process.arch === 'x32' || process.arch === 'ia32' ? 'win32-archive' : 'win32-x64-archive';
+            return process.arch === 'ia32' ? 'win32-archive' : 'win32-x64-archive';
         default:
             return 'linux-x64';
     }

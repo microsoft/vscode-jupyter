@@ -26,10 +26,9 @@ import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { KernelDiedError } from './kernelDiedError';
 import {
-    IInternalJupyterUriProvider,
     IJupyterInterpreterDependencyManager,
+    IJupyterServerProviderRegistry,
     IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration,
     JupyterInterpreterDependencyResponse,
     JupyterServerProviderHandle
 } from '../jupyter/types';
@@ -42,7 +41,7 @@ import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from './kernelErrorHandler.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { resolvableInstance } from '../../test/datascience/helpers';
+import { JupyterServer, JupyterServerCollection, JupyterServerProvider } from '../../api';
 
 suite('Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -54,7 +53,7 @@ suite('Error Handler Unit Tests', () => {
     let jupyterInterpreterService: JupyterInterpreterService;
     let kernelDependencyInstaller: IKernelDependencyService;
     let uriStorage: IJupyterServerUriStorage;
-    let jupyterUriProviderRegistration: IJupyterUriProviderRegistration;
+    let jupyterUriProviderRegistration: IJupyterServerProviderRegistry;
     let cmdManager: ICommandManager;
     let extensions: IExtensions;
     let reservedPythonNames: IReservedPythonNamedProvider;
@@ -76,7 +75,7 @@ suite('Error Handler Unit Tests', () => {
         uriStorage = mock<IJupyterServerUriStorage>();
         cmdManager = mock<ICommandManager>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
-        jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
+        jupyterUriProviderRegistration = mock<IJupyterServerProviderRegistry>();
         extensions = mock<IExtensions>();
         extensions = mock<IExtensions>();
         interpreterService = mock<IInterpreterService>();
@@ -788,58 +787,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 ].join('\n')
             );
         });
-        test('Display error when connection to remote jupyter server fails', async () => {
-            const error = new RemoteJupyterServerConnectionError(
-                uri,
-                serverProviderHandle,
-                new Error('ECONNRESET error')
-            );
-            const connection = RemoteKernelSpecConnectionMetadata.create({
-                baseUrl: 'http://hello:1234/',
-                id: '1',
-                kernelSpec: {
-                    argv: [],
-                    display_name: '',
-                    name: '',
-                    executable: ''
-                },
-                serverProviderHandle
-            });
-            when(
-                applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
-            ).thenResolve();
-            const provider = mock<IInternalJupyterUriProvider>();
-            when(provider.getServerUriWithoutAuthInfo).thenReturn(undefined);
-            when(provider.getServerUri(anything())).thenResolve({
-                baseUrl: error.baseUrl,
-                displayName: 'Server Display Name',
-                token: ''
-            });
-            when(
-                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
-            ).thenResolve(resolvableInstance(provider));
-            when(jupyterUriProviderRegistration.getDisplayNameIfProviderIsLoaded(serverProviderHandle)).thenResolve(
-                'Server Display Name'
-            );
-            const result = await dataScienceErrorHandler.handleKernelError(
-                error,
-                'start',
-                connection,
-                undefined,
-                'jupyterExtension'
-            );
-            assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
-            verify(
-                applicationShell.showErrorMessage(
-                    DataScience.remoteJupyterConnectionFailedWithServer('Server Display Name'),
-                    deepEqual({ detail: error.originalError.message || '', modal: true }),
-                    DataScience.removeRemoteJupyterConnectionButtonText,
-                    DataScience.changeRemoteJupyterConnectionButtonText,
-                    DataScience.selectDifferentKernel
-                )
-            ).once();
-            verify(uriStorage.remove(deepEqual(serverProviderHandle))).never();
-        });
         test('Select another kernel when connection to remote jupyter server fails and provider does not exist', async () => {
             const error = new RemoteJupyterServerConnectionError(
                 uri,
@@ -860,9 +807,21 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve();
-            when(
-                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
-            ).thenReject(new Error('Not Found'));
+            const server = mock<JupyterServer>();
+            when(server.id).thenReturn(serverProviderHandle.handle);
+            when(server.label).thenReturn('Hello Server');
+            when(server.connectionInformation).thenReturn({
+                baseUrl: Uri.parse('http://localhost:1234/'),
+                token: ''
+            });
+            const collection = mock<JupyterServerCollection>();
+            when(collection.extensionId).thenReturn(serverProviderHandle.extensionId);
+            when(collection.id).thenReturn(serverProviderHandle.id);
+            const serverProvider = mock<JupyterServerProvider>();
+            when(serverProvider.provideJupyterServers(anything())).thenResolve([instance(server)] as any);
+            when(collection.serverProvider).thenReturn(instance(serverProvider));
+            when(jupyterUriProviderRegistration.jupyterCollections).thenReturn([instance(collection)]);
+
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',
@@ -898,19 +857,14 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve();
-            const provider = mock<IInternalJupyterUriProvider>();
-            when(provider.getServerUriWithoutAuthInfo).thenReturn(undefined);
-            when(provider.getServerUri(anything())).thenResolve({
-                baseUrl: 'http://localhost:1234/',
-                displayName: 'Hello Server',
-                token: ''
-            });
-            when(
-                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
-            ).thenResolve(resolvableInstance(provider));
-            when(jupyterUriProviderRegistration.getDisplayNameIfProviderIsLoaded(serverProviderHandle)).thenResolve(
-                'Hello Server'
-            );
+            const collection = mock<JupyterServerCollection>();
+            when(collection.extensionId).thenReturn(serverProviderHandle.extensionId);
+            when(collection.id).thenReturn(serverProviderHandle.id);
+            when(collection.label).thenReturn('Hello Server');
+            const serverProvider = mock<JupyterServerProvider>();
+            when(serverProvider.provideJupyterServers(anything())).thenReject(new Error('Kaboom'));
+            when(collection.serverProvider).thenReturn(instance(serverProvider));
+            when(jupyterUriProviderRegistration.jupyterCollections).thenReturn([instance(collection)]);
 
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
@@ -952,16 +906,20 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.removeRemoteJupyterConnectionButtonText as any);
             when(uriStorage.remove(anything())).thenResolve();
-            const provider = mock<IInternalJupyterUriProvider>();
-            when(provider.getServerUriWithoutAuthInfo).thenReturn(undefined);
-            when(provider.getServerUri(anything())).thenResolve({
-                baseUrl: 'http://localhost:1234/',
-                displayName: 'Hello Server',
+            const server = mock<JupyterServer>();
+            when(server.id).thenReturn(serverProviderHandle.handle);
+            when(server.label).thenReturn('Hello Server');
+            when(server.connectionInformation).thenReturn({
+                baseUrl: Uri.parse('http://localhost:1234/'),
                 token: ''
             });
-            when(
-                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
-            ).thenResolve(resolvableInstance(provider));
+            const collection = mock<JupyterServerCollection>();
+            when(collection.extensionId).thenReturn(serverProviderHandle.extensionId);
+            when(collection.id).thenReturn(serverProviderHandle.id);
+            const serverProvider = mock<JupyterServerProvider>();
+            when(serverProvider.provideJupyterServers(anything())).thenReject(new Error('Kaboom'));
+            when(collection.serverProvider).thenReturn(instance(serverProvider));
+            when(jupyterUriProviderRegistration.jupyterCollections).thenReturn([instance(collection)]);
 
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
@@ -994,16 +952,13 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.changeRemoteJupyterConnectionButtonText as any);
             when(cmdManager.executeCommand(anything(), anything(), anything(), anything())).thenResolve();
-            const provider = mock<IInternalJupyterUriProvider>();
-            when(provider.getServerUriWithoutAuthInfo).thenReturn(undefined);
-            when(provider.getServerUri(anything())).thenResolve({
-                baseUrl: 'http://localhost:1234/',
-                displayName: 'Hello Server',
-                token: ''
-            });
-            when(
-                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
-            ).thenResolve(resolvableInstance(provider));
+            const collection = mock<JupyterServerCollection>();
+            when(collection.extensionId).thenReturn(serverProviderHandle.extensionId);
+            when(collection.id).thenReturn(serverProviderHandle.id);
+            const serverProvider = mock<JupyterServerProvider>();
+            when(serverProvider.provideJupyterServers(anything())).thenReject(new Error('Kaboom'));
+            when(collection.serverProvider).thenReturn(instance(serverProvider));
+            when(jupyterUriProviderRegistration.jupyterCollections).thenReturn([instance(collection)]);
 
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
@@ -1035,16 +990,20 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.selectDifferentKernel as any);
-            const provider = mock<IInternalJupyterUriProvider>();
-            when(provider.getServerUriWithoutAuthInfo).thenReturn(undefined);
-            when(provider.getServerUri(anything())).thenResolve({
-                baseUrl: 'http://localhost:1234/',
-                displayName: 'Hello Server',
+            const server = mock<JupyterServer>();
+            when(server.id).thenReturn(serverProviderHandle.handle);
+            when(server.label).thenReturn('Hello Server');
+            when(server.connectionInformation).thenReturn({
+                baseUrl: Uri.parse('http://localhost:1234/'),
                 token: ''
             });
-            when(
-                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
-            ).thenResolve(resolvableInstance(provider));
+            const collection = mock<JupyterServerCollection>();
+            when(collection.extensionId).thenReturn(serverProviderHandle.extensionId);
+            when(collection.id).thenReturn(serverProviderHandle.id);
+            const serverProvider = mock<JupyterServerProvider>();
+            when(serverProvider.provideJupyterServers(anything())).thenResolve([instance(server)] as any);
+            when(collection.serverProvider).thenReturn(instance(serverProvider));
+            when(jupyterUriProviderRegistration.jupyterCollections).thenReturn([instance(collection)]);
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',

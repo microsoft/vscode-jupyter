@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { instance, mock, when } from 'ts-mockito';
 import { Disposable, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IExtensions } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -19,7 +19,7 @@ import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder
 
 suite(`Contributed Local Kernel Spec Finder`, () => {
     let finder: ContributedLocalKernelSpecFinder;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let nonPythonKernelFinder: LocalKnownPathKernelSpecFinder;
     let pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>;
     let kernelFinder: KernelFinder;
@@ -91,7 +91,7 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
     });
-    teardown(() => dispose(disposables));
+    teardown(() => (disposables = dispose(disposables)));
     test('No change event if there are no kernels', async () => {
         when(nonPythonKernelFinder.kernels).thenReturn([]);
         when(pythonKernelFinder.kernels).thenReturn([]);

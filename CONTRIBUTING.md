@@ -23,7 +23,6 @@
     - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
     - [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
     - [Python Extension for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
-    - [TypeScript + Webpack Problem Matchers](https://marketplace.visualstudio.com/items?itemName=amodio.tsl-problem-matcher)
 
 ### Setup
 
@@ -46,7 +45,7 @@ python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --
 
 ### Incremental Build
 
-Run the `Compile`, `Compile Web Views`, and `Compile Web Extension` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
+Run the `Compile` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
 
 You can also compile from the command-line. For a full compile you can use:
 
@@ -57,11 +56,14 @@ npx gulp prePublishNonBundle
 For incremental builds you can use the following commands depending on your needs:
 
 ```shell
+# This will compile everthing, but only watch for changes to the desktop bundle.
 npm run compile
-npm run compile-viewers-watch # For Plot, Data Frame, Variable & IPyWidget Viewer
+# This watches changes to all files, webviews, web version of extension, node version of extension, etc
+# This can be resource intensive, as there are a number of bundles created, thus requiring monitoring of files for each of these numerous bundles.
+npm run compile-watch-all
 ```
 
-Sometimes you will need to run `npm run clean` and even `rm -r out`.
+Sometimes you will need to run `npm run clean` and even `rm -r out dist`.
 This is especially true if you have added or removed files.
 
 ### Errors and Warnings

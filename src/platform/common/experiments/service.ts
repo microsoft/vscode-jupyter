@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
-import { JVSC_EXTENSION_ID } from '../constants';
+import { JVSC_EXTENSION_ID, isPreReleaseVersion } from '../constants';
 import { traceInfo, traceVerbose } from '../../logging';
 import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IJupyterSettings, IMemento } from '../types';
 import { Experiments } from '../utils/localize';
@@ -115,6 +115,14 @@ export class ExperimentService implements IExperimentService {
             return true;
         }
 
+        // Enable the kernel completions experiment for all insider users
+        if (
+            experiment === ExperimentGroups.KernelCompletions &&
+            (this.appEnvironment.channel === 'insiders' || isPreReleaseVersion())
+        ) {
+            return true;
+        }
+
         // If getTreatmentVariable returns undefined,
         // it means that the value for this experiment was not found on the server.
         const treatmentVariable = this.experimentationService.getTreatmentVariable(
@@ -174,6 +182,7 @@ export class ExperimentService implements IExperimentService {
         }
 
         const optedIntoExperiments = new Set(this._optInto);
+        const enabledExperiments = new Set<string>();
 
         // Log experiments that users manually opt out, these are experiments which are added using the exp framework.
         this._optOutFrom
@@ -186,8 +195,17 @@ export class ExperimentService implements IExperimentService {
         this._optInto
             .filter((exp) => exp !== 'All')
             .forEach((exp) => {
+                enabledExperiments.add(exp);
                 traceInfo(Experiments.inGroup(exp));
             });
+
+        if (
+            experimentsDisabled &&
+            !enabledExperiments.has(ExperimentGroups.KernelCompletions) &&
+            (this.appEnvironment.channel === 'insiders' || isPreReleaseVersion())
+        ) {
+            traceInfo(Experiments.inGroup(ExperimentGroups.KernelCompletions));
+        }
 
         if (!experimentsDisabled) {
             // Log experiments that users are added to by the exp framework

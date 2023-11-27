@@ -20,7 +20,7 @@ import {
     IJupyterServerUriStorage,
     JupyterServerProviderHandle
 } from '../../kernels/jupyter/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 
 export interface IJupyterPasswordConnectInfo {
     requiresPassword: boolean;

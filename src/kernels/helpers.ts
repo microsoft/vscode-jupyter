@@ -1,16 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-// Helper functions for dealing with kernels and kernelspecs
-
 import * as path from '../platform/vscode-path/path';
 import * as uriPath from '../platform/vscode-path/resources';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { Kernel, KernelSpec } from '@jupyterlab/services';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import cloneDeep from 'lodash/cloneDeep';
 import url from 'url-parse';
 import {
     KernelConnectionMetadata,
@@ -19,7 +13,7 @@ import {
     PythonKernelConnectionMetadata,
     IJupyterKernelSpec
 } from './types';
-import { Uri } from 'vscode';
+import { NotebookCellOutputItem, Uri } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
@@ -34,6 +28,9 @@ import { sendTelemetryEvent } from '../telemetry';
 import { IPlatformService } from '../platform/common/platform/types';
 import { splitLines } from '../platform/common/helpers';
 import { getPythonEnvironmentName } from '../platform/interpreter/helpers';
+import { cellOutputToVSCCellOutput } from './execution/helpers';
+import { handleTensorBoardDisplayDataOutput } from './execution/executionHelpers';
+import { once } from '../platform/common/utils/functional';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -104,7 +101,7 @@ export function createInterpreterKernelSpecWithName(
 
 export function cleanEnvironment<T>(spec: T): T {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const copy = cloneDeep(spec) as unknown as { env?: any };
+    const copy = JSON.parse(JSON.stringify(spec)) as unknown as { env?: any };
 
     if (copy.env) {
         // Scrub the environment of the spec to make sure it has allowed values (they all must be strings)
@@ -120,6 +117,7 @@ export function cleanEnvironment<T>(spec: T): T {
         });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return copy as any;
 }
 
@@ -700,6 +698,76 @@ export async function executeSilently(
     traceVerbose(`Executing silently Code (completed) = ${codeForLogging} with ${outputs.length} output(s)`);
 
     return outputs;
+}
+
+export function executeSilentlyAndEmitOutput(
+    kernelConnection: Kernel.IKernelConnection,
+    code: string,
+    onStarted: () => void,
+    onOutput: (outputs: NotebookCellOutputItem[]) => void
+) {
+    code = code.replace(/\r\n/g, '\n');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+    const request = kernelConnection.requestExecute(
+        {
+            code,
+            silent: false,
+            stop_on_error: false,
+            allow_stdin: false,
+            store_history: false
+        },
+        true
+    );
+    const started = once(onStarted);
+    request.onIOPub = (msg) => {
+        started();
+        if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+            onOutput(
+                cellOutputToVSCCellOutput({
+                    output_type: 'stream',
+                    name: msg.content.name,
+                    text: msg.content.text
+                }).items
+            );
+        } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+            onOutput(
+                cellOutputToVSCCellOutput({
+                    output_type: 'execute_result',
+                    data: msg.content.data,
+                    metadata: msg.content.metadata,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    transient: msg.content.transient as any, // NOSONAR
+                    execution_count: msg.content.execution_count
+                }).items
+            );
+        } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+            onOutput(
+                cellOutputToVSCCellOutput({
+                    output_type: 'display_data',
+                    data: handleTensorBoardDisplayDataOutput(msg.content.data),
+                    metadata: msg.content.metadata,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    transient: msg.content.transient as any // NOSONAR
+                }).items
+            );
+        } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+            onOutput(
+                cellOutputToVSCCellOutput({
+                    output_type: 'error',
+                    ename: msg.content.ename,
+                    evalue: msg.content.evalue,
+                    traceback: msg.content.traceback
+                }).items
+            );
+        } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg) || jupyterLab.KernelMessage.isStatusMsg(msg)) {
+            //
+        } else {
+            traceWarning(`Got unexpected io pub message when executing code sillenty (${msg.header.msg_type})`);
+        }
+    };
+    return request;
 }
 
 function handleExecuteSilentErrors(

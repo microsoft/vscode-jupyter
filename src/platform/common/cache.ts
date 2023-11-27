@@ -24,7 +24,8 @@ const GlobalMementoKeyPrefixesToRemove = [
     'JUPYTER_REMOTE_KERNELSPECS_V4-',
     'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2022_10',
     'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10',
-    'user-jupyter-server-uri-list-v2'
+    'user-jupyter-server-uri-list-v2',
+    'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY'
 ];
 @injectable()
 export class OldCacheCleaner implements IExtensionSyncActivationService {

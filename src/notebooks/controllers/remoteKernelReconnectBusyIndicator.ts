@@ -3,9 +3,9 @@
 
 import { Disposable, NotebookController, NotebookDocument, workspace } from 'vscode';
 import { IKernel } from '../../kernels/types';
-import { Disposables } from '../../platform/common/utils';
+import { DisposableBase } from '../../platform/common/utils/lifecycle';
 
-export class RemoteKernelReconnectBusyIndicator extends Disposables {
+export class RemoteKernelReconnectBusyIndicator extends DisposableBase {
     constructor(
         private readonly kernel: IKernel,
         private readonly controller: NotebookController,
@@ -27,35 +27,29 @@ export class RemoteKernelReconnectBusyIndicator extends Disposables {
             // Older version of VS Code will not have this API, e.g. older insiders.
             return;
         }
-        workspace.onDidCloseNotebookDocument(
-            (e) => {
+        this._register(
+            workspace.onDidCloseNotebookDocument((e) => {
                 if (e === notebook) {
                     this.dispose();
                 }
-            },
-            this,
-            this.disposables
+            }, this)
         );
-        controller.onDidChangeSelectedNotebooks(
-            (e) => {
+        this._register(
+            controller.onDidChangeSelectedNotebooks((e) => {
                 if (e.notebook === notebook && e.selected === false) {
                     this.dispose();
                 }
-            },
-            this,
-            this.disposables
+            }, this)
         );
-        kernel.onStatusChanged(
-            (status) => {
+        this._register(
+            kernel.onStatusChanged((status) => {
                 if (status !== 'busy' && status !== 'unknown') {
                     this.dispose();
                 }
-            },
-            this,
-            this.disposables
+            }, this)
         );
         const execution = controller.createNotebookExecution(notebook);
         execution.start();
-        this.disposables.push(new Disposable(() => execution.end()));
+        this._register(new Disposable(() => execution.end()));
     }
 }

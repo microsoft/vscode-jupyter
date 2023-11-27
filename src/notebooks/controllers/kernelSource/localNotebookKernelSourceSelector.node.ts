@@ -6,7 +6,7 @@ import { CancellationError, CancellationToken, CancellationTokenSource, Notebook
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { IKernelFinder, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import {
     IMultiStepInput,

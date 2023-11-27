@@ -12,8 +12,6 @@ import {
 } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import type { KernelMessage } from '@jupyterlab/services';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import cloneDeep from 'lodash/cloneDeep';
 import fastDeepEqual from 'fast-deep-equal';
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
@@ -234,7 +232,7 @@ function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
         case 'execute_result':
         case 'update_display_data': {
             metadata.executionCount = output.execution_count;
-            metadata.metadata = output.metadata ? cloneDeep(output.metadata) : {};
+            metadata.metadata = output.metadata ? JSON.parse(JSON.stringify(output.metadata)) : {};
             break;
         }
         default:
@@ -697,7 +695,7 @@ export async function updateNotebookMetadata(
 
     if (kernelInfo && 'language_info' in kernelInfo && kernelInfo.language_info) {
         if (!fastDeepEqual(metadata.language_info, kernelInfo.language_info)) {
-            metadata.language_info = cloneDeep(kernelInfo.language_info);
+            metadata.language_info = JSON.parse(JSON.stringify(kernelInfo.language_info));
             changed = true;
         }
     } else {

@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { dispose } from '../../common/helpers';
+import { dispose } from '../../common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../common/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../common/constants';
@@ -47,53 +47,8 @@ export class PythonEnvironmentFilter implements IDisposable {
             return false;
         }
         const hiddenList = this.getExcludedPythonEnvironments();
-        const envFolderUri = 'uri' in interpreter ? interpreter.envPath : interpreter.environment?.folderUri;
+        const hidden = isPythonEnvInListOfHiddenEnvs(interpreter, hiddenList);
         const interpreterUri = 'uri' in interpreter ? interpreter.uri : interpreter.executable.uri;
-        if (!interpreterUri && !envFolderUri) {
-            return false;
-        }
-        const hidden = hiddenList.some((item) => {
-            /**
-             * Filter paths can be prefixed with `~`
-             * Filter paths can contain values with / even when on windows.
-             * We need to ensure these paths are portable from machine to machine (users syncing their settings).
-             * E.g. `~/miniconda3/envs/wow/hello/python`
-             * Paths defined here can be case insensitive and path seprators can be either / or \
-             */
-            const displayPath = getDisplayPath(item.trim()).toLowerCase().replace(/\\/g, '/');
-            item = item.trim().toLowerCase().replace(/\\/g, '/');
-            if (item.length === 0 || displayPath.length === 0) {
-                return false;
-            }
-            const displayInterpreterPath = getDisplayPath(interpreterUri).toLowerCase().replace(/\\/g, '/');
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            const interpreterPath = interpreterUri ? interpreterUri.fsPath.toLowerCase().replace(/\\/g, '/') : '';
-            if (
-                item === displayInterpreterPath ||
-                displayPath === displayInterpreterPath ||
-                item === interpreterPath ||
-                displayPath === interpreterPath
-            ) {
-                return true;
-            }
-            // Possible user entered the path to the environment instead of the executable.
-            const displayEnvPath = getDisplayPath(envFolderUri || '')
-                .toLowerCase()
-                .replace(/\\/g, '/');
-            const envPath = getDisplayPath(envFolderUri || '')
-                .toLowerCase()
-                .replace(/\\/g, '/');
-            if (
-                item === displayEnvPath ||
-                displayPath === displayEnvPath ||
-                item === envPath ||
-                displayPath === envPath
-            ) {
-                return true;
-            }
-            return false;
-        });
-
         if (hidden) {
             sendTelemetryEvent(Telemetry.JupyterKernelHiddenViaFilter);
             traceVerbose(`Python Env hidden via filter: ${getDisplayPath(interpreterUri)}`);
@@ -118,4 +73,53 @@ export class PythonEnvironmentFilter implements IDisposable {
         });
         return filters;
     }
+}
+
+export function isPythonEnvInListOfHiddenEnvs(
+    interpreter: { uri: Uri; envPath?: Uri } | Environment,
+    hiddenList: string[]
+): boolean {
+    const envFolderUri = 'uri' in interpreter ? interpreter.envPath : interpreter.environment?.folderUri;
+    const interpreterUri = 'uri' in interpreter ? interpreter.uri : interpreter.executable.uri;
+    if (!interpreterUri && !envFolderUri) {
+        return false;
+    }
+    const hidden = hiddenList.some((item) => {
+        /**
+         * Filter paths can be prefixed with `~`
+         * Filter paths can contain values with / even when on windows.
+         * We need to ensure these paths are portable from machine to machine (users syncing their settings).
+         * E.g. `~/miniconda3/envs/wow/hello/python`
+         * Paths defined here can be case insensitive and path seprators can be either / or \
+         */
+        const displayPath = getDisplayPath(item.trim()).toLowerCase().replace(/\\/g, '/');
+        item = item.trim().toLowerCase().replace(/\\/g, '/');
+        if (item.length === 0 || displayPath.length === 0) {
+            return false;
+        }
+        const displayInterpreterPath = getDisplayPath(interpreterUri).toLowerCase().replace(/\\/g, '/');
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        const interpreterPath = interpreterUri ? interpreterUri.fsPath.toLowerCase().replace(/\\/g, '/') : '';
+        if (
+            item === displayInterpreterPath ||
+            displayPath === displayInterpreterPath ||
+            item === interpreterPath ||
+            displayPath === interpreterPath
+        ) {
+            return true;
+        }
+        // Possible user entered the path to the environment instead of the executable.
+        const displayEnvPath = getDisplayPath(envFolderUri || '')
+            .toLowerCase()
+            .replace(/\\/g, '/');
+        const envPath = getDisplayPath(envFolderUri || '')
+            .toLowerCase()
+            .replace(/\\/g, '/');
+        if (item === displayEnvPath || displayPath === displayEnvPath || item === envPath || displayPath === envPath) {
+            return true;
+        }
+        return false;
+    });
+
+    return hidden;
 }

@@ -3,7 +3,6 @@
 
 import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
-import cloneDeep from 'lodash/cloneDeep';
 import uuid from 'uuid/v4';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
@@ -34,7 +33,7 @@ import {
     wrapCancellationTokens
 } from '../../../platform/common/cancellation';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { dispose } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 import { KernelSocketMap } from '../../kernelSocket';
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
@@ -286,7 +285,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     }
     public get spec(): Promise<KernelSpec.ISpecModel | undefined> {
         if (isUserRegisteredKernelSpecConnection(this.kernelConnectionMetadata)) {
-            const kernelSpec = cloneDeep(this.kernelConnectionMetadata.kernelSpec) as any;
+            const kernelSpec = JSON.parse(JSON.stringify(this.kernelConnectionMetadata.kernelSpec)) as any;
             const resources = 'resources' in kernelSpec ? kernelSpec.resources : {};
             return {
                 ...kernelSpec,
@@ -474,7 +473,7 @@ async function postStartKernel(
 
     // Attempt to get kernel to respond to requests (this is what jupyter does today).
     // Kinda warms up the kernel communication & ensure things are in the right state.
-    traceVerbose(`Kernel status before requesting kernel info and after ready is ${kernel?.status}`);
+    traceVerbose(`Kernel status is '${kernel?.status}' before requesting kernel info and after ready`);
     // Lets wait for the response (max of 3s), like jupyter (python code) & jupyter client (jupyter lab npm) does.
     // Lets not wait for full timeout, we don't want to slow kernel startup.
     // Note: in node_modules/@jupyterlab/services/lib/kernel/default.js we only wait for 3s.
@@ -613,7 +612,7 @@ async function waitForReady(
     kernelConnectionMetadata: LocalKernelConnectionMetadata,
     launchTimeout: number
 ): Promise<void> {
-    traceVerbose(`Waiting for Raw session to be ready, currently ${kernel.connectionStatus}`);
+    traceVerbose(`Waiting for Raw session to be ready, status: ${kernel.connectionStatus}`);
     // When our kernel connects and gets a status message it triggers the ready promise
     const deferred = createDeferred<'connected'>();
     const handler = (_: unknown, status: Kernel.ConnectionStatus) => {
@@ -630,10 +629,10 @@ async function waitForReady(
         deferred.resolve(kernel.connectionStatus);
     }
 
-    traceVerbose('Waiting for Raw session to be ready for 30s');
+    traceVerbose('Waiting for Raw session to be ready');
     const result = await raceTimeout(launchTimeout, deferred.promise);
     kernel.connectionStatusChanged.disconnect(handler);
-    traceVerbose(`Waited for Raw session to be ready & got ${result}`);
+    traceVerbose(`Waited for Raw session to be ready & got status: ${result}`);
 
     if (result !== 'connected') {
         throw new KernelConnectionTimeoutError(kernelConnectionMetadata);

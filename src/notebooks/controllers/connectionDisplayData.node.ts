@@ -7,12 +7,11 @@ import {
     getKernelConnectionDisplayPath,
     getRemoteKernelSessionInformation
 } from '../../kernels/helpers';
-import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IConnectionDisplayData, IConnectionDisplayDataProvider } from './types';
@@ -22,7 +21,7 @@ import {
     getKernelConnectionCategorySync
 } from './connectionDisplayData';
 import { DataScience } from '../../platform/common/utils/localize';
-import { getJupyterDisplayName } from '../../kernels/jupyter/connection/jupyterUriProviderRegistration';
+import { getJupyterDisplayName } from '../../kernels/jupyter/connection/jupyterServerProviderRegistry';
 
 @injectable()
 export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProvider {
@@ -30,8 +29,8 @@ export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProv
     constructor(
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
+        @inject(IJupyterServerProviderRegistry)
+        private readonly jupyterUriProviderRegistration: IJupyterServerProviderRegistry,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService
     ) {}
@@ -102,20 +101,15 @@ export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProv
         this.details.set(connection.id, details);
 
         if (connection.kind === 'connectToLiveRemoteKernel' || connection.kind === 'startUsingRemoteKernelSpec') {
-            getJupyterDisplayName(
+            const displayName = getJupyterDisplayName(
                 connection.serverProviderHandle,
                 this.jupyterUriProviderRegistration,
                 DataScience.kernelDefaultRemoteDisplayName
-            )
-                .then((displayName) => {
-                    if (details.serverDisplayName !== displayName) {
-                        details.serverDisplayName = displayName;
-
-                        details.triggerChange();
-                        return;
-                    }
-                })
-                .catch(noop);
+            );
+            if (details.serverDisplayName !== displayName) {
+                details.serverDisplayName = displayName;
+                details.triggerChange();
+            }
         }
 
         const kind = getKernelConnectionCategory(connection);

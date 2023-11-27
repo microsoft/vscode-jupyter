@@ -24,7 +24,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../platform/common/application/types';
-import { dispose } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/utils/lifecycle';
 import { IBrowserService, IConfigurationService, IDisposable, IExtensionContext } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -80,7 +80,7 @@ suite('Controller Registration', () => {
         kernelSpec: javaKernelSpec
     });
     let clock: fakeTimers.InstalledClock;
-    const disposables: IDisposable[] = [];
+    let disposables: IDisposable[] = [];
     let vscNotebook: IVSCodeNotebook;
     let kernelFinder: IKernelFinder;
     let extensionChecker: IPythonExtensionChecker;
@@ -218,7 +218,7 @@ suite('Controller Registration', () => {
     });
     teardown(() => {
         sinon.restore();
-        dispose(disposables);
+        disposables = dispose(disposables);
     });
 
     [true, false].forEach((web) => {

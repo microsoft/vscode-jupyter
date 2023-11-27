@@ -16,8 +16,8 @@ import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';
-import { dispose } from '../../platform/common/helpers';
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { dispose } from '../../platform/common/utils/lifecycle';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
@@ -36,6 +36,7 @@ import { NotebookCellStateTracker, traceCellMessage } from './helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import { isKernelSessionDead } from '../kernel';
+import { ICellExecution } from './types';
 
 /**
  * Factory for CellExecution objects.
@@ -66,7 +67,8 @@ export class CellExecutionFactory {
  * Further details here https://github.com/microsoft/vscode-jupyter/issues/232 & https://github.com/jupyter/jupyter_client/issues/297
  *
  */
-export class CellExecution implements IDisposable {
+export class CellExecution implements ICellExecution, IDisposable {
+    public readonly type = 'cell';
     public get result(): Promise<NotebookCellRunState> {
         return this._result.promise;
     }
@@ -107,7 +109,11 @@ export class CellExecution implements IDisposable {
                 // If the cell is deleted, then dispose the request object.
                 // No point keeping it alive, just chewing resources.
                 if (e === this.cell.document) {
-                    traceVerbose(`Disposing request as the cell was deleted ${getDisplayPath(this.cell.notebook.uri)}`);
+                    traceInfo(
+                        `Disposing request as the cell (${this.cell.index}) was deleted ${getDisplayPath(
+                            this.cell.notebook.uri
+                        )}`
+                    );
                     try {
                         this.request?.dispose(); // NOSONAR
                     } catch (e) {
@@ -152,7 +158,7 @@ export class CellExecution implements IDisposable {
     public async start(session: IKernelSession) {
         this.session = session;
         if (this.resumeExecution?.msg_id) {
-            return this.resume(session, this.resumeExecution);
+            return this.resume(session, this.resumeExecution).then(noop);
         }
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
@@ -180,7 +186,7 @@ export class CellExecution implements IDisposable {
             traceCellMessage(this.cell, 'Cell has already been started yet CellExecution.Start invoked again');
             traceError(`Cell has already been started yet CellExecution.Start invoked again ${this.cell.index}`);
             // TODO: Send telemetry this should never happen, if it does we have problems.
-            return this.result;
+            return this.result.then(noop);
         }
         this.started = true;
 
@@ -421,7 +427,7 @@ export class CellExecution implements IDisposable {
         try {
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
             this._preExecuteEmitter.fire(this.cell);
-            traceVerbose(`Execution Request Sent to Kernel for cell ${this.cell.index}`);
+            traceVerbose(`Cell Index:${this.cell.index} sent to kernel`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
             this.request = kernelConnection.requestExecute(
@@ -435,6 +441,8 @@ export class CellExecution implements IDisposable {
                 false,
                 metadata
             );
+            // Don't want dangling promises.
+            this.request.done.then(noop, noop);
         } catch (ex) {
             traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
             return this.completedWithErrors(ex);
