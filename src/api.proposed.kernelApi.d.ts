@@ -7,7 +7,7 @@ declare module './api' {
     interface OutputItem {
         /**
          * The mime type of the output.
-         * Includes standard mime types (but mot limited to) `text/plain`, `application/json`, `text/html`, etc.
+         * Includes standard mime types (but not limited to) `text/plain`, `application/json`, `text/html`, etc.
          *
          * Special mime types are:
          * - `application/x.notebook.stream.stdout`: The output is a stream of stdout. (same as NotebookCellOutputItem.stdout('').mime)
