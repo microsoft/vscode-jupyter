@@ -19,6 +19,11 @@ declare module './api' {
      */
     export interface Kernel {
         /**
+         * Language of the kernel.
+         * E.g. python, r, julia, etc.
+         */
+        language: string;
+        /**
          * Executes code in the kernel without affecting the execution count & execution history.
          *
          * @param code Code to be executed.
@@ -31,7 +36,7 @@ declare module './api' {
         /**
          * Gets an the kernel associated with a given resource.
          * For instance if the resource is a notebook, then get the kernel associated with the given Notebook document.
-         * Only kernels which have already been started by the user will be returned.
+         * Only kernels which have already been started by the user and belonging to Notebooks that are currently opened will be returned.
          */
         getKernel(uri: Uri): Thenable<Kernel | undefined>;
     }
