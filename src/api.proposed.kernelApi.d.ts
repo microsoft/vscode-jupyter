@@ -1,12 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { CancellationToken, Event, Uri } from 'vscode';
+import type { CancellationToken, Uri } from 'vscode';
 
 declare module './api' {
     interface OutputItem {
         /**
-         * The mime type of the output
+         * The mime type of the output.
+         * Includes standard mime types (but mot limited to) `text/plain`, `application/json`, `text/html`, etc.
+         *
+         * Special mime types are:
+         * - `application/x.notebook.stream.stdout`: The output is a stream of stdout. (same as NotebookCellOutputItem.stdout('').mime)
+         * - `application/x.notebook.stream.stderr`: The output is a stream of stderr. (same as NotebookCellOutputItem.stderr('').mime)
+         * - `application/vnd.code.notebook.error`: The output is a stream of stderr. (same as NotebookCellOutputItem.error(...).mime)
+         *
          */
         mime: string;
         /**
