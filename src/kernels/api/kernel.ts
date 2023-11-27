@@ -24,6 +24,7 @@ import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
 import { traceError, traceVerbose } from '../../platform/logging';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.
@@ -125,6 +126,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     private readonly progress: KernelExecutionProgressIndicator;
     private previousProgress?: IDisposable;
     private readonly _api: Kernel;
+    public readonly language: string;
     constructor(
         private readonly extensionId: string,
         private readonly kernel: IKernel,
@@ -134,8 +136,13 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         super();
         this.progress = this._register(new KernelExecutionProgressIndicator(extensionId, kernel));
         this._register(once(kernel.onDisposed)(() => this.progress.dispose()));
+        this.language =
+            kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
+                ? PYTHON_LANGUAGE
+                : kernel.kernelConnectionMetadata.kernelSpec.language || PYTHON_LANGUAGE;
         // Plain object returned to 3rd party extensions that cannot be modified or messed with.
         this._api = Object.freeze({
+            language: this.language,
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token)
         });
     }
