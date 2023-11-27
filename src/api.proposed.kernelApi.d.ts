@@ -10,7 +10,7 @@ declare module './api' {
          * Includes standard mime types (but not limited to) `text/plain`, `application/json`, `text/html`, etc.
          *
          * Special mime types are:
-         * - `application/x.notebook.stream.stdout`: The output is a stream of stdout. (same as NotebookCellOutputItem.stdout('').mime)
+         * - `application/x.notebook.stream.stdout`: The output is a stream of stdout. (same as `NotebookCellOutputItem.stdout('').mime`)
          * - `application/x.notebook.stream.stderr`: The output is a stream of stderr. (same as NotebookCellOutputItem.stderr('').mime)
          * - `application/vnd.code.notebook.error`: The output is a stream of stderr. (same as NotebookCellOutputItem.error(...).mime)
          *
