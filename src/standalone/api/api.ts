@@ -22,7 +22,7 @@ import {
 } from '../../api';
 import { stripCodicons } from '../../platform/common/helpers';
 import { jupyterServerUriToCollection } from '../../kernels/jupyter/connection/jupyterServerProviderRegistry';
-import { getKernelsApi } from '../../kernels/api/api';
+import { getKernelsApi } from './kernel';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {

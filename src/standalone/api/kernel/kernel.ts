@@ -11,19 +11,19 @@ import {
     workspace,
     NotebookDocument
 } from 'vscode';
-import { Kernel, OutputItem } from '../../api';
-import { ServiceContainer } from '../../platform/ioc/container';
-import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
-import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { DisposableBase, dispose } from '../../platform/common/utils/lifecycle';
-import { noop } from '../../platform/common/utils/misc';
-import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { Telemetry, sendTelemetryEvent } from '../../telemetry';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
-import { once } from '../../platform/common/utils/events';
-import { traceError, traceVerbose } from '../../platform/logging';
+import { Kernel, OutputItem } from '../../../api';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
+import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
+import { noop } from '../../../platform/common/utils/misc';
+import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
+import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/async';
+import { once } from '../../../platform/common/utils/events';
+import { traceError, traceVerbose } from '../../../platform/logging';
 
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.

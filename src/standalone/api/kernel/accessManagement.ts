@@ -2,12 +2,15 @@
 // Licensed under the MIT License.
 
 import { QuickPickItem, commands, extensions, l10n, window } from 'vscode';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
-import { toPromise } from '../../platform/common/utils/events';
-import { getExtensionAccessListForManagement, updateListOfExtensionsAllowedToAccessApi } from './apiAccess';
-import { ServiceContainer } from '../../platform/ioc/container';
-import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
+import { DisposableStore, dispose } from '../../../platform/common/utils/lifecycle';
+import { toPromise } from '../../../platform/common/utils/events';
+import {
+    getExtensionAccessListForManagement,
+    updateListOfExtensionsAllowedToAccessApi
+} from './apiAccess';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { injectable } from 'inversify';
 
 @injectable()

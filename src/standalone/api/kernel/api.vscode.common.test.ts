@@ -3,9 +3,9 @@
 
 import { assert } from 'chai';
 import { CancellationTokenSource, NotebookCellOutputItem, NotebookDocument } from 'vscode';
-import { traceInfo } from '../../platform/logging';
-import { IDisposable } from '../../platform/common/types';
-import { captureScreenShot, initialize, startJupyterServer, suiteMandatory, testMandatory } from '../../test/common';
+import { traceInfo } from '../../../platform/logging';
+import { IDisposable } from '../../../platform/common/types';
+import { captureScreenShot, initialize, startJupyterServer, suiteMandatory, testMandatory } from '../../../test/common';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
@@ -13,14 +13,14 @@ import {
     prewarmNotebooks,
     runCell,
     waitForExecutionCompletedSuccessfully
-} from '../../test/datascience/notebook/helper';
-import { getKernelsApi } from './api';
-import { raceTimeoutError } from '../../platform/common/utils/async';
-import { dispose } from '../../platform/common/utils/lifecycle';
-import { IKernel, IKernelProvider } from '../types';
-import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
-import { Kernels, OutputItem } from '../../api';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../test/constants';
+} from '../../../test/datascience/notebook/helper';
+import { getKernelsApi } from '.';
+import { raceTimeoutError } from '../../../platform/common/utils/async';
+import { dispose } from '../../../platform/common/utils/lifecycle';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
+import { Kernels, OutputItem } from '../../../api';
+import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../../test/constants';
 
 suiteMandatory('Kernel API Tests @python', function () {
     const disposables: IDisposable[] = [];
