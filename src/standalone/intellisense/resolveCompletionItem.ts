@@ -254,7 +254,7 @@ function checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
     });
 }
 
-const pendingInspectRequests = new WeakMap<Kernel.IKernelConnection, { count: number }>();
+export const pendingInspectRequests = new WeakMap<Kernel.IKernelConnection, { count: number }>();
 
 function doesKernelHaveTooManyPendingRequests(kernel: Kernel.IKernelConnection) {
     if (!pendingInspectRequests.has(kernel)) {
