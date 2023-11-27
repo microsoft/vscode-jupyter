@@ -214,7 +214,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             .get<IKernelProvider>(IKernelProvider)
             .getKernelExecution(this.kernel);
         const outputs: OutputItem[][] = [];
-        let outputsReceieved = createDeferred<void>();
+        let outputsReceived = createDeferred<void>();
         kernelExecution
             .executeCode(code, this.extensionId, token)
             .then((codeExecution) => {
@@ -243,6 +243,8 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                     (e) => {
                         e.forEach((item) => mimeTypes.add(item.mime));
                         outputs.push(e);
+                        outputsReceived.resolve();
+                        outputsReceived = createDeferred<void>();
                     },
                     this,
                     disposables
@@ -266,9 +268,9 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             disposables
         );
         while (true) {
-            await Promise.race([outputsReceieved.promise, done.promise]);
-            if (outputsReceieved.completed) {
-                outputsReceieved = createDeferred<void>();
+            await Promise.race([outputsReceived.promise, done.promise]);
+            if (outputsReceived.completed) {
+                outputsReceived = createDeferred<void>();
             }
             while (outputs.length) {
                 yield outputs.shift()!;
