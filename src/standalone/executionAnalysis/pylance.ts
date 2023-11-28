@@ -62,6 +62,10 @@ export async function activatePylance(): Promise<INotebookLanguageClient | undef
         return undefined;
     }
 
+    if (!pylanceExtension.isActive) {
+        return undefined;
+    }
+
     if (_client) {
         return _client;
     }
