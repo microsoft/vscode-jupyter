@@ -11,7 +11,7 @@ import { Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 
 const extensionApiAccess = new Map<string, ReturnType<typeof requestKernelAccessImpl>>();
-
+const extensionsTriedAccessingApi = new Set<string>();
 export function clearApiAccess() {
     extensionApiAccess.clear();
 }
@@ -28,15 +28,21 @@ export async function requestApiAccess(extensionId: string): Promise<{ accessAll
         apiAccess = requestKernelAccessImpl(extensionId);
         extensionApiAccess.set(extensionId, apiAccess);
         void apiAccess.then(({ result }) => {
-            if (result === 'learnMore' && extensionApiAccess.get(extensionId) === apiAccess) {
+            if (
+                (result === 'learnMore' || result === 'cancelled') &&
+                extensionApiAccess.get(extensionId) === apiAccess
+            ) {
                 extensionApiAccess.delete(extensionId);
+                extensionsTriedAccessingApi.add(extensionId);
             }
         });
     }
     return apiAccess.then(({ result }) => ({ accessAllowed: result === 'allowed' }));
 }
 
-async function requestKernelAccessImpl(extensionId: string): Promise<{ result: 'allowed' | 'denied' | 'learnMore' }> {
+async function requestKernelAccessImpl(
+    extensionId: string
+): Promise<{ result: 'allowed' | 'denied' | 'learnMore' | 'cancelled' }> {
     const accessInfo = await getAccessForExtensionsFromStore();
     if (accessInfo.get(extensionId) === true) {
         return { result: 'allowed' };
@@ -46,31 +52,33 @@ async function requestKernelAccessImpl(extensionId: string): Promise<{ result: '
         traceError(`Kernel API access revoked, as extension ${extensionId} does not exist!`);
         return { result: 'denied' };
     }
-    const grantAccess = Common.bannerLabelYes;
+    const allow = l10n.t('Allow');
+    const deny = l10n.t('Deny');
     const result = await window.showInformationMessage(
         l10n.t('Do you want to grant Kernel access to the extension {0} ({1})?', displayName, extensionId),
         {
             modal: true,
             detail: l10n.t('This allows the extension to execute code against Jupyter Kernels.')
         },
-        grantAccess,
-        Common.learnMore
+        allow,
+        Common.learnMore,
+        deny
     );
-
-    const accessAllowed = result === grantAccess;
 
     if (result === Common.learnMore) {
         env.openExternal(Uri.parse('https://aka.ms/vscodeJupyterKernelApiAccess')).then(noop, noop);
-    } else {
-        await updateIndividualExtensionAccessInStore(extensionId, accessAllowed);
+    } else if (result === allow || result === deny) {
+        await updateIndividualExtensionAccessInStore(extensionId, result === allow);
     }
     switch (result) {
-        case grantAccess:
+        case allow:
             return { result: 'allowed' };
         case Common.learnMore:
             return { result: 'learnMore' };
-        default:
+        case deny:
             return { result: 'denied' };
+        default:
+            return { result: 'cancelled' };
     }
 }
 
@@ -85,6 +93,9 @@ export async function getExtensionAccessListForManagement() {
         })
     ]);
     extensionsWithoutAccess.forEach((extensionId) => extensions.set(extensionId, false));
+    extensionsTriedAccessingApi.forEach((extensionId) =>
+        extensions.set(extensionId, extensions.get(extensionId) === true)
+    );
     return extensions;
 }
 
