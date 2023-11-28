@@ -1,4 +1,3 @@
-## Docstring:  
 One-dimensional ndarray with axis labels (including time series).  
   
 Labels need not be unique but must be a hashable type. The object  

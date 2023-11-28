@@ -3321,6 +3321,10 @@ export class IEventNamePropertyMapping {
              */
             kernelLanguage: string | undefined;
             /**
+             * Translated Monaco Language.
+             */
+            monacoLanguage: string | undefined;
+            /**
              * Whether the completion request was cancelled or not.
              */
             cancelled: boolean;
@@ -3375,6 +3379,10 @@ export class IEventNamePropertyMapping {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },
+            monacoLanguage: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
             kernelId: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
@@ -3422,6 +3430,10 @@ export class IEventNamePropertyMapping {
              * Language of the kernel spec.
              */
             kernelLanguage: string | undefined;
+            /**
+             * Translated Monaco Language.
+             */
+            monacoLanguage: string | undefined;
             /**
              * Whether we timedout waiting for the request to complete.
              */
@@ -3482,6 +3494,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             kernelLanguage: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            monacoLanguage: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },

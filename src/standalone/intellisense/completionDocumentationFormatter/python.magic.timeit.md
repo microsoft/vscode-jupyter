@@ -1,4 +1,3 @@
-## Docstring:  
 Time execution of a Python statement or expression  
   
 Usage, in line mode:  
