@@ -14,9 +14,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const referencesProvider = await activatePylance();
     if (!referencesProvider) {
-        vscode.window
-            .showErrorMessage('Could not get references provider from language server, Pylance prerelease required.')
-            .then(noop, noop);
         return;
     }
 
