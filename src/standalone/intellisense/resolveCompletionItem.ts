@@ -178,7 +178,8 @@ async function sendInspectRequest(
     }
     const counter = incrementPendingCounter(kernel);
     const stopWatch = new StopWatch();
-    const codeForLogging = splitLines(message.code).reverse()[0].trim();
+    // Get last 50 characters for logging
+    const codeForLogging = splitLines(message.code).reverse()[0].slice(-50);
     traceVerbose(`Inspecting code ${codeForLogging}`);
     const request = kernel.requestInspect(message).finally(() => {
         properties.completed = true;
@@ -188,15 +189,19 @@ async function sendInspectRequest(
     });
     checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
         request,
-        kernel,
         stopWatch,
         properties,
         measures,
-        toDispose
+        toDispose,
+        codeForLogging
     );
     // No need to raceCancel with the token, thats expected in the calling code.
     return request.then(({ content }) => {
-        traceVerbose(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms`);
+        if (token.isCancellationRequested) {
+            traceVerbose(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms (but cancelled)`);
+        } else {
+            traceVerbose(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms`);
+        }
         return content;
     });
 }
@@ -223,22 +228,23 @@ function generateInspectRequestMessage(
 }
 function checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
     request: Promise<unknown>,
-    kernel: Kernel.IKernelConnection,
     stopWatch: StopWatch,
     properties: TelemetryProperties<Telemetry.KernelCodeCompletionResolve>,
     measures: TelemetryMeasures<Telemetry.KernelCodeCompletionResolve>,
-    toDispose: DisposableStore
+    toDispose: DisposableStore,
+    codeForLogging: string
 ) {
     // Do not wait too long
     // Some kernels do not support this request, this will give
     // an indication that they never work.
+    const maxTime = MAX_TIMEOUT_WAITING_FOR_RESOLVE_COMPLETION * 10;
     const timeout = setTimeout(() => {
         properties.requestTimedout = true;
         measures.requestDuration = stopWatch.elapsedTime;
         sendTelemetryEvent(Telemetry.KernelCodeCompletionResolve, measures, properties);
 
-        traceWarning(`Timeout waiting to inspect code in kernel ${kernel.id}`);
-    }, MAX_TIMEOUT_WAITING_FOR_RESOLVE_COMPLETION * 10);
+        traceWarning(`Timeout (after ${maxTime}ms) waiting to inspect code '${codeForLogging}'`);
+    }, maxTime);
     const timeoutDisposable = new Disposable(() => clearTimeout(timeout));
     toDispose.add(timeoutDisposable);
 
