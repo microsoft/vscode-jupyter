@@ -160,12 +160,7 @@ async function updateIndividualExtensionAccessInStore(extensionId: string, acces
         if (accessAllowed && apiAccess.get(extensionId)) {
             return;
         }
-        if (accessAllowed && !apiAccess.get(extensionId)) {
-            apiAccess.set(extensionId, accessAllowed);
-        }
-        if (!accessAllowed && apiAccess.has(extensionId)) {
-            apiAccess.delete(extensionId);
-        }
+        apiAccess.set(extensionId, accessAllowed);
         try {
             await context.secrets.store(apiAccessSecretKey, JSON.stringify(Object.fromEntries(apiAccess)));
         } catch (ex) {
