@@ -192,7 +192,8 @@ async function sendInspectRequest(
         stopWatch,
         properties,
         measures,
-        toDispose
+        toDispose,
+        codeForLogging
     );
     // No need to raceCancel with the token, thats expected in the calling code.
     return request.then(({ content }) => {
@@ -227,18 +228,20 @@ function checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
     stopWatch: StopWatch,
     properties: TelemetryProperties<Telemetry.KernelCodeCompletionResolve>,
     measures: TelemetryMeasures<Telemetry.KernelCodeCompletionResolve>,
-    toDispose: DisposableStore
+    toDispose: DisposableStore,
+    codeForLogging: string
 ) {
     // Do not wait too long
     // Some kernels do not support this request, this will give
     // an indication that they never work.
+    const maxTime = MAX_TIMEOUT_WAITING_FOR_RESOLVE_COMPLETION * 10;
     const timeout = setTimeout(() => {
         properties.requestTimedout = true;
         measures.requestDuration = stopWatch.elapsedTime;
         sendTelemetryEvent(Telemetry.KernelCodeCompletionResolve, measures, properties);
 
-        traceWarning(`Timeout waiting to inspect code in kernel ${kernel.id}`);
-    }, MAX_TIMEOUT_WAITING_FOR_RESOLVE_COMPLETION * 10);
+        traceWarning(`Timeout (after ${maxTime}ms) waiting to inspect code '${codeForLogging}' in kernel ${kernel.id}`);
+    }, maxTime);
     const timeoutDisposable = new Disposable(() => clearTimeout(timeout));
     toDispose.add(timeoutDisposable);
 
