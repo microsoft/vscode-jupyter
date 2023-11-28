@@ -14,6 +14,11 @@ const extensionApiAccess = new Map<string, ReturnType<typeof requestKernelAccess
 const extensionsTriedAccessingApi = new Set<string>();
 export function clearApiAccess() {
     extensionApiAccess.clear();
+    extensionsTriedAccessingApi.clear();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    updatePromise = Promise.resolve();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    cachedAccessInfo = undefined;
 }
 export async function requestApiAccess(extensionId: string): Promise<{ accessAllowed: boolean }> {
     if (!workspace.isTrusted) {
@@ -46,6 +51,9 @@ async function requestKernelAccessImpl(
     const accessInfo = await getAccessForExtensionsFromStore();
     if (accessInfo.get(extensionId) === true) {
         return { result: 'allowed' };
+    }
+    if (accessInfo.get(extensionId) === false) {
+        return { result: 'denied' };
     }
     const displayName = extensions.getExtension(extensionId)?.packageJSON?.displayName;
     if (!displayName) {
