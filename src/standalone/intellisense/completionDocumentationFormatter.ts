@@ -89,7 +89,9 @@ function convertPythonDocumentationToMarkdown(documentation: string): MarkdownSt
             startedCodeBlockInTheMiddle = false;
 
             // Sometimes docstrings are single line,
-            markdownStringLines.push(`## ${possibleSection}`);
+            if (currentSection !== 'docstring:') {
+                markdownStringLines.push(`## ${possibleSection}`);
+            }
             // docstrings that are empty contain `<no docstring>` (e.g. matplotlib_inline)
             const docStringContents = line.includes(':') ? line.split(':')[1].replace('<no docstring>', '').trim() : '';
             if (docStringContents.length) {

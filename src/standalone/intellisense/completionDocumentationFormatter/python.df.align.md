@@ -13,7 +13,6 @@ df.align(
 ) -> 'tuple[Self, NDFrameT]'  
 ```  
 ----------  
-## Docstring:  
 Align two objects on their axes with the specified join method.  
   
 Join method is specified for each axis Index.  

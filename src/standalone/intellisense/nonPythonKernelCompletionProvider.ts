@@ -75,7 +75,8 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
         const properties: TelemetryProperties<Telemetry.KernelCodeCompletion> = {
             kernelId: this.kernelId,
             kernelConnectionType: this.kernel.kernelConnectionMetadata.kind,
-            kernelLanguage: this.monacoLanguage,
+            kernelLanguage: getKernelLanguage(this.kernel),
+            monacoLanguage: this.monacoLanguage,
             cancelled: false,
             kernelStatusBeforeRequest: this.kernel.status,
             completed: false,

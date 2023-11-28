@@ -213,6 +213,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
                 kernelId,
                 kernelConnectionType: kernel.kernelConnectionMetadata.kind,
                 kernelLanguage: PYTHON_LANGUAGE,
+                monacoLanguage: PYTHON_LANGUAGE,
                 cancelled: token.isCancellationRequested,
                 completed: true,
                 requestSent: true,

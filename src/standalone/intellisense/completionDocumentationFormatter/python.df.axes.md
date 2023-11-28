@@ -1,4 +1,3 @@
-## Docstring:  
 Return a list representing the axes of the DataFrame.  
   
 It has the row axis labels and column axis labels as the only members.  

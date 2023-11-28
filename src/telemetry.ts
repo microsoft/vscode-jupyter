@@ -3321,6 +3321,10 @@ export class IEventNamePropertyMapping {
              */
             kernelLanguage: string | undefined;
             /**
+             * Translated Monaco Language.
+             */
+            monacoLanguage: string | undefined;
+            /**
              * Whether the completion request was cancelled or not.
              */
             cancelled: boolean;
@@ -3372,6 +3376,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             kernelLanguage: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            monacoLanguage: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },
