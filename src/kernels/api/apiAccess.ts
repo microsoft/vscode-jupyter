@@ -157,7 +157,7 @@ async function updateIndividualExtensionAccessInStore(extensionId: string, acces
             return;
         }
         const apiAccess = await getAccessForExtensionsFromStore(true);
-        if (accessAllowed && apiAccess.get(extensionId)) {
+        if (accessAllowed === apiAccess.get(extensionId)) {
             return;
         }
         apiAccess.set(extensionId, accessAllowed);
