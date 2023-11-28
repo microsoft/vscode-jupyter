@@ -8,9 +8,11 @@ import {
     CompletionItem,
     CompletionItemKind,
     CompletionItemProvider,
+    CompletionList,
     Position,
     Range,
     TextDocument,
+    commands,
     l10n,
     languages,
     workspace
@@ -34,7 +36,7 @@ import { translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { DisposableBase, DisposableStore } from '../../platform/common/utils/lifecycle';
-import { sleep } from '../../platform/common/utils/async';
+import { raceTimeout, sleep } from '../../platform/common/utils/async';
 import { TelemetryMeasures, TelemetryProperties, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
@@ -49,6 +51,7 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
         private readonly toDispose: DisposableStore
     ) {}
 
+    private pendingCompletionRequest = new WeakMap<TextDocument, { position: Position; version: number }>();
     private previousCompletionItems = new WeakMap<
         CompletionItem,
         { documentRef: WeakRef<TextDocument>; position: Position }
@@ -59,11 +62,66 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
         token: CancellationToken,
         _context: CompletionContext
     ): Promise<CompletionItem[]> {
-        // Wait for 100ms, as we do not want to flood the kernel with too many messages.
-        // if after 100s, the token isn't cancelled, then send the request.
-        const version = document.version;
-        await sleep(100);
-        if (token.isCancellationRequested || version !== document.version || !this.kernel.session?.kernel) {
+        if (!this.kernel.session?.kernel) {
+            return [];
+        }
+        // Most likely being called again by us in getCompletionsFromOtherLanguageProviders
+        if (
+            this.pendingCompletionRequest.get(document)?.position.isEqual(position) &&
+            this.pendingCompletionRequest.get(document)?.version === document.version
+        ) {
+            return [];
+        }
+        this.pendingCompletionRequest.set(document, { position, version: document.version });
+        try {
+            // Request completions from other language providers.
+            // Do this early, as we know kernel completions will take longer.
+            const completionsFromOtherSourcesPromise = raceCancellation(
+                token,
+                (
+                    Promise.resolve(
+                        commands.executeCommand('vscode.executeCompletionItemProvider', document.uri, position)
+                    ) as Promise<CompletionList | undefined>
+                ).then((result) => result?.items || [])
+            );
+
+            // Wait for 100ms, as we do not want to flood the kernel with too many messages.
+            // if after 100ms, the token isn't cancelled, then send the request.
+            await sleep(100);
+            if (token.isCancellationRequested) {
+                return [];
+            }
+            const completions = await this.provideCompletionItemsFromKernel(document, position, token);
+            if (token.isCancellationRequested) {
+                return [];
+            }
+            // Wait no longer than the kernel takes to provide the completions,
+            // If kernel is faster than other language providers, then so be it.
+            // Adding delays here could just slow things down in VS Code.
+            // NOTE: We have already waited for 100ms earlier.
+            const otherCompletions = await raceTimeout(0, completionsFromOtherSourcesPromise);
+
+            const existingCompletionItems = new Set(
+                (otherCompletions || []).map((item) => (typeof item.label === 'string' ? item.label : item.label.label))
+            );
+            return completions.filter(
+                (item) => !existingCompletionItems.has(typeof item.label === 'string' ? item.label : item.label.label)
+            );
+        } finally {
+            if (
+                this.pendingCompletionRequest.get(document)?.position.isEqual(position) &&
+                this.pendingCompletionRequest.get(document)?.version === document.version
+            ) {
+                this.pendingCompletionRequest.delete(document);
+            }
+        }
+    }
+    async provideCompletionItemsFromKernel(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken
+    ): Promise<CompletionItem[]> {
+        if (token.isCancellationRequested || !this.kernel.session?.kernel) {
             return [];
         }
         const stopWatch = new StopWatch();
