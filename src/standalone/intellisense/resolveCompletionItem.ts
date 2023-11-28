@@ -188,7 +188,6 @@ async function sendInspectRequest(
     });
     checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
         request,
-        kernel,
         stopWatch,
         properties,
         measures,
@@ -197,7 +196,11 @@ async function sendInspectRequest(
     );
     // No need to raceCancel with the token, thats expected in the calling code.
     return request.then(({ content }) => {
-        traceVerbose(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms`);
+        if (token.isCancellationRequested) {
+            traceVerbose(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms (but cancelled)`);
+        } else {
+            traceVerbose(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms`);
+        }
         return content;
     });
 }
@@ -224,7 +227,6 @@ function generateInspectRequestMessage(
 }
 function checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
     request: Promise<unknown>,
-    kernel: Kernel.IKernelConnection,
     stopWatch: StopWatch,
     properties: TelemetryProperties<Telemetry.KernelCodeCompletionResolve>,
     measures: TelemetryMeasures<Telemetry.KernelCodeCompletionResolve>,
@@ -240,7 +242,7 @@ function checkHowLongKernelTakesToReplyEvenAfterTimeoutOrCancellation(
         measures.requestDuration = stopWatch.elapsedTime;
         sendTelemetryEvent(Telemetry.KernelCodeCompletionResolve, measures, properties);
 
-        traceWarning(`Timeout (after ${maxTime}ms) waiting to inspect code '${codeForLogging}' in kernel ${kernel.id}`);
+        traceWarning(`Timeout (after ${maxTime}ms) waiting to inspect code '${codeForLogging}'`);
     }, maxTime);
     const timeoutDisposable = new Disposable(() => clearTimeout(timeout));
     toDispose.add(timeoutDisposable);
