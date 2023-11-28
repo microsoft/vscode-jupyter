@@ -11,12 +11,13 @@ import { raceCancellation } from '../../platform/common/cancellation';
 import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { traceInfo, traceVerbose, traceWarning } from '../../platform/logging';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection, getKernelConnectionLanguage } from '../../kernels/helpers';
 import { Settings } from '../../platform/common/constants';
 import { convertDocumentationToMarkdown } from './completionDocumentationFormatter';
 import { once } from '../../platform/common/utils/events';
 import { IDisposable } from '../../platform/common/types';
 import { splitLines } from '../../platform/common/helpers';
+import { translateKernelLanguageToMonaco } from '../../platform/common/utils';
 
 // Not all kernels support requestInspect method.
 // E.g. deno does not support this, hence waiting for this to complete is poinless.
@@ -69,7 +70,10 @@ export async function resolveCompletionItem(
     const properties: TelemetryProperties<Telemetry.KernelCodeCompletionResolve> = {
         kernelId: kernelId,
         kernelConnectionType: kernel.kernelConnectionMetadata.kind,
-        kernelLanguage: monacoLanguage,
+        kernelLanguage: getKernelConnectionLanguage(kernel.kernelConnectionMetadata),
+        monacoLanguage: translateKernelLanguageToMonaco(
+            getKernelConnectionLanguage(kernel.kernelConnectionMetadata) || ''
+        ),
         cancelled: false,
         completed: false,
         completedWithData: false,

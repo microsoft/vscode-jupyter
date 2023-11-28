@@ -3431,6 +3431,10 @@ export class IEventNamePropertyMapping {
              */
             kernelLanguage: string | undefined;
             /**
+             * Translated Monaco Language.
+             */
+            monacoLanguage: string | undefined;
+            /**
              * Whether we timedout waiting for the request to complete.
              */
             requestTimedout?: boolean;
@@ -3490,6 +3494,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             kernelLanguage: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            monacoLanguage: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },
