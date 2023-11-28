@@ -178,7 +178,8 @@ async function sendInspectRequest(
     }
     const counter = incrementPendingCounter(kernel);
     const stopWatch = new StopWatch();
-    const codeForLogging = splitLines(message.code).reverse()[0].trim();
+    // Get last 50 characters for logging
+    const codeForLogging = splitLines(message.code).reverse()[0].slice(-50);
     traceVerbose(`Inspecting code ${codeForLogging}`);
     const request = kernel.requestInspect(message).finally(() => {
         properties.completed = true;
