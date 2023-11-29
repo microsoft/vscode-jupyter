@@ -10,9 +10,6 @@ import * as sinon from 'sinon';
 import uuid from 'uuid/v4';
 import {
     CancellationTokenSource,
-    CompletionContext,
-    CompletionItem,
-    CompletionTriggerKind,
     DebugSession,
     Diagnostic,
     Event,
@@ -91,7 +88,6 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import * as urlPath from '../../../platform/vscode-path/resources';
-import { PythonKernelCompletionProvider } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { initialize, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
@@ -965,30 +961,6 @@ export async function waitForExecutionCompletedSuccessfully(
         ),
         waitForCellExecutionToComplete(cell)
     ]);
-}
-
-export async function waitForCompletions(
-    completionProvider: PythonKernelCompletionProvider,
-    cell: NotebookCell,
-    pos: Position,
-    triggerCharacter: string | undefined
-) {
-    const token = new CancellationTokenSource().token;
-    let completions: CompletionItem[] = [];
-    await waitForCondition(
-        async () => {
-            await sleep(500); // Give it some time since last ask.
-            let context: CompletionContext = {
-                triggerKind: triggerCharacter ? CompletionTriggerKind.TriggerCharacter : CompletionTriggerKind.Invoke,
-                triggerCharacter
-            };
-            completions = await completionProvider.provideCompletionItems(cell.document, pos, token, context);
-            return completions.length > 0;
-        },
-        defaultNotebookTestTimeout,
-        `Unable to get completions for cell ${cell.document.uri}`
-    );
-    return completions;
 }
 
 export async function waitForCellHavingOutput(cell: NotebookCell) {

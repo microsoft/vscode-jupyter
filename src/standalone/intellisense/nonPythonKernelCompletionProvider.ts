@@ -18,7 +18,7 @@ import {
     workspace
 } from 'vscode';
 import { raceCancellation } from '../../platform/common/cancellation';
-import { traceInfo, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import {
     Experiments,
     IDisposable,
@@ -91,9 +91,17 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
             if (token.isCancellationRequested) {
                 return [];
             }
-            const completions = await this.provideCompletionItemsFromKernel(document, position, token);
+            let completions = await this.provideCompletionItemsFromKernel(document, position, token);
             if (token.isCancellationRequested) {
                 return [];
+            }
+            if (this.monacoLanguage === PYTHON_LANGUAGE) {
+                completions = translatePythonKernelCompletions(
+                    document,
+                    position,
+                    getCompletionTriggerCharacter(this.kernel).join(''),
+                    completions
+                );
             }
             // Wait no longer than the kernel takes to provide the completions,
             // If kernel is faster than other language providers, then so be it.
@@ -297,10 +305,17 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
             return;
         }
 
-        const triggerCharacters = getCompletionTriggerCharacter(this.kernel);
+        let triggerCharacters = getCompletionTriggerCharacter(this.kernel);
         if (triggerCharacters.length === 0) {
             logHowToEnableKernelCompletion(this.kernel);
             return;
+        }
+        if (this.monacoLanguage === PYTHON_LANGUAGE) {
+            // Special case. We know that the jupyter autocomplete works in strings, so if strings are available, trigger on / too so
+            // we can fill out paths.
+            if (triggerCharacters.includes('"') || triggerCharacters.includes("'")) {
+                triggerCharacters = [...triggerCharacters, '/'];
+            }
         }
 
         traceInfo(
@@ -351,7 +366,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
 }
 
 /**
- * This class implements a CompletionItemProvider for non-python kernels using the jupyter requestCompletions message.
+ * This class implements a CompletionItemProvider for kernels using the jupyter requestCompletions message.
  */
 @injectable()
 export class NonPythonKernelCompletionProvider extends DisposableBase implements IExtensionSyncActivationService {
@@ -369,7 +384,7 @@ export class NonPythonKernelCompletionProvider extends DisposableBase implements
                     return;
                 }
                 const language = getKernelLanguageAsMonacoLanguage(e);
-                if (!language || language.toLowerCase() === PYTHON_LANGUAGE.toLowerCase()) {
+                if (!language) {
                     return;
                 }
                 if (this.kernelCompletionProviders.has(e)) {
@@ -464,4 +479,157 @@ function logHowToEnableKernelCompletion(kernel: IKernel) {
             )
         );
     }
+}
+
+function positionInsideString(line: string, position: Position) {
+    const indexDoubleQuote = line.indexOf('"');
+    const indexSingleQuote = line.indexOf("'");
+    const lastIndexDoubleQuote = line.lastIndexOf('"');
+    const lastIndexSingleQuote = line.lastIndexOf("'");
+    const index = indexDoubleQuote >= 0 ? indexDoubleQuote : indexSingleQuote;
+    const lastIndex = lastIndexDoubleQuote >= 0 ? lastIndexDoubleQuote : lastIndexSingleQuote;
+    return index >= 0 && position.character > index && position.character <= lastIndex;
+}
+
+// Exported for unit testing
+export function translatePythonKernelCompletions(
+    document: TextDocument,
+    position: Position,
+    triggerCharacter: string | undefined,
+    completions: CompletionItem[]
+) {
+    const allowStringFilter =
+        triggerCharacter != undefined && (triggerCharacter.includes("'") || triggerCharacter.includes('"'));
+    let result = completions;
+    const charBeforeCursorPosition =
+        position.character === 0
+            ? undefined
+            : new Range(position.line, position.character - 1, position.line, position.character);
+    const charBeforeCursor = charBeforeCursorPosition ? document.getText(charBeforeCursorPosition) : undefined;
+    const isPreviousCharTriggerCharacter = charBeforeCursor === '.';
+    const wordRange = document.getWordRangeAtPosition(
+        isPreviousCharTriggerCharacter || triggerCharacter === '.'
+            ? new Position(position.line, position.character - 1)
+            : position
+    );
+    const wordRangeWithTriggerCharacter =
+        wordRange && charBeforeCursorPosition ? wordRange.union(charBeforeCursorPosition) : undefined;
+    const line = document.lineAt(position.line).text;
+    const word = wordRangeWithTriggerCharacter ? document.getText(wordRangeWithTriggerCharacter) : line;
+    const wordDot = word.endsWith('.') || isPreviousCharTriggerCharacter;
+    const insideString =
+        allowStringFilter &&
+        (triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(line, position));
+
+    traceInfoIfCI(`Jupyter completions filtering applied: ${insideString} on ${line}`);
+
+    // Update magics to have a much lower sort order than other strings.
+    // Also change things that start with our current word to eliminate the
+    // extra long label.
+    result = result.map((r, i) => {
+        const label = typeof r.label === 'string' ? r.label : r.label.label;
+        if (label.startsWith('%') || label.startsWith('!')) {
+            return {
+                ...r,
+                sortText: `ZZZ${r.sortText}`
+            };
+        }
+        // Do nothing for paths and the like inside strings.
+        if (insideString) {
+            return r;
+        }
+
+        const wordIndex = word ? label.indexOf(word) : -1;
+        let newLabel: string | undefined = undefined;
+        let newText: string | undefined = undefined;
+        let newRange: Range | { inserting: Range; replacing: Range } | undefined = undefined;
+
+        // Two cases for filtering. We're at the '.', then the word we have is the beginning of the string.
+        // Example, user typed 'df.' and label is 'df.PassengerId'. Word would be 'df.' in this case.
+        if (word && wordDot && label.includes(word)) {
+            newLabel = label.substring(label.indexOf(word) + (wordDot ? word.length : 0));
+            newText = label.substring(label.indexOf(word) + word.length);
+            const changeInCharacters =
+                (typeof r.label === 'string' ? r.label.length : r.label.label.length) - newText.length;
+            newRange =
+                r.range && 'start' in r.range
+                    ? new Range(
+                          new Position(r.range.start.line, r.range.start.character + changeInCharacters),
+                          r.range.end
+                      )
+                    : r.range;
+        }
+        // We're after the '.' and the user is typing more. We are in the middle of the string then.
+        // Example, user typed 'df.Pass' and label is 'df.PassengerId'. Word would be 'Pass' in this case.
+        if (!newText && wordIndex > 0) {
+            newLabel = label.substring(label.indexOf(word) + (wordDot ? word.length : 0));
+            newText = label.substring(label.indexOf(word) + word.length);
+            const changeInCharacters =
+                (typeof r.label === 'string' ? r.label.length : r.label.label.length) - newText.length;
+            newRange =
+                r.range && 'start' in r.range
+                    ? new Range(
+                          new Position(r.range.start.line, r.range.start.character + changeInCharacters),
+                          r.range.end
+                      )
+                    : r.range;
+        }
+        if (newLabel && newText && newRange) {
+            if (typeof r.label === 'string') {
+                r.label = newText;
+            } else {
+                r.label.label = newText;
+            }
+            r.insertText = newText;
+            r.filterText = wordDot ? `.${newText}` : newText;
+            r.range = newRange;
+            r.sortText = generateSortString(i);
+        }
+        return r;
+    });
+
+    // If not inside of a string, filter out file names (things that end with '/')
+    if (!insideString) {
+        result = result.filter((r) => {
+            const label = typeof r.label === 'string' ? r.label : r.label.label;
+            return !label.includes('.') && !label.endsWith('/');
+        });
+    } else {
+        // If inside a string and ending with '/', then add a command to force a suggestion right after
+        result = result.map((r) => {
+            const label = typeof r.label === 'string' ? r.label : r.label.label;
+            if (label.endsWith('/')) {
+                return {
+                    ...r,
+                    command: {
+                        command: 'editor.action.triggerSuggest',
+                        title: ''
+                    }
+                };
+            }
+            // Sometimes we have items with spaces, and Jupyter escapes spaces with `\ `
+            if (label.includes(' ')) {
+                if (typeof r.label === 'string') {
+                    r.label = r.label.replace(/\\ /g, ' ');
+                } else {
+                    r.label.label = r.label.label.replace(/\\ /g, ' ');
+                }
+            }
+            return r;
+        });
+    }
+
+    traceInfoIfCI(
+        `Jupyter completions for ${word} at pos ${position.line}:${
+            position.character
+        } with trigger: ${triggerCharacter}\n   ${completions.map((r) => r.label).join(',')}`
+    );
+
+    traceInfoIfCI(
+        `Jupyter results for ${word} at pos ${position.line}:${
+            position.character
+        } with trigger: ${triggerCharacter}\n   ${result.map((r) => r.label).join(',')}`
+    );
+
+    return result;
 }
