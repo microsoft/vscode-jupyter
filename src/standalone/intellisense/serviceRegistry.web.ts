@@ -4,7 +4,7 @@
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
-import { NonPythonKernelCompletionProvider } from './nonPythonKernelCompletionProvider';
+import { KernelCompletionProvider } from './kernelCompletionProvider';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
@@ -13,6 +13,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
-        NonPythonKernelCompletionProvider
+        KernelCompletionProvider
     );
 }

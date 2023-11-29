@@ -369,7 +369,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
  * This class implements a CompletionItemProvider for kernels using the jupyter requestCompletions message.
  */
 @injectable()
-export class NonPythonKernelCompletionProvider extends DisposableBase implements IExtensionSyncActivationService {
+export class KernelCompletionProvider extends DisposableBase implements IExtensionSyncActivationService {
     private readonly kernelCompletionProviders = new WeakMap<IKernel, KernelSpecificCompletionProvider>();
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         super();
