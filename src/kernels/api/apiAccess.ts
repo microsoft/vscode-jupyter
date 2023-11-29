@@ -10,10 +10,15 @@ import { once } from '../../platform/common/utils/functional';
 import { Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 
-const extensionApiAccess = new Map<string, Promise<{ accessAllowed: boolean }>>();
-
+const extensionApiAccess = new Map<string, ReturnType<typeof requestKernelAccessImpl>>();
+const extensionsTriedAccessingApi = new Set<string>();
 export function clearApiAccess() {
     extensionApiAccess.clear();
+    extensionsTriedAccessingApi.clear();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    updatePromise = Promise.resolve();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    cachedAccessInfo = undefined;
 }
 export async function requestApiAccess(extensionId: string): Promise<{ accessAllowed: boolean }> {
     if (!workspace.isTrusted) {
@@ -25,40 +30,64 @@ export async function requestApiAccess(extensionId: string): Promise<{ accessAll
     }
     let apiAccess = extensionApiAccess.get(extensionId);
     if (!apiAccess) {
-        apiAccess = requestKernelAccessImpl(extensionId).then((accessAllowed) => ({ accessAllowed }));
+        apiAccess = requestKernelAccessImpl(extensionId);
         extensionApiAccess.set(extensionId, apiAccess);
+        void apiAccess.then(({ result }) => {
+            if (
+                (result === 'learnMore' || result === 'cancelled') &&
+                extensionApiAccess.get(extensionId) === apiAccess
+            ) {
+                extensionApiAccess.delete(extensionId);
+                extensionsTriedAccessingApi.add(extensionId);
+            }
+        });
     }
-    return apiAccess;
+    return apiAccess.then(({ result }) => ({ accessAllowed: result === 'allowed' }));
 }
 
-async function requestKernelAccessImpl(extensionId: string) {
+async function requestKernelAccessImpl(
+    extensionId: string
+): Promise<{ result: 'allowed' | 'denied' | 'learnMore' | 'cancelled' }> {
     const accessInfo = await getAccessForExtensionsFromStore();
     if (accessInfo.get(extensionId) === true) {
-        return true;
+        return { result: 'allowed' };
+    }
+    if (accessInfo.get(extensionId) === false) {
+        return { result: 'denied' };
     }
     const displayName = extensions.getExtension(extensionId)?.packageJSON?.displayName;
     if (!displayName) {
         traceError(`Kernel API access revoked, as extension ${extensionId} does not exist!`);
-        return false;
+        return { result: 'denied' };
     }
-    const grantAccess = Common.bannerLabelYes;
+    const allow = l10n.t('Allow');
+    const deny = l10n.t('Deny');
     const result = await window.showInformationMessage(
         l10n.t('Do you want to grant Kernel access to the extension {0} ({1})?', displayName, extensionId),
         {
             modal: true,
             detail: l10n.t('This allows the extension to execute code against Jupyter Kernels.')
         },
-        grantAccess,
-        Common.learnMore
+        allow,
+        Common.learnMore,
+        deny
     );
-
-    const accessAllowed = result === grantAccess;
-    await updateIndividualExtensionAccessInStore(extensionId, accessAllowed);
 
     if (result === Common.learnMore) {
         env.openExternal(Uri.parse('https://aka.ms/vscodeJupyterKernelApiAccess')).then(noop, noop);
+    } else if (result === allow || result === deny) {
+        await updateIndividualExtensionAccessInStore(extensionId, result === allow);
     }
-    return accessAllowed;
+    switch (result) {
+        case allow:
+            return { result: 'allowed' };
+        case Common.learnMore:
+            return { result: 'learnMore' };
+        case deny:
+            return { result: 'denied' };
+        default:
+            return { result: 'cancelled' };
+    }
 }
 
 export async function getExtensionAccessListForManagement() {
@@ -66,12 +95,15 @@ export async function getExtensionAccessListForManagement() {
     const [extensions] = await Promise.all([
         getAccessForExtensionsFromStore().then((accessInfo) => new Map(accessInfo)),
         ...Array.from(extensionApiAccess.entries()).map(async ([extensionId, promise]) => {
-            if (!(await promise).accessAllowed) {
+            if ((await promise).result !== 'allowed') {
                 extensionsWithoutAccess.add(extensionId);
             }
         })
     ]);
     extensionsWithoutAccess.forEach((extensionId) => extensions.set(extensionId, false));
+    extensionsTriedAccessingApi.forEach((extensionId) =>
+        extensions.set(extensionId, extensions.get(extensionId) === true)
+    );
     return extensions;
 }
 
@@ -118,7 +150,7 @@ export async function updateListOfExtensionsAllowedToAccessApi(extensionIds: str
         await Promise.all(
             Array.from(extensionApiAccess.entries()).map(async ([extensionId, promise]) => {
                 const access = await promise;
-                access.accessAllowed = extensionIds.includes(extensionId) === true;
+                access.result = extensionIds.includes(extensionId) === true ? 'allowed' : 'denied';
             })
         );
         cachedAccessInfo = new Map(extensionIds.map((extensionId) => [extensionId, true]));
@@ -144,15 +176,10 @@ async function updateIndividualExtensionAccessInStore(extensionId: string, acces
             return;
         }
         const apiAccess = await getAccessForExtensionsFromStore(true);
-        if (accessAllowed && apiAccess.get(extensionId)) {
+        if (accessAllowed === apiAccess.get(extensionId)) {
             return;
         }
-        if (accessAllowed && !apiAccess.get(extensionId)) {
-            apiAccess.set(extensionId, accessAllowed);
-        }
-        if (!accessAllowed && apiAccess.has(extensionId)) {
-            apiAccess.delete(extensionId);
-        }
+        apiAccess.set(extensionId, accessAllowed);
         try {
             await context.secrets.store(apiAccessSecretKey, JSON.stringify(Object.fromEntries(apiAccess)));
         } catch (ex) {
