@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService } from '../../common/types';
 import { getInterpreterWorkspaceFolder } from './helpers';
 import { IServiceContainer } from '../../ioc/types';
@@ -43,7 +42,6 @@ export class PoetryInstaller extends ModuleInstaller {
 
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {
         super(serviceContainer);
@@ -57,7 +55,7 @@ export class PoetryInstaller extends ModuleInstaller {
             return false;
         }
 
-        const folder = getInterpreterWorkspaceFolder(interpreter, this.workspaceService);
+        const folder = getInterpreterWorkspaceFolder(interpreter);
         if (folder) {
             const executable =
                 'executable' in interpreter
@@ -80,7 +78,7 @@ export class PoetryInstaller extends ModuleInstaller {
     ): Promise<ExecutionInstallArgs> {
         const execPath = this.configurationService.getSettings(undefined).poetryPath;
         const args = [execPath, 'add', '--dev', moduleName];
-        const cwd = getInterpreterWorkspaceFolder(interpreter, this.workspaceService)?.fsPath;
+        const cwd = getInterpreterWorkspaceFolder(interpreter)?.fsPath;
 
         // TODO: We have to shell exec this because child_process.spawn will die
         // for poetry.

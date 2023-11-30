@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, EventEmitter, WorkspaceConfiguration } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from './application/types';
+import { Disposable, EventEmitter, WorkspaceConfiguration, workspace } from 'vscode';
+import { IApplicationShell, ICommandManager } from './application/types';
 import { traceVerbose } from '../logging';
 import { launch } from './net/browser';
 import { Deprecated } from './utils/localize';
@@ -58,13 +58,12 @@ export class FeatureManager implements IFeaturesManager {
     constructor(
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(ICommandManager) private cmdMgr: ICommandManager,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IApplicationShell) private appShell: IApplicationShell
     ) {
         this._updateFeatures();
 
         this.disposables.push(
-            this.workspace.onDidChangeConfiguration(() => {
+            workspace.onDidChangeConfiguration(() => {
                 this._updateFeatures();
             })
         );
@@ -127,19 +126,19 @@ export class FeatureManager implements IFeaturesManager {
 
     public checkAndNotifyDeprecatedSetting(deprecatedInfo: DeprecatedFeatureInfo) {
         let notify = false;
-        if (Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0) {
-            this.workspace.workspaceFolders.forEach((workspaceFolder) => {
+        if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
+            workspace.workspaceFolders.forEach((workspaceFolder) => {
                 if (notify) {
                     return;
                 }
                 notify = this.isDeprecatedSettingAndValueUsed(
-                    this.workspace.getConfiguration('jupyter', workspaceFolder.uri),
+                    workspace.getConfiguration('jupyter', workspaceFolder.uri),
                     deprecatedInfo.setting!
                 );
             });
         } else {
             notify = this.isDeprecatedSettingAndValueUsed(
-                this.workspace.getConfiguration('jupyter'),
+                workspace.getConfiguration('jupyter'),
                 deprecatedInfo.setting!
             );
         }

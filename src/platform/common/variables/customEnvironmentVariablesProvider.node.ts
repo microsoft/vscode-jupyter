@@ -3,10 +3,9 @@
 
 import { inject, injectable, optional } from 'inversify';
 import * as path from '../../vscode-path/path';
-import { CancellationToken, Disposable, Event, EventEmitter, RelativePattern, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, RelativePattern, Uri, workspace } from 'vscode';
 import { TraceOptions } from '../../logging/types';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry.node';
-import { IWorkspaceService } from '../application/types';
 import { IDisposableRegistry, Resource } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
@@ -14,6 +13,7 @@ import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '
 import { dispose } from '../utils/lifecycle';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { noop } from '../utils/misc';
+import { getWorkspaceFolderIdentifier } from '../application/workspace.base';
 
 const CACHE_DURATION = 60 * 1000;
 /**
@@ -32,7 +32,6 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     constructor(
         @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject('number') @optional() private cacheDuration: number = CACHE_DURATION
@@ -53,8 +52,8 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     ): Promise<EnvironmentVariables> {
         resource = resource
             ? resource
-            : this.workspaceService.workspaceFolders?.length
-            ? this.workspaceService.workspaceFolders[0].uri
+            : workspace.workspaceFolders?.length
+            ? workspace.workspaceFolders[0].uri
             : undefined;
 
         if (purpose === 'RunPythonCode') {
@@ -87,8 +86,8 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     ): Promise<EnvironmentVariables | undefined> {
         resource = resource
             ? resource
-            : this.workspaceService.workspaceFolders?.length
-            ? this.workspaceService.workspaceFolders[0].uri
+            : workspace.workspaceFolders?.length
+            ? workspace.workspaceFolders[0].uri
             : undefined;
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         if (!workspaceFolderUri) {
@@ -152,7 +151,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             return;
         }
         const pattern = new RelativePattern(Uri.file(path.dirname(envFile)), path.basename(envFile));
-        const envFileWatcher = this.workspaceService.createFileSystemWatcher(pattern, false, false, false);
+        const envFileWatcher = workspace.createFileSystemWatcher(pattern, false, false, false);
         if (envFileWatcher) {
             this.disposables.push(envFileWatcher);
             this.fileWatchers.add(key);
@@ -199,13 +198,13 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         return mergedVars;
     }
     private getWorkspaceFolderUri(resource?: Uri): Uri | undefined {
-        const workspaceFolders = this.workspaceService.workspaceFolders || [];
+        const workspaceFolders = workspace.workspaceFolders || [];
         const defaultWorkspaceFolderUri = workspaceFolders.length === 1 ? workspaceFolders[0].uri : undefined;
         if (!resource) {
             return defaultWorkspaceFolderUri;
         }
         // Possible user opens a file outside the workspace folder, in this case load .env file from workspace folder as the fallback.
-        return this.workspaceService.getWorkspaceFolder(resource!)?.uri || defaultWorkspaceFolderUri;
+        return workspace.getWorkspaceFolder(resource!)?.uri || defaultWorkspaceFolderUri;
     }
 
     private onEnvironmentFileCreated(workspaceFolderUri?: Uri) {
@@ -226,9 +225,9 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         this.changeEventEmitter.fire(workspaceFolderUri);
     }
     private getCacheKeyForMergedVars(workspaceFolderUri: Resource) {
-        return `${this.workspaceService.getWorkspaceFolderIdentifier(workspaceFolderUri)}:RunNonPythonCode`;
+        return `${getWorkspaceFolderIdentifier(workspaceFolderUri)}:RunNonPythonCode`;
     }
     private getCacheKeyForCustomVars(workspaceFolderUri: Resource) {
-        return `${this.workspaceService.getWorkspaceFolderIdentifier(workspaceFolderUri)}:RunNonPythonCode:CustomVars`;
+        return `${getWorkspaceFolderIdentifier(workspaceFolderUri)}:RunNonPythonCode:CustomVars`;
     }
 }

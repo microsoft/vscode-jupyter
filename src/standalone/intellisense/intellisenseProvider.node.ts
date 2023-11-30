@@ -9,11 +9,12 @@ import {
     NotebookDocument,
     Position,
     TextDocument,
-    Uri
+    Uri,
+    workspace
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { IDisposableRegistry, IConfigurationService } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -25,6 +26,7 @@ import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { traceInfoIfCI } from '../../platform/logging';
+import { getRootFolder } from '../../platform/common/application/workspace.base';
 
 const EmptyWorkspaceKey = '';
 
@@ -46,7 +48,6 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(NotebookPythonPathService) private readonly notebookPythonPathService: NotebookPythonPathService
@@ -68,7 +69,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         this.interpreterService.onDidChangeInterpreter(this.handleInterpreterChange, this, this.disposables);
 
         // If we change the language server type, we need to restart
-        this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
+        workspace.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
     }
 
     public async getLanguageClient(notebook: NotebookDocument) {
@@ -113,9 +114,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
-        const folder =
-            this.workspaceService.getWorkspaceFolder(uri)?.uri ||
-            (this.workspaceService.rootFolder ? this.workspaceService.rootFolder : undefined);
+        const folder = (uri ? workspace.getWorkspaceFolder(uri)?.uri : undefined) || getRootFolder();
         const key = folder ? getComparisonKey(folder) : EmptyWorkspaceKey;
         if (!this.activeInterpreterCache.has(key)) {
             this.interpreterService

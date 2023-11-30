@@ -6,10 +6,10 @@
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri, WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { TrustedKernelPaths } from './trustedKernelPaths.node';
 import { ITrustedKernelPaths } from './types';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
 suite('Trusted Kernel paths', () => {
     suite('Desktop', () => {
@@ -21,10 +21,11 @@ suite('Trusted Kernel paths', () => {
         function createTrustedPathService() {
             jupyterConfig = mock<WorkspaceConfiguration>();
             when(jupyterConfig.get('kernels.trusted', anything())).thenCall((_, defaultValue) => defaultValue);
-            const workspace = mock<IWorkspaceService>();
-            when(workspace.getConfiguration('jupyter', anything())).thenReturn(instance(jupyterConfig));
+            when(mockedVSCodeNamespaces.workspace.getConfiguration('jupyter', anything())).thenReturn(
+                instance(jupyterConfig)
+            );
             platform = mock<IPlatformService>();
-            trustedKernelPaths = new TrustedKernelPaths(instance(platform), instance(workspace));
+            trustedKernelPaths = new TrustedKernelPaths(instance(platform));
         }
         teardown(() => {
             process.env['PROGRAMDATA'] = oldValueForPROGRAMDATA;

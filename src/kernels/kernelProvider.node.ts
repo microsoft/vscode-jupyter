@@ -118,7 +118,6 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
     }
 
     public getOrCreate(uri: Uri, options: ThirdPartyKernelOptions): IThirdPartyKernel {
-        // const notebook = this.
         const existingKernelInfo = this.getInternal(uri);
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;

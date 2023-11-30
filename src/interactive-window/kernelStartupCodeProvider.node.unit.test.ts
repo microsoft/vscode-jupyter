@@ -6,7 +6,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 import * as path from '../platform/vscode-path/path';
 import { Uri, WorkspaceFolder } from 'vscode';
-import { IWorkspaceService } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../platform/common/types';
@@ -20,11 +19,11 @@ import {
     PythonKernelConnectionMetadata
 } from '../kernels/types';
 import { Schemas } from '../platform/vscode-path/utils';
+import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 
 suite('KernelWorkingFolder', function () {
     let configService: IConfigurationService;
     let fs: IFileSystem;
-    let workspace: IWorkspaceService;
     let kernelWorkingFolder: KernelStartupCodeProvider;
     let kernel: IKernel;
     let connectionMetadata: KernelConnectionMetadata;
@@ -35,15 +34,9 @@ suite('KernelWorkingFolder', function () {
         configService = mock<IConfigurationService>();
         settings = mock<IWatchableJupyterSettings>();
         fs = mock<IFileSystem>();
-        workspace = mock<IWorkspaceService>();
         const registry = mock<IStartupCodeProviders>();
         when(registry.register(anything(), anything())).thenReturn();
-        kernelWorkingFolder = new KernelStartupCodeProvider(
-            instance(configService),
-            instance(fs),
-            instance(workspace),
-            instance(registry)
-        );
+        kernelWorkingFolder = new KernelStartupCodeProvider(instance(configService), instance(fs), instance(registry));
         kernel = mock<IKernel>();
         connectionMetadata = mock<KernelConnectionMetadata>();
         kernelSpec = mock<IJupyterKernelSpec>();
@@ -87,8 +80,7 @@ suite('KernelWorkingFolder', function () {
             });
             test(`Has working folder`, async () => {
                 when(settings.notebookFileRoot).thenReturn(__dirname);
-                when(workspace.hasWorkspaceFolders).thenReturn(true);
-                when(workspace.workspaceFolders).thenReturn([workspaceFolder]);
+                when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([workspaceFolder]);
 
                 const uri = await kernelWorkingFolder.getWorkingDirectory(instance(kernel));
 
@@ -96,16 +88,14 @@ suite('KernelWorkingFolder', function () {
             });
             test('No working folder if setting `notebookFileRoot` is invalid', async () => {
                 when(settings.notebookFileRoot).thenReturn('bogus value');
-                when(workspace.hasWorkspaceFolders).thenReturn(true);
-                when(workspace.workspaceFolders).thenReturn([workspaceFolder]);
+                when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([workspaceFolder]);
                 when(fs.exists(anything())).thenResolve(false);
 
                 assert.isUndefined(await kernelWorkingFolder.getWorkingDirectory(instance(kernel)));
             });
             test('Has working folder and points to first workspace folder if setting `notebookFileRoot` points to non-existent path', async () => {
                 when(settings.notebookFileRoot).thenReturn(path.join(__dirname, 'xyz1234'));
-                when(workspace.hasWorkspaceFolders).thenReturn(true);
-                when(workspace.workspaceFolders).thenReturn([workspaceFolder]);
+                when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([workspaceFolder]);
                 when(fs.exists(anything())).thenResolve(false);
                 when(fs.exists(uriEquals(__dirname))).thenResolve(true);
 
@@ -115,8 +105,7 @@ suite('KernelWorkingFolder', function () {
             });
             test('Has working folder and points to folder of kernel resource when there are no workspace folders', async () => {
                 when(settings.notebookFileRoot).thenReturn(path.join(__dirname, 'xyz1234'));
-                when(workspace.hasWorkspaceFolders).thenReturn(false);
-                when(workspace.workspaceFolders).thenReturn([]);
+                when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
                 when(fs.exists(anything())).thenResolve(false);
                 when(fs.exists(uriEquals(__dirname))).thenResolve(false);
                 const kernelResourceUri = Uri.file(path.join(__dirname, 'dev', 'kernel.ipynb'));
@@ -130,8 +119,7 @@ suite('KernelWorkingFolder', function () {
             });
             test('No working folder if no workspace folders', async () => {
                 when(settings.notebookFileRoot).thenReturn(__dirname);
-                when(workspace.hasWorkspaceFolders).thenReturn(false);
-                when(workspace.workspaceFolders).thenReturn([]);
+                when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
                 when(fs.exists(anything())).thenResolve(false);
 
                 assert.isUndefined(await kernelWorkingFolder.getWorkingDirectory(instance(kernel)));

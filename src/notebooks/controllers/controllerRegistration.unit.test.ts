@@ -21,8 +21,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IVSCodeNotebook,
-    IWorkspaceService
+    IVSCodeNotebook
 } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IBrowserService, IConfigurationService, IDisposable, IExtensionContext } from '../../platform/common/types';
@@ -115,7 +114,6 @@ suite('Controller Registration', () => {
     let context: IExtensionContext;
     let kernelProvider: IKernelProvider;
     let languageService: NotebookCellLanguageService;
-    let workspace: IWorkspaceService;
     let documentManager: IDocumentManager;
     let appShell: IApplicationShell;
     let browser: IBrowserService;
@@ -136,7 +134,6 @@ suite('Controller Registration', () => {
         context = mock<IExtensionContext>();
         kernelProvider = mock<IKernelProvider>();
         languageService = mock<NotebookCellLanguageService>();
-        workspace = mock<IWorkspaceService>();
         documentManager = mock<IDocumentManager>();
         appShell = mock<IApplicationShell>();
         browser = mock<IBrowserService>();
@@ -148,7 +145,6 @@ suite('Controller Registration', () => {
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
         when(serviceContainer.get<IBrowserService>(IBrowserService)).thenReturn(instance(browser));
-        when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspace));
         when(serviceContainer.get<IDocumentManager>(IDocumentManager)).thenReturn(instance(documentManager));
         when(serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider)).thenReturn(
             instance(displayDataProvider)
@@ -228,7 +224,6 @@ suite('Controller Registration', () => {
                     instance(vscNotebook),
                     disposables,
                     instance(kernelFilter),
-                    instance(workspace),
                     instance(extensionChecker),
                     instance(serviceContainer),
                     instance(serverUriStorage),
@@ -340,8 +335,7 @@ suite('Controller Registration', () => {
                         _arg12,
                         _arg13,
                         _arg14,
-                        _arg15,
-                        _arg16
+                        _arg15
                     ) => {
                         if (connection === activePythonConnection) {
                             when(activeInterpreterController.id).thenReturn(id);
@@ -425,8 +419,7 @@ suite('Controller Registration', () => {
                         _arg12,
                         _arg13,
                         _arg14,
-                        _arg15,
-                        _arg16
+                        _arg15
                     ) => {
                         if (connection === activePythonConnection) {
                             when(activeInterpreterController.id).thenReturn(id);

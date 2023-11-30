@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -20,13 +20,12 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
     private sentMimeTypes: Set<string> = new Set<string>();
     private readonly disposables: IDisposable[] = [];
     private get isTelemetryDisabled() {
-        return isTelemetryDisabled(this.workspace);
+        return isTelemetryDisabled();
     }
 
     constructor(
         @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
     }

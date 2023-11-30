@@ -4,7 +4,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { inject, injectable } from 'inversify';
 import * as path from '../vscode-path/path';
-import { IWorkspaceService } from '../common/application/types';
 import { IDisposable, Resource } from '../common/types';
 import { ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../common/variables/types';
 import { EnvironmentType } from '../pythonEnvironments/info';
@@ -22,7 +21,7 @@ import { TraceOptions } from '../logging/types';
 import { pythonEnvToJupyterEnv, serializePythonEnvironment } from '../api/pythonApi';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { noop } from '../common/utils/misc';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, workspace } from 'vscode';
 import { raceCancellation } from '../common/cancellation';
 import { getEnvironmentType, getPythonEnvDisplayName, isCondaEnvironmentWithoutPython } from './helpers';
 import { Environment } from '@vscode/python-extension';
@@ -37,7 +36,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         { promise: Promise<NodeJS.ProcessEnv | undefined>; time: StopWatch }
     >();
     constructor(
-        @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(ICustomEnvironmentVariablesProvider)
         private readonly customEnvVarsService: ICustomEnvironmentVariablesProvider,
@@ -156,8 +154,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ): Promise<NodeJS.ProcessEnv | undefined> {
         resource = resource
             ? resource
-            : this.workspace.workspaceFolders?.length
-            ? this.workspace.workspaceFolders[0].uri
+            : workspace.workspaceFolders?.length
+            ? workspace.workspaceFolders[0].uri
             : undefined;
         const stopWatch = new StopWatch();
         // We'll need this later.

@@ -19,7 +19,6 @@ import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertIn
 import { JupyterConnection } from './connection/jupyterConnection';
 import { JupyterKernelService } from './session/jupyterKernelService.node';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
-import { JupyterCommandLineSelector } from './launcher/commandLineSelector.node';
 import { JupyterServerHelper } from './launcher/jupyterServerHelper.node';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector.node';
 import { JupyterServerProvider } from './launcher/jupyterServerProvider.node';
@@ -62,7 +61,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         MigrateJupyterInterpreterStateService
     );
     serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
-    serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
     serviceManager.addSingleton<JupyterInterpreterDependencyService>(
         JupyterInterpreterDependencyService,
         JupyterInterpreterDependencyService

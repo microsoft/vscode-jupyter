@@ -4,8 +4,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as path from '../../vscode-path/path';
-import { Uri, Range } from 'vscode';
-import { IWorkspaceService, IDocumentManager } from '../application/types';
+import { Uri, Range, workspace } from 'vscode';
+import { IDocumentManager } from '../application/types';
 import { AbstractSystemVariables } from './systemVariables';
 
 /**
@@ -19,14 +19,9 @@ export class SystemVariables extends AbstractSystemVariables {
     private _selectedText: string | undefined;
     private _execPath: string;
 
-    constructor(
-        file: Uri | undefined,
-        rootFolder: Uri | undefined,
-        workspace?: IWorkspaceService,
-        documentManager?: IDocumentManager
-    ) {
+    constructor(file: Uri | undefined, rootFolder: Uri | undefined, documentManager?: IDocumentManager) {
         super();
-        const workspaceFolder = workspace && file ? workspace.getWorkspaceFolder(file) : undefined;
+        const workspaceFolder = file ? workspace.getWorkspaceFolder(file) : undefined;
         this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder?.fsPath || __dirname;
         this._workspaceFolderName = path.basename(this._workspaceFolder);
         this._filePath = file ? file.fsPath : undefined;

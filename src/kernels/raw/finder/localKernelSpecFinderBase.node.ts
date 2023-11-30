@@ -5,7 +5,7 @@ import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
+import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -219,7 +219,6 @@ export abstract class LocalKernelSpecFinderBase<
     protected readonly kernelSpecFinder: LocalKernelSpecFinder;
     constructor(
         protected readonly fs: IFileSystemNode,
-        protected readonly workspaceService: IWorkspaceService,
         protected readonly extensionChecker: IPythonExtensionChecker,
         protected readonly memento: Memento,
         disposables: IDisposableRegistry,

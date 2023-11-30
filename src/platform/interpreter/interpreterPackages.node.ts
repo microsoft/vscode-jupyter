@@ -10,11 +10,11 @@ import { IInterpreterService } from './contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { getComparisonKey } from '../vscode-path/resources';
 import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../telemetry/helpers';
-import { IWorkspaceService } from '../common/application/types';
 import { traceError, traceWarning } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths.node';
 import { IInterpreterPackages } from './types';
 import { IPythonExecutionFactory } from './types.node';
+import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
 
 const interestedPackages = new Set(
     [
@@ -51,8 +51,7 @@ export class InterpreterPackages implements IInterpreterPackages {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         InterpreterPackages._instance = this;
         this.apiProvider.onDidActivatePythonExtension(
@@ -103,7 +102,7 @@ export class InterpreterPackages implements IInterpreterPackages {
             return [];
         }
 
-        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
+        const workspaceKey = getWorkspaceFolderIdentifier(resource);
         if (!this.interpreterPackages.has(workspaceKey)) {
             const promise = this.listPackagesImpl(resource);
             this.interpreterPackages.set(workspaceKey, promise);

@@ -25,7 +25,6 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
     ICommandManager,
-    IWorkspaceService,
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
@@ -160,7 +159,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         context: IExtensionContext,
         disposableRegistry: IDisposableRegistry,
         languageService: NotebookCellLanguageService,
-        workspace: IWorkspaceService,
         configuration: IConfigurationService,
         documentManager: IDocumentManager,
         appShell: IApplicationShell,
@@ -179,7 +177,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             context,
             disposableRegistry,
             languageService,
-            workspace,
             configuration,
             documentManager,
             appShell,
@@ -199,7 +196,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly context: IExtensionContext,
         disposableRegistry: IDisposableRegistry,
         private readonly languageService: NotebookCellLanguageService,
-        private readonly workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
         private readonly documentManager: IDocumentManager,
         private readonly appShell: IApplicationShell,
@@ -395,7 +391,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         });
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             return;
         }
         traceInfo(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
@@ -457,7 +453,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!isJupyterNotebook(event.notebook) && event.notebook.notebookType !== InteractiveWindowView) {
             return;
         }
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             return;
         }
         this.warnWhenUsingOutdatedPython();

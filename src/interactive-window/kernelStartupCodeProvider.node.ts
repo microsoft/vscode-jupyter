@@ -7,8 +7,7 @@ import { format } from '../platform/common/helpers';
 import { splitLines } from '../platform/common/helpers';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import * as path from '../platform/vscode-path/path';
-import { Uri } from 'vscode';
-import { IWorkspaceService } from '../platform/common/application/types';
+import { Uri, workspace } from 'vscode';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService, Resource } from '../platform/common/types';
 import { untildify } from '../platform/common/platform/fileUtils.node';
@@ -22,6 +21,7 @@ import {
 } from '../kernels/types';
 import { isLocalHostConnection, isPythonKernelConnection } from '../kernels/helpers';
 import { expandWorkingDir } from '../kernels/jupyter/jupyterUtils';
+import { getRootFolder } from '../platform/common/application/workspace.base';
 
 @injectable()
 export class KernelStartupCodeProvider implements IStartupCodeProvider, IExtensionSyncActivationService {
@@ -30,7 +30,6 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider, IExtensi
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IStartupCodeProviders) private readonly registry: IStartupCodeProviders
     ) {}
 
@@ -57,9 +56,10 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider, IExtensi
         }
 
         // workaround for 13057: provide a dummy workspace file when there is no .py file owner since IW resources are in the root
+        const rootFolder = getRootFolder();
         const launchingFile =
-            kernel.resourceUri?.path.endsWith('.interactive') && this.workspace.rootFolder
-                ? Uri.joinPath(this.workspace.rootFolder, kernel.resourceUri.path)
+            kernel.resourceUri?.path.endsWith('.interactive') && rootFolder
+                ? Uri.joinPath(rootFolder, kernel.resourceUri.path)
                 : kernel.resourceUri;
 
         let suggestedDir = await this.calculateWorkingDirectory(kernel.resourceUri);
@@ -75,7 +75,6 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider, IExtensi
                 expandWorkingDir(
                     getFilePath(suggestedDir),
                     launchingFile,
-                    this.workspace,
                     this.configService.getSettings(launchingFile)
                 )
             );
@@ -93,9 +92,9 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider, IExtensi
 
         // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
         // so only do this setting if we actually have a valid workspace open
-        if (fileRootStr && this.workspace.hasWorkspaceFolders) {
+        if (fileRootStr && workspace.workspaceFolders?.length) {
             const fileRoot = Uri.file(fileRootStr);
-            const workspaceFolderPath = this.workspace.workspaceFolders![0].uri;
+            const workspaceFolderPath = workspace.workspaceFolders![0].uri;
             if (path.isAbsolute(fileRootStr)) {
                 if (await this.fs.exists(fileRoot)) {
                     // User setting is absolute and exists, use it

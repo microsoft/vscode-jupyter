@@ -20,7 +20,7 @@ import {
     NotebookEdit,
     NotebookEditorRevealType
 } from 'vscode';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
+import { ICommandManager, IDocumentManager } from '../platform/common/application/types';
 import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
@@ -70,6 +70,7 @@ import {
     InteractiveWindowController as InteractiveController,
     InteractiveControllerFactory
 } from './InteractiveWindowController';
+import { getRootFolder } from '../platform/common/application/workspace.base';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -115,7 +116,6 @@ export class InteractiveWindow implements IInteractiveWindow {
     private readonly fs: IFileSystem;
     private readonly configuration: IConfigurationService;
     private readonly jupyterExporter: INotebookExporter;
-    private readonly workspaceService: IWorkspaceService;
     private readonly exportDialog: IExportDialog;
     private readonly interactiveWindowDebugger: IInteractiveWindowDebugger | undefined;
     private readonly errorHandler: IDataScienceErrorHandler;
@@ -138,7 +138,6 @@ export class InteractiveWindow implements IInteractiveWindow {
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.jupyterExporter = this.serviceContainer.get<INotebookExporter>(INotebookExporter);
-        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.exportDialog = this.serviceContainer.get<IExportDialog>(IExportDialog);
         this.interactiveWindowDebugger =
             this.serviceContainer.tryGet<IInteractiveWindowDebugger>(IInteractiveWindowDebugger);
@@ -508,7 +507,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         if (this.owner) {
             return this.owner;
         }
-        const root = this.workspaceService.rootFolder;
+        const root = getRootFolder();
         if (root) {
             return root;
         }

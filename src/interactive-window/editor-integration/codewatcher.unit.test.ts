@@ -22,8 +22,7 @@ import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
-    IVSCodeNotebook,
-    IWorkspaceService
+    IVSCodeNotebook
 } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
@@ -46,6 +45,7 @@ import { MockDocumentManager } from '../../test/datascience/mockDocumentManager'
 import { MockJupyterSettings } from '../../test/datascience/mockJupyterSettings';
 import { MockEditor } from '../../test/datascience/mockTextEditor';
 import { noop } from '../../test/core';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -101,10 +101,8 @@ suite('Code Watcher Unit Tests', () => {
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
-        const workspace = mock<IWorkspaceService>();
-
         // Setup default settings
-        jupyterSettings = new MockJupyterSettings(undefined, SystemVariables, 'node', instance(workspace));
+        jupyterSettings = new MockJupyterSettings(undefined, SystemVariables, 'node');
         jupyterSettings.assign({
             jupyterLaunchTimeout: 20000,
             jupyterLaunchRetries: 3,
@@ -137,9 +135,9 @@ suite('Code Watcher Unit Tests', () => {
         // Setup config service
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => jupyterSettings);
 
-        when(workspace.isTrusted).thenReturn(true);
+        when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
         const trustedEvent = new EventEmitter<void>();
-        when(workspace.onDidGrantWorkspaceTrust).thenReturn(trustedEvent.event);
+        when(mockedVSCodeNamespaces.workspace.onDidGrantWorkspaceTrust).thenReturn(trustedEvent.event);
         const notebook = mock<IVSCodeNotebook>();
         const execStateChangeEvent = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
         when(notebook.onDidChangeNotebookCellExecutionState).thenReturn(execStateChangeEvent.event);
@@ -153,7 +151,6 @@ suite('Code Watcher Unit Tests', () => {
         const codeLensFactory = new CodeLensFactory(
             configService.object,
             documentManager.object,
-            instance(workspace),
             instance(notebook),
             disposables,
             instance(storageFactory),
@@ -1052,9 +1049,8 @@ testing1
         const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce());
         document.setup((doc) => doc.getText()).returns(() => inputText);
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
-        const workspace = mock<IWorkspaceService>();
-        when(workspace.isTrusted).thenReturn(true);
-        when(workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
+        when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
+        when(mockedVSCodeNamespaces.workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
 
         const codeLensProvider = new DataScienceCodeLensProvider(
             serviceContainer.object,
@@ -1063,8 +1059,7 @@ testing1
             configService.object,
             commandManager.object,
             disposables,
-            debugService.object,
-            instance(workspace)
+            debugService.object
         );
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);

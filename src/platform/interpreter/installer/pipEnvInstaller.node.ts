@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { IWorkspaceService } from '../../common/application/types';
 import { InterpreterUri } from '../../common/types';
 import { isResource } from '../../common/utils/misc';
 import { IInterpreterService } from '../contracts';
@@ -15,6 +14,7 @@ import { getFilePath } from '../../common/platform/fs-paths';
 import { getInterpreterWorkspaceFolder } from './helpers';
 import { Environment } from '@vscode/python-extension';
 import { getEnvironmentType } from '../helpers';
+import { workspace } from 'vscode';
 
 export const pipenvName = 'pipenv';
 
@@ -23,10 +23,7 @@ export const pipenvName = 'pipenv';
  */
 @injectable()
 export class PipEnvInstaller extends ModuleInstaller {
-    constructor(
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
     public get name(): string {
@@ -49,9 +46,7 @@ export class PipEnvInstaller extends ModuleInstaller {
             const interpreter = await this.serviceContainer
                 .get<IInterpreterService>(IInterpreterService)
                 .getActiveInterpreter(resource);
-            const workspaceFolder = resource
-                ? this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource)
-                : undefined;
+            const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
             if (!interpreter || !workspaceFolder || interpreter.envType !== EnvironmentType.Pipenv) {
                 return false;
             }
@@ -74,7 +69,7 @@ export class PipEnvInstaller extends ModuleInstaller {
             flags & ModuleInstallFlags.updateDependencies ||
             flags & ModuleInstallFlags.upgrade;
         const args = [update ? 'update' : 'install', moduleName, '--dev'];
-        const workspaceFolder = getInterpreterWorkspaceFolder(interpreter, this.workspaceService);
+        const workspaceFolder = getInterpreterWorkspaceFolder(interpreter);
         return {
             args,
             exe: pipenvName,

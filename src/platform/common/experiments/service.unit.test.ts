@@ -6,8 +6,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as tasClient from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../application/applicationEnvironment.node';
-import { Channel, IApplicationEnvironment, IWorkspaceService } from '../application/types';
-import { WorkspaceService } from '../application/workspace.node';
+import { Channel, IApplicationEnvironment } from '../application/types';
 import { ConfigurationService } from '../configuration/service.node';
 import { ExperimentService } from './service';
 import { IConfigurationService } from '../types';
@@ -15,20 +14,19 @@ import * as Telemetry from '../../telemetry/index';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../../test/constants.node';
 import { MockMemento } from '../../../test/mocks/mementos';
 import { Experiments } from '../types';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 suite('Experimentation service', () => {
     const extensionVersion = '1.2.3';
 
     let configurationService: IConfigurationService;
     let appEnvironment: IApplicationEnvironment;
     let globalMemento: MockMemento;
-    let workspace: IWorkspaceService;
 
     setup(() => {
         configurationService = mock(ConfigurationService);
         appEnvironment = mock(ApplicationEnvironment);
         globalMemento = new MockMemento();
-        workspace = mock(WorkspaceService);
-        when(workspace.getConfiguration(anything(), anything())).thenReturn({
+        when(mockedVSCodeNamespaces.workspace.getConfiguration(anything(), anything())).thenReturn({
             get: () => [],
             has: () => false,
             inspect: () => undefined,
@@ -66,12 +64,7 @@ suite('Experimentation service', () => {
             configureApplicationEnvironment('stable', extensionVersion);
 
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            new ExperimentService(
-                instance(configurationService),
-                instance(workspace),
-                instance(appEnvironment),
-                globalMemento
-            );
+            new ExperimentService(instance(configurationService), instance(appEnvironment), globalMemento);
 
             sinon.assert.calledWithMatch(
                 getExperimentationServiceStub,
@@ -90,12 +83,7 @@ suite('Experimentation service', () => {
             configureApplicationEnvironment('insiders', extensionVersion);
 
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            new ExperimentService(
-                instance(configurationService),
-                instance(workspace),
-                instance(appEnvironment),
-                globalMemento
-            );
+            new ExperimentService(instance(configurationService), instance(appEnvironment), globalMemento);
 
             sinon.assert.calledWithMatch(
                 getExperimentationServiceStub,
@@ -115,7 +103,6 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(workspace),
                 instance(appEnvironment),
                 globalMemento
             );
@@ -130,7 +117,6 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(workspace),
                 instance(appEnvironment),
                 globalMemento
             );
@@ -170,7 +156,6 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(workspace),
                 instance(appEnvironment),
                 globalMemento
             );
@@ -185,7 +170,6 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(workspace),
                 instance(appEnvironment),
                 globalMemento
             );
@@ -200,7 +184,6 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(workspace),
                 instance(appEnvironment),
                 globalMemento
             );
@@ -214,7 +197,6 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(workspace),
                 instance(appEnvironment),
                 globalMemento
             );
@@ -241,7 +223,6 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(workspace),
                 instance(appEnvironment),
                 globalMemento
             );
@@ -255,7 +236,6 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(workspace),
                 instance(appEnvironment),
                 globalMemento
             );
@@ -269,7 +249,6 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(workspace),
                 instance(appEnvironment),
                 globalMemento
             );

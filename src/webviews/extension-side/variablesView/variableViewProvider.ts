@@ -5,7 +5,6 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
 import { IJupyterVariables } from '../../../kernels/variables/types';
 import {
-    IWorkspaceService,
     IWebviewViewProvider,
     IApplicationShell,
     ICommandManager,
@@ -49,7 +48,6 @@ export class VariableViewProvider implements IVariableViewProvider {
 
     constructor(
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IWebviewViewProvider) private readonly webviewViewProvider: IWebviewViewProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variables: IJupyterVariables,
@@ -72,7 +70,6 @@ export class VariableViewProvider implements IVariableViewProvider {
         // Create our actual variable view
         this.variableView = new VariableView(
             this.configuration,
-            this.workspaceService,
             this.webviewViewProvider,
             this.context,
             this.variables,

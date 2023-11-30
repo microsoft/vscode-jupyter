@@ -3,7 +3,6 @@
 
 import * as vscode from 'vscode';
 import { injectable, inject } from 'inversify';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IConfigurationService } from '../../../platform/common/types';
@@ -14,12 +13,12 @@ import { isCancellationError, raceCancellationError } from '../../../platform/co
 import { noop } from '../../../platform/common/utils/misc';
 import { RawJupyterSessionWrapper } from './rawJupyterSession.node';
 import { RawSessionConnection } from './rawSessionConnection.node';
+import { computeWorkingDirectory } from '../../../platform/common/application/workspace.node';
 
 @injectable()
 export class RawKernelSessionFactory implements IRawKernelSessionFactory {
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher
     ) {}
 
@@ -30,7 +29,7 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
         const [workingDirectory] = await Promise.all([
             raceCancellationError(
                 options.token,
-                this.workspaceService.computeWorkingDirectory(options.resource).then((dir) => vscode.Uri.file(dir))
+                computeWorkingDirectory(options.resource).then((dir) => vscode.Uri.file(dir))
             ),
             raceCancellationError(
                 options.token,

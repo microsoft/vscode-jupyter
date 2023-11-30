@@ -12,7 +12,7 @@ import {
 } from 'vscode';
 import { ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -64,12 +64,11 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
     private disposables: IDisposable[] = [];
     private sentMatches = new Set<string>();
     private get isTelemetryDisabled() {
-        return isTelemetryDisabled(this.workspace);
+        return isTelemetryDisabled();
     }
     constructor(
         @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
         this.vscNotebook.onDidOpenNotebookDocument(

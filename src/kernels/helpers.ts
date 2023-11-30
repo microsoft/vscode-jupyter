@@ -13,8 +13,7 @@ import {
     PythonKernelConnectionMetadata,
     IJupyterKernelSpec
 } from './types';
-import { NotebookCellOutputItem, Uri } from 'vscode';
-import { IWorkspaceService } from '../platform/common/application/types';
+import { NotebookCellOutputItem, Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
@@ -395,7 +394,6 @@ export function getRemoteKernelSessionInformation(
 
 export function getKernelConnectionDisplayPath(
     kernelConnection: KernelConnectionMetadata | undefined,
-    workspaceService: IWorkspaceService,
     platform: IPlatformService
 ) {
     if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
@@ -404,7 +402,7 @@ export function getKernelConnectionDisplayPath(
     const kernelPath = getKernelDisplayPathFromKernelConnection(kernelConnection);
     // If we have just one workspace folder opened, then ensure to use relative paths
     // where possible (e.g. for virtual environments).
-    const folders = workspaceService.workspaceFolders ? workspaceService.workspaceFolders : [];
+    const folders = workspace.workspaceFolders ? workspace.workspaceFolders : [];
     return kernelPath ? getDisplayPath(kernelPath, folders, platform.homeDir) : '';
 }
 

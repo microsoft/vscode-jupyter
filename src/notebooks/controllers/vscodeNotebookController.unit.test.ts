@@ -15,8 +15,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IVSCodeNotebook,
-    IWorkspaceService
+    IVSCodeNotebook
 } from '../../platform/common/application/types';
 import {
     IBrowserService,
@@ -39,6 +38,7 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IConnectionDisplayDataProvider } from './types';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData.node';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 suite(`Notebook Controller`, function () {
     let controller: NotebookController;
@@ -47,7 +47,6 @@ suite(`Notebook Controller`, function () {
     let commandManager: ICommandManager;
     let context: IExtensionContext;
     let languageService: NotebookCellLanguageService;
-    let workspace: IWorkspaceService;
     let documentManager: IDocumentManager;
     let configService: IConfigurationService;
     let appShell: IApplicationShell;
@@ -76,7 +75,6 @@ suite(`Notebook Controller`, function () {
         commandManager = mock<ICommandManager>();
         context = mock<IExtensionContext>();
         languageService = mock<NotebookCellLanguageService>();
-        workspace = mock<IWorkspaceService>();
         documentManager = mock<IDocumentManager>();
         configService = mock<IConfigurationService>();
         appShell = mock<IApplicationShell>();
@@ -105,6 +103,7 @@ suite(`Notebook Controller`, function () {
         disposables.push(new Disposable(() => clock.uninstall()));
         when(context.extensionUri).thenReturn(Uri.file('extension'));
         when(controller.onDidChangeSelectedNotebooks).thenReturn(onDidChangeSelectedNotebooks.event);
+        when(vscNotebookApi.notebookDocuments).thenReturn([]);
         when(vscNotebookApi.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(
             vscNotebookApi.createNotebookController(
@@ -120,7 +119,8 @@ suite(`Notebook Controller`, function () {
             return instance(controller);
         });
         when(languageService.getSupportedLanguages(anything())).thenReturn([PYTHON_LANGUAGE]);
-        when(workspace.isTrusted).thenReturn(true);
+        when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
+        when(mockedVSCodeNamespaces.workspace.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(vscNotebookApi.notebookEditors).thenReturn([]);
         when(documentManager.applyEdit(anything())).thenResolve();
         when(kernelProvider.getOrCreate(anything(), anything())).thenReturn(instance(kernel));
@@ -139,7 +139,6 @@ suite(`Notebook Controller`, function () {
         when(trustedPaths.isTrusted(anything())).thenReturn(true);
         when(jupyterSettings.disableJupyterAutoStart).thenReturn(false);
         displayDataProvider = new ConnectionDisplayDataProvider(
-            instance(workspace),
             instance(platform),
             instance(providerRegistry),
             disposables,
@@ -158,7 +157,6 @@ suite(`Notebook Controller`, function () {
             instance(context),
             disposables,
             instance(languageService),
-            instance(workspace),
             instance(configService),
             instance(documentManager),
             instance(appShell),
@@ -181,7 +179,7 @@ suite(`Notebook Controller`, function () {
     test('Kernel is not created upon selecting a controller if workspace is not trusted', async function () {
         createController('jupyter-notebook');
         when(kernelProvider.get(notebook)).thenReturn();
-        when(workspace.isTrusted).thenReturn(false);
+        when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(false);
 
         onDidChangeSelectedNotebooks.fire({ notebook, selected: true });
         await clock.runAllAsync();

@@ -3,7 +3,7 @@
 
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
-import { CancellationToken, CancellationTokenSource, env, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, env, Uri, workspace } from 'vscode';
 import {
     createInterpreterKernelSpec,
     getKernelId,
@@ -35,7 +35,6 @@ import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helper
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 
 export function localPythonKernelsCacheKey() {
     const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2023_3';
@@ -262,7 +261,6 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
     private static globalPythonKernelSpecsForWhichWeCouldNotFindInterpreterInfo = new Set<string>();
     constructor(
         private readonly interpreterService: IInterpreterService,
-        private readonly workspaceService: IWorkspaceService,
         private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly trustedKernels: ITrustedKernelPaths
@@ -483,9 +481,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         const cancelToken = this.cancelToken.token;
         const globalPythonKernelSpecs = this.listGlobalPythonKernelSpecs();
         const activeInterpreterInAWorkspacePromise = Promise.all(
-            (this.workspaceService.workspaceFolders || []).map((folder) =>
-                this.interpreterService.getActiveInterpreter(folder.uri)
-            )
+            (workspace.workspaceFolders || []).map((folder) => this.interpreterService.getActiveInterpreter(folder.uri))
         );
 
         traceVerbose(`Finding Global Python KernelSpecs`);

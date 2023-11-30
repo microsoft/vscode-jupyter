@@ -10,10 +10,11 @@ import {
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
     Range,
-    TextDocument
+    TextDocument,
+    workspace
 } from 'vscode';
 
-import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceWarning, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 
 import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
@@ -68,7 +69,6 @@ export class CodeLensFactory implements ICodeLensFactory {
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IGeneratedCodeStorageFactory)
@@ -76,7 +76,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         @inject(IKernelProvider) kernelProvider: IKernelProvider
     ) {
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
-        this.workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
+        workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
         notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
         kernelProvider.onDidDisposeKernel(
@@ -273,7 +273,7 @@ export class CodeLensFactory implements ICodeLensFactory {
 
         let commandsToBeDisabled: string[] = [];
         // If workspace is not trusted, then exclude execution related commands.
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             commandsToBeDisabled = [
                 ...CodeLensCommands.DebuggerCommands,
                 ...CodeLensCommands.DebuggerCommands,

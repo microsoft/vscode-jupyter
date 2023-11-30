@@ -5,10 +5,8 @@ import * as sinon from 'sinon';
 import * as path from '../../../platform/vscode-path/path';
 import assert from 'assert';
 import { expect } from 'chai';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, reset, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../../platform/common/application/types';
-import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { ExecutionResult, ShellOptions } from '../../../platform/common/process/types.node';
 import { IConfigurationService } from '../../../platform/common/types';
@@ -20,6 +18,7 @@ import { JupyterSettings } from '../../../platform/common/configSettings';
 import { PoetryInstaller } from '../../../platform/interpreter/installer/poetryInstaller.node';
 import { ExecutionInstallArgs } from '../../../platform/interpreter/installer/moduleInstaller.node';
 import { ModuleInstallFlags } from '../../../platform/interpreter/installer/types';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
 suite('Module Installer - Poetry', () => {
     class TestInstaller extends PoetryInstaller {
@@ -34,15 +33,15 @@ suite('Module Installer - Poetry', () => {
     const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
     const project1 = path.join(testPoetryDir, 'project1');
     let poetryInstaller: TestInstaller;
-    let workspaceService: IWorkspaceService;
     let configurationService: IConfigurationService;
     let serviceContainer: ServiceContainer;
     let shellExecute: sinon.SinonStub;
 
     setup(() => {
         serviceContainer = mock(ServiceContainer);
-        workspaceService = mock(WorkspaceService);
         configurationService = mock(ConfigurationService);
+        reset(mockedVSCodeNamespaces.workspace);
+        when(configurationService.getSettings(anything())).thenReturn({} as any);
 
         shellExecute = sinon.stub(fileUtils, 'shellExecute');
         shellExecute.callsFake((command: string, options: ShellOptions) => {
@@ -60,11 +59,7 @@ suite('Module Installer - Poetry', () => {
             return Promise.reject(new Error('Command failed'));
         });
 
-        poetryInstaller = new TestInstaller(
-            instance(serviceContainer),
-            instance(workspaceService),
-            instance(configurationService)
-        );
+        poetryInstaller = new TestInstaller(instance(serviceContainer), instance(configurationService));
     });
 
     teardown(() => {
@@ -91,7 +86,7 @@ suite('Module Installer - Poetry', () => {
             sysPrefix: '0'
         };
 
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
+        when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(anything())).thenReturn();
 
         const supported = await poetryInstaller.isSupported(interpreter);
 
@@ -125,7 +120,7 @@ suite('Module Installer - Poetry', () => {
 
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.poetryPath).thenReturn('poetry');
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
+        when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
 
         const supported = await poetryInstaller.isSupported(interpreter);
 
@@ -144,7 +139,7 @@ suite('Module Installer - Poetry', () => {
 
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.poetryPath).thenReturn('poetry');
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
+        when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
 
         const supported = await poetryInstaller.isSupported(interpreter);
 
@@ -163,7 +158,7 @@ suite('Module Installer - Poetry', () => {
 
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.poetryPath).thenReturn('poetry');
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
+        when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
 
         const supported = await poetryInstaller.isSupported(interpreter);
 

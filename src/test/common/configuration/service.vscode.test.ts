@@ -3,7 +3,6 @@
 
 import { expect } from 'chai';
 import { workspace } from 'vscode';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { AsyncDisposableRegistry } from '../../../platform/common/asyncDisposableRegistry';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
@@ -20,8 +19,7 @@ suite('Configuration Service', () => {
     test('Ensure same instance of settings return', async () => {
         const workspaceUri = workspace.workspaceFolders![0].uri;
         const settings = serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(workspaceUri);
-        const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const instanceIsSame = settings === (await getExtensionSettings(workspaceUri, workspaceService));
+        const instanceIsSame = settings === (await getExtensionSettings(workspaceUri));
         expect(instanceIsSame).to.be.equal(true, 'Incorrect settings');
     });
 

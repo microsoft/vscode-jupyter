@@ -7,7 +7,7 @@ import dedent from 'dedent';
 import { assert } from 'chai';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IBrowserService, IConfigurationService, IExtensions } from '../../platform/common/types';
@@ -42,12 +42,12 @@ import { DataScienceErrorHandlerNode } from './kernelErrorHandler.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { JupyterServer, JupyterServerCollection, JupyterServerProvider } from '../../api';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 suite('Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
     let dataScienceErrorHandler: DataScienceErrorHandler;
     let dependencyManager: IJupyterInterpreterDependencyManager;
-    let workspaceService: IWorkspaceService;
     let browser: IBrowserService;
     let configuration: IConfigurationService;
     let jupyterInterpreterService: JupyterInterpreterService;
@@ -68,7 +68,6 @@ suite('Error Handler Unit Tests', () => {
 
     setup(() => {
         applicationShell = mock<IApplicationShell>();
-        workspaceService = mock<IWorkspaceService>();
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
@@ -81,7 +80,7 @@ suite('Error Handler Unit Tests', () => {
         interpreterService = mock<IInterpreterService>();
         fs = mock<IFileSystem>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
-        when(workspaceService.workspaceFolders).thenReturn([]);
+        when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
         when(extensions.getExtension(anything())).thenReturn({ packageJSON: { displayName: '' } } as any);
@@ -95,7 +94,6 @@ suite('Error Handler Unit Tests', () => {
             instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
-            instance(workspaceService),
             instance(uriStorage),
             false,
             instance(extensions),
@@ -326,7 +324,7 @@ suite('Error Handler Unit Tests', () => {
                     uri: Uri.file('c:\\Development\\samples\\pySamples\\sample1\\kernel_issues')
                 }
             ];
-            when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+            when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn(workspaceFolders);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',
@@ -357,7 +355,7 @@ suite('Error Handler Unit Tests', () => {
                     uri: Uri.file('/Users/MyUserName/sample/kernel_issues')
                 }
             ];
-            when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+            when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn(workspaceFolders);
             when(reservedPythonNames.getUriOverridingReservedPythonNames(anything())).thenResolve([
                 { uri: Uri.file('/Users/MyUserName/sample/kernel_issues/xml.py'), type: 'file' }
             ]);
@@ -386,7 +384,7 @@ suite('Error Handler Unit Tests', () => {
                     uri: Uri.file('/Users/MyUserName/sample/kernel_issues')
                 }
             ];
-            when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+            when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn(workspaceFolders);
             when(reservedPythonNames.getUriOverridingReservedPythonNames(anything())).thenResolve([
                 { uri: Uri.file('/Users/MyUserName/sample/kernel_issues/xml/__init__.py'), type: '__init__' }
             ]);
@@ -415,7 +413,7 @@ suite('Error Handler Unit Tests', () => {
                     uri: Uri.file('/Users/MyUserName/sample/kernel_issues')
                 }
             ];
-            when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+            when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn(workspaceFolders);
             // Lets mark everything as not being reserved, in this case, we should not
             // treat files such as xml.py as overriding the builtin python modules
             when(reservedPythonNames.getUriOverridingReservedPythonNames(anything())).thenResolve([]);
@@ -469,7 +467,7 @@ suite('Error Handler Unit Tests', () => {
                     uri: Uri.file('/home/xyz/samples/pySamples/sample/')
                 }
             ];
-            when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+            when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn(workspaceFolders);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',

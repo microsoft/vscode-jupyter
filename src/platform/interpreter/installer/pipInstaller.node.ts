@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import * as path from '../../vscode-path/path';
-import { IWorkspaceService } from '../../common/application/types';
 import { _SCRIPTS_DIR } from '../internal/scripts/index.node';
 import { ModuleInstallerType, ModuleInstallFlags, Product, IInstaller } from './types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
@@ -14,6 +13,7 @@ import { IPythonExecutionFactory } from '../types.node';
 import { getPinnedPackages } from './pinnedPackages';
 import { Environment } from '@vscode/python-extension';
 import { getEnvironmentType } from '../helpers';
+import { workspace } from 'vscode';
 
 /**
  * Installer for pip. Default installer for most everything.
@@ -73,8 +73,7 @@ export class PipInstaller extends ModuleInstaller {
         }
 
         const args: string[] = [];
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const proxy = workspaceService.getConfiguration('http').get('proxy', '');
+        const proxy = workspace.getConfiguration('http').get('proxy', '');
         if (proxy.length > 0) {
             args.push('--proxy');
             args.push(proxy);

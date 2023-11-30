@@ -11,8 +11,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IVSCodeNotebook,
-    IWorkspaceService
+    IVSCodeNotebook
 } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IBrowserService, IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
@@ -100,7 +99,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             const languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
             const commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
             const documentManager = api.serviceContainer.get<IDocumentManager>(IDocumentManager);
-            const workspaceService = api.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
             const configuration = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
             const extensionChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
@@ -111,7 +109,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             const interpreters = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
             kernelConnectionMetadata = await getDefaultKernelConnection();
             const displayDataProvider = new ConnectionDisplayDataProvider(
-                workspaceService,
                 platform,
                 providerRegitry,
                 disposables,
@@ -156,7 +153,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 context,
                 disposables,
                 languageService,
-                workspaceService,
                 configuration,
                 documentManager,
                 appShell,

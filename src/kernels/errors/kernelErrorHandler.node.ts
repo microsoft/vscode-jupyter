@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import { IApplicationShell } from '../../platform/common/application/types';
 import {
     IBrowserService,
     IConfigurationService,
@@ -41,7 +41,6 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
         @inject(IKernelDependencyService)
         @optional()
         kernelDependency: IKernelDependencyService | undefined,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
         @inject(IsWebExtension) isWebExtension: boolean,
         @inject(IExtensions) extensions: IExtensions,
@@ -56,7 +55,6 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
             browser,
             configuration,
             kernelDependency,
-            workspaceService,
             serverUriStorage,
             jupyterUriProviderRegistration,
             isWebExtension,

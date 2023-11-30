@@ -9,7 +9,6 @@ import {
 } from '../../kernels/helpers';
 import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 import { KernelConnectionMetadata } from '../../kernels/types';
-import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -27,7 +26,6 @@ import { getJupyterDisplayName } from '../../kernels/jupyter/connection/jupyterS
 export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProvider {
     private readonly details = new Map<string, ConnectionDisplayData>();
     constructor(
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IJupyterServerProviderRegistry)
         private readonly jupyterUriProviderRegistration: IJupyterServerProviderRegistry,
@@ -38,7 +36,7 @@ export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProv
     public getDisplayData(connection: KernelConnectionMetadata): IConnectionDisplayData {
         if (!this.details.get(connection.id)) {
             const label = getDisplayNameOrNameOfKernelConnection(connection);
-            let description = getKernelConnectionDisplayPath(connection, this.workspace, this.platform);
+            let description = getKernelConnectionDisplayPath(connection, this.platform);
             if (connection.kind === 'connectToLiveRemoteKernel') {
                 description = getRemoteKernelSessionInformation(connection);
             }
@@ -66,11 +64,7 @@ export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProv
                     if (connection.kind === 'startUsingPythonInterpreter' && interpreter) {
                         connection.updateInterpreter(interpreter);
                         const newLabel = getDisplayNameOrNameOfKernelConnection(connection);
-                        const newDescription = getKernelConnectionDisplayPath(
-                            connection,
-                            this.workspace,
-                            this.platform
-                        );
+                        const newDescription = getKernelConnectionDisplayPath(connection, this.platform);
                         const newCategory = getKernelConnectionCategorySync(connection);
                         let changed = false;
                         if (newLabel !== newDetails.label) {

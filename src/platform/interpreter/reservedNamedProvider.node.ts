@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Memento, Uri } from 'vscode';
+import { ConfigurationTarget, Memento, Uri, workspace } from 'vscode';
 import { IMemento, GLOBAL_MEMENTO, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { BuiltInModules } from './constants';
-import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IReservedPythonNamedProvider } from './types';
@@ -26,7 +25,6 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private cache: Memento,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode
@@ -106,7 +104,7 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
     }
     public async addToIgnoreList(uri: Uri) {
         await this.pendingUpdate;
-        const jupyterConfig = this.workspace.getConfiguration('jupyter');
+        const jupyterConfig = workspace.getConfiguration('jupyter');
         const filePath = this.platform.isWindows ? uri.fsPath.toLowerCase() : uri.fsPath;
         this.initializeIgnoreList();
         const originalSizeOfList = this.ignoredFiles.size;
@@ -120,7 +118,7 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         return this.pendingUpdate;
     }
     private initializeIgnoreList() {
-        const jupyterConfig = this.workspace.getConfiguration('jupyter');
+        const jupyterConfig = workspace.getConfiguration('jupyter');
         let listInSettings = jupyterConfig.get(ignoreListSettingName, []) as string[];
         // Ignore file case on windows, hence lower case the files.
         if (this.platform.isWindows) {

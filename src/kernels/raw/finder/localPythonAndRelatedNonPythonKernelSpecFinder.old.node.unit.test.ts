@@ -5,7 +5,7 @@ import * as fakeTimers from '@sinonjs/fake-timers';
 import * as sinon from 'sinon';
 import { Disposable, Memento, Uri, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
+import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -29,12 +29,12 @@ import { uriEquals } from '../../../test/datascience/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
 suite(`Local Python and related kernels`, async () => {
     let finder: OldLocalPythonAndRelatedNonPythonKernelSpecFinder;
     let interpreterService: IInterpreterService;
     let fs: IFileSystemNode;
-    let workspaceService: IWorkspaceService;
     let extensionChecker: IPythonExtensionChecker;
     let kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder;
     let globalState: Memento;
@@ -143,7 +143,6 @@ suite(`Local Python and related kernels`, async () => {
         traceInfo(`Start Test (started) ${this.currentTest?.title}`);
         interpreterService = mock<IInterpreterService>();
         fs = mock<IFileSystemNode>();
-        workspaceService = mock<IWorkspaceService>();
         jupyterPaths = mock<JupyterPaths>();
         extensionChecker = mock<IPythonExtensionChecker>();
         kernelSpecsFromKnownLocations = mock(LocalKnownPathKernelSpecFinder);
@@ -174,7 +173,7 @@ suite(`Local Python and related kernels`, async () => {
         when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(tempDirForKernelSpecs);
         when(jupyterPaths.getKernelSpecRootPaths(anything())).thenResolve([]);
         when(jupyterPaths.getKernelSpecRootPath()).thenResolve(globalKernelRootPath);
-        when(workspaceService.workspaceFolders).thenReturn([]);
+        when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
 
         // Initialize the kernel specs (test data).
         let kernelSpec = await createInterpreterKernelSpec(venvInterpreter, tempDirForKernelSpecs);
@@ -202,7 +201,6 @@ suite(`Local Python and related kernels`, async () => {
         finder = new OldLocalPythonAndRelatedNonPythonKernelSpecFinder(
             instance(interpreterService),
             instance(fs),
-            instance(workspaceService),
             instance(jupyterPaths),
             instance(extensionChecker),
             instance(kernelSpecsFromKnownLocations),

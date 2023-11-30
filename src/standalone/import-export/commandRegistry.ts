@@ -4,12 +4,7 @@
 import { inject, injectable, optional } from 'inversify';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IVSCodeNotebook,
-    IWorkspaceService
-} from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { IFileConverter } from '../../notebooks/export/types';
@@ -18,6 +13,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IKernelFinder } from '../../kernels/types';
 import { PreferredKernelConnectionService } from '../../notebooks/controllers/preferredKernelConnectionService';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
+import { workspace } from 'vscode';
 
 /**
  * Registers the export commands if in a trusted workspace.
@@ -27,7 +23,6 @@ export class CommandRegistry implements IExtensionSyncActivationService {
     private exportCommand?: ExportCommands;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IFileConverter) private fileConverter: IFileConverter,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -51,8 +46,8 @@ export class CommandRegistry implements IExtensionSyncActivationService {
             new PreferredKernelConnectionService(jupyterConnection),
             kernelFinder
         );
-        if (!this.workspace.isTrusted) {
-            this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
+        if (!workspace.isTrusted) {
+            workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
     }
 
@@ -61,7 +56,7 @@ export class CommandRegistry implements IExtensionSyncActivationService {
     }
 
     private registerCommandsIfTrusted() {
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             return;
         }
         this.exportCommand?.register();

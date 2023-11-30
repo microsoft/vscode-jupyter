@@ -100,7 +100,6 @@ suite('JupyterSession', () => {
             instance(session),
             resource,
             kernelConnectionMetadata,
-            Uri.file(''),
             instance(kernelService),
             'jupyterExtension'
         );

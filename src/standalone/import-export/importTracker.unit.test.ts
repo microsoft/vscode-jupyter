@@ -13,7 +13,7 @@ import {
     NotebookDocument
 } from 'vscode';
 
-import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
 import {
     InteractiveWindowView,
     isTestExecution,
@@ -30,6 +30,7 @@ import { ImportTracker } from './importTracker';
 import { ResourceTypeTelemetryProperty, getTelemetryReporter } from '../../telemetry';
 import { waitForCondition } from '../../test/common';
 import { createMockedNotebookDocument } from '../../test/datascience/editor-integration/helpers';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 suite('Import Tracker', async () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
@@ -135,8 +136,7 @@ suite('Import Tracker', async () => {
         when(vscNb.onDidSaveNotebookDocument).thenReturn(onDidSaveNbEvent.event);
         when(vscNb.onDidChangeNotebookCellExecutionState).thenReturn(onDidChangeNotebookCellExecutionState.event);
         when(vscNb.notebookDocuments).thenReturn([]);
-        const workspace = mock<IWorkspaceService>();
-        when(workspace.getConfiguration('telemetry')).thenReturn({
+        when(mockedVSCodeNamespaces.workspace.getConfiguration('telemetry')).thenReturn({
             inspect: () => {
                 return {
                     key: 'enableTelemetry',
@@ -144,7 +144,7 @@ suite('Import Tracker', async () => {
                 };
             }
         } as any);
-        importTracker = new ImportTracker(instance(vscNb), disposables, instance(workspace));
+        importTracker = new ImportTracker(instance(vscNb), disposables);
     });
     teardown(() => {
         sinon.restore();

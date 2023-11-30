@@ -6,7 +6,6 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, WorkspaceFoldersChangeEvent } from 'vscode';
 import { createEventHandler } from '../../test/common';
-import { IWorkspaceService } from '../common/application/types';
 import { dispose } from '../common/utils/lifecycle';
 import { IDisposable, IExtensionContext } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -18,13 +17,13 @@ import {
     PythonExtension
 } from '@vscode/python-extension';
 import { IPythonApiProvider, IPythonExtensionChecker } from './types';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 suite(`Interpreter Service`, () => {
     let clock: fakeTimers.InstalledClock;
     let interpreterService: IInterpreterService;
     let apiProvider: IPythonApiProvider;
     let extensionChecker: IPythonExtensionChecker;
-    let workspace: IWorkspaceService;
     let context: IExtensionContext;
     let disposables: IDisposable[] = [];
     let onDidActivatePythonExtension: EventEmitter<void>;
@@ -38,7 +37,6 @@ suite(`Interpreter Service`, () => {
         interpreterService = mock<IInterpreterService>();
         apiProvider = mock<IPythonApiProvider>();
         extensionChecker = mock<IPythonExtensionChecker>();
-        workspace = mock<IWorkspaceService>();
         context = mock<IExtensionContext>();
         onDidActivatePythonExtension = new EventEmitter<void>();
         onDidChangeWorkspaceFolders = new EventEmitter<WorkspaceFoldersChangeEvent>();
@@ -62,7 +60,9 @@ suite(`Interpreter Service`, () => {
         (instance(newPythonApi) as any).then = undefined;
         when(apiProvider.getNewApi()).thenResolve(instance(newPythonApi));
         when(apiProvider.onDidActivatePythonExtension).thenReturn(onDidActivatePythonExtension.event);
-        when(workspace.onDidChangeWorkspaceFolders).thenReturn(onDidChangeWorkspaceFolders.event);
+        when(mockedVSCodeNamespaces.workspace.onDidChangeWorkspaceFolders).thenReturn(
+            onDidChangeWorkspaceFolders.event
+        );
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
@@ -73,7 +73,6 @@ suite(`Interpreter Service`, () => {
             instance(apiProvider),
             instance(extensionChecker),
             disposables,
-            instance(workspace),
             instance(context)
         );
     }

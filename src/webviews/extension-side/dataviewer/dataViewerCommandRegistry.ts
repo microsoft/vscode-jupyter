@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named, optional } from 'inversify';
-import { DebugConfiguration, Uri } from 'vscode';
+import { DebugConfiguration, Uri, workspace } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariables } from '../../../kernels/variables/types';
@@ -12,8 +12,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDebugService,
-    IVSCodeNotebook,
-    IWorkspaceService
+    IVSCodeNotebook
 } from '../../../platform/common/application/types';
 import { Commands, Identifiers, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { IPlatformService } from '../../../platform/common/platform/types';
@@ -50,7 +49,6 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         @optional()
         @named(Identifiers.DEBUGGER_VARIABLES)
         private variableProvider: IJupyterVariables | undefined,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IDataViewerDependencyService)
         @optional()
@@ -62,15 +60,15 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
     ) {
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
-        if (!this.workspace.isTrusted) {
-            this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
+        if (!workspace.isTrusted) {
+            workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
     }
     activate() {
         this.registerCommandsIfTrusted();
     }
     private registerCommandsIfTrusted() {
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             return;
         }
         this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);

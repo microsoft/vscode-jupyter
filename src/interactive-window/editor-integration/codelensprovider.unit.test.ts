@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { instance, mock, when } from 'ts-mockito';
+import { when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter, TextDocument, Uri } from 'vscode';
 
@@ -9,14 +9,14 @@ import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
-    IVSCodeNotebook,
-    IWorkspaceService
+    IVSCodeNotebook
 } from '../../platform/common/application/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
 import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IDebugLocationTracker } from '../../notebooks/debugger/debuggingTypes';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 // eslint-disable-next-line
 suite('DataScienceCodeLensProvider Unit Tests', () => {
@@ -42,9 +42,8 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         pythonSettings = TypeMoq.Mock.ofType<IWatchableJupyterSettings>();
         vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
-        const workspace = mock<IWorkspaceService>();
-        when(workspace.isTrusted).thenReturn(true);
-        when(workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
+        when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
+        when(mockedVSCodeNamespaces.workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         vscodeNotebook.setup((c) => c.activeNotebookEditor).returns(() => undefined);
         commandManager
@@ -58,8 +57,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             configurationService.object,
             commandManager.object,
             disposables,
-            debugService.object,
-            instance(workspace)
+            debugService.object
         );
     });
 

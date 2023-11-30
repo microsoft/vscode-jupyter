@@ -11,7 +11,6 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { InterpreterService } from '../../../platform/api/pythonApi';
 import {
@@ -136,13 +135,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             when(fs.exists(anything())).thenResolve(true);
             const env = mock<IApplicationEnvironment>();
             when(env.extensionVersion).thenReturn('');
-            const workspaceService = mock(WorkspaceService);
-            const testWorkspaceFolder = Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience'));
-
-            when(workspaceService.getWorkspaceFolderIdentifier(anything(), anything())).thenCall((_a, b) => {
-                return Promise.resolve(b);
-            });
-            when(workspaceService.rootFolder).thenReturn(testWorkspaceFolder);
             const envVarsProvider = mock(CustomEnvironmentVariablesProvider);
             when(envVarsProvider.getEnvironmentVariables(anything(), anything())).thenResolve({});
             const event = new EventEmitter<Uri | undefined>();
@@ -228,7 +220,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             when(fs.exists(anything())).thenResolve(true);
             const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
                 instance(fs),
-                instance(workspaceService),
                 jupyterPaths,
                 instance(extensionChecker),
                 instance(memento),
@@ -255,7 +246,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             const pythonKernelFinderWrapper = new OldLocalPythonAndRelatedNonPythonKernelSpecFinder(
                 instance(interpreterService),
                 instance(fs),
-                instance(workspaceService),
                 jupyterPaths,
                 instance(extensionChecker),
                 nonPythonKernelSpecFinder,
