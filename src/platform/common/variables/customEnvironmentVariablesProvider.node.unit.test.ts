@@ -67,7 +67,6 @@ suite('Custom Environment Variables Provider', () => {
             when(workspaceConfig.get<string>('envFile')).thenReturn('${workspaceFolder}/.env.python');
             return instance(workspaceConfig);
         });
-        // when(mockedVSCodeNamespaces.workspace.getWorkspaceFolderIdentifier(anything())).thenCall(() => workspaceFolder.uri.fsPath);
         when(
             mockedVSCodeNamespaces.workspace.createFileSystemWatcher(anything(), anything(), anything(), anything())
         ).thenReturn(instance(fsWatcher));
