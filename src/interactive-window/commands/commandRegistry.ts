@@ -39,7 +39,7 @@ import { IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { ExportFormat, IExportDialog, IFileConverter } from '../../notebooks/export/types';
+import { ExportFormat, IFileConverter } from '../../notebooks/export/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
@@ -49,6 +49,7 @@ import { INotebookEditorProvider } from '../../notebooks/types';
 import { IJupyterServerHelper, INotebookExporter } from '../../kernels/jupyter/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { StatusProvider } from './statusProvider';
+import { ExportDialog } from '../../notebooks/export/exportDialog';
 
 /**
  * Class that registers command handlers for interactive window commands.
@@ -77,7 +78,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
         @inject(IFileConverter) private fileConverter: IFileConverter,
-        @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard,
         @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook
     ) {
@@ -628,7 +628,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                 );
                 if (cells) {
                     // Bring up the export dialog box
-                    const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, file);
+                    const uri = await new ExportDialog().showDialog(ExportFormat.ipynb, file);
                     await this.waitForStatus(
                         async () => {
                             if (uri) {
@@ -678,7 +678,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                 );
                 if (cells) {
                     // Bring up the export dialog box
-                    const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, file);
+                    const uri = await new ExportDialog().showDialog(ExportFormat.ipynb, file);
                     if (!uri) {
                         return;
                     }

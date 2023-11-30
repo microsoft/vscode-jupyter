@@ -14,20 +14,19 @@ import { ExportFileOpener } from '../../../notebooks/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../../notebooks/export/exportInterpreterFinder.node';
 import { ExportUtil } from '../../../notebooks/export/exportUtil.node';
 import { FileConverter } from '../../../notebooks/export/fileConverter.node';
-import { INbConvertExport, IExport, IExportDialog, ExportFormat } from '../../../notebooks/export/types';
+import { IExport, ExportFormat } from '../../../notebooks/export/types';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IFileSystem } from '../../../platform/common/platform/types';
+import { ExportToPDF } from '../../../notebooks/export/exportToPDF';
+import { ExportToHTML } from '../../../notebooks/export/exportToHTML';
+import { ExportDialog } from '../../../notebooks/export/exportDialog';
 
 suite('File Converter @export', () => {
     let fileConverter: FileConverter;
-    let exportPython: INbConvertExport;
-    let exportHtml: INbConvertExport;
-    let exportPdf: INbConvertExport;
     let exportPythonPlain: IExport;
     let fileSystem: IFileSystemNode;
     let exportUtil: ExportUtil;
-    let filePicker: IExportDialog;
     let appShell: IApplicationShell;
     let exportFileOpener: sinon.SinonStub<
         [format: ExportFormat, uri: Uri, openDirectly?: boolean | undefined],
@@ -39,11 +38,7 @@ suite('File Converter @export', () => {
     setup(async () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
-        filePicker = mock<IExportDialog>();
         fileSystem = mock<IFileSystemNode>();
-        exportPython = mock<INbConvertExport>();
-        exportHtml = mock<INbConvertExport>();
-        exportPdf = mock<INbConvertExport>();
         exportPythonPlain = mock<IExport>();
         appShell = mock<IApplicationShell>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
@@ -51,10 +46,6 @@ suite('File Converter @export', () => {
         settings = mock<IWatchableJupyterSettings>();
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         when(settings.pythonExportMethod).thenReturn('direct');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(filePicker.showDialog(anything(), anything(), anything())).thenReturn(
-            Promise.resolve(Uri.file('test.pdf'))
-        );
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(appShell.showErrorMessage(anything())).thenResolve();
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
@@ -63,9 +54,11 @@ suite('File Converter @export', () => {
         when(exportUtil.getTargetFile(anything(), anything(), anything())).thenResolve(Uri.file('bar'));
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
-        when(exportPdf.export(anything(), anything(), anything(), anything())).thenResolve();
         when(exportPythonPlain.export(anything(), anything(), anything())).thenResolve();
-        when(filePicker.showDialog(anything(), anything())).thenResolve(Uri.file('foo'));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sinon.stub(ExportDialog.prototype, 'showDialog').callsFake((_, __, c) => {
+            return c ? Promise.resolve(Uri.file('test.pdf')) : Promise.resolve(Uri.file('foo'));
+        });
         when(exportInterpreterFinder.getExportInterpreter(anything())).thenResolve();
         exportFileOpener = sinon.stub(ExportFileOpener.prototype, 'openFile').resolves();
         sinon.stub(ServiceContainer, 'instance').get(() => ({
@@ -74,13 +67,9 @@ suite('File Converter @export', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
         fileConverter = new FileConverter(
-            instance(exportPdf),
-            instance(exportHtml),
-            instance(exportPython),
             instance(exportPythonPlain),
             instance(exportUtil),
             instance(fileSystem),
-            instance(filePicker),
             instance(reporter),
             instance(appShell),
             instance(configuration)
@@ -93,25 +82,34 @@ suite('File Converter @export', () => {
     teardown(() => sinon.restore());
 
     test('Erorr message is shown if export fails', async () => {
-        when(exportHtml.export(anything(), anything(), anything(), anything())).thenThrow(new Error('failed...'));
+        sinon.stub(ExportToHTML.prototype, 'export').rejects(new Error('failed...'));
+
         await fileConverter.export(ExportFormat.html, {} as any);
+
         verify(appShell.showErrorMessage(anything())).once();
         assert.strictEqual(exportFileOpener.callCount, 0);
     });
     test('Export to PDF is called when export method is PDF', async () => {
+        const exportToPdf = sinon.stub(ExportToPDF.prototype, 'export').resolves();
+
         await fileConverter.export(ExportFormat.pdf, {} as any);
-        verify(exportPdf.export(anything(), anything(), anything(), anything())).once();
+
+        assert.strictEqual(exportToPdf.callCount, 1);
         assert.strictEqual(exportFileOpener.callCount, 1);
         assert.strictEqual(exportFileOpener.getCall(0).args[0], ExportFormat.pdf);
     });
     test('Export to HTML is called when export method is HTML', async () => {
+        const exportToHtml = sinon.stub(ExportToHTML.prototype, 'export').resolves();
+
         await fileConverter.export(ExportFormat.html, {} as any);
-        verify(exportHtml.export(anything(), anything(), anything(), anything())).once();
+
+        assert.strictEqual(exportToHtml.callCount, 1);
         assert.strictEqual(exportFileOpener.callCount, 1);
         assert.strictEqual(exportFileOpener.getCall(0).args[0], ExportFormat.html);
     });
     test('Export to Python is called when export method is Python', async () => {
         await fileConverter.export(ExportFormat.python, {} as any);
+
         verify(exportPythonPlain.export(anything(), anything(), anything())).once();
         assert.strictEqual(exportFileOpener.callCount, 1);
         assert.strictEqual(exportFileOpener.getCall(0).args[0], ExportFormat.python);

@@ -10,22 +10,18 @@ import { TemporaryDirectory } from '../../platform/common/platform/types';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { sleep } from '../../platform/common/utils/async';
 import { ExportUtilBase } from './exportUtil';
-import { IExtensions } from '../../platform/common/types';
-import { ExportFormat, IExportDialog } from './types';
+import { ExportFormat } from './types';
 import { Uri } from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { ExportDialog } from './exportDialog';
 
 /**
  * Export utilities that only work in node
  */
 @injectable()
 export class ExportUtil extends ExportUtilBase {
-    constructor(
-        @inject(IFileSystemNode) private fs: IFileSystemNode,
-        @inject(IExtensions) extensions: IExtensions,
-        @inject(IExportDialog) filePicker: IExportDialog
-    ) {
-        super(extensions, filePicker);
+    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) {
+        super();
     }
 
     public async generateTempDir(): Promise<TemporaryDirectory> {
@@ -60,7 +56,7 @@ export class ExportUtil extends ExportUtilBase {
         let target;
 
         if (format !== ExportFormat.python) {
-            target = await this.filePicker.showDialog(format, source, defaultFileName);
+            target = await new ExportDialog().showDialog(format, source, defaultFileName);
         } else {
             target = Uri.file((await this.fs.createTemporaryLocalFile('.py')).filePath);
         }

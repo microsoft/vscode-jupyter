@@ -14,7 +14,10 @@ import { ProgressReporter } from '../../platform/progress/progressReporter';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportUtilBase } from './exportUtil';
-import { ExportFormat, IExport, IExportDialog, IFileConverter, INbConvertExport } from './types';
+import { ExportFormat, IExport, IFileConverter } from './types';
+import { ExportToPython } from './exportToPython';
+import { ExportToPDF } from './exportToPDF';
+import { ExportToHTML } from './exportToHTML';
 
 /**
  * Converts different file formats to others. Used in export.
@@ -23,10 +26,6 @@ import { ExportFormat, IExport, IExportDialog, IFileConverter, INbConvertExport 
 export class FileConverter implements IFileConverter {
     constructor(
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPythonPlain: IExport,
-        @inject(INbConvertExport) @named(ExportFormat.pdf) private readonly exportToPDF: INbConvertExport,
-        @inject(INbConvertExport) @named(ExportFormat.html) private readonly exportToHTML: INbConvertExport,
-        @inject(INbConvertExport) @named(ExportFormat.python) private readonly exportToPython: INbConvertExport,
-        @inject(IExportDialog) protected readonly filePicker: IExportDialog,
         @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
@@ -162,13 +161,13 @@ export class FileConverter implements IFileConverter {
     ) {
         switch (format) {
             case ExportFormat.python:
-                return await this.exportToPython.export(sourceDocument, target, interpreter, cancelToken);
+                return new ExportToPython().export(sourceDocument, target, interpreter!, cancelToken);
 
             case ExportFormat.pdf:
-                return await this.exportToPDF.export(sourceDocument, target, interpreter, cancelToken);
+                return new ExportToPDF().export(sourceDocument, target, interpreter!, cancelToken);
 
             case ExportFormat.html:
-                return await this.exportToHTML.export(sourceDocument, target, interpreter, cancelToken);
+                return new ExportToHTML().export(sourceDocument, target, interpreter!, cancelToken);
 
             default:
                 break;

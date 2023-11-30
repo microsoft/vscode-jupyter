@@ -11,7 +11,7 @@ import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './types';
+import { ExportFormat, IExportBase } from './types';
 import { ExportUtil } from './exportUtil.node';
 import { TemporaryDirectory } from '../../platform/common/platform/types';
 import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
@@ -21,13 +21,12 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../platform
  * Base class for using nbconvert to perform different export operations on node
  */
 @injectable()
-export class ExportBase implements INbConvertExport, IExportBase {
+export class ExportBase implements IExportBase {
     constructor(
         @inject(IPythonExecutionFactory) protected readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IJupyterSubCommandExecutionService)
         protected jupyterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystemNode) protected readonly fs: IFileSystemNode,
-        @inject(IExportDialog) protected readonly filePicker: IExportDialog,
         @inject(ExportUtil) protected readonly exportUtil: ExportUtil,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
         @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder

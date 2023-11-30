@@ -8,10 +8,10 @@ import { CancellationTokenSource, Uri, workspace } from 'vscode';
 import { IDocumentManager } from '../../../platform/common/application/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ExportInterpreterFinder } from '../../../notebooks/export/exportInterpreterFinder.node';
-import { INbConvertExport, ExportFormat } from '../../../notebooks/export/types';
 import { IExtensionTestApi } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
+import { ExportToPython } from '../../../notebooks/export/exportToPython';
 
 suite('Export Python @export', function () {
     let api: IExtensionTestApi;
@@ -23,7 +23,7 @@ suite('Export Python @export', function () {
     suiteTeardown(closeActiveWindows);
     test('Export To Python', async () => {
         const fileSystem = api.serviceContainer.get<IFileSystemNode>(IFileSystemNode);
-        const exportToPython = api.serviceContainer.get<INbConvertExport>(INbConvertExport, ExportFormat.python);
+        const exportToPython = new ExportToPython();
         const target = Uri.file((await fileSystem.createTemporaryLocalFile('.py')).filePath);
         const token = new CancellationTokenSource();
         const exportInterpreterFinder = api.serviceContainer.get<ExportInterpreterFinder>(ExportInterpreterFinder);
