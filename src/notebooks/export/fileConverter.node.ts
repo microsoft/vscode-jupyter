@@ -10,14 +10,14 @@ import { ExportFileOpener } from './exportFileOpener';
 import { ExportFormat, IFileConverter } from './types';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { FileConverter as FileConverterBase } from './fileConverter';
-import { ExportUtil } from './exportUtil.node';
 import { noop } from '../../platform/common/utils/misc';
+import { ExportUtilBase } from './exportUtil';
 
 // Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()
 export class FileConverter extends FileConverterBase implements IFileConverter {
     constructor(
-        @inject(ExportUtil) override readonly exportUtil: ExportUtil,
+        @inject(ExportUtilBase) override readonly exportUtil: ExportUtilBase,
         @inject(IFileSystemNode) readonly fs: IFileSystemNode,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IApplicationShell) applicationShell: IApplicationShell,

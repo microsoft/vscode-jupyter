@@ -12,10 +12,11 @@ import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportFormat, IExportBase } from './types';
-import { ExportUtil, ExportUtilNode, removeSvgs } from './exportUtil.node';
+import { ExportUtilNode, removeSvgs } from './exportUtil.node';
 import { TemporaryDirectory } from '../../platform/common/platform/types';
 import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../platform/interpreter/types.node';
+import { ExportUtilBase } from './exportUtil';
 
 /**
  * Base class for using nbconvert to perform different export operations on node
@@ -27,7 +28,7 @@ export class ExportBase implements IExportBase {
         @inject(IJupyterSubCommandExecutionService)
         protected jupyterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystemNode) protected readonly fs: IFileSystemNode,
-        @inject(ExportUtil) protected readonly exportUtil: ExportUtil,
+        @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
         @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder
     ) {}
