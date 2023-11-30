@@ -26,7 +26,6 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
         @inject(IExportDialog) filePicker: IExportDialog,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
-        @inject(ExportFileOpener) exportFileOpener: ExportFileOpener,
         @inject(IConfigurationService) configuration: IConfigurationService
     ) {
         super(
@@ -38,12 +37,11 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
             exportUtil,
             progressReporter,
             applicationShell,
-            exportFileOpener,
             configuration
         );
     }
 
     protected override async openExportedFile(format: ExportFormat, target: Uri) {
-        await this.exportFileOpener.openFile(format, target).catch(noop);
+        await new ExportFileOpener().openFile(format, target).catch(noop);
     }
 }

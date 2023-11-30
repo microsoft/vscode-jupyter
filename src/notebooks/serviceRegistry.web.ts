@@ -26,7 +26,6 @@ import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFact
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { ExportBase } from './export/exportBase.web';
 import { ExportDialog } from './export/exportDialog';
-import { ExportFileOpener } from './export/exportFileOpener';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
@@ -90,7 +89,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         CellOutputMimeTypeTracker
     );
 
-    serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
     serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);

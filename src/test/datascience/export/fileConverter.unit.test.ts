@@ -3,6 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
@@ -15,6 +16,8 @@ import { ExportUtil } from '../../../notebooks/export/exportUtil.node';
 import { FileConverter } from '../../../notebooks/export/fileConverter.node';
 import { INbConvertExport, IExport, IExportDialog, ExportFormat } from '../../../notebooks/export/types';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { IFileSystem } from '../../../platform/common/platform/types';
 
 suite('File Converter @export', () => {
     let fileConverter: FileConverter;
@@ -26,7 +29,10 @@ suite('File Converter @export', () => {
     let exportUtil: ExportUtil;
     let filePicker: IExportDialog;
     let appShell: IApplicationShell;
-    let exportFileOpener: ExportFileOpener;
+    let exportFileOpener: sinon.SinonStub<
+        [format: ExportFormat, uri: Uri, openDirectly?: boolean | undefined],
+        Promise<void>
+    >;
     let exportInterpreterFinder: ExportInterpreterFinder;
     let configuration: IConfigurationService;
     let settings: IWatchableJupyterSettings;
@@ -40,7 +46,6 @@ suite('File Converter @export', () => {
         exportPdf = mock<INbConvertExport>();
         exportPythonPlain = mock<IExport>();
         appShell = mock<IApplicationShell>();
-        exportFileOpener = mock<ExportFileOpener>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
         configuration = mock<IConfigurationService>();
         settings = mock<IWatchableJupyterSettings>();
@@ -62,7 +67,10 @@ suite('File Converter @export', () => {
         when(exportPythonPlain.export(anything(), anything(), anything())).thenResolve();
         when(filePicker.showDialog(anything(), anything())).thenResolve(Uri.file('foo'));
         when(exportInterpreterFinder.getExportInterpreter(anything())).thenResolve();
-        when(exportFileOpener.openFile(anything(), anything())).thenResolve();
+        exportFileOpener = sinon.stub(ExportFileOpener.prototype, 'openFile').resolves();
+        sinon.stub(ServiceContainer, 'instance').get(() => ({
+            get: (id: unknown) => (id == IFileSystem ? instance(fileSystem) : undefined)
+        }));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
         fileConverter = new FileConverter(
@@ -75,7 +83,6 @@ suite('File Converter @export', () => {
             instance(filePicker),
             instance(reporter),
             instance(appShell),
-            instance(exportFileOpener),
             instance(configuration)
         );
 
@@ -89,21 +96,24 @@ suite('File Converter @export', () => {
         when(exportHtml.export(anything(), anything(), anything(), anything())).thenThrow(new Error('failed...'));
         await fileConverter.export(ExportFormat.html, {} as any);
         verify(appShell.showErrorMessage(anything())).once();
-        verify(exportFileOpener.openFile(anything(), anything())).never();
+        assert.strictEqual(exportFileOpener.callCount, 0);
     });
     test('Export to PDF is called when export method is PDF', async () => {
         await fileConverter.export(ExportFormat.pdf, {} as any);
         verify(exportPdf.export(anything(), anything(), anything(), anything())).once();
-        verify(exportFileOpener.openFile(ExportFormat.pdf, anything())).once();
+        assert.strictEqual(exportFileOpener.callCount, 1);
+        assert.strictEqual(exportFileOpener.getCall(0).args[0], ExportFormat.pdf);
     });
     test('Export to HTML is called when export method is HTML', async () => {
         await fileConverter.export(ExportFormat.html, {} as any);
         verify(exportHtml.export(anything(), anything(), anything(), anything())).once();
-        verify(exportFileOpener.openFile(ExportFormat.html, anything())).once();
+        assert.strictEqual(exportFileOpener.callCount, 1);
+        assert.strictEqual(exportFileOpener.getCall(0).args[0], ExportFormat.html);
     });
     test('Export to Python is called when export method is Python', async () => {
         await fileConverter.export(ExportFormat.python, {} as any);
         verify(exportPythonPlain.export(anything(), anything(), anything())).once();
-        verify(exportFileOpener.openFile(ExportFormat.python, anything())).once();
+        assert.strictEqual(exportFileOpener.callCount, 1);
+        assert.strictEqual(exportFileOpener.getCall(0).args[0], ExportFormat.python);
     });
 });

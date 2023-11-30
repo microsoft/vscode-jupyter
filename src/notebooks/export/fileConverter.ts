@@ -30,7 +30,6 @@ export class FileConverter implements IFileConverter {
         @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(ExportFileOpener) protected readonly exportFileOpener: ExportFileOpener,
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService
     ) {}
 
@@ -121,7 +120,7 @@ export class FileConverter implements IFileConverter {
     }
 
     protected async openExportedFile(format: ExportFormat, target: Uri) {
-        await this.exportFileOpener.openFile(format, target, true).catch(noop);
+        await new ExportFileOpener().openFile(format, target, true).catch(noop);
     }
 
     protected async performPlainExport(
