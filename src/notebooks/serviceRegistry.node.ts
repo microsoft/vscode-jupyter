@@ -29,11 +29,10 @@ import { JupyterDebugService } from './debugger/jupyterDebugService.node';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { ExportBase } from './export/exportBase.node';
 import { ExportInterpreterFinder } from './export/exportInterpreterFinder.node';
-import { ExportToPythonPlain } from './export/exportToPythonPlain';
 import { ExportUtilBase } from './export/exportUtil';
 import { ExportUtil } from './export/exportUtil.node';
 import { FileConverter } from './export/fileConverter.node';
-import { ExportFormat, IExport, IExportBase, IFileConverter } from './export/types';
+import { IExportBase, IFileConverter } from './export/types';
 import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
@@ -121,7 +120,5 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
 
     serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);
-    serviceManager.addSingleton<IExport>(IExport, ExportToPythonPlain, ExportFormat.python);
-    serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
-    serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
+    serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtil);
 }

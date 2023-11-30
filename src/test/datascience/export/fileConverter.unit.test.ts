@@ -12,19 +12,19 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { ExportFileOpener } from '../../../notebooks/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../../notebooks/export/exportInterpreterFinder.node';
-import { ExportUtil } from '../../../notebooks/export/exportUtil.node';
+import { ExportUtil, ExportUtilNode } from '../../../notebooks/export/exportUtil.node';
 import { FileConverter } from '../../../notebooks/export/fileConverter.node';
-import { IExport, ExportFormat } from '../../../notebooks/export/types';
+import { ExportFormat } from '../../../notebooks/export/types';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { ExportToPDF } from '../../../notebooks/export/exportToPDF';
 import { ExportToHTML } from '../../../notebooks/export/exportToHTML';
 import { ExportDialog } from '../../../notebooks/export/exportDialog';
+import { ExportToPythonPlain } from '../../../notebooks/export/exportToPythonPlain';
 
 suite('File Converter @export', () => {
     let fileConverter: FileConverter;
-    let exportPythonPlain: IExport;
     let fileSystem: IFileSystemNode;
     let exportUtil: ExportUtil;
     let appShell: IApplicationShell;
@@ -39,7 +39,6 @@ suite('File Converter @export', () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
         fileSystem = mock<IFileSystemNode>();
-        exportPythonPlain = mock<IExport>();
         appShell = mock<IApplicationShell>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
         configuration = mock<IConfigurationService>();
@@ -49,12 +48,11 @@ suite('File Converter @export', () => {
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(appShell.showErrorMessage(anything())).thenResolve();
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-        when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => {} });
-        when(exportUtil.makeFileInDirectory(anything(), anything(), anything())).thenResolve('foo');
+        sinon.stub(ExportUtilNode.prototype, 'generateTempDir').resolves({ path: 'test', dispose: () => {} });
+        sinon.stub(ExportUtilNode.prototype, 'makeFileInDirectory').resolves('foo');
         when(exportUtil.getTargetFile(anything(), anything(), anything())).thenResolve(Uri.file('bar'));
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
-        when(exportPythonPlain.export(anything(), anything(), anything())).thenResolve();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sinon.stub(ExportDialog.prototype, 'showDialog').callsFake((_, __, c) => {
             return c ? Promise.resolve(Uri.file('test.pdf')) : Promise.resolve(Uri.file('foo'));
@@ -67,7 +65,6 @@ suite('File Converter @export', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
         fileConverter = new FileConverter(
-            instance(exportPythonPlain),
             instance(exportUtil),
             instance(fileSystem),
             instance(reporter),
@@ -108,9 +105,11 @@ suite('File Converter @export', () => {
         assert.strictEqual(exportFileOpener.getCall(0).args[0], ExportFormat.html);
     });
     test('Export to Python is called when export method is Python', async () => {
+        const exportToPython = sinon.stub(ExportToPythonPlain.prototype, 'export').resolves();
+
         await fileConverter.export(ExportFormat.python, {} as any);
 
-        verify(exportPythonPlain.export(anything(), anything(), anything())).once();
+        assert.strictEqual(exportToPython.callCount, 1);
         assert.strictEqual(exportFileOpener.callCount, 1);
         assert.strictEqual(exportFileOpener.getCall(0).args[0], ExportFormat.python);
     });
