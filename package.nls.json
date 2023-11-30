@@ -186,7 +186,7 @@
     "jupyter.configuration.jupyter.codeLenses.description": "Set of commands to put as code lens above a cell.",
     "jupyter.configuration.jupyter.codeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.commands.",
     "jupyter.configuration.jupyter.debugCodeLenses.description": "Set of debug commands to put as code lens above a cell while debugging.",
-    "jupyter.configuration.jupyter.debugCodeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLes.debugCommands.",
+    "jupyter.configuration.jupyter.debugCodeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.debugCommands.",
     "jupyter.configuration.jupyter.debugpyDistPath.description": "Path to debugpy bits for debugging cells.",
     "jupyter.configuration.jupyter.stopOnFirstLineWhileDebugging.description": "When debugging a cell, stop on the first line.",
     "jupyter.configuration.jupyter.remoteDebuggerPort.description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",

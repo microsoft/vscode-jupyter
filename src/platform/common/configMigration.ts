@@ -22,7 +22,7 @@ export class ConfigMigration {
         enableCellCodeLens: 'interactiveWindow.codeLens.enable',
         addGotoCodeLenses: 'interactiveWindow.codeLens.enableGotoCell',
         codeLenses: 'interactiveWindow.codeLens.commands',
-        debugCodeLenses: 'interactiveWindow.codeLes.debugCommands',
+        debugCodeLenses: 'interactiveWindow.codeLens.debugCommands',
 
         codeRegularExpression: 'interactiveWindow.cellMarker.codeRegex',
         markdownRegularExpression: 'interactiveWindow.cellMarker.markdownRegex',

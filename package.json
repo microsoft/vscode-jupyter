@@ -1746,7 +1746,7 @@
                     "deprecationMessage": "%jupyter.configuration.jupyter.debugCodeLenses.deprecationMessage%",
                     "scope": "resource"
                 },
-                "jupyter.interactiveWindow.codeLes.debugCommands": {
+                "jupyter.interactiveWindow.codeLens.debugCommands": {
                     "type": "string",
                     "default": "jupyter.debugcontinue, jupyter.debugstop, jupyter.debugstepover",
                     "description": "%jupyter.configuration.jupyter.debugCodeLenses.description%",
