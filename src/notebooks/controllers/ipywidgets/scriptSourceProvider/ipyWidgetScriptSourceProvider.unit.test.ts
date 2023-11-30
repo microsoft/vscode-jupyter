@@ -15,7 +15,6 @@ import { ApplicationShell } from '../../../../platform/common/application/applic
 import { IApplicationShell } from '../../../../platform/common/application/types';
 import { ConfigurationService } from '../../../../platform/common/configuration/service.node';
 import { dispose } from '../../../../platform/common/utils/lifecycle';
-import { HttpClient } from '../../../../platform/common/net/httpClient';
 import { PersistentState, PersistentStateFactory } from '../../../../platform/common/persistentState';
 import { IFileSystemNode } from '../../../../platform/common/platform/types.node';
 import {
@@ -82,7 +81,6 @@ suite('ipywidget - Widget Script Source Provider', () => {
         disposables = dispose(disposables);
     });
     function createScripSourceProvider() {
-        const httpClient = mock(HttpClient);
         const resourceConverter = mock<ILocalResourceUriConverter>();
         const fs = mock<IFileSystemNode>();
         jupyterPaths = mock<JupyterPaths>();
@@ -90,7 +88,6 @@ suite('ipywidget - Widget Script Source Provider', () => {
             new NbExtensionsPathProvider(),
             instance(fs),
             instance(context),
-            instance(httpClient),
             instance(jupyterPaths),
             disposables
         );
@@ -106,7 +103,6 @@ suite('ipywidget - Widget Script Source Provider', () => {
             instance(kernel),
             instance(resourceConverter),
             instance(configService),
-            instance(httpClient),
             scriptSourceFactory,
             Promise.resolve(true),
             instance(cdnScriptProvider)

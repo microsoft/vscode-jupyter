@@ -5,13 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento } from 'vscode';
 import { IApplicationShell } from '../../../../platform/common/application/types';
 import { Telemetry } from '../../../../platform/common/constants';
-import {
-    GLOBAL_MEMENTO,
-    IConfigurationService,
-    IHttpClient,
-    IMemento,
-    WidgetCDNs
-} from '../../../../platform/common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IMemento, WidgetCDNs } from '../../../../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { noop } from '../../../../platform/common/utils/misc';
@@ -19,6 +13,7 @@ import { traceError, traceInfo, traceVerbose } from '../../../../platform/loggin
 import { ConsoleForegroundColors } from '../../../../platform/logging/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from '../types';
+import { HttpClient } from '../../../../platform/common/net/httpClient';
 
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/54941b7a4b54036d089652d91b39f937bde6b6cd/packages/html-manager/src/libembed-amd.ts#L33
 const unpgkUrl = 'https://unpkg.com/';
@@ -85,8 +80,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
-        @inject(IHttpClient) private readonly httpClient: IHttpClient
+        @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService
     ) {}
     public dispose() {
         this.cache.clear();
@@ -103,8 +97,9 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             return true;
         }
         const promise = (async () => {
-            const unpkgPromise = createDeferredFromPromise(this.httpClient.exists(`${unpgkUrl}${moduleName}`));
-            const jsDeliverPromise = createDeferredFromPromise(this.httpClient.exists(`${jsdelivrUrl}${moduleName}`));
+            const httpClient = new HttpClient();
+            const unpkgPromise = createDeferredFromPromise(httpClient.exists(`${unpgkUrl}${moduleName}`));
+            const jsDeliverPromise = createDeferredFromPromise(httpClient.exists(`${jsdelivrUrl}${moduleName}`));
             await Promise.race([unpkgPromise.promise, jsDeliverPromise.promise]);
             if (unpkgPromise.value || jsDeliverPromise.value) {
                 return true;
@@ -199,7 +194,8 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         // Make sure CDN has the item before returning it.
         try {
             const downloadUrl = await this.generateDownloadUri(moduleName, moduleVersion, cdn);
-            if (downloadUrl && (await this.httpClient.exists(downloadUrl))) {
+            const httpClient = new HttpClient();
+            if (downloadUrl && (await httpClient.exists(downloadUrl))) {
                 return downloadUrl;
             }
         } catch (ex) {

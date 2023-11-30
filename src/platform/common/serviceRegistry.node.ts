@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IExtensionSyncActivationService } from '../activation/types';
-import { IExperimentService, IHttpClient } from '../common/types';
+import { IExperimentService } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
 import { ClipboardService } from './application/clipboard';
@@ -27,13 +27,10 @@ import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { CryptoUtils } from './crypto';
 import { ExperimentService } from './experiments/service';
 import { FeatureManager } from './featureManager';
-import { BrowserService } from './net/browser';
-import { HttpClient } from './net/httpClient';
 import { PersistentStateFactory } from './persistentState';
 import { IS_WINDOWS } from './platform/constants.node';
 import {
     IAsyncDisposableRegistry,
-    IBrowserService,
     ICryptoUtils,
     IExtensions,
     IFeaturesManager,
@@ -62,8 +59,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, EncryptedStorage);
     serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
-    serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
-    serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);

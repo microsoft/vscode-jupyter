@@ -19,7 +19,6 @@ import {
     GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce
 } from './cdnWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider } from '../types';
-import { HttpClient } from '../../../../platform/common/net/httpClient';
 import { IApplicationShell } from '../../../../platform/common/application/types';
 import { dispose } from '../../../../platform/common/utils/lifecycle';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
@@ -43,14 +42,12 @@ suite('ipywidget - CDN', () => {
         configService = mock(ConfigurationService);
         settings = { widgetScriptSources: [] } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
-        const httpClient = mock(HttpClient);
         appShell = mock<IApplicationShell>();
         memento = mock<Memento>();
         scriptSourceProvider = new CDNWidgetScriptSourceProvider(
             instance(appShell),
             instance(memento),
-            instance(configService),
-            instance(httpClient)
+            instance(configService)
         );
     });
 

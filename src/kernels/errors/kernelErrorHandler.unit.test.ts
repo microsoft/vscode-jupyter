@@ -5,12 +5,12 @@
 
 import dedent from 'dedent';
 import { assert } from 'chai';
-import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { anything, capture, deepEqual, instance, mock, reset, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Common, DataScience } from '../../platform/common/utils/localize';
-import { IBrowserService, IConfigurationService, IExtensions } from '../../platform/common/types';
+import { IConfigurationService, IExtensions } from '../../platform/common/types';
 import {
     IKernelDependencyService,
     KernelConnectionMetadata,
@@ -48,7 +48,6 @@ suite('Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
     let dataScienceErrorHandler: DataScienceErrorHandler;
     let dependencyManager: IJupyterInterpreterDependencyManager;
-    let browser: IBrowserService;
     let configuration: IConfigurationService;
     let jupyterInterpreterService: JupyterInterpreterService;
     let kernelDependencyInstaller: IKernelDependencyService;
@@ -70,7 +69,6 @@ suite('Error Handler Unit Tests', () => {
         applicationShell = mock<IApplicationShell>();
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
-        browser = mock<IBrowserService>();
         uriStorage = mock<IJupyterServerUriStorage>();
         cmdManager = mock<ICommandManager>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
@@ -91,7 +89,6 @@ suite('Error Handler Unit Tests', () => {
         dataScienceErrorHandler = new DataScienceErrorHandlerNode(
             instance(applicationShell),
             instance(dependencyManager),
-            instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
             instance(uriStorage),
@@ -105,6 +102,8 @@ suite('Error Handler Unit Tests', () => {
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
+        reset(mockedVSCodeNamespaces.env);
+        when(mockedVSCodeNamespaces.env.openExternal(anything())).thenReturn(Promise.resolve(true));
     });
     const message = 'Test error message.';
 
@@ -1024,8 +1023,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             const displayedMessage = capture(applicationShell.showErrorMessage).first();
             assert.strictEqual(displayedMessage[0], message);
             if (linkInfo) {
-                verify(browser.launch(anything())).once();
-                assert.strictEqual(capture(browser.launch).first()[0], linkInfo);
+                verify(mockedVSCodeNamespaces.env.openExternal(anything())).once();
+                assert.strictEqual(capture(mockedVSCodeNamespaces.env.openExternal).first()[0].toString(), linkInfo);
             }
         }
     });

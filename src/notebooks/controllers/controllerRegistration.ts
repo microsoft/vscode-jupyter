@@ -20,7 +20,6 @@ import {
     IDisposableRegistry,
     IConfigurationService,
     IExtensionContext,
-    IBrowserService,
     IDisposable
 } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -368,7 +367,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.serviceContainer.get<IConfigurationService>(IConfigurationService),
                         this.serviceContainer.get<IDocumentManager>(IDocumentManager),
                         this.serviceContainer.get<IApplicationShell>(IApplicationShell),
-                        this.serviceContainer.get<IBrowserService>(IBrowserService),
                         this.extensionChecker,
                         this.serviceContainer,
                         this.serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider)

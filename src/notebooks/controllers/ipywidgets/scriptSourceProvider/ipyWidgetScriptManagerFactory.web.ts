@@ -3,7 +3,7 @@
 
 import { injectable, inject } from 'inversify';
 import { IFileSystem } from '../../../../platform/common/platform/types';
-import { IDisposableRegistry, IExtensionContext, IHttpClient } from '../../../../platform/common/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../../platform/common/types';
 import { IKernel } from '../../../../kernels/types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory } from '../types';
@@ -15,7 +15,6 @@ import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory } from '../type
 export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFactory {
     private readonly managers = new WeakMap<IKernel, IIPyWidgetScriptManager>();
     constructor(
-        @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
@@ -26,7 +25,7 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
                 kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
                 kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
             ) {
-                const scriptManager = new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context, this.fs);
+                const scriptManager = new RemoteIPyWidgetScriptManager(kernel, this.context, this.fs);
                 this.managers.set(kernel, scriptManager);
                 kernel.onDisposed(() => scriptManager.dispose(), this, this.disposables);
             } else {

@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, EventEmitter, WorkspaceConfiguration, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from './application/types';
 import { traceVerbose } from '../logging';
-import { launch } from './net/browser';
+import { openInBrowser } from './net/browser';
 import { Deprecated } from './utils/localize';
 import {
     DeprecatedFeatureInfo,
@@ -110,7 +110,7 @@ export class FeatureManager implements IFeaturesManager {
         }
         switch (option) {
             case moreInfo: {
-                launch(deprecatedInfo.moreInfoUrl);
+                openInBrowser(deprecatedInfo.moreInfoUrl);
                 break;
             }
             case doNotShowAgain: {

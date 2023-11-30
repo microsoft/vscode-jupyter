@@ -4,20 +4,14 @@
 import { inject, optional } from 'inversify';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
-import { CancellationTokenSource, ConfigurationTarget, Uri, workspace } from 'vscode';
+import { CancellationTokenSource, ConfigurationTarget, Uri, env, workspace } from 'vscode';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { traceError, traceWarning } from '../../platform/logging';
-import {
-    IBrowserService,
-    IConfigurationService,
-    IExtensions,
-    IsWebExtension,
-    Resource
-} from '../../platform/common/types';
+import { IConfigurationService, IExtensions, IsWebExtension, Resource } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { Commands } from '../../platform/common/constants';
@@ -79,7 +73,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         @inject(IJupyterInterpreterDependencyManager)
         @optional()
         private readonly dependencyManager: IJupyterInterpreterDependencyManager | undefined,
-        @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IKernelDependencyService)
         @optional()
@@ -542,7 +535,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         const buttons = moreInfoLink ? [Common.learnMore] : [];
         await this.applicationShell.showErrorMessage(message, ...buttons).then((selection) => {
             if (selection === Common.learnMore && moreInfoLink) {
-                this.browser.launch(moreInfoLink);
+                void env.openExternal(Uri.parse(moreInfoLink));
             }
         });
     }

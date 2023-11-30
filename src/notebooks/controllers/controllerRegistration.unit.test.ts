@@ -24,7 +24,7 @@ import {
     IVSCodeNotebook
 } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { IBrowserService, IConfigurationService, IDisposable, IExtensionContext } from '../../platform/common/types';
+import { IConfigurationService, IDisposable, IExtensionContext } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -116,7 +116,6 @@ suite('Controller Registration', () => {
     let languageService: NotebookCellLanguageService;
     let documentManager: IDocumentManager;
     let appShell: IApplicationShell;
-    let browser: IBrowserService;
     let serviceContainer: IServiceContainer;
     let displayDataProvider: IConnectionDisplayDataProvider;
     let addOrUpdateCalled = false;
@@ -136,7 +135,6 @@ suite('Controller Registration', () => {
         languageService = mock<NotebookCellLanguageService>();
         documentManager = mock<IDocumentManager>();
         appShell = mock<IApplicationShell>();
-        browser = mock<IBrowserService>();
         serviceContainer = mock<IServiceContainer>();
         displayDataProvider = mock<IConnectionDisplayDataProvider>();
         onDidChangeKernels = new EventEmitter<void>();
@@ -144,7 +142,6 @@ suite('Controller Registration', () => {
         when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(commandManager));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
-        when(serviceContainer.get<IBrowserService>(IBrowserService)).thenReturn(instance(browser));
         when(serviceContainer.get<IDocumentManager>(IDocumentManager)).thenReturn(instance(documentManager));
         when(serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider)).thenReturn(
             instance(displayDataProvider)
@@ -335,7 +332,6 @@ suite('Controller Registration', () => {
                         _arg12,
                         _arg13,
                         _arg14,
-                        _arg15
                     ) => {
                         if (connection === activePythonConnection) {
                             when(activeInterpreterController.id).thenReturn(id);
@@ -419,7 +415,6 @@ suite('Controller Registration', () => {
                         _arg12,
                         _arg13,
                         _arg14,
-                        _arg15
                     ) => {
                         if (connection === activePythonConnection) {
                             when(activeInterpreterController.id).thenReturn(id);

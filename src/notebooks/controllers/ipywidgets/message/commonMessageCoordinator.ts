@@ -10,7 +10,6 @@ import {
     IDisposableRegistry,
     IOutputChannel,
     IConfigurationService,
-    IHttpClient,
     IsWebExtension,
     IDisposable
 } from '../../../../platform/common/types';
@@ -364,7 +363,6 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IKernelProvider>(IKernelProvider),
                 this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
                 this.serviceContainer.get<IConfigurationService>(IConfigurationService),
-                this.serviceContainer.get<IHttpClient>(IHttpClient),
                 this.serviceContainer.get<IWidgetScriptSourceProviderFactory>(IWidgetScriptSourceProviderFactory),
                 this.serviceContainer.get<boolean>(IsWebExtension),
                 this.serviceContainer.get<CDNWidgetScriptSourceProvider>(CDNWidgetScriptSourceProvider)

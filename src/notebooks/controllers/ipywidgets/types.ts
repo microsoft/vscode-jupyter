@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event, Uri } from 'vscode';
-import { IDisposable, IHttpClient } from '../../../platform/common/types';
+import { IDisposable } from '../../../platform/common/types';
 import { IPyWidgetMessages } from '../../../messageTypes';
 import { IKernel } from '../../../kernels/types';
 
@@ -71,11 +71,7 @@ export interface IWidgetScriptSourceProvider extends IDisposable {
 export const IWidgetScriptSourceProviderFactory = Symbol('IWidgetScriptSourceProviderFactory');
 
 export interface IWidgetScriptSourceProviderFactory {
-    getProviders(
-        kernel: IKernel,
-        uriConverter: ILocalResourceUriConverter,
-        httpClient: IHttpClient
-    ): IWidgetScriptSourceProvider[];
+    getProviders(kernel: IKernel, uriConverter: ILocalResourceUriConverter): IWidgetScriptSourceProvider[];
 }
 
 /**
