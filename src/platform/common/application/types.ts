@@ -658,7 +658,6 @@ export interface IDocumentManager {
 export const IWorkspaceService = Symbol('IWorkspaceService');
 
 export interface IWorkspaceService {
-
     /**
      * Computes where the working directory of a file is
      * @param resource

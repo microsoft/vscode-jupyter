@@ -68,9 +68,9 @@ suite('Custom Environment Variables Provider', () => {
             return instance(workspaceConfig);
         });
         // when(mockedVSCodeNamespaces.workspace.getWorkspaceFolderIdentifier(anything())).thenCall(() => workspaceFolder.uri.fsPath);
-        when(mockedVSCodeNamespaces.workspace.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
-            instance(fsWatcher)
-        );
+        when(
+            mockedVSCodeNamespaces.workspace.createFileSystemWatcher(anything(), anything(), anything(), anything())
+        ).thenReturn(instance(fsWatcher));
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);

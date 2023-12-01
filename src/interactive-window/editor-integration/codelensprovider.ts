@@ -4,11 +4,7 @@
 import { inject, injectable, optional } from 'inversify';
 import * as vscode from 'vscode';
 
-import {
-    ICommandManager,
-    IDebugService,
-    IDocumentManager,
-} from '../../platform/common/application/types';
+import { ICommandManager, IDebugService, IDocumentManager } from '../../platform/common/application/types';
 import { ContextKey } from '../../platform/common/contextKey';
 import { dispose } from '../../platform/common/utils/lifecycle';
 
