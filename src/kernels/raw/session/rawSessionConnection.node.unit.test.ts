@@ -16,6 +16,7 @@ import { resolvableInstance } from '../../../test/datascience/helpers';
 import { waitForCondition } from '../../../test/common';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import { RawSessionConnection } from './rawSessionConnection.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 const nonSerializingKernel =
     require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -136,6 +137,9 @@ suite('Raw Session & Raw Kernel Connection', () => {
             ioPubHandlers.forEach((handler) => handler(instance(kernel), someIOPubMessage));
             return kernelInfoResponse;
         });
+        const deferred = createDeferred<void>();
+        disposables.push(new Disposable(() => deferred.resolve()));
+        when(kernel.sendControlMessage(anything(), true, true)).thenReturn({ done: deferred.promise } as any);
         when(kernel.connectionStatus).thenReturn('connected');
 
         nonSerializingKernel.KernelConnection = function (options: { serverSettings: ServerConnection.ISettings }) {
