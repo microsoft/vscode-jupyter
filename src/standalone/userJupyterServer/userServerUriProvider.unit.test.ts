@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import {
     IJupyterRequestCreator,
     IJupyterServerProviderRegistry,
@@ -43,6 +43,7 @@ import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPa
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IJupyterServerUri, JupyterServerCollection } from '../../api';
 import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('User Uri Provider', () => {
@@ -83,6 +84,10 @@ suite('User Uri Provider', () => {
     let token: CancellationToken;
     let tokenSource: CancellationTokenSource;
     setup(() => {
+        reset(mockedVSCodeNamespaces.window);
+        reset(mockedVSCodeNamespaces.workspace);
+        reset(mockedVSCodeNamespaces.notebooks);
+        reset(mockedVSCodeNamespaces.env);
         inputBox = {
             show: noop,
             onDidAccept: noop as any,
@@ -125,6 +130,8 @@ suite('User Uri Provider', () => {
         tokenSource = new CancellationTokenSource();
         token = tokenSource.token;
         disposables.push(tokenSource);
+        when(mockedVSCodeNamespaces.env.machineId).thenReturn('1');
+        when(mockedVSCodeNamespaces.env.openExternal(anything())).thenReturn(Promise.resolve(true));
         when(serverUriStorage.getAll()).thenResolve([]);
         when(applicationShell.createInputBox()).thenReturn(inputBox);
         when(jupyterConnection.validateRemoteUri(anything())).thenResolve();

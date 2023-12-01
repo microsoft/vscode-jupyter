@@ -4,12 +4,7 @@
 import type * as jupyterlabService from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../../platform/logging';
-import {
-    IDisposableRegistry,
-    IConfigurationService,
-    IHttpClient,
-    IDisposable
-} from '../../../../platform/common/types';
+import { IDisposableRegistry, IConfigurationService, IDisposable } from '../../../../platform/common/types';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../../../messageTypes';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { IKernel, IKernelProvider } from '../../../../kernels/types';
@@ -56,7 +51,6 @@ export class IPyWidgetScriptSource {
         private readonly kernelProvider: IKernelProvider,
         disposables: IDisposableRegistry,
         private readonly configurationSettings: IConfigurationService,
-        private readonly httpClient: IHttpClient,
         private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory,
         isWebExtension: boolean,
         private readonly cdnScriptProvider: CDNWidgetScriptSourceProvider
@@ -131,7 +125,6 @@ export class IPyWidgetScriptSource {
             this.kernel,
             this.uriConverter,
             this.configurationSettings,
-            this.httpClient,
             this.sourceProviderFactory,
             this.isWebViewOnline.promise,
             this.cdnScriptProvider

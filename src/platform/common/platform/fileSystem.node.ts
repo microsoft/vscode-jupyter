@@ -4,13 +4,12 @@
 import * as path from '../../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import glob from 'glob';
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
 import { TemporaryFile } from './types';
 import { IFileSystemNode } from './types.node';
 import { ENCODING, FileSystem as FileSystemBase } from './fileSystem';
-import { IHttpClient } from '../types';
 import { FileType, Uri } from 'vscode';
 import { getFilePath } from './fs-paths';
 
@@ -21,8 +20,8 @@ import { getFilePath } from './fs-paths';
 @injectable()
 export class FileSystem extends FileSystemBase implements IFileSystemNode {
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
-    constructor(@inject(IHttpClient) httpClient: IHttpClient) {
-        super(httpClient);
+    constructor() {
+        super();
         this.globFiles = promisify(glob);
     }
 

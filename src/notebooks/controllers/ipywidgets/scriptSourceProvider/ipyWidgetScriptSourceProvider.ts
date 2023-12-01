@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { traceError, traceInfo } from '../../../../platform/logging';
-import { WidgetCDNs, IConfigurationService, IHttpClient, IDisposable } from '../../../../platform/common/types';
+import { WidgetCDNs, IConfigurationService, IDisposable } from '../../../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
 import { IKernel } from '../../../../kernels/types';
@@ -38,16 +38,11 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly kernel: IKernel,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
         private readonly configurationSettings: IConfigurationService,
-        private readonly httpClient: IHttpClient,
         private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory,
         private readonly isWebViewOnline: Promise<boolean>,
         private readonly cdnScriptProvider: CDNWidgetScriptSourceProvider
     ) {
-        this.scriptProviders = this.sourceProviderFactory.getProviders(
-            this.kernel,
-            this.localResourceUriConverter,
-            this.httpClient
-        );
+        this.scriptProviders = this.sourceProviderFactory.getProviders(this.kernel, this.localResourceUriConverter);
         this.monitorKernel();
     }
     public dispose() {

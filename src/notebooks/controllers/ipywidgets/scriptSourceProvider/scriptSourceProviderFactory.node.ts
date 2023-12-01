@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { GLOBAL_MEMENTO, IConfigurationService, IHttpClient, IMemento } from '../../../../platform/common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IMemento } from '../../../../platform/common/types';
 import { IKernel } from '../../../../kernels/types';
 import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider.node';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
@@ -29,12 +29,12 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {}
 
-    public getProviders(kernel: IKernel, uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
+    public getProviders(kernel: IKernel, uriConverter: ILocalResourceUriConverter) {
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
         // Give preference to CDN.
         scriptProviders.push(
-            new CDNWidgetScriptSourceProvider(this.appShell, this.globalMemento, this.configurationSettings, httpClient)
+            new CDNWidgetScriptSourceProvider(this.appShell, this.globalMemento, this.configurationSettings)
         );
         switch (kernel.kernelConnectionMetadata.kind) {
             case 'connectToLiveRemoteKernel':

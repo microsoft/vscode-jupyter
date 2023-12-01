@@ -63,6 +63,7 @@ export function initialize() {
     generateMock('env');
     generateMock('debug');
     generateMock('scm');
+    generateMock('env');
     generateMock('notebooks');
     generateMock('commands');
     generateMock('extensions');

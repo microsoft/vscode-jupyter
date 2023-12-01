@@ -14,7 +14,7 @@ import {
     IVSCodeNotebook
 } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
-import { IBrowserService, IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import {
@@ -104,7 +104,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             const extensionChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
             const providerRegitry =
                 api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
-            const browser = api.serviceContainer.get<IBrowserService>(IBrowserService);
             const platform = api.serviceContainer.get<IPlatformService>(IPlatformService);
             const interpreters = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
             kernelConnectionMetadata = await getDefaultKernelConnection();
@@ -156,7 +155,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 configuration,
                 documentManager,
                 appShell,
-                browser,
                 extensionChecker,
                 api.serviceContainer,
                 displayDataProvider

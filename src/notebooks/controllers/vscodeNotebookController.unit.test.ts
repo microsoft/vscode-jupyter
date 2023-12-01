@@ -18,7 +18,6 @@ import {
     IVSCodeNotebook
 } from '../../platform/common/application/types';
 import {
-    IBrowserService,
     IConfigurationService,
     IDisposable,
     IExtensionContext,
@@ -50,7 +49,6 @@ suite(`Notebook Controller`, function () {
     let documentManager: IDocumentManager;
     let configService: IConfigurationService;
     let appShell: IApplicationShell;
-    let browser: IBrowserService;
     let serviceContainer: IServiceContainer;
     let providerRegistry: IJupyterServerProviderRegistry;
     let platform: IPlatformService;
@@ -78,7 +76,6 @@ suite(`Notebook Controller`, function () {
         documentManager = mock<IDocumentManager>();
         configService = mock<IConfigurationService>();
         appShell = mock<IApplicationShell>();
-        browser = mock<IBrowserService>();
         serviceContainer = mock<IServiceContainer>();
         providerRegistry = mock<IJupyterServerProviderRegistry>();
         platform = mock<IPlatformService>();
@@ -160,7 +157,6 @@ suite(`Notebook Controller`, function () {
             instance(configService),
             instance(documentManager),
             instance(appShell),
-            instance(browser),
             instance(extensionChecker),
             instance(serviceContainer),
             displayDataProvider

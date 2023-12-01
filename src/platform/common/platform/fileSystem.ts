@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { IHttpClient } from '../types';
 import { IFileSystem } from './types';
 import * as uriPath from '../../vscode-path/resources';
 import { isFileNotFoundError } from './errors';
 import { traceError } from '../../logging';
 import { computeHash } from '../crypto';
+import { HttpClient } from '../net/httpClient';
 
 export const ENCODING = 'utf8';
 
@@ -18,7 +18,7 @@ export const ENCODING = 'utf8';
 @injectable()
 export class FileSystem implements IFileSystem {
     protected vscfs: vscode.FileSystem;
-    constructor(@inject(IHttpClient) private readonly httpClient: IHttpClient) {
+    constructor() {
         this.vscfs = vscode.workspace.fs;
     }
 
@@ -71,7 +71,7 @@ export class FileSystem implements IFileSystem {
         // Special case. http/https always returns stat true even if the file doesn't
         // exist. In those two cases use the http client instead
         if (filename.scheme.toLowerCase() === 'http' || filename.scheme.toLowerCase() === 'https') {
-            return this.httpClient.exists(filename.toString());
+            return new HttpClient().exists(filename.toString());
         }
 
         // Otherwise use stat

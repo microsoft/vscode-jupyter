@@ -8,7 +8,6 @@ import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../
 import { traceError } from '../../platform/logging';
 import {
     BannerType,
-    IBrowserService,
     IDisposableRegistry,
     IJupyterExtensionBanner,
     IPersistentState,
@@ -19,6 +18,7 @@ import * as localize from '../../platform/common/utils/localize';
 import { MillisecondsInADay } from '../../platform/constants.node';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
+import { openInBrowser } from '../../platform/common/net/browser';
 
 export const ISurveyBanner = Symbol('ISurveyBanner');
 export interface ISurveyBanner extends IExtensionSyncActivationService, IJupyterExtensionBanner {}
@@ -99,7 +99,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
@@ -173,7 +172,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     private async launchSurvey(type: BannerType): Promise<void> {
-        this.browserService.launch(this.getSurveyLink(type));
+        openInBrowser(this.getSurveyLink(type));
     }
     private async disable(answer: DSSurveyLabelIndex, type: BannerType) {
         let monthsTillNextPrompt = answer === DSSurveyLabelIndex.Yes ? 6 : 4;

@@ -30,6 +30,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
 import { createActiveInterpreterController } from '../notebook/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
+import { HttpClient } from '../../../platform/common/net/httpClient';
 
 suite('IPyWidget Script Manager @widgets', function () {
     this.timeout(120_000);
@@ -50,7 +51,7 @@ suite('IPyWidget Script Manager @widgets', function () {
         await startJupyterServer();
         sinon.restore();
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        httpClient = api.serviceContainer.get<IHttpClient>(IHttpClient);
+        httpClient = new HttpClient();
         fs = api.serviceContainer.get<IFileSystem>(IFileSystem);
         context = api.serviceContainer.get<IExtensionContext>(IExtensionContext);
         widgetScriptManagerFactory =

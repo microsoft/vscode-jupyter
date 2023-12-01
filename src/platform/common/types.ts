@@ -189,7 +189,6 @@ export type DownloadOptions = {
     extension: 'tmp' | string;
 };
 
-export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {
     downloadFile(uri: string): Promise<Response>;
     /**
@@ -232,11 +231,6 @@ export interface IExtensions {
      */
     getExtension<T>(extensionId: string): Extension<T> | undefined;
     determineExtensionFromCallStack(stack?: string): { extensionId: string; displayName: string };
-}
-
-export const IBrowserService = Symbol('IBrowserService');
-export interface IBrowserService {
-    launch(url: string): void;
 }
 
 export const IJupyterExtensionBanner = Symbol('IJupyterExtensionBanner');

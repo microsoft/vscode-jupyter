@@ -33,7 +33,6 @@ import { dispose } from '../../platform/common/utils/lifecycle';
 import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
-    IBrowserService,
     IConfigurationService,
     IDisplayOptions,
     IDisposable,
@@ -86,6 +85,7 @@ import { LastCellExecutionTracker } from '../../kernels/execution/lastCellExecut
 import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessageHandler';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
+import { openInBrowser } from '../../platform/common/net/browser';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -162,7 +162,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         configuration: IConfigurationService,
         documentManager: IDocumentManager,
         appShell: IApplicationShell,
-        browser: IBrowserService,
         extensionChecker: IPythonExtensionChecker,
         serviceContainer: IServiceContainer,
         displayDataProvider: IConnectionDisplayDataProvider
@@ -180,7 +179,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             configuration,
             documentManager,
             appShell,
-            browser,
             extensionChecker,
             serviceContainer,
             displayDataProvider
@@ -199,7 +197,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly configuration: IConfigurationService,
         private readonly documentManager: IDocumentManager,
         private readonly appShell: IApplicationShell,
-        private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
         private readonly displayDataProvider: IConnectionDisplayDataProvider
@@ -417,7 +414,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                     if (selection !== Common.learnMore) {
                         return;
                     }
-                    return this.browser.launch('https://aka.ms/jupyterUnSupportedPythonKernelVersions');
+                    return openInBrowser('https://aka.ms/jupyterUnSupportedPythonKernelVersions');
                 }, noop);
         }
     }

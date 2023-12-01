@@ -3,7 +3,7 @@
 
 import { injectable, inject } from 'inversify';
 import { IFileSystemNode } from '../../../../platform/common/platform/types.node';
-import { IDisposableRegistry, IExtensionContext, IHttpClient } from '../../../../platform/common/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../../platform/common/types';
 import { IKernel } from '../../../../kernels/types';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory, INbExtensionsPathProvider } from '../types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
@@ -20,7 +20,6 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
         @inject(INbExtensionsPathProvider) private readonly nbExtensionsPathProvider: INbExtensionsPathProvider,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
@@ -30,7 +29,7 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
                 kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
                 kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
             ) {
-                const scriptManager = new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context, this.fs);
+                const scriptManager = new RemoteIPyWidgetScriptManager(kernel, this.context, this.fs);
                 this.managers.set(kernel, scriptManager);
                 kernel.onDisposed(() => scriptManager.dispose(), this, this.disposables);
             } else {
