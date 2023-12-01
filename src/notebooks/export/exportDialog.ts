@@ -3,11 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
-import { SaveDialogOptions, Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import { SaveDialogOptions, Uri, window } from 'vscode';
+import { IWorkspaceService } from '../../platform/common/application/types';
 import * as localize from '../../platform/common/utils/localize';
 import { ExportFormat, IExportDialog } from './types';
 import { IsWebExtension } from '../../platform/common/types';
+import { ServiceContainer } from '../../platform/ioc/container';
 
 // File extensions for each export method
 export const PDFExtensions = { PDF: ['pdf'] };
@@ -19,11 +20,7 @@ export const PythonExtensions = { Python: ['py'] };
  */
 @injectable()
 export class ExportDialog implements IExportDialog {
-    constructor(
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
-    ) {}
+    constructor(@inject(IsWebExtension) private readonly isWebExtension: boolean) {}
 
     public async showDialog(
         format: ExportFormat,
@@ -70,7 +67,7 @@ export class ExportDialog implements IExportDialog {
             filters: fileExtensions
         };
 
-        return this.applicationShell.showSaveDialog(options);
+        return window.showSaveDialog(options);
     }
 
     private async getDefaultUri(source: Uri | undefined, targetFileName: string): Promise<Uri | undefined> {
@@ -86,7 +83,8 @@ export class ExportDialog implements IExportDialog {
             source.scheme === 'vscode-interactive'
         ) {
             // Just combine the working directory with the file
-            return Uri.file(path.join(await this.workspaceService.computeWorkingDirectory(source), targetFileName));
+            const workspaceService = ServiceContainer.instance.get<IWorkspaceService>(IWorkspaceService);
+            return Uri.file(path.join(await workspaceService.computeWorkingDirectory(source), targetFileName));
         }
 
         // Otherwise split off the end of the path and combine it with the target file name

@@ -8,7 +8,7 @@ import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../../
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
+import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { traceError, traceVerbose } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
@@ -34,14 +34,13 @@ export class LocalKnownPathKernelSpecFinder
     private readonly _kernels = new Map<string, LocalKernelSpecConnectionMetadata>();
     constructor(
         @inject(IFileSystemNode) fs: IFileSystemNode,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(IMemento) @named(GLOBAL_MEMENTO) memento: Memento,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IApplicationEnvironment) env: IApplicationEnvironment
     ) {
-        super(fs, workspaceService, extensionChecker, memento, disposables, env, jupyterPaths);
+        super(fs, extensionChecker, memento, disposables, env, jupyterPaths);
     }
     activate(): void {
         this.listKernelsFirstTimeFromMemento(localKernelSpecsCacheKey())

@@ -28,7 +28,6 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { isEqual } from '../../platform/vscode-path/resources';
-import { IWorkspaceService } from '../../platform/common/application/types';
 import { instance } from 'ts-mockito';
 
 export async function openNotebook(ipynbFile: vscode.Uri) {
@@ -113,10 +112,10 @@ export async function setActiveInterpreter(
     interpreter: vscode.Uri | undefined
 ) {
     if (interpreter) {
-        const [pythonApi, api] = await Promise.all([apiProvider.getNewApi(), initialize()]);
+        const [pythonApi] = await Promise.all([apiProvider.getNewApi(), initialize()]);
         // if we have one workspace, then use the Uri of the workspace folder.
-        const workspace = api.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        resource = workspace.workspaceFolders?.length === 1 ? workspace.workspaceFolders[0].uri : resource;
+        resource =
+            vscode.workspace.workspaceFolders?.length === 1 ? vscode.workspace.workspaceFolders[0].uri : resource;
         await pythonApi?.environments.updateActiveEnvironmentPath(getFilePath(interpreter), resource);
     }
 }

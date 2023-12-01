@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Memento } from 'vscode';
+import { Memento, workspace } from 'vscode';
 import { noop } from './utils/misc';
 import { IExtensionSyncActivationService } from '../activation/types';
-import { IApplicationEnvironment, IWorkspaceService } from './application/types';
+import { IApplicationEnvironment } from './application/types';
 import { GLOBAL_MEMENTO, ICryptoUtils, IMemento, WORKSPACE_MEMENTO } from './types';
 import { inject, injectable, named } from 'inversify';
 import { getFilePath } from './platform/fs-paths';
+import { getRootFolder } from './application/workspace.base';
 
 const GlobalMementoKeyPrefixesToRemove = [
     'currentServerHash',
@@ -30,7 +31,6 @@ const GlobalMementoKeyPrefixesToRemove = [
 @injectable()
 export class OldCacheCleaner implements IExtensionSyncActivationService {
     constructor(
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
@@ -61,12 +61,13 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
     }
 
     async getUriAccountKey(): Promise<string> {
-        if (this.workspace.rootFolder) {
+        const rootFolder = getRootFolder();
+        if (rootFolder) {
             // Folder situation
-            return this.crypto.createHash(getFilePath(this.workspace.rootFolder), 'SHA-512');
-        } else if (this.workspace.workspaceFile) {
+            return this.crypto.createHash(getFilePath(rootFolder), 'SHA-512');
+        } else if (workspace.workspaceFile) {
             // Workspace situation
-            return this.crypto.createHash(getFilePath(this.workspace.workspaceFile), 'SHA-512');
+            return this.crypto.createHash(getFilePath(workspace.workspaceFile), 'SHA-512');
         }
         return this.appEnv.machineId; // Global key when no folder or workspace file
     }

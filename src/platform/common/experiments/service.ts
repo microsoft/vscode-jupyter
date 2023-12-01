@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Memento } from 'vscode';
+import { Memento, workspace } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
-import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
+import { IApplicationEnvironment } from '../application/types';
 import { JVSC_EXTENSION_ID, isPreReleaseVersion } from '../constants';
 import { traceInfo, traceVerbose } from '../../logging';
 import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IJupyterSettings, IMemento } from '../types';
@@ -40,7 +40,6 @@ export class ExperimentService implements IExperimentService {
     }
     constructor(
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
-        @inject(IWorkspaceService) readonly workspace: IWorkspaceService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento
     ) {
@@ -149,7 +148,7 @@ export class ExperimentService implements IExperimentService {
         return this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] }).features;
     }
     private logExperiments() {
-        const telemetrySettings = this.workspace.getConfiguration('telemetry');
+        const telemetrySettings = workspace.getConfiguration('telemetry');
         let experimentsDisabled = false;
         if (telemetrySettings && telemetrySettings.get<boolean>('enableTelemetry') === false) {
             traceInfo('Telemetry is disabled');

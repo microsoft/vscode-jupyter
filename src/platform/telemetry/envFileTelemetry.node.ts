@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IWorkspaceService } from '../common/application/types';
 import { Resource } from '../common/types';
 import { SystemVariables } from '../common/variables/systemVariables.node';
 
 import { sendTelemetryEvent } from '.';
 import { EventName } from './constants';
-import { Uri } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
 
 let _defaultEnvFileSetting: string | undefined;
@@ -19,14 +18,10 @@ export function sendFileCreationTelemetry() {
     }
 }
 
-export async function sendActivationTelemetry(
-    fileSystem: IFileSystem,
-    workspaceService: IWorkspaceService,
-    resource: Resource
-) {
+export async function sendActivationTelemetry(fileSystem: IFileSystem, resource: Resource) {
     if (shouldSendTelemetry()) {
-        const systemVariables = new SystemVariables(resource, undefined, workspaceService);
-        const envFilePath = systemVariables.resolveAny(defaultEnvFileSetting(workspaceService))!;
+        const systemVariables = new SystemVariables(resource, undefined);
+        const envFilePath = systemVariables.resolveAny(defaultEnvFileSetting())!;
         const envFileExists = await fileSystem.exists(Uri.file(envFilePath));
 
         if (envFileExists) {
@@ -45,9 +40,9 @@ function shouldSendTelemetry(): boolean {
     return !envFileTelemetrySent;
 }
 
-function defaultEnvFileSetting(workspaceService: IWorkspaceService) {
+function defaultEnvFileSetting() {
     if (!_defaultEnvFileSetting) {
-        const section = workspaceService.getConfiguration('python');
+        const section = workspace.getConfiguration('python');
         _defaultEnvFileSetting = section.inspect<string>('envFile')?.defaultValue || '';
     }
 

@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { IHttpClient } from '../types';
-import { IWorkspaceService } from '../application/types';
 import { traceVerbose } from '../../logging';
 import * as fetch from 'cross-fetch';
+import { workspace } from 'vscode';
 
 /**
  * Class used to verify http connections and make GET requests
  */
 @injectable()
 export class HttpClient implements IHttpClient {
-    public readonly requestOptions: RequestInit = {};
-    constructor(@inject(IWorkspaceService) workspaceService: IWorkspaceService) {
-        const proxy = workspaceService.getConfiguration('http').get('proxy', '');
+    private readonly requestOptions: RequestInit = {};
+    constructor() {
+        const proxy = workspace.getConfiguration('http').get('proxy', '');
         if (proxy) {
             this.requestOptions = { headers: { proxy } };
         }

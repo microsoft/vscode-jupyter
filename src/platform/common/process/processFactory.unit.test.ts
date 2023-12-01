@@ -3,30 +3,30 @@
 
 import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Disposable, Uri } from 'vscode';
-import { IWorkspaceService } from '../../../platform/common/application/types';
-
+import { Uri } from 'vscode';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { ProcessServiceFactory } from '../../../platform/common/process/processFactory.node';
-import { IDisposableRegistry } from '../../../platform/common/types';
+import { IDisposable } from '../../../platform/common/types';
 import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import { dispose, getDisposableTracker, setDisposableTracker } from '../utils/lifecycle';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
 suite('Process - ProcessServiceFactory', () => {
     let factory: ProcessServiceFactory;
     let envVariablesProvider: ICustomEnvironmentVariablesProvider;
-    let disposableRegistry: IDisposableRegistry;
-
+    let disposableRegistry: IDisposable[] = [];
+    let oldDisposable = getDisposableTracker();
     setup(() => {
         envVariablesProvider = mock(CustomEnvironmentVariablesProvider);
-        disposableRegistry = [];
-        const workspace = mock<IWorkspaceService>();
-        when(workspace.isTrusted).thenReturn(true);
-        factory = new ProcessServiceFactory(instance(envVariablesProvider), disposableRegistry, instance(workspace));
+        when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
+        factory = new ProcessServiceFactory(instance(envVariablesProvider));
+        setDisposableTracker(disposableRegistry);
     });
 
     teardown(() => {
-        (disposableRegistry as Disposable[]).forEach((d) => d.dispose());
+        setDisposableTracker(oldDisposable);
+        disposableRegistry = dispose(disposableRegistry);
     });
 
     [Uri.parse('test'), undefined].forEach((resource) => {
@@ -38,8 +38,7 @@ suite('Process - ProcessServiceFactory', () => {
             const proc = await factory.create(resource);
             verify(envVariablesProvider.getEnvironmentVariables(resource, 'RunNonPythonCode', anything())).once();
 
-            const disposables = disposableRegistry as Disposable[];
-            expect(disposables.length).equal(1);
+            expect(disposableRegistry.length).equal(1);
             expect(proc).instanceOf(ProcessService);
         });
     });

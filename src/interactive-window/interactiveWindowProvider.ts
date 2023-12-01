@@ -12,10 +12,11 @@ import {
     NotebookEditor,
     Uri,
     ViewColumn,
-    window
+    window,
+    workspace
 } from 'vscode';
 
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../platform/common/application/types';
 import { traceInfo, traceVerbose } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 
@@ -83,7 +84,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveControllerHelper) private readonly controllerHelper: IInteractiveControllerHelper
     ) {
@@ -146,7 +146,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
     }
 
     public async getOrCreate(resource: Resource, connection?: KernelConnectionMetadata): Promise<IInteractiveWindow> {
-        if (!this.workspaceService.isTrusted) {
+        if (!workspace.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
             // The commands the like should be disabled.
             throw new Error('Workspace not trusted');

@@ -2,41 +2,30 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../application/types';
 import { JupyterSettings } from '../configSettings';
 import { ConfigurationService } from './service.node';
-import { IExperimentService } from '../types';
-import { IServiceContainer } from '../../ioc/types';
+import { instance, mock, verify, when } from 'ts-mockito';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import { uriEquals } from '../../../test/datascience/helpers';
 
 suite('Configuration Service', () => {
     const resource = Uri.parse('a');
-    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    let experimentService: TypeMoq.IMock<IExperimentService>;
-    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let configService: ConfigurationService;
     setup(() => {
-        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        workspaceService
-            .setup((w) => w.getWorkspaceFolder(resource))
-            .returns(() => ({
-                uri: resource,
-                index: 0,
-                name: '0'
-            }));
-        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-        serviceContainer.setup((s) => s.get(IWorkspaceService)).returns(() => workspaceService.object);
-        serviceContainer.setup((s) => s.get(IExperimentService)).returns(() => experimentService.object);
-        configService = new ConfigurationService(serviceContainer.object);
+        when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(uriEquals(resource))).thenReturn({
+            uri: resource,
+            index: 0,
+            name: '0'
+        });
+        configService = new ConfigurationService();
     });
 
-    function setupConfigProvider(): TypeMoq.IMock<WorkspaceConfiguration> {
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceService
-            .setup((w) => w.getConfiguration(TypeMoq.It.isValue('jupyter'), TypeMoq.It.isValue(resource)))
-            .returns(() => workspaceConfig.object);
+    function setupConfigProvider(): WorkspaceConfiguration {
+        const workspaceConfig = mock<WorkspaceConfiguration>();
+        when(mockedVSCodeNamespaces.workspace.getConfiguration('jupyter', uriEquals(resource))).thenReturn(
+            instance(workspaceConfig)
+        );
         return workspaceConfig;
     }
 
@@ -47,70 +36,50 @@ suite('Configuration Service', () => {
 
     test('Do not update global settings if global value is already equal to the new value', async () => {
         const workspaceConfig = setupConfigProvider();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' }) as any);
-        workspaceConfig
-            .setup((w) => w.update('setting', 'globalValue', ConfigurationTarget.Global))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
+        when(workspaceConfig.inspect('setting')).thenReturn({ globalValue: 'globalValue' } as any);
+        when(workspaceConfig.update('setting', 'globalValue', ConfigurationTarget.Global)).thenResolve();
 
         await configService.updateSetting('setting', 'globalValue', resource, ConfigurationTarget.Global);
 
-        workspaceConfig.verifyAll();
+        verify(workspaceConfig.update('setting', 'globalValue', ConfigurationTarget.Global)).never();
     });
 
     test('Update global settings if global value is not equal to the new value', async () => {
         const workspaceConfig = setupConfigProvider();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' }) as any);
-        workspaceConfig
-            .setup((w) => w.update('setting', 'newGlobalValue', ConfigurationTarget.Global))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
+        when(workspaceConfig.inspect('setting')).thenReturn({ globalValue: 'globalValue' } as any);
+        when(workspaceConfig.update('setting', 'newGlobalValue', ConfigurationTarget.Global)).thenResolve();
 
         await configService.updateSetting('setting', 'newGlobalValue', resource, ConfigurationTarget.Global);
 
-        workspaceConfig.verifyAll();
+        verify(workspaceConfig.update('setting', 'newGlobalValue', ConfigurationTarget.Global)).once();
     });
 
     test('Do not update workspace settings if workspace value is already equal to the new value', async () => {
         const workspaceConfig = setupConfigProvider();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' }) as any);
-        workspaceConfig
-            .setup((w) => w.update('setting', 'workspaceValue', ConfigurationTarget.Workspace))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
+        when(workspaceConfig.inspect('setting')).thenReturn({ workspaceValue: 'workspaceValue' } as any);
+        when(workspaceConfig.update('setting', 'workspaceValue', ConfigurationTarget.Workspace)).thenReturn();
 
         await configService.updateSetting('setting', 'workspaceValue', resource, ConfigurationTarget.Workspace);
 
-        workspaceConfig.verifyAll();
+        verify(workspaceConfig.update('setting', 'workspaceValue', ConfigurationTarget.Workspace)).never();
     });
 
     test('Update workspace settings if workspace value is not equal to the new value', async () => {
         const workspaceConfig = setupConfigProvider();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' }) as any);
-        workspaceConfig
-            .setup((w) => w.update('setting', 'newWorkspaceValue', ConfigurationTarget.Workspace))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
+        when(workspaceConfig.inspect('setting')).thenReturn({ workspaceValue: 'workspaceValue' } as any);
+        when(workspaceConfig.update('setting', 'newWorkspaceValue', ConfigurationTarget.Workspace)).thenResolve();
 
         await configService.updateSetting('setting', 'newWorkspaceValue', resource, ConfigurationTarget.Workspace);
 
-        workspaceConfig.verifyAll();
+        verify(workspaceConfig.update('setting', 'newWorkspaceValue', ConfigurationTarget.Workspace)).once();
     });
 
     test('Do not update workspace folder settings if workspace folder value is already equal to the new value', async () => {
         const workspaceConfig = setupConfigProvider();
-        workspaceConfig
-            .setup((w) => w.inspect('setting'))
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' }) as any);
-        workspaceConfig
-            .setup((w) => w.update('setting', 'workspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
+        when(workspaceConfig.inspect('setting')).thenReturn({ workspaceFolderValue: 'workspaceFolderValue' } as any);
+        when(
+            workspaceConfig.update('setting', 'workspaceFolderValue', ConfigurationTarget.WorkspaceFolder)
+        ).thenResolve();
 
         await configService.updateSetting(
             'setting',
@@ -119,19 +88,15 @@ suite('Configuration Service', () => {
             ConfigurationTarget.WorkspaceFolder
         );
 
-        workspaceConfig.verifyAll();
+        verify(workspaceConfig.update('setting', 'workspaceFolderValue', ConfigurationTarget.WorkspaceFolder)).never();
     });
 
     test('Update workspace folder settings if workspace folder value is not equal to the new value', async () => {
         const workspaceConfig = setupConfigProvider();
-        workspaceConfig
-            .setup((w) => w.inspect('setting'))
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' }) as any);
-        workspaceConfig
-            .setup((w) => w.update('setting', 'newWorkspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
+        when(workspaceConfig.inspect('setting')).thenReturn({ workspaceFolderValue: 'workspaceFolderValue' } as any);
+        when(
+            workspaceConfig.update('setting', 'newWorkspaceFolderValue', ConfigurationTarget.WorkspaceFolder)
+        ).thenResolve();
 
         await configService.updateSetting(
             'setting',
@@ -140,6 +105,8 @@ suite('Configuration Service', () => {
             ConfigurationTarget.WorkspaceFolder
         );
 
-        workspaceConfig.verifyAll();
+        verify(
+            workspaceConfig.update('setting', 'newWorkspaceFolderValue', ConfigurationTarget.WorkspaceFolder)
+        ).once();
     });
 });

@@ -4,7 +4,7 @@
 import type { ServerConnection } from '@jupyterlab/services';
 import * as path from '../../platform/vscode-path/path';
 import { ConfigurationTarget, Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import { IApplicationShell } from '../../platform/common/application/types';
 import { IJupyterConnection } from '../types';
 import { getJupyterConnectionDisplayName } from './helpers';
 import { IConfigurationService, IDisposable, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
@@ -20,7 +20,6 @@ import { IJupyterRequestAgentCreator, IJupyterRequestCreator, JupyterServerProvi
 export function expandWorkingDir(
     workingDir: string | undefined,
     launchingFile: Resource,
-    workspace: IWorkspaceService,
     settings: IWatchableJupyterSettings
 ): string {
     if (workingDir) {
@@ -31,12 +30,6 @@ export function expandWorkingDir(
     // No working dir, just use the path of the launching file.
     if (launchingFile) {
         return path.dirname(getFilePath(launchingFile));
-    }
-
-    // No launching file or working dir. Just use the default workspace folder
-    const workspaceFolder = workspace.getWorkspaceFolder(undefined);
-    if (workspaceFolder) {
-        return getFilePath(workspaceFolder.uri);
     }
 
     return process.cwd();

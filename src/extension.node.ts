@@ -118,11 +118,10 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
     try {
         let api: IExtensionApi;
         let ready: Promise<void>;
-        let serviceContainer: IServiceContainer;
-        [api, ready, serviceContainer] = await activateUnsafe(context, stopWatch, durations);
+        [api, ready] = await activateUnsafe(context, stopWatch, durations);
         // Send the "success" telemetry only if activation did not fail.
         // Otherwise Telemetry is send via the error handler.
-        sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
+        sendStartupTelemetry(ready, durations, stopWatch)
             // Run in the background.
             .catch(noop);
         await ready;
@@ -225,7 +224,7 @@ async function handleError(ex: Error, startupDurations: typeof durations) {
     // Possible logger hasn't initialized either.
     console.error('extension activation failed', ex);
     traceError('extension activation failed', ex);
-    await sendErrorTelemetry(ex, startupDurations, activatedServiceContainer);
+    await sendErrorTelemetry(ex, startupDurations);
 }
 
 function notifyUser(msg: string) {

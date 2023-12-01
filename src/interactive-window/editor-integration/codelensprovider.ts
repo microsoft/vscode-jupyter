@@ -4,12 +4,7 @@
 import { inject, injectable, optional } from 'inversify';
 import * as vscode from 'vscode';
 
-import {
-    ICommandManager,
-    IDebugService,
-    IDocumentManager,
-    IWorkspaceService
-} from '../../platform/common/application/types';
+import { ICommandManager, IDebugService, IDocumentManager } from '../../platform/common/application/types';
 import { ContextKey } from '../../platform/common/contextKey';
 import { dispose } from '../../platform/common/utils/lifecycle';
 
@@ -49,12 +44,11 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IDebugService) private debugService: IDebugService,
-        @inject(IWorkspaceService) workspace: IWorkspaceService
+        @inject(IDebugService) private debugService: IDebugService
     ) {
         disposableRegistry.push(this);
         disposableRegistry.push(
-            workspace.onDidGrantWorkspaceTrust(() => {
+            vscode.workspace.onDidGrantWorkspaceTrust(() => {
                 this.activeCodeWatchers = dispose(this.activeCodeWatchers);
                 this.didChangeCodeLenses.fire();
             })

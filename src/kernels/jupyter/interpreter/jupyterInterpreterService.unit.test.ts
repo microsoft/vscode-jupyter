@@ -5,7 +5,7 @@ import { IDisposable } from '@fluentui/react';
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
@@ -18,6 +18,7 @@ import { JupyterInterpreterDependencyService } from './jupyterInterpreterDepende
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
 /* eslint-disable  */
 
@@ -52,17 +53,15 @@ suite('Jupyter Interpreter Service', () => {
         memento = mock(MockMemento);
         interpreterSelectionState = mock(JupyterInterpreterStateStore);
         appShell = mock<IApplicationShell>();
-        const workspace = mock<IWorkspaceService>();
         const onDidGrantWorkspaceTrust = new EventEmitter<void>();
         disposables.push(onDidGrantWorkspaceTrust);
-        when(workspace.onDidGrantWorkspaceTrust).thenReturn(onDidGrantWorkspaceTrust.event);
+        when(mockedVSCodeNamespaces.workspace.onDidGrantWorkspaceTrust).thenReturn(onDidGrantWorkspaceTrust.event);
         jupyterInterpreterService = new JupyterInterpreterService(
             instance(interpreterSelectionState),
             instance(interpreterSelector),
             instance(interpreterConfiguration),
             instance(interpreterService),
             instance(appShell),
-            instance(workspace),
             disposables
         );
         when(interpreterService.getInterpreterDetails(pythonInterpreter.uri)).thenResolve(pythonInterpreter);

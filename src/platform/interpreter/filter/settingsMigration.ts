@@ -1,45 +1,43 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
+import { injectable } from 'inversify';
+import { ConfigurationTarget, WorkspaceConfiguration, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { noop } from '../../common/utils/misc';
 
 @injectable()
 export class PythonEnvFilterSettingMigration implements IExtensionSyncActivationService {
-    constructor(@inject(IWorkspaceService) private readonly workspace: IWorkspaceService) {}
     public activate() {
         this.migrateFilters().catch(noop);
     }
     private async migrateFilters() {
         // If user opened a mult-root workspace with multiple folders then combine them all.
         // As there's no way to provide controllers per folder.
-        const workspaceFolders = Array.isArray(this.workspace.workspaceFolders) ? this.workspace.workspaceFolders : [];
+        const workspaceFolders = Array.isArray(workspace.workspaceFolders) ? workspace.workspaceFolders : [];
         await this.migrateWorkspaceFilters(
-            this.workspace.getConfiguration('jupyter', undefined),
+            workspace.getConfiguration('jupyter', undefined),
             ConfigurationTarget.Global
         );
         if (workspaceFolders.length === 0) {
             await this.migrateWorkspaceFilters(
-                this.workspace.getConfiguration('jupyter', undefined),
+                workspace.getConfiguration('jupyter', undefined),
                 ConfigurationTarget.Global
             );
         } else if (workspaceFolders.length === 1) {
             await this.migrateWorkspaceFilters(
-                this.workspace.getConfiguration('jupyter', workspaceFolders[0].uri),
+                workspace.getConfiguration('jupyter', workspaceFolders[0].uri),
                 ConfigurationTarget.WorkspaceFolder
             );
         } else {
             await this.migrateWorkspaceFilters(
-                this.workspace.getConfiguration('jupyter', undefined),
+                workspace.getConfiguration('jupyter', undefined),
                 ConfigurationTarget.Workspace
             );
             await Promise.all(
                 workspaceFolders.map((workspaceFolder) =>
                     this.migrateWorkspaceFilters(
-                        this.workspace.getConfiguration('jupyter', workspaceFolder.uri),
+                        workspace.getConfiguration('jupyter', workspaceFolder.uri),
                         ConfigurationTarget.WorkspaceFolder
                     )
                 )

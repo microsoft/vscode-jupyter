@@ -11,11 +11,7 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { PlotViewer as PlotViewerBase } from './plotViewer';
-import {
-    IApplicationShell,
-    IWebviewPanelProvider,
-    IWorkspaceService
-} from '../../../platform/common/application/types';
+import { IApplicationShell, IWebviewPanelProvider } from '../../../platform/common/application/types';
 import { IConfigurationService, IExtensionContext } from '../../../platform/common/types';
 
 @injectable()
@@ -23,12 +19,11 @@ export class PlotViewer extends PlotViewerBase {
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IFileSystemNode) private fsNode: IFileSystemNode,
         @inject(IExtensionContext) context: IExtensionContext
     ) {
-        super(provider, configuration, workspaceService, applicationShell, fsNode, context);
+        super(provider, configuration, applicationShell, fsNode, context);
     }
 
     protected override async exportPlot(payload: IExportPlotRequest): Promise<void> {

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { Event, EventEmitter, NotebookDocument, workspace } from 'vscode';
 import { IContributedKernelFinder } from '../../kernels/internalTypes';
 import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
@@ -11,7 +11,6 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
     ICommandManager,
-    IWorkspaceService,
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
@@ -86,7 +85,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(PythonEnvironmentFilter) private readonly pythonEnvFilter: PythonEnvironmentFilter,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -151,7 +149,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         // Restrict to only our notebook documents
         if (
             (document.notebookType !== JupyterNotebookView && document.notebookType !== InteractiveWindowView) ||
-            !this.workspace.isTrusted
+            !workspace.isTrusted
         ) {
             return;
         }
@@ -367,7 +365,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.serviceContainer.get<IExtensionContext>(IExtensionContext),
                         this.disposables,
                         this.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService),
-                        this.workspace,
                         this.serviceContainer.get<IConfigurationService>(IConfigurationService),
                         this.serviceContainer.get<IDocumentManager>(IDocumentManager),
                         this.serviceContainer.get<IApplicationShell>(IApplicationShell),

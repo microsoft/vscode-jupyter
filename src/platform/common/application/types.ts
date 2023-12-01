@@ -6,7 +6,6 @@ import {
     BreakpointsChangeEvent,
     CancellationToken,
     CompletionItemProvider,
-    ConfigurationChangeEvent,
     DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
@@ -17,8 +16,6 @@ import {
     Disposable,
     DocumentSelector,
     Event,
-    FileSystemWatcher,
-    GlobPattern,
     InputBox,
     InputBoxOptions,
     MessageItem,
@@ -52,11 +49,9 @@ import {
     WebviewPanel as vscodeWebviewPanel,
     WebviewView as vscodeWebviewView,
     WindowState,
-    WorkspaceConfiguration,
     WorkspaceEdit,
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
-    WorkspaceFoldersChangeEvent,
     NotebookDocument,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
@@ -663,167 +658,6 @@ export interface IDocumentManager {
 export const IWorkspaceService = Symbol('IWorkspaceService');
 
 export interface IWorkspaceService {
-    /**
-     * ~~The folder that is open in the editor. `undefined` when no folder
-     * has been opened.~~
-     *
-     * @readonly
-     */
-    readonly rootFolder: Uri | undefined;
-
-    /**
-     * List of workspace folders or `undefined` when no folder is open.
-     * *Note* that the first entry corresponds to the value of `rootPath`.
-     *
-     * @readonly
-     */
-    readonly workspaceFolders: readonly WorkspaceFolder[] | undefined;
-
-    /**
-     * The location of the workspace file, for example:
-     *
-     * `file:///Users/name/Development/myProject.code-workspace`
-     *
-     * or
-     *
-     * `untitled:1555503116870`
-     *
-     * for a workspace that is untitled and not yet saved.
-     *
-     * Depending on the workspace that is opened, the value will be:
-     *  * `undefined` when no workspace or  a single folder is opened
-     *  * the path of the workspace file as `Uri` otherwise. if the workspace
-     * is untitled, the returned URI will use the `untitled:` scheme
-     *
-     * The location can e.g. be used with the `vscode.openFolder` command to
-     * open the workspace again after it has been closed.
-     *
-     * **Example:**
-     * ```typescript
-     * vscode.commands.executeCommand('vscode.openFolder', uriOfWorkspace);
-     * ```
-     *
-     * **Note:** it is not advised to use `workspace.workspaceFile` to write
-     * configuration data into the file. You can use `workspace.getConfiguration().update()`
-     * for that purpose which will work both when a single folder is opened as
-     * well as an untitled or saved workspace.
-     */
-    readonly workspaceFile: Resource;
-
-    /**
-     * An event that is emitted when a workspace folder is added or removed.
-     */
-    readonly onDidChangeWorkspaceFolders: Event<WorkspaceFoldersChangeEvent>;
-
-    /**
-     * An event that is emitted when the [configuration](#WorkspaceConfiguration) changed.
-     */
-    readonly onDidChangeConfiguration: Event<ConfigurationChangeEvent>;
-    /**
-     * Whether a workspace folder exists
-     * @type {boolean}
-     * @memberof IWorkspaceService
-     */
-    readonly hasWorkspaceFolders: boolean;
-
-    /**
-     * Returns the [workspace folder](#WorkspaceFolder) that contains a given uri.
-     * * returns `undefined` when the given uri doesn't match any workspace folder
-     * * returns the *input* when the given uri is a workspace folder itself
-     *
-     * @param uri An uri.
-     * @return A workspace folder or `undefined`
-     */
-    getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined;
-
-    /**
-     * Generate a key that's unique to the workspace folder (could be fsPath).
-     * @param {(Uri | undefined)} resource
-     * @returns {string}
-     * @memberof IWorkspaceService
-     */
-    getWorkspaceFolderIdentifier(resource: Uri | undefined, defaultValue?: string): string;
-    /**
-     * Returns a path that is relative to the workspace folder or folders.
-     *
-     * When there are no [workspace folders](#workspace.workspaceFolders) or when the path
-     * is not contained in them, the input is returned.
-     *
-     * @param pathOrUri A path or uri. When a uri is given its [fsPath](#Uri.fsPath) is used.
-     * @param includeWorkspaceFolder When `true` and when the given path is contained inside a
-     * workspace folder the name of the workspace is prepended. Defaults to `true` when there are
-     * multiple workspace folders and `false` otherwise.
-     * @return A path relative to the root or the input.
-     */
-    asRelativePath(pathOrUri: string | Uri, includeWorkspaceFolder?: boolean): string;
-
-    /**
-     * Creates a file system watcher.
-     *
-     * A glob pattern that filters the file events on their absolute path must be provided. Optionally,
-     * flags to ignore certain kinds of events can be provided. To stop listening to events the watcher must be disposed.
-     *
-     * *Note* that only files within the current [workspace folders](#workspace.workspaceFolders) can be watched.
-     *
-     * @param globPattern A [glob pattern](#GlobPattern) that is applied to the absolute paths of created, changed,
-     * and deleted files. Use a [relative pattern](#RelativePattern) to limit events to a certain [workspace folder](#WorkspaceFolder).
-     * @param ignoreCreateEvents Ignore when files have been created.
-     * @param ignoreChangeEvents Ignore when files have been changed.
-     * @param ignoreDeleteEvents Ignore when files have been deleted.
-     * @return A new file system watcher instance.
-     */
-    createFileSystemWatcher(
-        globPattern: GlobPattern,
-        ignoreCreateEvents?: boolean,
-        ignoreChangeEvents?: boolean,
-        ignoreDeleteEvents?: boolean
-    ): FileSystemWatcher;
-
-    /**
-     * Find files across all [workspace folders](#workspace.workspaceFolders) in the workspace.
-     *
-     * @sample `findFiles('**∕*.js', '**∕node_modules∕**', 10)`
-     * @param include A [glob pattern](#GlobPattern) that defines the files to search for. The glob pattern
-     * will be matched against the file paths of resulting matches relative to their workspace. Use a [relative pattern](#RelativePattern)
-     * to restrict the search results to a [workspace folder](#WorkspaceFolder).
-     * @param exclude  A [glob pattern](#GlobPattern) that defines files and folders to exclude. The glob pattern
-     * will be matched against the file paths of resulting matches relative to their workspace.
-     * @param maxResults An upper-bound for the result.
-     * @param token A token that can be used to signal cancellation to the underlying search engine.
-     * @return A thenable that resolves to an array of resource identifiers. Will return no results if no
-     * [workspace folders](#workspace.workspaceFolders) are opened.
-     */
-    findFiles(
-        include: GlobPattern,
-        exclude?: GlobPattern,
-        maxResults?: number,
-        token?: CancellationToken
-    ): Thenable<Uri[]>;
-
-    /**
-     * Get a workspace configuration object.
-     *
-     * When a section-identifier is provided only that part of the configuration
-     * is returned. Dots in the section-identifier are interpreted as child-access,
-     * like `{ myExt: { setting: { doIt: true }}}` and `getConfiguration('myExt.setting').get('doIt') === true`.
-     *
-     * When a resource is provided, configuration scoped to that resource is returned.
-     *
-     * @param section A dot-separated identifier.
-     * @param resource A resource for which the configuration is asked for
-     * @return The full configuration or a subset.
-     */
-    getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration;
-    /**
-     * When true, the user has explicitly trusted the contents of the workspace.
-     */
-    readonly isTrusted: boolean;
-
-    /**
-     * Event that fires when the current workspace has been trusted.
-     */
-    readonly onDidGrantWorkspaceTrust: Event<void>;
-
     /**
      * Computes where the working directory of a file is
      * @param resource

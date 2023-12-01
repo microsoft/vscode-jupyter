@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationTokenSource, Memento, NotebookDocument } from 'vscode';
+import { CancellationTokenSource, Memento, NotebookDocument, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/logging';
 import {
@@ -32,7 +32,6 @@ export class ServerPreload implements IExtensionSyncActivationService {
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IJupyterServerConnector) private serverConnector: IJupyterServerConnector,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IRawNotebookSupportedService) private readonly rawKernelSupport: IRawNotebookSupportedService,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private mementoStorage: Memento,
@@ -73,7 +72,7 @@ export class ServerPreload implements IExtensionSyncActivationService {
     }
 
     private async createServerIfNecessary() {
-        if (!this.workspace.isTrusted || this.rawKernelSupport.isSupported) {
+        if (!workspace.isTrusted || this.rawKernelSupport.isSupported) {
             return;
         }
         const source = new CancellationTokenSource();

@@ -2,15 +2,16 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { TextDocument } from 'vscode';
+import { TextDocument, workspace } from 'vscode';
 import { sendActivationTelemetry } from '../../platform/telemetry/envFileTelemetry.node';
-import { IWorkspaceService, IDocumentManager } from '../../platform/common/application/types';
+import { IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { traceDecoratorError } from '../../platform/logging';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { noop } from '../../platform/common/utils/misc';
+import { getWorkspaceFolderIdentifier } from '../../platform/common/application/workspace.base';
 
 /**
  * Responsible for sending workspace level telemetry.
@@ -23,7 +24,6 @@ export class WorkspaceActivation implements IExtensionSyncActivationService {
 
     constructor(
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem
     ) {}
 
@@ -38,9 +38,8 @@ export class WorkspaceActivation implements IExtensionSyncActivationService {
         if (editor && !editor.document.isUntitled) {
             return editor.document.uri;
         }
-        return Array.isArray(this.workspaceService.workspaceFolders) &&
-            this.workspaceService.workspaceFolders.length > 0
-            ? this.workspaceService.workspaceFolders[0].uri
+        return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0
+            ? workspace.workspaceFolders[0].uri
             : undefined;
     }
 
@@ -52,7 +51,7 @@ export class WorkspaceActivation implements IExtensionSyncActivationService {
         }
         this.activatedWorkspaces.add(key);
 
-        await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
+        await sendActivationTelemetry(this.fileSystem, resource);
     }
 
     public onDocOpened(doc: TextDocument) {
@@ -61,18 +60,18 @@ export class WorkspaceActivation implements IExtensionSyncActivationService {
         }
         const key = this.getWorkspaceKey(doc.uri);
         // If we have opened a doc that does not belong to workspace, then do nothing.
-        if (key === '' && this.workspaceService.hasWorkspaceFolders) {
+        if (key === '' || (workspace.workspaceFolders || []).length === 0) {
             return;
         }
         if (this.activatedWorkspaces.has(key)) {
             return;
         }
-        const folder = this.workspaceService.getWorkspaceFolder(doc.uri);
+        const folder = workspace.getWorkspaceFolder(doc.uri);
         this.activateWorkspace(folder ? folder.uri : undefined).catch(noop);
     }
 
     protected addHandlers() {
-        this.disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
+        this.disposables.push(workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
     }
     protected addRemoveDocOpenedHandlers() {
         if (this.hasMultipleWorkspaces()) {
@@ -88,7 +87,7 @@ export class WorkspaceActivation implements IExtensionSyncActivationService {
     }
     protected onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
-        const workspaceKeys = this.workspaceService.workspaceFolders!.map((workspaceFolder) =>
+        const workspaceKeys = (workspace.workspaceFolders || [])!.map((workspaceFolder) =>
             this.getWorkspaceKey(workspaceFolder.uri)
         );
         const activatedWkspcKeys = Array.from(this.activatedWorkspaces.keys());
@@ -101,9 +100,9 @@ export class WorkspaceActivation implements IExtensionSyncActivationService {
         this.addRemoveDocOpenedHandlers();
     }
     protected hasMultipleWorkspaces() {
-        return this.workspaceService.hasWorkspaceFolders && this.workspaceService.workspaceFolders!.length > 1;
+        return (workspace.workspaceFolders || []).length > 1;
     }
     protected getWorkspaceKey(resource: Resource) {
-        return this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
+        return getWorkspaceFolderIdentifier(resource, '');
     }
 }

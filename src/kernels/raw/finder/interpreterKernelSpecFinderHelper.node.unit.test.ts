@@ -17,8 +17,8 @@ import { ITrustedKernelPaths } from './types';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { IJupyterKernelSpec } from '../../types';
 import { noop } from '../../../test/core';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
 suite('Interpreter Kernel Spec Finder Helper', () => {
     let helper: GlobalPythonKernelSpecFinder;
@@ -47,12 +47,10 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         interpreterService = mock<IInterpreterService>();
         extensionChecker = mock<IPythonExtensionChecker>();
         trustedKernels = mock<ITrustedKernelPaths>();
-        const workspaceService = mock<IWorkspaceService>();
-        when(workspaceService.workspaceFolders).thenReturn([]);
+        when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
         const knownPathKernelSpecFinder = mock<LocalKnownPathKernelSpecFinder>();
         helper = new GlobalPythonKernelSpecFinder(
             instance(interpreterService),
-            instance(workspaceService),
             instance(knownPathKernelSpecFinder),
             instance(extensionChecker),
             instance(trustedKernels)

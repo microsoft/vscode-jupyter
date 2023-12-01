@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import uuid from 'uuid/v4';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, Uri, workspace } from 'vscode';
 import { inject, injectable, optional } from 'inversify';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
 import {
     IDisposableRegistry,
@@ -23,6 +22,8 @@ import { IJupyterConnection } from '../../types';
 import { JupyterWaitForIdleError } from '../../errors/jupyterWaitForIdleError';
 import { expandWorkingDir } from '../jupyterUtils';
 import { noop } from '../../../platform/common/utils/misc';
+import { getRootFolder } from '../../../platform/common/application/workspace.base';
+import { computeWorkingDirectory } from '../../../platform/common/application/workspace.node';
 
 /**
  * Jupyter server implementation that uses the JupyterExecutionBase class to launch Jupyter.
@@ -37,7 +38,6 @@ export class JupyterServerHelper implements IJupyterServerHelper {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(INotebookStarter) @optional() private readonly notebookStarter: INotebookStarter | undefined,
         @inject(IJupyterSubCommandExecutionService)
@@ -47,18 +47,16 @@ export class JupyterServerHelper implements IJupyterServerHelper {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
-        if (workspace) {
-            workspace.onDidChangeConfiguration(
-                (e) => {
-                    if (e.affectsConfiguration('python.dataScience', undefined)) {
-                        // When config changes happen, recreate our commands.
-                        this.onSettingsChanged();
-                    }
-                },
-                this,
-                this.disposableRegistry
-            );
-        }
+        workspace.onDidChangeConfiguration(
+            (e) => {
+                if (e.affectsConfiguration('python.dataScience', undefined)) {
+                    // When config changes happen, recreate our commands.
+                    this.onSettingsChanged();
+                }
+            },
+            this,
+            this.disposableRegistry
+        );
         asyncRegistry.push(this);
     }
 
@@ -167,12 +165,12 @@ export class JupyterServerHelper implements IJupyterServerHelper {
         traceInfo(`Launching server`);
         const settings = this.configuration.getSettings(resource);
         const useDefaultConfig = settings.useDefaultConfigForJupyter;
-        const workingDir = await this.workspace.computeWorkingDirectory(resource);
+        const workingDir = await computeWorkingDirectory(resource);
         // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
+        const rootFolder = getRootFolder();
         const workingDirectory = expandWorkingDir(
             workingDir,
-            this.workspace.rootFolder ? urlPath.joinPath(this.workspace.rootFolder, `${uuid()}.txt`) : undefined,
-            this.workspace,
+            rootFolder ? urlPath.joinPath(rootFolder, `${uuid()}.txt`) : undefined,
             settings
         );
 

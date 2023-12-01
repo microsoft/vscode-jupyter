@@ -7,28 +7,25 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { PipEnvInstaller } from '../../../platform/interpreter/installer/pipEnvInstaller.node';
 import * as pipEnvHelper from '../../../platform/interpreter/installer/pipenv.node';
+import { when } from 'ts-mockito';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import { uriEquals } from '../../../test/datascience/helpers';
 
 suite('PipEnv installer', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let isPipenvEnvironmentRelatedToFolder: sinon.SinonStub;
-    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let pipEnvInstaller: PipEnvInstaller;
     const interpreterPath = Uri.file('path/to/interpreter');
     const workspaceFolder = Uri.file('path/to/folder');
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
-            .returns(() => workspaceService.object);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService)))
             .returns(() => interpreterService.object);
@@ -38,7 +35,7 @@ suite('PipEnv installer', async () => {
             .callsFake((interpreter: Uri, folder: Uri) => {
                 return Promise.resolve(interpreterPath === interpreter && folder === workspaceFolder);
             });
-        pipEnvInstaller = new PipEnvInstaller(serviceContainer.object, workspaceService.object);
+        pipEnvInstaller = new PipEnvInstaller(serviceContainer.object);
     });
 
     teardown(() => {
@@ -78,7 +75,9 @@ suite('PipEnv installer', async () => {
             .setup((p) => p.getActiveInterpreter(resource))
             .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, uri: interpreterPath } as any));
 
-        workspaceService.setup((w) => w.getWorkspaceFolder(resource)).returns(() => ({ uri: workspaceFolder }) as any);
+        when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(uriEquals(resource))).thenReturn({
+            uri: workspaceFolder
+        } as any);
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(true, 'Should be true');
     });
@@ -89,9 +88,9 @@ suite('PipEnv installer', async () => {
             .setup((p) => p.getActiveInterpreter(resource))
             .returns(() => Promise.resolve({ envType: EnvironmentType.Conda, uri: interpreterPath } as any));
 
-        workspaceService
-            .setup((w) => w.getWorkspaceFolder(resource))
-            .returns(() => ({ uri: { fsPath: workspaceFolder } }) as any);
+        when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(uriEquals(resource))).thenReturn({
+            uri: { fsPath: workspaceFolder }
+        } as any);
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(false, 'Should be false');
     });
@@ -102,9 +101,9 @@ suite('PipEnv installer', async () => {
             .setup((p) => p.getActiveInterpreter(resource))
             .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, uri: 'some random path' } as any));
 
-        workspaceService
-            .setup((w) => w.getWorkspaceFolder(resource))
-            .returns(() => ({ uri: { fsPath: workspaceFolder } }) as any);
+        when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(uriEquals(resource))).thenReturn({
+            uri: { fsPath: workspaceFolder }
+        } as any);
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(false, 'Should be false');
     });

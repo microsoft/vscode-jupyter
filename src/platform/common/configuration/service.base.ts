@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
-import { IServiceContainer } from '../../ioc/types';
-import { IWorkspaceService } from '../application/types';
+import { ConfigurationTarget, Uri, WorkspaceConfiguration, workspace } from 'vscode';
 import { JupyterSettings } from '../configSettings';
 import { isTestExecution, isUnitTestExecution } from '../constants';
 import { IConfigurationService, IWatchableJupyterSettings } from '../types';
@@ -12,10 +10,6 @@ import { IConfigurationService, IWatchableJupyterSettings } from '../types';
  * Wrapper around the workspace.getConfiguration api. Makes for typesafe access to configuration properties.
  */
 export abstract class BaseConfigurationService implements IConfigurationService {
-    protected readonly workspaceService: IWorkspaceService;
-    constructor(private readonly serviceContainer: IServiceContainer) {
-        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    }
     public abstract getSettings(resource?: Uri): IWatchableJupyterSettings;
 
     public async updateSectionSetting(
@@ -31,9 +25,9 @@ export abstract class BaseConfigurationService implements IConfigurationService 
         };
         let settingsInfo = defaultSetting;
         if (section === 'jupyter' && configTarget !== ConfigurationTarget.Global) {
-            settingsInfo = JupyterSettings.getSettingsUriAndTarget(resource, this.workspaceService);
+            settingsInfo = JupyterSettings.getSettingsUriAndTarget(resource);
         }
-        const configSection = this.workspaceService.getConfiguration(section, settingsInfo.uri);
+        const configSection = workspace.getConfiguration(section, settingsInfo.uri);
         const currentValue = configSection.inspect(setting);
 
         if (

@@ -26,8 +26,7 @@ import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
-    IVSCodeNotebook,
-    IWorkspaceService
+    IVSCodeNotebook
 } from '../../platform/common/application/types';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -72,7 +71,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IInteractiveWindowProvider)
         private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
@@ -84,8 +82,8 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook
     ) {
         this.statusProvider = new StatusProvider(applicationShell);
-        if (!this.workspace.isTrusted) {
-            this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
+        if (!workspace.isTrusted) {
+            workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
     }
     public activate() {
@@ -196,7 +194,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         this.disposables.forEach((d) => d.dispose());
     }
     private registerCommandsIfTrusted() {
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             return;
         }
         this.registerCommand(Commands.RunAllCells, this.runAllCells);

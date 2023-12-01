@@ -16,7 +16,7 @@ import {
 } from './types';
 import { logValue, traceDecoratorVerbose } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell } from '../../common/application/types';
 import { traceError } from '../../logging';
 import { IProcessServiceFactory } from '../../common/process/types.node';
 import {
@@ -74,8 +74,6 @@ export class DataScienceInstaller {
 
     protected readonly configService: IConfigurationService;
 
-    protected readonly workspaceService: IWorkspaceService;
-
     private readonly productService: IProductService;
 
     protected readonly persistentStateFactory: IPersistentStateFactory;
@@ -86,7 +84,6 @@ export class DataScienceInstaller {
     ) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.productService = serviceContainer.get<IProductService>(IProductService);
         this.persistentStateFactory = serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }

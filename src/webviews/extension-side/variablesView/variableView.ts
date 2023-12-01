@@ -14,7 +14,6 @@ import {
     IJupyterVariablesResponse
 } from '../../../kernels/variables/types';
 import {
-    IWorkspaceService,
     IWebviewViewProvider,
     IApplicationShell,
     ICommandManager,
@@ -47,7 +46,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     }
     constructor(
         configuration: IConfigurationService,
-        workspaceService: IWorkspaceService,
         provider: IWebviewViewProvider,
         context: IExtensionContext,
         private readonly variables: IJupyterVariables,
@@ -60,14 +58,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly experiments: IExperimentService
     ) {
         const variableViewDir = joinPath(context.extensionUri, 'dist', 'webviews', 'webview-side', 'viewers');
-        super(
-            configuration,
-            workspaceService,
-            (c, d) => new VariableViewMessageListener(c, d),
-            provider,
-            variableViewDir,
-            [joinPath(variableViewDir, 'variableView.js')]
-        );
+        super(configuration, (c, d) => new VariableViewMessageListener(c, d), provider, variableViewDir, [
+            joinPath(variableViewDir, 'variableView.js')
+        ]);
 
         // Sign up if the active variable view notebook is changed, restarted or updated
         this.notebookWatcher.onDidFinishExecutingActiveNotebook(this.activeNotebookExecuted, this, this.disposables);

@@ -9,7 +9,7 @@ import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
+import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
@@ -60,7 +60,6 @@ export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKern
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IFileSystemNode) fs: IFileSystemNode,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(LocalKnownPathKernelSpecFinder)
@@ -70,11 +69,10 @@ export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKern
         @inject(IApplicationEnvironment) env: IApplicationEnvironment,
         @inject(ITrustedKernelPaths) trustedKernels: ITrustedKernelPaths
     ) {
-        super(fs, workspaceService, extensionChecker, memento, disposables, env, jupyterPaths);
+        super(fs, extensionChecker, memento, disposables, env, jupyterPaths);
 
         this.globalPythonKernelSpecFinder = new GlobalPythonKernelSpecFinder(
             this.interpreterService,
-            this.workspaceService,
             this.kernelSpecsFromKnownLocations,
             this.extensionChecker,
             trustedKernels

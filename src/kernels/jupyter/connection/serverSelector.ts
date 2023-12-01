@@ -4,10 +4,8 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
 import { inject, injectable } from 'inversify';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
 import { IJupyterServerProviderRegistry, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
-import { IDisposableRegistry } from '../../../platform/common/types';
 import { JupyterConnection } from './jupyterConnection';
 import { JVSC_EXTENSION_ID, TestingKernelPickerProviderId } from '../../../platform/common/constants';
 
@@ -28,8 +26,6 @@ export class JupyterServerSelector {
     constructor(
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
-        @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry,
         @inject(IJupyterServerProviderRegistry) readonly serverProviderRegistry: IJupyterServerProviderRegistry
     ) {}
 

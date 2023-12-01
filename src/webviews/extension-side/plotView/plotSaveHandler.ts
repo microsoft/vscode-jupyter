@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCellOutput, NotebookDocument, Uri } from 'vscode';
+import { NotebookCellOutput, NotebookDocument, Uri, workspace } from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
-import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types';
@@ -23,8 +23,7 @@ export const imageExtensionForMimeType: Record<string, string> = {
 export class PlotSaveHandler implements IPlotSaveHandler {
     constructor(
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
 
     public async savePlot(notebook: NotebookDocument, outputId: string, mimeType: string) {
@@ -64,7 +63,7 @@ export class PlotSaveHandler implements IPlotSaveHandler {
             filters['Images'] = [imageExtension];
         }
         const workspaceUri =
-            (this.workspace.workspaceFolders?.length || 0) > 0 ? this.workspace.workspaceFolders![0].uri : undefined;
+            (workspace.workspaceFolders?.length || 0) > 0 ? workspace.workspaceFolders![0].uri : undefined;
         const fileName = `output.${imageExtension}`;
         const defaultUri = workspaceUri ? Uri.joinPath(workspaceUri, fileName) : Uri.file(fileName);
         return this.shell.showSaveDialog({

@@ -13,19 +13,18 @@ import {
     Uri,
     WorkspaceConfiguration
 } from 'vscode';
-import { IWorkspaceService } from '../common/application/types';
 import { dispose } from '../common/utils/lifecycle';
 import { IPlatformService } from '../common/platform/types';
 import { IFileSystemNode } from '../common/platform/types.node';
 import { IDisposable } from '../common/types';
 import { ignoreListSettingName, ReservedNamedProvider } from './reservedNamedProvider.node';
 import * as path from '../vscode-path/path';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 suite('Reserved Names Provider', () => {
     let disposables: IDisposable[] = [];
     let reservedNamedProvider: ReservedNamedProvider;
     let memento: Memento;
-    let workspace: IWorkspaceService;
     let platform: IPlatformService;
     let fs: IFileSystemNode;
     let workspaceConfig: WorkspaceConfiguration;
@@ -33,17 +32,16 @@ suite('Reserved Names Provider', () => {
     const defaultIgnoreList = ['**/site-packages/**', '**/lib/python/**', '**/lib64/python/**'];
     setup(() => {
         memento = mock<Memento>();
-        workspace = mock<IWorkspaceService>();
         platform = mock<IPlatformService>();
         fs = mock<IFileSystemNode>();
         workspaceConfig = mock<WorkspaceConfiguration>();
         when(memento.update(anything(), anything())).thenResolve();
-        when(workspace.getConfiguration('jupyter')).thenReturn(instance(workspaceConfig));
+        when(mockedVSCodeNamespaces.workspace.getConfiguration('jupyter')).thenReturn(instance(workspaceConfig));
         when(workspaceConfig.get(ignoreListSettingName, anything())).thenReturn(defaultIgnoreList);
         when(memento.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue as any);
         settingsChanged = new EventEmitter<ConfigurationChangeEvent>();
         disposables.push(settingsChanged);
-        when(workspace.onDidChangeConfiguration).thenReturn(settingsChanged.event);
+        when(mockedVSCodeNamespaces.workspace.onDidChangeConfiguration).thenReturn(settingsChanged.event);
         createProvider();
     });
     teardown(() => {
@@ -52,7 +50,6 @@ suite('Reserved Names Provider', () => {
     function createProvider() {
         reservedNamedProvider = new ReservedNamedProvider(
             instance(memento),
-            instance(workspace),
             instance(platform),
             disposables,
             instance(fs)

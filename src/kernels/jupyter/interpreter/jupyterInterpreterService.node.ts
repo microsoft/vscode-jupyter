@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Uri, workspace } from 'vscode';
 import { raceCancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -12,7 +12,7 @@ import { JupyterInterpreterDependencyService } from './jupyterInterpreterDepende
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 import { JupyterInterpreterDependencyResponse } from '../types';
-import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IDisposableRegistry } from '../../../platform/common/types';
 
@@ -37,10 +37,9 @@ export class JupyterInterpreterService {
         private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        this.workspace.onDidGrantWorkspaceTrust(
+        workspace.onDidGrantWorkspaceTrust(
             () => {
                 if (this.getInitialInterpreterPromiseFailed) {
                     this.getInitialInterpreterPromise = undefined;

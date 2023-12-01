@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, Uri } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
+import { EventEmitter, Uri, workspace } from 'vscode';
 import { dispose } from '../../common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../common/types';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -23,13 +22,12 @@ export class PythonEnvironmentFilter implements IDisposable {
         return this._onDidChange.event;
     }
     constructor(
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IsWebExtension) private readonly webExtension: boolean
     ) {
         disposables.push(this);
         if (!this.webExtension) {
-            this.workspace.onDidChangeConfiguration(
+            workspace.onDidChangeConfiguration(
                 (e) => {
                     e.affectsConfiguration('jupyter.kernels.excludePythonEnvironments') && this._onDidChange.fire();
                 },
@@ -58,15 +56,15 @@ export class PythonEnvironmentFilter implements IDisposable {
     private getExcludedPythonEnvironments(): string[] {
         // If user opened a mult-root workspace with multiple folders then combine them all.
         // As there's no way to provide controllers per folder.
-        if (!this.workspace.workspaceFolders || this.workspace.workspaceFolders.length === 0) {
-            return this.workspace
+        if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
+            return workspace
                 .getConfiguration('jupyter', undefined)
                 .get<string[]>('kernels.excludePythonEnvironments', []);
         }
         const filters: string[] = [];
-        this.workspace.workspaceFolders.forEach((item) => {
+        workspace.workspaceFolders.forEach((item) => {
             filters.push(
-                ...this.workspace
+                ...workspace
                     .getConfiguration('jupyter', item.uri)
                     .get<string[]>('kernels.excludePythonEnvironments', [])
             );

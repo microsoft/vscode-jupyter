@@ -4,13 +4,7 @@
 import { Uri, WebviewView as vscodeWebviewView } from 'vscode';
 
 import { WebviewHost } from './webviewHost';
-import {
-    IWebviewView,
-    IWebviewViewMessageListener,
-    IWorkspaceService,
-    IWebviewViewProvider,
-    IWebview
-} from '../common/application/types';
+import { IWebviewView, IWebviewViewMessageListener, IWebviewViewProvider, IWebview } from '../common/application/types';
 import { IConfigurationService, IDisposable, Resource } from '../common/types';
 import { IJupyterExtraSettings } from './types';
 
@@ -28,7 +22,6 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
 
     constructor(
         protected override configService: IConfigurationService,
-        protected override workspaceService: IWorkspaceService,
         messageListenerCtor: (
             callback: (message: string, payload: {}) => void,
             disposed: () => void
@@ -37,7 +30,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         rootPath: Uri,
         scripts: Uri[]
     ) {
-        super(configService, workspaceService, rootPath, scripts);
+        super(configService, rootPath, scripts);
 
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.dispose.bind(this));

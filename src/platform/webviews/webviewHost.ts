@@ -8,9 +8,10 @@ import {
     Uri,
     WebviewPanel as vscodeWebviewPanel,
     WebviewView as vscodeWebviewView,
+    workspace,
     WorkspaceConfiguration
 } from 'vscode';
-import { IWebview, IWorkspaceService } from '../common/application/types';
+import { IWebview } from '../common/application/types';
 import { DefaultTheme, PythonExtension } from '../common/constants';
 import { Resource, IConfigurationService, IDisposable } from '../common/types';
 import { Deferred, createDeferred } from '../common/utils/async';
@@ -52,12 +53,11 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     constructor(
         protected configService: IConfigurationService,
-        protected workspaceService: IWorkspaceService,
         protected rootPath: Uri,
         protected scripts: Uri[]
     ) {
         // Listen for settings changes from vscode.
-        this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
+        this._disposables.push(workspace.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
 
         // Listen for settings changes
         this._disposables.push(
@@ -172,7 +172,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         if (this.webview === undefined) {
             // Get our settings to pass along to the react control
             const settings = await this.generateDataScienceExtraSettings();
-            const workspaceFolder = this.workspaceService.getWorkspaceFolder(cwd)?.uri;
+            const workspaceFolder = workspace.getWorkspaceFolder(cwd)?.uri;
 
             this.webview = await this.provideWebview(cwd, settings, workspaceFolder, webView);
 
@@ -189,8 +189,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     protected async generateDataScienceExtraSettings(): Promise<IJupyterExtraSettings> {
         const resource = this.owningResource;
-        const editor = this.workspaceService.getConfiguration('editor');
-        const workbench = this.workspaceService.getConfiguration('workbench');
+        const editor = workspace.getConfiguration('editor');
+        const workbench = workspace.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         const pythonExt = extensions.getExtension(PythonExtension);
         const sendableSettings = JSON.parse(JSON.stringify(this.configService.getSettings(resource)));

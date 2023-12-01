@@ -47,7 +47,6 @@ export class JupyterSessionWrapper
         session: Session.ISessionConnection,
         private readonly resource: Resource,
         private readonly kernelConnectionMetadata: KernelConnectionMetadata,
-        public readonly workingDirectory: Uri,
         private readonly kernelService: IJupyterKernelService | undefined,
         private readonly creator: KernelActionSource
     ) {

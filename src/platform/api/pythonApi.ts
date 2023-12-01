@@ -3,12 +3,12 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { EventEmitter, Event, Uri, ExtensionMode, CancellationTokenSource, CancellationToken } from 'vscode';
+import { EventEmitter, Event, Uri, ExtensionMode, CancellationTokenSource, CancellationToken, workspace } from 'vscode';
 import { IPythonApiProvider, IPythonExtensionChecker, PythonApi, PythonEnvironment_PythonApi } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
+import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, IExtensionContext } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
@@ -31,6 +31,7 @@ import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExp
 import { getOSType, OSType } from '../common/utils/platform';
 import { SemVer } from 'semver';
 import { getEnvironmentType } from '../interpreter/helpers';
+import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -213,8 +214,7 @@ export class OldPythonApiProvider implements IPythonApiProvider {
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
     ) {
         const previouslyInstalled = this.extensionChecker.isPythonExtensionInstalled;
         if (!previouslyInstalled) {
@@ -247,7 +247,7 @@ export class OldPythonApiProvider implements IPythonApiProvider {
     public setApi(api: PythonApi): void {
         // Never allow accessing python API (we don't want to ever use the API and run code in untrusted API).
         // Don't assume Python API will always be disabled in untrusted workspaces.
-        if (this.api.resolved || !this.workspace.isTrusted) {
+        if (this.api.resolved || !workspace.isTrusted) {
             return;
         }
         this.api.resolve(api);
@@ -316,7 +316,6 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         // Listen for the python extension being installed or uninstalled
@@ -345,7 +344,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     // python extension
     public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
         // If workspace is not trusted, then don't show prompt
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             return;
         }
 
@@ -418,7 +417,6 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
@@ -436,15 +434,15 @@ export class InterpreterService implements IInterpreterService {
                 );
             }
         }
-        this.workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders, this, disposables);
-        this.workspace.onDidGrantWorkspaceTrust(() => this.refreshInterpreters(true), this, this.disposables);
+        workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders, this, disposables);
+        workspace.onDidGrantWorkspaceTrust(() => this.refreshInterpreters(true), this, this.disposables);
         this.disposables.push(this._onDidChangeStatus);
         this.disposables.push(this.refreshPromises);
         this.disposables.push(this.onResumeEnvDetection);
         this.refreshPromises.onStateChange(() => {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
-        this.workspace.onDidGrantWorkspaceTrust(
+        workspace.onDidGrantWorkspaceTrust(
             () => this.populateCachedListOfInterpreters(true).catch(noop),
             this,
             this.disposables
@@ -535,21 +533,23 @@ export class InterpreterService implements IInterpreterService {
     private workspaceCachedActiveInterpreter = new Set<string>();
     private lastLoggedResourceAndInterpreterId = '';
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             return;
         }
         const stopWatch = new StopWatch();
         this.hookupOnDidChangeInterpreterEvent();
         // If there's only one workspace folder, and we don't have a resource, then use the
         // workspace uri of the single workspace folder.
-        if (!resource && this.workspace.workspaceFolders?.length === 1) {
-            resource = this.workspace.workspaceFolders[0].uri;
+        if (!resource && workspace.workspaceFolders?.length === 1) {
+            resource = workspace.workspaceFolders[0].uri;
         }
         // We need a valid resource, thats associated with a workspace folder
-        if (this.workspace.workspaceFolders?.length) {
-            resource = this.workspace.getWorkspaceFolder(resource)?.uri || this.workspace.workspaceFolders[0].uri;
+        if (workspace.workspaceFolders?.length) {
+            resource =
+                (resource ? workspace.getWorkspaceFolder(resource)?.uri : undefined) ||
+                workspace.workspaceFolders[0].uri;
         }
-        const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
+        const workspaceId = getWorkspaceFolderIdentifier(resource);
         const promise = this.getApi().then(async (api) => {
             if (!api) {
                 return;
@@ -604,7 +604,7 @@ export class InterpreterService implements IInterpreterService {
         pythonPath: Uri | { path: string } | InterpreterId,
         token?: CancellationToken
     ): Promise<undefined | PythonEnvironment> {
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             throw new Error('Unable to determine active Interpreter as Workspace is not trusted');
         }
 
@@ -764,7 +764,7 @@ export class InterpreterService implements IInterpreterService {
         cancelToken: CancellationToken,
         recursiveCounter = 0
     ): Promise<PythonEnvironment[]> {
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             return [];
         }
 

@@ -20,11 +20,7 @@ import {
 import { isValidSliceExpression, preselectedSliceExpression } from '../../webview-side/data-explorer/helpers';
 import { CheckboxState } from '../../../platform/telemetry/constants';
 import { IKernel } from '../../../kernels/types';
-import {
-    IWebviewPanelProvider,
-    IWorkspaceService,
-    IApplicationShell
-} from '../../../platform/common/application/types';
+import { IWebviewPanelProvider, IApplicationShell } from '../../../platform/common/application/types';
 import { HelpLinks, Telemetry } from '../../../platform/common/constants';
 import { traceError, traceInfo } from '../../../platform/logging';
 import {
@@ -75,7 +71,6 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
         @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler,
@@ -85,7 +80,6 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         super(
             configuration,
             provider,
-            workspaceService,
             (c, v, d) => new DataViewerMessageListener(c, v, d),
             dataExplorerDir,
             [joinPath(dataExplorerDir, 'dataExplorer.js')],

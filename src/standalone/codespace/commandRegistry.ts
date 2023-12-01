@@ -4,16 +4,15 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { Commands } from '../../platform/common/constants';
-import { commands } from 'vscode';
+import { commands, workspace } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
 
 @injectable()
 export class CommandRegistry implements IDisposable, IExtensionSyncActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
     activate() {
@@ -24,7 +23,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private registerCommandsIfTrusted() {
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             return;
         }
 

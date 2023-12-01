@@ -9,7 +9,7 @@ import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
-import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import { IApplicationShell } from '../../platform/common/application/types';
 import { traceError, traceWarning } from '../../platform/logging';
 import {
     IBrowserService,
@@ -84,7 +84,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         @inject(IKernelDependencyService)
         @optional()
         private readonly kernelDependency: IKernelDependencyService | undefined,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IJupyterServerProviderRegistry)
         private readonly jupyterUriProviderRegistration: IJupyterServerProviderRegistry,
@@ -488,7 +487,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         } else {
             const files = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
             const failureInfo = analyzeKernelErrors(
-                this.workspaceService.workspaceFolders || [],
+                workspace.workspaceFolders || [],
                 err,
                 getDisplayNameOrNameOfKernelConnection(kernelConnection),
                 kernelConnection.interpreter?.sysPrefix,

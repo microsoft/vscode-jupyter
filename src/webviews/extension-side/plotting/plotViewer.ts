@@ -8,11 +8,7 @@ import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
 import { IExportPlotRequest, IPlotViewer, IPlotViewerMapping, PlotViewerMessages } from './types';
-import {
-    IWebviewPanelProvider,
-    IWorkspaceService,
-    IApplicationShell
-} from '../../../platform/common/application/types';
+import { IWebviewPanelProvider, IApplicationShell } from '../../../platform/common/application/types';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import * as localize from '../../../platform/common/utils/localize';
@@ -30,7 +26,6 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) protected applicationShell: IApplicationShell,
         @inject(IFileSystem) protected fs: IFileSystem,
         @inject(IExtensionContext) readonly context: IExtensionContext
@@ -40,7 +35,6 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         super(
             configuration,
             provider,
-            workspaceService,
             (c, v, d) => new PlotViewerMessageListener(c, v, d),
             plotDir,
             [joinPath(plotDir, 'plotViewer.js')],

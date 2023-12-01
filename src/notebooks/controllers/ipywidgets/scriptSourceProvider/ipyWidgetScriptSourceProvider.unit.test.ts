@@ -12,8 +12,7 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../../../kernels/types';
 import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
-import { IApplicationShell, IWorkspaceService } from '../../../../platform/common/application/types';
-import { WorkspaceService } from '../../../../platform/common/application/workspace.node';
+import { IApplicationShell } from '../../../../platform/common/application/types';
 import { ConfigurationService } from '../../../../platform/common/configuration/service.node';
 import { dispose } from '../../../../platform/common/utils/lifecycle';
 import { HttpClient } from '../../../../platform/common/net/httpClient';
@@ -34,6 +33,7 @@ import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvid
 import { NbExtensionsPathProvider } from './nbExtensionsPathProvider.node';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import { ScriptSourceProviderFactory } from './scriptSourceProviderFactory.node';
+import { mockedVSCodeNamespaces } from '../../../../test/vscode-mock';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
@@ -43,7 +43,6 @@ suite('ipywidget - Widget Script Source Provider', () => {
     let configService: IConfigurationService;
     let settings: ReadWrite<IJupyterSettings>;
     let appShell: IApplicationShell;
-    let workspaceService: IWorkspaceService;
     let scriptSourceFactory: IWidgetScriptSourceProviderFactory;
     let onDidChangeWorkspaceSettings: EventEmitter<ConfigurationChangeEvent>;
     let userSelectedOkOrDoNotShowAgainInPrompt: PersistentState<boolean>;
@@ -54,11 +53,10 @@ suite('ipywidget - Widget Script Source Provider', () => {
     setup(() => {
         configService = mock(ConfigurationService);
         appShell = mock(ApplicationShell);
-        workspaceService = mock(WorkspaceService);
         context = mock<IExtensionContext>();
         memento = mock<Memento>();
         onDidChangeWorkspaceSettings = new EventEmitter<ConfigurationChangeEvent>();
-        when(workspaceService.onDidChangeConfiguration).thenReturn(onDidChangeWorkspaceSettings.event);
+        when(mockedVSCodeNamespaces.workspace.onDidChangeConfiguration).thenReturn(onDidChangeWorkspaceSettings.event);
         const stateFactory = mock(PersistentStateFactory);
         userSelectedOkOrDoNotShowAgainInPrompt = mock<PersistentState<boolean>>();
         kernel = mock<IKernel>();

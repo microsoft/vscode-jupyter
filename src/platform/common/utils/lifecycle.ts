@@ -6,10 +6,14 @@ import { IDisposable } from '../types';
 import { once } from './functional';
 import { Iterable } from './iterable';
 
-let disposableTracker: IDisposable[] | null = null;
+let disposableTracker: IDisposable[] | undefined = undefined;
 
-export function setDisposableTracker(tracker: IDisposable[] | null): void {
+export function setDisposableTracker(tracker: IDisposable[] | undefined): void {
     disposableTracker = tracker;
+}
+
+export function getDisposableTracker(): IDisposable[] | undefined {
+    return disposableTracker;
 }
 
 export function trackDisposable<T extends IDisposable>(x: T): T {

@@ -5,7 +5,6 @@ import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../common/platform/types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IServiceContainer } from '../ioc/types';
-import { IWorkspaceService } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
 import { createCondaEnv, createPythonEnv } from './pythonEnvironment.node';
 import { createPythonProcessService } from './pythonProcess.node';
@@ -18,7 +17,7 @@ import {
     IPythonExecutionService
 } from './types.node';
 import { Environment } from '@vscode/python-extension';
-import { Uri } from 'vscode';
+import { Uri, workspace } from 'vscode';
 
 /**
  * Creates IPythonExecutionService objects. They can be either process based or daemon based.
@@ -30,8 +29,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
-        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -47,12 +45,12 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     ): Promise<IPythonExecutionService> {
         options.resource = options.resource
             ? options.resource
-            : this.workspace.workspaceFolders?.length
-            ? this.workspace.workspaceFolders[0].uri
+            : workspace.workspaceFolders?.length
+            ? workspace.workspaceFolders[0].uri
             : undefined;
 
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
-        if (!this.workspace.isTrusted) {
+        if (!workspace.isTrusted) {
             throw new Error('Workspace not trusted');
         }
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationError, CancellationToken, Disposable, Uri } from 'vscode';
+import { CancellationError, CancellationToken, Disposable } from 'vscode';
 import { Cancellation, raceCancellationError } from '../../../platform/common/cancellation';
 import uuid from 'uuid/v4';
 import * as urlPath from '../../../platform/vscode-path/resources';
@@ -18,7 +18,6 @@ import {
 } from '../../types';
 import { IJupyterKernelService, IJupyterServerProvider } from '../types';
 import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { inject, injectable, optional } from 'inversify';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
@@ -54,7 +53,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         private readonly jupyterNotebookProvider: IJupyterServerProvider,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IJupyterKernelService) @optional() private readonly kernelService: IJupyterKernelService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
@@ -104,14 +102,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
 
             await raceCancellationError(options.token, this.validateRemoteServer(options, sessionManager));
 
-            // Figure out the working directory we need for our new notebook. This is only necessary for local.
-            const workingDirectory = isLocalConnection(options.kernelConnection)
-                ? await raceCancellationError(
-                      options.token,
-                      this.workspaceService.computeWorkingDirectory(options.resource)
-                  )
-                : '';
-
             // Disposing session manager will dispose all sessions that were started by that session manager.
             // Hence Session managers should be disposed only if the corresponding session is shutdown.
             const session = await this.connectToOrCreateSession({
@@ -135,7 +125,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 session,
                 options.resource,
                 options.kernelConnection,
-                Uri.file(workingDirectory),
                 this.kernelService,
                 options.creator
             );

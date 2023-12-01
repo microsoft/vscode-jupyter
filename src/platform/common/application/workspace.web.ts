@@ -3,9 +3,10 @@
 
 import { injectable } from 'inversify';
 import { Resource } from '../types';
-import { BaseWorkspaceService } from './workspace.base';
+import { BaseWorkspaceService, getRootFolder } from './workspace.base';
 import * as urlPath from '../../vscode-path/resources';
 import { getFilePath } from '../platform/fs-paths';
+import { workspace } from 'vscode';
 
 /**
  * Web implementation of the workspace service. Computing working directory is different for web.
@@ -23,7 +24,7 @@ export class WorkspaceService extends BaseWorkspaceService {
             }
         }
 
-        resource = this.getWorkspaceFolder(resource)?.uri || this.rootFolder;
+        resource = (resource ? workspace.getWorkspaceFolder(resource)?.uri : undefined) || getRootFolder();
 
         return resource ? getFilePath(resource) : '.';
     }

@@ -6,22 +6,20 @@ import { ConfigurationTarget, extensions } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../activation/types';
 import { PythonExtension, PylanceExtension } from '../../constants';
 import { noop } from '../../utils/misc';
-import { ICommandManager, IWorkspaceService } from '../types';
+import { ICommandManager } from '../types';
+import { workspace } from 'vscode';
 
 /**
  * Allows the jupyter extension to run in a different process than other extensions.
  */
 @injectable()
 export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSyncActivationService {
-    constructor(
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) {}
+    constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager) {}
     public activate() {
         this.commandManager.registerCommand('jupyter.runInDedicatedExtensionHost', this.updateAffinity, this);
     }
     private async updateAffinity() {
-        const affinity = this.workspaceService.getConfiguration('extensions').get('experimental.affinity') as
+        const affinity = workspace.getConfiguration('extensions').get('experimental.affinity') as
             | { [key: string]: number }
             | undefined;
         let maxAffinity = 0;
@@ -46,7 +44,7 @@ export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSync
             update[PylanceExtension] = targetAffinity;
         }
 
-        await this.workspaceService.getConfiguration('extensions').update(
+        await workspace.getConfiguration('extensions').update(
             'experimental.affinity',
             {
                 ...(affinity ?? {}),
