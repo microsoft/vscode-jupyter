@@ -15,6 +15,7 @@ import {
     CompletionTriggerKind,
     DebugSession,
     Diagnostic,
+    Disposable,
     Event,
     EventEmitter,
     Hover,
@@ -1364,8 +1365,7 @@ export async function hijackSavePrompt(
     let clickButton = createDeferred<string | Uri>();
     const messageDisplayed: string[] = [];
     let displayCount = 0;
-    // eslint-disable-next-line
-    const stub = sinon.stub(appShell, 'showSaveDialog').callsFake(function (msg: { saveLabel: string }) {
+    const showSaveDialogFake = (msg: { saveLabel: string }) => {
         traceInfo(`Message displayed to user '${JSON.stringify(msg)}', checking for '${saveLabel}'`);
         if (msg.saveLabel === saveLabel) {
             messageDisplayed.push(msg.saveLabel);
@@ -1384,13 +1384,17 @@ export async function hijackSavePrompt(
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (appShell.showSaveDialog as any).wrappedMethod.apply(appShell, arguments);
-    } as any);
-    const disposable = { dispose: () => stub.restore() };
+    };
+    // eslint-disable-next-line
+    const stub1 = sinon.stub(appShell, 'showSaveDialog').callsFake(showSaveDialogFake as any);
+    // Stub VS Code namespace as well, in case we're not using IApplicationShell (wrappers).
+    const stub2 = sinon.stub(window, 'showSaveDialog').callsFake(showSaveDialogFake as any);
+    const disposable = Disposable.from(new Disposable(() => stub1.restore()), new Disposable(() => stub2.restore()));
     if (disposables) {
         disposables.push(disposable);
     }
     return {
-        dispose: () => stub.restore(),
+        dispose: () => disposable.dispose(),
         getDisplayCount: () => displayCount,
         get displayed() {
             return displayed.promise;
