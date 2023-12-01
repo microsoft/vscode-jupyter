@@ -346,6 +346,7 @@ function initializeWidgetManager(widgetState?: NotebookMetadata['widgets']) {
 let ipyWidgetVersionResponseHandled = false;
 export function activate(context: KernelMessagingApi) {
     capturedContext = context;
+    hookWindowFunctions(context);
     logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
     context.onDidReceiveKernelMessage(async (e) => {
         if (
@@ -420,4 +421,25 @@ export function activate(context: KernelMessagingApi) {
         }
     });
     requestWidgetVersion(context);
+}
+
+function hookWindowFunctions(context: KernelMessagingApi) {
+    if (context.postKernelMessage) {
+        window.alert = (message: string) => {
+            console.log('window.alert', message);
+            context.postKernelMessage?.({
+                type: IPyWidgetMessages.IPyWidgets_Window_Alert,
+                message: message.toString()
+            });
+            throw new Error('window.alert not supported in VS Code Renderers');
+        };
+        window.open = (url: string | undefined | URL) => {
+            console.log('window.open', url);
+            if (url) {
+                context.postKernelMessage?.({ type: IPyWidgetMessages.IPyWidgets_Window_Open, url: url.toString() });
+                throw new Error('window.open not supported in VS Code Renderers');
+            }
+            return null;
+        };
+    }
 }
