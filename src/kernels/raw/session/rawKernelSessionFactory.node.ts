@@ -6,7 +6,7 @@ import { injectable, inject } from 'inversify';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../platform/common/types';
+import { IConfigurationService } from '../../../platform/common/types';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { IRawKernelSession, LocaLKernelSessionCreationOptions, LocalKernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawKernelSessionFactory } from '../types';
@@ -14,34 +14,14 @@ import { isCancellationError, raceCancellationError } from '../../../platform/co
 import { noop } from '../../../platform/common/utils/misc';
 import { RawJupyterSessionWrapper } from './rawJupyterSession.node';
 import { RawSessionConnection } from './rawSessionConnection.node';
-import { dispose } from '../../../platform/common/utils/lifecycle';
 
 @injectable()
 export class RawKernelSessionFactory implements IRawKernelSessionFactory {
-    private sessions = new Set<IRawKernelSession>();
-    private disposables: IDisposable[] = [];
-    private disposed = false;
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
-    ) {
-        disposables.push(this);
-    }
-
-    public dispose() {
-        if (!this.disposed) {
-            this.disposed = true;
-            Array.from(this.sessions.values()).map((session) =>
-                session
-                    .shutdown()
-                    .catch(noop)
-                    .finally(() => session.dispose())
-            );
-            dispose(this.disposables);
-        }
-    }
+        @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher
+    ) {}
 
     public async create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession> {
         traceVerbose(`Creating raw notebook for resource '${getDisplayPath(options.resource)}'`);
@@ -83,10 +63,6 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
             throw error;
         }
 
-        const rawSession = new RawJupyterSessionWrapper(session, options.resource, options.kernelConnection);
-        rawSession.onDidDispose(() => this.sessions.delete(rawSession), this, this.disposables);
-
-        this.sessions.add(rawSession);
-        return rawSession;
+        return new RawJupyterSessionWrapper(session, options.resource, options.kernelConnection);
     }
 }
