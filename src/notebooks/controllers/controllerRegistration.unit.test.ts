@@ -331,7 +331,7 @@ suite('Controller Registration', () => {
                         _arg11,
                         _arg12,
                         _arg13,
-                        _arg14,
+                        _arg14
                     ) => {
                         if (connection === activePythonConnection) {
                             when(activeInterpreterController.id).thenReturn(id);
@@ -414,7 +414,7 @@ suite('Controller Registration', () => {
                         _arg11,
                         _arg12,
                         _arg13,
-                        _arg14,
+                        _arg14
                     ) => {
                         if (connection === activePythonConnection) {
                             when(activeInterpreterController.id).thenReturn(id);
