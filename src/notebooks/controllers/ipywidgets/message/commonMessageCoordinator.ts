@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { Event, EventEmitter, NotebookDocument, Uri, env, window } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL, WIDGET_VERSION_NON_PYTHON_KERNELS } from '../../../../platform/common/constants';
 import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../../../platform/logging';
@@ -191,6 +191,12 @@ export class CommonMessageCoordinator {
                 this.onMessage(webview, m.type, m.payload);
                 if (m.type === IPyWidgetMessages.IPyWidgets_Request_Widget_Version) {
                     await sendIPyWidgetsVersion();
+                }
+                if (m.type === IPyWidgetMessages.IPyWidgets_Window_Alert) {
+                    void window.showInformationMessage(m.message);
+                }
+                if (m.type === IPyWidgetMessages.IPyWidgets_Window_Open) {
+                    void env.openExternal(Uri.parse(m.url));
                 }
                 if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
                     traceVerbose('Web view is ready to receive widget messages');
