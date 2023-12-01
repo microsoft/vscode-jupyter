@@ -3,12 +3,13 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { dispose } from '../platform/common/utils/lifecycle';
+import { DisposableStore, dispose } from '../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
+import { Disposable } from 'vscode';
 
 @injectable()
 export class KernelStatusProvider implements IExtensionSyncActivationService {
@@ -64,13 +65,25 @@ export class KernelStatusProvider implements IExtensionSyncActivationService {
         kernel.addHook(
             'willInterrupt',
             async () => {
-                const progress = KernelProgressReporter.createProgressReporter(
-                    kernel.resourceUri,
-                    DataScience.interruptKernelStatus(
-                        getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-                    )
-                );
-                this.interruptProgress.set(kernel, progress);
+                // Wait for around 1s before displaying the notification
+                // Generally interrupts completely fairly quickly, in < 1s
+                // Hence no point displaying a notification just to hide that immediately after its displayed
+                const disposable = new DisposableStore();
+                const timeout = setTimeout(() => {
+                    if (disposable.isDisposed) {
+                        return;
+                    }
+                    disposable.add(
+                        KernelProgressReporter.createProgressReporter(
+                            kernel.resourceUri,
+                            DataScience.interruptKernelStatus(
+                                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+                            )
+                        )
+                    );
+                }, 1_000);
+                disposable.add(new Disposable(() => clearTimeout(timeout)));
+                this.interruptProgress.set(kernel, disposable);
             },
             this,
             this.disposables
