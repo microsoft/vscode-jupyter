@@ -9,11 +9,12 @@ import {
     Range,
     TextDocumentChangeEvent,
     TextDocumentContentChangeEvent,
-    Uri
+    Uri,
+    notebooks
 } from 'vscode';
 
 import { splitMultilineString } from '../../platform/common/utils';
-import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IDocumentManager } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { uncommentMagicCommands } from './cellFactory';
@@ -34,7 +35,6 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         private readonly configService: IConfigurationService,
         private readonly storage: IGeneratedCodeStore,
         private readonly notebook: NotebookDocument,
-        notebooks: IVSCodeNotebook,
         disposables: IDisposableRegistry
     ) {
         disposables.push(this);

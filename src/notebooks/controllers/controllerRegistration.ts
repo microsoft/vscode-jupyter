@@ -8,12 +8,7 @@ import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../../ker
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import {
-    IVSCodeNotebook,
-    ICommandManager,
-    IDocumentManager,
-    IApplicationShell
-} from '../../platform/common/application/types';
+import { ICommandManager, IDocumentManager, IApplicationShell } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { isCI, JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import {
@@ -81,7 +76,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
     }>();
     private selectedControllers = new Map<string, IVSCodeNotebookController>();
     constructor(
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(PythonEnvironmentFilter) private readonly pythonEnvFilter: PythonEnvironmentFilter,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
@@ -129,9 +123,9 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
             this.disposables
         );
         // Sign up for document either opening or closing
-        this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
+        workspace.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
-        this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
+        workspace.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
 
         this.loadControllers();
     }
@@ -358,7 +352,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         metadata,
                         id,
                         viewType,
-                        this.notebook,
                         this.serviceContainer.get<ICommandManager>(ICommandManager),
                         this.serviceContainer.get<IKernelProvider>(IKernelProvider),
                         this.serviceContainer.get<IExtensionContext>(IExtensionContext),
@@ -440,6 +433,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
     }
 
     private isControllerAttachedToADocument(controller: IVSCodeNotebookController) {
-        return this.notebook.notebookDocuments.some((doc) => controller.isAssociatedWithDocument(doc));
+        return workspace.notebookDocuments.some((doc) => controller.isAssociatedWithDocument(doc));
     }
 }

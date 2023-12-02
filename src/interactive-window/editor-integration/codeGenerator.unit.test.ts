@@ -2,15 +2,16 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { NotebookDocument, Position, Range, Uri } from 'vscode';
+import { EventEmitter, NotebookCellExecutionStateChangeEvent, NotebookDocument, Position, Range, Uri } from 'vscode';
 
-import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
+import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../platform/common/types';
 import { CodeGenerator } from './codeGenerator';
 import { MockDocumentManager } from '../../test/datascience/mockDocumentManager';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { IGeneratedCodeStore, InteractiveCellMetadata } from './types';
 import { GeneratedCodeStorage } from './generatedCodeStorage';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { dispose } from '../../platform/common/utils/lifecycle';
 
 // eslint-disable-next-line
 suite('Code Generator Unit Tests', () => {
@@ -20,7 +21,8 @@ suite('Code Generator Unit Tests', () => {
     let pythonSettings: IWatchableJupyterSettings;
     let storage: IGeneratedCodeStore;
     let notebook: NotebookDocument;
-    let vscodeNotebooks: IVSCodeNotebook;
+    let onDidChangeNotebookCellExecutionState: EventEmitter<NotebookCellExecutionStateChangeEvent>;
+    let disposables: IDisposable[] = [];
     setup(() => {
         configurationService = mock<IConfigurationService>();
         pythonSettings = mock<IWatchableJupyterSettings>();
@@ -28,18 +30,24 @@ suite('Code Generator Unit Tests', () => {
         when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
         documentManager = new MockDocumentManager();
         notebook = mock<NotebookDocument>();
-        vscodeNotebooks = mock<IVSCodeNotebook>();
+        onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
+        disposables.push(onDidChangeNotebookCellExecutionState);
+        when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
+            onDidChangeNotebookCellExecutionState.event
+        );
         when(notebook.uri).thenReturn();
         codeGenerator = new CodeGenerator(
             documentManager,
             instance(configurationService),
             storage,
             instance(notebook),
-            instance(vscodeNotebooks),
             []
         );
+        disposables.push(codeGenerator);
     });
-    teardown(() => codeGenerator.dispose());
+    teardown(() => {
+        disposables = dispose(disposables);
+    });
     function addSingleChange(file: string, range: Range, newText: string) {
         documentManager.changeDocument(file, [{ range, newText }]);
     }

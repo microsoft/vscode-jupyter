@@ -12,7 +12,6 @@ import { DocumentManager } from './application/documentManager';
 import { EncryptedStorage } from './application/encryptedStorage';
 import { Extensions } from './application/extensions.node';
 import { LanguageService } from './application/languageService.node';
-import { VSCodeNotebook } from './application/notebook';
 import {
     IApplicationEnvironment,
     IClipboard,
@@ -20,8 +19,7 @@ import {
     IDocumentManager,
     IEncryptedStorage,
     ILanguageService,
-    ITerminalManager,
-    IVSCodeNotebook
+    ITerminalManager
 } from './application/types';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { CryptoUtils } from './crypto';
@@ -52,7 +50,6 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
-    serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);

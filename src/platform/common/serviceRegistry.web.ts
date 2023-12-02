@@ -20,9 +20,8 @@ import { registerTypes as registerPlatformTypes } from './platform/serviceRegist
 import { Extensions } from './application/extensions.web';
 import { CryptoUtils } from './crypto';
 import { EncryptedStorage } from './application/encryptedStorage';
-import { IClipboard, IDebugService, IDocumentManager, IEncryptedStorage, IVSCodeNotebook } from './application/types';
+import { IClipboard, IDebugService, IDocumentManager, IEncryptedStorage } from './application/types';
 import { DocumentManager } from './application/documentManager';
-import { VSCodeNotebook } from './application/notebook';
 import { ClipboardService } from './application/clipboard';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
@@ -42,7 +41,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, EncryptedStorage);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
-    serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);

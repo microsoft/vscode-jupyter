@@ -2,9 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
+import {
+    NotebookCell,
+    NotebookCellExecutionStateChangeEvent,
+    NotebookCellKind,
+    NotebookDocument,
+    notebooks,
+    workspace
+} from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -23,17 +29,14 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
         return isTelemetryDisabled();
     }
 
-    constructor(
-        @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
-    ) {
+    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         disposables.push(this);
     }
     public activate() {
-        this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
-        this.vscNotebook.onDidCloseNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
-        this.vscNotebook.onDidSaveNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
-        this.vscNotebook.onDidChangeNotebookCellExecutionState(
+        workspace.onDidOpenNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
+        workspace.onDidCloseNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
+        workspace.onDidSaveNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
+        notebooks.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables

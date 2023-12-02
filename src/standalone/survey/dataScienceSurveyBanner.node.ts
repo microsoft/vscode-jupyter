@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind } from 'vscode';
+import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind, notebooks } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 import {
     BannerType,
@@ -100,7 +100,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
-        @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
@@ -117,7 +116,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     public activate() {
-        this.vscodeNotebook.onDidChangeNotebookCellExecutionState(
+        notebooks.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables

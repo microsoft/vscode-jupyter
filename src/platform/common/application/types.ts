@@ -52,18 +52,7 @@ import {
     WorkspaceEdit,
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
-    NotebookDocument,
-    NotebookEditor,
-    NotebookEditorSelectionChangeEvent,
-    NotebookDocumentContentOptions,
-    NotebookRendererScript,
-    NotebookController,
-    NotebookCell,
-    NotebookSerializer,
-    NotebookData,
-    NotebookDocumentShowOptions,
-    ColorTheme,
-    NotebookCellExecutionStateChangeEvent
+    ColorTheme
 } from 'vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
@@ -1045,41 +1034,6 @@ export interface IClipboard {
      * Writes text into the clipboard.
      */
     writeText(value: string): Promise<void>;
-}
-
-export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
-export interface IVSCodeNotebook {
-    readonly onDidChangeNotebookCellExecutionState: Event<NotebookCellExecutionStateChangeEvent>;
-    readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
-    readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
-    readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
-    readonly onDidChangeVisibleNotebookEditors: Event<readonly NotebookEditor[]>;
-    readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
-    readonly onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
-    readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
-    readonly notebookEditors: Readonly<NotebookEditor[]>;
-    readonly activeNotebookEditor: NotebookEditor | undefined;
-    registerNotebookSerializer(
-        notebookType: string,
-        serializer: NotebookSerializer,
-        options?: NotebookDocumentContentOptions
-    ): Disposable;
-
-    createNotebookController(
-        id: string,
-        viewType: string,
-        label: string,
-        handler?: (
-            cells: NotebookCell[],
-            notebook: NotebookDocument,
-            controller: NotebookController
-        ) => void | Thenable<void>,
-        rendererScripts?: NotebookRendererScript[],
-        additionalLocalResourceRoots?: Uri[]
-    ): NotebookController;
-    openNotebookDocument(uri: Uri): Thenable<NotebookDocument>;
-    openNotebookDocument(viewType: string, content?: NotebookData): Promise<NotebookDocument>;
-    showNotebookDocument(document: NotebookDocument, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
 }
 
 export const IEncryptedStorage = Symbol('IEncryptedStorage');

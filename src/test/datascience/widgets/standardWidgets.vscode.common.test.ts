@@ -18,10 +18,9 @@ import {
     workspace,
     WorkspaceEdit
 } from 'vscode';
-import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
+import { captureScreenShot, startJupyterServer, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -103,9 +102,7 @@ export async function clickWidget(comms: Utils, cell: NotebookCell, selector: st
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Standard IPyWidget Tests @widgets', function () {
-    let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let vscodeNotebook: IVSCodeNotebook;
 
     this.timeout(120_000);
     const widgetScriptSourcesValue = ['jsdelivr.com', 'unpkg.com'];
@@ -117,7 +114,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
     suiteSetup(async function () {
         traceInfo('Suite Setup Standard IPyWidget Tests');
         this.timeout(120_000);
-        api = await initialize();
+        await initialize();
         traceInfo('Suite Setup Standard IPyWidget Tests, Step 2');
         const config = workspace.getConfiguration('jupyter', undefined);
         await config.update('widgetScriptSources', widgetScriptSourcesValue, ConfigurationTarget.Global);
@@ -137,7 +134,6 @@ suite('Standard IPyWidget Tests @widgets', function () {
         await commands.executeCommand('notebook.cell.collapseAllCellInputs');
         comms = await initializeWidgetComms(disposables);
 
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         traceInfo('Suite Setup (completed)');
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
@@ -160,11 +156,11 @@ suite('Standard IPyWidget Tests @widgets', function () {
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Slider Widget', async function () {
         await initializeNotebookForWidgetTest(disposables, { templateFile: 'slider_widgets.ipynb' }, editor);
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
 
-        const cellVersion = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(4)!;
+        const cellVersion = window.activeNotebookEditor?.notebook.cellAt(4)!;
         await Promise.all([
             runCell(cellVersion),
             waitForCondition(
@@ -191,13 +187,13 @@ suite('Standard IPyWidget Tests @widgets', function () {
                 },
                 editor
             );
-            const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
+            const cell = window.activeNotebookEditor?.notebook.cellAt(1)!;
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['<input type="text', 'Enter your name:'], '.widget-text');
         });
         test('Linking Widgets slider to textbox widget', async function () {
             await initializeNotebookForWidgetTest(disposables, { templateFile: 'slider_widgets.ipynb' }, editor);
-            const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells()!;
+            const [, cell1, cell2, cell3] = window.activeNotebookEditor!.notebook.getCells()!;
             await executeCellAndDontWaitForOutput(cell1);
             await executeCellAndWaitForOutput(cell2, comms);
             await executeCellAndWaitForOutput(cell3, comms);
@@ -218,13 +214,13 @@ suite('Standard IPyWidget Tests @widgets', function () {
                 },
                 editor
             );
-            const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(2)!;
+            const cell = window.activeNotebookEditor?.notebook.cellAt(2)!;
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['Check me', '<input type="checkbox'], '.widget-checkbox');
         });
         test('Button Widget (click button)', async () => {
             await initializeNotebookForWidgetTest(disposables, { templateFile: 'button_widgets.ipynb' }, editor);
-            const [cell0, cell1, cell2] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [cell0, cell1, cell2] = window.activeNotebookEditor!.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell0, comms);
             await executeCellAndWaitForOutput(cell1, comms);
@@ -240,7 +236,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
         });
         test('Button Widget (click button in output of another cell)', async () => {
             await initializeNotebookForWidgetTest(disposables, { templateFile: 'button_widgets.ipynb' }, editor);
-            const [cell0, cell1, cell2] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [cell0, cell1, cell2] = window.activeNotebookEditor!.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell0, comms);
             await executeCellAndWaitForOutput(cell1, comms);
@@ -262,7 +258,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
                 },
                 editor
             );
-            const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [cell0, cell1] = window.activeNotebookEditor!.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell0, comms);
             await executeCellAndWaitForOutput(cell1, comms);
@@ -275,11 +271,11 @@ suite('Standard IPyWidget Tests @widgets', function () {
         test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
             // // https://github.com/microsoft/vscode-jupyter/issues/8748
             // await initializeNotebookForWidgetTest(disposables, { templateFile: 'standard_widgets.ipynb' }, editor);
-            // const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+            // const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
             // await executeCellAndWaitForOutput(cell, comms);
             // await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
             // // Restart the kernel.
-            // const uri = vscodeNotebook.activeNotebookEditor!.notebook.uri;
+            // const uri = window.activeNotebookEditor!.notebook.uri;
             // await commands.executeCommand('workbench.action.files.save');
             // await closeActiveWindows();
             // // Open this notebook again.
@@ -293,11 +289,11 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // const comms = await initializeNotebookForWidgetTest(disposables, {
             //     templateFile: 'standard_widgets.ipynb'
             // });
-            // const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+            // const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
             // await executeCellAndWaitForOutput(cell, comms);
             // await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
             // // Restart the kernel.
-            // const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook)!;
+            // const kernel = kernelProvider.get(window.activeNotebookEditor!.notebook)!;
             // await kernel.restart();
             // await executeCellAndWaitForOutput(cell, comms);
             // await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
@@ -313,11 +309,11 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // const comms = await initializeNotebookForWidgetTest(disposables, {
             //     templateFile: 'standard_widgets.ipynb'
             // });
-            // const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+            // const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
             // await executeCellAndWaitForOutput(cell, comms);
             // await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
             // // Restart the kernel.
-            // const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook)!;
+            // const kernel = kernelProvider.get(window.activeNotebookEditor!.notebook)!;
             // await kernel.interrupt();
             // await executeCellAndWaitForOutput(cell, comms);
             // await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
@@ -336,7 +332,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
                 },
                 editor
             );
-            const [cell1, cell2, cell3, cell4] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [cell1, cell2, cell3, cell4] = window.activeNotebookEditor!.notebook.getCells();
             await executeCellAndWaitForOutput(cell1, comms);
 
             // Run the second cell & verify we have output in the first cell.
@@ -373,7 +369,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
                 },
                 editor
             );
-            const [cell1, cell2, cell3, cell4, cell5, cell6] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [cell1, cell2, cell3, cell4, cell5, cell6] = window.activeNotebookEditor!.notebook.getCells();
             let html = '';
 
             const runCellAndTestOutput = async (cell: NotebookCell) => {
@@ -507,7 +503,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
                 },
                 editor
             );
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+            const cell = window.activeNotebookEditor!.notebook.cellAt(0);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['Click Me!', '<button']);
@@ -534,7 +530,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
                 },
                 editor
             );
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+            const cell = window.activeNotebookEditor!.notebook.cellAt(0);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, [
@@ -567,7 +563,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
                 },
                 editor
             );
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+            const cell = window.activeNotebookEditor!.notebook.cellAt(0);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['Text Value is Foo']);

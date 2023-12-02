@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { languages, NotebookCellKind, NotebookDocument } from 'vscode';
+import { languages, NotebookCellKind, NotebookDocument, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
@@ -22,7 +21,6 @@ import { IControllerRegistration, IVSCodeNotebookController } from '../controlle
 @injectable()
 export class EmptyNotebookCellLanguageService implements IExtensionSyncActivationService {
     constructor(
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration
     ) {}
@@ -40,7 +38,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSyncActivatio
         if (!isJupyterNotebook(document)) {
             return;
         }
-        const editor = this.notebook.notebookEditors.find((item) => item.notebook === document);
+        const editor = window.visibleNotebookEditors.find((item) => item.notebook === document);
         if (!editor) {
             return;
         }

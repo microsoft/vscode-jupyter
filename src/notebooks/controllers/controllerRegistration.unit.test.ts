@@ -17,12 +17,7 @@ import {
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    IVSCodeNotebook
-} from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -33,6 +28,7 @@ import { ControllerRegistration } from './controllerRegistration';
 import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import { IConnectionDisplayDataProvider, IVSCodeNotebookController } from './types';
 import { VSCodeNotebookController } from './vscodeNotebookController';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 suite('Controller Registration', () => {
     const activePythonEnv: PythonEnvironment = {
@@ -80,7 +76,6 @@ suite('Controller Registration', () => {
     });
     let clock: fakeTimers.InstalledClock;
     let disposables: IDisposable[] = [];
-    let vscNotebook: IVSCodeNotebook;
     let kernelFinder: IKernelFinder;
     let extensionChecker: IPythonExtensionChecker;
     let interpreters: IInterpreterService;
@@ -120,7 +115,6 @@ suite('Controller Registration', () => {
     let displayDataProvider: IConnectionDisplayDataProvider;
     let addOrUpdateCalled = false;
     setup(() => {
-        vscNotebook = mock<IVSCodeNotebook>();
         kernelFinder = mock<IKernelFinder>();
         extensionChecker = mock<IPythonExtensionChecker>();
         interpreters = mock<IInterpreterService>();
@@ -202,7 +196,7 @@ suite('Controller Registration', () => {
         when(kernelFinder.kernels).thenReturn([]);
         when(interpreters.resolvedEnvironments).thenReturn([activePythonEnv]);
         when(kernelFilter.isPythonEnvironmentExcluded(anything())).thenReturn(false);
-        when(vscNotebook.notebookDocuments).thenReturn([]);
+        when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(interpreters.getActiveInterpreter(anything())).thenResolve(activePythonEnv);
 
@@ -218,7 +212,6 @@ suite('Controller Registration', () => {
         suite(`${web ? 'Web' : 'Desktop'}`, () => {
             setup(() => {
                 registration = new ControllerRegistration(
-                    instance(vscNotebook),
                     disposables,
                     instance(kernelFilter),
                     instance(extensionChecker),
@@ -330,8 +323,7 @@ suite('Controller Registration', () => {
                         _arg10,
                         _arg11,
                         _arg12,
-                        _arg13,
-                        _arg14
+                        _arg13
                     ) => {
                         if (connection === activePythonConnection) {
                             when(activeInterpreterController.id).thenReturn(id);
@@ -413,8 +405,7 @@ suite('Controller Registration', () => {
                         _arg10,
                         _arg11,
                         _arg12,
-                        _arg13,
-                        _arg14
+                        _arg13
                     ) => {
                         if (connection === activePythonConnection) {
                             when(activeInterpreterController.id).thenReturn(id);

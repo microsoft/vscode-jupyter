@@ -247,7 +247,6 @@ suite('Kernel Execution @kernelCore', function () {
         await waitForTextOutput(displayCell, 'foo', 0, false);
     });
     test('Clearing output while executing will ensure output is cleared', async function () {
-        // const vscNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         let onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
         const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
         stub.get(() => onDidChangeNbEventHandler.event);
