@@ -21,13 +21,7 @@ import {
 } from 'vscode';
 import { IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDebugService,
-    IDocumentManager
-} from '../../platform/common/application/types';
-
+import { IApplicationShell, ICommandManager, IDebugService } from '../../platform/common/application/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
@@ -60,7 +54,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookExporter) @optional() private jupyterExporter: INotebookExporter | undefined,
         @inject(IJupyterServerHelper) @optional() private jupyterServerHelper: IJupyterServerHelper | undefined,
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
@@ -142,7 +135,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                     if (file) {
                         return this.exportFile(file);
                     } else {
-                        const activeEditor = this.documentManager.activeTextEditor;
+                        const activeEditor = window.activeTextEditor;
                         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
                             return this.exportFile(activeEditor.document.uri);
                         }
@@ -159,7 +152,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                     if (file) {
                         return this.exportFileAndOutput(file);
                     } else {
-                        const activeEditor = this.documentManager.activeTextEditor;
+                        const activeEditor = window.activeTextEditor;
                         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
                             return this.exportFileAndOutput(activeEditor.document.uri);
                         }
@@ -229,7 +222,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
 
     private getCodeWatcher(file: Uri | undefined): ICodeWatcher | undefined {
         if (file && this.dataScienceCodeLensProvider) {
-            const possibleDocuments = this.documentManager.textDocuments.filter((d) => urlPath.isEqual(d.uri, file));
+            const possibleDocuments = workspace.textDocuments.filter((d) => urlPath.isEqual(d.uri, file));
             if (possibleDocuments && possibleDocuments.length === 1) {
                 return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
             } else if (possibleDocuments && possibleDocuments.length > 1) {
@@ -339,7 +332,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
 
     private async runToLine(): Promise<void> {
         const activeCodeWatcher = this.getCurrentCodeWatcher();
-        const textEditor = this.documentManager.activeTextEditor;
+        const textEditor = window.activeTextEditor;
 
         if (activeCodeWatcher && textEditor && textEditor.selection) {
             return activeCodeWatcher.runToLine(textEditor.selection.start.line);
@@ -348,7 +341,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
 
     private async runFromLine(): Promise<void> {
         const activeCodeWatcher = this.getCurrentCodeWatcher();
-        const textEditor = this.documentManager.activeTextEditor;
+        const textEditor = window.activeTextEditor;
 
         if (activeCodeWatcher && textEditor && textEditor.selection) {
             return activeCodeWatcher.runFromLine(textEditor.selection.start.line);
@@ -377,7 +370,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
             return activeCodeWatcher.runSelectionOrLine(
-                this.documentManager.activeTextEditor,
+                window.activeTextEditor,
                 // If this is a URI, the runSelectionOrLine is not expecting a URI, so act like nothing was sent.
                 isUri(textOrUri) ? undefined : textOrUri
             );
@@ -554,7 +547,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private getCurrentCodeLens(): CodeLens | undefined {
-        const activeEditor = this.documentManager.activeTextEditor;
+        const activeEditor = window.activeTextEditor;
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeEditor && activeCodeWatcher) {
             // Find the cell that matches
@@ -571,7 +564,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
     // Get our matching code watcher for the active document
     private getCurrentCodeWatcher(): ICodeWatcher | undefined {
-        const activeEditor = this.documentManager.activeTextEditor;
+        const activeEditor = window.activeTextEditor;
         if (!activeEditor || !activeEditor.document || !this.dataScienceCodeLensProvider) {
             return undefined;
         }
@@ -617,7 +610,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         const filePath = getFilePath(file);
         if (filePath && filePath.length > 0 && this.jupyterExporter) {
             // If the current file is the active editor, then generate cells from the document.
-            const activeEditor = this.documentManager.activeTextEditor;
+            const activeEditor = window.activeTextEditor;
             if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.uri, file)) {
                 const cells = generateCellsFromDocument(
                     activeEditor.document,
@@ -663,7 +656,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             (await this.jupyterServerHelper.isJupyterServerSupported())
         ) {
             // If the current file is the active editor, then generate cells from the document.
-            const activeEditor = this.documentManager.activeTextEditor;
+            const activeEditor = window.activeTextEditor;
             if (
                 activeEditor &&
                 activeEditor.document &&
@@ -836,7 +829,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             const uri = Uri.parse(context.metadata.interactive.uristring);
             const line = context.metadata.interactive.lineIndex;
 
-            const editor = await this.documentManager.showTextDocument(uri, { viewColumn: ViewColumn.One });
+            const editor = await window.showTextDocument(uri, { viewColumn: ViewColumn.One });
 
             // If we found the editor change its selection
             if (editor) {

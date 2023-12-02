@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IDocumentManager } from '../../platform/common/application/types';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { CodeGenerator } from './codeGenerator';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory, IInteractiveWindowCodeGenerator } from './types';
@@ -17,7 +16,6 @@ export class CodeGeneratorFactory implements ICodeGeneratorFactory, IExtensionSy
     private readonly codeGenerators = new WeakMap<NotebookDocument, IInteractiveWindowCodeGenerator>();
 
     constructor(
-        @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
@@ -31,7 +29,6 @@ export class CodeGeneratorFactory implements ICodeGeneratorFactory, IExtensionSy
             return existing;
         }
         const codeGenerator = new CodeGenerator(
-            this.documentManager,
             this.configService,
             this.storageFactory.getOrCreate(notebook),
             notebook,

@@ -20,7 +20,7 @@ import {
     NotebookEdit,
     NotebookEditorRevealType
 } from 'vscode';
-import { ICommandManager, IDocumentManager } from '../platform/common/application/types';
+import { ICommandManager } from '../platform/common/application/types';
 import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
@@ -113,7 +113,6 @@ export class InteractiveWindow implements IInteractiveWindow {
 
     public readonly notebookUri: Uri;
 
-    private readonly documentManager: IDocumentManager;
     private readonly fs: IFileSystem;
     private readonly configuration: IConfigurationService;
     private readonly jupyterExporter: INotebookExporter;
@@ -133,7 +132,6 @@ export class InteractiveWindow implements IInteractiveWindow {
         notebookEditorOrTab: NotebookEditor | InteractiveTab,
         public readonly inputUri: Uri
     ) {
-        this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -299,17 +297,17 @@ export class InteractiveWindow implements IInteractiveWindow {
     public async debugCode(code: string, fileUri: Uri, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find((d) => this.fs.arePathsSame(d.uri, fileUri));
+        const doc = workspace.textDocuments.find((d) => this.fs.arePathsSame(d.uri, fileUri));
         if (!this.useNewDebugMode() && doc && doc.isUntitled) {
             // Before we start, get the list of documents
-            const beforeSave = [...this.documentManager.textDocuments];
+            const beforeSave = [...workspace.textDocuments];
 
             saved = await doc.save();
 
             // If that worked, we have to open the new document. It should be
             // the new entry in the list
             if (saved) {
-                const diff = this.documentManager.textDocuments.filter((f) => beforeSave.indexOf(f) === -1);
+                const diff = workspace.textDocuments.filter((f) => beforeSave.indexOf(f) === -1);
                 if (diff && diff.length > 0) {
                     // The interactive window often opens at the same time. Avoid picking that one.
                     // Another unrelated window could open at the same time too.
@@ -320,7 +318,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     fileUri = savedFileEditor.uri;
 
                     // Open the new document
-                    await this.documentManager.openTextDocument(fileUri);
+                    await workspace.openTextDocument(fileUri);
                 }
             }
         }

@@ -26,7 +26,6 @@ import {
     workspace
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -53,10 +52,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
     private readonly disposables: IDisposable[] = [];
     private readonly notebooksProcessed = new WeakMap<NotebookDocument, Map<CellUri, CellVersion>>();
     private readonly cellsToProcess = new Set<NotebookCell>();
-    constructor(
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IDocumentManager) private readonly documents: IDocumentManager
-    ) {
+    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         this.problems = languages.createDiagnosticCollection(diagnosticSource);
         this.disposables.push(this.problems);
         disposables.push(this);
@@ -68,7 +64,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
     public activate(): void {
         this.disposables.push(languages.registerCodeActionsProvider(PYTHON_LANGUAGE, this));
         this.disposables.push(languages.registerHoverProvider(PYTHON_LANGUAGE, this));
-        this.documents.onDidChangeTextDocument(
+        workspace.onDidChangeTextDocument(
             (e) => {
                 const notebook = getAssociatedJupyterNotebook(e.document);
                 if (!notebook) {

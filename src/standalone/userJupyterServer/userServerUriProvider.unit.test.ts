@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as sinon from 'sinon';
-import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import {
     IJupyterRequestCreator,
     IJupyterServerProviderRegistry,
@@ -90,10 +90,9 @@ suite('User Uri Provider', () => {
     let token: CancellationToken;
     let tokenSource: CancellationTokenSource;
     setup(() => {
-        reset(mockedVSCodeNamespaces.window);
-        reset(mockedVSCodeNamespaces.workspace);
-        reset(mockedVSCodeNamespaces.notebooks);
-        reset(mockedVSCodeNamespaces.env);
+        // reset(mockedVSCodeNamespaces.window);
+        // reset(mockedVSCodeNamespaces.workspace);
+        // reset(mockedVSCodeNamespaces.notebooks);
         inputBox = {
             show: noop,
             onDidAccept: noop as any,

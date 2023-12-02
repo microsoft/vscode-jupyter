@@ -4,8 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as path from '../../vscode-path/path';
-import { Uri, Range, workspace } from 'vscode';
-import { IDocumentManager } from '../application/types';
+import { Uri, Range, workspace, window } from 'vscode';
 import { AbstractSystemVariables } from './systemVariables';
 
 /**
@@ -19,19 +18,16 @@ export class SystemVariables extends AbstractSystemVariables {
     private _selectedText: string | undefined;
     private _execPath: string;
 
-    constructor(file: Uri | undefined, rootFolder: Uri | undefined, documentManager?: IDocumentManager) {
+    constructor(file: Uri | undefined, rootFolder: Uri | undefined) {
         super();
         const workspaceFolder = file ? workspace.getWorkspaceFolder(file) : undefined;
         this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder?.fsPath || __dirname;
         this._workspaceFolderName = path.basename(this._workspaceFolder);
         this._filePath = file ? file.fsPath : undefined;
-        if (documentManager && documentManager.activeTextEditor) {
-            this._lineNumber = documentManager.activeTextEditor.selection.anchor.line + 1;
-            this._selectedText = documentManager.activeTextEditor.document.getText(
-                new Range(
-                    documentManager.activeTextEditor.selection.start,
-                    documentManager.activeTextEditor.selection.end
-                )
+        if (window && window.activeTextEditor) {
+            this._lineNumber = window.activeTextEditor.selection.anchor.line + 1;
+            this._selectedText = window.activeTextEditor.document.getText(
+                new Range(window.activeTextEditor.selection.start, window.activeTextEditor.selection.end)
             );
         }
         this._execPath = process.execPath;

@@ -5,12 +5,12 @@
 
 import dedent from 'dedent';
 import { assert } from 'chai';
-import { anything, capture, deepEqual, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Uri, WorkspaceFolder } from 'vscode';
+import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Common, DataScience } from '../../platform/common/utils/localize';
-import { IConfigurationService } from '../../platform/common/types';
+import { IConfigurationService, IDisposable } from '../../platform/common/types';
 import {
     IKernelDependencyService,
     KernelConnectionMetadata,
@@ -42,7 +42,8 @@ import { DataScienceErrorHandlerNode } from './kernelErrorHandler.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { JupyterServer, JupyterServerCollection, JupyterServerProvider } from '../../api';
-import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
+import { dispose } from '../../platform/common/utils/lifecycle';
 
 suite('Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -63,8 +64,10 @@ suite('Error Handler Unit Tests', () => {
         id: Uri.file('Some Path').fsPath,
         sysPrefix: ''
     };
-
+    let disposables: IDisposable[] = [];
     setup(() => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
         applicationShell = mock<IApplicationShell>();
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
@@ -100,8 +103,11 @@ suite('Error Handler Unit Tests', () => {
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
-        reset(mockedVSCodeNamespaces.env);
+        // reset(mockedVSCodeNamespaces.env);
         when(mockedVSCodeNamespaces.env.openExternal(anything())).thenReturn(Promise.resolve(true));
+    });
+    teardown(() => {
+        disposables = dispose(disposables);
     });
     const message = 'Test error message.';
 

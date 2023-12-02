@@ -5,7 +5,7 @@ import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor, window, workspace } from 'vscode';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { ICommandManager, IDocumentManager } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { EditorContexts, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -43,7 +43,6 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         @inject(IInteractiveWindowProvider)
         @optional()
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
-        @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
@@ -96,7 +95,7 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         this.disposables.forEach((item) => item.dispose());
     }
     public activate() {
-        this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
+        window.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
         this.kernelProvider.onKernelStatusChanged(this.onDidKernelStatusChange, this, this.disposables);
         // Interactive provider might not be available
         if (this.interactiveProvider) {
@@ -116,8 +115,8 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         window.onDidChangeActiveNotebookEditor(this.onDidChangeActiveNotebookEditor, this, this.disposables);
 
         // Do we already have python file opened.
-        if (this.docManager.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
-            this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
+        if (window.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
+            this.onDidChangeActiveTextEditor(window.activeTextEditor);
         }
         window.onDidChangeNotebookEditorSelection(
             this.updateNativeNotebookInteractiveWindowOpenContext,

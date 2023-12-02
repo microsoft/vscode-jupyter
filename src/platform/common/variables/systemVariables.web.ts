@@ -5,8 +5,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Uri, Range, workspace } from 'vscode';
-import { IDocumentManager } from '../application/types';
+import { Uri, Range, workspace, window } from 'vscode';
 import { AbstractSystemVariables } from './systemVariables';
 
 /**
@@ -18,18 +17,15 @@ export class SystemVariables extends AbstractSystemVariables {
     private _lineNumber: number | undefined;
     private _selectedText: string | undefined;
 
-    constructor(file: Uri | undefined, rootFolder: string | undefined, documentManager?: IDocumentManager) {
+    constructor(file: Uri | undefined, rootFolder: string | undefined) {
         super();
         const workspaceFolder = file ? workspace.getWorkspaceFolder(file) : undefined;
         this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.path : rootFolder || '';
         this._filePath = file ? file.path : undefined;
-        if (documentManager && documentManager.activeTextEditor) {
-            this._lineNumber = documentManager.activeTextEditor.selection.anchor.line + 1;
-            this._selectedText = documentManager.activeTextEditor.document.getText(
-                new Range(
-                    documentManager.activeTextEditor.selection.start,
-                    documentManager.activeTextEditor.selection.end
-                )
+        if (window.activeTextEditor) {
+            this._lineNumber = window.activeTextEditor.selection.anchor.line + 1;
+            this._selectedText = window.activeTextEditor.document.getText(
+                new Range(window.activeTextEditor.selection.start, window.activeTextEditor.selection.end)
             );
         }
     }

@@ -7,7 +7,7 @@ import { when, instance, mock, anything, verify, reset } from 'ts-mockito';
 import { Disposable, EventEmitter, Extension, ExtensionMode, SecretStorage, SecretStorageChangeEvent } from 'vscode';
 import { clearApiAccess, requestApiAccess, updateListOfExtensionsAllowedToAccessApi } from './apiAccess';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
-import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platform/common/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { Common } from '../../platform/common/utils/localize';
@@ -24,7 +24,8 @@ suite('Kernel Api Access', () => {
     const secretStorage = new Map<string, string>();
     setup(() => {
         clearApiAccess();
-        reset(mockedVSCodeNamespaces.window);
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
         when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
 
         secretStorage.clear();

@@ -5,7 +5,6 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { instance, mock, when } from 'ts-mockito';
 import { EventEmitter, NotebookDocument } from 'vscode';
-import { IDocumentManager } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IConfigurationService, IDisposable } from '../../platform/common/types';
 import { CodeGenerator } from './codeGenerator';
@@ -17,20 +16,18 @@ import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 suite('CodeGeneratorFactory', () => {
     let factory: CodeGeneratorFactory;
-    let docManager: IDocumentManager;
     let configService: IConfigurationService;
     let storageFactory: IGeneratedCodeStorageFactory;
     let disposables: IDisposable[] = [];
     let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
     let clearMethodOnStorage: sinon.SinonSpy<[], void>;
     setup(() => {
-        docManager = mock<IDocumentManager>();
         configService = mock<IConfigurationService>();
         storageFactory = new GeneratedCodeStorageFactory();
         onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
         when(mockedVSCodeNamespaces.workspace.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         disposables.push(onDidCloseNotebookDocument);
-        factory = new CodeGeneratorFactory(instance(docManager), instance(configService), storageFactory, disposables);
+        factory = new CodeGeneratorFactory(instance(configService), storageFactory, disposables);
         factory.activate();
         clearMethodOnStorage = sinon.spy(GeneratedCodeStorage.prototype, 'clear');
     });

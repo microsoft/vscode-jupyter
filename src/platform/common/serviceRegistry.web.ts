@@ -20,8 +20,7 @@ import { registerTypes as registerPlatformTypes } from './platform/serviceRegist
 import { Extensions } from './application/extensions.web';
 import { CryptoUtils } from './crypto';
 import { EncryptedStorage } from './application/encryptedStorage';
-import { IDebugService, IDocumentManager, IEncryptedStorage } from './application/types';
-import { DocumentManager } from './application/documentManager';
+import { IDebugService, IEncryptedStorage } from './application/types';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { DebugService } from './application/debugService';
@@ -38,7 +37,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, EncryptedStorage);
-    serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);

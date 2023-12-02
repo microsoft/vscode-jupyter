@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Extension, QuickPickItem, Uri, WebviewView as vscodeWebviewView } from 'vscode';
+import { Extension, QuickPickItem, Uri, WebviewView as vscodeWebviewView, window } from 'vscode';
 import { joinPath } from '../../../platform/vscode-path/resources';
 import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping, IVariableViewer } from './types';
@@ -13,12 +13,7 @@ import {
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
 } from '../../../kernels/variables/types';
-import {
-    IWebviewViewProvider,
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager
-} from '../../../platform/common/application/types';
+import { IWebviewViewProvider, IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { traceError } from '../../../platform/logging';
 import {
@@ -53,7 +48,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly appShell: IApplicationShell,
         private readonly notebookWatcher: INotebookWatcher,
         private readonly commandManager: ICommandManager,
-        private readonly documentManager: IDocumentManager,
         private readonly experiments: IExperimentService
     ) {
         const variableViewDir = joinPath(context.extensionUri, 'dist', 'webviews', 'webview-side', 'viewers');
@@ -66,7 +60,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
         this.variables.refreshRequired(this.sendRefreshMessage, this, this.disposables);
-        this.documentManager.onDidChangeActiveTextEditor(this.activeTextEditorChanged, this, this.disposables);
+        window.onDidChangeActiveTextEditor(this.activeTextEditorChanged, this, this.disposables);
     }
 
     @capturePerfTelemetry(Telemetry.NativeVariableViewLoaded)

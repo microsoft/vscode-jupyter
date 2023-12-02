@@ -5,16 +5,13 @@ import {
     Breakpoint,
     BreakpointsChangeEvent,
     CancellationToken,
-    CompletionItemProvider,
     DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
     DebugConsole,
     DebugSession,
     DebugSessionCustomEvent,
-    DecorationRenderOptions,
     Disposable,
-    DocumentSelector,
     Event,
     InputBox,
     InputBoxOptions,
@@ -30,17 +27,8 @@ import {
     SaveDialogOptions,
     StatusBarAlignment,
     StatusBarItem,
-    Terminal,
-    TerminalOptions,
-    TextDocument,
-    TextDocumentChangeEvent,
-    TextDocumentShowOptions,
     TextEditor,
-    TextEditorDecorationType,
     TextEditorEdit,
-    TextEditorOptionsChangeEvent,
-    TextEditorSelectionChangeEvent,
-    TextEditorViewColumnChangeEvent,
     TreeView,
     TreeViewOptions,
     UIKind,
@@ -49,7 +37,6 @@ import {
     WebviewPanel as vscodeWebviewPanel,
     WebviewView as vscodeWebviewView,
     WindowState,
-    WorkspaceEdit,
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
     ColorTheme
@@ -483,167 +470,6 @@ export interface ICommandManager {
     getCommands(filterInternal?: boolean): Thenable<string[]>;
 }
 
-export const IDocumentManager = Symbol('IDocumentManager');
-
-export interface IDocumentManager {
-    /**
-     * All text documents currently known to the system.
-     *
-     * @readonly
-     */
-    readonly textDocuments: readonly TextDocument[];
-    /**
-     * The currently active editor or `undefined`. The active editor is the one
-     * that currently has focus or, when none has focus, the one that has changed
-     * input most recently.
-     */
-    readonly activeTextEditor: TextEditor | undefined;
-
-    /**
-     * The currently visible editors or an empty array.
-     */
-    readonly visibleTextEditors: readonly TextEditor[];
-
-    /**
-     * An [event](#Event) which fires when the [active editor](#window.activeTextEditor)
-     * has changed. *Note* that the event also fires when the active editor changes
-     * to `undefined`.
-     */
-    readonly onDidChangeActiveTextEditor: Event<TextEditor | undefined>;
-
-    /**
-     * An event that is emitted when a [text document](#TextDocument) is changed. This usually happens
-     * when the [contents](#TextDocument.getText) changes but also when other things like the
-     * [dirty](#TextDocument.isDirty)-state changes.
-     */
-    readonly onDidChangeTextDocument: Event<TextDocumentChangeEvent>;
-
-    /**
-     * An [event](#Event) which fires when the array of [visible editors](#window.visibleTextEditors)
-     * has changed.
-     */
-    readonly onDidChangeVisibleTextEditors: Event<readonly TextEditor[]>;
-
-    /**
-     * An [event](#Event) which fires when the selection in an editor has changed.
-     */
-    readonly onDidChangeTextEditorSelection: Event<TextEditorSelectionChangeEvent>;
-
-    /**
-     * An [event](#Event) which fires when the options of an editor have changed.
-     */
-    readonly onDidChangeTextEditorOptions: Event<TextEditorOptionsChangeEvent>;
-
-    /**
-     * An [event](#Event) which fires when the view column of an editor has changed.
-     */
-    readonly onDidChangeTextEditorViewColumn: Event<TextEditorViewColumnChangeEvent>;
-
-    /**
-     * An event that is emitted when a [text document](#TextDocument) is opened.
-     */
-    readonly onDidOpenTextDocument: Event<TextDocument>;
-    /**
-     * An event that is emitted when a [text document](#TextDocument) is disposed.
-     */
-    readonly onDidCloseTextDocument: Event<TextDocument>;
-    /**
-     * An event that is emitted when a [text document](#TextDocument) is saved to disk.
-     */
-    readonly onDidSaveTextDocument: Event<TextDocument>;
-
-    /**
-     * Show the given document in a text editor. A [column](#ViewColumn) can be provided
-     * to control where the editor is being shown. Might change the [active editor](#window.activeTextEditor).
-     *
-     * @param document A text document to be shown.
-     * @param column A view column in which the [editor](#TextEditor) should be shown. The default is the [one](#ViewColumn.One), other values
-     * are adjusted to be `Min(column, columnCount + 1)`, the [active](#ViewColumn.Active)-column is
-     * not adjusted.
-     * @param preserveFocus When `true` the editor will not take focus.
-     * @return A promise that resolves to an [editor](#TextEditor).
-     */
-    showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): Thenable<TextEditor>;
-
-    /**
-     * Show the given document in a text editor. [Options](#TextDocumentShowOptions) can be provided
-     * to control options of the editor is being shown. Might change the [active editor](#window.activeTextEditor).
-     *
-     * @param document A text document to be shown.
-     * @param options [Editor options](#TextDocumentShowOptions) to configure the behavior of showing the [editor](#TextEditor).
-     * @return A promise that resolves to an [editor](#TextEditor).
-     */
-    showTextDocument(document: TextDocument, options?: TextDocumentShowOptions): Thenable<TextEditor>;
-
-    /**
-     * A short-hand for `openTextDocument(uri).then(document => showTextDocument(document, options))`.
-     *
-     * @see [openTextDocument](#openTextDocument)
-     *
-     * @param uri A resource identifier.
-     * @param options [Editor options](#TextDocumentShowOptions) to configure the behavior of showing the [editor](#TextEditor).
-     * @return A promise that resolves to an [editor](#TextEditor).
-     */
-    showTextDocument(uri: Uri, options?: TextDocumentShowOptions): Thenable<TextEditor>;
-    /**
-     * Opens a document. Will return early if this document is already open. Otherwise
-     * the document is loaded and the [didOpen](#workspace.onDidOpenTextDocument)-event fires.
-     *
-     * The document is denoted by an [uri](#Uri). Depending on the [scheme](#Uri.scheme) the
-     * following rules apply:
-     * * `file`-scheme: Open a file on disk, will be rejected if the file does not exist or cannot be loaded.
-     * * `untitled`-scheme: A new file that should be saved on disk, e.g. `untitled:c:\frodo\new.js`. The language
-     * will be derived from the file name.
-     * * For all other schemes the registered text document content [providers](#TextDocumentContentProvider) are consulted.
-     *
-     * *Note* that the lifecycle of the returned document is owned by the editor and not by the extension. That means an
-     * [`onDidClose`](#workspace.onDidCloseTextDocument)-event can occur at any time after opening it.
-     *
-     * @param uri Identifies the resource to open.
-     * @return A promise that resolves to a [document](#TextDocument).
-     */
-    openTextDocument(uri: Uri): Thenable<TextDocument>;
-
-    /**
-     * A short-hand for `openTextDocument(Uri.file(fileName))`.
-     *
-     * @see [openTextDocument](#openTextDocument)
-     * @param fileName A name of a file on disk.
-     * @return A promise that resolves to a [document](#TextDocument).
-     */
-    openTextDocument(fileName: string): Thenable<TextDocument>;
-
-    /**
-     * Opens an untitled text document. The editor will prompt the user for a file
-     * path when the document is to be saved. The `options` parameter allows to
-     * specify the *language* and/or the *content* of the document.
-     *
-     * @param options Options to control how the document will be created.
-     * @return A promise that resolves to a [document](#TextDocument).
-     */
-    openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument>;
-    /**
-     * Make changes to one or many resources as defined by the given
-     * [workspace edit](#WorkspaceEdit).
-     *
-     * When applying a workspace edit, the editor implements an 'all-or-nothing'-strategy,
-     * that means failure to load one document or make changes to one document will cause
-     * the edit to be rejected.
-     *
-     * @param edit A workspace edit.
-     * @return A thenable that resolves when the edit could be applied.
-     */
-    applyEdit(edit: WorkspaceEdit): Thenable<boolean>;
-
-    /**
-     * Create a TextEditorDecorationType that can be used to add decorations to text editors.
-     *
-     * @param options Rendering options for the decoration type.
-     * @return A new decoration type instance.
-     */
-    createTextEditorDecorationType(options: DecorationRenderOptions): TextEditorDecorationType;
-}
-
 export const IWorkspaceService = Symbol('IWorkspaceService');
 
 export interface IWorkspaceService {
@@ -652,28 +478,6 @@ export interface IWorkspaceService {
      * @param resource
      */
     computeWorkingDirectory(resource: Resource): Promise<string>;
-}
-
-export const ITerminalManager = Symbol('ITerminalManager');
-
-export interface ITerminalManager {
-    /**
-     * An [event](#Event) which fires when a terminal is disposed.
-     */
-    readonly onDidCloseTerminal: Event<Terminal>;
-    /**
-     * An [event](#Event) which fires when a terminal has been created, either through the
-     * [createTerminal](#window.createTerminal) API or commands.
-     */
-    readonly onDidOpenTerminal: Event<Terminal>;
-    /**
-     * Creates a [Terminal](#Terminal). The cwd of the terminal will be the workspace directory
-     * if it exists, regardless of whether an explicit customStartPath setting exists.
-     *
-     * @param options A TerminalOptions object describing the characteristics of the new terminal.
-     * @return A new Terminal.
-     */
-    createTerminal(options: TerminalOptions): Terminal;
 }
 
 export const IDebugService = Symbol('IDebugManager');
@@ -998,29 +802,6 @@ export const IWebviewViewProvider = Symbol('IWebviewViewProvider');
 export interface IWebviewViewProvider {
     create(options: IWebviewViewOptions): Promise<IWebviewView>;
 }
-export const ILanguageService = Symbol('ILanguageService');
-export interface ILanguageService {
-    /**
-     * Register a completion provider.
-     *
-     * Multiple providers can be registered for a language. In that case providers are sorted
-     * by their [score](#languages.match) and groups of equal score are sequentially asked for
-     * completion items. The process stops when one or many providers of a group return a
-     * result. A failing provider (rejected promise or exception) will not fail the whole
-     * operation.
-     *
-     * @param selector A selector that defines the documents this provider is applicable to.
-     * @param provider A completion provider.
-     * @param triggerCharacters Trigger completion when the user types one of the characters, like `.` or `:`.
-     * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
-     */
-    registerCompletionItemProvider(
-        selector: DocumentSelector,
-        provider: CompletionItemProvider,
-        ...triggerCharacters: string[]
-    ): Disposable;
-}
-
 export type Channel = 'stable' | 'insiders';
 
 export const IEncryptedStorage = Symbol('IEncryptedStorage');

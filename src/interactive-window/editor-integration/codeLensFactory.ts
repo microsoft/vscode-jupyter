@@ -14,7 +14,6 @@ import {
     workspace
 } from 'vscode';
 
-import { IDocumentManager } from '../../platform/common/application/types';
 import { traceWarning, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 
 import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
@@ -69,13 +68,12 @@ export class CodeLensFactory implements ICodeLensFactory {
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IGeneratedCodeStorageFactory)
         private readonly generatedCodeStorageFactory: IGeneratedCodeStorageFactory,
         @inject(IKernelProvider) kernelProvider: IKernelProvider
     ) {
-        this.documentManager.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
+        workspace.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
         workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
         notebooks.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);

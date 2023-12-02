@@ -4,7 +4,7 @@
 import { inject, injectable, optional } from 'inversify';
 import * as vscode from 'vscode';
 
-import { ICommandManager, IDebugService, IDocumentManager } from '../../platform/common/application/types';
+import { ICommandManager, IDebugService } from '../../platform/common/application/types';
 import { ContextKey } from '../../platform/common/contextKey';
 import { dispose } from '../../platform/common/utils/lifecycle';
 
@@ -40,7 +40,6 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IDebugLocationTracker) @optional() private debugLocationTracker: IDebugLocationTracker | undefined,
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
@@ -54,7 +53,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             })
         );
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
-        disposableRegistry.push(this.documentManager.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
+        disposableRegistry.push(vscode.workspace.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
         if (this.debugLocationTracker) {
             disposableRegistry.push(this.debugLocationTracker.updated(this.onDebugLocationUpdated.bind(this)));
         }
@@ -199,7 +198,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         }
 
         // Create a new watcher for this file if we can find a matching document
-        const possibleDocuments = this.documentManager.textDocuments.filter((d) => d.uri.toString() === uri.toString());
+        const possibleDocuments = vscode.workspace.textDocuments.filter((d) => d.uri.toString() === uri.toString());
         if (possibleDocuments && possibleDocuments.length > 0) {
             traceVerbose(`creating new code watcher with matching document ${uri}`);
             return this.createNewCodeWatcher(possibleDocuments[0]);
