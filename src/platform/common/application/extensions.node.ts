@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { Event, Extension, extensions } from 'vscode';
+import { extensions } from 'vscode';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize';
 import { parseStack } from '../../errors';
@@ -14,24 +14,14 @@ import { traceError } from '../../logging';
  */
 @injectable()
 export class Extensions implements IExtensions {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public get all(): readonly Extension<any>[] {
-        return extensions.all;
-    }
-
-    public get onDidChange(): Event<void> {
-        return extensions.onDidChange;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public getExtension(extensionId: any) {
-        return extensions.getExtension(extensionId);
-    }
     public determineExtensionFromCallStack(stack?: string): { extensionId: string; displayName: string } {
         stack = stack || new Error().stack;
         try {
             if (stack) {
-                const jupyterExtRoot = this.getExtension(JVSC_EXTENSION_ID)!.extensionUri.toString().toLowerCase();
+                const jupyterExtRoot = extensions
+                    .getExtension(JVSC_EXTENSION_ID)!
+                    .extensionUri.toString()
+                    .toLowerCase();
                 const frames = stack
                     .split('\n')
                     .map((f) => {
@@ -48,7 +38,7 @@ export class Extensions implements IExtensions {
                     }
                 });
                 for (const frame of frames) {
-                    const matchingExt = this.all.find(
+                    const matchingExt = extensions.all.find(
                         (ext) =>
                             ext.id !== JVSC_EXTENSION_ID &&
                             (frame.toLowerCase().startsWith(ext.extensionUri.fsPath.toLowerCase()) ||

@@ -6,7 +6,7 @@ import { Memento, NotebookDocument, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../../platform/common/types';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -18,6 +18,7 @@ import {
 } from '../../kernels/helpers';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
+import { extensions } from 'vscode';
 
 const mementoKeyToNeverPromptExtensionAgain = 'JVSC_NEVER_PROMPT_EXTENSIONS_LIST';
 const knownExtensionsToRecommend = new Map<string, { displayName: string; extensionLink: string }>([
@@ -50,7 +51,6 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {
         disposables.push(this);
@@ -91,7 +91,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
     }
     private async recommendExtensionForLanguage(language: string) {
         const extensionId = extensionsThatSupportJupyterKernelLanguages.get(language.toLowerCase());
-        if (!extensionId || this.extensions.getExtension(extensionId)) {
+        if (!extensionId || extensions.getExtension(extensionId)) {
             return;
         }
         const extensionInfo = knownExtensionsToRecommend.get(extensionId);

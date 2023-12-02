@@ -10,7 +10,7 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Common, DataScience } from '../../platform/common/utils/localize';
-import { IConfigurationService, IExtensions } from '../../platform/common/types';
+import { IConfigurationService } from '../../platform/common/types';
 import {
     IKernelDependencyService,
     KernelConnectionMetadata,
@@ -54,7 +54,6 @@ suite('Error Handler Unit Tests', () => {
     let uriStorage: IJupyterServerUriStorage;
     let jupyterUriProviderRegistration: IJupyterServerProviderRegistry;
     let cmdManager: ICommandManager;
-    let extensions: IExtensions;
     let reservedPythonNames: IReservedPythonNamedProvider;
     let fs: IFileSystem;
     let interpreterService: IInterpreterService;
@@ -73,15 +72,15 @@ suite('Error Handler Unit Tests', () => {
         cmdManager = mock<ICommandManager>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
         jupyterUriProviderRegistration = mock<IJupyterServerProviderRegistry>();
-        extensions = mock<IExtensions>();
-        extensions = mock<IExtensions>();
         interpreterService = mock<IInterpreterService>();
         fs = mock<IFileSystem>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
-        when(extensions.getExtension(anything())).thenReturn({ packageJSON: { displayName: '' } } as any);
+        when(mockedVSCodeNamespaces.extensions.getExtension(anything())).thenReturn({
+            packageJSON: { displayName: '' }
+        } as any);
         when(fs.exists(anything())).thenResolve(true);
         reservedPythonNames = mock<IReservedPythonNamedProvider>();
         when(reservedPythonNames.isReserved(anything())).thenResolve(false);
@@ -93,7 +92,6 @@ suite('Error Handler Unit Tests', () => {
             instance(kernelDependencyInstaller),
             instance(uriStorage),
             false,
-            instance(extensions),
             instance(jupyterUriProviderRegistration),
             instance(reservedPythonNames),
             instance(fs),

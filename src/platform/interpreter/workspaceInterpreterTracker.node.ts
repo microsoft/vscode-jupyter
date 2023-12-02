@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Uri, workspace } from 'vscode';
-import { IDisposableRegistry, IExtensions, IsWebExtension, Resource } from '../common/types';
+import { Uri, extensions, workspace } from 'vscode';
+import { IDisposableRegistry, IsWebExtension, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { inject, injectable } from 'inversify';
 import { IInterpreterService } from './contracts';
@@ -19,7 +19,6 @@ export class DesktopWorkspaceInterpreterTracker implements IWorkspaceInterpreter
     private readonly workspaceInterpreters = new Map<string, undefined | Uri>();
     private trackingInterpreters?: boolean;
     constructor(
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -27,7 +26,7 @@ export class DesktopWorkspaceInterpreterTracker implements IWorkspaceInterpreter
     ) {}
     public activate() {
         this.trackActiveInterpreters();
-        this.extensions.onDidChange(this.trackActiveInterpreters, this, this.disposables);
+        extensions.onDidChange(this.trackActiveInterpreters, this, this.disposables);
     }
     public isActiveWorkspaceInterpreter(resource: Resource, interpreter?: PythonEnvironment) {
         if (!interpreter) {

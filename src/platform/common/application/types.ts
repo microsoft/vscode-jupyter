@@ -1023,19 +1023,6 @@ export interface ILanguageService {
 
 export type Channel = 'stable' | 'insiders';
 
-export const IClipboard = Symbol('IClipboard');
-export interface IClipboard {
-    /**
-     * Read the current clipboard contents as text.
-     */
-    readText(): Promise<string>;
-
-    /**
-     * Writes text into the clipboard.
-     */
-    writeText(value: string): Promise<void>;
-}
-
 export const IEncryptedStorage = Symbol('IEncryptedStorage');
 export interface IEncryptedStorage {
     store(service: string, key: string, value: string | undefined): Promise<void>;

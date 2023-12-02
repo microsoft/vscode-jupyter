@@ -25,10 +25,17 @@ import {
     UserJupyterServerUriListMementoKey,
     UserJupyterServerUrlProvider
 } from './userServerUrlProvider';
-import { CancellationError, CancellationToken, CancellationTokenSource, Disposable, InputBox, Memento } from 'vscode';
+import {
+    CancellationError,
+    CancellationToken,
+    CancellationTokenSource,
+    Disposable,
+    InputBox,
+    Memento,
+    env
+} from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
-    IClipboard,
     IApplicationShell,
     IEncryptedStorage,
     ICommandManager,
@@ -48,7 +55,6 @@ import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('User Uri Provider', () => {
     let provider: UserJupyterServerUrlProvider;
-    let clipboard: IClipboard;
     let applicationShell: IApplicationShell;
     let configService: IConfigurationService;
     let jupyterConnection: JupyterConnection;
@@ -117,7 +123,6 @@ suite('User Uri Provider', () => {
         });
         sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
 
-        clipboard = mock<IClipboard>();
         applicationShell = mock<IApplicationShell>();
         configService = mock<IConfigurationService>();
         jupyterConnection = mock<JupyterConnection>();
@@ -189,7 +194,6 @@ suite('User Uri Provider', () => {
         const appEnv = mock<IApplicationEnvironment>();
         when(appEnv.channel).thenReturn('stable');
         provider = new UserJupyterServerUrlProvider(
-            instance(clipboard),
             instance(applicationShell),
             instance(configService),
             instance(jupyterConnection),
@@ -372,7 +376,7 @@ suite('User Uri Provider', () => {
         await testMigration();
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.resolves('Foo Bar');
-        when(clipboard.readText()).thenResolve('https://localhost:3333?token=ABCD');
+        void env.clipboard.writeText('https://localhost:3333?token=ABCD');
 
         const [cmd] = await provider.provideCommands('', token);
         const server = await provider.handleCommand(cmd, token);
@@ -384,7 +388,6 @@ suite('User Uri Provider', () => {
         assert.ok(server.id);
         assert.strictEqual(server.label, 'Foo Bar');
         assert.ok(displayNameStub.called, 'We should have prompted the user for a display name');
-        verify(clipboard.readText()).once();
 
         const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
@@ -402,7 +405,7 @@ suite('User Uri Provider', () => {
     });
     test('When adding a HTTPS url (without pwd, and without a token) do not warn user about using insecure connections', async function () {
         await testMigration();
-        when(clipboard.readText()).thenResolve('https://localhost:3333');
+        void env.clipboard.writeText('https://localhost:3333');
         const secureConnectionStub = sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections');
         secureConnectionStub.resolves(true);
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');

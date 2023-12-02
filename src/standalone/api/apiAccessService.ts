@@ -5,12 +5,13 @@ import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell } from '../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, Telemetry, unknownExtensionId } from '../../platform/common/constants';
-import { GLOBAL_MEMENTO, IExtensionContext, IExtensions, IMemento } from '../../platform/common/types';
+import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../platform/common/types';
 import { PromiseChain } from '../../platform/common/utils/async';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { traceError, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
+import { extensions } from 'vscode';
 
 type ApiExtensionInfo = {
     extensionId: string;
@@ -42,8 +43,7 @@ export class ApiAccessService {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IExtensionContext) private context: IExtensionContext,
-        @inject(IApplicationEnvironment) private env: IApplicationEnvironment,
-        @inject(IExtensions) private extensions: IExtensions
+        @inject(IApplicationEnvironment) private env: IApplicationEnvironment
     ) {}
     public async getAccessInformation(info: {
         extensionId: string;
@@ -54,7 +54,7 @@ export class ApiAccessService {
         if (this.context.extensionMode === ExtensionMode.Test || !publisherId || this.env.channel === 'insiders') {
             if (!TrustedExtensionPublishers.has(publisherId) && !PublishersAllowedWithPrompts.has(publisherId)) {
                 traceWarning(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
-                const displayName = this.extensions.getExtension(info.extensionId)?.packageJSON?.displayName || '';
+                const displayName = extensions.getExtension(info.extensionId)?.packageJSON?.displayName || '';
                 const extensionDisplay =
                     displayName && info.extensionId
                         ? `${displayName} (${info.extensionId})`

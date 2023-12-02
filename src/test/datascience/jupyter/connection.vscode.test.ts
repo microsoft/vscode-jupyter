@@ -1,12 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {
-    IApplicationShell,
-    IClipboard,
-    ICommandManager,
-    IEncryptedStorage
-} from '../../../platform/common/application/types';
+import { IApplicationShell, ICommandManager, IEncryptedStorage } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import {
     IAsyncDisposableRegistry,
@@ -34,7 +29,7 @@ import {
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento, workspace } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento, env, workspace } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
@@ -125,7 +120,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
             jupyterLabWithHelloPasswordAndEmptyToken
         ]);
     });
-    let clipboard: IClipboard;
     let appShell: IApplicationShell;
     let encryptedStorage: IEncryptedStorage;
     let memento: Memento;
@@ -172,7 +166,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         token = new CancellationTokenSource();
         disposables.push(new Disposable(() => token.cancel()));
         disposables.push(token);
-        clipboard = mock<IClipboard>();
         appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         encryptedStorage = mock<IEncryptedStorage>();
         memento = mock<Memento>();
@@ -192,7 +185,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         requestCreator = api.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator);
 
         userUriProvider = new UserJupyterServerUrlProvider(
-            instance(clipboard),
             appShell,
             api.serviceContainer.get<IConfigurationService>(IConfigurationService),
             api.serviceContainer.get<JupyterConnection>(JupyterConnection),
@@ -242,7 +234,7 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         );
         disposables.push(prompt);
         const displayName = 'Test Remove Server Name';
-        when(clipboard.readText()).thenResolve(userUri);
+        void env.clipboard.writeText(userUri);
         sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser').resolves({
             url: userUri,
             jupyterServerUri: parseUri(userUri, '')!

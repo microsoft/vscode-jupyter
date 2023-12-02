@@ -5,7 +5,6 @@ import { IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
-import { ClipboardService } from './application/clipboard';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand.node';
 import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
@@ -14,7 +13,6 @@ import { Extensions } from './application/extensions.node';
 import { LanguageService } from './application/languageService.node';
 import {
     IApplicationEnvironment,
-    IClipboard,
     IDebugService,
     IDocumentManager,
     IEncryptedStorage,
@@ -50,7 +48,6 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
-    serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);

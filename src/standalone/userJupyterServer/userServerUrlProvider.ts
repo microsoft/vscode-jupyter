@@ -28,12 +28,7 @@ import {
     IJupyterServerProviderRegistry
 } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import {
-    IApplicationShell,
-    IClipboard,
-    ICommandManager,
-    IEncryptedStorage
-} from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager, IEncryptedStorage } from '../../platform/common/application/types';
 import {
     Identifiers,
     JUPYTER_HUB_EXTENSION_ID,
@@ -105,7 +100,6 @@ export class UserJupyterServerUrlProvider
     private jupyterServerUriInput: UserJupyterServerUriInput;
     private jupyterServerUriDisplayName: UserJupyterServerDisplayName;
     constructor(
-        @inject(IClipboard) clipboard: IClipboard,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
@@ -138,7 +132,7 @@ export class UserJupyterServerUrlProvider
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.secureConnectionValidator = new SecureConnectionValidator(applicationShell, globalMemento);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.jupyterServerUriInput = new UserJupyterServerUriInput(clipboard, applicationShell, requestCreator);
+        this.jupyterServerUriInput = new UserJupyterServerUriInput(applicationShell, requestCreator);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.jupyterServerUriDisplayName = new UserJupyterServerDisplayName(applicationShell);
         this.jupyterPasswordConnect = new JupyterPasswordConnect(
@@ -788,7 +782,6 @@ export class UserJupyterServerUrlProvider
 
 export class UserJupyterServerUriInput {
     constructor(
-        @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator
     ) {}
@@ -802,7 +795,7 @@ export class UserJupyterServerUriInput {
         // thats not a good UX, because as soon as user clicks kernel picker they get prompted to allow clipbpard access
         if (!initialValue && !isWeb) {
             try {
-                const text = await this.clipboard.readText().catch(() => '');
+                const text = await env.clipboard.readText();
                 const parsedUri = text.trim().startsWith('https://github.com/')
                     ? undefined
                     : Uri.parse(text.trim(), true);
@@ -810,6 +803,7 @@ export class UserJupyterServerUriInput {
                 initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : '';
             } catch {
                 // We can ignore errors.
+                initialValue = '';
             }
         }
 

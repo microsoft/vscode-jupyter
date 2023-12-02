@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
+import { ConfigurationTarget, Disposable, Event, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandIds } from '../../commands';
 import { ICommandManager } from './application/types';
@@ -202,34 +202,6 @@ export interface IExtensionContext extends ExtensionContext {}
 
 export const IExtensions = Symbol('IExtensions');
 export interface IExtensions {
-    /**
-     * All extensions currently known to the system.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly all: readonly Extension<any>[];
-
-    /**
-     * An event which fires when `extensions.all` changes. This can happen when extensions are
-     * installed, uninstalled, enabled or disabled.
-     */
-    readonly onDidChange: Event<void>;
-
-    /**
-     * Get an extension by its full identifier in the form of: `publisher.name`.
-     *
-     * @param extensionId An extension identifier.
-     * @return An extension or `undefined`.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getExtension(extensionId: string): Extension<any> | undefined;
-
-    /**
-     * Get an extension its full identifier in the form of: `publisher.name`.
-     *
-     * @param extensionId An extension identifier.
-     * @return An extension or `undefined`.
-     */
-    getExtension<T>(extensionId: string): Extension<T> | undefined;
     determineExtensionFromCallStack(stack?: string): { extensionId: string; displayName: string };
 }
 

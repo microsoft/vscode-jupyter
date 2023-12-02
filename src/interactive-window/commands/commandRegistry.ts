@@ -23,7 +23,6 @@ import { IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
 import {
     IApplicationShell,
-    IClipboard,
     ICommandManager,
     IDebugService,
     IDocumentManager
@@ -77,8 +76,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
-        @inject(IFileConverter) private fileConverter: IFileConverter,
-        @inject(IClipboard) private clipboard: IClipboard
+        @inject(IFileConverter) private fileConverter: IFileConverter
     ) {
         this.statusProvider = new StatusProvider(applicationShell);
         if (!workspace.isTrusted) {
@@ -856,7 +854,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                 context.metadata.interactiveWindowCellMarker ?? settings.defaultCellMarker,
                 context.document.getText()
             ].join('\n');
-            await this.clipboard.writeText(source);
+            await env.clipboard.writeText(source);
         }
     }
 }

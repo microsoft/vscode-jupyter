@@ -28,7 +28,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
 import { CancellationTokenSource, Disposable, EventEmitter, Memento, Uri } from 'vscode';
-import { IDisposable, IExtensionContext, IExtensions } from '../../../platform/common/types';
+import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import {
     BaseKernelConnectionMetadata,
@@ -235,7 +235,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             disposables.push(onDidChangeEvent);
             when(uriStorage.onDidChange).thenReturn(onDidChangeEvent.event);
 
-            const extensions = mock<IExtensions>();
             const trustedKernels = mock<ITrustedKernelPaths>();
             when(trustedKernels.isTrusted(anything())).thenReturn(true);
             kernelFinder = new KernelFinder(disposables);
@@ -261,8 +260,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                 kernelFinder,
                 [],
                 instance(extensionChecker),
-                instance(interpreterService),
-                instance(extensions)
+                instance(interpreterService)
             );
             changeEventFired = createEventHandler(kernelFinder, 'onDidChangeKernels', disposables);
             localKernelSpecFinder.activate();

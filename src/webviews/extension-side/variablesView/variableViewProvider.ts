@@ -15,8 +15,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExtensionContext,
-    IExtensions
+    IExtensionContext
 } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { INotebookWatcher, IVariableViewProvider } from './types';
@@ -56,7 +55,6 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IExperimentService) private readonly experiments: IExperimentService
     ) {}
 
@@ -78,7 +76,6 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.notebookWatcher,
             this.commandManager,
             this.documentManager,
-            this.extensions,
             this.experiments
         );
 
