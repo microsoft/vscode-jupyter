@@ -37,3 +37,9 @@ export const IExport = Symbol('IExport');
 export interface IExport {
     export(sourceDocument: NotebookDocument, target: Uri, token: CancellationToken): Promise<void>;
 }
+
+export const IExportUtil = Symbol('IExportUtil');
+export interface IExportUtil {
+    getContent(document: NotebookDocument): Promise<string>;
+    getTargetFile(format: ExportFormat, source: Uri, defaultFileName?: string | undefined): Promise<Uri | undefined>;
+}

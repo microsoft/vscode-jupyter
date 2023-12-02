@@ -1,16 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
 import { NotebookCellData, NotebookData, NotebookDocument, Uri, extensions } from 'vscode';
-import { ExportFormat } from './types';
+import { ExportFormat, IExportUtil } from './types';
 import { ExportDialog } from './exportDialog';
 
 /**
  * Export utilities that are common to node/web
  */
-@injectable()
-export class ExportUtilBase {
+export abstract class ExportUtilBase implements IExportUtil {
     async getContent(document: NotebookDocument): Promise<string> {
         const serializerApi = extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
             'vscode.ipynb'

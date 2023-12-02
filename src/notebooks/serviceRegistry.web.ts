@@ -25,9 +25,9 @@ import {
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { ExportBase } from './export/exportBase.web';
-import { ExportUtilBase } from './export/exportUtil';
-import { FileConverter } from './export/fileConverter';
-import { IExportBase, IFileConverter } from './export/types';
+import { ExportUtil } from './export/exportUtil.web';
+import { FileConverter } from './export/fileConverter.web';
+import { IExportBase, IExportUtil, IFileConverter } from './export/types';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { NotebookCommandListener } from './notebookCommandListener';
@@ -86,5 +86,5 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
 
     serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
-    serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
+    serviceManager.addSingleton<IExportUtil>(IExportUtil, ExportUtil);
 }

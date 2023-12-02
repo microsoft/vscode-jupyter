@@ -13,8 +13,7 @@ import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/type
 import { concatMultilineString } from '../../platform/common/utils';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { ExportUtilBase } from './exportUtil';
-import { ExportFormat, IExportBase } from './types';
+import { ExportFormat, IExportBase, IExportUtil } from './types';
 import { traceError, traceLog } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
@@ -45,7 +44,8 @@ export class ExportBase implements IExportBase {
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
+        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
+        @inject(IExportUtil) private readonly exportUtil: IExportUtil
     ) {}
 
     public async export(
@@ -93,7 +93,7 @@ export class ExportBase implements IExportBase {
         const jupyter = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         const contentsManager = new jupyter.ContentsManager({ serverSettings });
 
-        let contents = await new ExportUtilBase().getContent(sourceDocument);
+        let contents = await this.exportUtil.getContent(sourceDocument);
 
         let fileExt = '';
 

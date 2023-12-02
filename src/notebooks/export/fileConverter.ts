@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import { CancellationToken, NotebookDocument, Uri, workspace } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IApplicationShell } from '../../platform/common/application/types';
@@ -13,8 +13,7 @@ import { traceError } from '../../platform/logging';
 import { ProgressReporter } from '../../platform/progress/progressReporter';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportFileOpener } from './exportFileOpener';
-import { ExportUtilBase } from './exportUtil';
-import { ExportFormat, IFileConverter } from './types';
+import { ExportFormat, IExportUtil, IFileConverter } from './types';
 import { ExportToPython } from './exportToPython';
 import { ExportToPDF } from './exportToPDF';
 import { ExportToHTML } from './exportToHTML';
@@ -23,10 +22,9 @@ import { ExportToPythonPlain } from './exportToPythonPlain';
 /**
  * Converts different file formats to others. Used in export.
  */
-@injectable()
-export class FileConverter implements IFileConverter {
+export abstract class FileConverterBase implements IFileConverter {
     constructor(
-        @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
+        @inject(IExportUtil) protected readonly exportUtil: IExportUtil,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService
