@@ -93,7 +93,7 @@ export class ExportBase implements IExportBase {
         const jupyter = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         const contentsManager = new jupyter.ContentsManager({ serverSettings });
 
-        let contents = await new ExportUtilBase().getContent(sourceDocument);
+        let contents = await this.exportUtil.getContent(sourceDocument);
 
         let fileExt = '';
 
