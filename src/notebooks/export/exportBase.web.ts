@@ -13,8 +13,7 @@ import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/type
 import { concatMultilineString } from '../../platform/common/utils';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { ExportUtilBase } from './exportUtil';
-import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './types';
+import { ExportFormat, IExportBase, IExportUtil } from './types';
 import { traceError, traceLog } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
@@ -41,13 +40,12 @@ function generateBackingIPyNbFileName(resource: Resource) {
  * Base class for exporting on web. Uses the kernel to perform the export and then translates the blob sent back to a file.
  */
 @injectable()
-export class ExportBase implements INbConvertExport, IExportBase {
+export class ExportBase implements IExportBase {
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExportDialog) protected readonly filePicker: IExportDialog,
-        @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
-        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
+        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
+        @inject(IExportUtil) private readonly exportUtil: IExportUtil
     ) {}
 
     public async export(

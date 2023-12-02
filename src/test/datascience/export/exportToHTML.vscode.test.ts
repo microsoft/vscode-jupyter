@@ -7,10 +7,10 @@ import * as path from '../../../platform/vscode-path/path';
 import { CancellationTokenSource, Uri, workspace } from 'vscode';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ExportInterpreterFinder } from '../../../notebooks/export/exportInterpreterFinder.node';
-import { INbConvertExport, ExportFormat } from '../../../notebooks/export/types';
 import { IExtensionTestApi } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
+import { ExportToHTML } from '../../../notebooks/export/exportToHTML';
 
 suite('Export HTML @export', function () {
     let api: IExtensionTestApi;
@@ -22,7 +22,7 @@ suite('Export HTML @export', function () {
     suiteTeardown(closeActiveWindows);
     test('Export To HTML', async () => {
         const fileSystem = api.serviceContainer.get<IFileSystemNode>(IFileSystemNode);
-        const exportToHTML = api.serviceContainer.get<INbConvertExport>(INbConvertExport, ExportFormat.html);
+        const exportToHTML = new ExportToHTML();
         const exportInterpreterFinder = api.serviceContainer.get<ExportInterpreterFinder>(ExportInterpreterFinder);
         const file = await fileSystem.createTemporaryLocalFile('.html');
         const target = Uri.file(file.filePath);

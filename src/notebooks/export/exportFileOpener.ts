@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
 import { Position, TextEditor, Uri, window, workspace } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry, PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -10,13 +9,16 @@ import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { ExportFormat } from './types';
 import { openInBrowser } from '../../platform/common/net/browser';
+import { ServiceContainer } from '../../platform/ioc/container';
 
 /**
  * Used to handle opening the results of an export
  */
-@injectable()
 export class ExportFileOpener {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
+    private readonly fs: IFileSystem;
+    constructor() {
+        this.fs = ServiceContainer.instance.get<IFileSystem>(IFileSystem);
+    }
 
     public async openFile(format: ExportFormat, uri: Uri, openDirectly: boolean = false) {
         if (format === ExportFormat.python) {

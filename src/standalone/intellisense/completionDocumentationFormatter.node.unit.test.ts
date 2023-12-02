@@ -10,24 +10,34 @@ import { convertDocumentationToMarkdown } from './completionDocumentationFormatt
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../test/constants.node';
 
 suite('Jupyter Completion Documentation Formatter', () => {
-    test('Python DocString', async () => {
-        await convertAndCompare('python', 'python.df.A');
-        await convertAndCompare('python', 'python.df.align');
-        await convertAndCompare('python', 'python.df.axes');
-        await convertAndCompare('python', 'python.matplotlib_inline');
-        await convertAndCompare('python', 'python.magic.timeit');
-        await convertAndCompare('python', 'python.property');
-        await convertAndCompare('python', 'python.ArithmeticError');
+    suite('Python DocString', () => {
+        [
+            'python.df.A',
+            'python.df.align',
+            'python.df.axes',
+            'python.matplotlib_inline',
+            'python.magic.timeit',
+            'python.property',
+            'python.ArithmeticError'
+        ].forEach((inputFile) => {
+            test(inputFile, async () => {
+                await convertAndCompare('python', inputFile);
+            });
+        });
     });
-    test('Julia DocString', async () => {
-        await convertAndCompare('julia', 'julia.abs');
-        await convertAndCompare('julia', 'julia.axes');
-        await convertAndCompare('julia', 'julia.zip');
+    suite('Julia DocString', async () => {
+        ['julia.abs', 'julia.axes', 'julia.zip'].forEach((inputFile) => {
+            test(inputFile, async () => {
+                await convertAndCompare('julia', inputFile);
+            });
+        });
     });
-    test('R DocString', async () => {
-        await convertAndCompare('r', 'r.sort');
-        await convertAndCompare('r', 'r.sortedXyData');
-        await convertAndCompare('r', 'r.library');
+    suite('R DocString', async () => {
+        ['r.sort', 'r.sortedXyData', 'r.library'].forEach((inputFile) => {
+            test(inputFile, async () => {
+                await convertAndCompare('r', inputFile);
+            });
+        });
     });
 
     async function convertAndCompare(language: string, inputFile: string) {

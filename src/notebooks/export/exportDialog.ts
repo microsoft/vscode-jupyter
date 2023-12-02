@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import { SaveDialogOptions, Uri, window } from 'vscode';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import * as localize from '../../platform/common/utils/localize';
-import { ExportFormat, IExportDialog } from './types';
+import { ExportFormat } from './types';
 import { IsWebExtension } from '../../platform/common/types';
 import { ServiceContainer } from '../../platform/ioc/container';
 
@@ -18,10 +17,7 @@ export const PythonExtensions = { Python: ['py'] };
 /**
  * UI for exporting a notebook to a file.
  */
-@injectable()
-export class ExportDialog implements IExportDialog {
-    constructor(@inject(IsWebExtension) private readonly isWebExtension: boolean) {}
-
+export class ExportDialog {
     public async showDialog(
         format: ExportFormat,
         source: Uri | undefined,
@@ -71,7 +67,8 @@ export class ExportDialog implements IExportDialog {
     }
 
     private async getDefaultUri(source: Uri | undefined, targetFileName: string): Promise<Uri | undefined> {
-        if (source && source.scheme === 'untitled' && this.isWebExtension) {
+        const isWebExtension = ServiceContainer.instance.get<boolean>(IsWebExtension);
+        if (source && source.scheme === 'untitled' && isWebExtension) {
             // Force using simple file dialog
             return undefined;
         }

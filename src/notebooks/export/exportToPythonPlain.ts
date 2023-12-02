@@ -1,22 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookCell, NotebookCellKind, NotebookDocument, Uri } from 'vscode';
 import { splitLines } from '../../platform/common/helpers';
 import { IFileSystem, IPlatformService } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { appendLineFeed } from '../../platform/common/utils';
 import { IExport } from './types';
+import { ServiceContainer } from '../../platform/ioc/container';
 
 // Handles exporting a NotebookDocument to python without using nbconvert
-@injectable()
 export class ExportToPythonPlain implements IExport {
-    public constructor(
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IPlatformService) private platform: IPlatformService
-    ) {}
+    private readonly fs: IFileSystem;
+    private readonly configuration: IConfigurationService;
+    private platform: IPlatformService;
+    constructor() {
+        this.fs = ServiceContainer.instance.get<IFileSystem>(IFileSystem);
+        this.configuration = ServiceContainer.instance.get<IConfigurationService>(IConfigurationService);
+        this.platform = ServiceContainer.instance.get<IPlatformService>(IPlatformService);
+    }
 
     async writeFile(target: Uri, contents: string): Promise<void> {
         await this.fs.writeFile(target, contents);

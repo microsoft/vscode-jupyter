@@ -1,23 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { NotebookCellData, NotebookData, NotebookDocument, Uri } from 'vscode';
-import { IExtensions } from '../../platform/common/types';
-import { ExportFormat, IExportDialog } from './types';
+import { NotebookCellData, NotebookData, NotebookDocument, Uri, extensions } from 'vscode';
+import { ExportFormat, IExportUtil } from './types';
+import { ExportDialog } from './exportDialog';
 
 /**
  * Export utilities that are common to node/web
  */
-@injectable()
-export class ExportUtilBase {
-    constructor(
-        @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IExportDialog) protected readonly filePicker: IExportDialog
-    ) {}
-
+export abstract class ExportUtilBase implements IExportUtil {
     async getContent(document: NotebookDocument): Promise<string> {
-        const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
+        const serializerApi = extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
             'vscode.ipynb'
         );
         if (!serializerApi) {
@@ -48,7 +41,7 @@ export class ExportUtilBase {
         source: Uri,
         defaultFileName?: string | undefined
     ): Promise<Uri | undefined> {
-        let target = await this.filePicker.showDialog(format, source, defaultFileName);
+        let target = await new ExportDialog().showDialog(format, source, defaultFileName);
 
         return target;
     }

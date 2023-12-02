@@ -25,15 +25,9 @@ import {
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { ExportBase } from './export/exportBase.web';
-import { ExportDialog } from './export/exportDialog';
-import { ExportFileOpener } from './export/exportFileOpener';
-import { ExportToHTML } from './export/exportToHTML';
-import { ExportToPDF } from './export/exportToPDF';
-import { ExportToPython } from './export/exportToPython';
-import { ExportToPythonPlain } from './export/exportToPythonPlain';
-import { ExportUtilBase } from './export/exportUtil';
-import { FileConverter } from './export/fileConverter';
-import { ExportFormat, IExport, IExportBase, IExportDialog, IFileConverter, INbConvertExport } from './export/types';
+import { ExportUtil } from './export/exportUtil.web';
+import { FileConverter } from './export/fileConverter.web';
+import { IExportBase, IExportUtil, IFileConverter } from './export/types';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { NotebookCommandListener } from './notebookCommandListener';
@@ -90,13 +84,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         CellOutputMimeTypeTracker
     );
 
-    serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
     serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);
-    serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
-    serviceManager.addSingleton<IExport>(IExport, ExportToPythonPlain, ExportFormat.python);
-    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToHTML, ExportFormat.html);
-    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
-    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
-    serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
+    serviceManager.addSingleton<IExportUtil>(IExportUtil, ExportUtil);
 }

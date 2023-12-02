@@ -11,8 +11,8 @@ import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './types';
-import { ExportUtil } from './exportUtil.node';
+import { ExportFormat, IExportBase, IExportUtil } from './types';
+import { ExportUtilNode, removeSvgs } from './exportUtil.node';
 import { TemporaryDirectory } from '../../platform/common/platform/types';
 import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../platform/interpreter/types.node';
@@ -21,14 +21,13 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../platform
  * Base class for using nbconvert to perform different export operations on node
  */
 @injectable()
-export class ExportBase implements INbConvertExport, IExportBase {
+export class ExportBase implements IExportBase {
     constructor(
         @inject(IPythonExecutionFactory) protected readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IJupyterSubCommandExecutionService)
         protected jupyterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystemNode) protected readonly fs: IFileSystemNode,
-        @inject(IExportDialog) protected readonly filePicker: IExportDialog,
-        @inject(ExportUtil) protected readonly exportUtil: ExportUtil,
+        @inject(IExportUtil) protected readonly exportUtil: IExportUtil,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
         @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder
     ) {}
@@ -67,7 +66,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
         if (format === ExportFormat.pdf) {
             // When exporting to PDF we need to remove any SVG output. This is due to an error
             // with nbconvert and a dependency of its called InkScape.
-            contents = await this.exportUtil.removeSvgs(contents);
+            contents = await removeSvgs(contents);
         }
 
         /* Need to make a temp directory here, instead of just a temp file. This is because
@@ -75,7 +74,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
             as what we want the title of the exported file to be. To ensure this file path will be unique
             we store it in a temp directory. The name of the file matters because when
             exporting to certain formats the filename is used within the exported document as the title. */
-        const tempDir = await this.exportUtil.generateTempDir();
+        const tempDir = await new ExportUtilNode().generateTempDir();
         const source = await this.makeSourceFile(target, contents, tempDir);
 
         const service = await this.getExecutionService(source, interpreter);
@@ -126,7 +125,11 @@ export class ExportBase implements INbConvertExport, IExportBase {
     private async makeSourceFile(target: Uri, contents: string, tempDir: TemporaryDirectory): Promise<Uri> {
         // Creates a temporary file with the same base name as the target file
         const fileName = path.basename(target.fsPath, path.extname(target.fsPath));
-        const sourceFilePath = await this.exportUtil.makeFileInDirectory(contents, `${fileName}.ipynb`, tempDir.path);
+        const sourceFilePath = await new ExportUtilNode().makeFileInDirectory(
+            contents,
+            `${fileName}.ipynb`,
+            tempDir.path
+        );
         return Uri.file(sourceFilePath);
     }
 
