@@ -18,12 +18,7 @@ import {
 } from 'vscode';
 
 import { instance, mock, when } from 'ts-mockito';
-import {
-    ICommandManager,
-    IDebugService,
-    IDocumentManager,
-    IVSCodeNotebook
-} from '../../platform/common/application/types';
+import { ICommandManager, IDebugService, IDocumentManager } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { CodeLensFactory } from './codeLensFactory';
@@ -138,9 +133,10 @@ suite('Code Watcher Unit Tests', () => {
         when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
         const trustedEvent = new EventEmitter<void>();
         when(mockedVSCodeNamespaces.workspace.onDidGrantWorkspaceTrust).thenReturn(trustedEvent.event);
-        const notebook = mock<IVSCodeNotebook>();
         const execStateChangeEvent = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
-        when(notebook.onDidChangeNotebookCellExecutionState).thenReturn(execStateChangeEvent.event);
+        when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
+            execStateChangeEvent.event
+        );
         const storageFactory = mock<IGeneratedCodeStorageFactory>();
         const kernelProvider = mock<IKernelProvider>();
         const kernelDisposedEvent = new EventEmitter<IKernel>();
@@ -151,7 +147,6 @@ suite('Code Watcher Unit Tests', () => {
         const codeLensFactory = new CodeLensFactory(
             configService.object,
             documentManager.object,
-            instance(notebook),
             disposables,
             instance(storageFactory),
             instance(kernelProvider)

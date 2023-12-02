@@ -8,11 +8,12 @@ import {
     NotebookCellKind,
     NotebookDocument,
     TextDocument,
-    Uri
+    Uri,
+    notebooks,
+    workspace
 } from 'vscode';
 import { ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -66,24 +67,21 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
     private get isTelemetryDisabled() {
         return isTelemetryDisabled();
     }
-    constructor(
-        @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
-    ) {
+    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         disposables.push(this);
-        this.vscNotebook.onDidOpenNotebookDocument(
+        workspace.onDidOpenNotebookDocument(
             (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
             this.disposables
         );
-        this.vscNotebook.onDidCloseNotebookDocument(
+        workspace.onDidCloseNotebookDocument(
             (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
             this.disposables
         );
-        this.vscNotebook.onDidSaveNotebookDocument(
+        workspace.onDidSaveNotebookDocument(
             (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
             this.disposables
         );
-        this.vscNotebook.onDidChangeNotebookCellExecutionState(
+        notebooks.onDidChangeNotebookCellExecutionState(
             (e) => {
                 if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
                     this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
@@ -100,7 +98,7 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
     }
 
     public activate() {
-        this.vscNotebook.notebookDocuments.forEach((e) => this.checkNotebookDocument(e, 'onOpenCloseOrSave'));
+        workspace.notebookDocuments.forEach((e) => this.checkNotebookDocument(e, 'onOpenCloseOrSave'));
     }
 
     private getDocumentLines(document: TextDocument): string[] {

@@ -4,11 +4,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, CompletionList, Position } from 'vscode';
-import { IVSCodeNotebook } from '../../../../platform/common/application/types';
+import { commands, CompletionList, Position, window } from 'vscode';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
-import { captureScreenShot, IExtensionTestApi } from '../../../common.node';
+import { captureScreenShot } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { initialize } from '../../../initialize.node';
 import {
@@ -26,9 +25,7 @@ import { getTextOutputValue } from '../../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', function () {
-    let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let vscodeNotebook: IVSCodeNotebook;
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo(`Start Suite Code Completion via Jupyter`);
@@ -37,11 +34,10 @@ suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', funct
             return this.skip();
         }
         this.timeout(120_000);
-        api = await initialize();
+        await initialize();
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
@@ -65,7 +61,7 @@ suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', funct
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell and get completions for variable', async () => {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await runCell(cell);
 
@@ -74,7 +70,7 @@ suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', funct
         const outputText = getTextOutputValue(cell.outputs[0]).trim();
         traceInfo(`Cell Output ${outputText}`);
         await insertCodeCell('a.', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+        const cell2 = window.activeNotebookEditor!.notebook.cellAt(1);
 
         const position = new Position(0, 2);
         traceInfo('Get completions in test');

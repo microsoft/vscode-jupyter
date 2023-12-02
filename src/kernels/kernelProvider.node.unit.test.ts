@@ -13,7 +13,7 @@ import {
     NotebookDocument,
     Uri
 } from 'vscode';
-import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
+import { IApplicationShell } from '../platform/common/application/types';
 import {
     IConfigurationService,
     IDisposable,
@@ -48,7 +48,6 @@ suite('Jupyter Session', () => {
         let sessionCreator: IKernelSessionFactory;
         let configService: IConfigurationService;
         let appShell: IApplicationShell;
-        let vscNotebook: IVSCodeNotebook;
         let context: IExtensionContext;
         let jupyterServerUriStorage: IJupyterServerUriStorage;
         let metadata: KernelConnectionMetadata;
@@ -58,7 +57,6 @@ suite('Jupyter Session', () => {
             sessionCreator = mock<IKernelSessionFactory>();
             configService = mock<IConfigurationService>();
             appShell = mock<IApplicationShell>();
-            vscNotebook = mock<IVSCodeNotebook>();
             context = mock<IExtensionContext>();
             jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
             metadata = mock<KernelConnectionMetadata>();
@@ -79,7 +77,6 @@ suite('Jupyter Session', () => {
                 instance(sessionCreator),
                 instance(configService),
                 instance(appShell),
-                instance(vscNotebook),
                 instance(context),
                 instance(jupyterServerUriStorage),
                 [],
@@ -97,7 +94,6 @@ suite('Jupyter Session', () => {
                 instance(sessionCreator),
                 instance(configService),
                 instance(appShell),
-                instance(vscNotebook),
                 instance(registry),
                 instance(workspaceMemento)
             );
@@ -174,7 +170,6 @@ suite('Jupyter Session', () => {
         let sessionCreator: IKernelSessionFactory;
         let configService: IConfigurationService;
         let appShell: IApplicationShell;
-        let vscNotebook: IVSCodeNotebook;
         let jupyterServerUriStorage: IJupyterServerUriStorage;
         let context: IExtensionContext;
         let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
@@ -206,7 +201,6 @@ suite('Jupyter Session', () => {
             sessionCreator = mock<IKernelSessionFactory>();
             configService = mock<IConfigurationService>();
             appShell = mock<IApplicationShell>();
-            vscNotebook = mock<IVSCodeNotebook>();
             jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
             context = mock<IExtensionContext>();
             const configSettings = mock<IWatchableJupyterSettings>();
@@ -215,12 +209,14 @@ suite('Jupyter Session', () => {
             when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
                 onDidChangeNotebookCellExecutionState.event
             );
-            when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
+            when(mockedVSCodeNamespaces.workspace.onDidCloseNotebookDocument).thenReturn(
+                onDidCloseNotebookDocument.event
+            );
             when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
                 onDidChangeNotebookCellExecutionState.event
             );
             when(configService.getSettings(anything())).thenReturn(instance(configSettings));
-            when(vscNotebook.notebookDocuments).thenReturn([
+            when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([
                 instance(sampleNotebook1),
                 instance(sampleNotebook2),
                 instance(sampleNotebook3)
@@ -239,7 +235,6 @@ suite('Jupyter Session', () => {
                 instance(sessionCreator),
                 instance(configService),
                 instance(appShell),
-                instance(vscNotebook),
                 instance(context),
                 instance(jupyterServerUriStorage),
                 [],
@@ -252,7 +247,6 @@ suite('Jupyter Session', () => {
                 instance(sessionCreator),
                 instance(configService),
                 instance(appShell),
-                instance(vscNotebook),
                 instance(registry),
                 instance(workspaceMemento)
             );

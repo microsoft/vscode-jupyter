@@ -14,7 +14,6 @@ import {
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { IDisposableRegistry, IConfigurationService } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -46,7 +45,6 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
@@ -57,11 +55,11 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         // Sign up for kernel change events on notebooks
         this.controllerRegistration.onControllerSelected(this.controllerChanged, this, this.disposables);
         // Sign up for notebook open and close events.
-        this.notebooks.onDidOpenNotebookDocument(this.openedNotebook, this, this.disposables);
-        this.notebooks.onDidCloseNotebookDocument(this.closedNotebook, this, this.disposables);
+        workspace.onDidOpenNotebookDocument(this.openedNotebook, this, this.disposables);
+        workspace.onDidCloseNotebookDocument(this.closedNotebook, this, this.disposables);
 
         // For all currently open notebooks, launch their language server
-        this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).catch(noop));
+        workspace.notebookDocuments.forEach((n) => this.openedNotebook(n).catch(noop));
 
         // Track active interpreter, but synchronously. We need synchronously so we
         // can compare during intellisense operations.
@@ -261,7 +259,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
             this.servers.clear();
 
             // For all currently open notebooks, launch their language server
-            this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).catch(noop));
+            workspace.notebookDocuments.forEach((n) => this.openedNotebook(n).catch(noop));
         }
     }
 }

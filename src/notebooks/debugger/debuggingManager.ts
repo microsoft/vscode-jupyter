@@ -10,16 +10,12 @@ import {
     DebugSessionOptions,
     NotebookCell,
     NotebookDocument,
-    Uri
+    Uri,
+    workspace
 } from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDebugService,
-    IVSCodeNotebook
-} from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager, IDebugService } from '../../platform/common/application/types';
 import { EditorContexts } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { IPlatformService } from '../../platform/common/platform/types';
@@ -60,13 +56,12 @@ export class DebuggingManager
         @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(kernelProvider, controllerRegistration, commandManager, appShell, vscNotebook, serviceContainer);
+        super(kernelProvider, controllerRegistration, commandManager, appShell, serviceContainer);
         this.runByLineCells = new ContextKey(EditorContexts.RunByLineCells, commandManager);
         this.runByLineDocuments = new ContextKey(EditorContexts.RunByLineDocuments, commandManager);
         this.debugDocuments = new ContextKey(EditorContexts.DebugDocuments, commandManager);
@@ -176,7 +171,7 @@ export class DebuggingManager
         assertIsDebugConfig(config);
 
         const notebookUri = config.__notebookUri;
-        const notebook = this.vscNotebook.notebookDocuments.find((doc) => doc.uri.toString() === notebookUri);
+        const notebook = workspace.notebookDocuments.find((doc) => doc.uri.toString() === notebookUri);
 
         if (!notebook) {
             traceInfo(`Cannot start debugging. Notebook ${notebookUri} not found.`);

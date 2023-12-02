@@ -3,8 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as sinon from 'sinon';
-import { commands, ConfigurationTarget, Memento, NotebookEditor, workspace } from 'vscode';
-import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { commands, ConfigurationTarget, Memento, NotebookEditor, window, workspace } from 'vscode';
 import { traceInfo } from '../../../platform/logging';
 import {
     GLOBAL_MEMENTO,
@@ -43,7 +42,6 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
     suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'} @widgets`, function () {
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];
-        let vscodeNotebook: IVSCodeNotebook;
         let kernelProvider: IKernelProvider;
 
         this.timeout(120_000);
@@ -62,7 +60,6 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             api = await initialize();
             const config = workspace.getConfiguration('jupyter', undefined);
             await config.update('widgetScriptSources', widgetScriptSourcesValue, ConfigurationTarget.Global);
-            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
             const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             const settings = configService.getSettings(undefined) as ReadWrite<IJupyterSettings>;
@@ -82,8 +79,6 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             await commands.executeCommand('workbench.action.closePanel');
             await commands.executeCommand('workbench.action.maximizeEditorHideSidebar');
             comms = await initializeWidgetComms(disposables);
-
-            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
 
             traceInfo('Suite Setup (completed)');
         });
@@ -105,11 +100,11 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
         suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
         test('Slider Widget', async function () {
             await initializeNotebookForWidgetTest(disposables, { templateFile: 'slider_widgets.ipynb' }, editor);
-            const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+            const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
 
-            const cellVersion = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(4)!;
+            const cellVersion = window.activeNotebookEditor?.notebook.cellAt(4)!;
             await Promise.all([
                 runCell(cellVersion),
                 waitForCondition(
@@ -130,7 +125,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
                 },
                 editor
             );
-            const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [cell0, cell1] = window.activeNotebookEditor!.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell0, comms);
             await executeCellAndWaitForOutput(cell1, comms);
@@ -155,7 +150,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
                 },
                 editor
             );
-            const [, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [, cell1] = window.activeNotebookEditor!.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell1, comms);
             await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
@@ -175,7 +170,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
                 },
                 editor
             );
-            const [, cell1, cell2] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [, cell1, cell2] = window.activeNotebookEditor!.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell1, comms);
             await executeCellAndWaitForOutput(cell2, comms);
@@ -201,7 +196,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
                 },
                 editor
             );
-            const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [, cell1, cell2, cell3] = window.activeNotebookEditor!.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell1, comms);
             await executeCellAndWaitForOutput(cell2, comms);
@@ -222,7 +217,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
                 },
                 editor
             );
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+            const cell = window.activeNotebookEditor!.notebook.cellAt(1);
             // ipyvolume fails in Python 3.10 due to a known issue.
             const kernel = kernelProvider.get(cell.notebook);
             if (
@@ -246,7 +241,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
                 },
                 editor
             );
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+            const cell = window.activeNotebookEditor!.notebook.cellAt(1);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['<canvas']);
@@ -259,7 +254,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
                 },
                 editor
             );
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+            const cell = window.activeNotebookEditor!.notebook.cellAt(1);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['<canvas']);
@@ -272,7 +267,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
                 },
                 editor
             );
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+            const cell = window.activeNotebookEditor!.notebook.cellAt(1);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image']);
@@ -281,7 +276,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'matplotlib_widgets_inline.ipynb'
             });
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(2);
+            const cell = window.activeNotebookEditor!.notebook.cellAt(2);
 
             const mimTypes = () =>
                 cell.outputs.map((output) => output.items.map((item) => item.mime).join(',')).join(',');
@@ -300,7 +295,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
                 },
                 editor
             );
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(3);
+            const cell = window.activeNotebookEditor!.notebook.cellAt(3);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['>Figure 1<', '<canvas', 'Download plot']);
@@ -313,7 +308,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
                 },
                 editor
             );
-            const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [, cell1, cell2, cell3] = window.activeNotebookEditor!.notebook.getCells();
 
             await executeCellAndDontWaitForOutput(cell1);
             await executeCellAndWaitForOutput(cell2, comms);

@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { IInterpreterStatusbarVisibilityFilter, IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
-import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { isJupyterNotebook } from '../../common/utils';
 import { noop } from '../../common/utils/misc';
@@ -21,12 +20,11 @@ export class InterpreterStatusBarVisibility
     private _registered = false;
 
     constructor(
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IPythonApiProvider) private pythonApi: IPythonApiProvider
     ) {
-        vscNotebook.onDidChangeActiveNotebookEditor(
+        window.onDidChangeActiveNotebookEditor(
             () => {
                 this._changed.fire();
             },
@@ -46,10 +44,7 @@ export class InterpreterStatusBarVisibility
         return this._changed.event;
     }
     public get hidden() {
-        return this.vscNotebook.activeNotebookEditor &&
-            isJupyterNotebook(this.vscNotebook.activeNotebookEditor.notebook)
-            ? true
-            : false;
+        return window.activeNotebookEditor && isJupyterNotebook(window.activeNotebookEditor.notebook) ? true : false;
     }
     private registerStatusFilter() {
         if (this._registered) {

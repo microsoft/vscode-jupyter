@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, multiInject, named } from 'inversify';
-import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
+import { IApplicationShell } from '../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { Memento, NotebookDocument, Uri } from 'vscode';
 import {
@@ -39,14 +39,13 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IKernelSessionFactory) private sessionCreator: IKernelSessionFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
         @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
         @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
-        super(asyncDisposables, disposables, notebook);
+        super(asyncDisposables, disposables);
         disposables.push(jupyterServerUriStorage.onDidRemove(this.handleServerRemoval.bind(this)));
     }
 
@@ -102,11 +101,10 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IKernelSessionFactory) private sessionCreator: IKernelSessionFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
-        super(asyncDisposables, disposables, notebook);
+        super(asyncDisposables, disposables);
     }
 
     public getOrCreate(uri: Uri, options: ThirdPartyKernelOptions): IThirdPartyKernel {

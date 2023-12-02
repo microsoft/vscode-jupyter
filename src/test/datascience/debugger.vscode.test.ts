@@ -5,11 +5,11 @@ import { assert } from 'chai';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as sinon from 'sinon';
-import { commands, debug } from 'vscode';
+import { commands, debug, window } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IDebuggingManager, INotebookDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
-import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { Commands, JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
 import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
@@ -40,7 +40,6 @@ suite('Run By Line @debugger', function () {
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
-    let vscodeNotebook: IVSCodeNotebook;
     let debuggingManager: IDebuggingManager;
     this.timeout(120_000);
     suiteSetup(async function () {
@@ -66,7 +65,6 @@ suite('Run By Line @debugger', function () {
             traceVerbose('Step5');
             variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
             debuggingManager = api.serviceContainer.get<IDebuggingManager>(INotebookDebuggingManager);
-            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         } catch (ex) {
             traceError('Failed to setup suite for Run By Line @debugger', ex);
             throw ex;
@@ -127,7 +125,7 @@ suite('Run By Line @debugger', function () {
             });
 
             const cell = await insertCodeCell('a=1\na', { index: 0 });
-            const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
+            const doc = window.activeNotebookEditor?.notebook!;
             traceInfo(`Inserted cell`);
 
             await commandManager.executeCommand(Commands.RunByLine, cell);
@@ -165,7 +163,7 @@ suite('Run By Line @debugger', function () {
     test.skip('Stops at end of cell', async function () {
         // Run by line seems to end up on the second line of the function, not the first
         const cell = await insertCodeCell('a=1\na', { index: 0 });
-        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
+        const doc = window.activeNotebookEditor?.notebook!;
         traceInfo(`Inserted cell`);
 
         await commandManager.executeCommand(Commands.RunByLine, cell);
@@ -208,7 +206,7 @@ suite('Run By Line @debugger', function () {
 
     test('Interrupt during debugging', async function () {
         const cell = await insertCodeCell('a=1\na', { index: 0 });
-        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
+        const doc = window.activeNotebookEditor?.notebook!;
 
         await commandManager.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
@@ -226,7 +224,7 @@ suite('Run By Line @debugger', function () {
 
     test('Stops in same-cell function called from last line', async function () {
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
-        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
+        const doc = window.activeNotebookEditor?.notebook!;
 
         await commandManager.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
@@ -256,7 +254,7 @@ suite('Run By Line @debugger', function () {
     test.skip('Restart while debugging', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/12188
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
-        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
+        const doc = window.activeNotebookEditor?.notebook!;
 
         await commandManager.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
@@ -280,7 +278,7 @@ suite('Run By Line @debugger', function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
         const cell1 = await insertCodeCell('foo()');
-        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
+        const doc = window.activeNotebookEditor?.notebook!;
 
         await runCell(cell0);
         await commandManager.executeCommand(Commands.RunByLine, cell1);
@@ -307,7 +305,7 @@ suite('Run By Line @debugger', function () {
                 index: 0
             }
         );
-        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
+        const doc = window.activeNotebookEditor?.notebook!;
         const cell = doc.getCells()[0];
 
         commandManager.executeCommand(Commands.RunByLine, cell).then(noop, noop);

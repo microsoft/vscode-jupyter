@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IDocumentManager } from '../../platform/common/application/types';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { CodeGenerator } from './codeGenerator';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory, IInteractiveWindowCodeGenerator } from './types';
-import { NotebookDocument } from 'vscode';
+import { NotebookDocument, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 
 /**
@@ -20,11 +20,10 @@ export class CodeGeneratorFactory implements ICodeGeneratorFactory, IExtensionSy
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public activate(): void {
-        this.notebooks.onDidCloseNotebookDocument(this.onDidCloseNotebook, this, this.disposables);
+        workspace.onDidCloseNotebookDocument(this.onDidCloseNotebook, this, this.disposables);
     }
     public getOrCreate(notebook: NotebookDocument): IInteractiveWindowCodeGenerator {
         const existing = this.get(notebook);
@@ -36,7 +35,6 @@ export class CodeGeneratorFactory implements ICodeGeneratorFactory, IExtensionSy
             this.configService,
             this.storageFactory.getOrCreate(notebook),
             notebook,
-            this.notebooks,
             this.disposables
         );
         this.codeGenerators.set(notebook, codeGenerator);

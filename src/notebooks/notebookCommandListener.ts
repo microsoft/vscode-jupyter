@@ -10,9 +10,10 @@ import {
     NotebookEdit,
     NotebookRange,
     Uri,
+    window,
     workspace
 } from 'vscode';
-import { IVSCodeNotebook, ICommandManager, IApplicationShell } from '../platform/common/application/types';
+import { ICommandManager, IApplicationShell } from '../platform/common/application/types';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
 import { Commands } from '../platform/common/constants';
 import { noop } from '../platform/common/utils/misc';
@@ -39,7 +40,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     private kernelInterruptedDontAskToRestart: boolean = false;
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IVSCodeNotebook) private notebooks: IVSCodeNotebook,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -108,19 +108,19 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     }
 
     private runAllCells() {
-        if (this.notebooks.activeNotebookEditor) {
+        if (window.activeNotebookEditor) {
             this.commandManager.executeCommand('notebook.execute').then(noop, noop);
         }
     }
 
     private addCellBelow() {
-        if (this.notebooks.activeNotebookEditor) {
+        if (window.activeNotebookEditor) {
             this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow').then(noop, noop);
         }
     }
 
     private removeAllCells() {
-        const document = this.notebooks.activeNotebookEditor?.notebook;
+        const document = window.activeNotebookEditor?.notebook;
         if (!document) {
             return;
         }
@@ -133,7 +133,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         }).then(noop, noop);
     }
     private collapseAll() {
-        const document = this.notebooks.activeNotebookEditor?.notebook;
+        const document = window.activeNotebookEditor?.notebook;
         if (!document) {
             return;
         }
@@ -147,7 +147,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     }
 
     private expandAll() {
-        const document = this.notebooks.activeNotebookEditor?.notebook;
+        const document = window.activeNotebookEditor?.notebook;
         if (!document) {
             return;
         }

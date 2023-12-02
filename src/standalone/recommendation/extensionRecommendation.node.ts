@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Memento, NotebookDocument } from 'vscode';
+import { Memento, NotebookDocument, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../../platform/common/types';
 import { Common, DataScience } from '../../platform/common/utils/localize';
@@ -46,7 +46,6 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
     private readonly disposables: IDisposable[] = [];
     private recommendedInSession = new Set<string>();
     constructor(
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IControllerRegistration) private readonly controllerManager: IControllerRegistration,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
@@ -61,7 +60,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
     }
 
     public activate() {
-        this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
+        workspace.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         this.controllerManager.onControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
     }
 

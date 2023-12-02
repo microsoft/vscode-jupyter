@@ -17,17 +17,14 @@ import {
     NotebookEdit,
     NotebookEditor,
     NotebookRendererScript,
+    notebooks,
     Uri,
+    window,
     workspace,
     WorkspaceEdit
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import {
-    IVSCodeNotebook,
-    ICommandManager,
-    IDocumentManager,
-    IApplicationShell
-} from '../../platform/common/application/types';
+import { ICommandManager, IDocumentManager, IApplicationShell } from '../../platform/common/application/types';
 import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/logging';
@@ -153,7 +150,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         kernelConnection: KernelConnectionMetadata,
         id: string,
         _viewType: string,
-        notebookApi: IVSCodeNotebook,
         commandManager: ICommandManager,
         kernelProvider: IKernelProvider,
         context: IExtensionContext,
@@ -170,7 +166,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             kernelConnection,
             id,
             _viewType,
-            notebookApi,
             commandManager,
             kernelProvider,
             context,
@@ -188,7 +183,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private kernelConnection: KernelConnectionMetadata,
         id: string,
         private _viewType: string,
-        private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
         private readonly kernelProvider: IKernelProvider,
         private readonly context: IExtensionContext,
@@ -208,13 +202,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }>();
 
         this.displayData = this.displayDataProvider.getDisplayData(this.connection);
-        this.controller = this.notebookApi.createNotebookController(
+        this.controller = notebooks.createNotebookController(
             id,
             _viewType,
             this.displayData.label,
             this.handleExecution.bind(this),
-            this.getRendererScripts(),
-            []
+            this.getRendererScripts()
         );
         this.displayData.onDidChange(this.updateDisplayData, this, this.disposables);
         this.updateDisplayData();
@@ -225,7 +218,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
-        this.notebookApi.onDidCloseNotebookDocument(
+        workspace.onDidCloseNotebookDocument(
             (n) => {
                 this.associatedDocuments.delete(n);
             },
@@ -329,7 +322,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (this.isDisposed) {
             return;
         }
-        const nbDocumentUris = this.notebookApi.notebookDocuments
+        const nbDocumentUris = workspace.notebookDocuments
             .filter((item) => this.associatedDocuments.has(item))
             .map((item) => item.uri.toString());
         traceVerbose(
@@ -652,7 +645,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.notebookKernels.set(doc, kernel);
         const handlerDisposables: IDisposable[] = [];
         // If the notebook is closed, dispose everything.
-        this.notebookApi.onDidCloseNotebookDocument(
+        workspace.onDidCloseNotebookDocument(
             (e) => {
                 if (e === doc) {
                     dispose(handlerDisposables);
@@ -701,7 +694,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // If we have an existing kernel, then we know for a fact the user is changing the kernel.
         // Else VSC is just setting a kernel for a notebook after it has opened.
         if (existingKernel) {
-            this.notebookApi.notebookEditors
+            window.visibleNotebookEditors
                 .filter((editor) => editor.notebook === document)
                 .forEach((editor) =>
                     this.postMessage(

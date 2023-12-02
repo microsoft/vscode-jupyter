@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
-import { IVSCodeNotebook } from '../platform/common/application/types';
+import { Event, EventEmitter, NotebookDocument, Uri, workspace } from 'vscode';
 import { traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../platform/common/types';
@@ -40,7 +39,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     public readonly onKernelStatusChanged = this._onKernelStatusChanged.event;
     public get kernels() {
         const kernels = new Set<IKernel>();
-        this.notebook.notebookDocuments.forEach((item) => {
+        workspace.notebookDocuments.forEach((item) => {
             const kernel = this.get(item);
             if (kernel) {
                 kernels.add(kernel);
@@ -50,11 +49,10 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     }
     constructor(
         protected asyncDisposables: IAsyncDisposableRegistry,
-        protected disposables: IDisposableRegistry,
-        private readonly notebook: IVSCodeNotebook
+        protected disposables: IDisposableRegistry
     ) {
         this.asyncDisposables.push(this);
-        this.notebook.onDidCloseNotebookDocument((e) => this.disposeOldKernel(e), this, disposables);
+        workspace.onDidCloseNotebookDocument((e) => this.disposeOldKernel(e), this, disposables);
         disposables.push(this._onDidDisposeKernel);
         disposables.push(this._onDidRestartKernel);
         disposables.push(this._onKernelStatusChanged);
@@ -77,7 +75,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     }
     public get(uriOrNotebook: Uri | NotebookDocument | string): IKernel | undefined {
         if (isUri(uriOrNotebook)) {
-            const notebook = this.notebook.notebookDocuments.find(
+            const notebook = workspace.notebookDocuments.find(
                 (item) => item.uri.toString() === uriOrNotebook.toString()
             );
             return notebook ? this.get(notebook) : undefined;
@@ -153,7 +151,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     }
 
     protected handleServerRemoval(servers: JupyterServerProviderHandle[]) {
-        this.notebook.notebookDocuments.forEach((document) => {
+        workspace.notebookDocuments.forEach((document) => {
             const kernel = this.kernelsByNotebook.get(document);
             if (kernel) {
                 const metadata = kernel.options.metadata;
@@ -197,11 +195,10 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
     }
     constructor(
         protected asyncDisposables: IAsyncDisposableRegistry,
-        protected disposables: IDisposableRegistry,
-        private readonly notebook: IVSCodeNotebook
+        protected disposables: IDisposableRegistry
     ) {
         this.asyncDisposables.push(this);
-        this.notebook.onDidCloseNotebookDocument(
+        workspace.onDidCloseNotebookDocument(
             (e) => {
                 traceVerbose(`Notebook document ${getDisplayPath(e.uri)} got closed`);
                 this.disposeOldKernel(e.uri);

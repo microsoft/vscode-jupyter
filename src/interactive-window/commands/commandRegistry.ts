@@ -16,7 +16,8 @@ import {
     Position,
     ViewColumn,
     workspace,
-    WorkspaceEdit
+    WorkspaceEdit,
+    window
 } from 'vscode';
 import { IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
@@ -25,8 +26,7 @@ import {
     IClipboard,
     ICommandManager,
     IDebugService,
-    IDocumentManager,
-    IVSCodeNotebook
+    IDocumentManager
 } from '../../platform/common/application/types';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -78,8 +78,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
         @inject(IFileConverter) private fileConverter: IFileConverter,
-        @inject(IClipboard) private clipboard: IClipboard,
-        @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook
+        @inject(IClipboard) private clipboard: IClipboard
     ) {
         this.statusProvider = new StatusProvider(applicationShell);
         if (!workspace.isTrusted) {
@@ -693,9 +692,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                         getDisplayPath(file)
                     );
                     // Next open this notebook & execute it.
-                    await this.notebook
-                        .openNotebookDocument(uri)
-                        .then((document) => this.notebook.showNotebookDocument(document));
+                    await workspace.openNotebookDocument(uri).then((document) => window.showNotebookDocument(document));
                     await this.commandManager.executeCommand('notebook.execute');
                     return uri;
                 }

@@ -5,8 +5,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, Uri } from 'vscode';
-import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { commands, Uri, window } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
 import { captureScreenShot, IExtensionTestApi, initialize, waitForCondition } from '../../common';
@@ -32,7 +31,6 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
 suite('Remote Kernel Execution', function () {
     let controllerRegistration: IControllerRegistration;
-    let vscodeNotebook: IVSCodeNotebook;
     let ipynbFile: Uri;
     let svcContainer: IServiceContainer;
     let interpreterService: IInterpreterService;
@@ -50,9 +48,7 @@ suite('Remote Kernel Execution', function () {
         await startJupyterServer();
         sinon.restore();
         const serviceContainer = api.serviceContainer;
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-        vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         svcContainer = serviceContainer;
         interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
     });
@@ -104,8 +100,8 @@ suite('Remote Kernel Execution', function () {
 
         await insertCodeCell('a = "123412341234"', { index: 0 });
         await insertCodeCell('print(a)', { index: 1 });
-        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
+        const cell1 = window.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = window.activeNotebookEditor?.notebook.cellAt(1)!;
         await runCell(cell1);
 
         // Now connect to a remote jupyter server.
@@ -137,7 +133,7 @@ suite('Remote Kernel Execution', function () {
     test('Remote kernels support intellisense @lsp', async function () {
         const { editor } = await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
-        let nbEditor = vscodeNotebook.activeNotebookEditor!;
+        let nbEditor = window.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`

@@ -5,12 +5,7 @@ import { when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter, TextDocument, Uri } from 'vscode';
 
-import {
-    ICommandManager,
-    IDebugService,
-    IDocumentManager,
-    IVSCodeNotebook
-} from '../../platform/common/application/types';
+import { ICommandManager, IDebugService, IDocumentManager } from '../../platform/common/application/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
 import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -29,7 +24,6 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
     let tokenSource: CancellationTokenSource;
-    let vscodeNotebook: TypeMoq.IMock<IVSCodeNotebook>;
     const disposables: Disposable[] = [];
 
     setup(() => {
@@ -41,11 +35,10 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         pythonSettings = TypeMoq.Mock.ofType<IWatchableJupyterSettings>();
-        vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
         when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
         when(mockedVSCodeNamespaces.workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
+        when(mockedVSCodeNamespaces.window.activeNotebookEditor).thenReturn(undefined);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-        vscodeNotebook.setup((c) => c.activeNotebookEditor).returns(() => undefined);
         commandManager
             .setup((c) => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve());
