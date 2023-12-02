@@ -37,6 +37,7 @@ import {
     NotebookDocument,
     NotebookEditor,
     Uri,
+    notebooks,
     window,
     workspace
 } from 'vscode';
@@ -49,11 +50,10 @@ import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeN
 import { NotebookCellLanguageService } from '../../../notebooks/languages/cellLanguageService';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IJupyterServerProviderRegistry } from '../../../kernels/jupyter/types';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ConnectionDisplayDataProvider } from '../../../notebooks/controllers/connectionDisplayData.node';
-import { mockedVSCodeNamespaces } from '../../vscode-mock';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -106,14 +106,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 disposables,
                 interpreters
             );
-            when(
-                mockedVSCodeNamespaces.notebooks.createNotebookController(
-                    anything(),
-                    anything(),
-                    anything(),
-                    anything()
-                )
-            ).thenCall((id, _view, _label, handler) => {
+            sinon.stub(notebooks, 'createNotebookController').callsFake((id, _view, _label, handler) => {
                 cellExecutionHandler = handler!;
                 const nbController = mock<NotebookController>();
                 const onDidChangeSelectedNotebooks = new EventEmitter<{
@@ -186,7 +179,10 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
         sinon.restore();
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    suiteTeardown(() => {
+        sinon.restore();
+        return closeNotebooksAndCleanUpAfterTests(disposables);
+    });
     suite('Raw Kernels', () => {
         setup(function () {
             if (IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
