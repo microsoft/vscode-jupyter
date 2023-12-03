@@ -38,7 +38,6 @@ import { createDeferred, createDeferredFromPromise } from '../../../platform/com
 import { IMultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { UserJupyterServerPickerProviderId } from '../../../platform/common/constants';
-import { mockedVSCodeNamespaces } from '../../vscode-mock';
 
 suite('Connect to Remote Jupyter Servers @mandatory', function () {
     // On conda these take longer for some reason.
