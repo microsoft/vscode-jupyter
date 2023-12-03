@@ -902,10 +902,13 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
                         await clickInstallFromIPyKernelPrompt();
                     }
                 }
-                await (commands.executeCommand as any).wrappedMethod.apply(commands, 'notebook.selectKernel', {
-                    id: controller.controller.id,
-                    extension: JVSC_EXTENSION_ID_FOR_TESTS
-                });
+                await (commands.executeCommand as any).wrappedMethod.apply(commands, [
+                    'notebook.selectKernel',
+                    {
+                        id: controller.controller.id,
+                        extension: JVSC_EXTENSION_ID_FOR_TESTS
+                    }
+                ]);
 
                 kernelSelected.resolve(true);
                 return Promise.resolve(true);
