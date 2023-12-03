@@ -29,7 +29,7 @@ import {
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento, env, workspace } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento, env, window, workspace } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
@@ -175,7 +175,7 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         when(memento.update(anything(), anything())).thenResolve();
         when(encryptedStorage.retrieve(anything(), anything())).thenResolve();
         when(encryptedStorage.store(anything(), anything(), anything())).thenResolve();
-        when(mockedVSCodeNamespaces.window.createInputBox()).thenReturn(inputBox);
+        sinon.stub(window, 'createInputBox').callsFake(() => inputBox);
         const serverUriStorage = mock<IJupyterServerUriStorage>();
         when(serverUriStorage.getAll()).thenResolve([]);
         const onDidRemoveUriStorage = new EventEmitter<JupyterServerProviderHandle[]>();
