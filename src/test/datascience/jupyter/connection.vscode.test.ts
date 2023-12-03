@@ -29,7 +29,17 @@ import {
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento, env, window, workspace } from 'vscode';
+import {
+    CancellationTokenSource,
+    Disposable,
+    EventEmitter,
+    InputBox,
+    Memento,
+    commands,
+    env,
+    window,
+    workspace
+} from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
@@ -161,6 +171,7 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
             return new Disposable(noop);
         });
         sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
+        sinon.stub(commands, 'registerCommand').resolves();
         token = new CancellationTokenSource();
         disposables.push(new Disposable(() => token.cancel()));
         disposables.push(token);
