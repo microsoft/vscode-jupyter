@@ -5,24 +5,11 @@ import { IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
-import { ClipboardService } from './application/clipboard';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand.node';
 import { DebugService } from './application/debugService';
-import { DocumentManager } from './application/documentManager';
 import { EncryptedStorage } from './application/encryptedStorage';
 import { Extensions } from './application/extensions.node';
-import { LanguageService } from './application/languageService.node';
-import { VSCodeNotebook } from './application/notebook';
-import {
-    IApplicationEnvironment,
-    IClipboard,
-    IDebugService,
-    IDocumentManager,
-    IEncryptedStorage,
-    ILanguageService,
-    ITerminalManager,
-    IVSCodeNotebook
-} from './application/types';
+import { IApplicationEnvironment, IDebugService, IEncryptedStorage } from './application/types';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { CryptoUtils } from './crypto';
 import { ExperimentService } from './experiments/service';
@@ -43,7 +30,6 @@ import { registerTypes as registerPlatformTypes } from './platform/serviceRegist
 import { registerTypes as processRegisterTypes } from './process/serviceRegistry.node';
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
 import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost.node';
-import { TerminalManager } from './application/terminalManager.node';
 import { OldCacheCleaner } from './cache';
 
 // eslint-disable-next-line
@@ -52,16 +38,11 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
-    serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
-    serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
-    serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, EncryptedStorage);
-    serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
-    serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
 
     serviceManager.addSingleton<IFeaturesManager>(IFeaturesManager, FeatureManager);
 

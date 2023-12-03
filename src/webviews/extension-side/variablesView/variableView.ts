@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Extension, QuickPickItem, Uri, WebviewView as vscodeWebviewView } from 'vscode';
+import { Extension, QuickPickItem, Uri, WebviewView as vscodeWebviewView, window } from 'vscode';
 import { joinPath } from '../../../platform/vscode-path/resources';
 import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping, IVariableViewer } from './types';
@@ -13,12 +13,7 @@ import {
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
 } from '../../../kernels/variables/types';
-import {
-    IWebviewViewProvider,
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager
-} from '../../../platform/common/application/types';
+import { IWebviewViewProvider, IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { traceError } from '../../../platform/logging';
 import {
@@ -27,7 +22,6 @@ import {
     IDisposableRegistry,
     IDisposable,
     IExtensionContext,
-    IExtensions,
     IExperimentService,
     Experiments
 } from '../../../platform/common/types';
@@ -36,6 +30,7 @@ import { WebviewViewHost } from '../../../platform/webviews/webviewViewHost';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
 import { Commands, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { extensions } from 'vscode';
 
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection
@@ -53,8 +48,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly appShell: IApplicationShell,
         private readonly notebookWatcher: INotebookWatcher,
         private readonly commandManager: ICommandManager,
-        private readonly documentManager: IDocumentManager,
-        private readonly extensions: IExtensions,
         private readonly experiments: IExperimentService
     ) {
         const variableViewDir = joinPath(context.extensionUri, 'dist', 'webviews', 'webview-side', 'viewers');
@@ -67,7 +60,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
         this.variables.refreshRequired(this.sendRefreshMessage, this, this.disposables);
-        this.documentManager.onDidChangeActiveTextEditor(this.activeTextEditorChanged, this, this.disposables);
+        window.onDidChangeActiveTextEditor(this.activeTextEditorChanged, this, this.disposables);
     }
 
     @capturePerfTelemetry(Telemetry.NativeVariableViewLoaded)
@@ -213,15 +206,13 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private getVariableViewers(): { extension: Extension<any>; jupyterVariableViewers: IVariableViewer }[] {
-        const extensions = this.extensions.all
+        const variableViewers = extensions.all
             .filter(
                 (e) =>
                     e.packageJSON?.contributes?.jupyterVariableViewers &&
                     e.packageJSON?.contributes?.jupyterVariableViewers.length
             )
-            .filter((e) => e.id !== JVSC_EXTENSION_ID);
-
-        const variableViewers = extensions
+            .filter((e) => e.id !== JVSC_EXTENSION_ID)
             .map((e) => {
                 const contributes = e.packageJSON?.contributes;
                 if (contributes?.jupyterVariableViewers) {

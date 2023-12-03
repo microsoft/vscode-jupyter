@@ -7,7 +7,7 @@ import { instance, mock, when } from 'ts-mockito';
 import { Disposable, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { dispose } from '../../../platform/common/utils/lifecycle';
-import { IDisposable, IExtensions } from '../../../platform/common/types';
+import { IDisposable } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { createEventHandler } from '../../../test/common';
@@ -16,6 +16,7 @@ import { LocalKernelConnectionMetadata, LocalKernelSpecConnectionMetadata } from
 import { ContributedLocalKernelSpecFinder } from './contributedLocalKernelSpecFinder.node';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
 suite(`Contributed Local Kernel Spec Finder`, () => {
     let finder: ContributedLocalKernelSpecFinder;
@@ -25,7 +26,6 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
     let kernelFinder: KernelFinder;
     let extensionChecker: IPythonExtensionChecker;
     let interpreterService: IInterpreterService;
-    let extensions: IExtensions;
     let clock: fakeTimers.InstalledClock;
     let onDidChangeInterpreter: EventEmitter<PythonEnvironment | undefined>;
     let onDidChangeExtensions: EventEmitter<void>;
@@ -58,7 +58,6 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         kernelFinder = mock<KernelFinder>();
         extensionChecker = mock<IPythonExtensionChecker>();
         interpreterService = mock<IInterpreterService>();
-        extensions = mock<IExtensions>();
         onDidChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();
         onDidChangeExtensions = new EventEmitter<void>();
         onDidChangeNonPythonKernels = new EventEmitter<void>();
@@ -72,7 +71,7 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         when(interpreterService.status).thenReturn('idle');
         when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
         when(interpreterService.onDidChangeStatus).thenReturn(onDidChangeInterpreterStatus.event);
-        when(extensions.onDidChange).thenReturn(onDidChangeExtensions.event);
+        when(mockedVSCodeNamespaces.extensions.onDidChange).thenReturn(onDidChangeExtensions.event);
         when(nonPythonKernelFinder.status).thenReturn('idle');
         when(nonPythonKernelFinder.onDidChangeKernels).thenReturn(onDidChangeNonPythonKernels.event);
         when(pythonKernelFinder.status).thenReturn('idle');
@@ -84,8 +83,7 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
             instance(kernelFinder),
             disposables,
             instance(extensionChecker),
-            instance(interpreterService),
-            instance(extensions)
+            instance(interpreterService)
         );
 
         clock = fakeTimers.install();

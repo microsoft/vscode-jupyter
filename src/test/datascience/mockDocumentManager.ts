@@ -23,14 +23,13 @@ import {
     WorkspaceEdit
 } from 'vscode';
 
-import { IDocumentManager } from '../../platform/common/application/types';
 import { MockDocument } from './mockDocument';
 import { MockEditor } from './mockTextEditor';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 
-export class MockDocumentManager implements IDocumentManager {
+export class MockDocumentManager {
     public textDocuments: TextDocument[] = [];
     public activeTextEditor: TextEditor | undefined;
     public visibleTextEditors: TextEditor[] = [];

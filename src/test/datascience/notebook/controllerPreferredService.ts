@@ -20,7 +20,6 @@ import {
 } from '../../../notebooks/controllers/types';
 import { getLanguageOfNotebookDocument } from '../../../notebooks/languages/helpers';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import {
     InteractiveWindowView,
     JupyterNotebookView,
@@ -61,7 +60,6 @@ export class ControllerPreferredService {
         private readonly registration: IControllerRegistration,
         private readonly defaultService: ControllerDefaultService,
         private readonly interpreters: IInterpreterService | undefined,
-        private readonly notebook: IVSCodeNotebook,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly kernelRankHelper: KernelRankingHelper,
         private readonly isWebExtension: boolean
@@ -75,7 +73,6 @@ export class ControllerPreferredService {
                 serviceContainer.get<boolean>(IsWebExtension)
                     ? undefined
                     : serviceContainer.get<IInterpreterService>(IInterpreterService),
-                serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
                 serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
                 new KernelRankingHelper(
                     serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider)
@@ -90,11 +87,11 @@ export class ControllerPreferredService {
     }
     public activate() {
         // Sign up for document either opening or closing
-        this.disposables.add(this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
+        this.disposables.add(workspace.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
-        this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook));
+        workspace.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook));
         this.disposables.add(
-            this.notebook.onDidCloseNotebookDocument((document) => {
+            workspace.onDidCloseNotebookDocument((document) => {
                 const token = this.preferredCancelTokens.get(document);
                 if (token) {
                     this.preferredCancelTokens.delete(document);
@@ -106,7 +103,7 @@ export class ControllerPreferredService {
             this.registration.onDidChange(
                 ({ added }) =>
                     added.length
-                        ? this.notebook.notebookDocuments.map((nb) => this.onDidOpenNotebookDocument(nb))
+                        ? workspace.notebookDocuments.map((nb) => this.onDidOpenNotebookDocument(nb))
                         : undefined,
                 this
             )

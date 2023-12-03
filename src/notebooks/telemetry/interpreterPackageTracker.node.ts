@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { NotebookDocument } from 'vscode';
+import { NotebookDocument, extensions } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
-import { IExtensions, IDisposableRegistry, InterpreterUri, IsWebExtension } from '../../platform/common/types';
+import { IDisposableRegistry, InterpreterUri, IsWebExtension } from '../../platform/common/types';
 import { isResource, noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IInstaller, Product } from '../../platform/interpreter/installer/types';
@@ -23,7 +23,6 @@ export class InterpreterPackageTracker implements IExtensionSyncActivationServic
     constructor(
         @inject(IInterpreterPackages) private readonly packages: IInterpreterPackages,
         @inject(IInstaller) @optional() private readonly installer: IInstaller | undefined,
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -41,7 +40,7 @@ export class InterpreterPackageTracker implements IExtensionSyncActivationServic
             );
         }
         this.installer?.onInstalled(this.onDidInstallPackage, this, this.disposables); // Not supported in Web
-        this.extensions.onDidChange(this.trackUponActivation, this, this.disposables);
+        extensions.onDidChange(this.trackUponActivation, this, this.disposables);
         this.trackUponActivation().catch(noop);
         this.apiProvider.onDidActivatePythonExtension(this.trackUponActivation, this, this.disposables);
     }

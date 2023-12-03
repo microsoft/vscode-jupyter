@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCell } from 'vscode';
-import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-
+import { NotebookCell, window } from 'vscode';
+import { ICommandManager } from '../../platform/common/application/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { Commands } from '../../platform/common/constants';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -19,7 +18,6 @@ import { INotebookDebuggingManager, KernelDebugMode } from './debuggingTypes';
 export class CommandRegistry implements IDisposable, IExtensionSyncActivationService {
     constructor(
         @inject(INotebookDebuggingManager) private readonly debuggingManager: INotebookDebuggingManager,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
@@ -72,7 +70,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private getCellFromActiveEditor(): NotebookCell | undefined {
-        const editor = this.vscNotebook.activeNotebookEditor;
+        const editor = window.activeNotebookEditor;
         if (editor) {
             const range = editor.selections[0];
             if (range) {

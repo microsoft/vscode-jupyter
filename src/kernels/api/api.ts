@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { Kernel, Kernels } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../types';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { createKernelApiForExtension as createKernelApiForExtension } from './kernel';
 import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { requestApiAccess } from './apiAccess';
@@ -18,8 +17,7 @@ export function getKernelsApi(extensionId: string): Kernels {
             let accessAllowed: boolean | undefined = undefined;
 
             const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
-            const notebooks = ServiceContainer.instance.get<IVSCodeNotebook>(IVSCodeNotebook);
-            const notebook = notebooks.notebookDocuments.find((item) => item.uri.toString() === uri.toString());
+            const notebook = workspace.notebookDocuments.find((item) => item.uri.toString() === uri.toString());
             const kernel = kernelProvider.get(notebook || uri);
             // We are only interested in returning kernels that have been started by the user.
             if (!kernel || !kernel.startedAtLeastOnce) {

@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { TextDocument, workspace } from 'vscode';
 import { sendActivationTelemetry } from '../../platform/telemetry/envFileTelemetry.node';
-import { IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { traceDecoratorError } from '../../platform/logging';
@@ -12,6 +11,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IFileSystem } from '../../platform/common/platform/types';
 import { noop } from '../../platform/common/utils/misc';
 import { getWorkspaceFolderIdentifier } from '../../platform/common/application/workspace.base';
+import { window } from 'vscode';
 
 /**
  * Responsible for sending workspace level telemetry.
@@ -22,10 +22,7 @@ export class WorkspaceActivation implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];
     private docOpenedHandler?: IDisposable;
 
-    constructor(
-        @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
-    ) {}
+    constructor(@inject(IFileSystem) private readonly fileSystem: IFileSystem) {}
 
     public activate() {
         this.addHandlers();
@@ -34,7 +31,7 @@ export class WorkspaceActivation implements IExtensionSyncActivationService {
     }
 
     private getActiveResource(): Resource {
-        const editor = this.documentManager.activeTextEditor;
+        const editor = window.activeTextEditor;
         if (editor && !editor.document.isUntitled) {
             return editor.document.uri;
         }
@@ -76,7 +73,7 @@ export class WorkspaceActivation implements IExtensionSyncActivationService {
     protected addRemoveDocOpenedHandlers() {
         if (this.hasMultipleWorkspaces()) {
             if (!this.docOpenedHandler) {
-                this.docOpenedHandler = this.documentManager.onDidOpenTextDocument(this.onDocOpened, this);
+                this.docOpenedHandler = workspace.onDidOpenTextDocument(this.onDocOpened, this);
             }
             return;
         }

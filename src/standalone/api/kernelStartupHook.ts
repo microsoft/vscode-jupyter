@@ -4,10 +4,10 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IKernel, IKernelProvider, IKernelSession, isRemoteConnection } from '../../kernels/types';
-import { IDisposableRegistry, IExtensions } from '../../platform/common/types';
+import { IDisposableRegistry } from '../../platform/common/types';
 import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
-import { CancellationError, CancellationToken } from 'vscode';
+import { CancellationError, CancellationToken, extensions } from 'vscode';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -20,8 +20,6 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExtensions)
-        private readonly extensions: IExtensions,
         @inject(IJupyterServerProviderRegistry)
         private readonly serverProviders: IJupyterServerProviderRegistry
     ) {}
@@ -74,7 +72,7 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                 const onStartKernel = serverProvider.serverProvider.onStartKernel.bind(serverProvider.serverProvider);
                 const time = Date.now();
                 try {
-                    const extension = this.extensions.getExtension(serverProvider.extensionId);
+                    const extension = extensions.getExtension(serverProvider.extensionId);
                     const message = DataScience.runningKernelStartupHooksFor(
                         extension?.packageJSON?.displayName || serverProvider.extensionId
                     );

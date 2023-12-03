@@ -5,7 +5,6 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, CompletionList, Position, Uri, window } from 'vscode';
-import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, initialize, startJupyterServer, waitForCondition } from '../../common';
@@ -39,7 +38,6 @@ suite('Remote Execution @kernelCore', function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let vscodeNotebook: IVSCodeNotebook;
     let ipynbFile: Uri;
     let serviceContainer: IServiceContainer;
     let controllerRegistration: IControllerRegistration;
@@ -55,7 +53,6 @@ suite('Remote Execution @kernelCore', function () {
         await startJupyterServer();
         sinon.restore();
         serviceContainer = api.serviceContainer;
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         controllerDefault = ControllerDefaultService.create(api.serviceContainer);
         storage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
@@ -149,7 +146,7 @@ suite('Remote Execution @kernelCore', function () {
         });
 
         await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
     });
 
@@ -157,7 +154,7 @@ suite('Remote Execution @kernelCore', function () {
         setIntellisenseTimeout(30000);
         const { editor } = await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
-        let nbEditor = vscodeNotebook.activeNotebookEditor!;
+        let nbEditor = window.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`

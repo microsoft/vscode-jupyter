@@ -4,9 +4,9 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, NotebookDocument } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { IDisposable, IExtensions } from '../../platform/common/types';
+import { IDisposable } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { Common } from '../../platform/common/utils/localize';
 import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
@@ -14,6 +14,7 @@ import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../ker
 import { ExtensionRecommendationService } from './extensionRecommendation.node';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('Extension Recommendation', () => {
@@ -22,10 +23,8 @@ suite('Extension Recommendation', () => {
             suite(`Notebook language '${languageToBeTested}' defined in ${whereIsLanguageDefined}`, () => {
                 let disposables: IDisposable[] = [];
                 let recommendation: ExtensionRecommendationService;
-                let vscNotebook: IVSCodeNotebook;
                 let memento: Memento;
                 let appShell: IApplicationShell;
-                let extensions: IExtensions;
                 let commandManager: ICommandManager;
                 let controllerRegistration: IControllerRegistration;
                 let onDidOpenNotebookDocument: EventEmitter<NotebookDocument>;
@@ -42,26 +41,24 @@ suite('Extension Recommendation', () => {
                         notebook: NotebookDocument;
                         controller: VSCodeNotebookController;
                     }>();
-                    vscNotebook = mock<IVSCodeNotebook>();
-                    when(vscNotebook.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
+                    when(mockedVSCodeNamespaces.workspace.onDidOpenNotebookDocument).thenReturn(
+                        onDidOpenNotebookDocument.event
+                    );
                     controllerRegistration = mock<IControllerRegistration>();
                     when(controllerRegistration.onControllerSelected).thenReturn(onNotebookControllerSelected.event);
                     memento = mock<Memento>();
                     appShell = mock<IApplicationShell>();
-                    extensions = mock<IExtensions>();
                     commandManager = mock<ICommandManager>();
                     recommendation = new ExtensionRecommendationService(
-                        instance(vscNotebook),
                         instance(controllerRegistration),
                         disposables,
                         instance(memento),
                         instance(appShell),
-                        instance(extensions),
                         instance(commandManager)
                     );
 
                     when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenReturn();
-                    when(extensions.getExtension(anything())).thenReturn();
+                    when(mockedVSCodeNamespaces.extensions.getExtension(anything())).thenReturn();
                     when(memento.get(anything(), anything())).thenReturn([]);
                     recommendation.activate();
                 }

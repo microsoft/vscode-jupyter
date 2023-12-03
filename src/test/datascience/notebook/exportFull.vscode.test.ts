@@ -8,7 +8,6 @@ import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, PYTHON_PATH } from '../../common.node';
@@ -44,7 +43,6 @@ suite('Export @export', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let proc: ProcessService;
-    let vscodeNotebook: IVSCodeNotebook;
     let importer: JupyterImporter;
     let nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker;
     let interpreterService: IInterpreterService;
@@ -70,7 +68,6 @@ suite('Export @export', function () {
             );
 
             sinon.restore();
-            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             proc = new ProcessService();
             traceInfo('Suite Setup (completed)');
         } catch (e) {
@@ -89,10 +86,10 @@ suite('Export @export', function () {
             sinon.restore();
             await startJupyterServer();
             await createEmptyPythonNotebook(disposables);
-            assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+            assert.isOk(window.activeNotebookEditor, 'No active notebook');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
             activeInterpreter = (await interpreterService.getActiveInterpreter(
-                vscodeNotebook.activeNotebookEditor?.notebook.uri
+                window.activeNotebookEditor?.notebook.uri
             ))!;
             defaultCellMarker =
                 api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings()

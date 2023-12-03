@@ -5,7 +5,6 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { instance, mock, when } from 'ts-mockito';
 import { EventEmitter, NotebookDocument } from 'vscode';
-import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IConfigurationService, IDisposable } from '../../platform/common/types';
 import { CodeGenerator } from './codeGenerator';
@@ -13,31 +12,22 @@ import { CodeGeneratorFactory } from './codeGeneratorFactory';
 import { GeneratedCodeStorage } from './generatedCodeStorage';
 import { GeneratedCodeStorageFactory } from './generatedCodeStorageFactory';
 import { IGeneratedCodeStorageFactory } from './types';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 suite('CodeGeneratorFactory', () => {
     let factory: CodeGeneratorFactory;
-    let docManager: IDocumentManager;
     let configService: IConfigurationService;
     let storageFactory: IGeneratedCodeStorageFactory;
     let disposables: IDisposable[] = [];
-    let notebooks: IVSCodeNotebook;
     let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
     let clearMethodOnStorage: sinon.SinonSpy<[], void>;
     setup(() => {
-        docManager = mock<IDocumentManager>();
         configService = mock<IConfigurationService>();
-        notebooks = mock<IVSCodeNotebook>();
-        storageFactory = new GeneratedCodeStorageFactory(instance(notebooks));
+        storageFactory = new GeneratedCodeStorageFactory();
         onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
-        when(notebooks.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
+        when(mockedVSCodeNamespaces.workspace.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         disposables.push(onDidCloseNotebookDocument);
-        factory = new CodeGeneratorFactory(
-            instance(docManager),
-            instance(configService),
-            storageFactory,
-            disposables,
-            instance(notebooks)
-        );
+        factory = new CodeGeneratorFactory(instance(configService), storageFactory, disposables);
         factory.activate();
         clearMethodOnStorage = sinon.spy(GeneratedCodeStorage.prototype, 'clear');
     });

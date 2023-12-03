@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../platform/common/application/types';
 import { Common, DataScience } from '../platform/common/utils/localize';
 import { createInterpreterKernelSpec } from './helpers';
 import { KernelDependencyService } from './kernelDependencyService.node';
@@ -17,13 +17,13 @@ import { IInteractiveWindowProvider, IInteractiveWindow } from '../interactive-w
 import { DisplayOptions } from './displayOptions';
 import { IRawNotebookSupportedService } from './raw/types';
 import { getResourceType } from '../platform/common/utils';
+import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // eslint-disable-next-line
 suite('Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
-    let notebooks: IVSCodeNotebook;
     let appShell: IApplicationShell;
     let cmdManager: ICommandManager;
     let installer: IInstaller;
@@ -52,13 +52,12 @@ suite('Kernel Dependency Service', () => {
         serviceContainer = mock<IServiceContainer>();
         memento = mock<Memento>();
         kernelProvider = mock<IKernelProvider>();
-        notebooks = mock<IVSCodeNotebook>();
         when(kernelProvider.kernels).thenReturn([]);
         when(kernelProvider.get(anything())).thenReturn();
         when(memento.get(anything(), anything())).thenReturn(false);
         when(serviceContainer.get<IKernelProvider>(IKernelProvider)).thenReturn(instance(kernelProvider));
         when(cmdManager.executeCommand('notebook.selectKernel', anything())).thenResolve();
-        when(notebooks.notebookDocuments).thenReturn([]);
+        when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
         const rawSupport = mock<IRawNotebookSupportedService>();
         when(rawSupport.isSupported).thenReturn(true);
         dependencyService = new KernelDependencyService(
@@ -81,8 +80,8 @@ suite('Kernel Dependency Service', () => {
                 token = new CancellationTokenSource();
                 if (resource && getResourceType(resource) === 'notebook') {
                     when(document.uri).thenReturn(resource);
-                    when(notebooks.activeNotebookEditor).thenReturn(instance(editor));
-                    when(notebooks.notebookDocuments).thenReturn([instance(document)]);
+                    when(mockedVSCodeNamespaces.window.activeNotebookEditor).thenReturn(instance(editor));
+                    when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([instance(document)]);
                 } else {
                     when(interactiveWindowProvider.activeWindow).thenReturn(instance(activeInteractiveWindow));
                     when(serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider)).thenReturn(

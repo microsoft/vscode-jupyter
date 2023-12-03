@@ -5,12 +5,12 @@
 
 import dedent from 'dedent';
 import { assert } from 'chai';
-import { anything, capture, deepEqual, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Uri, WorkspaceFolder } from 'vscode';
+import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Common, DataScience } from '../../platform/common/utils/localize';
-import { IConfigurationService, IExtensions } from '../../platform/common/types';
+import { IConfigurationService, IDisposable } from '../../platform/common/types';
 import {
     IKernelDependencyService,
     KernelConnectionMetadata,
@@ -42,7 +42,8 @@ import { DataScienceErrorHandlerNode } from './kernelErrorHandler.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { JupyterServer, JupyterServerCollection, JupyterServerProvider } from '../../api';
-import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
+import { dispose } from '../../platform/common/utils/lifecycle';
 
 suite('Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -54,7 +55,6 @@ suite('Error Handler Unit Tests', () => {
     let uriStorage: IJupyterServerUriStorage;
     let jupyterUriProviderRegistration: IJupyterServerProviderRegistry;
     let cmdManager: ICommandManager;
-    let extensions: IExtensions;
     let reservedPythonNames: IReservedPythonNamedProvider;
     let fs: IFileSystem;
     let interpreterService: IInterpreterService;
@@ -64,8 +64,10 @@ suite('Error Handler Unit Tests', () => {
         id: Uri.file('Some Path').fsPath,
         sysPrefix: ''
     };
-
+    let disposables: IDisposable[] = [];
     setup(() => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
         applicationShell = mock<IApplicationShell>();
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
@@ -73,15 +75,15 @@ suite('Error Handler Unit Tests', () => {
         cmdManager = mock<ICommandManager>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
         jupyterUriProviderRegistration = mock<IJupyterServerProviderRegistry>();
-        extensions = mock<IExtensions>();
-        extensions = mock<IExtensions>();
         interpreterService = mock<IInterpreterService>();
         fs = mock<IFileSystem>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
-        when(extensions.getExtension(anything())).thenReturn({ packageJSON: { displayName: '' } } as any);
+        when(mockedVSCodeNamespaces.extensions.getExtension(anything())).thenReturn({
+            packageJSON: { displayName: '' }
+        } as any);
         when(fs.exists(anything())).thenResolve(true);
         reservedPythonNames = mock<IReservedPythonNamedProvider>();
         when(reservedPythonNames.isReserved(anything())).thenResolve(false);
@@ -93,7 +95,6 @@ suite('Error Handler Unit Tests', () => {
             instance(kernelDependencyInstaller),
             instance(uriStorage),
             false,
-            instance(extensions),
             instance(jupyterUriProviderRegistration),
             instance(reservedPythonNames),
             instance(fs),
@@ -102,8 +103,11 @@ suite('Error Handler Unit Tests', () => {
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
-        reset(mockedVSCodeNamespaces.env);
+        // reset(mockedVSCodeNamespaces.env);
         when(mockedVSCodeNamespaces.env.openExternal(anything())).thenReturn(Promise.resolve(true));
+    });
+    teardown(() => {
+        disposables = dispose(disposables);
     });
     const message = 'Test error message.';
 

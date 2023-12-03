@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter } from 'vscode';
+import { EventEmitter, extensions } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceDecoratorError, traceError } from '../../../platform/logging';
-import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
+import { IDisposableRegistry } from '../../../platform/common/types';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -62,8 +62,7 @@ export class ContributedLocalKernelSpecFinder
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IInterpreterService) private readonly interpreters: IInterpreterService
     ) {
         kernelFinder.registerKernelFinder(this);
         this.disposables.push(this._onDidChangeStatus);
@@ -106,7 +105,7 @@ export class ContributedLocalKernelSpecFinder
         this.interpreters.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
         this.loadData().then(noop, noop);
         this.interpreters.onDidChangeInterpreters(async () => this.loadData().then(noop, noop), this, this.disposables);
-        this.extensions.onDidChange(
+        extensions.onDidChange(
             () => {
                 // If we just installed the Python extension and we fetched the controllers, then fetch it again.
                 if (

@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument, Disposable, NotebookEditor, Uri, EventEmitter } from 'vscode';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { NotebookDocument, Disposable, NotebookEditor, Uri, EventEmitter, workspace, window } from 'vscode';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
@@ -105,16 +104,11 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IControllerRegistration) private readonly controllerManager: IControllerRegistration
     ) {}
     public activate(): void {
-        this.notebook.onDidChangeVisibleNotebookEditors(
-            this.onDidChangeVisibleNotebookEditors,
-            this,
-            this.disposableRegistry
-        );
-        this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposableRegistry);
+        window.onDidChangeVisibleNotebookEditors(this.onDidChangeVisibleNotebookEditors, this, this.disposableRegistry);
+        workspace.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposableRegistry);
         this.controllerManager.onControllerSelected(this.onDidSelectController, this, this.disposableRegistry);
     }
     public onDidSelectController(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
@@ -122,7 +116,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         const previousCoordinators = this.messageCoordinators.get(e.notebook);
         if (previousCoordinators) {
             this.messageCoordinators.delete(e.notebook);
-            this.notebook.notebookEditors
+            window.visibleNotebookEditors
                 .filter((editor) => editor.notebook === e.notebook)
                 .forEach((editor) => {
                     const comms = this.notebookCommunications.get(editor);
@@ -138,7 +132,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         }
 
         // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
-        this.notebook.notebookEditors
+        window.visibleNotebookEditors
             .filter((editor) => editor.notebook === e.notebook)
             .forEach((editor) => this.initializeNotebookCommunication(editor, e.controller));
     }

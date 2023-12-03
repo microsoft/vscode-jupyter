@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { instance, mock, reset, verify, when } from 'ts-mockito';
-import { EventEmitter, NotebookControllerDetectionTask } from 'vscode';
+import { instance, mock, verify, when } from 'ts-mockito';
+import { EventEmitter, Disposable, NotebookControllerDetectionTask } from 'vscode';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { IDisposable } from '../platform/common/types';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 import { IKernelFinder } from './types';
-import { mockedVSCodeNamespaces } from '../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../test/vscode-mock';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 
 suite('Kernel Refresh Indicator (web)', () => {
@@ -18,6 +18,8 @@ suite('Kernel Refresh Indicator (web)', () => {
     let taskNb: NotebookControllerDetectionTask;
     let taskIW: NotebookControllerDetectionTask;
     setup(() => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
         kernelFinder = mock<IKernelFinder>();
         onDidChangeStatus = new EventEmitter<void>();
         when(kernelFinder.status).thenReturn('idle');
@@ -35,7 +37,7 @@ suite('Kernel Refresh Indicator (web)', () => {
         disposables.push(onDidChangeStatus);
     });
     teardown(() => {
-        reset(mockedVSCodeNamespaces.notebooks);
+        // reset(mockedVSCodeNamespaces.notebooks);
         disposables = dispose(disposables);
     });
     test('No Progress when finder is idle', async () => {

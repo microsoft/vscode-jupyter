@@ -9,7 +9,7 @@ import { anything, instance, mock, reset, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { ExecutionResult, ShellOptions } from '../../../platform/common/process/types.node';
-import { IConfigurationService } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
@@ -18,7 +18,9 @@ import { JupyterSettings } from '../../../platform/common/configSettings';
 import { PoetryInstaller } from '../../../platform/interpreter/installer/poetryInstaller.node';
 import { ExecutionInstallArgs } from '../../../platform/interpreter/installer/moduleInstaller.node';
 import { ModuleInstallFlags } from '../../../platform/interpreter/installer/types';
-import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
+import { Disposable } from 'vscode';
+import { dispose } from '../../common/utils/lifecycle';
 
 suite('Module Installer - Poetry', () => {
     class TestInstaller extends PoetryInstaller {
@@ -36,8 +38,10 @@ suite('Module Installer - Poetry', () => {
     let configurationService: IConfigurationService;
     let serviceContainer: ServiceContainer;
     let shellExecute: sinon.SinonStub;
-
+    let disposables: IDisposable[] = [];
     setup(() => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
         serviceContainer = mock(ServiceContainer);
         configurationService = mock(ConfigurationService);
         reset(mockedVSCodeNamespaces.workspace);
@@ -63,6 +67,7 @@ suite('Module Installer - Poetry', () => {
     });
 
     teardown(() => {
+        disposables = dispose(disposables);
         shellExecute?.restore();
     });
 

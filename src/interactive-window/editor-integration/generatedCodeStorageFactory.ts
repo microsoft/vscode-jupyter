@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { NotebookDocument, Uri } from 'vscode';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { injectable } from 'inversify';
+import { NotebookDocument, Uri, workspace } from 'vscode';
 import { GeneratedCodeStorage } from './generatedCodeStorage';
 import { IGeneratedCodeStore, IGeneratedCodeStorageFactory } from './types';
 
@@ -13,7 +12,6 @@ import { IGeneratedCodeStore, IGeneratedCodeStorageFactory } from './types';
 @injectable()
 export class GeneratedCodeStorageFactory implements IGeneratedCodeStorageFactory {
     private readonly storages = new WeakMap<NotebookDocument, IGeneratedCodeStore>();
-    constructor(@inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook) {}
     getOrCreate(notebook: NotebookDocument): IGeneratedCodeStore {
         if (!this.storages.has(notebook)) {
             this.storages.set(notebook, new GeneratedCodeStorage());
@@ -24,7 +22,7 @@ export class GeneratedCodeStorageFactory implements IGeneratedCodeStorageFactory
         if ('notebook' in options) {
             return this.storages.get(options.notebook)!;
         } else {
-            const notebook = this.notebook.notebookDocuments.find((nb) => {
+            const notebook = workspace.notebookDocuments.find((nb) => {
                 const storage = this.storages.get(nb);
                 return storage?.all.find((item) => item.uri.toString() === options.fileUri.toString());
             });

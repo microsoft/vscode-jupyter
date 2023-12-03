@@ -8,7 +8,7 @@ import * as path from '../../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { commands, Memento, workspace, window, Uri, NotebookCell, NotebookDocument, NotebookCellKind } from 'vscode';
 import { IPythonApiProvider } from '../../../../platform/api/types';
-import { ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
+import { ICommandManager } from '../../../../platform/common/application/types';
 import { Kernel } from '../../../../kernels/kernel';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import {
@@ -93,7 +93,6 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
     let memento: Memento;
     let installerSpy: sinon.SinonSpy;
     let commandManager: ICommandManager;
-    let vscodeNotebook: IVSCodeNotebook;
     let controllerRegistration: IControllerRegistration;
     const delayForUITest = 120_000;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
@@ -119,7 +118,6 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
         configSettings = configService.getSettings(undefined) as any;
@@ -603,7 +601,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
 
         // Now that IPyKernel is missing, if we attempt to restart a kernel, we should get a prompt.
         // Previously things just hang at weird spots, its not a likely scenario, but this test ensures the code works as expected.
-        const startController = controllerRegistration.getSelected(vscodeNotebook.activeNotebookEditor?.notebook!);
+        const startController = controllerRegistration.getSelected(window.activeNotebookEditor?.notebook!);
         assert.ok(startController);
 
         // Confirm message is displayed.
@@ -623,9 +621,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
             // Verify the new kernel associated with this notebook is different.
             waitForCondition(
                 async () => {
-                    const newController = controllerRegistration.getSelected(
-                        vscodeNotebook.activeNotebookEditor?.notebook!
-                    );
+                    const newController = controllerRegistration.getSelected(window.activeNotebookEditor?.notebook!);
                     assert.ok(newController);
                     assert.notEqual(startController?.id, newController!.id);
                     return true;
@@ -803,7 +799,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
                 );
                 selectADifferentKernelStub = result.selectADifferentKernelStub;
             }
-            const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+            const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
 
             await Promise.all([
                 runAllCellsInActiveNotebook(),

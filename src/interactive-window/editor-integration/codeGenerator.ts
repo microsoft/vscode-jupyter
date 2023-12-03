@@ -9,11 +9,12 @@ import {
     Range,
     TextDocumentChangeEvent,
     TextDocumentContentChangeEvent,
-    Uri
+    Uri,
+    notebooks,
+    workspace
 } from 'vscode';
 
 import { splitMultilineString } from '../../platform/common/utils';
-import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { uncommentMagicCommands } from './cellFactory';
@@ -30,16 +31,14 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
     private disposed?: boolean;
     private disposables: Disposable[] = [];
     constructor(
-        private readonly documentManager: IDocumentManager,
         private readonly configService: IConfigurationService,
         private readonly storage: IGeneratedCodeStore,
         private readonly notebook: NotebookDocument,
-        notebooks: IVSCodeNotebook,
         disposables: IDisposableRegistry
     ) {
         disposables.push(this);
         // Watch document changes so we can update our generated code
-        this.documentManager.onDidChangeTextDocument(this.onChangedDocument, this, this.disposables);
+        workspace.onDidChangeTextDocument(this.onChangedDocument, this, this.disposables);
         notebooks.onDidChangeNotebookCellExecutionState(this.onDidCellStateChange, this, this.disposables);
     }
 
@@ -130,7 +129,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         // Find the text document that matches. We need more information than
         // the add code gives us
         const { lineIndex: cellLine, uristring } = metadata.interactive;
-        const doc = this.documentManager.textDocuments.find((d) => d.uri.toString() === uristring);
+        const doc = workspace.textDocuments.find((d) => d.uri.toString() === uristring);
         if (!doc) {
             return;
         }

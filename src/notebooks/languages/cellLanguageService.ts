@@ -3,10 +3,9 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
-import { Memento, NotebookDocument } from 'vscode';
+import { Memento, NotebookDocument, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
 import {
     LanguagesSupportedByPythonkernel,
     PYTHON_LANGUAGE,
@@ -27,7 +26,6 @@ export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUA
 @injectable()
 export class NotebookCellLanguageService implements IExtensionSyncActivationService {
     constructor(
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker
@@ -48,7 +46,7 @@ export class NotebookCellLanguageService implements IExtensionSyncActivationServ
         return translateKernelLanguageToMonaco(jupyterLanguage || defaultLanguage);
     }
     public activate() {
-        this.vscNotebook.onDidSaveNotebookDocument(this.onDidSaveNotebookDocument, this, this.disposables);
+        workspace.onDidSaveNotebookDocument(this.onDidSaveNotebookDocument, this, this.disposables);
     }
     public getSupportedLanguages(kernelConnection: KernelConnectionMetadata): string[] {
         if (isPythonKernelConnection(kernelConnection)) {

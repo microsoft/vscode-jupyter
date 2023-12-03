@@ -4,14 +4,14 @@
 import { inject, optional } from 'inversify';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
-import { CancellationTokenSource, ConfigurationTarget, Uri, env, workspace } from 'vscode';
+import { CancellationTokenSource, ConfigurationTarget, Uri, env, extensions, workspace } from 'vscode';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { traceError, traceWarning } from '../../platform/logging';
-import { IConfigurationService, IExtensions, IsWebExtension, Resource } from '../../platform/common/types';
+import { IConfigurationService, IsWebExtension, Resource } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { Commands } from '../../platform/common/constants';
@@ -81,7 +81,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         @inject(IJupyterServerProviderRegistry)
         private readonly jupyterUriProviderRegistration: IJupyterServerProviderRegistry,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined
     ) {}
@@ -218,7 +217,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             return this.handleJupyterServerUriProviderError(error, errorContext);
         } else if (error instanceof InvalidRemoteJupyterServerUriHandleError) {
             const extensionName =
-                this.extensions.getExtension(error.serverProviderHandle.extensionId)?.packageJSON.displayName ||
+                extensions.getExtension(error.serverProviderHandle.extensionId)?.packageJSON.displayName ||
                 error.serverProviderHandle.extensionId;
             return getUserFriendlyErrorMessage(
                 DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid(extensionName),
@@ -355,7 +354,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             );
             const extensionName =
                 err instanceof InvalidRemoteJupyterServerUriHandleError
-                    ? this.extensions.getExtension(err.serverProviderHandle.extensionId)?.packageJSON.displayName ||
+                    ? extensions.getExtension(err.serverProviderHandle.extensionId)?.packageJSON.displayName ||
                       err.serverProviderHandle.extensionId
                     : '';
             const options = actionSource === 'jupyterExtension' ? [DataScience.selectDifferentKernel] : [];

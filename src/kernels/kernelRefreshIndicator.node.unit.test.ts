@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import * as fakeTimers from '@sinonjs/fake-timers';
-import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookControllerDetectionTask, NotebookDocument, NotebookEditor } from 'vscode';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { IDisposable } from '../platform/common/types';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
 import { IKernelFinder } from './types';
-import { mockedVSCodeNamespaces } from '../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../test/vscode-mock';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { createDeferred } from '../platform/common/utils/async';
@@ -26,6 +26,7 @@ suite('Kernel Refresh Indicator (node)', () => {
     let onPythonExtensionInstallationStatusChanged: EventEmitter<'installed' | 'uninstalled'>;
     let clock: fakeTimers.InstalledClock;
     setup(() => {
+        resetVSCodeMocks();
         kernelFinder = mock<IKernelFinder>();
         onDidChangeStatus = new EventEmitter<void>();
         onPythonExtensionInstallationStatusChanged = new EventEmitter<'installed' | 'uninstalled'>();
@@ -57,7 +58,6 @@ suite('Kernel Refresh Indicator (node)', () => {
         disposables.push(onPythonExtensionInstallationStatusChanged);
     });
     teardown(() => {
-        reset(mockedVSCodeNamespaces.notebooks);
         disposables = dispose(disposables);
     });
     suite('Python extension not installed', () => {

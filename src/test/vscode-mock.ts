@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { anything, instance, mock, when } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 /* eslint-disable no-invalid-this, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
 
 import * as vscode from 'vscode';
@@ -19,7 +19,7 @@ const originalLoad = Module._load;
 
 function generateMock<K extends keyof VSCode>(name: K): void {
     const mockedObj = mock<VSCode[K]>();
-    (mockedVSCode as any)[name] = instance(mockedObj);
+    mockedVSCode[name] = instance(mockedObj);
     mockedVSCodeNamespaces[name] = mockedObj;
 }
 
@@ -56,7 +56,8 @@ class MockClipboard {
         this.text = value;
     }
 }
-export function initialize() {
+
+export function resetVSCodeMocks() {
     generateMock('workspace');
     generateMock('window');
     generateMock('languages');
@@ -70,10 +71,15 @@ export function initialize() {
 
     when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
     when(mockedVSCodeNamespaces.window.visibleNotebookEditors).thenReturn([]);
+    when(mockedVSCodeNamespaces.window.activeTextEditor).thenReturn(undefined);
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
     when(mockedVSCodeNamespaces.env.clipboard).thenReturn(clipboard);
     when(mockedVSCodeNamespaces.env.appName).thenReturn('Insider');
+}
+
+export function initialize() {
+    resetVSCodeMocks();
 
     // When upgrading to npm 9-10, this might have to change, as we could have explicit imports (named imports).
     Module._load = function (request: any, _parent: any) {
@@ -180,19 +186,6 @@ mockedVSCode.QuickPickItemKind = vscodeMocks.vscMockExtHostedTypes.QuickPickItem
 (mockedVSCode as any).NotebookControllerAffinity = vscodeMocks.vscMockExtHostedTypes.NotebookControllerAffinity;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
-(mockedVSCode as any).NotebookCellOutput = vscodeMocks.vscMockExtHostedTypes.NotebookCellOutput;
+mockedVSCode.NotebookCellOutput = vscodeMocks.vscMockExtHostedTypes.NotebookCellOutput;
 (mockedVSCode as any).NotebookCellOutputItem = vscodeMocks.vscMockExtHostedTypes.NotebookCellOutputItem;
 (mockedVSCode as any).NotebookCellExecutionState = vscodeMocks.vscMockExtHostedTypes.NotebookCellExecutionState;
-(mockedVSCode as any).notebook = { notebookDocuments: [] };
-mockedVSCode.workspace;
-// This API is used in src/telemetry/telemetry.ts
-const extensions = mock<typeof vscode.extensions>();
-when(extensions.all).thenReturn([]);
-const extension = mock<vscode.Extension<any>>();
-const packageJson = mock<any>();
-const contributes = mock<any>();
-when(extension.packageJSON).thenReturn(instance(packageJson));
-when(packageJson.contributes).thenReturn(instance(contributes));
-when(contributes.debuggers).thenReturn([{ aiKey: '' }]);
-when(extensions.getExtension(anything())).thenReturn(instance(extension));
-mockedVSCode.extensions = instance(extensions);

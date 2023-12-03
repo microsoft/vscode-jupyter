@@ -5,7 +5,6 @@ import { inject, injectable, named } from 'inversify';
 
 import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { raceCancellation } from '../../platform/common/cancellation';
 import { Identifiers, InteractiveWindowView, PYTHON, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
@@ -31,12 +30,11 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {}
     public activate() {
-        this.notebook.onDidChangeNotebookCellExecutionState(
+        vscode.notebooks.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables
@@ -135,7 +133,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
             return [];
         }
         const kernels = new Set<IKernel>();
-        this.notebook.notebookDocuments
+        vscode.workspace.notebookDocuments
             .filter((item) => notebookUri?.toString() === item.uri.toString())
             .forEach((item) => {
                 const kernel = this.kernelProvider.get(item);

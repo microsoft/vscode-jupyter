@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
 
-import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
+import { DebugAdapterTracker, Disposable, Event, EventEmitter, window } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from '../../kernels/variables/helpers';
@@ -16,7 +16,7 @@ import {
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
 } from '../../kernels/variables/types';
-import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IDebugService } from '../../platform/common/application/types';
 import { Identifiers } from '../../platform/common/constants';
 import {
     IConfigurationService,
@@ -54,7 +54,6 @@ export class DebuggerVariables
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(INotebookDebuggingManager) private readonly debuggingManager: INotebookDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,
         @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
@@ -424,13 +423,13 @@ export class DebuggerVariables
     }
 
     private activeNotebookIsDebugging(): boolean {
-        const activeNotebook = this.vscNotebook.activeNotebookEditor;
+        const activeNotebook = window.activeNotebookEditor;
         return !!activeNotebook && this.debuggingManager.isDebugging(activeNotebook.notebook);
     }
 
     // This handles all the debug session calls, variable handling, and refresh calls needed for notebook debugging
     private async handleNotebookVariables(stoppedMessage: DebugProtocol.StoppedEvent): Promise<void> {
-        const doc = this.vscNotebook.activeNotebookEditor?.notebook;
+        const doc = window.activeNotebookEditor?.notebook;
         const threadId = stoppedMessage.body.threadId;
 
         if (doc) {

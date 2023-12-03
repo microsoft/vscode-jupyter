@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 import * as sinon from 'sinon';
-import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, TextEditor, Uri } from 'vscode';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposable } from '../../platform/common/types';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportFormat } from './types';
 import { ProgressReporter } from '../../platform/progress/progressReporter';
-import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { ServiceContainer } from '../../platform/ioc/container';
 
@@ -18,6 +18,9 @@ suite('Export File Opener', () => {
     let fileSystem: IFileSystem;
     let disposables: IDisposable[] = [];
     setup(async () => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
+
         fileSystem = mock<IFileSystem>();
         const reporter = mock(ProgressReporter);
         const editor = mock<TextEditor>();
@@ -28,7 +31,7 @@ suite('Export File Opener', () => {
         when(mockedVSCodeNamespaces.workspace.openTextDocument(anything())).thenResolve();
         when(mockedVSCodeNamespaces.window.showTextDocument(anything())).thenReturn(Promise.resolve(instance(editor)));
         when(fileSystem.readFile(anything())).thenResolve();
-        reset(mockedVSCodeNamespaces.env);
+        // reset(mockedVSCodeNamespaces.env);
         when(mockedVSCodeNamespaces.env.openExternal(anything())).thenReturn(Promise.resolve(true));
         sinon.stub(ServiceContainer, 'instance').get(() => ({
             get: (id: unknown) => (id == IFileSystem ? instance(fileSystem) : undefined)

@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Position, Range, TextEditor, Uri } from 'vscode';
+import { Position, Range, TextEditor, Uri, window, workspace } from 'vscode';
 
-import { IApplicationShell, IDocumentManager } from '../../common/application/types';
+import { IApplicationShell } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
@@ -13,11 +13,9 @@ import { noop } from '../../common/utils/misc';
  * Handles trimming code sent to a terminal so it actually runs.
  */
 export class CodeExecutionHelperBase implements ICodeExecutionHelper {
-    protected readonly documentManager: IDocumentManager;
     private readonly applicationShell: IApplicationShell;
 
     constructor(serviceContainer: IServiceContainer) {
-        this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
     }
 
@@ -26,7 +24,7 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
     }
 
     public async getFileToExecute(): Promise<Uri | undefined> {
-        const activeEditor = this.documentManager.activeTextEditor;
+        const activeEditor = window.activeTextEditor;
         if (!activeEditor) {
             this.applicationShell.showErrorMessage('No open file to run in terminal').then(noop, noop);
             return;
@@ -65,7 +63,7 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
     }
 
     public async saveFileIfDirty(file: Uri): Promise<void> {
-        const docs = this.documentManager.textDocuments.filter((d) => d.uri.path === file.path);
+        const docs = workspace.textDocuments.filter((d) => d.uri.path === file.path);
         if (docs.length === 1 && docs[0].isDirty) {
             await docs[0].save();
         }

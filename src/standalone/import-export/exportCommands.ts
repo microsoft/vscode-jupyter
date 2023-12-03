@@ -1,10 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationTokenSource, NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
+import {
+    CancellationTokenSource,
+    NotebookDocument,
+    QuickPickItem,
+    QuickPickOptions,
+    Uri,
+    window,
+    workspace
+} from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -36,7 +44,6 @@ export class ExportCommands implements IDisposable {
         private fileConverter: IFileConverter,
         private readonly applicationShell: IApplicationShell,
         private readonly fs: IFileSystem,
-        private readonly notebooks: IVSCodeNotebook,
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
         private readonly controllerRegistration: IControllerRegistration,
         private readonly preferredKernel: PreferredKernelConnectionService,
@@ -74,8 +81,8 @@ export class ExportCommands implements IDisposable {
     private async nativeNotebookExport(context?: Uri | { notebookEditor: { notebookUri: Uri } }) {
         const notebookUri = isUri(context) ? context : context?.notebookEditor?.notebookUri;
         const document = notebookUri
-            ? this.notebooks.notebookDocuments.find((item) => this.fs.arePathsSame(item.uri, notebookUri))
-            : this.notebooks.activeNotebookEditor?.notebook;
+            ? workspace.notebookDocuments.find((item) => this.fs.arePathsSame(item.uri, notebookUri))
+            : window.activeNotebookEditor?.notebook;
 
         if (document) {
             let preferredInterpreter: PythonEnvironment | undefined;
@@ -110,7 +117,7 @@ export class ExportCommands implements IDisposable {
             // if no source document was passed then this was called from the command palette,
             // so we need to get the active editor
             sourceDocument =
-                this.notebooks.activeNotebookEditor?.notebook ||
+                window.activeNotebookEditor?.notebook ||
                 this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookDocument;
             if (!sourceDocument) {
                 traceInfo('Export called without a valid exportable document active');

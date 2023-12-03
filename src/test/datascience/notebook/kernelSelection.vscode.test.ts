@@ -7,7 +7,6 @@ import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { commands, Uri, window } from 'vscode';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
-import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../kernels/types';
@@ -65,7 +64,6 @@ suite('Kernel Selection @kernelPicker', function () {
     const venvKernelSearchString = '.venvkernel';
     const venvNoRegSearchString = '.venvnoreg';
     let activeInterpreterSearchString = '';
-    let vscodeNotebook: IVSCodeNotebook;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     /*
     This test requires a virtual environment to be created & registered as a kernel.
@@ -86,7 +84,6 @@ suite('Kernel Selection @kernelPicker', function () {
         api = await initialize();
 
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
 
         if (!pythonChecker.isPythonExtensionInstalled) {
@@ -180,7 +177,7 @@ suite('Kernel Selection @kernelPicker', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         await waitForCondition(
@@ -216,7 +213,7 @@ suite('Kernel Selection @kernelPicker', function () {
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
@@ -234,8 +231,8 @@ suite('Kernel Selection @kernelPicker', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
         await insertCodeCell('print("Hello World")', { index: 1 });
 
-        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
+        const cell1 = window.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = window.activeNotebookEditor?.notebook.getCells()![1]!;
 
         // If it was successfully selected, then we know a Python kernel was correctly selected & managed to run the code.
         await Promise.all([
@@ -253,7 +250,7 @@ suite('Kernel Selection @kernelPicker', function () {
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
@@ -280,7 +277,7 @@ suite('Kernel Selection @kernelPicker', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
@@ -331,7 +328,7 @@ suite('Kernel Selection @kernelPicker', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),

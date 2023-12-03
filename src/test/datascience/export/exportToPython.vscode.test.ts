@@ -5,7 +5,6 @@
 import { assert } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
 import { CancellationTokenSource, Uri, workspace } from 'vscode';
-import { IDocumentManager } from '../../../platform/common/application/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ExportInterpreterFinder } from '../../../notebooks/export/exportInterpreterFinder.node';
 import { IExtensionTestApi } from '../../common.node';
@@ -33,8 +32,7 @@ suite('Export Python @export', function () {
         );
         await exportToPython.export(document, target, interpreter, token.token);
         assert.exists(target);
-        const documentManager = api.serviceContainer.get<IDocumentManager>(IDocumentManager);
-        const targetDocument = await documentManager.openTextDocument(target!);
+        const targetDocument = await workspace.openTextDocument(target!);
         assert.include(targetDocument.getText(), 'tim = 1');
     });
 });

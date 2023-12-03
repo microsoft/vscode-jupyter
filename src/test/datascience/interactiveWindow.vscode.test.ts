@@ -38,7 +38,6 @@ import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/
 import { IPythonApiProvider } from '../../platform/api/types';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Commands } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 
@@ -141,9 +140,8 @@ suite(`Interactive window Execution @iw`, async function () {
             'open file Prompt not displayed'
         );
 
-        const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        const document = await vscodeNotebook.openNotebookDocument(notebookFile);
-        let editor = await vscodeNotebook.showNotebookDocument(document, { preserveFocus: false });
+        const document = await vscode.workspace.openNotebookDocument(notebookFile);
+        let editor = await vscode.window.showNotebookDocument(document, { preserveFocus: false });
 
         const cells = editor.notebook.getCells();
         assert.strictEqual(cells?.length, 3);

@@ -4,7 +4,7 @@
 import { inject, injectable, optional } from 'inversify';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { IFileConverter } from '../../notebooks/export/types';
@@ -27,7 +27,6 @@ export class CommandRegistry implements IExtensionSyncActivationService {
         @inject(IFileConverter) private fileConverter: IFileConverter,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IInteractiveWindowProvider)
         @optional()
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
@@ -40,7 +39,6 @@ export class CommandRegistry implements IExtensionSyncActivationService {
             this.fileConverter,
             this.applicationShell,
             this.fs,
-            this.notebooks,
             this.interactiveProvider,
             controllerSelection,
             new PreferredKernelConnectionService(jupyterConnection),

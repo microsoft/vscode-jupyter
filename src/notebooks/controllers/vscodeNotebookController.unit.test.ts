@@ -11,12 +11,7 @@ import { NotebookDocument, EventEmitter, NotebookController, Uri, Disposable } f
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { IKernel, IKernelProvider, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../kernels/types';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    IVSCodeNotebook
-} from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import {
     IConfigurationService,
     IDisposable,
@@ -37,16 +32,14 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IConnectionDisplayDataProvider } from './types';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData.node';
-import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 
 suite(`Notebook Controller`, function () {
     let controller: NotebookController;
     let kernelConnection: KernelConnectionMetadata;
-    let vscNotebookApi: IVSCodeNotebook;
     let commandManager: ICommandManager;
     let context: IExtensionContext;
     let languageService: NotebookCellLanguageService;
-    let documentManager: IDocumentManager;
     let configService: IConfigurationService;
     let appShell: IApplicationShell;
     let serviceContainer: IServiceContainer;
@@ -68,12 +61,12 @@ suite(`Notebook Controller`, function () {
     let displayDataProvider: IConnectionDisplayDataProvider;
     let interpreterService: IInterpreterService;
     setup(async function () {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
         kernelConnection = mock<KernelConnectionMetadata>();
-        vscNotebookApi = mock<IVSCodeNotebook>();
         commandManager = mock<ICommandManager>();
         context = mock<IExtensionContext>();
         languageService = mock<NotebookCellLanguageService>();
-        documentManager = mock<IDocumentManager>();
         configService = mock<IConfigurationService>();
         appShell = mock<IApplicationShell>();
         serviceContainer = mock<IServiceContainer>();
@@ -100,11 +93,10 @@ suite(`Notebook Controller`, function () {
         disposables.push(new Disposable(() => clock.uninstall()));
         when(context.extensionUri).thenReturn(Uri.file('extension'));
         when(controller.onDidChangeSelectedNotebooks).thenReturn(onDidChangeSelectedNotebooks.event);
-        when(vscNotebookApi.notebookDocuments).thenReturn([]);
-        when(vscNotebookApi.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
+        when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
+        when(mockedVSCodeNamespaces.workspace.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(
-            vscNotebookApi.createNotebookController(
-                anything(),
+            mockedVSCodeNamespaces.notebooks.createNotebookController(
                 anything(),
                 anything(),
                 anything(),
@@ -118,8 +110,8 @@ suite(`Notebook Controller`, function () {
         when(languageService.getSupportedLanguages(anything())).thenReturn([PYTHON_LANGUAGE]);
         when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
         when(mockedVSCodeNamespaces.workspace.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
-        when(vscNotebookApi.notebookEditors).thenReturn([]);
-        when(documentManager.applyEdit(anything())).thenResolve();
+        when(mockedVSCodeNamespaces.window.visibleNotebookEditors).thenReturn([]);
+        when(mockedVSCodeNamespaces.workspace.applyEdit(anything())).thenResolve();
         when(kernelProvider.getOrCreate(anything(), anything())).thenReturn(instance(kernel));
         when(configService.getSettings(anything())).thenReturn(instance(jupyterSettings));
         when((kernelConnection as LocalKernelConnectionMetadata).kernelSpec).thenReturn({
@@ -148,14 +140,12 @@ suite(`Notebook Controller`, function () {
             instance(kernelConnection),
             '1',
             viewType,
-            instance(vscNotebookApi),
             instance(commandManager),
             instance(kernelProvider),
             instance(context),
             disposables,
             instance(languageService),
             instance(configService),
-            instance(documentManager),
             instance(appShell),
             instance(extensionChecker),
             instance(serviceContainer),
@@ -283,6 +273,6 @@ suite(`Notebook Controller`, function () {
         onDidChangeSelectedNotebooks.fire({ notebook, selected: true });
         await clock.runAllAsync();
 
-        verify(documentManager.applyEdit(anything())).once();
+        verify(mockedVSCodeNamespaces.workspace.applyEdit(anything())).once();
     });
 });

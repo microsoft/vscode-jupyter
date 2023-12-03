@@ -2,18 +2,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named, optional } from 'inversify';
-import { DebugConfiguration, Uri, workspace } from 'vscode';
+import { DebugConfiguration, Uri, window, workspace } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariables } from '../../../kernels/variables/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandNameArgumentTypeMapping } from '../../../commands';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDebugService,
-    IVSCodeNotebook
-} from '../../../platform/common/application/types';
+import { IApplicationShell, ICommandManager, IDebugService } from '../../../platform/common/application/types';
 import { Commands, Identifiers, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
@@ -55,7 +50,6 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         private readonly dataViewerDependencyService: IDataViewerDependencyService | undefined,
         @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
     ) {
@@ -147,7 +141,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
     }
 
     private getActiveKernel() {
-        const activeNotebook = this.notebooks.activeNotebookEditor?.notebook;
+        const activeNotebook = window.activeNotebookEditor?.notebook;
         const activeJupyterNotebookKernel =
             activeNotebook?.notebookType == JupyterNotebookView ? this.kernelProvider.get(activeNotebook) : undefined;
 
@@ -173,7 +167,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         if (!interactiveWindow) {
             return;
         }
-        return this.notebooks.notebookDocuments.find(
+        return workspace.notebookDocuments.find(
             (notebookDocument) => notebookDocument === interactiveWindow?.notebookDocument
         );
     }

@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { Uri, NotebookEditor, window } from 'vscode';
-import { IVSCodeNotebook } from '../platform/common/application/types';
+import { injectable } from 'inversify';
+import { Uri, NotebookEditor, window, workspace } from 'vscode';
 import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { getComparisonKey } from '../platform/vscode-path/resources';
@@ -20,7 +19,6 @@ import { getOSType, OSType } from '../platform/common/utils/platform';
 @injectable()
 export class NotebookEditorProvider implements INotebookEditorProvider {
     private providers: Set<IEmbedNotebookEditorProvider> = new Set();
-    constructor(@inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook) {}
 
     registerEmbedNotebookProvider(provider: IEmbedNotebookEditorProvider): void {
         this.providers.add(provider);
@@ -30,12 +28,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const key = resource ? getComparisonKey(resource, true) : 'false';
         const notebook =
             getResourceType(resource) === 'notebook'
-                ? this.vscodeNotebook.notebookDocuments.find((item) => getComparisonKey(item.uri, true) === key)
+                ? workspace.notebookDocuments.find((item) => getComparisonKey(item.uri, true) === key)
                 : undefined;
         const targetNotebookEditor =
-            notebook && this.vscodeNotebook.activeNotebookEditor?.notebook === notebook
-                ? this.vscodeNotebook.activeNotebookEditor
-                : undefined;
+            notebook && window.activeNotebookEditor?.notebook === notebook ? window.activeNotebookEditor : undefined;
 
         if (targetNotebookEditor) {
             return targetNotebookEditor;
@@ -59,7 +55,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
 
     findAssociatedNotebookDocument(uri: Uri) {
         const ignoreCase = getOSType() === OSType.Windows;
-        let notebook = this.vscodeNotebook.notebookDocuments.find((n) => {
+        let notebook = workspace.notebookDocuments.find((n) => {
             // Use the path part of the URI. It should match the path for the notebook
             return ignoreCase ? n.uri.path.toLowerCase() === uri.path.toLowerCase() : n.uri.path === uri.path;
         });

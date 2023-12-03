@@ -5,7 +5,7 @@
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import { instance, mock, reset, verify, when } from 'ts-mockito';
-import { WorkspaceConfiguration } from 'vscode';
+import { Disposable, WorkspaceConfiguration } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../constants.node';
 import {
     _resetSharedProperties,
@@ -17,7 +17,9 @@ import {
 import { isUnitTestExecution, isTestExecution, setTestExecution, setUnitTestExecution } from '../common/constants';
 import { sleep } from '../../test/core';
 import { waitForCondition } from '../../test/common';
-import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
+import { IDisposable } from '../common/types';
+import { dispose } from '../common/utils/lifecycle';
 
 suite('Telemetry', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
@@ -55,8 +57,11 @@ suite('Telemetry', () => {
         expect(Reporter.measures).to.deep.equal(expectedMeasures);
         expect(Reporter.properties).to.deep.equal(expectedProperties);
     }
-
+    let disposables: IDisposable[] = [];
     setup(() => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
+
         const reporter = getTelemetryReporter();
         sinon.stub(reporter, 'sendTelemetryEvent').callsFake((eventName: string, properties?: {}, measures?: {}) => {
             Reporter.eventName.push(eventName);
@@ -68,6 +73,7 @@ suite('Telemetry', () => {
         Reporter.clear();
     });
     teardown(() => {
+        disposables = dispose(disposables);
         sinon.restore();
         setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
         setTestExecution(oldValueOfVSC_JUPYTER_CI_TEST);

@@ -6,11 +6,11 @@ import * as vscode from 'vscode';
 
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IJupyterSettings } from '../../platform/common/types';
 import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
 import { generateCellRangesFromDocument } from './cellFactory';
+import { window } from 'vscode';
 
 /**
  * Provides the lines that show up between cells in the editor.
@@ -24,7 +24,6 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
     private timer: NodeJS.Timer | undefined | number;
 
     constructor(
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
@@ -32,9 +31,9 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
         this.computeDecorations();
         disposables.push(this);
         disposables.push(this.configuration.getSettings(undefined).onDidChange(this.settingsChanged, this));
-        disposables.push(this.documentManager.onDidChangeActiveTextEditor(this.changedEditor, this));
-        disposables.push(this.documentManager.onDidChangeTextEditorSelection(this.changedSelection, this));
-        disposables.push(this.documentManager.onDidChangeTextDocument(this.changedDocument, this));
+        disposables.push(vscode.window.onDidChangeActiveTextEditor(this.changedEditor, this));
+        disposables.push(vscode.window.onDidChangeTextEditorSelection(this.changedSelection, this));
+        disposables.push(vscode.workspace.onDidChangeTextDocument(this.changedDocument, this));
         this.settingsChanged();
     }
 
@@ -51,8 +50,8 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
     }
 
     private settingsChanged() {
-        if (this.documentManager.activeTextEditor) {
-            this.triggerUpdate(this.documentManager.activeTextEditor);
+        if (vscode.window.activeTextEditor) {
+            this.triggerUpdate(vscode.window.activeTextEditor);
         }
     }
 
@@ -61,8 +60,8 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
     }
 
     private changedDocument(e: vscode.TextDocumentChangeEvent) {
-        if (this.documentManager.activeTextEditor && e.document === this.documentManager.activeTextEditor.document) {
-            this.triggerUpdate(this.documentManager.activeTextEditor);
+        if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
+            this.triggerUpdate(window.activeTextEditor);
         }
     }
 
@@ -81,25 +80,25 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
     }
 
     private computeDecorations() {
-        this.currentCellTopUnfocused = this.documentManager.createTextEditorDecorationType({
+        this.currentCellTopUnfocused = window.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('interactive.inactiveCodeBorder'),
             borderWidth: '2px 0px 0px 0px',
             borderStyle: 'solid',
             isWholeLine: true
         });
-        this.currentCellBottomUnfocused = this.documentManager.createTextEditorDecorationType({
+        this.currentCellBottomUnfocused = window.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('interactive.inactiveCodeBorder'),
             borderWidth: '0px 0px 1px 0px',
             borderStyle: 'solid',
             isWholeLine: true
         });
-        this.currentCellTop = this.documentManager.createTextEditorDecorationType({
+        this.currentCellTop = window.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('interactive.activeCodeBorder'),
             borderWidth: '2px 0px 0px 0px',
             borderStyle: 'solid',
             isWholeLine: true
         });
-        this.currentCellBottom = this.documentManager.createTextEditorDecorationType({
+        this.currentCellBottom = window.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('interactive.activeCodeBorder'),
             borderWidth: '0px 0px 1px 0px',
             borderStyle: 'solid',
@@ -123,7 +122,7 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
      */
     private update(editor: vscode.TextEditor | undefined) {
         // Don't look through all visible editors unless we have to i.e. the active editor has changed
-        const editorsToCheck = editor === undefined ? this.documentManager.visibleTextEditors : [editor];
+        const editorsToCheck = editor === undefined ? window.visibleTextEditors : [editor];
         for (const editor of editorsToCheck) {
             if (
                 editor &&
@@ -157,7 +156,7 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
                                 nonCurrentCells.push(new vscode.Range(cellTop, cellTop));
                             }
                         });
-                    if (this.documentManager.activeTextEditor === editor) {
+                    if (window.activeTextEditor === editor) {
                         editor.setDecorations(this.currentCellTop, rangeTop);
                         editor.setDecorations(this.currentCellBottom, rangeBottom);
                         editor.setDecorations(this.currentCellTopUnfocused, nonCurrentCells);

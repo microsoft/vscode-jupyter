@@ -3,14 +3,23 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { EventEmitter, Event, Uri, ExtensionMode, CancellationTokenSource, CancellationToken, workspace } from 'vscode';
+import {
+    EventEmitter,
+    Event,
+    Uri,
+    ExtensionMode,
+    CancellationTokenSource,
+    CancellationToken,
+    workspace,
+    extensions
+} from 'vscode';
 import { IPythonApiProvider, IPythonExtensionChecker, PythonApi, PythonEnvironment_PythonApi } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import { IExtensions, IDisposableRegistry, IExtensionContext } from '../common/types';
+import { IDisposableRegistry, IExtensionContext } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
@@ -212,13 +221,12 @@ export class OldPythonApiProvider implements IPythonApiProvider {
     private _pythonExtensionVersion?: SemVer | undefined;
 
     constructor(
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
     ) {
         const previouslyInstalled = this.extensionChecker.isPythonExtensionInstalled;
         if (!previouslyInstalled) {
-            this.extensions.onDidChange(
+            extensions.onDidChange(
                 async () => {
                     if (this.extensionChecker.isPythonExtensionInstalled) {
                         await this.registerHooks();
@@ -237,7 +245,7 @@ export class OldPythonApiProvider implements IPythonApiProvider {
     }
     public async getNewApi(): Promise<PythonExtensionApi | undefined> {
         await this.init();
-        const extension = this.extensions.getExtension<PythonExtensionApi>(PythonExtension);
+        const extension = extensions.getExtension<PythonExtensionApi>(PythonExtension);
         if (extension?.packageJSON?.version) {
             this._pythonExtensionVersion = new SemVer(extension?.packageJSON?.version);
         }
@@ -257,7 +265,7 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         if (this.initialized) {
             return;
         }
-        const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
+        const pythonExtension = extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         } else {
@@ -269,7 +277,7 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         if (this.hooksRegistered) {
             return;
         }
-        const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
+        const pythonExtension = extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
             return;
         }
@@ -313,13 +321,12 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
      */
     public static promptDisplayed?: boolean;
     constructor(
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         // Listen for the python extension being installed or uninstalled
-        this.extensions.onDidChange(this.extensionsChangeHandler.bind(this), this, this.disposables);
+        extensions.onDidChange(this.extensionsChangeHandler.bind(this), this, this.disposables);
 
         // Name is a bit different here as we use the isPythonExtensionInstalled property for checking the current state.
         // This property is to see if we change it during extension actions.
@@ -327,10 +334,10 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public get isPythonExtensionInstalled() {
-        return this.extensions.getExtension(PythonExtension) !== undefined;
+        return extensions.getExtension(PythonExtension) !== undefined;
     }
     public get isPythonExtensionActive() {
-        return this.extensions.getExtension(PythonExtension)?.isActive === true;
+        return extensions.getExtension(PythonExtension)?.isActive === true;
     }
 
     // Directly install the python extension instead of just showing the extension open page

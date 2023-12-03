@@ -14,7 +14,7 @@ import {
     window
 } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
@@ -45,7 +45,6 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
         private readonly controllerRegistration: IControllerRegistration,
         protected readonly commandManager: ICommandManager,
         protected readonly appShell: IApplicationShell,
-        protected readonly vscNotebook: IVSCodeNotebook,
         protected readonly serviceContainer: IServiceContainer
     ) {}
 
