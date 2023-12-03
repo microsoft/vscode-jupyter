@@ -3,9 +3,8 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import { NotebookCell } from 'vscode';
+import { NotebookCell, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { IApplicationShell } from '../platform/common/application/types';
 import { Telemetry } from '../platform/common/constants';
 import { IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
@@ -26,7 +25,6 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
 
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider
     ) {}
     public activate(): void {
@@ -54,7 +52,7 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         // and the session has died, then notify the user of this dead kernel.
         // Note: We know this kernel started successfully.
         if (kernel.session.kind === 'localRaw' && kernel.status === 'dead') {
-            this.applicationShell
+            window
                 .showErrorMessage(
                     DataScience.kernelDiedWithoutError(
                         getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
@@ -69,7 +67,7 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         // and the session is auto restarting, then this means the kernel died.
         // notify the user of this
         if (kernel.session.kind !== 'localRaw' && kernel.status === 'autorestarting') {
-            this.applicationShell
+            window
                 .showErrorMessage(
                     DataScience.kernelDiedWithoutErrorAndAutoRestarting(
                         getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)

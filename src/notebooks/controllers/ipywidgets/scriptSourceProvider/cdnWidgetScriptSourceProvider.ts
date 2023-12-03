@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Memento } from 'vscode';
-import { IApplicationShell } from '../../../../platform/common/application/types';
+import { ConfigurationTarget, Memento, Uri, env, window } from 'vscode';
 import { Telemetry } from '../../../../platform/common/constants';
 import { GLOBAL_MEMENTO, IConfigurationService, IMemento, WidgetCDNs } from '../../../../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../../../platform/common/utils/async';
@@ -78,7 +77,6 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     }
     private configurationPromise?: Deferred<void>;
     constructor(
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService
     ) {}
@@ -212,7 +210,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             return;
         }
         this.notifiedUserAboutWidgetScriptNotFound.add(moduleName);
-        const selection = await this.appShell.showWarningMessage(
+        const selection = await window.showWarningMessage(
             DataScience.cdnWidgetScriptNotAccessibleWarningMessage(moduleName, JSON.stringify(this.cdnProviders)),
             Common.ok,
             Common.doNotShowAgain,
@@ -222,7 +220,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             case Common.doNotShowAgain:
                 return this.globalMemento.update(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, true);
             case Common.moreInfo:
-                return this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
+                return env.openExternal(Uri.parse('https://aka.ms/PVSCIPyWidgets'));
             default:
                 noop();
         }
@@ -242,7 +240,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
         this.configurationPromise = createDeferred();
         sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDN);
-        const selection = await this.appShell.showInformationMessage(
+        const selection = await window.showInformationMessage(
             DataScience.useCDNForWidgetsNoInformation,
             { modal: true },
             Common.ok,
@@ -271,7 +269,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 break;
             }
             case Common.moreInfo: {
-                this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
+                void env.openExternal(Uri.parse('https://aka.ms/PVSCIPyWidgets'));
                 break;
             }
             default:
@@ -300,7 +298,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             return;
         }
         this.notifiedUserAboutWidgetScriptNotFound.add(moduleName);
-        const selection = await this.appShell.showWarningMessage(
+        const selection = await window.showWarningMessage(
             DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork(
                 moduleName,
                 version,
@@ -314,7 +312,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             case Common.doNotShowAgain:
                 return this.globalMemento.update(GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN, true);
             case Common.reportThisIssue:
-                return this.appShell.openUrl('https://aka.ms/CreatePVSCDataScienceIssue');
+                return env.openExternal(Uri.parse('https://aka.ms/CreatePVSCDataScienceIssue'));
             default:
                 noop();
         }

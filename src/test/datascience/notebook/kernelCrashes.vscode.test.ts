@@ -7,7 +7,7 @@ import * as fs from 'fs-extra';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
+import { ICommandManager } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
@@ -92,7 +92,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             const languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
             const commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
             const configuration = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
             const extensionChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
             const providerRegitry =
                 api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
@@ -142,7 +141,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 disposables,
                 languageService,
                 configuration,
-                appShell,
                 extensionChecker,
                 api.serviceContainer,
                 displayDataProvider

@@ -3,8 +3,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { NotebookCellExecutionState } from 'vscode';
-import { IApplicationShell } from '../../../platform/common/application/types';
+import { NotebookCellExecutionState, window } from 'vscode';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -103,8 +102,7 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         const cell = await notebook.appendCodeCell(
             'import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)'
         );
-        const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const showInformationMessage = sinon.stub(appShell, 'showInformationMessage');
+        const showInformationMessage = sinon.stub(window, 'showInformationMessage');
         showInformationMessage.resolves(); // Ignore message to restart kernel.
         disposables.push({ dispose: () => showInformationMessage.restore() });
         traceInfo('Step 1');
@@ -229,8 +227,7 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         await notebook.appendCodeCell('3');
 
         const [cell1, cell2, cell3] = notebook.getCells();
-        const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const showInformationMessage = sinon.stub(appShell, 'showInformationMessage');
+        const showInformationMessage = sinon.stub(window, 'showInformationMessage');
         showInformationMessage.resolves(); // Ignore message to restart kernel.
         disposables.push({ dispose: () => showInformationMessage.restore() });
 

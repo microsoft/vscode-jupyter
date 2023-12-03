@@ -14,7 +14,6 @@ import {
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import dedent from 'dedent';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { IApplicationShell } from '../../platform/common/application/types';
 import { IKernelController } from '../types';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
@@ -34,7 +33,6 @@ import { waitForCondition } from '../../test/common';
 
 suite(`Cell Execution Message Handler`, () => {
     let disposables: IDisposable[] = [];
-    let appShell: IApplicationShell;
     let controller: IKernelController;
     let context: IExtensionContext;
     let kernel: Kernel.IKernelConnection;
@@ -46,13 +44,7 @@ suite(`Cell Execution Message Handler`, () => {
 
     function createNotebook(cells: NotebookCellData[]) {
         const notebook = createMockedNotebookDocument(cells);
-        messageHandlerService = new CellExecutionMessageHandlerService(
-            instance(appShell),
-            controller,
-            instance(context),
-            [],
-            notebook
-        );
+        messageHandlerService = new CellExecutionMessageHandlerService(controller, instance(context), [], notebook);
         disposables.push(messageHandlerService);
         return notebook;
     }
@@ -84,7 +76,6 @@ suite(`Cell Execution Message Handler`, () => {
         messageHandlingFailure = undefined;
         tokenSource = new CancellationTokenSource();
         disposables.push(tokenSource);
-        appShell = mock<IApplicationShell>();
         controller = createKernelController();
         context = mock<IExtensionContext>();
         const fakes = createKernelConnection(new JupyterRequestCreator());

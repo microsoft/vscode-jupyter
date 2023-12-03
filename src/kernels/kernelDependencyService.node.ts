@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
-import { IApplicationShell } from '../platform/common/application/types';
+import { CancellationToken, CancellationTokenSource, Memento, Uri, env, window } from 'vscode';
 import { raceCancellation } from '../platform/common/cancellation';
 import { traceInfo, traceError, traceInfoIfCI, traceDecoratorVerbose, logValue } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
@@ -42,7 +41,6 @@ import { isPythonKernelConnection } from './helpers';
 export class KernelDependencyService implements IKernelDependencyService {
     private installPromises = new Map<string, Promise<KernelInterpreterDependencyResponse>>();
     constructor(
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
@@ -285,7 +283,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                         ? installOption
                         : await raceCancellation(
                               cancelTokenSource.token,
-                              this.appShell.showInformationMessage(message, { modal: true }, ...options)
+                              window.showInformationMessage(message, { modal: true }, ...options)
                           );
 
                 if (selection === moreInfoOption) {
@@ -299,7 +297,7 @@ export class KernelDependencyService implements IKernelDependencyService {
 
                     // Link to our wiki page on jupyter kernels + ipykernel
                     // https://github.com/microsoft/vscode-jupyter/wiki/Jupyter-Kernels-and-the-Jupyter-Extension#python-extension-and-ipykernel
-                    this.appShell.openUrl('https://aka.ms/AAhi594');
+                    void env.openExternal(Uri.parse('https://aka.ms/AAhi594'));
                 }
                 // "More Info" isn't a full valid response here, so reprompt after showing it
             } while (selection === moreInfoOption);

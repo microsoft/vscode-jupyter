@@ -6,7 +6,6 @@ import * as sinon from 'sinon';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { IDisposable } from '../platform/common/types';
 import { dispose } from '../platform/common/utils/lifecycle';
-import { IApplicationShell } from '../platform/common/application/types';
 import {
     IKernel,
     IKernelSession,
@@ -29,7 +28,7 @@ import { Signal } from '@lumino/signaling';
 import type { Kernel } from '@jupyterlab/services';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { CellExecutionCreator, NotebookCellExecutionWrapper } from './execution/cellExecutionCreator';
-import { mockedVSCodeNamespaces } from '../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../test/vscode-mock';
 import { JupyterNotebookView } from '../platform/common/constants';
 import { IJupyterServerProviderRegistry, IJupyterServerUriEntry, IJupyterServerUriStorage } from './jupyter/types';
 import { noop } from '../test/core';
@@ -38,7 +37,6 @@ import { JupyterServer, JupyterServerCollection, JupyterServerProvider } from '.
 suite('Kernel ReConnect Progress Message', () => {
     let disposables: IDisposable[] = [];
     let monitor: KernelAutoReconnectMonitor;
-    let appShell: IApplicationShell;
     let kernelProvider: IKernelProvider;
     let jupyterServerUriStorage: IJupyterServerUriStorage;
     let jupyterUriProviderRegistration: IJupyterServerProviderRegistry;
@@ -48,13 +46,14 @@ suite('Kernel ReConnect Progress Message', () => {
     let kernelExecution: INotebookKernelExecution;
     let clock: fakeTimers.InstalledClock;
     setup(() => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
         onDidStartKernel = new EventEmitter<IKernel>();
         onDidDisposeKernel = new EventEmitter<IKernel>();
         onDidRestartKernel = new EventEmitter<IKernel>();
 
         disposables.push(...[onDidStartKernel, onDidDisposeKernel, onDidRestartKernel]);
-        appShell = mock<IApplicationShell>();
-        when(appShell.withProgress(anything(), anything())).thenResolve();
+        when(mockedVSCodeNamespaces.window.withProgress(anything(), anything())).thenResolve();
         kernelProvider = mock<IKernelProvider>();
         kernelExecution = mock<INotebookKernelExecution>();
         when(kernelProvider.onDidStartKernel).thenReturn(onDidStartKernel.event);
@@ -68,7 +67,6 @@ suite('Kernel ReConnect Progress Message', () => {
         when(jupyterUriProviderRegistration.jupyterCollections).thenReturn([]);
         disposables.push(new Disposable(() => clock.uninstall()));
         monitor = new KernelAutoReconnectMonitor(
-            instance(appShell),
             disposables,
             instance(kernelProvider),
             instance(jupyterServerUriStorage),
@@ -123,7 +121,7 @@ suite('Kernel ReConnect Progress Message', () => {
         kernel.kernelConnectionStatusSignal.emit('disconnected');
         await clock.runAllAsync();
 
-        verify(appShell.withProgress(anything(), anything())).once();
+        verify(mockedVSCodeNamespaces.window.withProgress(anything(), anything())).once();
     });
     test('Do not display a message if kernel is restarting', async () => {
         const kernel = createKernel();
@@ -138,14 +136,13 @@ suite('Kernel ReConnect Progress Message', () => {
 
         await clock.runAllAsync();
 
-        verify(appShell.withProgress(anything(), anything())).never();
+        verify(mockedVSCodeNamespaces.window.withProgress(anything(), anything())).never();
     });
 });
 
 suite('Kernel ReConnect Failed Monitor', () => {
     let disposables: IDisposable[] = [];
     let monitor: KernelAutoReconnectMonitor;
-    let appShell: IApplicationShell;
     let kernelProvider: IKernelProvider;
     let jupyterServerUriStorage: IJupyterServerUriStorage;
     let jupyterUriProviderRegistration: IJupyterServerProviderRegistry;
@@ -157,13 +154,14 @@ suite('Kernel ReConnect Failed Monitor', () => {
     let onDidChangeNotebookCellExecutionState: EventEmitter<NotebookCellExecutionStateChangeEvent>;
     let kernelExecution: INotebookKernelExecution;
     setup(() => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
         onDidStartKernel = new EventEmitter<IKernel>();
         onDidDisposeKernel = new EventEmitter<IKernel>();
         onDidRestartKernel = new EventEmitter<IKernel>();
 
         disposables.push(...[onDidStartKernel, onDidDisposeKernel, onDidRestartKernel]);
-        appShell = mock<IApplicationShell>();
-        when(appShell.showErrorMessage(anything())).thenResolve();
+        when(mockedVSCodeNamespaces.window.showErrorMessage(anything())).thenResolve();
         kernelProvider = mock<IKernelProvider>();
         kernelExecution = mock<INotebookKernelExecution>();
         when(kernelProvider.onDidStartKernel).thenReturn(onDidStartKernel.event);
@@ -175,7 +173,6 @@ suite('Kernel ReConnect Failed Monitor', () => {
         jupyterUriProviderRegistration = mock<IJupyterServerProviderRegistry>();
         when(jupyterUriProviderRegistration.jupyterCollections).thenReturn([]);
         monitor = new KernelAutoReconnectMonitor(
-            instance(appShell),
             disposables,
             instance(kernelProvider),
             instance(jupyterServerUriStorage),
@@ -252,7 +249,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         kernel.kernelConnectionStatusSignal.emit('disconnected');
         await clock.runAllAsync();
 
-        verify(appShell.showErrorMessage(anything())).once();
+        verify(mockedVSCodeNamespaces.window.showErrorMessage(anything())).once();
         verify(cellExecution.appendOutput(anything())).never();
     });
     test('Do not display a message if kernel was restarted', async () => {
@@ -266,7 +263,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         kernel.kernelConnectionStatusSignal.emit('disconnected');
         await clock.runAllAsync();
 
-        verify(appShell.showErrorMessage(anything())).never();
+        verify(mockedVSCodeNamespaces.window.showErrorMessage(anything())).never();
         verify(cellExecution.appendOutput(anything())).never();
     });
     test('Do not display a message if kernel is disposed', async () => {
@@ -280,7 +277,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         kernel.kernelConnectionStatusSignal.emit('disconnected');
         await clock.runAllAsync();
 
-        verify(appShell.showErrorMessage(anything())).never();
+        verify(mockedVSCodeNamespaces.window.showErrorMessage(anything())).never();
         verify(cellExecution.appendOutput(anything())).never();
     });
     test('Display message when kernel is disconnected with a pending cells)', async () => {
@@ -297,7 +294,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         kernel.kernelConnectionStatusSignal.emit('disconnected');
         await clock.runAllAsync();
 
-        verify(appShell.showErrorMessage(anything())).once();
+        verify(mockedVSCodeNamespaces.window.showErrorMessage(anything())).once();
         verify(cellExecution.appendOutput(anything())).once();
     });
     test('Do not display a message in the cell if the cell completed execution', async () => {
@@ -317,7 +314,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         kernel.kernelConnectionStatusSignal.emit('disconnected');
         await clock.runAllAsync();
 
-        verify(appShell.showErrorMessage(anything())).once();
+        verify(mockedVSCodeNamespaces.window.showErrorMessage(anything())).once();
         verify(cellExecution.appendOutput(anything())).never();
     });
 
@@ -357,7 +354,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         await clock.runAllAsync();
 
         // the server is gone, the kernel is disposed so we don't show the error message
-        verify(appShell.showErrorMessage(anything())).never();
+        verify(mockedVSCodeNamespaces.window.showErrorMessage(anything())).never();
         verify(cellExecution.appendOutput(anything())).never();
     });
 });

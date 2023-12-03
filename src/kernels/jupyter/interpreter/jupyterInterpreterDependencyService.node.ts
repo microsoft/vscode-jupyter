@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { IApplicationShell } from '../../../platform/common/application/types';
+import { CancellationToken, CancellationTokenSource, Uri, env, window } from 'vscode';
 import { raceCancellation } from '../../../platform/common/cancellation';
 import { traceError } from '../../../platform/logging';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
@@ -105,7 +104,6 @@ export class JupyterInterpreterDependencyService {
      */
     private readonly dependenciesInstalledInInterpreter = new Set<string>();
     constructor(
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IJupyterCommandFactory) private readonly commandFactory: IJupyterCommandFactory
     ) {}
@@ -150,7 +148,7 @@ export class JupyterInterpreterDependencyService {
                 moduleName: ProductNames.get(Product.jupyter)!,
                 pythonEnvType: interpreter.envType
             });
-            const selection = await this.applicationShell.showErrorMessage(
+            const selection = await window.showErrorMessage(
                 message,
                 { modal: true },
                 DataScience.jupyterInstall,
@@ -201,7 +199,7 @@ export class JupyterInterpreterDependencyService {
                 }
 
                 case DataScience.pythonInteractiveHelpLink: {
-                    this.applicationShell.openUrl(HelpLinks.PythonInteractiveHelpLink);
+                    void env.openExternal(Uri.parse(HelpLinks.PythonInteractiveHelpLink));
                     sendTelemetryEvent(Telemetry.UserDidNotInstallJupyter);
                     return JupyterInterpreterDependencyResponse.cancel;
                 }
@@ -320,7 +318,7 @@ export class JupyterInterpreterDependencyService {
         if (token?.isCancellationRequested) {
             return JupyterInterpreterDependencyResponse.cancel;
         }
-        const selectionFromError = await this.applicationShell.showErrorMessage(
+        const selectionFromError = await window.showErrorMessage(
             DataScience.jupyterKernelSpecModuleNotFound(interpreter.uri.fsPath),
             { modal: true },
             DataScience.selectDifferentJupyterInterpreter

@@ -16,7 +16,6 @@ import { IJupyterServerUri, JupyterServer } from '../../../api';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { IDataScienceErrorHandler } from '../../errors/types';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { IConfigurationService, ReadWrite } from '../../../platform/common/types';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { CancellationTokenSource, Uri } from 'vscode';
@@ -30,7 +29,6 @@ export class JupyterConnection {
     constructor(
         @inject(IJupyterServerProviderRegistry)
         private readonly jupyterPickerRegistration: IJupyterServerProviderRegistry,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IDataScienceErrorHandler)
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -110,12 +108,12 @@ export class JupyterConnection {
             // We should throw an exception if any of that fails.
         } catch (err) {
             if (JupyterSelfCertsError.isSelfCertsError(err)) {
-                const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
+                const handled = await handleSelfCertsError(this.configService, err.message);
                 if (!handled) {
                     throw err;
                 }
             } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
-                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
+                const handled = await handleExpiredCertsError(this.configService, err.message);
                 if (!handled) {
                     throw err;
                 }

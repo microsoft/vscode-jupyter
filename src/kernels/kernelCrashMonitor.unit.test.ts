@@ -5,7 +5,6 @@ import * as fakeTimers from '@sinonjs/fake-timers';
 import { KernelMessage } from '@jupyterlab/services';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
-import { IApplicationShell } from '../platform/common/application/types';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { IDisposable } from '../platform/common/types';
 import { createKernelController, TestNotebookDocument } from '../test/datascience/notebook/executionHelper';
@@ -23,12 +22,12 @@ import { assert } from 'chai';
 import { DataScience } from '../platform/common/utils/localize';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
+import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 
 suite('Kernel Crash Monitor', () => {
     let kernelProvider: IKernelProvider;
     let disposables: IDisposable[] = [];
     let kernel: IKernel;
-    let appShell: IApplicationShell;
     let kernelCrashMonitor: KernelCrashMonitor;
     let onKernelStatusChanged: EventEmitter<{
         status: KernelMessage.Status;
@@ -66,7 +65,6 @@ suite('Kernel Crash Monitor', () => {
     setup(async () => {
         kernelProvider = mock<IKernelProvider>();
         kernel = mock<IKernel>();
-        appShell = mock<IApplicationShell>();
         kernelExecution = mock<INotebookKernelExecution>();
         kernelSession = mock<IKernelSession>();
         onKernelStatusChanged = new EventEmitter<{
@@ -87,7 +85,7 @@ suite('Kernel Crash Monitor', () => {
         when(kernel.disposing).thenReturn(false);
         when(kernel.session).thenReturn(instance(kernelSession));
         when(kernelSession.kind).thenReturn('localRaw');
-        when(appShell.showErrorMessage(anything())).thenResolve();
+        when(mockedVSCodeNamespaces.window.showErrorMessage(anything())).thenResolve();
 
         when(kernelProvider.onDidStartKernel).thenReturn(onDidStartKernel.event);
         when(kernelProvider.onKernelStatusChanged).thenReturn(onKernelStatusChanged.event);
@@ -95,7 +93,7 @@ suite('Kernel Crash Monitor', () => {
         when(kernelProvider.getKernelExecution(anything())).thenReturn(instance(kernelExecution));
         when(kernelExecution.onPreExecute).thenReturn(onPreExecute.event);
 
-        kernelCrashMonitor = new KernelCrashMonitor(disposables, instance(appShell), instance(kernelProvider));
+        kernelCrashMonitor = new KernelCrashMonitor(disposables, instance(kernelProvider));
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
     });
@@ -121,7 +119,7 @@ suite('Kernel Crash Monitor', () => {
         await clock.runAllAsync();
 
         verify(
-            appShell.showErrorMessage(
+            mockedVSCodeNamespaces.window.showErrorMessage(
                 DataScience.kernelDiedWithoutError(getDisplayNameOrNameOfKernelConnection(localKernelSpec))
             )
         ).once();
@@ -152,7 +150,7 @@ suite('Kernel Crash Monitor', () => {
         await clock.runAllAsync();
 
         verify(
-            appShell.showErrorMessage(
+            mockedVSCodeNamespaces.window.showErrorMessage(
                 DataScience.kernelDiedWithoutErrorAndAutoRestarting(
                     getDisplayNameOrNameOfKernelConnection(remoteKernelSpec)
                 )

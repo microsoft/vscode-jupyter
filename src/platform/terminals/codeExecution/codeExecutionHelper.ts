@@ -3,9 +3,7 @@
 
 import { Position, Range, TextEditor, Uri, window, workspace } from 'vscode';
 
-import { IApplicationShell } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 import { noop } from '../../common/utils/misc';
 
@@ -13,12 +11,6 @@ import { noop } from '../../common/utils/misc';
  * Handles trimming code sent to a terminal so it actually runs.
  */
 export class CodeExecutionHelperBase implements ICodeExecutionHelper {
-    private readonly applicationShell: IApplicationShell;
-
-    constructor(serviceContainer: IServiceContainer) {
-        this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-    }
-
     public async normalizeLines(code: string, _resource?: Uri): Promise<string> {
         return code;
     }
@@ -26,17 +18,15 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
     public async getFileToExecute(): Promise<Uri | undefined> {
         const activeEditor = window.activeTextEditor;
         if (!activeEditor) {
-            this.applicationShell.showErrorMessage('No open file to run in terminal').then(noop, noop);
+            window.showErrorMessage('No open file to run in terminal').then(noop, noop);
             return;
         }
         if (activeEditor.document.isUntitled) {
-            this.applicationShell
-                .showErrorMessage('The active file needs to be saved before it can be run')
-                .then(noop, noop);
+            window.showErrorMessage('The active file needs to be saved before it can be run').then(noop, noop);
             return;
         }
         if (activeEditor.document.languageId !== PYTHON_LANGUAGE) {
-            this.applicationShell.showErrorMessage('The active file is not a Python source file').then(noop, noop);
+            window.showErrorMessage('The active file is not a Python source file').then(noop, noop);
             return;
         }
         if (activeEditor.document.isDirty) {

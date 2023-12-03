@@ -5,7 +5,6 @@ import { IDisposable } from '@fluentui/react';
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
@@ -30,7 +29,6 @@ suite('Jupyter Interpreter Service', () => {
     let selectedInterpreterEventArgs: PythonEnvironment | undefined;
     let memento: Memento;
     let interpreterSelectionState: JupyterInterpreterStateStore;
-    let appShell: IApplicationShell;
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
     const pythonInterpreter: PythonEnvironment = {
         uri: Uri.file('some path'),
@@ -52,7 +50,6 @@ suite('Jupyter Interpreter Service', () => {
         interpreterService = mock<IInterpreterService>();
         memento = mock(MockMemento);
         interpreterSelectionState = mock(JupyterInterpreterStateStore);
-        appShell = mock<IApplicationShell>();
         const onDidGrantWorkspaceTrust = new EventEmitter<void>();
         disposables.push(onDidGrantWorkspaceTrust);
         when(mockedVSCodeNamespaces.workspace.onDidGrantWorkspaceTrust).thenReturn(onDidGrantWorkspaceTrust.event);
@@ -61,7 +58,6 @@ suite('Jupyter Interpreter Service', () => {
             instance(interpreterSelector),
             instance(interpreterConfiguration),
             instance(interpreterService),
-            instance(appShell),
             disposables
         );
         when(interpreterService.getInterpreterDetails(pythonInterpreter.uri)).thenResolve(pythonInterpreter);
@@ -127,12 +123,12 @@ suite('Jupyter Interpreter Service', () => {
         assert.equal(selectedInterpreter, secondPythonInterpreter);
     });
     test('Display prompt to select an interpreter when running the installer without an active interpreter', async () => {
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
+        when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything())).thenResolve();
 
         const response = await jupyterInterpreterService.installMissingDependencies(new JupyterInstallError('Kaboom'));
 
         verify(
-            appShell.showErrorMessage(
+            mockedVSCodeNamespaces.window.showErrorMessage(
                 'Kaboom',
                 deepEqual({ modal: true }),
                 DataScience.selectDifferentJupyterInterpreter

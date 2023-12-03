@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationError, ConfigurationTarget, QuickInputButtons } from 'vscode';
-import { IApplicationShell } from '../../platform/common/application/types';
+import { CancellationError, ConfigurationTarget, QuickInputButtons, window } from 'vscode';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
@@ -30,8 +29,6 @@ export interface IJupyterPasswordConnectInfo {
 export class JupyterPasswordConnect {
     private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo>>();
     constructor(
-        private appShell: IApplicationShell,
-
         private readonly configService: IConfigurationService,
         private readonly agentCreator: IJupyterRequestAgentCreator | undefined,
         private readonly requestCreator: IJupyterRequestCreator,
@@ -116,7 +113,7 @@ export class JupyterPasswordConnect {
         if (requiresPassword || options.isTokenEmpty) {
             // Get password first
             if (requiresPassword && options.isTokenEmpty) {
-                const input = this.appShell.createInputBox();
+                const input = window.createInputBox();
                 options.disposables.push(input);
                 input.title = DataScience.jupyterSelectPasswordTitle;
                 input.placeholder = DataScience.jupyterSelectPasswordPrompt;
@@ -257,7 +254,7 @@ export class JupyterPasswordConnect {
                 // Ask user to change setting and possibly try again.
                 const enableOption: string = DataScience.jupyterSelfCertEnable;
                 const closeOption: string = DataScience.jupyterSelfCertClose;
-                const value = await this.appShell.showErrorMessage(
+                const value = await window.showErrorMessage(
                     DataScience.jupyterSelfCertFail(e.message),
                     { modal: true },
                     enableOption,

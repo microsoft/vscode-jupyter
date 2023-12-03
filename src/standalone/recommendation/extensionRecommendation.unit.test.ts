@@ -4,7 +4,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, NotebookDocument } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
@@ -14,7 +14,7 @@ import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../ker
 import { ExtensionRecommendationService } from './extensionRecommendation.node';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('Extension Recommendation', () => {
@@ -24,7 +24,6 @@ suite('Extension Recommendation', () => {
                 let disposables: IDisposable[] = [];
                 let recommendation: ExtensionRecommendationService;
                 let memento: Memento;
-                let appShell: IApplicationShell;
                 let commandManager: ICommandManager;
                 let controllerRegistration: IControllerRegistration;
                 let onDidOpenNotebookDocument: EventEmitter<NotebookDocument>;
@@ -36,6 +35,7 @@ suite('Extension Recommendation', () => {
                     startNewSession();
                 });
                 function startNewSession() {
+                    resetVSCodeMocks();
                     onDidOpenNotebookDocument = new EventEmitter<NotebookDocument>();
                     onNotebookControllerSelected = new EventEmitter<{
                         notebook: NotebookDocument;
@@ -47,22 +47,30 @@ suite('Extension Recommendation', () => {
                     controllerRegistration = mock<IControllerRegistration>();
                     when(controllerRegistration.onControllerSelected).thenReturn(onNotebookControllerSelected.event);
                     memento = mock<Memento>();
-                    appShell = mock<IApplicationShell>();
                     commandManager = mock<ICommandManager>();
                     recommendation = new ExtensionRecommendationService(
                         instance(controllerRegistration),
                         disposables,
                         instance(memento),
-                        instance(appShell),
                         instance(commandManager)
                     );
 
-                    when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenReturn();
+                    when(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).thenReturn();
                     when(mockedVSCodeNamespaces.extensions.getExtension(anything())).thenReturn();
                     when(memento.get(anything(), anything())).thenReturn([]);
                     recommendation.activate();
                 }
-                teardown(() => (disposables = dispose(disposables)));
+                teardown(() => {
+                    disposables = dispose(disposables);
+                    resetVSCodeMocks();
+                });
                 function createNotebook(language: string) {
                     const notebook = mock<NotebookDocument>();
                     const kernelSpecLanguage = whereIsLanguageDefined === 'kernelspec' ? language : undefined;
@@ -97,24 +105,52 @@ suite('Extension Recommendation', () => {
                 test('No recommendations for python Notebooks', async () => {
                     const nb = createNotebook('python');
                     onDidOpenNotebookDocument.fire(nb);
-                    verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
+                    verify(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).never();
                 });
                 test('No recommendations for python kernels', async () => {
                     const notebook = createNotebook('');
                     const controller = createController('python');
                     onNotebookControllerSelected.fire({ notebook, controller });
-                    verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
+                    verify(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).never();
                 });
                 test('No recommendations for julia Notebooks', async () => {
                     const nb = createNotebook('julia');
                     onDidOpenNotebookDocument.fire(nb);
-                    verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
+                    verify(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).never();
                 });
                 test('No recommendations for julia kernels', async () => {
                     const notebook = createNotebook('');
                     const controller = createController('julia');
                     onNotebookControllerSelected.fire({ notebook, controller });
-                    verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
+                    verify(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).never();
                 });
                 test(`Got recommendations once per session when opening a notebook`, async () => {
                     const nb = createNotebook(languageToBeTested);
@@ -127,7 +163,7 @@ suite('Extension Recommendation', () => {
                     // Only one prompt regardless of how many notebooks were opened.
                     const expectedMessage = `The [.NET Interactive Notebooks Preview](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension is recommended for notebooks targeting the language '${languageToBeTested}'`;
                     verify(
-                        appShell.showInformationMessage(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
                             expectedMessage,
                             Common.bannerLabelYes,
                             Common.bannerLabelNo,
@@ -143,34 +179,72 @@ suite('Extension Recommendation', () => {
                     onNotebookControllerSelected.fire({ notebook, controller });
                     onNotebookControllerSelected.fire({ notebook: notebook2, controller: controller2 });
                     // Only one prompt regardless of how many notebooks were opened.
-                    verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
+                    verify(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).once();
                 });
                 test(`Never show prompt again when opening a notebook in a new session`, async () => {
-                    when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                        Common.doNotShowAgain as any
-                    );
+                    when(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).thenResolve(Common.doNotShowAgain as any);
 
                     const nb = createNotebook(languageToBeTested);
                     onDidOpenNotebookDocument.fire(nb);
-                    verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
+                    verify(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).once();
 
                     // New session
                     startNewSession();
                     when(memento.get(anything(), anything())).thenReturn(['ms-dotnettools.dotnet-interactive-vscode']);
                     const nb2 = createNotebook(languageToBeTested);
                     onDidOpenNotebookDocument.fire(nb2);
-                    verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
+                    verify(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).never();
                 });
                 test(`Open extension page to install the recommended extension`, async () => {
-                    when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                        Common.bannerLabelYes as any
-                    );
+                    when(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).thenResolve(Common.bannerLabelYes as any);
                     when(commandManager.executeCommand(anything(), anything())).thenResolve();
 
                     const nb = createNotebook(languageToBeTested);
                     onDidOpenNotebookDocument.fire(nb);
                     await sleep(0); // wait for even loop to process pending async calls.
-                    verify(appShell.showInformationMessage(anything(), anything(), anything(), anything())).once();
+                    verify(
+                        mockedVSCodeNamespaces.window.showInformationMessage(
+                            anything(),
+                            anything(),
+                            anything(),
+                            anything()
+                        )
+                    ).once();
                     verify(
                         commandManager.executeCommand('extension.open', 'ms-dotnettools.dotnet-interactive-vscode')
                     ).once();

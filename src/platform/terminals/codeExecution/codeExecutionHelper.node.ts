@@ -24,7 +24,7 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
     private readonly processServiceFactory: IProcessServiceFactory;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
+        super();
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     }

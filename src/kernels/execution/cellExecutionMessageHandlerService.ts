@@ -4,7 +4,6 @@
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellExecution, NotebookDocument, workspace } from 'vscode';
 import { IKernelController, ITracebackFormatter } from '../../kernels/types';
-import { IApplicationShell } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { CellExecutionMessageHandler } from './cellExecutionMessageHandler';
@@ -16,7 +15,6 @@ export class CellExecutionMessageHandlerService {
     private readonly disposables: IDisposable[] = [];
     private readonly messageHandlers = new WeakMap<NotebookCell, CellExecutionMessageHandler>();
     constructor(
-        private readonly appShell: IApplicationShell,
         private readonly controller: IKernelController,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
@@ -54,7 +52,6 @@ export class CellExecutionMessageHandlerService {
         this.messageHandlers.get(cell)?.dispose();
         const handler = new CellExecutionMessageHandler(
             cell,
-            this.appShell,
             this.controller,
             this.context,
             this.formatters,
@@ -79,7 +76,6 @@ export class CellExecutionMessageHandlerService {
         this.messageHandlers.get(cell)?.dispose();
         const handler = new CellExecutionMessageHandler(
             cell,
-            this.appShell,
             this.controller,
             this.context,
             this.formatters,

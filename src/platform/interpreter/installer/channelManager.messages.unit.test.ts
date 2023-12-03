@@ -3,7 +3,6 @@
 
 import assert from 'assert';
 import { SemVer } from 'semver';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../../platform/ioc/container';
@@ -13,6 +12,7 @@ import { InstallationChannelManager } from '../../../platform/interpreter/instal
 import { IModuleInstaller, Product } from '../../../platform/interpreter/installer/types';
 import { Uri } from 'vscode';
 import { anything, instance, mock, when } from 'ts-mockito';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
 const info: PythonEnvironment = {
     displayName: '',
@@ -28,7 +28,6 @@ const info: PythonEnvironment = {
 suite('Installation - channel messages', () => {
     let serviceContainer: IServiceContainer;
     let platform: IPlatformService;
-    let appShell: IApplicationShell;
     let interpreters: IInterpreterService;
     let moduleInstaller: IModuleInstaller;
 
@@ -36,11 +35,9 @@ suite('Installation - channel messages', () => {
         serviceContainer = mock<ServiceContainer>();
 
         platform = mock<IPlatformService>();
-        appShell = mock<IApplicationShell>();
         interpreters = mock<IInterpreterService>();
         moduleInstaller = mock<IModuleInstaller>();
         when(serviceContainer.get<IPlatformService>(IPlatformService)).thenReturn(instance(platform));
-        when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreters));
         when(serviceContainer.getAll<IModuleInstaller>(IModuleInstaller)).thenReturn([instance(moduleInstaller)]);
     });
@@ -143,18 +140,22 @@ suite('Installation - channel messages', () => {
         let url = '';
         let message = '';
         let search = '';
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenCall((m: string, _, s: string) => {
-            message = m;
-            search = s;
-            return Promise.resolve(search);
-        });
-        when(appShell.showErrorMessage(anything(), anything())).thenCall((m: string, s: string) => {
-            message = m;
-            search = s;
-            return Promise.resolve(search);
-        });
-        when(appShell.openUrl(anything())).thenCall((s: string) => {
-            url = s;
+        when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything())).thenCall(
+            (m: string, _, s: string) => {
+                message = m;
+                search = s;
+                return Promise.resolve(search);
+            }
+        );
+        when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything())).thenCall(
+            (m: string, s: string) => {
+                message = m;
+                search = s;
+                return Promise.resolve(search);
+            }
+        );
+        when(mockedVSCodeNamespaces.env.openExternal(anything())).thenCall((s: Uri) => {
+            url = s.toString(true);
         });
         if (methodType === 'showNoInstallersMessage') {
             await channels.showNoInstallersMessage(activeInterpreter);

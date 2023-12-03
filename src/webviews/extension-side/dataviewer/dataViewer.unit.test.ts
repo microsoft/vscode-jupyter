@@ -3,8 +3,7 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter, Uri } from 'vscode';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell';
-import { IApplicationShell, IWebviewPanelProvider } from '../../../platform/common/application/types';
+import { IWebviewPanelProvider } from '../../../platform/common/application/types';
 import { WebviewPanelProvider } from '../../../platform/webviews/webviewPanelProvider';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
@@ -20,14 +19,12 @@ suite('DataViewer', () => {
     let dataViewer: IDataViewer;
     let webPanelProvider: IWebviewPanelProvider;
     let configService: IConfigurationService;
-    let applicationShell: IApplicationShell;
     let dataProvider: IDataViewerDataProvider;
     const title: string = 'Data Viewer - Title';
 
     setup(async () => {
         webPanelProvider = mock(WebviewPanelProvider);
         configService = mock(ConfigurationService);
-        applicationShell = mock(ApplicationShell);
         dataProvider = mock(JupyterVariableDataProvider);
         const settings = mock(JupyterSettings);
         const settingsChangedEvent = new EventEmitter<void>();
@@ -45,7 +42,6 @@ suite('DataViewer', () => {
         dataViewer = new DataViewer(
             instance(webPanelProvider),
             instance(configService),
-            instance(applicationShell),
             new MockMemento(),
             instance(mock<IDataScienceErrorHandler>()),
             instance(context)

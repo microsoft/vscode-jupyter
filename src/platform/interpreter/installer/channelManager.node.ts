@@ -3,11 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { IApplicationShell } from '../../common/application/types';
+import {} from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
 import { Installer } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IInstallationChannelManager, IModuleInstaller, Product } from './types';
+import { Uri, env, window } from 'vscode';
 
 /**
  * Finds IModuleInstaller instances for a particular environment (like pip, poetry, conda).
@@ -58,8 +59,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
     }
 
     public async showNoInstallersMessage(interpreter: PythonEnvironment): Promise<void> {
-        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const result = await appShell.showErrorMessage(
+        const result = await window.showErrorMessage(
             interpreter.envType === EnvironmentType.Conda ? Installer.noCondaOrPipInstaller : Installer.noPipInstaller,
             { modal: true },
             Installer.searchForHelp
@@ -67,10 +67,12 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         if (result === Installer.searchForHelp) {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
             const osName = platform.isWindows ? 'Windows' : platform.isMac ? 'MacOS' : 'Linux';
-            appShell.openUrl(
-                `https://www.bing.com/search?q=Install Pip ${osName} ${
-                    interpreter.envType === EnvironmentType.Conda ? 'Conda' : ''
-                }`
+            void env.openExternal(
+                Uri.parse(
+                    `https://www.bing.com/search?q=Install Pip ${osName} ${
+                        interpreter.envType === EnvironmentType.Conda ? 'Conda' : ''
+                    }`
+                )
             );
         }
     }

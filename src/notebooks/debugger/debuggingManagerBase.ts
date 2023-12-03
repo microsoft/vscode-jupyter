@@ -11,10 +11,12 @@ import {
     NotebookDocument,
     NotebookEditor,
     workspace,
-    window
+    window,
+    env,
+    Uri
 } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
@@ -44,7 +46,6 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
         protected readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration,
         protected readonly commandManager: ICommandManager,
-        protected readonly appShell: IApplicationShell,
         protected readonly serviceContainer: IServiceContainer
     ) {}
 
@@ -104,7 +105,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
             await debug.startDebugging(undefined, config, options);
         } catch (err) {
             traceError(`Can't start debugging (${err})`);
-            this.appShell.showErrorMessage(DataScience.cantStartDebugging).then(noop, noop);
+            window.showErrorMessage(DataScience.cantStartDebugging).then(noop, noop);
         }
     }
 
@@ -165,7 +166,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     ): Promise<IpykernelCheckResult> {
         const editor = this.findEditorForCell(cell);
         if (!editor) {
-            this.appShell.showErrorMessage(DataScience.noNotebookToDebug).then(noop, noop);
+            window.showErrorMessage(DataScience.noNotebookToDebug).then(noop, noop);
             return IpykernelCheckResult.Unknown;
         }
 
@@ -217,7 +218,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     }
 
     private async promptInstallIpykernel6() {
-        const response = await this.appShell.showInformationMessage(
+        const response = await window.showInformationMessage(
             DataScience.needIpykernel6,
             { modal: true },
             DataScience.setup
@@ -225,8 +226,10 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
 
         if (response === DataScience.setup) {
             sendTelemetryEvent(DebuggingTelemetry.clickedOnSetup);
-            this.appShell.openUrl(
-                'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'
+            void env.openExternal(
+                Uri.parse(
+                    'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'
+                )
             );
         } else {
             sendTelemetryEvent(DebuggingTelemetry.closedModal);

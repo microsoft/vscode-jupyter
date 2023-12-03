@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, EventEmitter, WorkspaceConfiguration, workspace } from 'vscode';
-import { IApplicationShell, ICommandManager } from './application/types';
+import { Disposable, EventEmitter, WorkspaceConfiguration, window, workspace } from 'vscode';
+import { ICommandManager } from './application/types';
 import { traceVerbose } from '../logging';
 import { openInBrowser } from './net/browser';
 import { Deprecated } from './utils/localize';
@@ -57,8 +57,7 @@ export class FeatureManager implements IFeaturesManager {
     private disposables: Disposable[] = [];
     constructor(
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
-        @inject(ICommandManager) private cmdMgr: ICommandManager,
-        @inject(IApplicationShell) private appShell: IApplicationShell
+        @inject(ICommandManager) private cmdMgr: ICommandManager
     ) {
         this._updateFeatures();
 
@@ -104,7 +103,7 @@ export class FeatureManager implements IFeaturesManager {
         }
         const moreInfo = 'Learn more';
         const doNotShowAgain = 'Never show again';
-        const option = await this.appShell.showInformationMessage(deprecatedInfo.message, moreInfo, doNotShowAgain);
+        const option = await window.showInformationMessage(deprecatedInfo.message, moreInfo, doNotShowAgain);
         if (!option) {
             return;
         }

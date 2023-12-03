@@ -3,7 +3,6 @@
 
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IInstaller, Product, InstallerResponse } from '../../../platform/interpreter/installer/types';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { raceCancellation } from '../../../platform/common/cancellation';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
@@ -19,10 +18,9 @@ export class InterpreterDataViewerDependencyImplementation extends BaseDataViewe
         private readonly installer: IInstaller,
         private pythonFactory: IPythonExecutionFactory,
         private interpreterService: IInterpreterService,
-        applicationShell: IApplicationShell,
         isCodeSpace: boolean
     ) {
-        super(applicationShell, isCodeSpace);
+        super(isCodeSpace);
     }
 
     protected async _getVersion(

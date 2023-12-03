@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IApplicationShell } from '../../platform/common/application/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { ProgressReporter } from '../../platform/progress/progressReporter';
 import { ExportFileOpener } from './exportFileOpener';
@@ -19,10 +18,9 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
         @inject(IExportUtil) override readonly exportUtil: IExportUtil,
         @inject(IFileSystemNode) readonly fs: IFileSystemNode,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
-        @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IConfigurationService) configuration: IConfigurationService
     ) {
-        super(exportUtil, progressReporter, applicationShell, configuration);
+        super(exportUtil, progressReporter, configuration);
     }
 
     protected override async openExportedFile(format: ExportFormat, target: Uri) {

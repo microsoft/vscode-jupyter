@@ -13,7 +13,7 @@ import {
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
 } from '../../../kernels/variables/types';
-import { IWebviewViewProvider, IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
+import { IWebviewViewProvider, ICommandManager } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { traceError } from '../../../platform/logging';
 import {
@@ -45,7 +45,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         context: IExtensionContext,
         private readonly variables: IJupyterVariables,
         private readonly disposables: IDisposableRegistry,
-        private readonly appShell: IApplicationShell,
         private readonly notebookWatcher: INotebookWatcher,
         private readonly commandManager: ICommandManager,
         private readonly experiments: IExperimentService
@@ -159,7 +158,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                     });
                 } else {
                     // show quick pick
-                    const quickPick = this.appShell.createQuickPick<QuickPickItem & { command: string }>();
+                    const quickPick = window.createQuickPick<QuickPickItem & { command: string }>();
                     quickPick.title = 'Select DataFrame Viewer';
                     quickPick.items = variableViewers.map((d) => {
                         return {
@@ -192,7 +191,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         } catch (e) {
             traceError(e);
             sendTelemetryEvent(Telemetry.FailedShowDataViewer);
-            this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail).then(noop, noop);
+            window.showErrorMessage(localize.DataScience.showDataViewerFail).then(noop, noop);
         }
     }
 

@@ -12,7 +12,6 @@ import {
     IWidgetScriptSourceProvider,
     IWidgetScriptSourceProviderFactory
 } from '../types';
-import { IApplicationShell } from '../../../../platform/common/application/types';
 import { Memento } from 'vscode';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 
@@ -25,7 +24,6 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
         @inject(IIPyWidgetScriptManagerFactory)
         private readonly widgetScriptManagerFactory: IIPyWidgetScriptManagerFactory,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {}
 
@@ -33,9 +31,7 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
         // Give preference to CDN.
-        scriptProviders.push(
-            new CDNWidgetScriptSourceProvider(this.appShell, this.globalMemento, this.configurationSettings)
-        );
+        scriptProviders.push(new CDNWidgetScriptSourceProvider(this.globalMemento, this.configurationSettings));
         switch (kernel.kernelConnectionMetadata.kind) {
             case 'connectToLiveRemoteKernel':
             case 'startUsingRemoteKernelSpec':

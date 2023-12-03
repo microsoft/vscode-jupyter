@@ -22,7 +22,6 @@ import {
     IJupyterServerProviderRegistry
 } from '../../../kernels/jupyter/types';
 import { IKernelFinder, KernelConnectionMetadata, RemoteKernelConnectionMetadata } from '../../../kernels/types';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import {
     InteractiveWindowView,
     JUPYTER_HUB_EXTENSION_ID,
@@ -39,7 +38,6 @@ import {
     IQuickPickParameters,
     MultiStepInput
 } from '../../../platform/common/utils/multiStepInput';
-import { ServiceContainer } from '../../../platform/ioc/container';
 import { IConnectionDisplayDataProvider, IRemoteNotebookKernelSourceSelector } from '../types';
 import { MultiStepResult } from './types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
@@ -110,8 +108,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         this.cancellationTokenSource?.dispose();
 
         this.cancellationTokenSource = new CancellationTokenSource();
-        const appShell = ServiceContainer.instance.get<IApplicationShell>(IApplicationShell);
-        const multiStep = new MultiStepInput<MultiStepResult>(appShell);
+        const multiStep = new MultiStepInput<MultiStepResult>();
         const state: MultiStepResult = { disposables: [], notebook };
         try {
             const result = await multiStep.run(

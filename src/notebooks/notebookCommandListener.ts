@@ -13,7 +13,7 @@ import {
     window,
     workspace
 } from 'vscode';
-import { ICommandManager, IApplicationShell } from '../platform/common/application/types';
+import { ICommandManager } from '../platform/common/application/types';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
 import { Commands } from '../platform/common/constants';
 import { noop } from '../platform/common/utils/misc';
@@ -42,7 +42,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
-        @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IConfigurationService) private configurationService: IConfigurationService,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(IControllerRegistration) private controllerRegistration: IControllerRegistration,
@@ -214,12 +213,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 const yes = DataScience.restartKernelMessageYes;
                 const dontAskAgain = DataScience.restartKernelMessageDontAskAgain;
 
-                const response = await this.applicationShell.showInformationMessage(
-                    message,
-                    { modal: true },
-                    yes,
-                    dontAskAgain
-                );
+                const response = await window.showInformationMessage(message, { modal: true }, yes, dontAskAgain);
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
                     this.wrapKernelMethod('restart', kernel).catch(noop);
@@ -267,7 +261,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                         false
                     );
                 } else {
-                    this.applicationShell.showErrorMessage(ex.toString()).then(noop, noop);
+                    window.showErrorMessage(ex.toString()).then(noop, noop);
                 }
             }
         })();

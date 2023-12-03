@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Event, EventEmitter, Uri, workspace } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Uri, window, workspace } from 'vscode';
 import { raceCancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -12,7 +12,6 @@ import { JupyterInterpreterDependencyService } from './jupyterInterpreterDepende
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 import { JupyterInterpreterDependencyResponse } from '../types';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IDisposableRegistry } from '../../../platform/common/types';
 
@@ -36,7 +35,6 @@ export class JupyterInterpreterService {
         @inject(JupyterInterpreterDependencyService)
         private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         workspace.onDidGrantWorkspaceTrust(
@@ -121,7 +119,7 @@ export class JupyterInterpreterService {
             interpreter = await this.interpreterService.getActiveInterpreter(undefined);
             if (!interpreter) {
                 if (err) {
-                    const selection = await this.appShell.showErrorMessage(
+                    const selection = await window.showErrorMessage(
                         err.message,
                         { modal: true },
                         DataScience.selectDifferentJupyterInterpreter

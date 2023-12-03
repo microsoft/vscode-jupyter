@@ -17,7 +17,6 @@ import {
 } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
 import { IJupyterServerUri, JupyterServer, JupyterServerCollection, JupyterServerProvider } from '../../../api';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import { JupyterLabHelper } from '../session/jupyterLabHelper';
 import { resolvableInstance } from '../../../test/datascience/helpers';
@@ -27,7 +26,6 @@ suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
     let registrationPicker: IJupyterServerProviderRegistry;
     let sessionManager: JupyterLabHelper;
-    let appShell: IApplicationShell;
     let configService: IConfigurationService;
     let errorHandler: IDataScienceErrorHandler;
     let disposables: IDisposable[] = [];
@@ -58,7 +56,6 @@ suite('Jupyter Connection', async () => {
         };
         registrationPicker = mock<IJupyterServerProviderRegistry>();
         sessionManager = mock<JupyterLabHelper>();
-        appShell = mock<IApplicationShell>();
         configService = mock<IConfigurationService>();
         errorHandler = mock<IDataScienceErrorHandler>();
         requestAgentCreator = mock<IJupyterRequestAgentCreator>();
@@ -73,7 +70,6 @@ suite('Jupyter Connection', async () => {
         when(registrationPicker.jupyterCollections).thenReturn([instance(collection)]);
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
-            instance(appShell),
             instance(configService),
             instance(errorHandler),
             instance(requestAgentCreator),

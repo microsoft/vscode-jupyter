@@ -7,7 +7,6 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { ExportFileOpener } from '../../../notebooks/export/exportFileOpener';
@@ -22,12 +21,12 @@ import { ExportToPDF } from '../../../notebooks/export/exportToPDF';
 import { ExportToHTML } from '../../../notebooks/export/exportToHTML';
 import { ExportDialog } from '../../../notebooks/export/exportDialog';
 import { ExportToPythonPlain } from '../../../notebooks/export/exportToPythonPlain';
+import { mockedVSCodeNamespaces } from '../../vscode-mock';
 
 suite('File Converter @export', () => {
     let fileConverter: FileConverter;
     let fileSystem: IFileSystemNode;
     let exportUtil: ExportUtil;
-    let appShell: IApplicationShell;
     let exportFileOpener: sinon.SinonStub<
         [format: ExportFormat, uri: Uri, openDirectly?: boolean | undefined],
         Promise<void>
@@ -39,14 +38,13 @@ suite('File Converter @export', () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
         fileSystem = mock<IFileSystemNode>();
-        appShell = mock<IApplicationShell>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
         configuration = mock<IConfigurationService>();
         settings = mock<IWatchableJupyterSettings>();
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         when(settings.pythonExportMethod).thenReturn('direct');
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-        when(appShell.showErrorMessage(anything())).thenResolve();
+        when(mockedVSCodeNamespaces.window.showErrorMessage(anything())).thenResolve();
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         sinon.stub(ExportUtilNode.prototype, 'generateTempDir').resolves({ path: 'test', dispose: () => {} });
         sinon.stub(ExportUtilNode.prototype, 'makeFileInDirectory').resolves('foo');
@@ -68,7 +66,6 @@ suite('File Converter @export', () => {
             instance(exportUtil),
             instance(fileSystem),
             instance(reporter),
-            instance(appShell),
             instance(configuration)
         );
 
@@ -83,7 +80,7 @@ suite('File Converter @export', () => {
 
         await fileConverter.export(ExportFormat.html, {} as any);
 
-        verify(appShell.showErrorMessage(anything())).once();
+        verify(mockedVSCodeNamespaces.window.showErrorMessage(anything())).once();
         assert.strictEqual(exportFileOpener.callCount, 0);
     });
     test('Export to PDF is called when export method is PDF', async () => {

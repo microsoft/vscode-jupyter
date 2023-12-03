@@ -3,8 +3,6 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import { IKernel, IKernelSession } from '../../../kernels/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
@@ -18,10 +16,10 @@ import { pandasMinimumVersionSupportedByVariableViewer } from '../../../webviews
 import { PythonExecutionFactory } from '../../../platform/interpreter/pythonExecutionFactory.node';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { Kernel } from '@jupyterlab/services';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
 
 suite('DataViewerDependencyService (IKernel, Node)', () => {
     let dependencyService: DataViewerDependencyService;
-    let appShell: IApplicationShell;
     let pythonExecFactory: IPythonExecutionFactory;
     let installer: IInstaller;
     let interpreterService: IInterpreterService;
@@ -29,8 +27,8 @@ suite('DataViewerDependencyService (IKernel, Node)', () => {
     let session: IKernelSession;
 
     setup(async () => {
+        resetVSCodeMocks();
         installer = mock(ProductInstaller);
-        appShell = mock(ApplicationShell);
         pythonExecFactory = mock(PythonExecutionFactory);
         interpreterService = mock<IInterpreterService>();
         kernel = mock<IKernel>();
@@ -42,12 +40,12 @@ suite('DataViewerDependencyService (IKernel, Node)', () => {
             instance(installer),
             instance(pythonExecFactory),
             instance(interpreterService),
-            instance(appShell),
             false
         );
     });
 
     teardown(() => {
+        resetVSCodeMocks();
         sinon.restore();
     });
 
@@ -132,7 +130,9 @@ suite('DataViewerDependencyService (IKernel, Node)', () => {
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: '' }]));
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install as any);
+        when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything())).thenResolve(
+            Common.install as any
+        );
 
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         assert.equal(await resultPromise, undefined);
@@ -146,7 +146,7 @@ suite('DataViewerDependencyService (IKernel, Node)', () => {
         const stub = sinon.stub(helpers, 'executeSilently');
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: '' }]));
 
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
+        when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything())).thenResolve();
 
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         await assert.isRejected(

@@ -6,7 +6,6 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Uri } from 'vscode';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { InterpreterUri, IOutputChannel } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -20,6 +19,8 @@ import {
 } from '../../../platform/interpreter/installer/types';
 import { sleep } from '../../../test/core';
 import { Environment } from '@vscode/python-extension';
+import { anything, when } from 'ts-mockito';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
 
 class AlwaysInstalledDataScienceInstaller extends DataScienceInstaller {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
@@ -32,29 +33,27 @@ suite('DataScienceInstaller install', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let installationChannelManager: TypeMoq.IMock<IInstallationChannelManager>;
     let dataScienceInstaller: DataScienceInstaller;
-    let appShell: TypeMoq.IMock<IApplicationShell>;
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
     let tokenSource: CancellationTokenSource;
 
     const interpreterPath = Uri.file('path/to/interpreter');
 
     setup(() => {
+        resetVSCodeMocks();
         tokenSource = new CancellationTokenSource();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         installationChannelManager = TypeMoq.Mock.ofType<IInstallationChannelManager>();
-        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
-        appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
+        when(mockedVSCodeNamespaces.window.showErrorMessage(anything())).thenResolve();
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInstallationChannelManager)))
             .returns(() => installationChannelManager.object);
-
-        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
 
         dataScienceInstaller = new AlwaysInstalledDataScienceInstaller(serviceContainer.object, outputChannel.object);
     });
 
     teardown(() => {
+        resetVSCodeMocks();
         tokenSource.dispose();
     });
 

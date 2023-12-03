@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { commands, extensions, NotebookDocumentChangeEvent, workspace } from 'vscode';
+import { commands, extensions, NotebookDocumentChangeEvent, window, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { RendererExtension, WIDGET_MIMETYPE } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
@@ -16,10 +15,7 @@ import { noop } from '../../../platform/common/utils/misc';
 export class RendererVersionChecker implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];
     static messageDisplayed: boolean = false;
-    constructor(
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
-    ) {
+    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         disposables.push(this);
     }
     dispose(): void {
@@ -73,7 +69,7 @@ export class RendererVersionChecker implements IExtensionSyncActivationService {
             return;
         }
         RendererVersionChecker.messageDisplayed = true;
-        this.appShell
+        window
             .showInformationMessage(DataScience.rendererExtensionRequired, { modal: true }, Common.bannerLabelYes)
             .then((answer) => {
                 if (answer === Common.bannerLabelYes) {
@@ -87,7 +83,7 @@ export class RendererVersionChecker implements IExtensionSyncActivationService {
             return;
         }
         RendererVersionChecker.messageDisplayed = true;
-        this.appShell
+        window
             .showInformationMessage(DataScience.rendererExtension1015Required, { modal: true }, Common.bannerLabelYes)
             .then((answer) => {
                 if (answer === Common.bannerLabelYes) {

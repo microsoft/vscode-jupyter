@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Progress as VSCProgress, ProgressLocation } from 'vscode';
-import { IApplicationShell } from '../common/application/types';
+import { injectable } from 'inversify';
+import { CancellationToken, CancellationTokenSource, Progress as VSCProgress, ProgressLocation, window } from 'vscode';
 import { IDisposable } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
@@ -23,7 +22,7 @@ export class ProgressReporter implements IProgressReporter {
         return this.currentActions.length === 0 ? undefined : this.currentActions[this.currentActions.length - 1];
     }
 
-    constructor(@inject(IApplicationShell) private readonly appShell: IApplicationShell) {
+    constructor() {
         registerReporter(this);
     }
 
@@ -39,7 +38,7 @@ export class ProgressReporter implements IProgressReporter {
         const deferred = createDeferred();
         const options = { location: ProgressLocation.Notification, cancellable: cancellable, title: message };
 
-        this.appShell
+        window
             .withProgress(options, async (progress, cancelToken) => {
                 cancelToken.onCancellationRequested(() => {
                     if (cancelToken.isCancellationRequested) {

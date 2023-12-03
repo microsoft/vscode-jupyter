@@ -11,6 +11,7 @@ import {
     NotebookCell,
     NotebookDocument,
     NotebookEditor,
+    window,
     workspace
 } from 'vscode';
 import { IKernelProvider } from '../../../kernels/types';
@@ -24,7 +25,7 @@ import {
 } from '../../../notebooks/debugger/debuggingTypes';
 import { assertIsInteractiveWindowDebugConfig, IpykernelCheckResult } from '../../../notebooks/debugger/helper';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { IApplicationShell, ICommandManager, IDebugService } from '../../../platform/common/application/types';
+import { ICommandManager, IDebugService } from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IConfigurationService } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -52,7 +53,6 @@ export class InteractiveWindowDebuggingManager
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
         @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
         @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IDebugLocationTrackerFactory)
         private readonly debugLocationTrackerFactory: IDebugLocationTrackerFactory,
@@ -60,7 +60,7 @@ export class InteractiveWindowDebuggingManager
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(kernelProvider, controllerRegistration, commandManager, appShell, serviceContainer);
+        super(kernelProvider, controllerRegistration, commandManager, serviceContainer);
     }
 
     public override activate() {
@@ -146,7 +146,7 @@ export class InteractiveWindowDebuggingManager
     ): Promise<DebugAdapterDescriptor | undefined> {
         const kernel = await this.ensureKernelIsRunning(notebook);
         if (!kernel?.session) {
-            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted).then(noop, noop);
+            window.showInformationMessage(DataScience.kernelWasNotStarted).then(noop, noop);
             return;
         }
         const adapter = new KernelDebugAdapter(
@@ -163,7 +163,7 @@ export class InteractiveWindowDebuggingManager
 
         const cell = notebook.cellAt(config.__cellIndex);
         const controller = new DebugCellController(adapter, cell, this.kernelProvider.getKernelExecution(kernel!));
-        adapter.addDebuggingDelegates([controller, new RestartNotSupportedController(cell, this.serviceContainer)]);
+        adapter.addDebuggingDelegates([controller, new RestartNotSupportedController(cell)]);
         controller.ready
             .then(() => dbgr.resolve())
             .catch((ex) => console.error('Failed waiting for controller to be ready', ex));

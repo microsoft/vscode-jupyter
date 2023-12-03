@@ -7,7 +7,7 @@ import nock from 'nock';
 import * as path from '../../../../platform/vscode-path/path';
 import { Readable } from 'stream';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ConfigurationTarget, Memento, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Memento, Uri } from 'vscode';
 import { JupyterSettings } from '../../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../../platform/common/configuration/service.node';
 import { IConfigurationService, IDisposable, WidgetCDNs } from '../../../../platform/common/types';
@@ -19,10 +19,10 @@ import {
     GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce
 } from './cdnWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider } from '../types';
-import { IApplicationShell } from '../../../../platform/common/application/types';
 import { dispose } from '../../../../platform/common/utils/lifecycle';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { computeHash } from '../../../../platform/common/crypto';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../../test/vscode-mock';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const sanitize = require('sanitize-filename');
@@ -36,19 +36,16 @@ suite('ipywidget - CDN', () => {
     let configService: IConfigurationService;
     let settings: JupyterSettings;
     let memento: Memento;
-    let appShell: IApplicationShell;
     let disposables: IDisposable[] = [];
     setup(() => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
+
         configService = mock(ConfigurationService);
         settings = { widgetScriptSources: [] } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
-        appShell = mock<IApplicationShell>();
         memento = mock<Memento>();
-        scriptSourceProvider = new CDNWidgetScriptSourceProvider(
-            instance(appShell),
-            instance(memento),
-            instance(configService)
-        );
+        scriptSourceProvider = new CDNWidgetScriptSourceProvider(instance(memento), instance(configService));
     });
 
     teardown(() => (disposables = dispose(disposables)));
@@ -66,12 +63,20 @@ suite('ipywidget - CDN', () => {
         return Uri.file(path.join(EXTENSION_ROOT_DIR, 'temp', 'scripts', hash, 'index.js')).toString();
     }
     test('Prompt to use CDN', async () => {
-        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve();
+        when(
+            mockedVSCodeNamespaces.window.showInformationMessage(
+                anything(),
+                anything(),
+                anything(),
+                anything(),
+                anything()
+            )
+        ).thenResolve();
 
         await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1', true);
 
         verify(
-            appShell.showInformationMessage(
+            mockedVSCodeNamespaces.window.showInformationMessage(
                 DataScience.useCDNForWidgetsNoInformation,
                 deepEqual({ modal: true }),
                 Common.ok,
@@ -82,13 +87,15 @@ suite('ipywidget - CDN', () => {
     });
     test('Warn if there is no network access and CDN is used', async () => {
         settings.widgetScriptSources = ['jsdelivr.com'];
-        when(appShell.showWarningMessage(anything(), anything(), anything(), anything())).thenResolve();
+        when(
+            mockedVSCodeNamespaces.window.showWarningMessage(anything(), anything(), anything(), anything())
+        ).thenResolve();
         when(memento.get(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, anything())).thenReturn(false);
 
         await scriptSourceProvider.getWidgetScriptSource('Hello World', '1', false);
 
         verify(
-            appShell.showWarningMessage(
+            mockedVSCodeNamespaces.window.showWarningMessage(
                 DataScience.cdnWidgetScriptNotAccessibleWarningMessage(
                     'Hello World',
                     JSON.stringify(settings.widgetScriptSources)
@@ -101,13 +108,15 @@ suite('ipywidget - CDN', () => {
     });
     test('Do not warn if there is no network access and CDN is not used', async () => {
         settings.widgetScriptSources = [];
-        when(appShell.showWarningMessage(anything(), anything(), anything(), anything())).thenResolve();
+        when(
+            mockedVSCodeNamespaces.window.showWarningMessage(anything(), anything(), anything(), anything())
+        ).thenResolve();
         when(memento.get(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, anything())).thenReturn(false);
 
         await scriptSourceProvider.getWidgetScriptSource('Hello World', '1', false);
 
         verify(
-            appShell.showWarningMessage(
+            mockedVSCodeNamespaces.window.showWarningMessage(
                 DataScience.cdnWidgetScriptNotAccessibleWarningMessage(
                     'Hello World',
                     JSON.stringify(settings.widgetScriptSources)
@@ -120,15 +129,15 @@ suite('ipywidget - CDN', () => {
     });
     test('Verify we track the fact that we should not warn again if there is no network access', async () => {
         settings.widgetScriptSources = ['jsdelivr.com'];
-        when(appShell.showWarningMessage(anything(), anything(), anything(), anything())).thenResolve(
-            Common.doNotShowAgain as any
-        );
+        when(
+            mockedVSCodeNamespaces.window.showWarningMessage(anything(), anything(), anything(), anything())
+        ).thenResolve(Common.doNotShowAgain as any);
         when(memento.get(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, anything())).thenReturn(false);
 
         await scriptSourceProvider.getWidgetScriptSource('Hello World', '1', false);
 
         verify(
-            appShell.showWarningMessage(
+            mockedVSCodeNamespaces.window.showWarningMessage(
                 DataScience.cdnWidgetScriptNotAccessibleWarningMessage(
                     'Hello World',
                     JSON.stringify(settings.widgetScriptSources)
@@ -141,13 +150,21 @@ suite('ipywidget - CDN', () => {
         verify(memento.update(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, true)).once();
     });
     test('Do not prompt to use CDN if user has chosen not to use a CDN', async () => {
-        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve();
+        when(
+            mockedVSCodeNamespaces.window.showInformationMessage(
+                anything(),
+                anything(),
+                anything(),
+                anything(),
+                anything()
+            )
+        ).thenResolve();
         when(memento.get(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, false)).thenReturn(true);
 
         await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
         verify(
-            appShell.showInformationMessage(
+            mockedVSCodeNamespaces.window.showInformationMessage(
                 DataScience.useCDNForWidgetsNoInformation,
                 deepEqual({ modal: true }),
                 Common.ok,
@@ -166,7 +183,7 @@ suite('ipywidget - CDN', () => {
     function verifyNoCDNUpdatedInSettings() {
         // Confirm message was displayed.
         verify(
-            appShell.showInformationMessage(
+            mockedVSCodeNamespaces.window.showInformationMessage(
                 DataScience.useCDNForWidgetsNoInformation,
                 anything(),
                 Common.ok,
@@ -181,7 +198,15 @@ suite('ipywidget - CDN', () => {
         ).once();
     }
     test('Do not update if prompt is dismissed', async () => {
-        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve();
+        when(
+            mockedVSCodeNamespaces.window.showInformationMessage(
+                anything(),
+                anything(),
+                anything(),
+                anything(),
+                anything()
+            )
+        ).thenResolve();
 
         await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
@@ -189,9 +214,15 @@ suite('ipywidget - CDN', () => {
         verify(memento.update(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, anything())).never();
     });
     test('Do not update settings if Cancel is clicked in prompt', async () => {
-        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
-            Common.cancel as any
-        );
+        when(
+            mockedVSCodeNamespaces.window.showInformationMessage(
+                anything(),
+                anything(),
+                anything(),
+                anything(),
+                anything()
+            )
+        ).thenResolve(Common.cancel as any);
 
         await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
@@ -199,9 +230,15 @@ suite('ipywidget - CDN', () => {
         verify(memento.update(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, anything())).never();
     });
     test('Update settings to not use CDN if `Do Not Show Again` is clicked in prompt', async () => {
-        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
-            Common.doNotShowAgain as any
-        );
+        when(
+            mockedVSCodeNamespaces.window.showInformationMessage(
+                anything(),
+                anything(),
+                anything(),
+                anything(),
+                anything()
+            )
+        ).thenResolve(Common.doNotShowAgain as any);
 
         await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
@@ -209,15 +246,21 @@ suite('ipywidget - CDN', () => {
         verify(memento.update(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, true)).once();
     });
     test('Update settings to use CDN based on prompt', async () => {
-        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
-            Common.ok as any
-        );
+        when(
+            mockedVSCodeNamespaces.window.showInformationMessage(
+                anything(),
+                anything(),
+                anything(),
+                anything(),
+                anything()
+            )
+        ).thenResolve(Common.ok as any);
 
         await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
         // Confirm message was displayed.
         verify(
-            appShell.showInformationMessage(
+            mockedVSCodeNamespaces.window.showInformationMessage(
                 DataScience.useCDNForWidgetsNoInformation,
                 anything(),
                 Common.ok,
@@ -247,13 +290,17 @@ suite('ipywidget - CDN', () => {
             '1',
             JSON.stringify((<any>settings).widgetScriptSources)
         );
-        verify(appShell.showWarningMessage(expectedMessage, anything(), anything(), anything())).once();
+        verify(
+            mockedVSCodeNamespaces.window.showWarningMessage(expectedMessage, anything(), anything(), anything())
+        ).once();
 
         // Ensure message is not displayed more than once.
         values = await scriptSourceProvider.getWidgetScriptSource('module1', '1');
 
         assert.deepEqual(values, { moduleName: 'module1' });
-        verify(appShell.showWarningMessage(expectedMessage, anything(), anything(), anything())).once();
+        verify(
+            mockedVSCodeNamespaces.window.showWarningMessage(expectedMessage, anything(), anything(), anything())
+        ).once();
     });
 
     [true, false].forEach((localLaunch) => {

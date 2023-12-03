@@ -11,12 +11,10 @@ import { IExtensionSyncActivationService } from './activation/types';
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter';
-import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
 import {
     ICommandManager,
     IWorkspaceService,
-    IApplicationShell,
     IWebviewViewProvider,
     IWebviewPanelProvider
 } from './common/application/types';
@@ -35,7 +33,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addBinding(FileSystem, IFileSystem);
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
-    serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
 
     registerApiTypes(serviceManager);

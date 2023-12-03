@@ -71,7 +71,6 @@ import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeN
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
 import { LastSavedNotebookCellLanguage } from '../../../notebooks/languages/cellLanguageService';
 import { INotebookEditorProvider } from '../../../notebooks/types';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import {
     JVSC_EXTENSION_ID,
     JupyterNotebookView,
@@ -1297,14 +1296,13 @@ export async function hijackPrompt(
     buttonToClick?: WindowPromptStubButtonClickOptions,
     disposables: IDisposable[] = []
 ): Promise<WindowPromptStub> {
-    const api = await initialize();
-    const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
+    await initialize();
     let displayed = createDeferred<boolean>();
     let clickButton = createDeferred<string | Uri>();
     const messageDisplayed: string[] = [];
     let displayCount = 0;
     // eslint-disable-next-line
-    const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
+    const stub = sinon.stub(window, promptType).callsFake(function (msg: string) {
         traceInfo(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
         if (
             ('exactMatch' in message && msg.trim() === message.exactMatch.trim()) ||
@@ -1326,7 +1324,7 @@ export async function hijackPrompt(
             }
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);
+        return (window[promptType] as any).wrappedMethod.apply(window, arguments);
     } as any);
     const disposable = { dispose: () => stub.restore() };
     if (disposables) {
@@ -1355,8 +1353,7 @@ export async function hijackSavePrompt(
     buttonToClick?: WindowPromptStubButtonClickOptions,
     disposables: IDisposable[] = []
 ): Promise<WindowPromptStub> {
-    const api = await initialize();
-    const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
+    await initialize();
     let displayed = createDeferred<boolean>();
     let clickButton = createDeferred<string | Uri>();
     const messageDisplayed: string[] = [];
@@ -1379,13 +1376,11 @@ export async function hijackSavePrompt(
             }
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (appShell.showSaveDialog as any).wrappedMethod.apply(appShell, arguments);
+        return (window.showSaveDialog as any).wrappedMethod.apply(window, arguments);
     };
     // eslint-disable-next-line
-    const stub1 = sinon.stub(appShell, 'showSaveDialog').callsFake(showSaveDialogFake as any);
-    // Stub VS Code namespace as well, in case we're not using IApplicationShell (wrappers).
-    const stub2 = sinon.stub(window, 'showSaveDialog').callsFake(showSaveDialogFake as any);
-    const disposable = Disposable.from(new Disposable(() => stub1.restore()), new Disposable(() => stub2.restore()));
+    const stub1 = sinon.stub(window, 'showSaveDialog').callsFake(showSaveDialogFake as any);
+    const disposable = new Disposable(() => stub1.restore());
     if (disposables) {
         disposables.push(disposable);
     }
@@ -1481,11 +1476,10 @@ export type QuickPickStub = {
 };
 
 export async function hijackCreateQuickPick(disposables: IDisposable[] = []): Promise<QuickPickStub> {
-    const api = await initialize();
-    const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
+    await initialize();
     const emitter = new EventEmitter<MockQuickPick>();
 
-    const stub = sinon.stub(appShell, 'createQuickPick').callsFake(function () {
+    const stub = sinon.stub(window, 'createQuickPick').callsFake(function () {
         const result = new MockQuickPick();
         emitter.fire(result);
         return result;
@@ -1565,17 +1559,16 @@ export async function getDebugSessionAndAdapter(
 }
 
 export async function clickOKForRestartPrompt() {
-    const api = await initialize();
+    await initialize();
     // Ensure we click `Yes` when prompted to restart the kernel.
-    const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
-    const showInformationMessage = sinon.stub(appShell, 'showInformationMessage').callsFake(function (message: string) {
+    const showInformationMessage = sinon.stub(window, 'showInformationMessage').callsFake(function (message: string) {
         traceInfo(`Step 2. ShowInformationMessage ${message}`);
         if (message === DataScience.restartKernelMessage) {
             traceInfo(`Step 3. ShowInformationMessage & yes to restart`);
             // User clicked ok to restart it.
             return DataScience.restartKernelMessageYes;
         }
-        return (appShell.showInformationMessage as any).wrappedMethod.apply(appShell, arguments);
+        return (window.showInformationMessage as any).wrappedMethod.apply(window, arguments);
     });
     return { dispose: () => showInformationMessage.restore() };
 }

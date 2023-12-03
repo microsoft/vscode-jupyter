@@ -13,7 +13,6 @@ import {
     NotebookDocument,
     Uri
 } from 'vscode';
-import { IApplicationShell } from '../platform/common/application/types';
 import {
     IConfigurationService,
     IDisposable,
@@ -47,7 +46,6 @@ suite('Jupyter Session', () => {
         const asyncDisposables: { dispose: () => Promise<unknown> }[] = [];
         let sessionCreator: IKernelSessionFactory;
         let configService: IConfigurationService;
-        let appShell: IApplicationShell;
         let context: IExtensionContext;
         let jupyterServerUriStorage: IJupyterServerUriStorage;
         let metadata: KernelConnectionMetadata;
@@ -56,7 +54,6 @@ suite('Jupyter Session', () => {
         setup(() => {
             sessionCreator = mock<IKernelSessionFactory>();
             configService = mock<IConfigurationService>();
-            appShell = mock<IApplicationShell>();
             context = mock<IExtensionContext>();
             jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
             metadata = mock<KernelConnectionMetadata>();
@@ -76,7 +73,6 @@ suite('Jupyter Session', () => {
                 disposables,
                 instance(sessionCreator),
                 instance(configService),
-                instance(appShell),
                 instance(context),
                 instance(jupyterServerUriStorage),
                 [],
@@ -93,7 +89,6 @@ suite('Jupyter Session', () => {
                 disposables,
                 instance(sessionCreator),
                 instance(configService),
-                instance(appShell),
                 instance(registry),
                 instance(workspaceMemento)
             );
@@ -169,7 +164,6 @@ suite('Jupyter Session', () => {
         let thirdPartyKernelProvider: IThirdPartyKernelProvider;
         let sessionCreator: IKernelSessionFactory;
         let configService: IConfigurationService;
-        let appShell: IApplicationShell;
         let jupyterServerUriStorage: IJupyterServerUriStorage;
         let context: IExtensionContext;
         let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
@@ -200,7 +194,6 @@ suite('Jupyter Session', () => {
             asyncDisposables = new AsyncDisposableRegistry();
             sessionCreator = mock<IKernelSessionFactory>();
             configService = mock<IConfigurationService>();
-            appShell = mock<IApplicationShell>();
             jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
             context = mock<IExtensionContext>();
             const configSettings = mock<IWatchableJupyterSettings>();
@@ -234,7 +227,6 @@ suite('Jupyter Session', () => {
                 disposables,
                 instance(sessionCreator),
                 instance(configService),
-                instance(appShell),
                 instance(context),
                 instance(jupyterServerUriStorage),
                 [],
@@ -246,7 +238,6 @@ suite('Jupyter Session', () => {
                 disposables,
                 instance(sessionCreator),
                 instance(configService),
-                instance(appShell),
                 instance(registry),
                 instance(workspaceMemento)
             );

@@ -20,12 +20,12 @@ import {
     ExtensionMode,
     NotebookEdit,
     NotebookCellOutputItem,
-    Disposable
+    Disposable,
+    window
 } from 'vscode';
 
 import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
-import { IApplicationShell } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
@@ -179,7 +179,6 @@ export class CellExecutionMessageHandler implements IDisposable {
     private endAbnormallyTimeout?: NodeJS.Timeout | number;
     constructor(
         public readonly cell: NotebookCell,
-        private readonly applicationService: IApplicationShell,
         private readonly controller: IKernelController,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
@@ -835,7 +834,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             const cancelToken = new CancellationTokenSource();
             this.prompts.add(cancelToken);
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
-            await this.applicationService
+            await window
                 .showInputBox(
                     {
                         prompt: msg.content.prompt ? msg.content.prompt.toString() : '',

@@ -3,7 +3,7 @@
 
 /* eslint-disable , @typescript-eslint/no-explicit-any, @typescript-eslint/no-extraneous-class */
 
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import {
     Disposable,
     Event,
@@ -12,9 +12,9 @@ import {
     QuickInputButtons,
     QuickPick,
     QuickPickItem,
-    QuickPickItemButtonEvent
+    QuickPickItemButtonEvent,
+    window
 } from 'vscode';
-import { IApplicationShell } from '../application/types';
 import { dispose } from '../utils/lifecycle';
 import { createDeferred } from './async';
 import { noop } from './misc';
@@ -117,7 +117,6 @@ export interface IMultiStepInput<S> {
 export class MultiStepInput<S> implements IMultiStepInput<S> {
     private current?: QuickInput;
     private steps: InputStep<S>[] = [];
-    constructor(private readonly shell: IApplicationShell) {}
     public run(start: InputStep<S>, state: S) {
         return this.stepThrough(start, state);
     }
@@ -151,7 +150,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
     }: P): { quickPick: QuickPick<T>; selection: Promise<MultiStepInputQuickPicResponseType<T, P>> } {
         const disposables: Disposable[] = [];
         const deferred = createDeferred<MultiStepInputQuickPicResponseType<T, P>>();
-        const input = this.shell.createQuickPick<T>();
+        const input = window.createQuickPick<T>();
         input.title = title;
         input.step = step;
         input.totalSteps = totalSteps;
@@ -214,7 +213,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     if (message) {
                         resolvable = false;
                         // No validation allowed on a quick pick. Have to put up a dialog instead
-                        await this.shell.showErrorMessage(message, { modal: true });
+                        await window.showErrorMessage(message, { modal: true });
                     }
                     input.enabled = true;
                     input.busy = false;
@@ -242,7 +241,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                             input.enabled = false;
                             input.busy = true;
                             // No validation allowed on a quick pick. Have to put up a dialog instead
-                            await this.shell.showErrorMessage(validationMessage);
+                            await window.showErrorMessage(validationMessage);
                             input.enabled = true;
                             input.busy = false;
                         }
@@ -274,7 +273,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         const disposables: Disposable[] = [];
         try {
             return await new Promise<MultiStepInputInputBoxResponseType<P>>((resolve, reject) => {
-                const input = this.shell.createInputBox();
+                const input = window.createInputBox();
                 input.title = title;
                 input.step = step;
                 input.totalSteps = totalSteps;
@@ -376,8 +375,7 @@ export interface IMultiStepInputFactory {
 }
 @injectable()
 export class MultiStepInputFactory implements IMultiStepInputFactory {
-    constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell) {}
     public create<S>(): IMultiStepInput<S> {
-        return new MultiStepInput<S>(this.shell);
+        return new MultiStepInput<S>();
     }
 }

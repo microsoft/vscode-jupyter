@@ -4,7 +4,7 @@
 import { inject, injectable, optional } from 'inversify';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { IFileConverter } from '../../notebooks/export/types';
@@ -25,7 +25,6 @@ export class CommandRegistry implements IExtensionSyncActivationService {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IFileConverter) private fileConverter: IFileConverter,
-        @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInteractiveWindowProvider)
         @optional()
@@ -37,7 +36,6 @@ export class CommandRegistry implements IExtensionSyncActivationService {
         this.exportCommand = new ExportCommands(
             this.commandManager,
             this.fileConverter,
-            this.applicationShell,
             this.fs,
             this.interactiveProvider,
             controllerSelection,

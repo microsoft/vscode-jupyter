@@ -28,7 +28,7 @@ import {
     IJupyterServerProviderRegistry
 } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IApplicationShell, ICommandManager, IEncryptedStorage } from '../../platform/common/application/types';
+import { ICommandManager, IEncryptedStorage } from '../../platform/common/application/types';
 import {
     Identifiers,
     JUPYTER_HUB_EXTENSION_ID,
@@ -100,7 +100,6 @@ export class UserJupyterServerUrlProvider
     private jupyterServerUriInput: UserJupyterServerUriInput;
     private jupyterServerUriDisplayName: UserJupyterServerDisplayName;
     constructor(
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
@@ -130,13 +129,12 @@ export class UserJupyterServerUrlProvider
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.newStorage = new NewStorage(encryptedStorage);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.secureConnectionValidator = new SecureConnectionValidator(applicationShell, globalMemento);
+        this.secureConnectionValidator = new SecureConnectionValidator(globalMemento);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.jupyterServerUriInput = new UserJupyterServerUriInput(applicationShell, requestCreator);
+        this.jupyterServerUriInput = new UserJupyterServerUriInput(requestCreator);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.jupyterServerUriDisplayName = new UserJupyterServerDisplayName(applicationShell);
+        this.jupyterServerUriDisplayName = new UserJupyterServerDisplayName();
         this.jupyterPasswordConnect = new JupyterPasswordConnect(
-            applicationShell,
             configService,
             agentCreator,
             requestCreator,
@@ -144,7 +142,6 @@ export class UserJupyterServerUrlProvider
             disposables
         );
         this.jupyterHubPasswordConnect = new JupyterHubPasswordConnect(
-            applicationShell,
             multiStepFactory,
             asyncDisposableRegistry,
             configService,
@@ -376,7 +373,7 @@ export class UserJupyterServerUrlProvider
             return;
         }
         if (extensions.getExtension(JUPYTER_HUB_EXTENSION_ID)) {
-            this.applicationShell
+            window
                 .showInformationMessage(DataScience.useJupyterHubExtension, {
                     modal: true,
                     detail: DataScience.useJupyterHubExtensionDetail
@@ -388,7 +385,7 @@ export class UserJupyterServerUrlProvider
                         .then(noop, noop);
                 }, noop);
         } else {
-            this.applicationShell
+            window
                 .showInformationMessage(
                     DataScience.installJupyterHub,
                     { modal: true, detail: DataScience.installJupyterHubDetail },
@@ -781,10 +778,7 @@ export class UserJupyterServerUrlProvider
 }
 
 export class UserJupyterServerUriInput {
-    constructor(
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator
-    ) {}
+    constructor(@inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator) {}
 
     async getUrlFromUser(
         initialValue: string,
@@ -808,7 +802,7 @@ export class UserJupyterServerUriInput {
         }
 
         // Ask the user to enter a URI to connect to.
-        const input = this.applicationShell.createInputBox();
+        const input = window.createInputBox();
         disposables.push(input);
         input.title = DataScience.jupyterSelectUriInputTitle;
         input.placeholder = DataScience.jupyterSelectUriInputPlaceholder;
@@ -918,12 +912,11 @@ function sendRemoteTelemetryForAdditionOfNewRemoteServer(
 }
 
 export class UserJupyterServerDisplayName {
-    constructor(@inject(IApplicationShell) private readonly applicationShell: IApplicationShell) {}
     public displayNamesOfHandles = new Map<string, string>();
     public async getDisplayName(handle: string, defaultValue: string): Promise<string> {
         const disposables: Disposable[] = [];
         try {
-            const input = this.applicationShell.createInputBox();
+            const input = window.createInputBox();
             disposables.push(input);
             input.ignoreFocusOut = true;
             input.title = DataScience.jupyterRenameServer;
@@ -958,10 +951,7 @@ export class UserJupyterServerDisplayName {
     }
 }
 export class SecureConnectionValidator {
-    constructor(
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
-    ) {}
+    constructor(@inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento) {}
 
     public async promptToUseInsecureConnections(): Promise<boolean> {
         if (this.globalMemento.get(GlobalStateUserAllowsInsecureConnections, false)) {
@@ -971,7 +961,7 @@ export class SecureConnectionValidator {
         const disposables: Disposable[] = [];
         const deferred = createDeferred<boolean>();
         try {
-            const input = this.applicationShell.createQuickPick();
+            const input = window.createQuickPick();
             disposables.push(input);
             input.canSelectMany = false;
             input.ignoreFocusOut = true;

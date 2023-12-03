@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../platform/common/application/types';
+import { ICommandManager } from '../platform/common/application/types';
 import { Common, DataScience } from '../platform/common/utils/localize';
 import { createInterpreterKernelSpec } from './helpers';
 import { KernelDependencyService } from './kernelDependencyService.node';
@@ -17,21 +17,22 @@ import { IInteractiveWindowProvider, IInteractiveWindow } from '../interactive-w
 import { DisplayOptions } from './displayOptions';
 import { IRawNotebookSupportedService } from './raw/types';
 import { getResourceType } from '../platform/common/utils';
-import { mockedVSCodeNamespaces } from '../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../test/vscode-mock';
+import { Disposable } from 'vscode';
+import { dispose } from '../platform/common/utils/lifecycle';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // eslint-disable-next-line
 suite('Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
-    let appShell: IApplicationShell;
     let cmdManager: ICommandManager;
     let installer: IInstaller;
     let serviceContainer: IServiceContainer;
     let kernelProvider: IKernelProvider;
     let memento: Memento;
     let editor: NotebookEditor;
-
+    let disposables: Disposable[] = [];
     const interpreter = createPythonInterpreter({
         displayName: 'name',
         envType: EnvironmentType.Conda,
@@ -46,7 +47,8 @@ suite('Kernel Dependency Service', () => {
         });
     });
     setup(() => {
-        appShell = mock<IApplicationShell>();
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
         installer = mock<IInstaller>();
         cmdManager = mock<ICommandManager>();
         serviceContainer = mock<IServiceContainer>();
@@ -61,7 +63,6 @@ suite('Kernel Dependency Service', () => {
         const rawSupport = mock<IRawNotebookSupportedService>();
         when(rawSupport.isSupported).thenReturn(true);
         dependencyService = new KernelDependencyService(
-            instance(appShell),
             instance(installer),
             instance(memento),
             false,
@@ -69,6 +70,7 @@ suite('Kernel Dependency Service', () => {
             instance(serviceContainer)
         );
     });
+    teardown(() => (disposables = dispose(disposables)));
     [undefined, Uri.file('test.py'), Uri.file('test.ipynb')].forEach((resource) => {
         suite(`With resource = ${resource?.toString()}`, () => {
             let token: CancellationTokenSource;
@@ -114,15 +116,23 @@ suite('Kernel Dependency Service', () => {
                     token: token.token
                 });
 
-                verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+                verify(
+                    mockedVSCodeNamespaces.window.showInformationMessage(anything(), anything(), anything())
+                ).never();
             });
             test('Prompt if if ipykernel is not installed', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
-                    Common.install as any
-                );
                 when(
-                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                    mockedVSCodeNamespaces.window.showInformationMessage(anything(), anything(), anything())
+                ).thenResolve(Common.install as any);
+                when(
+                    mockedVSCodeNamespaces.window.showInformationMessage(
+                        anything(),
+                        anything(),
+                        anything(),
+                        anything(),
+                        anything()
+                    )
                 ).thenResolve(Common.install as any);
 
                 const result = await dependencyService.installMissingDependencies({
@@ -133,21 +143,29 @@ suite('Kernel Dependency Service', () => {
                 });
                 assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
 
-                verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+                verify(
+                    mockedVSCodeNamespaces.window.showInformationMessage(anything(), anything(), anything())
+                ).never();
             });
             test('Install ipykernel', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
                 when(installer.install(Product.ipykernel, interpreter, anything(), anything(), anything())).thenResolve(
                     InstallerResponse.Installed
                 );
-                when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
-                    Common.install as any
-                );
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    Common.install as any
-                );
                 when(
-                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                    mockedVSCodeNamespaces.window.showInformationMessage(anything(), anything(), anything())
+                ).thenResolve(Common.install as any);
+                when(
+                    mockedVSCodeNamespaces.window.showInformationMessage(anything(), anything(), anything(), anything())
+                ).thenResolve(Common.install as any);
+                when(
+                    mockedVSCodeNamespaces.window.showInformationMessage(
+                        anything(),
+                        anything(),
+                        anything(),
+                        anything(),
+                        anything()
+                    )
                 ).thenResolve(Common.install as any);
 
                 await dependencyService.installMissingDependencies({
@@ -163,12 +181,17 @@ suite('Kernel Dependency Service', () => {
                 when(installer.install(Product.ipykernel, interpreter, anything(), true, anything())).thenResolve(
                     InstallerResponse.Installed
                 );
-                when(appShell.showInformationMessage(anything(), anything(), Common.install)).thenResolve(
-                    Common.install as any
-                );
-                when(appShell.showInformationMessage(anything(), anything(), Common.install, anything)).thenResolve(
-                    Common.install as any
-                );
+                when(
+                    mockedVSCodeNamespaces.window.showInformationMessage(anything(), anything(), Common.install)
+                ).thenResolve(Common.install as any);
+                when(
+                    mockedVSCodeNamespaces.window.showInformationMessage(
+                        anything(),
+                        anything(),
+                        Common.install,
+                        anything
+                    )
+                ).thenResolve(Common.install as any);
 
                 await dependencyService.installMissingDependencies({
                     resource,
@@ -182,14 +205,20 @@ suite('Kernel Dependency Service', () => {
                 when(installer.install(Product.ipykernel, interpreter, anything(), anything(), anything())).thenReject(
                     new Error('Install failed - kaboom')
                 );
-                when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
-                    Common.install as any
-                );
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    Common.install as any
-                );
                 when(
-                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                    mockedVSCodeNamespaces.window.showInformationMessage(anything(), anything(), anything())
+                ).thenResolve(Common.install as any);
+                when(
+                    mockedVSCodeNamespaces.window.showInformationMessage(anything(), anything(), anything(), anything())
+                ).thenResolve(Common.install as any);
+                when(
+                    mockedVSCodeNamespaces.window.showInformationMessage(
+                        anything(),
+                        anything(),
+                        anything(),
+                        anything(),
+                        anything()
+                    )
                 ).thenResolve(Common.install as any);
 
                 const result = await dependencyService.installMissingDependencies({
@@ -209,7 +238,13 @@ suite('Kernel Dependency Service', () => {
                 when(memento.get(anything(), anything())).thenReturn(false);
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
                 when(
-                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                    mockedVSCodeNamespaces.window.showInformationMessage(
+                        anything(),
+                        anything(),
+                        anything(),
+                        anything(),
+                        anything()
+                    )
                 ).thenResolve(DataScience.selectKernel as any);
 
                 const result = await dependencyService.installMissingDependencies({
@@ -231,9 +266,17 @@ suite('Kernel Dependency Service', () => {
 
                 when(memento.get(anything(), anything())).thenReturn(false);
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
                 when(
-                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                    mockedVSCodeNamespaces.window.showInformationMessage(anything(), anything(), anything(), anything())
+                ).thenResolve();
+                when(
+                    mockedVSCodeNamespaces.window.showInformationMessage(
+                        anything(),
+                        anything(),
+                        anything(),
+                        anything(),
+                        anything()
+                    )
                 ).thenResolve();
 
                 const result = await dependencyService.installMissingDependencies({

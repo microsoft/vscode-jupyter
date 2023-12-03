@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
-
-import { IApplicationShell } from '../../platform/common/application/types';
+import { Disposable, ProgressLocation, ProgressOptions, window } from 'vscode';
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
 
@@ -54,8 +52,6 @@ class StatusItem implements Disposable {
 export class StatusProvider {
     private statusCount: number = 0;
 
-    constructor(private applicationShell: IApplicationShell) {}
-
     private set(message: string, timeout?: number, cancel?: () => void): Disposable {
         // Start our progress
         this.incrementCount();
@@ -70,7 +66,7 @@ export class StatusProvider {
         };
 
         // Set our application shell status with a busy icon
-        this.applicationShell
+        window
             .withProgress(progressOptions, (_p, c) => {
                 if (c && cancel) {
                     c.onCancellationRequested(() => {

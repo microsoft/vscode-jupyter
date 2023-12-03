@@ -6,7 +6,6 @@ import * as sinon from 'sinon';
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from './shiftEnterBanner';
-import { IApplicationShell } from '../platform/common/application/types';
 import {
     isTestExecution,
     isUnitTestExecution,
@@ -21,11 +20,12 @@ import {
     IWatchableJupyterSettings
 } from '../platform/common/types';
 import { getTelemetryReporter } from '../telemetry';
+import { anything, when } from 'ts-mockito';
+import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 
 suite('Interactive Shift Enter Banner', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
     const oldValueOfVSC_JUPYTER_CI_TEST = isTestExecution();
-    let appShell: typemoq.IMock<IApplicationShell>;
     let config: typemoq.IMock<IConfigurationService>;
 
     class Reporter {
@@ -43,7 +43,6 @@ suite('Interactive Shift Enter Banner', () => {
         });
         setUnitTestExecution(false);
         setTestExecution(false);
-        appShell = typemoq.Mock.ofType<IApplicationShell>();
         config = typemoq.Mock.ofType<IConfigurationService>();
     });
 
@@ -57,10 +56,9 @@ suite('Interactive Shift Enter Banner', () => {
     });
 
     test('Shift Enter Banner with Jupyter available', async () => {
-        const shiftBanner = loadBanner(appShell, config, true, true, true, 'Yes');
+        const shiftBanner = loadBanner(config, true, true, 'Yes');
         await shiftBanner.showBanner();
 
-        appShell.verifyAll();
         config.verifyAll();
 
         expect(Reporter.eventNames).to.deep.equal([
@@ -70,28 +68,25 @@ suite('Interactive Shift Enter Banner', () => {
     });
 
     test("Shift Enter Banner don't check Jupyter when disabled", async () => {
-        const shiftBanner = loadBanner(appShell, config, false, false, false, 'Yes');
+        const shiftBanner = loadBanner(config, false, false, 'Yes');
         await shiftBanner.showBanner();
 
-        appShell.verifyAll();
         config.verifyAll();
 
         expect(Reporter.eventNames).to.deep.equal([]);
     });
 
     test('Shift Enter Banner changes setting', async () => {
-        const shiftBanner = loadBanner(appShell, config, false, false, true, 'Yes');
+        const shiftBanner = loadBanner(config, false, true, 'Yes');
         await shiftBanner.enableInteractiveShiftEnter();
 
-        appShell.verifyAll();
         config.verifyAll();
     });
 
     test('Shift Enter Banner say no', async () => {
-        const shiftBanner = loadBanner(appShell, config, true, true, true, 'No');
+        const shiftBanner = loadBanner(config, true, true, 'No');
         await shiftBanner.showBanner();
 
-        appShell.verifyAll();
         config.verifyAll();
 
         expect(Reporter.eventNames).to.deep.equal([
@@ -103,10 +98,8 @@ suite('Interactive Shift Enter Banner', () => {
 
 // Create a test banner with the given settings
 function loadBanner(
-    appShell: typemoq.IMock<IApplicationShell>,
     config: typemoq.IMock<IConfigurationService>,
     stateEnabled: boolean,
-    bannerShown: boolean,
     configCalled: boolean,
     questionResponse: string
 ): InteractiveShiftEnterBanner {
@@ -144,10 +137,9 @@ function loadBanner(
     const no = 'No';
 
     // Config AppShell
-    appShell
-        .setup((a) => a.showInformationMessage(typemoq.It.isAny(), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
-        .returns(() => Promise.resolve(questionResponse))
-        .verifiable(bannerShown ? typemoq.Times.once() : typemoq.Times.never());
+    when(mockedVSCodeNamespaces.window.showInformationMessage(anything(), yes, no)).thenReturn(
+        Promise.resolve(questionResponse) as any
+    );
 
     // Config settings
     config
@@ -162,5 +154,5 @@ function loadBanner(
         .returns(() => Promise.resolve())
         .verifiable(configCalled ? typemoq.Times.once() : typemoq.Times.never());
 
-    return new InteractiveShiftEnterBanner(appShell.object, persistService.object, config.object);
+    return new InteractiveShiftEnterBanner(persistService.object, config.object);
 }
