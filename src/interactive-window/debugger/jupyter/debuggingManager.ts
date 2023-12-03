@@ -25,7 +25,7 @@ import {
 } from '../../../notebooks/debugger/debuggingTypes';
 import { assertIsInteractiveWindowDebugConfig, IpykernelCheckResult } from '../../../notebooks/debugger/helper';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { ICommandManager, IDebugService } from '../../../platform/common/application/types';
+import { IDebugService } from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IConfigurationService } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -52,7 +52,6 @@ export class InteractiveWindowDebuggingManager
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
         @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
-        @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IDebugLocationTrackerFactory)
         private readonly debugLocationTrackerFactory: IDebugLocationTrackerFactory,
@@ -60,7 +59,7 @@ export class InteractiveWindowDebuggingManager
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(kernelProvider, controllerRegistration, commandManager, serviceContainer);
+        super(kernelProvider, controllerRegistration, serviceContainer);
     }
 
     public override activate() {

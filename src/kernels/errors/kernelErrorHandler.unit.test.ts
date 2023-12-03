@@ -7,7 +7,6 @@ import dedent from 'dedent';
 import { assert } from 'chai';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
-import { ICommandManager } from '../../platform/common/application/types';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IConfigurationService, IDisposable } from '../../platform/common/types';
@@ -53,7 +52,6 @@ suite('Error Handler Unit Tests', () => {
     let kernelDependencyInstaller: IKernelDependencyService;
     let uriStorage: IJupyterServerUriStorage;
     let jupyterUriProviderRegistration: IJupyterServerProviderRegistry;
-    let cmdManager: ICommandManager;
     let reservedPythonNames: IReservedPythonNamedProvider;
     let fs: IFileSystem;
     let interpreterService: IInterpreterService;
@@ -70,7 +68,6 @@ suite('Error Handler Unit Tests', () => {
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
         uriStorage = mock<IJupyterServerUriStorage>();
-        cmdManager = mock<ICommandManager>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
         jupyterUriProviderRegistration = mock<IJupyterServerProviderRegistry>();
         interpreterService = mock<IInterpreterService>();
@@ -977,7 +974,9 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     anything()
                 )
             ).thenResolve(DataScience.changeRemoteJupyterConnectionButtonText as any);
-            when(cmdManager.executeCommand(anything(), anything(), anything(), anything())).thenResolve();
+            when(
+                mockedVSCodeNamespaces.commands.executeCommand(anything(), anything(), anything(), anything())
+            ).thenResolve();
             const collection = mock<JupyterServerCollection>();
             when(collection.extensionId).thenReturn(serverProviderHandle.extensionId);
             when(collection.id).thenReturn(serverProviderHandle.id);

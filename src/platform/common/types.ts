@@ -5,7 +5,6 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { ConfigurationTarget, Disposable, Event, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandIds } from '../../commands';
-import { ICommandManager } from './application/types';
 import { ISystemVariables } from './variables/types';
 
 export const IsCodeSpace = Symbol('IsCodeSpace');
@@ -280,7 +279,7 @@ export type InterpreterUri = Resource | PythonEnvironment;
 
 export const IDataScienceCommandListener = Symbol('IDataScienceCommandListener');
 export interface IDataScienceCommandListener {
-    register(commandManager: ICommandManager): void;
+    register(): void;
 }
 
 export interface IDisplayOptions {

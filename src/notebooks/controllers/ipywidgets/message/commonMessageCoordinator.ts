@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { Event, EventEmitter, NotebookDocument, Uri, env, window } from 'vscode';
-import { ICommandManager } from '../../../../platform/common/application/types';
+import { Event, EventEmitter, NotebookDocument, Uri, commands, env, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL, WIDGET_VERSION_NON_PYTHON_KERNELS } from '../../../../platform/common/constants';
 import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../../../platform/logging';
 import {
@@ -58,7 +57,6 @@ export class CommonMessageCoordinator {
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private ipyWidgetScriptSource?: IPyWidgetScriptSource;
-    private commandManager: ICommandManager;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly postEmitter = new EventEmitter<{ message: string; payload: any }>();
     private disposables: IDisposableRegistry;
@@ -75,7 +73,6 @@ export class CommonMessageCoordinator {
     ) {
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.initialize();
     }
@@ -301,7 +298,7 @@ export class CommonMessageCoordinator {
     }
     @swallowExceptions()
     private async enableCDNForWidgets(webview: IWebviewCommunication) {
-        await this.commandManager.executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource);
+        await commands.executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource);
         await webview.postMessage({ type: IPyWidgetMessages.IPyWidgets_AttemptToDownloadFailedWidgetsAgain });
     }
     private async sendUnsupportedWidgetVersionFailureTelemetry(

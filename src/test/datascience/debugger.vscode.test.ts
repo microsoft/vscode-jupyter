@@ -9,7 +9,6 @@ import { commands, debug, window } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IDebuggingManager, INotebookDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
-import { ICommandManager } from '../../platform/common/application/types';
 import { Commands, JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
 import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
@@ -38,7 +37,6 @@ import { ITestVariableViewProvider } from './variableView/variableViewTestInterf
 suite('Run By Line @debugger', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
     let debuggingManager: IDebuggingManager;
     this.timeout(120_000);
@@ -59,7 +57,6 @@ suite('Run By Line @debugger', function () {
             traceVerbose('Step3');
             sinon.restore();
             traceVerbose('Step4');
-            commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
             const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             traceVerbose('Step5');
@@ -128,7 +125,7 @@ suite('Run By Line @debugger', function () {
             const doc = window.activeNotebookEditor?.notebook!;
             traceInfo(`Inserted cell`);
 
-            await commandManager.executeCommand(Commands.RunByLine, cell);
+            await commands.executeCommand(Commands.RunByLine, cell);
             traceInfo(`Executed run by line`);
             const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
@@ -136,7 +133,7 @@ suite('Run By Line @debugger', function () {
             await waitForStoppedEvent(debugAdapter!);
 
             // Go head and run to the end now
-            await commandManager.executeCommand(Commands.RunByLineStop, cell);
+            await commands.executeCommand(Commands.RunByLineStop, cell);
 
             // Wait until we have finished and have output
             await waitForCondition(
@@ -166,7 +163,7 @@ suite('Run By Line @debugger', function () {
         const doc = window.activeNotebookEditor?.notebook!;
         traceInfo(`Inserted cell`);
 
-        await commandManager.executeCommand(Commands.RunByLine, cell);
+        await commands.executeCommand(Commands.RunByLine, cell);
         traceInfo(`Executed run by line`);
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
@@ -181,14 +178,14 @@ suite('Run By Line @debugger', function () {
         const coreVariableView = await variableViewProvider.activeVariableView;
         const variableView = coreVariableView as unknown as ITestWebviewHost;
 
-        await commandManager.executeCommand(Commands.RunByLineNext, cell);
+        await commands.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!);
         traceInfo(`Got past second stop event`);
 
         const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
         await waitForVariablesToMatch(expectedVariables, variableView);
 
-        await commandManager.executeCommand(Commands.RunByLineNext, cell);
+        await commands.executeCommand(Commands.RunByLineNext, cell);
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,
@@ -208,13 +205,13 @@ suite('Run By Line @debugger', function () {
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = window.activeNotebookEditor?.notebook!;
 
-        await commandManager.executeCommand(Commands.RunByLine, cell);
+        await commands.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!);
 
         // Interrupt kernel and check we finished
-        await commandManager.executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: doc.uri } });
+        await commands.executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: doc.uri } });
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,
@@ -226,13 +223,13 @@ suite('Run By Line @debugger', function () {
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = window.activeNotebookEditor?.notebook!;
 
-        await commandManager.executeCommand(Commands.RunByLine, cell);
+        await commands.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!); // First line
-        await commandManager.executeCommand(Commands.RunByLineNext, cell);
+        await commands.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!); // foo()
-        await commandManager.executeCommand(Commands.RunByLineNext, cell);
+        await commands.executeCommand(Commands.RunByLineNext, cell);
         const stoppedEvent = await waitForStoppedEvent(debugAdapter!); // print(1) inside def foo
         const stack: DebugProtocol.StackTraceResponse['body'] = await session!.customRequest('stackTrace', {
             threadId: stoppedEvent.body.threadId
@@ -241,7 +238,7 @@ suite('Run By Line @debugger', function () {
         assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
         assert.equal(stack.stackFrames[0].line, 2, 'Stopped at the wrong line');
 
-        await commandManager.executeCommand(Commands.RunByLineNext, cell);
+        await commands.executeCommand(Commands.RunByLineNext, cell);
         const stoppedEvent2 = await waitForStoppedEvent(debugAdapter!); // foo()
         const stack2: DebugProtocol.StackTraceResponse['body'] = await session!.customRequest('stackTrace', {
             threadId: stoppedEvent2.body.threadId
@@ -256,10 +253,10 @@ suite('Run By Line @debugger', function () {
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = window.activeNotebookEditor?.notebook!;
 
-        await commandManager.executeCommand(Commands.RunByLine, cell);
+        await commands.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
         await waitForStoppedEvent(debugAdapter!); // First line
-        await commandManager.executeCommand('workbench.action.debug.restart');
+        await commands.executeCommand('workbench.action.debug.restart');
         const { debugAdapter: debugAdapter2, session: session2 } = await getDebugSessionAndAdapter(
             debuggingManager,
             doc,
@@ -281,14 +278,14 @@ suite('Run By Line @debugger', function () {
         const doc = window.activeNotebookEditor?.notebook!;
 
         await runCell(cell0);
-        await commandManager.executeCommand(Commands.RunByLine, cell1);
+        await commands.executeCommand(Commands.RunByLine, cell1);
         const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!); // First line
-        await commandManager.executeCommand(Commands.RunByLineNext, cell1);
+        await commands.executeCommand(Commands.RunByLineNext, cell1);
 
         await waitForStoppedEvent(debugAdapter!); // Returns after call
-        await commandManager.executeCommand(Commands.RunByLineNext, cell1);
+        await commands.executeCommand(Commands.RunByLineNext, cell1);
 
         await waitForCondition(
             async () => !debug.activeDebugSession,
@@ -308,13 +305,13 @@ suite('Run By Line @debugger', function () {
         const doc = window.activeNotebookEditor?.notebook!;
         const cell = doc.getCells()[0];
 
-        commandManager.executeCommand(Commands.RunByLine, cell).then(noop, noop);
+        commands.executeCommand(Commands.RunByLine, cell).then(noop, noop);
         const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!);
 
         // Interrupt kernel and check that the cell didn't finish running
-        await commandManager.executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: doc.uri } });
+        await commands.executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: doc.uri } });
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,
@@ -323,12 +320,12 @@ suite('Run By Line @debugger', function () {
         assert.isFalse(getCellOutputs(cell).includes('final output'), `Final line did run even with an interrupt`);
 
         // Start over and make sure we can execute all lines
-        commandManager.executeCommand(Commands.RunByLine, cell).then(noop, noop);
+        commands.executeCommand(Commands.RunByLine, cell).then(noop, noop);
         const { debugAdapter: debugAdapter2 } = await getDebugSessionAndAdapter(debuggingManager, doc);
         await waitForStoppedEvent(debugAdapter2!);
         await waitForCondition(
             async () => {
-                await commandManager.executeCommand(Commands.RunByLineNext, cell);
+                await commands.executeCommand(Commands.RunByLineNext, cell);
                 await waitForStoppedEvent(debugAdapter2!);
                 return getCellOutputs(cell).includes('sleepy');
             },
@@ -336,7 +333,7 @@ suite('Run By Line @debugger', function () {
             `Print during time loop is not working. Outputs: ${getCellOutputs(cell)}}`,
             1000
         );
-        await commandManager.executeCommand(Commands.RunByLineStop, cell);
+        await commands.executeCommand(Commands.RunByLineStop, cell);
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,

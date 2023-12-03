@@ -5,6 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import {
     CancellationError,
     CancellationTokenSource,
+    commands,
     Disposable,
     EventEmitter,
     ExtensionMode,
@@ -24,7 +25,6 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { ICommandManager } from '../../platform/common/application/types';
 import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/logging';
@@ -150,7 +150,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         kernelConnection: KernelConnectionMetadata,
         id: string,
         _viewType: string,
-        commandManager: ICommandManager,
         kernelProvider: IKernelProvider,
         context: IExtensionContext,
         disposableRegistry: IDisposableRegistry,
@@ -164,7 +163,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             kernelConnection,
             id,
             _viewType,
-            commandManager,
             kernelProvider,
             context,
             disposableRegistry,
@@ -179,7 +177,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private kernelConnection: KernelConnectionMetadata,
         id: string,
         private _viewType: string,
-        private readonly commandManager: ICommandManager,
         private readonly kernelProvider: IKernelProvider,
         private readonly context: IExtensionContext,
         disposableRegistry: IDisposableRegistry,
@@ -518,7 +515,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     private handleInterrupt(notebook: NotebookDocument) {
         traceVerbose(`VS Code interrupted kernel for ${getDisplayPath(notebook.uri)}`);
         notebook.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
-        this.commandManager
+        commands
             .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: notebook.uri } })
             .then(noop, (ex) => traceError('Failed to interrupt', ex));
     }

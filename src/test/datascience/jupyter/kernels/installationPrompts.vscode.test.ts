@@ -8,7 +8,6 @@ import * as path from '../../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { commands, Memento, workspace, window, Uri, NotebookCell, NotebookDocument, NotebookCellKind } from 'vscode';
 import { IPythonApiProvider } from '../../../../platform/api/types';
-import { ICommandManager } from '../../../../platform/common/application/types';
 import { Kernel } from '../../../../kernels/kernel';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import {
@@ -92,7 +91,6 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
     let installer: IInstaller;
     let memento: Memento;
     let installerSpy: sinon.SinonSpy;
-    let commandManager: ICommandManager;
     let controllerRegistration: IControllerRegistration;
     const delayForUITest = 120_000;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
@@ -115,7 +113,6 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         this.timeout(120_000);
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
-        commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
@@ -578,7 +575,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         installerSpy = sinon.spy(installer, 'install');
         const promptToInstall = await clickInstallFromIPyKernelPrompt();
         await Promise.all([
-            commandManager.executeCommand(Commands.RestartKernel, {
+            commands.executeCommand(Commands.RestartKernel, {
                 notebookEditor: { notebookUri: nbFile }
             }),
             waitForCondition(
@@ -609,7 +606,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         const { kernelSelected } = hookupKernelSelected(promptToInstall, venvNoRegPath);
 
         await Promise.all([
-            commandManager.executeCommand(Commands.RestartKernel, {
+            commands.executeCommand(Commands.RestartKernel, {
                 notebookEditor: { notebookUri: nbFile }
             }),
             waitForCondition(
@@ -893,7 +890,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         }
 
         const kernelSelected = createDeferred<boolean>();
-        const selectADifferentKernelStub = sinon.stub(commandManager, 'executeCommand').callsFake(async function (
+        const selectADifferentKernelStub = sinon.stub(commands, 'executeCommand').callsFake(async function (
             cmd: string
         ) {
             if (cmd === 'notebook.selectKernel') {

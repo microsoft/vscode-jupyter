@@ -4,7 +4,6 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
-import { ICommandManager } from '../platform/common/application/types';
 import { Common, DataScience } from '../platform/common/utils/localize';
 import { createInterpreterKernelSpec } from './helpers';
 import { KernelDependencyService } from './kernelDependencyService.node';
@@ -26,7 +25,6 @@ import { dispose } from '../platform/common/utils/lifecycle';
 // eslint-disable-next-line
 suite('Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
-    let cmdManager: ICommandManager;
     let installer: IInstaller;
     let serviceContainer: IServiceContainer;
     let kernelProvider: IKernelProvider;
@@ -50,7 +48,6 @@ suite('Kernel Dependency Service', () => {
         resetVSCodeMocks();
         disposables.push(new Disposable(() => resetVSCodeMocks()));
         installer = mock<IInstaller>();
-        cmdManager = mock<ICommandManager>();
         serviceContainer = mock<IServiceContainer>();
         memento = mock<Memento>();
         kernelProvider = mock<IKernelProvider>();
@@ -58,7 +55,7 @@ suite('Kernel Dependency Service', () => {
         when(kernelProvider.get(anything())).thenReturn();
         when(memento.get(anything(), anything())).thenReturn(false);
         when(serviceContainer.get<IKernelProvider>(IKernelProvider)).thenReturn(instance(kernelProvider));
-        when(cmdManager.executeCommand('notebook.selectKernel', anything())).thenResolve();
+        when(mockedVSCodeNamespaces.commands.executeCommand('notebook.selectKernel', anything())).thenResolve();
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
         const rawSupport = mock<IRawNotebookSupportedService>();
         when(rawSupport.isSupported).thenReturn(true);
@@ -287,7 +284,7 @@ suite('Kernel Dependency Service', () => {
                 });
 
                 assert.equal(result, KernelInterpreterDependencyResponse.cancel, 'Wasnt sCanceled');
-                verify(cmdManager.executeCommand('notebook.selectKernel', anything())).never();
+                verify(mockedVSCodeNamespaces.commands.executeCommand('notebook.selectKernel', anything())).never();
             });
         });
     });

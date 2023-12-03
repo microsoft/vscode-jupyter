@@ -7,12 +7,12 @@ import {
     QuickPickItem,
     QuickPickOptions,
     Uri,
+    commands,
     window,
     workspace
 } from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
-import { ICommandManager } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -40,7 +40,6 @@ interface IExportQuickPickItem extends QuickPickItem {
 export class ExportCommands implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        private readonly commandManager: ICommandManager,
         private fileConverter: IFileConverter,
         private readonly fs: IFileSystem,
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
@@ -73,7 +72,7 @@ export class ExportCommands implements IDisposable {
         U extends ICommandNameArgumentTypeMapping[E]
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
-        const disposable = this.commandManager.registerCommand(command, callback, this);
+        const disposable = commands.registerCommand(command, callback, this);
         this.disposables.push(disposable);
     }
 
@@ -161,7 +160,7 @@ export class ExportCommands implements IDisposable {
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                         format: ExportFormat.python
                     });
-                    this.commandManager
+                    commands
                         .executeCommand(Commands.ExportAsPythonScript, sourceDocument, interpreter)
                         .then(noop, noop);
                 }
@@ -177,7 +176,7 @@ export class ExportCommands implements IDisposable {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                             format: ExportFormat.html
                         });
-                        this.commandManager
+                        commands
                             .executeCommand(Commands.ExportToHTML, sourceDocument, defaultFileName, interpreter)
                             .then(noop, noop);
                     }
@@ -189,7 +188,7 @@ export class ExportCommands implements IDisposable {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                             format: ExportFormat.pdf
                         });
-                        this.commandManager
+                        commands
                             .executeCommand(Commands.ExportToPDF, sourceDocument, defaultFileName, interpreter)
                             .then(noop, noop);
                     }

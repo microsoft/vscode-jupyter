@@ -17,8 +17,8 @@ import {
     Uri
 } from 'vscode';
 
-import { instance, mock, when } from 'ts-mockito';
-import { ICommandManager, IDebugService } from '../../platform/common/application/types';
+import { anything, instance, mock, when } from 'ts-mockito';
+import { IDebugService } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { CodeLensFactory } from './codeLensFactory';
@@ -64,7 +64,6 @@ suite('Code Watcher Unit Tests', () => {
     let codeWatcher: CodeWatcher;
     let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
     let activeInteractiveWindow: TypeMoq.IMock<IInteractiveWindow>;
-    let commandManager: TypeMoq.IMock<ICommandManager>;
     let textEditor: TypeMoq.IMock<TextEditor>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let configService: TypeMoq.IMock<IConfigurationService>;
@@ -87,7 +86,6 @@ suite('Code Watcher Unit Tests', () => {
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
-        commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         // Setup default settings
         jupyterSettings = new MockJupyterSettings(undefined, SystemVariables, 'node');
@@ -167,14 +165,12 @@ suite('Code Watcher Unit Tests', () => {
         // Setup our active text editor
         when(mockedVSCodeNamespaces.window.activeTextEditor).thenReturn(textEditor.object);
 
-        commandManager
-            .setup((c) => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((c, n, v) => {
-                if (c === 'setContext') {
-                    contexts.set(n, v);
-                }
-                return Promise.resolve();
-            });
+        when(mockedVSCodeNamespaces.commands.executeCommand(anything(), anything(), anything())).thenCall((c, n, v) => {
+            if (c === 'setContext') {
+                contexts.set(n, v);
+            }
+            return Promise.resolve();
+        });
 
         codeWatcher = new CodeWatcher(
             interactiveWindowProvider.object,
@@ -1041,7 +1037,6 @@ testing1
             serviceContainer.object,
             debugLocationTracker.object,
             configService.object,
-            commandManager.object,
             disposables,
             debugService.object
         );

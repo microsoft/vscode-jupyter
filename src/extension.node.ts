@@ -42,7 +42,7 @@ import {
     workspace
 } from 'vscode';
 import { buildApi, IExtensionApi } from './standalone/api/api';
-import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
+import { IApplicationEnvironment } from './platform/common/application/types';
 import { setHomeDirectory, traceError } from './platform/logging';
 import {
     GLOBAL_MEMENTO,
@@ -388,8 +388,7 @@ async function activateLegacy(
     });
 
     // "initialize" "services"
-    const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
-    cmdManager.executeCommand('setContext', 'jupyter.vscode.channel', applicationEnv.channel).then(noop, noop);
+    commands.executeCommand('setContext', 'jupyter.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     // "activate" everything else
     serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager).activate();

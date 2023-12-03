@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, multiInject, optional } from 'inversify';
-import { ICommandManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import {
@@ -28,7 +27,6 @@ export class GlobalActivation implements IExtensionSyncActivationService {
     private changeHandler: IDisposable | undefined;
     private startTime: number = Date.now();
     constructor(
-        @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IRawNotebookSupportedService)
@@ -56,7 +54,7 @@ export class GlobalActivation implements IExtensionSyncActivationService {
         this.computeZmqAvailable();
 
         if (this.commandListeners) {
-            this.commandListeners.forEach((c) => c.register(this.commandManager));
+            this.commandListeners.forEach((c) => c.register());
         }
     }
 
@@ -70,18 +68,18 @@ export class GlobalActivation implements IExtensionSyncActivationService {
     private onSettingsChanged = () => {
         const settings = this.configuration.getSettings(undefined);
         const ownsSelection = settings.sendSelectionToInteractiveWindow;
-        const editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
+        const editorContext = new ContextKey(EditorContexts.OwnsSelection);
         editorContext.set(ownsSelection).catch(noop);
     };
 
     private computeZmqAvailable() {
-        const zmqContext = new ContextKey(EditorContexts.ZmqAvailable, this.commandManager);
+        const zmqContext = new ContextKey(EditorContexts.ZmqAvailable);
         zmqContext.set(this.rawSupported ? this.rawSupported.isSupported : false).then(noop, noop);
     }
 
     private onChangedActiveTextEditor() {
         // Setup the editor context for the cells
-        const editorContext = new ContextKey(EditorContexts.HasCodeCells, this.commandManager);
+        const editorContext = new ContextKey(EditorContexts.HasCodeCells);
         const activeEditor = window.activeTextEditor;
 
         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {

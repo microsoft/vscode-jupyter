@@ -11,7 +11,6 @@ import { NotebookDocument, EventEmitter, NotebookController, Uri, Disposable } f
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { IKernel, IKernelProvider, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../kernels/types';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { ICommandManager } from '../../platform/common/application/types';
 import {
     IConfigurationService,
     IDisposable,
@@ -37,7 +36,6 @@ import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock
 suite(`Notebook Controller`, function () {
     let controller: NotebookController;
     let kernelConnection: KernelConnectionMetadata;
-    let commandManager: ICommandManager;
     let context: IExtensionContext;
     let languageService: NotebookCellLanguageService;
     let configService: IConfigurationService;
@@ -63,7 +61,6 @@ suite(`Notebook Controller`, function () {
         resetVSCodeMocks();
         disposables.push(new Disposable(() => resetVSCodeMocks()));
         kernelConnection = mock<KernelConnectionMetadata>();
-        commandManager = mock<ICommandManager>();
         context = mock<IExtensionContext>();
         languageService = mock<NotebookCellLanguageService>();
         configService = mock<IConfigurationService>();
@@ -138,7 +135,6 @@ suite(`Notebook Controller`, function () {
             instance(kernelConnection),
             '1',
             viewType,
-            instance(commandManager),
             instance(kernelProvider),
             instance(context),
             disposables,

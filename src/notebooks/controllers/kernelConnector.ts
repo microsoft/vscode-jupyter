@@ -13,8 +13,7 @@ import {
     IThirdPartyKernelProvider,
     IKernelController
 } from '../../kernels/types';
-import { CancellationError, Memento, NotebookDocument, Uri, window } from 'vscode';
-import { ICommandManager } from '../../platform/common/application/types';
+import { CancellationError, Memento, NotebookDocument, Uri, commands, window } from 'vscode';
 import { traceVerbose, traceWarning } from '../../platform/logging';
 import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../platform/common/utils/async';
@@ -47,7 +46,6 @@ export class KernelConnector {
         resource: Resource,
         serviceContainer: IServiceContainer
     ): Promise<{ controller: IKernelController; metadata: KernelConnectionMetadata } | undefined> {
-        const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         const notebookEditorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const editor = notebookEditorProvider.findNotebookEditor(resource);
 
@@ -57,7 +55,7 @@ export class KernelConnector {
         const waitForSelection = createDeferred<IVSCodeNotebookController>();
         const disposable = controllerManager.onControllerSelected((e) => waitForSelection.resolve(e.controller));
 
-        const selected = await selectKernel(resource, serviceContainer.get(INotebookEditorProvider), commandManager);
+        const selected = await selectKernel(resource, serviceContainer.get(INotebookEditorProvider));
         if (selected && editor) {
             controller = await waitForSelection.promise;
         }
@@ -65,12 +63,7 @@ export class KernelConnector {
         return controller ? { controller: controller.controller, metadata: controller.connection } : undefined;
     }
 
-    private static async notifyAndRestartDeadKernel(
-        kernel: IBaseKernel,
-        serviceContainer: IServiceContainer
-    ): Promise<boolean> {
-        const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-
+    private static async notifyAndRestartDeadKernel(kernel: IBaseKernel): Promise<boolean> {
         const selection = await window.showErrorMessage(
             DataScience.cannotRunCellKernelIsDead(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
@@ -87,7 +80,7 @@ export class KernelConnector {
                 break;
             }
             case DataScience.showJupyterLogs: {
-                commandManager.executeCommand(Commands.ViewJupyterOutput).then(noop, noop);
+                commands.executeCommand(Commands.ViewJupyterOutput).then(noop, noop);
             }
         }
         return restartedKernel;
@@ -428,7 +421,7 @@ export class KernelConnector {
                 // We need to perform this check first, as its possible we'd call this method for dead kernels.
                 // & if the kernel is dead, prompt to restart.
                 if (initialContext !== 'restart' && isKernelDead(kernel) && !options.disableUI) {
-                    const restarted = await KernelConnector.notifyAndRestartDeadKernel(kernel, serviceContainer);
+                    const restarted = await KernelConnector.notifyAndRestartDeadKernel(kernel);
                     return {
                         kernel,
                         deadKernelAction: restarted ? 'deadKernelWasRestarted' : 'deadKernelWasNoRestarted'
@@ -443,7 +436,7 @@ export class KernelConnector {
 
                     // If the kernel is dead, ask the user if they want to restart
                     if (isKernelDead(kernel) && !options.disableUI) {
-                        await KernelConnector.notifyAndRestartDeadKernel(kernel, serviceContainer);
+                        await KernelConnector.notifyAndRestartDeadKernel(kernel);
                     }
                 }
             } catch (error) {

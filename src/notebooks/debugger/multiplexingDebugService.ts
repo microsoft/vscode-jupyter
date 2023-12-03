@@ -14,11 +14,12 @@ import {
     Disposable,
     Event,
     EventEmitter,
-    WorkspaceFolder
+    WorkspaceFolder,
+    commands
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IJupyterDebugService } from './debuggingTypes';
-import { ICommandManager, IDebugService } from '../../platform/common/application/types';
+import { IDebugService } from '../../platform/common/application/types';
 import { Identifiers } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -37,7 +38,6 @@ export class MultiplexingDebugService implements IJupyterDebugService {
 
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDebugService) private vscodeDebugService: IDebugService,
         @optional()
         @inject(IJupyterDebugService)
@@ -171,7 +171,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
             this.jupyterDebugService.stop();
         } else {
             // Stop our debugging UI session, no await as we just want it stopped
-            this.commandManager.executeCommand('workbench.action.debug.stop').then(noop, noop);
+            commands.executeCommand('workbench.action.debug.stop').then(noop, noop);
         }
     }
 

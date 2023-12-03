@@ -35,7 +35,7 @@ import {
     env
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
-import { IEncryptedStorage, ICommandManager, IApplicationEnvironment } from '../../platform/common/application/types';
+import { IEncryptedStorage, IApplicationEnvironment } from '../../platform/common/application/types';
 import { noop } from '../../test/core';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { JVSC_EXTENSION_ID, Settings, UserJupyterServerPickerProviderId } from '../../platform/common/constants';
@@ -67,7 +67,6 @@ suite('User Uri Provider', () => {
             asyncDisposables.push(disposable as any);
         }
     };
-    let commands: ICommandManager;
     let requestCreator: IJupyterRequestCreator;
     let inputBox: InputBox;
     let getPasswordConnectionInfoStub: sinon.SinonStub<
@@ -122,7 +121,6 @@ suite('User Uri Provider', () => {
         serverUriStorage = mock<IJupyterServerUriStorage>();
         globalMemento = mock<Memento>();
         multiStepFactory = mock<IMultiStepInputFactory>();
-        commands = mock<ICommandManager>();
         requestCreator = mock<IJupyterRequestCreator>();
         tokenSource = new CancellationTokenSource();
         token = tokenSource.token;
@@ -195,7 +193,6 @@ suite('User Uri Provider', () => {
             disposables,
             instance(multiStepFactory),
             asyncDisposableRegistry,
-            instance(commands),
             undefined,
             instance(requestCreator),
             instance(mock<IExtensionContext>()),

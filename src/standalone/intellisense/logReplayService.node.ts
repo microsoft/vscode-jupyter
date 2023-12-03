@@ -7,7 +7,6 @@ import * as vscode from 'vscode';
 import type * as lspConcat from '@vscode/lsp-notebook-concat';
 import type * as protocol from 'vscode-languageserver-protocol';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { ICommandManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR, Commands, EditorContexts } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { traceInfo } from '../../platform/logging';
@@ -41,19 +40,16 @@ export class LogReplayService implements IExtensionSyncActivationService {
     private activeNotebook: vscode.NotebookDocument | undefined;
     private isLogActive: ContextKey | undefined;
     constructor(
-        @inject(ICommandManager) private readonly commandService: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
     public activate() {
         this.disposableRegistry.push(
-            this.commandService.registerCommand(Commands.ReplayPylanceLog, this.replayPylanceLog, this)
+            vscode.commands.registerCommand(Commands.ReplayPylanceLog, this.replayPylanceLog, this)
         );
-        this.disposableRegistry.push(
-            this.commandService.registerCommand(Commands.ReplayPylanceLogStep, this.step, this)
-        );
-        this.isLogActive = new ContextKey(EditorContexts.ReplayLogLoaded, this.commandService);
+        this.disposableRegistry.push(vscode.commands.registerCommand(Commands.ReplayPylanceLogStep, this.step, this));
+        this.isLogActive = new ContextKey(EditorContexts.ReplayLogLoaded);
         this.isLogActive.set(false).then(noop, noop);
     }
 

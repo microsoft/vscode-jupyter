@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { when } from 'ts-mockito';
+import { anything, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter, TextDocument, Uri } from 'vscode';
 
-import { ICommandManager, IDebugService } from '../../platform/common/application/types';
+import { IDebugService } from '../../platform/common/application/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
 import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -19,7 +19,6 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let configurationService: TypeMoq.IMock<IConfigurationService>;
     let codeLensProvider: IDataScienceCodeLensProvider;
     let pythonSettings: TypeMoq.IMock<IWatchableJupyterSettings>;
-    let commandManager: TypeMoq.IMock<ICommandManager>;
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
     let tokenSource: CancellationTokenSource;
@@ -29,7 +28,6 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         tokenSource = new CancellationTokenSource();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
-        commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         pythonSettings = TypeMoq.Mock.ofType<IWatchableJupyterSettings>();
@@ -37,15 +35,12 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         when(mockedVSCodeNamespaces.workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
         when(mockedVSCodeNamespaces.window.activeNotebookEditor).thenReturn(undefined);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-        commandManager
-            .setup((c) => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve());
+        when(mockedVSCodeNamespaces.commands.executeCommand(anything(), anything(), anything())).thenResolve();
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
         codeLensProvider = new DataScienceCodeLensProvider(
             serviceContainer.object,
             debugLocationTracker.object,
             configurationService.object,
-            commandManager.object,
             disposables,
             debugService.object
         );

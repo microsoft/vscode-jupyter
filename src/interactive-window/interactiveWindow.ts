@@ -18,9 +18,9 @@ import {
     Disposable,
     window,
     NotebookEdit,
-    NotebookEditorRevealType
+    NotebookEditorRevealType,
+    commands
 } from 'vscode';
-import { ICommandManager } from '../platform/common/application/types';
 import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
@@ -122,7 +122,6 @@ export class InteractiveWindow implements IInteractiveWindow {
     private readonly storageFactory: IGeneratedCodeStorageFactory;
     private readonly debuggingManager: IInteractiveWindowDebuggingManager;
     private readonly isWebExtension: boolean;
-    private readonly commandManager: ICommandManager;
     private readonly kernelProvider: IKernelProvider;
     private controller: InteractiveController | undefined;
     constructor(
@@ -132,7 +131,6 @@ export class InteractiveWindow implements IInteractiveWindow {
         notebookEditorOrTab: NotebookEditor | InteractiveTab,
         public readonly inputUri: Uri
     ) {
-        this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.jupyterExporter = this.serviceContainer.get<INotebookExporter>(INotebookExporter);
@@ -460,7 +458,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         if (this.notebookDocument) {
             await Promise.all(
                 this.notebookDocument.getCells().map(async (_cell, index) => {
-                    await this.commandManager.executeCommand('notebook.cell.expandCellInput', {
+                    await commands.executeCommand('notebook.cell.expandCellInput', {
                         ranges: [{ start: index, end: index + 1 }],
                         document: this.notebookUri
                     });
@@ -476,7 +474,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     if (cell.kind !== NotebookCellKind.Code) {
                         return;
                     }
-                    await this.commandManager.executeCommand('notebook.cell.collapseCellInput', {
+                    await commands.executeCommand('notebook.cell.collapseCellInput', {
                         ranges: [{ start: index, end: index + 1 }],
                         document: this.notebookUri
                     });
@@ -631,7 +629,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         // Then run the export command with these contents
         if (this.isWebExtension) {
             // In web, we currently only support exporting as python script
-            this.commandManager
+            commands
                 .executeCommand(
                     Commands.ExportAsPythonScript,
                     this.notebookDocument,
@@ -639,7 +637,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                 )
                 .then(noop, noop);
         } else {
-            this.commandManager
+            commands
                 .executeCommand(
                     Commands.Export,
                     this.notebookDocument,

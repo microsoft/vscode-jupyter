@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named, optional } from 'inversify';
-import { DebugConfiguration, Uri, window, workspace } from 'vscode';
+import { DebugConfiguration, Uri, commands, window, workspace } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariables } from '../../../kernels/variables/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandNameArgumentTypeMapping } from '../../../commands';
-import { ICommandManager, IDebugService } from '../../../platform/common/application/types';
+import { IDebugService } from '../../../platform/common/application/types';
 import { Commands, Identifiers, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
@@ -32,7 +32,6 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
     private dataViewerChecker: DataViewerChecker;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterVariableDataProviderFactory)
@@ -71,7 +70,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         U extends ICommandNameArgumentTypeMapping[E]
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
-        const disposable = this.commandManager.registerCommand(command, callback, this);
+        const disposable = commands.registerCommand(command, callback, this);
         this.disposables.push(disposable);
     }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {

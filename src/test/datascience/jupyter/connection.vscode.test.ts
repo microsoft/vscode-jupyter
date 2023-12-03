@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ICommandManager, IEncryptedStorage } from '../../../platform/common/application/types';
+import { IEncryptedStorage } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import {
     IAsyncDisposableRegistry,
@@ -124,7 +124,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
     let memento: Memento;
     const disposables: IDisposable[] = [];
     let userUriProvider: UserJupyterServerUrlProvider;
-    let commands: ICommandManager;
     let inputBox: InputBox;
     let token: CancellationTokenSource;
     let requestCreator: IJupyterRequestCreator;
@@ -167,8 +166,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         disposables.push(token);
         encryptedStorage = mock<IEncryptedStorage>();
         memento = mock<Memento>();
-        commands = mock<ICommandManager>();
-        when(commands.registerCommand(anything(), anything())).thenReturn(new Disposable(noop));
         when(memento.get(anything())).thenReturn(undefined);
         when(memento.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
         when(memento.update(anything(), anything())).thenResolve();
@@ -192,7 +189,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
             disposables,
             api.serviceContainer.get<IMultiStepInputFactory>(IMultiStepInputFactory),
             api.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
-            instance(commands),
             api.serviceContainer.get<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator),
             api.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator),
             api.serviceContainer.get<IExtensionContext>(IExtensionContext),

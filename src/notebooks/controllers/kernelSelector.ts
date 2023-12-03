@@ -1,22 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ICommandManager } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 import { Resource } from '../../platform/common/types';
 import { INotebookEditorProvider } from '../types';
+import { commands } from 'vscode';
 
 /**
  * Return `true` if a new kernel has been selected.
  */
 export async function selectKernel(
     resource: Resource,
-    notebookEditorProvider: INotebookEditorProvider | undefined,
-    commandManager: ICommandManager
+    notebookEditorProvider: INotebookEditorProvider | undefined
 ): Promise<boolean> {
     const notebookEditor = notebookEditorProvider?.findNotebookEditor(resource);
     if (notebookEditor) {
-        return commandManager.executeCommand('notebook.selectKernel', {
+        return commands.executeCommand('notebook.selectKernel', {
             notebookEditor
         }) as Promise<boolean>;
     }

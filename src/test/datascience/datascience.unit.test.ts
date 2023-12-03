@@ -5,7 +5,6 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CommandManager } from '../../platform/common/application/commandManager';
 import { JupyterSettings } from '../../platform/common/configSettings';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
@@ -18,20 +17,17 @@ import { mockedVSCodeNamespaces } from '../vscode-mock';
 /* eslint-disable  */
 suite('Tests', () => {
     let dataScience: GlobalActivation;
-    let cmdManager: CommandManager;
     let configService: IConfigurationService;
     let settings: IWatchableJupyterSettings;
     let onDidChangeSettings: sinon.SinonStub;
     let onDidChangeActiveTextEditor: sinon.SinonStub;
     let rawNotebookSupported: IRawNotebookSupportedService;
     setup(() => {
-        cmdManager = mock(CommandManager);
         configService = mock(ConfigurationService);
         settings = mock(JupyterSettings);
         rawNotebookSupported = mock(RawNotebookSupportedService);
 
         dataScience = new GlobalActivation(
-            instance(cmdManager),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             [] as any,
             instance(configService),
