@@ -118,6 +118,7 @@ export class ResourceMap<T> implements Map<Uri, T> {
         return this.map.delete(this.toKey(resource));
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     forEach(clb: (value: T, key: Uri, map: Map<Uri, T>) => void, thisArg?: any): void {
         if (typeof thisArg !== 'undefined') {
             clb = clb.bind(thisArg);
@@ -186,6 +187,7 @@ export class ResourceSet implements Set<Uri> {
         return this._map.delete(value);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     forEach(callbackfn: (value: Uri, value2: Uri, set: Set<Uri>) => void, thisArg?: any): void {
         this._map.forEach((_value, key) => callbackfn.call(thisArg, key, key, this));
     }
@@ -339,6 +341,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
         return item.value;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     forEach(callbackfn: (value: V, key: K, map: LinkedMap<K, V>) => void, thisArg?: any): void {
         const state = this._state;
         let current = this._head;
@@ -720,6 +723,7 @@ export class BidirectionalMap<K, V> {
         return true;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     forEach(callbackfn: (value: V, key: K, map: BidirectionalMap<K, V>) => void, thisArg?: any): void {
         this._m1.forEach((value, key) => {
             callbackfn.call(thisArg, value, key, this);
