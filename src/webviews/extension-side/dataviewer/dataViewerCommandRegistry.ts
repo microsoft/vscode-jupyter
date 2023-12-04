@@ -8,7 +8,7 @@ import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels
 import { IJupyterVariables } from '../../../kernels/variables/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandNameArgumentTypeMapping } from '../../../commands';
-import { IApplicationShell, ICommandManager, IDebugService } from '../../../platform/common/application/types';
+import { ICommandManager, IDebugService } from '../../../platform/common/application/types';
 import { Commands, Identifiers, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
@@ -35,7 +35,6 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) configService: IConfigurationService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IJupyterVariableDataProviderFactory)
         @optional()
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory | undefined,
@@ -53,7 +52,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
     ) {
-        this.dataViewerChecker = new DataViewerChecker(configService, appShell);
+        this.dataViewerChecker = new DataViewerChecker(configService);
         if (!workspace.isTrusted) {
             workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
@@ -135,7 +134,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
             } catch (e) {
                 traceError(e);
                 sendTelemetryEvent(Telemetry.FailedShowDataViewer);
-                this.appShell.showErrorMessage(DataScience.showDataViewerFail).then(noop, noop);
+                window.showErrorMessage(DataScience.showDataViewerFail).then(noop, noop);
             }
         }
     }

@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../platform/common/application/types';
+import { ConfigurationTarget, window } from 'vscode';
 import { Telemetry } from '../platform/common/constants';
 import { IJupyterExtensionBanner, IPersistentStateFactory, IConfigurationService } from '../platform/common/types';
 import * as localize from '../platform/common/utils/localize';
@@ -29,7 +28,6 @@ export class InteractiveShiftEnterBanner implements IJupyterExtensionBanner {
     private bannerLabels: string[] = [localize.Common.bannerLabelYes, localize.Common.bannerLabelNo];
 
     constructor(
-        @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService
     ) {
@@ -65,7 +63,7 @@ export class InteractiveShiftEnterBanner implements IJupyterExtensionBanner {
         }
 
         sendTelemetryEvent(Telemetry.ShiftEnterBannerShown);
-        const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
+        const response = await window.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[InteractiveShiftEnterLabelIndex.Yes]: {
                 await this.enableInteractiveShiftEnter();

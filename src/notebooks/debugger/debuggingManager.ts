@@ -11,11 +11,12 @@ import {
     NotebookCell,
     NotebookDocument,
     Uri,
+    window,
     workspace
 } from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IApplicationShell, ICommandManager, IDebugService } from '../../platform/common/application/types';
+import { ICommandManager, IDebugService } from '../../platform/common/application/types';
 import { EditorContexts } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { IPlatformService } from '../../platform/common/platform/types';
@@ -55,13 +56,12 @@ export class DebuggingManager
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
         @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
         @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(kernelProvider, controllerRegistration, commandManager, appShell, serviceContainer);
+        super(kernelProvider, controllerRegistration, commandManager, serviceContainer);
         this.runByLineCells = new ContextKey(EditorContexts.RunByLineCells, commandManager);
         this.runByLineDocuments = new ContextKey(EditorContexts.RunByLineDocuments, commandManager);
         this.debugDocuments = new ContextKey(EditorContexts.DebugDocuments, commandManager);
@@ -249,7 +249,7 @@ export class DebuggingManager
 
             return new DebugAdapterInlineImplementation(adapter);
         } else {
-            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted).then(noop, noop);
+            window.showInformationMessage(DataScience.kernelWasNotStarted).then(noop, noop);
         }
 
         return;

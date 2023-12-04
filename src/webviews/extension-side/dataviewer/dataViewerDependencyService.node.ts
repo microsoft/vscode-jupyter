@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { IInstaller } from '../../../platform/interpreter/installer/types';
 import { IKernel } from '../../../kernels/types';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { IsCodeSpace } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
@@ -31,15 +30,13 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         @inject(IInstaller) installer: IInstaller,
         @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
-        @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IsCodeSpace) isCodeSpace: boolean
     ) {
-        this.withKernel = new KernelDataViewerDependencyImplementation(applicationShell, isCodeSpace);
+        this.withKernel = new KernelDataViewerDependencyImplementation(isCodeSpace);
         this.withInterpreter = new InterpreterDataViewerDependencyImplementation(
             installer,
             pythonFactory,
             interpreterService,
-            applicationShell,
             isCodeSpace
         );
     }

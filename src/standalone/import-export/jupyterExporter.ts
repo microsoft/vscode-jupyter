@@ -4,9 +4,8 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, optional } from 'inversify';
 
-import { Uri } from 'vscode';
+import { Uri, window } from 'vscode';
 import { CellMatcher } from '../../interactive-window/editor-integration/cellMatcher';
-import { IApplicationShell } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { ICell, IConfigurationService } from '../../platform/common/types';
@@ -27,7 +26,6 @@ export class JupyterExporter implements INotebookExporter {
         @inject(IJupyterServerHelper) @optional() private jupyterServerHelper: IJupyterServerHelper | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IDataScienceErrorHandler) protected errorHandler: IDataScienceErrorHandler
     ) {}
 
@@ -46,7 +44,7 @@ export class JupyterExporter implements INotebookExporter {
                 return;
             }
             const openQuestion1 = DataScience.exportOpenQuestion1;
-            this.applicationShell
+            window
                 .showInformationMessage(DataScience.exportDialogComplete(file), openQuestion1)
                 .then(async (str: string | undefined) => {
                     try {
@@ -60,7 +58,7 @@ export class JupyterExporter implements INotebookExporter {
                 }, noop);
         } catch (exc) {
             traceError('Error in exporting notebook file');
-            this.applicationShell
+            window
                 .showInformationMessage(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     DataScience.exportDialogFailed(exc as any)

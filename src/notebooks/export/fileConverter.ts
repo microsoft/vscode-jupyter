@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject } from 'inversify';
-import { CancellationToken, NotebookDocument, Uri, workspace } from 'vscode';
+import { CancellationToken, NotebookDocument, Uri, window, workspace } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IApplicationShell } from '../../platform/common/application/types';
 import { Telemetry } from '../../platform/common/constants';
 import { IConfigurationService } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
@@ -26,7 +25,6 @@ export abstract class FileConverterBase implements IFileConverter {
     constructor(
         @inject(IExportUtil) protected readonly exportUtil: IExportUtil,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService
     ) {}
 
@@ -173,7 +171,6 @@ export abstract class FileConverterBase implements IFileConverter {
     }
 
     private showExportFailed(msg: string) {
-        // eslint-disable-next-line
-        this.applicationShell.showErrorMessage(`${localize.DataScience.failedExportMessage} ${msg}`).then;
+        void window.showErrorMessage(`${localize.DataScience.failedExportMessage} ${msg}`);
     }
 }

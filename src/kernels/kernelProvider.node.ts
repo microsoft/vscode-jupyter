@@ -3,7 +3,6 @@
 
 import { inject, injectable, multiInject, named } from 'inversify';
 import { Memento, NotebookDocument, Uri } from 'vscode';
-import { IApplicationShell } from '../platform/common/application/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -38,7 +37,6 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IKernelSessionFactory) private sessionCreator: IKernelSessionFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
         @multiInject(ITracebackFormatter)
@@ -70,7 +68,6 @@ export class KernelProvider extends BaseCoreKernelProvider {
             options.metadata,
             this.sessionCreator,
             settings,
-            this.appShell,
             options.controller,
             this.startupCodeProviders.getProviders(notebookType),
             this.workspaceStorage
@@ -90,10 +87,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
             this.disposables
         );
 
-        this.executions.set(
-            kernel,
-            new NotebookKernelExecution(kernel, this.appShell, this.context, this.formatters, notebook)
-        );
+        this.executions.set(kernel, new NotebookKernelExecution(kernel, this.context, this.formatters, notebook));
         this.asyncDisposables.push(kernel);
         this.storeKernel(notebook, options, kernel);
         this.deleteMappingIfKernelIsDisposed(kernel);
@@ -108,7 +102,6 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IKernelSessionFactory) private sessionCreator: IKernelSessionFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
@@ -130,7 +123,6 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             resourceUri,
             options.metadata,
             this.sessionCreator,
-            this.appShell,
             settings,
             this.startupCodeProviders.getProviders(notebookType),
             this.workspaceStorage

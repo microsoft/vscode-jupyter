@@ -2,24 +2,25 @@
 // Licensed under the MIT License.
 
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../applicationShell';
 import { CommandManager } from '../commandManager';
 import { ReloadVSCodeCommandHandler } from './reloadCommand.node';
-import { IApplicationShell, ICommandManager } from '../types';
+import { ICommandManager } from '../types';
 import { Common } from '../../utils/localize';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../../test/vscode-mock';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('Common Commands ReloadCommand', () => {
     let reloadCommandHandler: ReloadVSCodeCommandHandler;
-    let appShell: IApplicationShell;
     let cmdManager: ICommandManager;
     setup(async () => {
-        appShell = mock(ApplicationShell);
+        resetVSCodeMocks();
         cmdManager = mock(CommandManager);
-        reloadCommandHandler = new ReloadVSCodeCommandHandler(instance(cmdManager), instance(appShell));
+        reloadCommandHandler = new ReloadVSCodeCommandHandler(instance(cmdManager));
         when(cmdManager.executeCommand(anything())).thenResolve();
+        when(mockedVSCodeNamespaces.window.showInformationMessage(anything())).thenResolve();
         await reloadCommandHandler.activate();
     });
+    teardown(() => resetVSCodeMocks());
 
     test('Confirm command handler is added', async () => {
         verify(cmdManager.registerCommand('jupyter.reloadVSCode', anything(), anything())).once();
@@ -31,29 +32,31 @@ suite('Common Commands ReloadCommand', () => {
 
         await commandHandler.call(reloadCommandHandler, message);
 
-        verify(appShell.showInformationMessage(message, Common.reload)).once;
+        verify(mockedVSCodeNamespaces.window.showInformationMessage(message, Common.reload)).once;
     });
     test('Do not reload VS Code if user selects `Reload` option', async () => {
         const message = 'Hello World!';
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const commandHandler = capture(cmdManager.registerCommand as any).first()[1] as Function;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(appShell.showInformationMessage(message, Common.reload)).thenResolve(Common.reload as any);
+        when(mockedVSCodeNamespaces.window.showInformationMessage(message, Common.reload)).thenResolve(
+            Common.reload as any
+        );
 
         await commandHandler.call(reloadCommandHandler, message);
 
-        verify(appShell.showInformationMessage(message, Common.reload)).once;
+        verify(mockedVSCodeNamespaces.window.showInformationMessage(message, Common.reload)).once;
         verify(cmdManager.executeCommand('workbench.action.reloadWindow')).once();
     });
     test('Do not reload VS Code if user does not select `Reload` option', async () => {
         const message = 'Hello World!';
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const commandHandler = capture(cmdManager.registerCommand as any).first()[1] as Function;
-        when(appShell.showInformationMessage(message, Common.reload)).thenResolve;
+        when(mockedVSCodeNamespaces.window.showInformationMessage(message, Common.reload)).thenResolve;
 
         await commandHandler.call(reloadCommandHandler, message);
 
-        verify(appShell.showInformationMessage(message, Common.reload)).once;
+        verify(mockedVSCodeNamespaces.window.showInformationMessage(message, Common.reload)).once;
         verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
     });
 });

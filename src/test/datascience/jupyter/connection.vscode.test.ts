@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IApplicationShell, ICommandManager, IEncryptedStorage } from '../../../platform/common/application/types';
+import { ICommandManager, IEncryptedStorage } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import {
     IAsyncDisposableRegistry,
@@ -29,7 +29,7 @@ import {
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento, env, workspace } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento, env, window, workspace } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
@@ -120,7 +120,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
             jupyterLabWithHelloPasswordAndEmptyToken
         ]);
     });
-    let appShell: IApplicationShell;
     let encryptedStorage: IEncryptedStorage;
     let memento: Memento;
     const disposables: IDisposable[] = [];
@@ -166,7 +165,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         token = new CancellationTokenSource();
         disposables.push(new Disposable(() => token.cancel()));
         disposables.push(token);
-        appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         encryptedStorage = mock<IEncryptedStorage>();
         memento = mock<Memento>();
         commands = mock<ICommandManager>();
@@ -176,7 +174,7 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         when(memento.update(anything(), anything())).thenResolve();
         when(encryptedStorage.retrieve(anything(), anything())).thenResolve();
         when(encryptedStorage.store(anything(), anything(), anything())).thenResolve();
-        sinon.stub(appShell, 'createInputBox').callsFake(() => inputBox);
+        sinon.stub(window, 'createInputBox').callsFake(() => inputBox);
         const serverUriStorage = mock<IJupyterServerUriStorage>();
         when(serverUriStorage.getAll()).thenResolve([]);
         const onDidRemoveUriStorage = new EventEmitter<JupyterServerProviderHandle[]>();
@@ -185,7 +183,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         requestCreator = api.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator);
 
         userUriProvider = new UserJupyterServerUrlProvider(
-            appShell,
             api.serviceContainer.get<IConfigurationService>(IConfigurationService),
             api.serviceContainer.get<JupyterConnection>(JupyterConnection),
             false,

@@ -9,10 +9,10 @@ import {
     NotebookCell,
     NotebookCellExecutionState,
     notebooks,
-    ProgressLocation
+    ProgressLocation,
+    window
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { IApplicationShell } from '../platform/common/application/types';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { createDeferred } from '../platform/common/utils/async';
 import { isJupyterNotebook } from '../platform/common/utils';
@@ -44,7 +44,6 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
     private lastExecutedCellPerKernel = new WeakMap<IKernel, NotebookCell | undefined>();
 
     constructor(
-        @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -166,7 +165,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         const message = DataScience.automaticallyReconnectingToAKernelProgressMessage(
             getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
         );
-        this.appShell
+        window
             .withProgress({ location: ProgressLocation.Notification, title: message }, async () => deferred.promise)
             .then(noop, noop);
 
@@ -194,7 +193,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             ? DataScience.kernelDisconnected(getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata))
             : DataScience.remoteJupyterConnectionFailedWithServer(kernel.kernelConnectionMetadata.baseUrl);
 
-        this.appShell.showErrorMessage(message).then(noop, noop);
+        window.showErrorMessage(message).then(noop, noop);
 
         try {
             const lastExecutedCell = this.lastExecutedCellPerKernel.get(kernel);

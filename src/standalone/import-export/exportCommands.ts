@@ -12,7 +12,7 @@ import {
 } from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
-import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -42,7 +42,6 @@ export class ExportCommands implements IDisposable {
     constructor(
         private readonly commandManager: ICommandManager,
         private fileConverter: IFileConverter,
-        private readonly applicationShell: IApplicationShell,
         private readonly fs: IFileSystem,
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
         private readonly controllerRegistration: IControllerRegistration,
@@ -215,6 +214,6 @@ export class ExportCommands implements IDisposable {
             placeHolder: localize.DataScience.exportAsQuickPickPlaceholder
         };
 
-        return this.applicationShell.showQuickPick(items, options);
+        return window.showQuickPick(items, options);
     }
 }

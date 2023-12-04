@@ -2,11 +2,17 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCell, NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, notebooks } from 'vscode';
+import {
+    NotebookCell,
+    NotebookCellExecutionState,
+    NotebookCellExecutionStateChangeEvent,
+    notebooks,
+    window
+} from 'vscode';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
-import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
+import { ICommandManager } from '../../../platform/common/application/types';
 import { Commands, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { raceTimeout } from '../../../platform/common/utils/async';
@@ -26,7 +32,6 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
@@ -75,11 +80,7 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
     private async installPythonViaKernelPicker(): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
         const buttons = this.installedOnceBefore ? [Common.install, Common.reload] : [Common.install];
-        const selection = await this.appShell.showErrorMessage(
-            DataScience.pythonNotInstalled,
-            { modal: true },
-            ...buttons
-        );
+        const selection = await window.showErrorMessage(DataScience.pythonNotInstalled, { modal: true }, ...buttons);
 
         if (selection === Common.install) {
             this.installedOnceBefore = true;

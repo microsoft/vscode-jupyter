@@ -17,13 +17,15 @@ import {
     KernelInterpreterDependencyResponse,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
-import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { createKernelController, TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { KernelConnector } from './kernelConnector';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
+import { Disposable } from 'vscode';
 
 suite('Kernel Connector', () => {
     const pythonConnection = PythonKernelConnectionMetadata.create({
@@ -50,7 +52,6 @@ suite('Kernel Connector', () => {
     let kernel: IKernel;
     let errorHandler: IDataScienceErrorHandler;
     let kernelSession: IKernelSession;
-    let appShell: IApplicationShell;
     let commandManager: ICommandManager;
     let pythonKernelSpec = PythonKernelConnectionMetadata.create({
         id: 'python',
@@ -67,12 +68,14 @@ suite('Kernel Connector', () => {
         }
     });
     setup(() => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
+
         serviceContainer = mock<IServiceContainer>();
         kernelProvider = mock<IKernelProvider>();
         trustedKernels = mock<ITrustedKernelPaths>();
         errorHandler = mock<IDataScienceErrorHandler>();
         kernelSession = mock<IKernelSession>();
-        appShell = mock<IApplicationShell>();
         commandManager = mock<ICommandManager>();
         kernel = mock<IKernel>();
         (instance(kernel) as any).then = undefined;
@@ -85,7 +88,6 @@ suite('Kernel Connector', () => {
         when(trustedKernels.isTrusted(anything())).thenReturn(true);
         when(serviceContainer.get<IKernelProvider>(IKernelProvider)).thenReturn(instance(kernelProvider));
         when(serviceContainer.get<ITrustedKernelPaths>(ITrustedKernelPaths)).thenReturn(instance(trustedKernels));
-        when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
         when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(commandManager));
         when(serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler)).thenReturn(
             instance(errorHandler)
@@ -137,7 +139,7 @@ suite('Kernel Connector', () => {
         when(errorHandler.handleKernelError(anything(), anything(), anything(), anything(), anything())).thenResolve(
             KernelInterpreterDependencyResponse.failed
         );
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenReturn(
+        when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything(), anything())).thenReturn(
             Promise.resolve(DataScience.restartKernel)
         );
         await KernelConnector.connectToNotebookKernel(
@@ -155,7 +157,7 @@ suite('Kernel Connector', () => {
 
         verify(kernel.restart()).once();
         verify(
-            appShell.showErrorMessage(
+            mockedVSCodeNamespaces.window.showErrorMessage(
                 DataScience.cannotRunCellKernelIsDead(getDisplayNameOrNameOfKernelConnection(pythonKernelSpec)),
                 deepEqual({ modal: true }),
                 anything(),
@@ -169,7 +171,9 @@ suite('Kernel Connector', () => {
         when(errorHandler.handleKernelError(anything(), anything(), anything(), anything(), anything())).thenResolve(
             KernelInterpreterDependencyResponse.failed
         );
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve();
+        when(
+            mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything(), anything())
+        ).thenResolve();
         const result = KernelConnector.connectToNotebookKernel(
             pythonConnection,
             instance(serviceContainer),
@@ -186,7 +190,7 @@ suite('Kernel Connector', () => {
         await assert.isRejected(result, new KernelDeadError(pythonKernelSpec).message);
         verify(kernel.restart()).never();
         verify(
-            appShell.showErrorMessage(
+            mockedVSCodeNamespaces.window.showErrorMessage(
                 DataScience.cannotRunCellKernelIsDead(getDisplayNameOrNameOfKernelConnection(pythonKernelSpec)),
                 deepEqual({ modal: true }),
                 anything(),

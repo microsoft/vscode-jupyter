@@ -3,8 +3,6 @@
 
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ProductInstaller } from '../../../platform/interpreter/installer/productInstaller.node';
@@ -13,13 +11,14 @@ import { JupyterCommandFactory, InterpreterJupyterKernelSpecCommand } from './ju
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterDependencyResponse } from '../types';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types.node';
-import { Uri } from 'vscode';
+import { Disposable, Uri } from 'vscode';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 
 suite('Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
-    let appShell: IApplicationShell;
     let installer: IInstaller;
     let commandFactory: IJupyterCommandFactory;
     let command: IJupyterCommand;
@@ -29,8 +28,11 @@ suite('Jupyter Interpreter Configuration', () => {
         sysPrefix: '',
         sysVersion: ''
     };
+    let disposables: Disposable[] = [];
     setup(() => {
-        appShell = mock(ApplicationShell);
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
+
         installer = mock(ProductInstaller);
         commandFactory = mock(JupyterCommandFactory);
         command = mock(InterpreterJupyterKernelSpecCommand);
@@ -41,12 +43,9 @@ suite('Jupyter Interpreter Configuration', () => {
         ).thenReturn(instance(command));
         when(command.exec(anything(), anything())).thenResolve({ stdout: '' });
 
-        configuration = new JupyterInterpreterDependencyService(
-            instance(appShell),
-            instance(installer),
-            instance(commandFactory)
-        );
+        configuration = new JupyterInterpreterDependencyService(instance(installer), instance(commandFactory));
     });
+    teardown(() => (disposables = dispose(disposables)));
     test('Return ok if all dependencies are installed', async () => {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(true);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
@@ -61,12 +60,14 @@ suite('Jupyter Interpreter Configuration', () => {
     ): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(jupyterInstalled);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(notebookInstalled);
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve();
+        when(
+            mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything(), anything())
+        ).thenResolve();
 
         const response = await configuration.installMissingDependencies(pythonInterpreter);
 
         verify(
-            appShell.showErrorMessage(
+            mockedVSCodeNamespaces.window.showErrorMessage(
                 anything(),
                 deepEqual({ modal: true }),
                 DataScience.jupyterInstall,
@@ -83,7 +84,9 @@ suite('Jupyter Interpreter Configuration', () => {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(true);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
         when(installer.isInstalled(Product.pip, pythonInterpreter)).thenResolve(true);
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+        when(
+            mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything(), anything())
+        ).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall as any
         );
@@ -97,7 +100,7 @@ suite('Jupyter Interpreter Configuration', () => {
         verify(installer.install(Product.jupyter, anything(), anything(), anything(), anything())).once();
         verify(installer.install(anything(), anything(), anything(), anything(), anything())).once();
         verify(
-            appShell.showErrorMessage(
+            mockedVSCodeNamespaces.window.showErrorMessage(
                 anything(),
                 deepEqual({ modal: true }),
                 DataScience.jupyterInstall,
@@ -113,7 +116,9 @@ suite('Jupyter Interpreter Configuration', () => {
     ): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+        when(
+            mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything(), anything())
+        ).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall as any
         );
@@ -133,7 +138,9 @@ suite('Jupyter Interpreter Configuration', () => {
     ): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(false);
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+        when(
+            mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything(), anything())
+        ).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall as any
         );

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { injectable, inject, named } from 'inversify';
-import { ExtensionMode, Memento } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../../platform/common/application/types';
+import { ExtensionMode, Memento, window } from 'vscode';
+import { IApplicationEnvironment } from '../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, Telemetry, unknownExtensionId } from '../../platform/common/constants';
 import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../platform/common/types';
 import { PromiseChain } from '../../platform/common/utils/async';
@@ -41,7 +41,6 @@ export class ApiAccessService {
     private promiseChain = new PromiseChain();
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
-        @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IApplicationEnvironment) private env: IApplicationEnvironment
     ) {}
@@ -59,7 +58,7 @@ export class ApiAccessService {
                     displayName && info.extensionId
                         ? `${displayName} (${info.extensionId})`
                         : info.extensionId || publisherId;
-                this.appShell
+                window
                     .showErrorMessage(DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs(extensionDisplay))
                     .then(noop, noop);
             }
@@ -80,7 +79,7 @@ export class ApiAccessService {
             // This cannot happen in the real world, unless someone has written an extension.
             // without testing it at all. Safe to display an error message.
             // This way extension author knows they need to contact us.
-            this.appShell
+            window
                 .showErrorMessage(
                     `Please contact the Jupyter Extension to get access to the Kernel API. Publisher ${publisherId}`
                 )
@@ -106,7 +105,7 @@ export class ApiAccessService {
                 `${info.displayName} (${info.extensionId})`,
                 Common.bannerLabelYes
             );
-            const selection = await this.appShell.showInformationMessage(
+            const selection = await window.showInformationMessage(
                 msg,
                 { modal: true },
                 Common.bannerLabelYes,

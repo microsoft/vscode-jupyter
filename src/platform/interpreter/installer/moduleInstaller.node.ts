@@ -1,8 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    Progress,
+    ProgressLocation,
+    ProgressOptions,
+    window
+} from 'vscode';
 import { traceVerbose } from '../../logging';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types.node';
 import { createDeferred } from '../../common/utils/async';
@@ -199,13 +205,12 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         // Display progress indicator if we have ability to cancel this operation from calling code.
         // This is required as its possible the installation can take a long time.
         // (i.e. if installation takes a long time in terminal or like, a progress indicator is necessary to let user know what is being waited on).
-        const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const options: ProgressOptions = {
             location: ProgressLocation.Notification,
             cancellable: true,
             title: Products.installingModule(name)
         };
-        await shell.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
+        await window.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
     }
     public abstract isSupported(interpreter: PythonEnvironment | Environment): Promise<boolean>;
     protected abstract getExecutionArgs(

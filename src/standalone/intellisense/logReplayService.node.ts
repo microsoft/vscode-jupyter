@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import type * as lspConcat from '@vscode/lsp-notebook-concat';
 import type * as protocol from 'vscode-languageserver-protocol';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR, Commands, EditorContexts } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { traceInfo } from '../../platform/logging';
@@ -15,6 +15,7 @@ import { IDisposableRegistry, IConfigurationService } from '../../platform/commo
 import { sleep, waitForCondition } from '../../platform/common/utils/async';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { IFileSystem } from '../../platform/common/platform/types';
+import { window } from 'vscode';
 
 /**
  * Class used to replay pylance log output to regenerate a series of edits.
@@ -42,7 +43,6 @@ export class LogReplayService implements IExtensionSyncActivationService {
     constructor(
         @inject(ICommandManager) private readonly commandService: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
@@ -59,7 +59,7 @@ export class LogReplayService implements IExtensionSyncActivationService {
 
     private async replayPylanceLog() {
         if (vscode.window.activeNotebookEditor) {
-            const file = await this.appShell.showOpenDialog({ title: 'Open Pylance Output Log' });
+            const file = await window.showOpenDialog({ title: 'Open Pylance Output Log' });
             if (file && file.length === 1) {
                 this.activeNotebook = vscode.window.activeNotebookEditor.notebook;
                 this.steps = await this.parsePylanceLogSteps(file[0].fsPath);
@@ -67,7 +67,7 @@ export class LogReplayService implements IExtensionSyncActivationService {
                 void this.isLogActive?.set(true);
             }
         } else {
-            this.appShell.showErrorMessage(`Command should be run with a jupyter notebook open`).then(noop, noop);
+            vscode.window.showErrorMessage(`Command should be run with a jupyter notebook open`).then(noop, noop);
         }
     }
 
@@ -78,9 +78,7 @@ export class LogReplayService implements IExtensionSyncActivationService {
             this.activeNotebook === vscode.window.activeNotebookEditor?.notebook &&
             this.activeNotebook
         ) {
-            this.appShell
-                .showInformationMessage(`Replaying step ${this.index + 2} of ${this.steps.length}`)
-                .then(noop, noop);
+            window.showInformationMessage(`Replaying step ${this.index + 2} of ${this.steps.length}`).then(noop, noop);
 
             // Move to next step
             this.index += 1;
@@ -229,7 +227,7 @@ export class LogReplayService implements IExtensionSyncActivationService {
             this.activeNotebook?.toString() !== vscode.window.activeNotebookEditor?.notebook.uri.toString() &&
             this.index < this.steps.length - 1
         ) {
-            this.appShell
+            window
                 .showErrorMessage(`You changed the notebook editor in the middle of stepping through the log`)
                 .then(noop, noop);
         }

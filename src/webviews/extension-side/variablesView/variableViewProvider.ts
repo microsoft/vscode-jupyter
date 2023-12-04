@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
 import { IJupyterVariables } from '../../../kernels/variables/types';
-import { IWebviewViewProvider, IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
+import { IWebviewViewProvider, ICommandManager } from '../../../platform/common/application/types';
 import { Identifiers, isTestExecution } from '../../../platform/common/constants';
 import {
     IConfigurationService,
@@ -46,7 +46,6 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variables: IJupyterVariables,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExperimentService) private readonly experiments: IExperimentService
@@ -66,7 +65,6 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.context,
             this.variables,
             this.disposables,
-            this.appShell,
             this.notebookWatcher,
             this.commandManager,
             this.experiments

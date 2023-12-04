@@ -16,7 +16,7 @@ import {
     workspace
 } from 'vscode';
 
-import { IApplicationShell, ICommandManager } from '../platform/common/application/types';
+import { ICommandManager } from '../platform/common/application/types';
 import { traceInfo, traceVerbose } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 
@@ -83,7 +83,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceMemento: Memento,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveControllerHelper) private readonly controllerHelper: IInteractiveControllerHelper
     ) {
@@ -299,7 +298,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
                 localize.DataScience.interactiveWindowModeBannerSwitchNo
             ];
             // Ask user if they'd like to switch to per file or not.
-            const response = await this.appShell.showInformationMessage(
+            const response = await window.showInformationMessage(
                 localize.DataScience.interactiveWindowModeBannerTitle,
                 ...questions
             );

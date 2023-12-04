@@ -3,12 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
-import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Uri, ViewColumn, window } from 'vscode';
 
 import { traceError, traceInfo } from '../../../platform/logging';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
 import { IExportPlotRequest, IPlotViewer, IPlotViewerMapping, PlotViewerMessages } from './types';
-import { IWebviewPanelProvider, IApplicationShell } from '../../../platform/common/application/types';
+import { IWebviewPanelProvider } from '../../../platform/common/application/types';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import * as localize from '../../../platform/common/utils/localize';
@@ -26,7 +26,6 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IApplicationShell) protected applicationShell: IApplicationShell,
         @inject(IFileSystem) protected fs: IFileSystem,
         @inject(IExtensionContext) readonly context: IExtensionContext
     ) {
@@ -127,7 +126,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         filtersObject[localize.DataScience.svgFilter] = ['svg'];
 
         // Ask the user what file to save to
-        const file = await this.applicationShell.showSaveDialog({
+        const file = await window.showSaveDialog({
             saveLabel: localize.DataScience.exportPlotTitle,
             filters: filtersObject
         });
@@ -149,9 +148,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             }
         } catch (e) {
             traceError(e);
-            this.applicationShell
-                .showErrorMessage(localize.DataScience.exportImageFailed(e.toString()))
-                .then(noop, noop);
+            window.showErrorMessage(localize.DataScience.exportImageFailed(e.toString())).then(noop, noop);
         }
     }
 }

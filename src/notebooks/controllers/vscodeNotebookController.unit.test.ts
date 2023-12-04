@@ -11,7 +11,7 @@ import { NotebookDocument, EventEmitter, NotebookController, Uri, Disposable } f
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { IKernel, IKernelProvider, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../kernels/types';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import {
     IConfigurationService,
     IDisposable,
@@ -41,7 +41,6 @@ suite(`Notebook Controller`, function () {
     let context: IExtensionContext;
     let languageService: NotebookCellLanguageService;
     let configService: IConfigurationService;
-    let appShell: IApplicationShell;
     let serviceContainer: IServiceContainer;
     let providerRegistry: IJupyterServerProviderRegistry;
     let platform: IPlatformService;
@@ -68,7 +67,6 @@ suite(`Notebook Controller`, function () {
         context = mock<IExtensionContext>();
         languageService = mock<NotebookCellLanguageService>();
         configService = mock<IConfigurationService>();
-        appShell = mock<IApplicationShell>();
         serviceContainer = mock<IServiceContainer>();
         providerRegistry = mock<IJupyterServerProviderRegistry>();
         platform = mock<IPlatformService>();
@@ -146,7 +144,6 @@ suite(`Notebook Controller`, function () {
             disposables,
             instance(languageService),
             instance(configService),
-            instance(appShell),
             instance(extensionChecker),
             instance(serviceContainer),
             displayDataProvider

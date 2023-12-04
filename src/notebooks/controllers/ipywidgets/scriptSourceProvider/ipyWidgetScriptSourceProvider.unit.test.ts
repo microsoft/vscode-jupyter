@@ -11,8 +11,6 @@ import {
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../../kernels/types';
-import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
-import { IApplicationShell } from '../../../../platform/common/application/types';
 import { ConfigurationService } from '../../../../platform/common/configuration/service.node';
 import { dispose } from '../../../../platform/common/utils/lifecycle';
 import { PersistentState, PersistentStateFactory } from '../../../../platform/common/persistentState';
@@ -41,7 +39,6 @@ suite('ipywidget - Widget Script Source Provider', () => {
     let kernel: IKernel;
     let configService: IConfigurationService;
     let settings: ReadWrite<IJupyterSettings>;
-    let appShell: IApplicationShell;
     let scriptSourceFactory: IWidgetScriptSourceProviderFactory;
     let onDidChangeWorkspaceSettings: EventEmitter<ConfigurationChangeEvent>;
     let userSelectedOkOrDoNotShowAgainInPrompt: PersistentState<boolean>;
@@ -51,7 +48,6 @@ suite('ipywidget - Widget Script Source Provider', () => {
     let disposables: IDisposable[] = [];
     setup(() => {
         configService = mock(ConfigurationService);
-        appShell = mock(ApplicationShell);
         context = mock<IExtensionContext>();
         memento = mock<Memento>();
         onDidChangeWorkspaceSettings = new EventEmitter<ConfigurationChangeEvent>();
@@ -94,7 +90,6 @@ suite('ipywidget - Widget Script Source Provider', () => {
         scriptSourceFactory = new ScriptSourceProviderFactory(
             instance(configService),
             scriptManagerFactory,
-            instance(appShell),
             instance(memento)
         );
         const cdnScriptProvider = mock<CDNWidgetScriptSourceProvider>();
@@ -209,7 +204,9 @@ suite('ipywidget - Widget Script Source Provider', () => {
                 assert.deepEqual(values, { moduleName: 'module1', scriptUri: '1', source: 'cdn' });
                 assert.isFalse(localOrRemoteSource.calledOnce);
                 assert.isTrue(cdnSource.calledOnce);
-                verify(appShell.showWarningMessage(anything(), anything(), anything(), anything())).never();
+                verify(
+                    mockedVSCodeNamespaces.window.showWarningMessage(anything(), anything(), anything(), anything())
+                ).never();
             });
         });
     });

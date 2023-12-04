@@ -5,11 +5,10 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, CancellationTokenSource, Progress as VSCProgress } from 'vscode';
 import { noop, sleep } from '../../test/core';
-import { ApplicationShell } from '../common/application/applicationShell';
-import { IApplicationShell } from '../common/application/types';
 import { getUserMessageForAction } from './messages';
 import { ProgressReporter } from './progressReporter';
 import { ReportableAction } from './types';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 type Task<R> = (
     progress: VSCProgress<{ message?: string; increment?: number }>,
     token: CancellationToken
@@ -19,28 +18,26 @@ type Task<R> = (
 suite('Progress Reporter', () => {
     let reporter: ProgressReporter;
     let vscodeProgressReporter: VSCProgress<{ message?: string | undefined; increment?: number | undefined }>;
-    let appShell: IApplicationShell;
     class VSCodeReporter {
         public report(_value: { message?: string | undefined; increment?: number | undefined }) {
             noop();
         }
     }
     setup(() => {
-        appShell = mock(ApplicationShell);
         vscodeProgressReporter = mock(VSCodeReporter);
-        reporter = new ProgressReporter(instance(appShell));
+        reporter = new ProgressReporter();
     });
 
     test('Progress message should not get cancelled', async () => {
         let callbackPromise: Promise<{}> | undefined;
         const cancel = new CancellationTokenSource();
-        when(appShell.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
+        when(mockedVSCodeNamespaces.window.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
             return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
         });
 
         reporter.createProgressIndicator('Hello World');
 
-        // appShell.WithProgress should not complete.
+        // mockedVSCodeNamespaces.window.WithProgress should not complete.
         const message = await Promise.race([callbackPromise, sleep(500).then(() => 'Timeout')]);
         assert.equal(message, 'Timeout');
         verify(vscodeProgressReporter.report(anything())).never();
@@ -49,7 +46,7 @@ suite('Progress Reporter', () => {
     test('Cancel progress message when cancellation is cancelled', async () => {
         let callbackPromise: Promise<{}> | undefined;
         const cancel = new CancellationTokenSource();
-        when(appShell.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
+        when(mockedVSCodeNamespaces.window.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
             return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
         });
 
@@ -57,7 +54,7 @@ suite('Progress Reporter', () => {
 
         cancel.cancel();
 
-        // appShell.WithProgress should complete.
+        // mockedVSCodeNamespaces.window.WithProgress should complete.
         await callbackPromise!;
         verify(vscodeProgressReporter.report(anything())).never();
     });
@@ -65,7 +62,7 @@ suite('Progress Reporter', () => {
     test('Cancel progress message when disposed', async () => {
         let callbackPromise: Promise<{}> | undefined;
         const cancel = new CancellationTokenSource();
-        when(appShell.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
+        when(mockedVSCodeNamespaces.window.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
             return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
         });
 
@@ -73,14 +70,14 @@ suite('Progress Reporter', () => {
 
         disposable.dispose();
 
-        // appShell.WithProgress should complete.
+        // mockedVSCodeNamespaces.window.WithProgress should complete.
         await callbackPromise!;
         verify(vscodeProgressReporter.report(anything())).never();
     });
     test('Report progress until disposed', async () => {
         let callbackPromise: Promise<{}> | undefined;
         const cancel = new CancellationTokenSource();
-        when(appShell.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
+        when(mockedVSCodeNamespaces.window.withProgress(anything(), anything())).thenCall((_, cb: Task<{}>) => {
             return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
         });
 
@@ -128,7 +125,7 @@ suite('Progress Reporter', () => {
         // Confirm the messages were displayed in the order we expected.
         assert.equal(progressMessages.join(', '), expectedProgressMessages.join(', '));
 
-        // appShell.WithProgress should complete.
+        // mockedVSCodeNamespaces.window.WithProgress should complete.
         disposable.dispose();
         await callbackPromise!;
     });

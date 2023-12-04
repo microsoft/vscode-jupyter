@@ -21,7 +21,7 @@ import {
 } from 'vscode';
 import { IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
-import { IApplicationShell, ICommandManager, IDebugService } from '../../platform/common/application/types';
+import { ICommandManager, IDebugService } from '../../platform/common/application/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
@@ -54,7 +54,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookExporter) @optional() private jupyterExporter: INotebookExporter | undefined,
         @inject(IJupyterServerHelper) @optional() private jupyterServerHelper: IJupyterServerHelper | undefined,
-        @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDataScienceCodeLensProvider)
@@ -63,7 +62,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IInteractiveWindowProvider)
         private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
@@ -71,7 +69,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
         @inject(IFileConverter) private fileConverter: IFileConverter
     ) {
-        this.statusProvider = new StatusProvider(applicationShell);
+        this.statusProvider = new StatusProvider();
         if (!workspace.isTrusted) {
             workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
@@ -538,7 +536,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private async createNewNotebook(): Promise<void> {
-        this.appShell
+        window
             .showInformationMessage(
                 'This command has been deprecated and will eventually be removed, please use ["Create: New Jupyter Notebook"](command:workbench.action.openGlobalKeybindings?%5B%22@command:ipynb.newUntitledIpynb%22%5D) instead.'
             )
@@ -632,7 +630,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                     // When all done, show a notice that it completed.
                     if (uri && filePath) {
                         const openQuestion1 = DataScience.exportOpenQuestion1;
-                        const selection = await this.applicationShell.showInformationMessage(
+                        const selection = await window.showInformationMessage(
                             DataScience.exportDialogComplete(getDisplayPath(file)),
                             openQuestion1
                         );
@@ -754,7 +752,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         const filtersObject: { [name: string]: string[] } = {};
         filtersObject[filtersKey] = ['ipynb'];
 
-        const uris = await this.applicationShell.showOpenDialog({
+        const uris = await window.showOpenDialog({
             openLabel: DataScience.importDialogTitle,
             filters: filtersObject
         });

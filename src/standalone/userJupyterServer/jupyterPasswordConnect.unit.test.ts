@@ -8,17 +8,16 @@ import * as typemoq from 'typemoq';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.web';
 import { IJupyterRequestCreator, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { ApplicationShell } from '../../platform/common/application/applicationShell';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
-import { IDisposableRegistry } from '../../platform/common/types';
 import { JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { Disposable, InputBox } from 'vscode';
 import { noop } from '../../test/core';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
+import { dispose } from '../../platform/common/utils/lifecycle';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('JupyterServer Password Connect', () => {
     let jupyterPasswordConnect: JupyterPasswordConnect;
-    let appShell: ApplicationShell;
     let configService: ConfigurationService;
     let requestCreator: IJupyterRequestCreator;
 
@@ -26,7 +25,11 @@ suite('JupyterServer Password Connect', () => {
     const sessionName: string = 'sessionName';
     const sessionValue: string = 'sessionValue';
     let inputBox: InputBox;
+    let disposables: Disposable[] = [];
     setup(() => {
+        resetVSCodeMocks();
+        disposables.push(new Disposable(() => resetVSCodeMocks()));
+
         inputBox = {
             show: noop,
             onDidAccept: noop as any,
@@ -56,23 +59,21 @@ suite('JupyterServer Password Connect', () => {
             return new Disposable(noop);
         });
 
-        appShell = mock(ApplicationShell);
-        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
-        when(appShell.createInputBox()).thenReturn(inputBox);
+        when(mockedVSCodeNamespaces.window.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
+        when(mockedVSCodeNamespaces.window.createInputBox()).thenReturn(inputBox);
         configService = mock(ConfigurationService);
         requestCreator = mock(JupyterRequestCreator);
         const serverUriStorage = mock<IJupyterServerUriStorage>();
-        const disposables = mock<IDisposableRegistry>();
 
         jupyterPasswordConnect = new JupyterPasswordConnect(
-            instance(appShell),
             instance(configService),
             undefined,
             instance(requestCreator),
             instance(serverUriStorage),
-            instance(disposables)
+            disposables
         );
     });
+    teardown(() => (disposables = dispose(disposables)));
 
     function createMockSetup(secure: boolean, ok: boolean, xsrfReponseStatusCode: 200 | 302 | 401 = 302) {
         const dsSettings = {
@@ -140,7 +141,7 @@ suite('JupyterServer Password Connect', () => {
 
     test('With Password', async () => {
         inputBox.value = 'Python';
-        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
+        when(mockedVSCodeNamespaces.window.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
 
         // Mock our second call to get session cookie
@@ -198,7 +199,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock.verifyAll();
     });
     test('Empty Password and empty token', async () => {
-        when(appShell.showInputBox(anything())).thenReject(new Error('Should not be called'));
+        when(mockedVSCodeNamespaces.window.showInputBox(anything())).thenReject(new Error('Should not be called'));
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true, 200);
 
         // Mock our second call to get session cookie
@@ -256,7 +257,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock.verifyAll();
     });
     test('Password required and non-empty token', async () => {
-        when(appShell.showInputBox(anything())).thenReject(new Error('Should not be called'));
+        when(mockedVSCodeNamespaces.window.showInputBox(anything())).thenReject(new Error('Should not be called'));
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true, 401);
 
         // Mock our second call to get session cookie
@@ -392,7 +393,7 @@ suite('JupyterServer Password Connect', () => {
     test('Bad password followed by good password.', async () => {
         // Reconfigure our app shell to first give a bad password
         inputBox.value = 'JUNK';
-        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('JUNK'));
+        when(mockedVSCodeNamespaces.window.showInputBox(anything())).thenReturn(Promise.resolve('JUNK'));
 
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
 
@@ -441,7 +442,7 @@ suite('JupyterServer Password Connect', () => {
         assert(!result.requestHeaders, 'First call to get password should have failed');
 
         // Now set our input for the correct password
-        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
+        when(mockedVSCodeNamespaces.window.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
 
         // Mock our second call to get session cookie with the correct password 'Python'
         const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);

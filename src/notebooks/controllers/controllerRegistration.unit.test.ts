@@ -17,7 +17,7 @@ import {
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -109,7 +109,6 @@ suite('Controller Registration', () => {
     let context: IExtensionContext;
     let kernelProvider: IKernelProvider;
     let languageService: NotebookCellLanguageService;
-    let appShell: IApplicationShell;
     let serviceContainer: IServiceContainer;
     let displayDataProvider: IConnectionDisplayDataProvider;
     let addOrUpdateCalled = false;
@@ -126,14 +125,12 @@ suite('Controller Registration', () => {
         context = mock<IExtensionContext>();
         kernelProvider = mock<IKernelProvider>();
         languageService = mock<NotebookCellLanguageService>();
-        appShell = mock<IApplicationShell>();
         serviceContainer = mock<IServiceContainer>();
         displayDataProvider = mock<IConnectionDisplayDataProvider>();
         onDidChangeKernels = new EventEmitter<void>();
         disposables.push(onDidChangeKernels);
         when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(commandManager));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
-        when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
         when(serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider)).thenReturn(
             instance(displayDataProvider)
         );
@@ -318,8 +315,7 @@ suite('Controller Registration', () => {
                         _arg8,
                         _arg9,
                         _arg10,
-                        _arg11,
-                        _arg12
+                        _arg11
                     ) => {
                         if (connection === activePythonConnection) {
                             when(activeInterpreterController.id).thenReturn(id);
@@ -399,8 +395,7 @@ suite('Controller Registration', () => {
                         _arg8,
                         _arg9,
                         _arg10,
-                        _arg11,
-                        _arg12
+                        _arg11
                     ) => {
                         if (connection === activePythonConnection) {
                             when(activeInterpreterController.id).thenReturn(id);

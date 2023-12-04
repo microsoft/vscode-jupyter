@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
-import { Uri } from 'vscode';
+import { Uri, window } from 'vscode';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { IExportPlotRequest } from './types';
@@ -11,7 +11,7 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { PlotViewer as PlotViewerBase } from './plotViewer';
-import { IApplicationShell, IWebviewPanelProvider } from '../../../platform/common/application/types';
+import { IWebviewPanelProvider } from '../../../platform/common/application/types';
 import { IConfigurationService, IExtensionContext } from '../../../platform/common/types';
 
 @injectable()
@@ -19,11 +19,10 @@ export class PlotViewer extends PlotViewerBase {
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IFileSystemNode) private fsNode: IFileSystemNode,
         @inject(IExtensionContext) context: IExtensionContext
     ) {
-        super(provider, configuration, applicationShell, fsNode, context);
+        super(provider, configuration, fsNode, context);
     }
 
     protected override async exportPlot(payload: IExportPlotRequest): Promise<void> {
@@ -34,7 +33,7 @@ export class PlotViewer extends PlotViewerBase {
         filtersObject[localize.DataScience.svgFilter] = ['svg'];
 
         // Ask the user what file to save to
-        const file = await this.applicationShell.showSaveDialog({
+        const file = await window.showSaveDialog({
             saveLabel: localize.DataScience.exportPlotTitle,
             filters: filtersObject
         });
@@ -60,7 +59,7 @@ export class PlotViewer extends PlotViewerBase {
             }
         } catch (e) {
             traceError(e);
-            this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed(e)).then(noop, noop);
+            window.showErrorMessage(localize.DataScience.exportImageFailed(e)).then(noop, noop);
         }
     }
 }

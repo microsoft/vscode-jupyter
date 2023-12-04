@@ -35,12 +35,7 @@ import {
     env
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
-import {
-    IApplicationShell,
-    IEncryptedStorage,
-    ICommandManager,
-    IApplicationEnvironment
-} from '../../platform/common/application/types';
+import { IEncryptedStorage, ICommandManager, IApplicationEnvironment } from '../../platform/common/application/types';
 import { noop } from '../../test/core';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { JVSC_EXTENSION_ID, Settings, UserJupyterServerPickerProviderId } from '../../platform/common/constants';
@@ -55,7 +50,6 @@ import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('User Uri Provider', () => {
     let provider: UserJupyterServerUrlProvider;
-    let applicationShell: IApplicationShell;
     let configService: IConfigurationService;
     let jupyterConnection: JupyterConnection;
     let encryptedStorage: IEncryptedStorage;
@@ -122,7 +116,6 @@ suite('User Uri Provider', () => {
         });
         sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
 
-        applicationShell = mock<IApplicationShell>();
         configService = mock<IConfigurationService>();
         jupyterConnection = mock<JupyterConnection>();
         encryptedStorage = mock<IEncryptedStorage>();
@@ -137,7 +130,7 @@ suite('User Uri Provider', () => {
         when(mockedVSCodeNamespaces.env.machineId).thenReturn('1');
         when(mockedVSCodeNamespaces.env.openExternal(anything())).thenReturn(Promise.resolve(true));
         when(serverUriStorage.getAll()).thenResolve([]);
-        when(applicationShell.createInputBox()).thenReturn(inputBox);
+        when(mockedVSCodeNamespaces.window.createInputBox()).thenReturn(inputBox);
         when(jupyterConnection.validateRemoteUri(anything())).thenResolve();
         when(globalMemento.get(UserJupyterServerUriListKey)).thenReturn([]);
         when(globalMemento.update(UserJupyterServerUriListKey, anything())).thenCall((_, v) => {
@@ -193,7 +186,6 @@ suite('User Uri Provider', () => {
         const appEnv = mock<IApplicationEnvironment>();
         when(appEnv.channel).thenReturn('stable');
         provider = new UserJupyterServerUrlProvider(
-            instance(applicationShell),
             instance(configService),
             instance(jupyterConnection),
             false,

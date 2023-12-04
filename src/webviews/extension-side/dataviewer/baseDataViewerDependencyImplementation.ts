@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { IKernel } from '../../../kernels/types';
 import { IDataViewerDependencyService } from './types';
@@ -12,17 +11,14 @@ import { SemVer } from 'semver';
 import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { ProductNames } from '../../../platform/interpreter/installer/productNames';
 import { Product } from '../../../platform/interpreter/installer/types';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { CancellationToken, CancellationTokenSource, window } from 'vscode';
 import { traceWarning } from '../../../platform/logging';
 
 /**
  * base class of the data viewer dependency implementation.
  */
 export abstract class BaseDataViewerDependencyImplementation<TExecuter> implements IDataViewerDependencyService {
-    constructor(
-        private readonly applicationShell: IApplicationShell,
-        private isCodeSpace: boolean
-    ) {}
+    constructor(private isCodeSpace: boolean) {}
 
     abstract checkAndInstallMissingDependencies(executionEnvironment: IKernel | PythonEnvironment): Promise<void>;
 
@@ -54,7 +50,7 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
 
         let selection = this.isCodeSpace
             ? Common.install
-            : await this.applicationShell.showErrorMessage(message, { modal: true }, Common.install);
+            : await window.showErrorMessage(message, { modal: true }, Common.install);
 
         if (selection === Common.install) {
             await this._doInstall(executer, tokenSource);

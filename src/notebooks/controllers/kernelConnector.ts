@@ -13,8 +13,8 @@ import {
     IThirdPartyKernelProvider,
     IKernelController
 } from '../../kernels/types';
-import { CancellationError, Memento, NotebookDocument, Uri } from 'vscode';
-import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
+import { CancellationError, Memento, NotebookDocument, Uri, window } from 'vscode';
+import { ICommandManager } from '../../platform/common/application/types';
 import { traceVerbose, traceWarning } from '../../platform/logging';
 import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../platform/common/utils/async';
@@ -69,10 +69,9 @@ export class KernelConnector {
         kernel: IBaseKernel,
         serviceContainer: IServiceContainer
     ): Promise<boolean> {
-        const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
 
-        const selection = await appShell.showErrorMessage(
+        const selection = await window.showErrorMessage(
             DataScience.cannotRunCellKernelIsDead(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
             ),

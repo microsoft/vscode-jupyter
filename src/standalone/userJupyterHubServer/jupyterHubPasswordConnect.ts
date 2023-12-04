@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../../platform/common/application/types';
+import { ConfigurationTarget, window } from 'vscode';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -35,8 +34,6 @@ export interface IJupyterPasswordConnectInfo {
 export class JupyterHubPasswordConnect {
     private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo>>();
     constructor(
-        private appShell: IApplicationShell,
-
         private readonly multiStepFactory: IMultiStepInputFactory,
         private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
         private readonly configService: IConfigurationService,
@@ -382,7 +379,7 @@ export class JupyterHubPasswordConnect {
                 // Ask user to change setting and possibly try again.
                 const enableOption: string = DataScience.jupyterSelfCertEnable;
                 const closeOption: string = DataScience.jupyterSelfCertClose;
-                const value = await this.appShell.showErrorMessage(
+                const value = await window.showErrorMessage(
                     DataScience.jupyterSelfCertFail(e.message),
                     { modal: true },
                     enableOption,

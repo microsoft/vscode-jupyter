@@ -7,7 +7,6 @@ import * as nodeFetch from 'node-fetch';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.web';
 import { IJupyterRequestCreator, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { ApplicationShell } from '../../platform/common/application/applicationShell';
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { IDisposableRegistry } from '../../platform/common/types';
@@ -17,11 +16,11 @@ import { MockQuickPick } from '../../test/datascience/mockQuickPick';
 import { JupyterHubPasswordConnect } from './jupyterHubPasswordConnect';
 import { Disposable, InputBox } from 'vscode';
 import { noop } from '../../test/core';
+import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('Jupyter Hub Password Connect', () => {
     let jupyterPasswordConnect: JupyterHubPasswordConnect;
-    let appShell: ApplicationShell;
     let configService: ConfigurationService;
     let requestCreator: IJupyterRequestCreator;
 
@@ -56,10 +55,9 @@ suite('Jupyter Hub Password Connect', () => {
             return new Disposable(noop);
         });
 
-        appShell = mock(ApplicationShell);
-        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
-        when(appShell.createInputBox()).thenReturn(inputBox);
-        const multiStepFactory = new MultiStepInputFactory(instance(appShell));
+        when(mockedVSCodeNamespaces.window.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
+        when(mockedVSCodeNamespaces.window.createInputBox()).thenReturn(inputBox);
+        const multiStepFactory = new MultiStepInputFactory();
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
         configService = mock(ConfigurationService);
         requestCreator = mock(JupyterRequestCreator);
@@ -67,7 +65,6 @@ suite('Jupyter Hub Password Connect', () => {
         const disposables = mock<IDisposableRegistry>();
 
         jupyterPasswordConnect = new JupyterHubPasswordConnect(
-            instance(appShell),
             multiStepFactory,
             instance(mockDisposableRegistry),
             instance(configService),
@@ -87,8 +84,8 @@ suite('Jupyter Hub Password Connect', () => {
 
         const quickPick = new MockQuickPick('');
         const input = new MockInputBox('test', 2); // We want the input box to enter twice for this scenario
-        when(appShell.createQuickPick()).thenReturn(quickPick!);
-        when(appShell.createInputBox()).thenReturn(input);
+        when(mockedVSCodeNamespaces.window.createQuickPick()).thenReturn(quickPick!);
+        when(mockedVSCodeNamespaces.window.createInputBox()).thenReturn(input);
 
         const hubActiveResponse = mock(nodeFetch.Response);
         when(hubActiveResponse.ok).thenReturn(true);

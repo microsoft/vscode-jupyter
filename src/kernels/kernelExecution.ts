@@ -12,7 +12,6 @@ import {
     workspace,
     CancellationToken
 } from 'vscode';
-import { IApplicationShell } from '../platform/common/application/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IDisposable, IExtensionContext } from '../platform/common/types';
 import { traceInfo, traceVerbose } from '../platform/logging';
@@ -62,13 +61,11 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
 
     constructor(
         private readonly kernel: IKernel,
-        appShell: IApplicationShell,
         context: IExtensionContext,
         formatters: ITracebackFormatter[],
         private readonly notebook: NotebookDocument
     ) {
         const requestListener = new CellExecutionMessageHandlerService(
-            appShell,
             kernel.controller,
             context,
             formatters,

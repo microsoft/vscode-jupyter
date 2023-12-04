@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCellOutput, NotebookDocument, Uri, workspace } from 'vscode';
+import { NotebookCellOutput, NotebookDocument, Uri, window, workspace } from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types';
@@ -21,10 +20,7 @@ export const imageExtensionForMimeType: Record<string, string> = {
 
 @injectable()
 export class PlotSaveHandler implements IPlotSaveHandler {
-    constructor(
-        @inject(IApplicationShell) private readonly shell: IApplicationShell,
-        @inject(IFileSystem) private readonly fs: IFileSystem
-    ) {}
+    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
 
     public async savePlot(notebook: NotebookDocument, outputId: string, mimeType: string) {
         if (notebook.isClosed) {
@@ -66,7 +62,7 @@ export class PlotSaveHandler implements IPlotSaveHandler {
             (workspace.workspaceFolders?.length || 0) > 0 ? workspace.workspaceFolders![0].uri : undefined;
         const fileName = `output.${imageExtension}`;
         const defaultUri = workspaceUri ? Uri.joinPath(workspaceUri, fileName) : Uri.file(fileName);
-        return this.shell.showSaveDialog({
+        return window.showSaveDialog({
             defaultUri,
             saveLabel: DataScience.exportPlotTitle,
             filters
