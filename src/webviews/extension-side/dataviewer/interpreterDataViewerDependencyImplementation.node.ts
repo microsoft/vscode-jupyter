@@ -17,10 +17,9 @@ export class InterpreterDataViewerDependencyImplementation extends BaseDataViewe
     constructor(
         private readonly installer: IInstaller,
         private pythonFactory: IPythonExecutionFactory,
-        private interpreterService: IInterpreterService,
-        isCodeSpace: boolean
+        private interpreterService: IInterpreterService
     ) {
-        super(isCodeSpace);
+        super();
     }
 
     protected async _getVersion(

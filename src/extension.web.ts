@@ -65,7 +65,6 @@ import {
     IFeaturesManager,
     IMemento,
     IOutputChannel,
-    IsCodeSpace,
     IsDevMode,
     IsWebExtension,
     WORKSPACE_MEMENTO
@@ -90,6 +89,7 @@ import {
     JUPYTER_OUTPUT_CHANNEL,
     PylanceExtension,
     PythonExtension,
+    setIsCodeSpace,
     STANDARD_OUTPUT_CHANNEL,
     Telemetry
 } from './platform/common/constants';
@@ -118,6 +118,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     setDisposableTracker(context.subscriptions);
+    setIsCodeSpace(env.uiKind == UIKind.Web);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
         let api: IExtensionApi;
@@ -258,7 +259,6 @@ function addOutputChannel(context: IExtensionContext, serviceManager: IServiceMa
         getJupyterOutputChannel(context.subscriptions),
         JUPYTER_OUTPUT_CHANNEL
     );
-    serviceManager.addSingletonInstance<boolean>(IsCodeSpace, env.uiKind == UIKind.Web);
 
     // Log env info.
     standardOutputChannel.appendLine(`${env.appName} (${version}, ${env.remoteName}, ${env.appHost})`);

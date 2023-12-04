@@ -17,11 +17,10 @@ import {
     IDisposableRegistry,
     IJupyterExtensionBanner,
     IPersistentState,
-    IPersistentStateFactory,
-    IsCodeSpace
+    IPersistentStateFactory
 } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
-import { MillisecondsInADay } from '../../platform/constants.node';
+import { MillisecondsInADay, isCodeSpace } from '../../platform/constants.node';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { openInBrowser } from '../../platform/common/net/browser';
@@ -105,7 +104,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
 
     constructor(
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
         this.setPersistentState(BannerType.InsidersNotebookSurvey, InsidersNotebookSurveyStateKeys.ShowBanner);
@@ -153,7 +151,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
 
     private shouldShowBanner(type: BannerType) {
         if (
-            this.isCodeSpace ||
+            isCodeSpace() ||
             !this.isEnabled(type) ||
             this.disabledInCurrentSession ||
             !DataScienceSurveyBanner.surveyDelay

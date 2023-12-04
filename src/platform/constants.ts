@@ -29,3 +29,12 @@ export const UserJupyterServerPickerProviderId = '_builtin.jupyterServerUrlProvi
 export function isBuiltInJupyterProvider(id: string) {
     return id === TestingKernelPickerProviderId || id === UserJupyterServerPickerProviderId;
 }
+
+let isCodeSpaceValue = false;
+export function setIsCodeSpace(value: boolean) {
+    isCodeSpaceValue = value;
+}
+
+export function isCodeSpace() {
+    return isCodeSpaceValue;
+}

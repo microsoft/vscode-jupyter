@@ -39,8 +39,7 @@ suite('DataViewerDependencyService (IKernel, Node)', () => {
         dependencyService = new DataViewerDependencyService(
             instance(installer),
             instance(pythonExecFactory),
-            instance(interpreterService),
-            false
+            instance(interpreterService)
         );
     });
 
