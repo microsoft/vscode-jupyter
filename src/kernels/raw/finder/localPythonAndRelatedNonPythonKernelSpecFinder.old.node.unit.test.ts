@@ -23,13 +23,13 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc';
 import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
-import { ResourceMap } from '../../../platform/vscode-path/map';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import { ResourceMap } from '../../../platform/common/utils/map';
 
 suite(`Local Python and related kernels`, async () => {
     let finder: OldLocalPythonAndRelatedNonPythonKernelSpecFinder;

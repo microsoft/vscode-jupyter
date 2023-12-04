@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { ResourceMap } from '../../platform/vscode-path/map';
 import { IGeneratedCode, IFileGeneratedCodes, IGeneratedCodeStore } from './types';
+import { ResourceMap } from '../../platform/common/utils/map';
 
 /**
  * Stores an IGeneratedCode for each file that is sent to the Interactive Window.

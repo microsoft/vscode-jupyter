@@ -25,7 +25,6 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceInfo } from '../../platform/logging';
-import { ResourceSet } from '../../platform/vscode-path/map';
 import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IControllerRegistration } from '../controllers/types';
@@ -38,6 +37,7 @@ import { DebuggingManagerBase } from './debuggingManagerBase';
 import { INotebookDebugConfig, INotebookDebuggingManager, KernelDebugMode } from './debuggingTypes';
 import { assertIsDebugConfig, IpykernelCheckResult } from './helper';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
+import { ResourceSet } from '../../platform/common/utils/map';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.

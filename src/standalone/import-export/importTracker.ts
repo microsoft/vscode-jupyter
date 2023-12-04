@@ -21,8 +21,8 @@ import { noop } from '../../platform/common/utils/misc';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { isJupyterNotebook } from '../../platform/common/utils';
-import { ResourceMap } from '../../platform/vscode-path/map';
 import { isTelemetryDisabled } from '../../telemetry';
+import { ResourceMap } from '../../platform/common/utils/map';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for

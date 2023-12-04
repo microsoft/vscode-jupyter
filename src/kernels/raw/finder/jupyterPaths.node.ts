@@ -19,13 +19,13 @@ import { tryGetRealPath } from '../../../platform/common/utils.node';
 import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { traceDecoratorVerbose } from '../../../platform/logging';
 import { OSType } from '../../../platform/common/utils/platform.node';
-import { ResourceMap, ResourceSet } from '../../../platform/vscode-path/map';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { TraceOptions } from '../../../platform/logging/types';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { ResourceMap, ResourceSet } from '../../../platform/common/utils/map';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
