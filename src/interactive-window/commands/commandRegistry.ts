@@ -21,7 +21,7 @@ import {
 } from 'vscode';
 import { IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
-import { ICommandManager, IDebugService } from '../../platform/common/application/types';
+import { IDebugService } from '../../platform/common/application/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
@@ -59,7 +59,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(IDataScienceCodeLensProvider)
         @optional()
         private dataScienceCodeLensProvider: IDataScienceCodeLensProvider | undefined,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IInteractiveWindowProvider)
@@ -126,7 +125,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                 });
             }
         );
-        this.commandManager.registerCommand(
+        commands.registerCommand(
             Commands.ExportFileAsNotebook,
             (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
                 return this.listenForErrors(() => {
@@ -176,7 +175,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         this.registerCommand(Commands.ScrollToCell, (file: Uri, id: string) => this.scrollToCell(file, id));
         this.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow);
         this.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow);
-        this.commandManager.registerCommand(Commands.InteractiveCopyCell, this.copyCellInInteractiveWindow);
+        commands.registerCommand(Commands.InteractiveCopyCell, this.copyCellInInteractiveWindow);
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
@@ -214,7 +213,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         U extends ICommandNameArgumentTypeMapping[E]
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
-        const disposable = this.commandManager.registerCommand(command, callback, this);
+        const disposable = commands.registerCommand(command, callback, this);
         this.disposables.push(disposable);
     }
 
@@ -235,7 +234,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         const previousValue = this.configService.getSettings().logging.level;
         if (previousValue !== 'debug') {
             await this.configService.updateSetting('logging.level', 'debug', undefined, ConfigurationTarget.Global);
-            this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
+            commands.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
         }
     }
 
@@ -243,7 +242,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         const previousValue = this.configService.getSettings().logging.level;
         if (previousValue !== 'error') {
             await this.configService.updateSetting('logging.level', 'error', undefined, ConfigurationTarget.Global);
-            this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
+            commands.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
         }
     }
 
@@ -397,7 +396,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     private async debugStepOver(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
-            this.commandManager.executeCommand('workbench.action.debug.stepOver').then(noop, noop);
+            commands.executeCommand('workbench.action.debug.stepOver').then(noop, noop);
         }
     }
 
@@ -416,7 +415,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                 }
             }
 
-            this.commandManager.executeCommand('workbench.action.debug.stop').then(noop, noop);
+            commands.executeCommand('workbench.action.debug.stop').then(noop, noop);
         }
     }
 
@@ -424,7 +423,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     private async debugContinue(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
-            this.commandManager.executeCommand('workbench.action.debug.continue').then(noop, noop);
+            commands.executeCommand('workbench.action.debug.continue').then(noop, noop);
         }
     }
 
@@ -582,12 +581,12 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     private async openVariableView(): Promise<void> {
         // For all contributed views vscode creates a command with the format [view ID].focus to focus that view
         // It's the given way to focus a single view so using that here, note that it needs to match the view ID
-        return this.commandManager.executeCommand('jupyterViewVariables.focus');
+        return commands.executeCommand('jupyterViewVariables.focus');
     }
 
     // Open the VS Code outline view
     private async openOutlineView(): Promise<void> {
-        return this.commandManager.executeCommand('outline.focus');
+        return commands.executeCommand('outline.focus');
     }
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -682,7 +681,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                     );
                     // Next open this notebook & execute it.
                     await workspace.openNotebookDocument(uri).then((document) => window.showNotebookDocument(document));
-                    await this.commandManager.executeCommand('notebook.execute');
+                    await commands.executeCommand('notebook.execute');
                     return uri;
                 }
             }

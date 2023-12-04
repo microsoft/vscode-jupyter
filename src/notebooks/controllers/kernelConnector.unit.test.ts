@@ -17,7 +17,6 @@ import {
     KernelInterpreterDependencyResponse,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
-import { ICommandManager } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -52,7 +51,6 @@ suite('Kernel Connector', () => {
     let kernel: IKernel;
     let errorHandler: IDataScienceErrorHandler;
     let kernelSession: IKernelSession;
-    let commandManager: ICommandManager;
     let pythonKernelSpec = PythonKernelConnectionMetadata.create({
         id: 'python',
         interpreter: {
@@ -76,7 +74,6 @@ suite('Kernel Connector', () => {
         trustedKernels = mock<ITrustedKernelPaths>();
         errorHandler = mock<IDataScienceErrorHandler>();
         kernelSession = mock<IKernelSession>();
-        commandManager = mock<ICommandManager>();
         kernel = mock<IKernel>();
         (instance(kernel) as any).then = undefined;
         notebook = new TestNotebookDocument();
@@ -88,7 +85,6 @@ suite('Kernel Connector', () => {
         when(trustedKernels.isTrusted(anything())).thenReturn(true);
         when(serviceContainer.get<IKernelProvider>(IKernelProvider)).thenReturn(instance(kernelProvider));
         when(serviceContainer.get<ITrustedKernelPaths>(ITrustedKernelPaths)).thenReturn(instance(trustedKernels));
-        when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(commandManager));
         when(serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler)).thenReturn(
             instance(errorHandler)
         );

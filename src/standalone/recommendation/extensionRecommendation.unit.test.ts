@@ -4,7 +4,6 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, NotebookDocument } from 'vscode';
-import { ICommandManager } from '../../platform/common/application/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
@@ -24,7 +23,6 @@ suite('Extension Recommendation', () => {
                 let disposables: IDisposable[] = [];
                 let recommendation: ExtensionRecommendationService;
                 let memento: Memento;
-                let commandManager: ICommandManager;
                 let controllerRegistration: IControllerRegistration;
                 let onDidOpenNotebookDocument: EventEmitter<NotebookDocument>;
                 let onNotebookControllerSelected: EventEmitter<{
@@ -47,12 +45,10 @@ suite('Extension Recommendation', () => {
                     controllerRegistration = mock<IControllerRegistration>();
                     when(controllerRegistration.onControllerSelected).thenReturn(onNotebookControllerSelected.event);
                     memento = mock<Memento>();
-                    commandManager = mock<ICommandManager>();
                     recommendation = new ExtensionRecommendationService(
                         instance(controllerRegistration),
                         disposables,
-                        instance(memento),
-                        instance(commandManager)
+                        instance(memento)
                     );
 
                     when(
@@ -232,7 +228,7 @@ suite('Extension Recommendation', () => {
                             anything()
                         )
                     ).thenResolve(Common.bannerLabelYes as any);
-                    when(commandManager.executeCommand(anything(), anything())).thenResolve();
+                    when(mockedVSCodeNamespaces.commands.executeCommand(anything(), anything())).thenResolve();
 
                     const nb = createNotebook(languageToBeTested);
                     onDidOpenNotebookDocument.fire(nb);
@@ -246,7 +242,10 @@ suite('Extension Recommendation', () => {
                         )
                     ).once();
                     verify(
-                        commandManager.executeCommand('extension.open', 'ms-dotnettools.dotnet-interactive-vscode')
+                        mockedVSCodeNamespaces.commands.executeCommand(
+                            'extension.open',
+                            'ms-dotnettools.dotnet-interactive-vscode'
+                        )
                     ).once();
                 });
             });

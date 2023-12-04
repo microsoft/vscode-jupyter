@@ -13,10 +13,10 @@ import {
     workspace,
     window,
     env,
-    Uri
+    Uri,
+    commands
 } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { ICommandManager } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
@@ -45,7 +45,6 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     public constructor(
         protected readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration,
-        protected readonly commandManager: ICommandManager,
         protected readonly serviceContainer: IServiceContainer
     ) {}
 
@@ -182,7 +181,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
             }
             case IpykernelCheckResult.ControllerNotSelected: {
                 if (allowSelectKernel) {
-                    await this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
+                    await commands.executeCommand('notebook.selectKernel', { notebookEditor: editor });
                     return await this.checkIpykernelAndPrompt(cell, false);
                 }
             }

@@ -11,13 +11,7 @@ import { IExtensionSyncActivationService } from './activation/types';
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter';
-import { CommandManager } from './common/application/commandManager';
-import {
-    ICommandManager,
-    IWorkspaceService,
-    IWebviewViewProvider,
-    IWebviewPanelProvider
-} from './common/application/types';
+import { IWorkspaceService, IWebviewViewProvider, IWebviewPanelProvider } from './common/application/types';
 import { ConfigurationService } from './common/configuration/service.node';
 import { IFileSystem } from './common/platform/types';
 import { IFileSystemNode } from './common/platform/types.node';
@@ -31,7 +25,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
     serviceManager.addBinding(FileSystem, IFileSystemNode);
     serviceManager.addBinding(FileSystem, IFileSystem);
-    serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
 

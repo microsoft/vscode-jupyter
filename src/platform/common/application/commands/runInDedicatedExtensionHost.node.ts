@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, extensions } from 'vscode';
+import { injectable } from 'inversify';
+import { ConfigurationTarget, commands, extensions } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../activation/types';
 import { PythonExtension, PylanceExtension } from '../../constants';
 import { noop } from '../../utils/misc';
-import { ICommandManager } from '../types';
 import { workspace } from 'vscode';
 
 /**
@@ -14,9 +13,8 @@ import { workspace } from 'vscode';
  */
 @injectable()
 export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSyncActivationService {
-    constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager) {}
     public activate() {
-        this.commandManager.registerCommand('jupyter.runInDedicatedExtensionHost', this.updateAffinity, this);
+        commands.registerCommand('jupyter.runInDedicatedExtensionHost', this.updateAffinity, this);
     }
     private async updateAffinity() {
         const affinity = workspace.getConfiguration('extensions').get('experimental.affinity') as
@@ -53,6 +51,6 @@ export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSync
             ConfigurationTarget.Global
         );
 
-        this.commandManager.executeCommand('workbench.action.reloadWindow').then(noop, noop);
+        commands.executeCommand('workbench.action.reloadWindow').then(noop, noop);
     }
 }

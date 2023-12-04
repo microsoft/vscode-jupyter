@@ -5,7 +5,6 @@ import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor, window, workspace } from 'vscode';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { ICommandManager } from '../../platform/common/application/types';
 import { EditorContexts, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -43,7 +42,6 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         @inject(IInteractiveWindowProvider)
         @optional()
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IControllerRegistration) private readonly controllers: IControllerRegistration,
@@ -51,45 +49,27 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         private readonly jupyterUriProviderRegistration: IJupyterServerProviderRegistry
     ) {
         disposables.push(this);
-        this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
-        this.canRestartNotebookKernelContext = new ContextKey(
-            EditorContexts.CanRestartNotebookKernel,
-            this.commandManager
-        );
-        this.canInterruptNotebookKernelContext = new ContextKey(
-            EditorContexts.CanInterruptNotebookKernel,
-            this.commandManager
-        );
+        this.nativeContext = new ContextKey(EditorContexts.IsNativeActive);
+        this.canRestartNotebookKernelContext = new ContextKey(EditorContexts.CanRestartNotebookKernel);
+        this.canInterruptNotebookKernelContext = new ContextKey(EditorContexts.CanInterruptNotebookKernel);
         this.canRestartInteractiveWindowKernelContext = new ContextKey(
-            EditorContexts.CanRestartInteractiveWindowKernel,
-            this.commandManager
+            EditorContexts.CanRestartInteractiveWindowKernel
         );
         this.canInterruptInteractiveWindowKernelContext = new ContextKey(
-            EditorContexts.CanInterruptInteractiveWindowKernel,
-            this.commandManager
+            EditorContexts.CanInterruptInteractiveWindowKernel
         );
-        this.interactiveContext = new ContextKey(EditorContexts.IsInteractiveActive, this.commandManager);
-        this.interactiveOrNativeContext = new ContextKey(
-            EditorContexts.IsInteractiveOrNativeActive,
-            this.commandManager
-        );
-        this.pythonOrNativeContext = new ContextKey(EditorContexts.IsPythonOrNativeActive, this.commandManager);
-        this.pythonOrInteractiveContext = new ContextKey(
-            EditorContexts.IsPythonOrInteractiveActive,
-            this.commandManager
-        );
-        this.pythonOrInteractiveOrNativeContext = new ContextKey(
-            EditorContexts.IsPythonOrInteractiveOrNativeActive,
-            this.commandManager
-        );
-        this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
-        this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
-        this.isJupyterKernelSelected = new ContextKey(EditorContexts.IsJupyterKernelSelected, this.commandManager);
+        this.interactiveContext = new ContextKey(EditorContexts.IsInteractiveActive);
+        this.interactiveOrNativeContext = new ContextKey(EditorContexts.IsInteractiveOrNativeActive);
+        this.pythonOrNativeContext = new ContextKey(EditorContexts.IsPythonOrNativeActive);
+        this.pythonOrInteractiveContext = new ContextKey(EditorContexts.IsPythonOrInteractiveActive);
+        this.pythonOrInteractiveOrNativeContext = new ContextKey(EditorContexts.IsPythonOrInteractiveOrNativeActive);
+        this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells);
+        this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook);
+        this.isJupyterKernelSelected = new ContextKey(EditorContexts.IsJupyterKernelSelected);
         this.hasNativeNotebookOrInteractiveWindowOpen = new ContextKey(
-            EditorContexts.HasNativeNotebookOrInteractiveWindowOpen,
-            this.commandManager
+            EditorContexts.HasNativeNotebookOrInteractiveWindowOpen
         );
-        this.kernelSourceContext = new ContextKey(EditorContexts.KernelSource, this.commandManager);
+        this.kernelSourceContext = new ContextKey(EditorContexts.KernelSource);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());

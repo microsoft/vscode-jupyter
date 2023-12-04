@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCell, window } from 'vscode';
-import { ICommandManager } from '../../platform/common/application/types';
+import { NotebookCell, commands, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { Commands } from '../../platform/common/constants';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -18,17 +17,14 @@ import { INotebookDebuggingManager, KernelDebugMode } from './debuggingTypes';
 export class CommandRegistry implements IDisposable, IExtensionSyncActivationService {
     constructor(
         @inject(INotebookDebuggingManager) private readonly debuggingManager: INotebookDebuggingManager,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
 
     public activate() {
-        this.disposables.push(this.commandManager.registerCommand(Commands.RunByLine, this.runByLine, this));
-        this.disposables.push(this.commandManager.registerCommand(Commands.RunByLineNext, this.runByLineNext, this));
-        this.disposables.push(this.commandManager.registerCommand(Commands.RunByLineStop, this.runByLineStop, this));
-        this.disposables.push(
-            this.commandManager.registerCommand(Commands.RunAndDebugCell, this.runAndDebugCell, this)
-        );
+        this.disposables.push(commands.registerCommand(Commands.RunByLine, this.runByLine, this));
+        this.disposables.push(commands.registerCommand(Commands.RunByLineNext, this.runByLineNext, this));
+        this.disposables.push(commands.registerCommand(Commands.RunByLineStop, this.runByLineStop, this));
+        this.disposables.push(commands.registerCommand(Commands.RunAndDebugCell, this.runAndDebugCell, this));
     }
 
     private async runByLine(cell: NotebookCell | undefined) {

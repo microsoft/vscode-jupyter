@@ -28,7 +28,7 @@ import {
     IJupyterServerProviderRegistry
 } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { ICommandManager, IEncryptedStorage } from '../../platform/common/application/types';
+import { IEncryptedStorage } from '../../platform/common/application/types';
 import {
     Identifiers,
     JUPYTER_HUB_EXTENSION_ID,
@@ -109,7 +109,6 @@ export class UserJupyterServerUrlProvider
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMultiStepInputFactory) multiStepFactory: IMultiStepInputFactory,
         @inject(IAsyncDisposableRegistry) asyncDisposableRegistry: IAsyncDisposableRegistry,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IJupyterRequestAgentCreator)
         @optional()
         agentCreator: IJupyterRequestAgentCreator | undefined,
@@ -165,7 +164,7 @@ export class UserJupyterServerUrlProvider
         collection.documentation = this.documentation;
         this._register(this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this));
         this._register(
-            this.commandManager.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
+            commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
                 await Promise.all([
                     this.oldStorage.clear().catch(noop),
                     this.newStorage.clear().catch(noop),

@@ -4,7 +4,6 @@
 import { inject, injectable, optional } from 'inversify';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { ICommandManager } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { IFileConverter } from '../../notebooks/export/types';
@@ -23,7 +22,6 @@ export class CommandRegistry implements IExtensionSyncActivationService {
     private exportCommand?: ExportCommands;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IFileConverter) private fileConverter: IFileConverter,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInteractiveWindowProvider)
@@ -34,7 +32,6 @@ export class CommandRegistry implements IExtensionSyncActivationService {
         @inject(JupyterConnection) readonly jupyterConnection: JupyterConnection
     ) {
         this.exportCommand = new ExportCommands(
-            this.commandManager,
             this.fileConverter,
             this.fs,
             this.interactiveProvider,

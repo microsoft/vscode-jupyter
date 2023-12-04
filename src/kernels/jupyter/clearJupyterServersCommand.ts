@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ICommandManager } from '../../platform/common/application/types';
 import { Commands, JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { IJupyterServerProviderRegistry, IJupyterServerUriStorage } from './types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { noop } from '../../platform/common/utils/misc';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationTokenSource, commands } from 'vscode';
 
 /**
  * Registers commands to allow the user to set the remote server URI.
@@ -16,14 +15,13 @@ import { CancellationTokenSource } from 'vscode';
 @injectable()
 export class ClearJupyterServersCommand implements IExtensionSyncActivationService {
     constructor(
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IJupyterServerProviderRegistry) private readonly registrations: IJupyterServerProviderRegistry,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
     ) {}
     public activate() {
         this.disposables.push(
-            this.commandManager.registerCommand(
+            commands.registerCommand(
                 Commands.ClearSavedJupyterUris,
                 async () => {
                     await this.serverUriStorage.clear().catch(noop);
@@ -45,9 +43,7 @@ export class ClearJupyterServersCommand implements IExtensionSyncActivationServi
                                 );
                             })
                     ).catch(noop);
-                    await this.commandManager
-                        .executeCommand('dataScience.ClearUserProviderJupyterServerCache')
-                        .then(noop, noop);
+                    await commands.executeCommand('dataScience.ClearUserProviderJupyterServerCache').then(noop, noop);
                 },
                 this
             )

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Extension, QuickPickItem, Uri, WebviewView as vscodeWebviewView, window } from 'vscode';
+import { Extension, QuickPickItem, Uri, commands, WebviewView as vscodeWebviewView, window } from 'vscode';
 import { joinPath } from '../../../platform/vscode-path/resources';
 import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping, IVariableViewer } from './types';
@@ -13,7 +13,7 @@ import {
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
 } from '../../../kernels/variables/types';
-import { IWebviewViewProvider, ICommandManager } from '../../../platform/common/application/types';
+import { IWebviewViewProvider } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { traceError } from '../../../platform/logging';
 import {
@@ -46,7 +46,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly variables: IJupyterVariables,
         private readonly disposables: IDisposableRegistry,
         private readonly notebookWatcher: INotebookWatcher,
-        private readonly commandManager: ICommandManager,
         private readonly experiments: IExperimentService
     ) {
         const variableViewDir = joinPath(context.extensionUri, 'dist', 'webviews', 'webview-side', 'viewers');
@@ -112,7 +111,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     // Variable view visibility has changed. Update our context key for command enable / disable
     private handleVisibilityChanged() {
-        const context = new ContextKey('jupyter.variableViewVisible', this.commandManager);
+        const context = new ContextKey('jupyter.variableViewVisible');
         let visible = false;
         if (this.webviewView) {
             visible = this.webviewView.visible;
@@ -144,15 +143,12 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                 const variableViewers = this.getMatchingVariableViewers(request.variable);
                 if (variableViewers.length === 0) {
                     // No data frame viewer extensions, show notifications
-                    await this.commandManager.executeCommand(
-                        'workbench.extensions.search',
-                        '@tag:jupyterVariableViewers'
-                    );
+                    await commands.executeCommand('workbench.extensions.search', '@tag:jupyterVariableViewers');
                     return;
                 } else if (variableViewers.length === 1) {
                     const command = variableViewers[0].jupyterVariableViewers.command;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    return this.commandManager.executeCommand(command as any, {
+                    return commands.executeCommand(command as any, {
                         container: {},
                         variable: request.variable
                     });
@@ -171,7 +167,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                         const item = quickPick.selectedItems[0];
                         if (item) {
                             quickPick.hide();
-                            this.commandManager
+                            commands
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 .executeCommand(item.command as any, {
                                     container: {},
@@ -183,7 +179,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                     quickPick.show();
                 }
             } else {
-                return this.commandManager.executeCommand(Commands.ShowDataViewer, {
+                return commands.executeCommand(Commands.ShowDataViewer, {
                     container: {},
                     variable: request.variable
                 });

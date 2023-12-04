@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookCell } from 'vscode';
+import { NotebookCell, commands } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { INotebookKernelExecution } from '../../../kernels/types';
-import { ICommandManager } from '../../../platform/common/application/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { traceVerbose } from '../../../platform/logging';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -27,8 +26,7 @@ export class DebugCellController implements IDebuggingDelegate {
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
         public readonly debugCell: NotebookCell,
-        private readonly execution: INotebookKernelExecution,
-        private readonly commandManager: ICommandManager
+        private readonly execution: INotebookKernelExecution
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
     }
@@ -57,7 +55,7 @@ export class DebugCellController implements IDebuggingDelegate {
         if (request.command === 'configurationDone') {
             await cellDebugSetup(this.execution, this.debugAdapter);
 
-            this.commandManager
+            commands
                 .executeCommand('notebook.cell.execute', {
                     ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
                     document: this.debugCell.notebook.uri

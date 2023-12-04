@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument, window, workspace } from 'vscode';
+import { NotebookDocument, commands, window, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { ICommandManager } from '../../platform/common/application/types';
 import { traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
@@ -27,7 +26,6 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
     ) {}
@@ -90,7 +88,7 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
     private async switchKernel(n: NotebookDocument, kernel: Readonly<KernelConnectionMetadata>) {
         traceVerbose(`Using notebook.selectKernel to force remote kernel for ${getDisplayPath(n.uri)} to ${kernel.id}`);
         // Do this in a loop as it may fail
-        await this.commandManager.executeCommand('notebook.selectKernel', {
+        await commands.executeCommand('notebook.selectKernel', {
             id: kernel.id,
             extension: JVSC_EXTENSION_ID
         });

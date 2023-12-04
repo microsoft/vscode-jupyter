@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 import { ApplicationEnvironment } from './common/application/applicationEnvironment.web';
-import { CommandManager } from './common/application/commandManager';
 import {
-    ICommandManager,
     IWorkspaceService,
     IApplicationEnvironment,
     IWebviewViewProvider,
@@ -30,7 +28,6 @@ import { WorkspaceInterpreterTracker } from './interpreter/workspaceInterpreterT
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
-    serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);

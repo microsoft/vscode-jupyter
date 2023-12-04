@@ -3,10 +3,10 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { ICommandManager } from '../../../platform/common/application/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
+import { commands } from 'vscode';
 
 /**
  * Registers the command for setting the interpreter to launch jupyter with
@@ -15,12 +15,11 @@ import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 export class JupyterInterpreterSelectionCommand implements IExtensionSyncActivationService {
     constructor(
         @inject(JupyterInterpreterService) private readonly service: JupyterInterpreterService,
-        @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public activate() {
         this.disposables.push(
-            this.cmdManager.registerCommand('jupyter.selectJupyterInterpreter', () => {
+            commands.registerCommand('jupyter.selectJupyterInterpreter', () => {
                 this.service.selectInterpreter().catch(noop);
             })
         );

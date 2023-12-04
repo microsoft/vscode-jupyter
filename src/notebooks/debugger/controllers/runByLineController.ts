@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookCell, Position } from 'vscode';
+import { NotebookCell, Position, commands } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { INotebookKernelExecution } from '../../../kernels/types';
-import { ICommandManager } from '../../../platform/common/application/types';
 import { Commands } from '../../../platform/common/constants';
 import { splitLines } from '../../../platform/common/helpers';
 import { IConfigurationService } from '../../../platform/common/types';
@@ -28,7 +27,6 @@ export class RunByLineController implements IDebuggingDelegate {
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
         public readonly debugCell: NotebookCell,
-        private readonly commandManager: ICommandManager,
         private readonly execution: INotebookKernelExecution,
         private readonly settings: IConfigurationService
     ) {
@@ -154,12 +152,12 @@ export class RunByLineController implements IDebuggingDelegate {
             // Open variables view
             const settings = this.settings.getSettings(this.debugCell.notebook.uri);
             if (settings.showVariableViewWhenDebugging) {
-                this.commandManager.executeCommand(Commands.OpenVariableView).then(noop, noop);
+                commands.executeCommand(Commands.OpenVariableView).then(noop, noop);
             }
         }
 
         // Run cell
-        this.commandManager
+        commands
             .executeCommand('notebook.cell.execute', {
                 ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
                 document: this.debugCell.notebook.uri

@@ -16,7 +16,7 @@ import {
 } from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { ICommandManager, IDebugService } from '../../platform/common/application/types';
+import { IDebugService } from '../../platform/common/application/types';
 import { EditorContexts } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { IPlatformService } from '../../platform/common/platform/types';
@@ -55,16 +55,15 @@ export class DebuggingManager
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
         @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
-        @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(kernelProvider, controllerRegistration, commandManager, serviceContainer);
-        this.runByLineCells = new ContextKey(EditorContexts.RunByLineCells, commandManager);
-        this.runByLineDocuments = new ContextKey(EditorContexts.RunByLineDocuments, commandManager);
-        this.debugDocuments = new ContextKey(EditorContexts.DebugDocuments, commandManager);
+        super(kernelProvider, controllerRegistration, serviceContainer);
+        this.runByLineCells = new ContextKey(EditorContexts.RunByLineCells);
+        this.runByLineDocuments = new ContextKey(EditorContexts.RunByLineDocuments);
+        this.debugDocuments = new ContextKey(EditorContexts.DebugDocuments);
     }
 
     public override activate() {
@@ -220,7 +219,6 @@ export class DebuggingManager
                 const rblController = new RunByLineController(
                     adapter,
                     cell,
-                    this.commandManager,
                     this.kernelProvider.getKernelExecution(kernel!),
                     this.configurationService
                 );
@@ -235,8 +233,7 @@ export class DebuggingManager
                 const controller = new DebugCellController(
                     adapter,
                     cell,
-                    this.kernelProvider.getKernelExecution(kernel!),
-                    this.commandManager
+                    this.kernelProvider.getKernelExecution(kernel!)
                 );
                 adapter.addDebuggingDelegates([
                     controller,

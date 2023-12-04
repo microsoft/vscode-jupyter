@@ -12,13 +12,13 @@ import {
     CancellationToken,
     workspace,
     extensions,
-    window
+    window,
+    commands
 } from 'vscode';
 import { IPythonApiProvider, IPythonExtensionChecker, PythonApi, PythonEnvironment_PythonApi } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
-import { ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IDisposableRegistry, IExtensionContext } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
@@ -321,10 +321,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
      * Used only for testing
      */
     public static promptDisplayed?: boolean;
-    constructor(
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {
+    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {
         // Listen for the python extension being installed or uninstalled
         extensions.onDidChange(this.extensionsChangeHandler.bind(this), this, this.disposables);
 
@@ -342,7 +339,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
     // Directly install the python extension instead of just showing the extension open page
     public async directlyInstallPythonExtension(): Promise<void> {
-        return this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension, {
+        return commands.executeCommand('workbench.extensions.installExtension', PythonExtension, {
             context: { skipWalkthrough: true }
         });
     }
@@ -373,7 +370,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
     private async installPythonExtension() {
         // Have the user install python
-        this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
+        commands.executeCommand('extension.open', PythonExtension).then(noop, noop);
     }
 
     private async extensionsChangeHandler(): Promise<void> {

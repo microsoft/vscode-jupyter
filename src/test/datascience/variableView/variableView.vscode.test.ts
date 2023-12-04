@@ -3,7 +3,6 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { ICommandManager } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize.node';
@@ -27,12 +26,11 @@ import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataView
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
 import { IKernelProvider } from '../../../kernels/types';
 import { trimQuotes } from '../../../platform/common/helpers';
-import { window } from 'vscode';
+import { commands, window } from 'vscode';
 
 suite('VariableView @variableViewer', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
     let activeInterpreter: PythonEnvironment;
     let kernelProvider: IKernelProvider;
@@ -48,7 +46,6 @@ suite('VariableView @variableViewer', function () {
         }
 
         sinon.restore();
-        commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         const interpreter = await api.serviceContainer
             .get<IInterpreterService>(IInterpreterService)
@@ -77,7 +74,7 @@ suite('VariableView @variableViewer', function () {
     // Test for basic variable view functionality with one document
     test('Can show VariableView (webview-test) and do not have any additional variables', async function () {
         // Send the command to open the view
-        await commandManager.executeCommand(Commands.OpenVariableView);
+        await commands.executeCommand(Commands.OpenVariableView);
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
@@ -124,7 +121,7 @@ suite('VariableView @variableViewer', function () {
 
     test('Can show variables even when print is overridden', async function () {
         // Send the command to open the view
-        await commandManager.executeCommand(Commands.OpenVariableView);
+        await commands.executeCommand(Commands.OpenVariableView);
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
@@ -150,7 +147,7 @@ suite('VariableView @variableViewer', function () {
     // Test variables switching between documents
     test('VariableView document switching (webview-test)', async function () {
         // Send the command to open the view
-        await commandManager.executeCommand(Commands.OpenVariableView);
+        await commands.executeCommand(Commands.OpenVariableView);
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
@@ -197,7 +194,7 @@ suite('VariableView @variableViewer', function () {
             return this.skip();
         }
         // Send the command to open the view
-        await commandManager.executeCommand(Commands.OpenVariableView);
+        await commands.executeCommand(Commands.OpenVariableView);
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
@@ -238,7 +235,7 @@ myClass = MyClass()
 
     test('VariableView basic types B (webview-test)', async function () {
         // Send the command to open the view
-        await commandManager.executeCommand(Commands.OpenVariableView);
+        await commands.executeCommand(Commands.OpenVariableView);
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
@@ -277,7 +274,7 @@ mySet = {1, 2, 3}
     // Test opening data viewers while another dataviewer is open
     test('Open dataviewer', async function () {
         // Send the command to open the view
-        await commandManager.executeCommand(Commands.OpenVariableView);
+        await commands.executeCommand(Commands.OpenVariableView);
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
