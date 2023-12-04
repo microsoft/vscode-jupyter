@@ -6,13 +6,13 @@ import { Uri } from 'vscode';
 import * as path from '../vscode-path/resources';
 import { EnvironmentType } from '../pythonEnvironments/info';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { ResourceMap } from '../common/resourceMap';
 import { swallowExceptions } from '../common/utils/decorators';
 import { IProcessServiceFactory } from '../common/process/types.node';
 import { traceVerbose } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { Environment } from '@vscode/python-extension';
 import { getEnvironmentType } from './helpers';
+import { ResourceMap } from '../common/utils/map';
 
 @injectable()
 export class GlobalPythonExecutablePathService {

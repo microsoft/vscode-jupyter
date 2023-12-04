@@ -14,8 +14,8 @@ import { ConsoleForegroundColors } from '../../../../platform/logging/types';
 import { noop } from '../../../../platform/common/utils/misc';
 import { createDeferred, Deferred } from '../../../../platform/common/utils/async';
 import { ScriptUriConverter } from './scriptUriConverter';
-import { ResourceMap } from '../../../../platform/vscode-path/map';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
+import { ResourceMap } from '../../../../platform/common/utils/map';
 
 /**
  * Handles messages from the kernel related to setting up widgets.
