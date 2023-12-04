@@ -5,19 +5,16 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as tasClient from 'vscode-tas-client';
-import { ApplicationEnvironment } from '../application/applicationEnvironment.node';
-import { Channel, IApplicationEnvironment } from '../application/types';
+import { ApplicationEnvironment } from '../application/applicationEnvironment';
+import { IApplicationEnvironment } from '../application/types';
 import { ConfigurationService } from '../configuration/service.node';
 import { ExperimentService } from './service';
 import { IConfigurationService } from '../types';
 import * as Telemetry from '../../telemetry/index';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../../test/constants.node';
 import { MockMemento } from '../../../test/mocks/mementos';
 import { Experiments } from '../types';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 suite('Experimentation service', () => {
-    const extensionVersion = '1.2.3';
-
     let configurationService: IConfigurationService;
     let appEnvironment: IApplicationEnvironment;
     let globalMemento: MockMemento;
@@ -50,56 +47,11 @@ suite('Experimentation service', () => {
         } as any);
     }
 
-    function configureApplicationEnvironment(channel: Channel, version: string) {
-        when(appEnvironment.channel).thenReturn(channel);
-        when(appEnvironment.extensionName).thenReturn(JVSC_EXTENSION_ID_FOR_TESTS);
-        when(appEnvironment.packageJson).thenReturn({ version });
-    }
-
     suite('Initialization', () => {
-        test.skip('Users with a release version of the extension should be in the Public target population', () => {
-            const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
-
-            configureSettings(true, [], []);
-            configureApplicationEnvironment('stable', extensionVersion);
-
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            new ExperimentService(instance(configurationService), instance(appEnvironment), globalMemento);
-
-            sinon.assert.calledWithMatch(
-                getExperimentationServiceStub,
-                JVSC_EXTENSION_ID_FOR_TESTS,
-                extensionVersion,
-                tasClient.TargetPopulation.Public,
-                sinon.match.any,
-                globalMemento
-            );
-        });
-
-        test.skip('Users with an Insiders version of the extension should be the Insiders target population', () => {
-            const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
-
-            configureSettings(true, [], []);
-            configureApplicationEnvironment('insiders', extensionVersion);
-
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            new ExperimentService(instance(configurationService), instance(appEnvironment), globalMemento);
-
-            sinon.assert.calledWithMatch(
-                getExperimentationServiceStub,
-                JVSC_EXTENSION_ID_FOR_TESTS,
-                extensionVersion,
-                tasClient.TargetPopulation.Insiders,
-                sinon.match.any,
-                globalMemento
-            );
-        });
-
         test('Users can only opt into experiment groups', () => {
             sinon.stub(tasClient, 'getExperimentationService');
 
             configureSettings(true, ['Foo - experiment', 'Bar - control'], []);
-            configureApplicationEnvironment('stable', extensionVersion);
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
@@ -113,7 +65,6 @@ suite('Experimentation service', () => {
         test('Users can only opt out of experiment groups', () => {
             sinon.stub(tasClient, 'getExperimentationService');
             configureSettings(true, [], ['Foo - experiment', 'Bar - control']);
-            configureApplicationEnvironment('stable', extensionVersion);
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
@@ -143,8 +94,6 @@ suite('Experimentation service', () => {
                 getTreatmentVariable: () => true
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any);
-
-            configureApplicationEnvironment('stable', extensionVersion);
         });
 
         teardown(() => {
@@ -214,8 +163,6 @@ suite('Experimentation service', () => {
                 getTreatmentVariable: () => 'value'
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any);
-
-            configureApplicationEnvironment('stable', extensionVersion);
         });
 
         test.skip('If the service is enabled and the opt-out array is empty,return the value from the experimentation framework for a given experiment', async () => {

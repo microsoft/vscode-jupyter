@@ -11,6 +11,7 @@ import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IJupyterSett
 import { Experiments } from '../utils/localize';
 import { Experiments as ExperimentGroups } from '../types';
 import { ExperimentationTelemetry } from './telemetry.node';
+import { getVSCodeChannel } from '../application/applicationEnvironment';
 
 // This is a hacky way to determine what experiments have been loaded by the Experiments service.
 // There's no public API yet, hence we access the global storage that is updated by the experiments package.
@@ -58,7 +59,7 @@ export class ExperimentService implements IExperimentService {
 
         let targetPopulation: TargetPopulation;
 
-        if (this.appEnvironment.channel === 'insiders') {
+        if (getVSCodeChannel() === 'insiders') {
             targetPopulation = TargetPopulation.Insiders;
         } else {
             targetPopulation = TargetPopulation.Public;
@@ -68,7 +69,7 @@ export class ExperimentService implements IExperimentService {
 
         this.experimentationService = getExperimentationService(
             JVSC_EXTENSION_ID,
-            this.appEnvironment.packageJson.version!,
+            this.appEnvironment.extensionVersion!,
             targetPopulation,
             telemetryReporter,
             this.globalState
@@ -117,7 +118,7 @@ export class ExperimentService implements IExperimentService {
         // Enable the kernel completions experiment for all insider users
         if (
             experiment === ExperimentGroups.KernelCompletions &&
-            (this.appEnvironment.channel === 'insiders' || isPreReleaseVersion())
+            (getVSCodeChannel() === 'insiders' || isPreReleaseVersion())
         ) {
             return true;
         }
@@ -201,7 +202,7 @@ export class ExperimentService implements IExperimentService {
         if (
             experimentsDisabled &&
             !enabledExperiments.has(ExperimentGroups.KernelCompletions) &&
-            (this.appEnvironment.channel === 'insiders' || isPreReleaseVersion())
+            (getVSCodeChannel() === 'insiders' || isPreReleaseVersion())
         ) {
             traceInfo(Experiments.inGroup(ExperimentGroups.KernelCompletions));
         }

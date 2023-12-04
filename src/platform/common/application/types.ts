@@ -12,7 +12,6 @@ import {
     DebugSessionCustomEvent,
     Disposable,
     Event,
-    UIKind,
     Uri,
     ViewColumn,
     WebviewPanel as vscodeWebviewPanel,
@@ -132,95 +131,11 @@ export interface IDebugService {
 export const IApplicationEnvironment = Symbol('IApplicationEnvironment');
 export interface IApplicationEnvironment {
     /**
-     * The application name of the editor, like 'VS Code'.
-     *
-     * @readonly
-     */
-    readonly appName: string;
-
-    /**
-     * The extension name.
-     *
-     * @readonly
-     */
-    readonly extensionName: string;
-    /**
      * The extension name.
      *
      * @readonly
      */
     readonly extensionVersion: string;
-
-    /**
-     * The application root folder from which the editor is running.
-     *
-     * @readonly
-     */
-    readonly appRoot: string;
-
-    /**
-     * Represents the preferred user-language, like `de-CH`, `fr`, or `en-US`.
-     *
-     * @readonly
-     */
-    readonly language: string;
-
-    /**
-     * A unique identifier for the computer.
-     *
-     * @readonly
-     */
-    readonly machineId: string;
-
-    /**
-     * A unique identifier for the current session.
-     * Changes each time the editor is started.
-     *
-     * @readonly
-     */
-    readonly sessionId: string;
-    /**
-     * Contents of `package.json` as a JSON object.
-     *
-     * @type {any}
-     * @memberof IApplicationEnvironment
-     */
-    readonly packageJson: any;
-    /**
-     * Gets the full path to the user settings file. (may or may not exist).
-     *
-     * @type {string}
-     * @memberof IApplicationShell
-     */
-    readonly userSettingsFile: Uri | undefined;
-    /**
-     * Gets the full path to the user custom keybindings file. (may or may not exist).
-     *
-     * @type {string}
-     * @memberof IApplicationShell
-     */
-    readonly userCustomKeybindingsFile: Uri | undefined;
-    /**
-     * The detected default shell for the extension host, this is overridden by the
-     * `terminal.integrated.shell` setting for the extension host's platform.
-     *
-     * @type {string}
-     * @memberof IApplicationShell
-     */
-    readonly shell: string;
-    /**
-     * Gets the vscode channel (whether 'insiders' or 'stable').
-     */
-    readonly channel: Channel;
-    /**
-     * The version of the editor.
-     */
-    readonly vscodeVersion: string;
-    /**
-     * The custom uri scheme the editor registers to in the operating system.
-     */
-    readonly uriScheme: string;
-    readonly uiKind: UIKind;
 }
 
 export interface IWebviewMessageListener {

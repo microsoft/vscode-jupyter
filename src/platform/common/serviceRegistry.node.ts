@@ -4,7 +4,6 @@
 import { IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService } from '../common/types';
 import { IServiceManager } from '../ioc/types';
-import { ApplicationEnvironment } from './application/applicationEnvironment.node';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand.node';
 import { DebugService } from './application/debugService';
 import { EncryptedStorage } from './application/encryptedStorage';
@@ -31,6 +30,7 @@ import { registerTypes as processRegisterTypes } from './process/serviceRegistry
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
 import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost.node';
 import { OldCacheCleaner } from './cache';
+import { ApplicationEnvironment } from './application/applicationEnvironment';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {

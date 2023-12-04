@@ -35,7 +35,7 @@ import {
     env
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
-import { IEncryptedStorage, IApplicationEnvironment } from '../../platform/common/application/types';
+import { IEncryptedStorage } from '../../platform/common/application/types';
 import { noop } from '../../test/core';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { JVSC_EXTENSION_ID, Settings, UserJupyterServerPickerProviderId } from '../../platform/common/constants';
@@ -181,8 +181,6 @@ suite('User Uri Provider', () => {
         when(
             jupyterServerProviderRegistry.createJupyterServerCollection(anything(), anything(), anything(), anything())
         ).thenReturn(instance(collection));
-        const appEnv = mock<IApplicationEnvironment>();
-        when(appEnv.channel).thenReturn('stable');
         provider = new UserJupyterServerUrlProvider(
             instance(configService),
             instance(jupyterConnection),
