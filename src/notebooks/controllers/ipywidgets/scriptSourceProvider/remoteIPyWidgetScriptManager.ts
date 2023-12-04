@@ -128,7 +128,7 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         }
     }
     protected async getWidgetScriptSource(script: Uri): Promise<string> {
-        const uri = script.toString();
+        const uri = script.toString(true);
         const httpClient = new HttpClient();
         const response = await httpClient.downloadFile(uri);
         if (response.status === 200) {
