@@ -142,9 +142,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         return {
             ready: Promise.resolve(),
             registerPythonApi: noop,
-            registerRemoteServerProvider: () => ({ dispose: noop }),
             getKernelService: () => Promise.resolve(undefined),
-            addRemoteJupyterServer: () => Promise.resolve(undefined),
             openNotebook: () => Promise.reject(),
             createJupyterServerCollection: () => {
                 throw new Error('Not Implemented');

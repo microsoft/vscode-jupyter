@@ -21,7 +21,6 @@ import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlP
 import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
 import { CommandRegistry as CodespaceCommandRegistry } from './codespace/commandRegistry';
 import { EagerlyActivateJupyterUriProviders } from './api/activateJupyterProviderExtensions';
-import { KernelStartupHooksForJupyterProviders } from './api/kernelStartupHook';
 import { ExposeUsedAzMLServerHandles } from './api/usedAzMLServerHandles';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
@@ -78,10 +77,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         CodespaceCommandRegistry
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        KernelStartupHooksForJupyterProviders
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

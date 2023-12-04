@@ -23,16 +23,6 @@ declare module './api' {
          */
         ready: Promise<void>;
         /**
-         * Registers a remote server provider component that's used to pick remote jupyter server URIs
-         * @param serverProvider object called back when picking jupyter server URI
-         */
-        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): Disposable;
-        /**
-         * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
-         * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
-         */
-        addRemoteJupyterServer(providerId: string, handle: string): Promise<void>;
-        /**
          * Gets the service that provides access to kernels.
          * Returns `undefined` if the calling extension is not allowed to access this API. This could
          * happen either when user doesn't allow this or the extension doesn't allow this.

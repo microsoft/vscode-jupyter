@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ExtensionMode, Uri, commands, window, workspace } from 'vscode';
+import { Disposable, ExtensionMode, Uri, commands, window, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
@@ -113,7 +113,19 @@ export function buildApi(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return proxy as any;
     };
-    const api: IExtensionApi = {
+    type APIForGithubCodespaces = {
+        /**
+         * Registers a remote server provider component that's used to pick remote jupyter server URIs
+         * @param serverProvider object called back when picking jupyter server URI
+         */
+        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): Disposable;
+        /**
+         * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
+         * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
+         */
+        addRemoteJupyterServer(providerId: string, handle: string): Promise<void>;
+    };
+    const api: IExtensionApi & APIForGithubCodespaces = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
             traceError('Failure during activation.', ex);
@@ -139,7 +151,8 @@ export function buildApi(
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: extensionId,
                 pemUsed: 'registerRemoteServerProvider'
-            });
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any);
             const { serverProvider, commandProvider } = jupyterServerUriToCollection(provider);
             const collection = createJupyterServerCollection(
                 provider.id,
@@ -160,7 +173,8 @@ export function buildApi(
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: extensions.determineExtensionFromCallStack().extensionId,
                 pemUsed: 'registerRemoteServerProvider'
-            });
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any);
             const kernelServiceFactory =
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
@@ -173,7 +187,8 @@ export function buildApi(
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: extensionId,
                 pemUsed: 'addRemoteJupyterServer'
-            });
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any);
 
             const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
 
