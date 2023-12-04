@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Memento, workspace } from 'vscode';
+import { Memento, env, workspace } from 'vscode';
 import { noop } from './utils/misc';
 import { IExtensionSyncActivationService } from '../activation/types';
-import { IApplicationEnvironment } from './application/types';
 import { GLOBAL_MEMENTO, ICryptoUtils, IMemento, WORKSPACE_MEMENTO } from './types';
 import { inject, injectable, named } from 'inversify';
 import { getFilePath } from './platform/fs-paths';
@@ -33,7 +32,6 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceState: Memento
     ) {}
     public activate(): void {
@@ -69,6 +67,6 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
             // Workspace situation
             return this.crypto.createHash(getFilePath(workspace.workspaceFile), 'SHA-512');
         }
-        return this.appEnv.machineId; // Global key when no folder or workspace file
+        return env.machineId; // Global key when no folder or workspace file
     }
 }

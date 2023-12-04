@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ApplicationEnvironment } from './common/application/applicationEnvironment.web';
 import {
     IWorkspaceService,
     IApplicationEnvironment,
@@ -25,6 +24,7 @@ import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { WebviewPanelProvider } from './webviews/webviewPanelProvider';
 import { WebviewViewProvider } from './webviews/webviewViewProvider';
 import { WorkspaceInterpreterTracker } from './interpreter/workspaceInterpreterTracker';
+import { ApplicationEnvironment } from './common/application/applicationEnvironment';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);

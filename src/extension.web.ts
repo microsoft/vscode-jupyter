@@ -54,7 +54,6 @@ import {
     workspace
 } from 'vscode';
 import { buildApi, IExtensionApi } from './standalone/api/api';
-import { IApplicationEnvironment } from './platform/common/application/types';
 import { traceError } from './platform/logging';
 import {
     GLOBAL_MEMENTO,
@@ -104,6 +103,7 @@ import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { sendTelemetryEvent } from './telemetry';
+import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -331,7 +331,6 @@ async function activateLegacy(
     const duration = stopWatch.elapsedTime;
     sendTelemetryEvent(Telemetry.ExperimentLoad, { duration });
 
-    const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
 
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
@@ -344,7 +343,7 @@ async function activateLegacy(
     });
 
     // "initialize" "services"
-    commands.executeCommand('setContext', 'jupyter.vscode.channel', applicationEnv.channel).then(noop, noop);
+    commands.executeCommand('setContext', 'jupyter.vscode.channel', getVSCodeChannel()).then(noop, noop);
 
     // "activate" everything else
     serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager).activate();

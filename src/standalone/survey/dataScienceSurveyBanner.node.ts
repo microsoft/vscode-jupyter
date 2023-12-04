@@ -2,9 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind, notebooks, window } from 'vscode';
+import {
+    NotebookCellExecutionState,
+    NotebookCellExecutionStateChangeEvent,
+    UIKind,
+    env,
+    notebooks,
+    window
+} from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IApplicationEnvironment } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 import {
     BannerType,
@@ -19,6 +25,7 @@ import { MillisecondsInADay } from '../../platform/constants.node';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { openInBrowser } from '../../platform/common/net/browser';
+import { getVSCodeChannel } from '../../platform/common/application/applicationEnvironment';
 
 export const ISurveyBanner = Symbol('ISurveyBanner');
 export interface ISurveyBanner extends IExtensionSyncActivationService, IJupyterExtensionBanner {}
@@ -61,12 +68,12 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     public isEnabled(type: BannerType): boolean {
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
-                if (this.applicationEnvironment.channel === 'insiders') {
+                if (getVSCodeChannel() === 'insiders') {
                     return this.isEnabledInternal(type);
                 }
                 break;
             case BannerType.ExperimentNotebookSurvey:
-                if (this.applicationEnvironment.channel === 'stable') {
+                if (getVSCodeChannel() === 'stable') {
                     return this.isEnabledInternal(type);
                 }
                 break;
@@ -77,7 +84,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         return false;
     }
     private isEnabledInternal(type: BannerType): boolean {
-        if (this.applicationEnvironment.uiKind !== UIKind.Desktop) {
+        if (env.uiKind !== UIKind.Desktop) {
             return false;
         }
 
@@ -98,7 +105,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
 
     constructor(
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
