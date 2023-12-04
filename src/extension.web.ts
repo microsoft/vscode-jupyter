@@ -66,7 +66,6 @@ import {
     IMemento,
     IOutputChannel,
     IsDevMode,
-    IsWebExtension,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
 import { createDeferred } from './platform/common/utils/async';
@@ -90,6 +89,7 @@ import {
     PylanceExtension,
     PythonExtension,
     setIsCodeSpace,
+    setIsWebExtension,
     STANDARD_OUTPUT_CHANNEL,
     Telemetry
 } from './platform/common/constants';
@@ -119,6 +119,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     setDisposableTracker(context.subscriptions);
     setIsCodeSpace(env.uiKind == UIKind.Web);
+    setIsWebExtension(true);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
         let api: IExtensionApi;
@@ -303,7 +304,6 @@ async function activateLegacy(
         workspace.getConfiguration('jupyter').get<boolean>('development', false);
 
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
-    serviceManager.addSingletonInstance<boolean>(IsWebExtension, true);
     if (isDevMode) {
         commands.executeCommand('setContext', 'jupyter.development', true).then(noop, noop);
     }

@@ -45,7 +45,7 @@ import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPa
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IJupyterServerUri, JupyterServerCollection } from '../../api';
 import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
-import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('User Uri Provider', () => {
@@ -83,9 +83,7 @@ suite('User Uri Provider', () => {
     let token: CancellationToken;
     let tokenSource: CancellationTokenSource;
     setup(() => {
-        // reset(mockedVSCodeNamespaces.window);
-        // reset(mockedVSCodeNamespaces.workspace);
-        // reset(mockedVSCodeNamespaces.notebooks);
+        resetVSCodeMocks();
         inputBox = {
             show: noop,
             onDidAccept: noop as any,
@@ -184,7 +182,6 @@ suite('User Uri Provider', () => {
         provider = new UserJupyterServerUrlProvider(
             instance(configService),
             instance(jupyterConnection),
-            false,
             instance(encryptedStorage),
             instance(serverUriStorage),
             instance(globalMemento),
@@ -200,6 +197,7 @@ suite('User Uri Provider', () => {
     });
     teardown(async () => {
         sinon.restore();
+        resetVSCodeMocks();
         disposables = dispose(disposables);
         await asyncDisposableRegistry.dispose();
     });

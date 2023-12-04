@@ -193,7 +193,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         userUriProvider = new UserJupyterServerUrlProvider(
             api.serviceContainer.get<IConfigurationService>(IConfigurationService),
             api.serviceContainer.get<JupyterConnection>(JupyterConnection),
-            false,
             instance(encryptedStorage),
             instance(serverUriStorage),
             instance(memento),

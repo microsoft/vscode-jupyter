@@ -88,7 +88,6 @@ suite('Error Handler Unit Tests', () => {
             instance(configuration),
             instance(kernelDependencyInstaller),
             instance(uriStorage),
-            false,
             instance(jupyterUriProviderRegistration),
             instance(reservedPythonNames),
             instance(fs),

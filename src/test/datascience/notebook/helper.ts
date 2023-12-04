@@ -76,12 +76,13 @@ import {
     JupyterNotebookView,
     MARKDOWN_LANGUAGE,
     PYTHON_LANGUAGE,
-    defaultNotebookFormat
+    defaultNotebookFormat,
+    isWebExtension
 } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
-import { GLOBAL_MEMENTO, IDisposable, IMemento, IsWebExtension } from '../../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isWeb } from '../../../platform/common/utils/misc';
@@ -114,8 +115,7 @@ export async function getServices() {
             IControllerRegistration
         ) as IControllerRegistration,
         controllerPreferred: ControllerPreferredService.create(api.serviceContainer),
-        isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
-        interpreterService: api.serviceContainer.get<boolean>(IsWebExtension)
+        interpreterService: isWebExtension()
             ? undefined
             : api.serviceContainer.get<IInterpreterService>(IInterpreterService),
         kernelFinder: api.serviceContainer.get<IKernelFinder>(IKernelFinder),
@@ -733,8 +733,8 @@ export async function waitForKernelToGetAutoSelectedImpl(
     skipAutoSelection: boolean = false
 ) {
     traceInfoIfCI('Wait for kernel to get auto selected');
-    const { controllerRegistration, controllerPreferred, interpreterService, isWebExtension } = await getServices();
-    const useRemoteKernelSpec = IS_REMOTE_NATIVE_TEST() || isWebExtension; // Web is only remote
+    const { controllerRegistration, controllerPreferred, interpreterService } = await getServices();
+    const useRemoteKernelSpec = IS_REMOTE_NATIVE_TEST() || isWebExtension(); // Web is only remote
 
     // Wait for the active editor to come up
     notebookEditor = await waitForActiveNotebookEditor(notebookEditor);

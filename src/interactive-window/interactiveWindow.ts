@@ -21,12 +21,12 @@ import {
     NotebookEditorRevealType,
     commands
 } from 'vscode';
-import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
+import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE, isWebExtension } from '../platform/common/constants';
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
 
-import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource } from '../platform/common/types';
+import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import {
     IKernel,
@@ -121,7 +121,6 @@ export class InteractiveWindow implements IInteractiveWindow {
     private readonly codeGeneratorFactory: ICodeGeneratorFactory;
     private readonly storageFactory: IGeneratedCodeStorageFactory;
     private readonly debuggingManager: IInteractiveWindowDebuggingManager;
-    private readonly isWebExtension: boolean;
     private readonly kernelProvider: IKernelProvider;
     private controller: InteractiveController | undefined;
     constructor(
@@ -143,7 +142,6 @@ export class InteractiveWindow implements IInteractiveWindow {
         this.debuggingManager = this.serviceContainer.get<IInteractiveWindowDebuggingManager>(
             IInteractiveWindowDebuggingManager
         );
-        this.isWebExtension = this.serviceContainer.get<boolean>(IsWebExtension);
         this.notebookUri = isInteractiveInputTab(notebookEditorOrTab)
             ? notebookEditorOrTab.input.uri
             : notebookEditorOrTab.notebook.uri;
@@ -627,7 +625,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         // Then run the export command with these contents
-        if (this.isWebExtension) {
+        if (isWebExtension()) {
             // In web, we currently only support exporting as python script
             commands
                 .executeCommand(

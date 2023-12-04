@@ -16,6 +16,7 @@ import { createDeferred, Deferred } from '../../../../platform/common/utils/asyn
 import { ScriptUriConverter } from './scriptUriConverter';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 import { ResourceMap } from '../../../../platform/common/utils/map';
+import { isWebExtension } from '../../../../platform/constants';
 
 /**
  * Handles messages from the kernel related to setting up widgets.
@@ -52,10 +53,9 @@ export class IPyWidgetScriptSource {
         disposables: IDisposableRegistry,
         private readonly configurationSettings: IConfigurationService,
         private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory,
-        isWebExtension: boolean,
         private readonly cdnScriptProvider: CDNWidgetScriptSourceProvider
     ) {
-        this.uriConverter = new ScriptUriConverter(isWebExtension, (resource) => {
+        this.uriConverter = new ScriptUriConverter(isWebExtension(), (resource) => {
             if (!this.uriTranslationRequests.has(resource))
                 this.uriTranslationRequests.set(resource, createDeferred<Uri>());
             this.postEmitter.fire({

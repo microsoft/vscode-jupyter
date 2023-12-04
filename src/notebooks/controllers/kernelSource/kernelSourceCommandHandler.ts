@@ -30,10 +30,11 @@ import {
     InteractiveWindowView,
     JupyterNotebookView,
     Telemetry,
-    TestingKernelPickerProviderId
+    TestingKernelPickerProviderId,
+    isWebExtension
 } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/utils/lifecycle';
-import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
@@ -58,7 +59,6 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
     private kernelSpecsSourceRegistered = false;
     constructor(
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
@@ -70,7 +70,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         dispose(this.localDisposables);
     }
     activate(): void {
-        if (!this.isWebExtension) {
+        if (!isWebExtension()) {
             this.localDisposables.push(
                 notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
                     provideNotebookKernelSourceActions: () => {
@@ -295,7 +295,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
             isLocalConnection(controller.connection) &&
             isPythonKernelConnection(controller.connection) &&
             controller.connection.interpreter?.isCondaEnvWithoutPython &&
-            !this.isWebExtension
+            !isWebExtension()
         ) {
             const disposables: IDisposable[] = [];
             try {

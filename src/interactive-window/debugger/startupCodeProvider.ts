@@ -11,10 +11,10 @@ import {
     IStartupCodeProviders,
     StartupCodePriority
 } from '../../kernels/types';
-import { InteractiveWindowView } from '../../platform/common/constants';
+import { InteractiveWindowView, isWebExtension } from '../../platform/common/constants';
 import { splitLines } from '../../platform/common/helpers';
 import { IFileSystem } from '../../platform/common/platform/types';
-import { IConfigurationService, IExtensionContext, IsWebExtension } from '../../platform/common/types';
+import { IConfigurationService, IExtensionContext } from '../../platform/common/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 
 @injectable()
@@ -28,7 +28,6 @@ export class InteractiveWindowDebuggingStartupCodeProvider
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IStartupCodeProviders) private readonly registry: IStartupCodeProviders
     ) {}
 
@@ -40,7 +39,7 @@ export class InteractiveWindowDebuggingStartupCodeProvider
             return [];
         }
 
-        if (!this.isWebExtension) {
+        if (!isWebExtension()) {
             const useNewDebugger = this.configService.getSettings(undefined).forceIPyKernelDebugger === true;
             if (useNewDebugger) {
                 return [];

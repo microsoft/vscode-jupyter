@@ -4,8 +4,13 @@
 import { NotebookDocument, workspace } from 'vscode';
 import { isPythonNotebook } from '../../../kernels/helpers';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
-import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { IDisposableRegistry, IsWebExtension, Resource } from '../../../platform/common/types';
+import {
+    InteractiveWindowView,
+    JupyterNotebookView,
+    PYTHON_LANGUAGE,
+    isWebExtension
+} from '../../../platform/common/constants';
+import { IDisposableRegistry, Resource } from '../../../platform/common/types';
 import { getNotebookMetadata } from '../../../platform/common/utils';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceInfoIfCI, traceDecoratorVerbose, traceError } from '../../../platform/logging';
@@ -23,20 +28,16 @@ export class ControllerDefaultService {
         private readonly registration: IControllerRegistration,
         private readonly interpreters: IInterpreterService | undefined,
         readonly disposables: IDisposableRegistry,
-        private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider,
-        private readonly isWeb: boolean
+        private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider
     ) {}
     private static _instance: ControllerDefaultService;
     public static create(serviceContainer: IServiceContainer) {
         if (!ControllerDefaultService._instance) {
             ControllerDefaultService._instance = new ControllerDefaultService(
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration),
-                serviceContainer.get<boolean>(IsWebExtension)
-                    ? undefined
-                    : serviceContainer.get<IInterpreterService>(IInterpreterService),
+                isWebExtension() ? undefined : serviceContainer.get<IInterpreterService>(IInterpreterService),
                 serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
-                serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider),
-                serviceContainer.get<boolean>(IsWebExtension, IsWebExtension)
+                serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider)
             );
         }
         return ControllerDefaultService._instance;
@@ -56,7 +57,7 @@ export class ControllerDefaultService {
                     : undefined;
             const controller = await this.createDefaultRemoteController(viewType, notebook);
             // If we're running on web, there is no active interpreter to fall back to
-            if (controller || this.isWeb) {
+            if (controller || isWebExtension()) {
                 return controller;
             }
             // This should never happen.

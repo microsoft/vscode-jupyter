@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { Uri } from 'vscode';
-import { IConfigurationService, IsWebExtension, Resource } from '../../platform/common/types';
+import { IConfigurationService, Resource } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { IKernelDependencyService } from '../types';
 import {
@@ -33,7 +33,6 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
         @optional()
         kernelDependency: IKernelDependencyService | undefined,
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
-        @inject(IsWebExtension) isWebExtension: boolean,
         @inject(IJupyterServerProviderRegistry) jupyterUriProviderRegistration: IJupyterServerProviderRegistry,
         @inject(IReservedPythonNamedProvider) private readonly reservedPythonNames: IReservedPythonNamedProvider,
         @inject(IFileSystem) fs: IFileSystem,
@@ -45,7 +44,6 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
             kernelDependency,
             serverUriStorage,
             jupyterUriProviderRegistration,
-            isWebExtension,
             fs,
             interpreterService
         );
