@@ -3,7 +3,8 @@
 
 import * as vscode from 'vscode';
 import { IApplicationEnvironment } from './types';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { IExtensionContext } from '../types';
 
 /**
  * Wrapper around the vscode.env object and some other properties related to the VS code instance.
@@ -14,7 +15,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         // eslint-disable-next-line
         return this.extensionContext.extension.packageJSON.version;
     }
-    constructor(private readonly extensionContext: vscode.ExtensionContext) {}
+    constructor(@inject(IExtensionContext) private readonly extensionContext: vscode.ExtensionContext) {}
 }
 
 export function getVSCodeChannel() {
