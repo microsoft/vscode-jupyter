@@ -4,7 +4,7 @@
 import { CancellationToken, Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
-import { traceCellMessage } from './helpers';
+import { createJupyterCellFromVSCNotebookCell, traceCellMessage } from './helpers';
 import { CellExecutionFactory } from './cellExecution';
 import {
     IKernelSession,
@@ -242,11 +242,21 @@ export class CellExecutionQueue implements Disposable {
                 }
             }
 
+            let cellErrorsAllowed = false;
+            // If however the cell does allow errors, then ignore this and continue
+            // I.e. if the cell has the tag `raises-exception`, then ignore exceptions
+            if (
+                itemToExecute.type === 'cell' &&
+                createJupyterCellFromVSCNotebookCell(itemToExecute.cell).metadata?.tags?.includes('raises-exception')
+            ) {
+                cellErrorsAllowed = true;
+            }
+
             // If notebook was closed or a cell has failed then bail out.
             if (
                 notebookClosed ||
                 this.cancelledOrCompletedWithErrors ||
-                executionResult === NotebookCellRunState.Error
+                (executionResult === NotebookCellRunState.Error && !cellErrorsAllowed)
             ) {
                 this.cancelledOrCompletedWithErrors = true;
                 const reasons: string[] = [];
