@@ -13,13 +13,12 @@ import { ProductNames } from '../../../platform/interpreter/installer/productNam
 import { Product } from '../../../platform/interpreter/installer/types';
 import { CancellationToken, CancellationTokenSource, window } from 'vscode';
 import { traceWarning } from '../../../platform/logging';
+import { isCodeSpace } from '../../../platform/constants';
 
 /**
  * base class of the data viewer dependency implementation.
  */
 export abstract class BaseDataViewerDependencyImplementation<TExecuter> implements IDataViewerDependencyService {
-    constructor(private isCodeSpace: boolean) {}
-
     abstract checkAndInstallMissingDependencies(executionEnvironment: IKernel | PythonEnvironment): Promise<void>;
 
     protected abstract _getVersion(executer: TExecuter, token: CancellationToken): Promise<string | undefined>;
@@ -48,7 +47,7 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
             ? DataScience.pandasTooOldForViewingFormat(version, pandasMinimumVersionSupportedByVariableViewer)
             : DataScience.pandasRequiredForViewing(pandasMinimumVersionSupportedByVariableViewer);
 
-        let selection = this.isCodeSpace
+        let selection = isCodeSpace()
             ? Common.install
             : await window.showErrorMessage(message, { modal: true }, Common.install);
 

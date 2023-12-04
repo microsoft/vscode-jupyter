@@ -43,8 +43,7 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
         dependencyService = new DataViewerDependencyService(
             instance(installer),
             instance(pythonExecFactory),
-            instance(interpreterService),
-            false
+            instance(interpreterService)
         );
 
         when(interpreterService.getActiveInterpreter()).thenResolve(interpreter);

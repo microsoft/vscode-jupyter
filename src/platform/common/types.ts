@@ -7,7 +7,6 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandIds } from '../../commands';
 import { ISystemVariables } from './variables/types';
 
-export const IsCodeSpace = Symbol('IsCodeSpace');
 export const IsDevMode = Symbol('IsDevMode');
 export const IsWebExtension = Symbol('IsWebExtension');
 export const IOutputChannel = Symbol('IOutputChannel');

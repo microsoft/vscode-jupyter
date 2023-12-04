@@ -24,7 +24,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
         when(session.kernel).thenReturn(instance(mock<Kernel.IKernelConnection>()));
         kernel = mock<IKernel>();
         when(kernel.session).thenReturn(instance(session));
-        dependencyService = new DataViewerDependencyService(false);
+        dependencyService = new DataViewerDependencyService();
     });
 
     teardown(() => {

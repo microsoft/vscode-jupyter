@@ -6,7 +6,7 @@ import { CancellationToken, CancellationTokenSource, Memento, Uri, env, window }
 import { raceCancellation } from '../platform/common/cancellation';
 import { traceInfo, traceError, traceInfoIfCI, traceDecoratorVerbose, logValue } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
-import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from '../platform/common/types';
+import { IMemento, GLOBAL_MEMENTO, Resource, IDisplayOptions } from '../platform/common/types';
 import { DataScience, Common } from '../platform/common/utils/localize';
 import { IServiceContainer } from '../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
@@ -32,6 +32,7 @@ import { getComparisonKey } from '../platform/vscode-path/resources';
 import { isModulePresentInEnvironment } from '../platform/interpreter/installer/productInstaller.node';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import { isPythonKernelConnection } from './helpers';
+import { isCodeSpace } from '../platform/constants';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -43,7 +44,6 @@ export class KernelDependencyService implements IKernelDependencyService {
     constructor(
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
-        @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(IRawNotebookSupportedService) private readonly rawSupport: IRawNotebookSupportedService,
         @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
@@ -267,7 +267,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         options.push(moreInfoOption);
 
         try {
-            if (!this.isCodeSpace || !installWithoutPrompting) {
+            if (!isCodeSpace() || !installWithoutPrompting) {
                 sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'prompted',
                     moduleName: productNameForTelemetry,
@@ -279,7 +279,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             let selection;
             do {
                 selection =
-                    this.isCodeSpace || installWithoutPrompting
+                    isCodeSpace() || installWithoutPrompting
                         ? installOption
                         : await raceCancellation(
                               cancelTokenSource.token,

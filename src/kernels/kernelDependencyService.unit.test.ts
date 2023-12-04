@@ -62,7 +62,6 @@ suite('Kernel Dependency Service', () => {
         dependencyService = new KernelDependencyService(
             instance(installer),
             instance(memento),
-            false,
             instance(rawSupport),
             instance(serviceContainer)
         );
