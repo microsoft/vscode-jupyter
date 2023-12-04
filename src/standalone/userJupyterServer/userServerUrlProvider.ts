@@ -35,7 +35,8 @@ import {
     JVSC_EXTENSION_ID,
     Settings,
     Telemetry,
-    UserJupyterServerPickerProviderId
+    UserJupyterServerPickerProviderId,
+    isWebExtension
 } from '../../platform/common/constants';
 import {
     GLOBAL_MEMENTO,
@@ -44,8 +45,7 @@ import {
     IDisposable,
     IDisposableRegistry,
     IExtensionContext,
-    IMemento,
-    IsWebExtension
+    IMemento
 } from '../../platform/common/types';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
@@ -102,7 +102,6 @@ export class UserJupyterServerUrlProvider
     constructor(
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
@@ -531,7 +530,7 @@ export class UserJupyterServerUrlProvider
                                     (url: string) => `[${url}](${url})`
                                 );
                                 validationErrorMessage = (
-                                    this.isWebExtension
+                                    isWebExtension()
                                         ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
                                         : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
                                 )(errorMessage);
@@ -656,7 +655,7 @@ export class UserJupyterServerUrlProvider
                                     (url: string) => `[${url}](${url})`
                                 );
                                 validationErrorMessage = (
-                                    this.isWebExtension || true
+                                    isWebExtension()
                                         ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
                                         : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
                                 )(errorMessage);

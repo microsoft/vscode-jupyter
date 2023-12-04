@@ -37,4 +37,11 @@ export function setIsCodeSpace(value: boolean) {
 
 export function isCodeSpace() {
     return isCodeSpaceValue;
+let isWebExtensionValue = false;
+export function setIsWebExtension(value: boolean) {
+    isWebExtensionValue = value;
+}
+
+export function isWebExtension() {
+    return isWebExtensionValue;
 }

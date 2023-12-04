@@ -4,9 +4,9 @@
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri, workspace } from 'vscode';
 import { dispose } from '../../common/utils/lifecycle';
-import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../common/types';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../common/constants';
+import { Telemetry, isWebExtension } from '../../common/constants';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { traceVerbose } from '../../logging';
 import { Environment } from '@vscode/python-extension';
@@ -21,12 +21,9 @@ export class PythonEnvironmentFilter implements IDisposable {
     public get onDidChange() {
         return this._onDidChange.event;
     }
-    constructor(
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IsWebExtension) private readonly webExtension: boolean
-    ) {
+    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         disposables.push(this);
-        if (!this.webExtension) {
+        if (!isWebExtension()) {
             workspace.onDidChangeConfiguration(
                 (e) => {
                     e.affectsConfiguration('jupyter.kernels.excludePythonEnvironments') && this._onDidChange.fire();
@@ -41,7 +38,7 @@ export class PythonEnvironmentFilter implements IDisposable {
         dispose(this.disposables);
     }
     public isPythonEnvironmentExcluded(interpreter: { uri: Uri; envPath?: Uri } | Environment): boolean {
-        if (this.webExtension) {
+        if (isWebExtension()) {
             return false;
         }
         const hiddenList = this.getExcludedPythonEnvironments();

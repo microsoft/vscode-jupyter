@@ -9,7 +9,6 @@ import {
     IDisposableRegistry,
     IOutputChannel,
     IConfigurationService,
-    IsWebExtension,
     IDisposable
 } from '../../../../platform/common/types';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
@@ -359,7 +358,6 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
                 this.serviceContainer.get<IConfigurationService>(IConfigurationService),
                 this.serviceContainer.get<IWidgetScriptSourceProviderFactory>(IWidgetScriptSourceProviderFactory),
-                this.serviceContainer.get<boolean>(IsWebExtension),
                 this.serviceContainer.get<CDNWidgetScriptSourceProvider>(CDNWidgetScriptSourceProvider)
             );
             this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.cacheOrSend, this));

@@ -6,8 +6,8 @@ import { SaveDialogOptions, Uri, window } from 'vscode';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import * as localize from '../../platform/common/utils/localize';
 import { ExportFormat } from './types';
-import { IsWebExtension } from '../../platform/common/types';
 import { ServiceContainer } from '../../platform/ioc/container';
+import { isWebExtension } from '../../platform/constants';
 
 // File extensions for each export method
 export const PDFExtensions = { PDF: ['pdf'] };
@@ -67,8 +67,7 @@ export class ExportDialog {
     }
 
     private async getDefaultUri(source: Uri | undefined, targetFileName: string): Promise<Uri | undefined> {
-        const isWebExtension = ServiceContainer.instance.get<boolean>(IsWebExtension);
-        if (source && source.scheme === 'untitled' && isWebExtension) {
+        if (source && source.scheme === 'untitled' && isWebExtension()) {
             // Force using simple file dialog
             return undefined;
         }
