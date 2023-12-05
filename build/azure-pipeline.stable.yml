@@ -23,6 +23,7 @@ resources:
 extends:
   template: azure-pipelines/extension/stable.yml@templates
   parameters:
+    standardizedVersioning: true
     publishExtension: ${{ parameters.publishExtension }}
     l10nSourcePaths: ./src
     buildPlatforms:
