@@ -20,7 +20,7 @@ import {
 import { IKernelConnection, IKernelProcess } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
+import { Cancellation, isCancellationError } from '../../../platform/common/cancellation';
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
@@ -143,7 +143,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     @capturePerfTelemetry(Telemetry.RawKernelProcessLaunch)
-    public async launch(workingDirectory: string, timeout: number, cancelToken: CancellationToken): Promise<void> {
+    public async launch(workingDirectory: string, _timeout: number, cancelToken: CancellationToken): Promise<void> {
         if (this.launchedOnce) {
             throw new Error('Kernel has already been launched.');
         }
@@ -251,24 +251,24 @@ export class KernelProcess implements IKernelProcess {
             if (deferred.rejected) {
                 await deferred.promise;
             }
-            const tcpPortUsed = (await import('tcp-port-used')).default;
+            // const tcpPortUsed = (await import('tcp-port-used')).default;
             const stopwtach = new StopWatch();
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
             // Kernel must be connected to bo Shell & IoPub channels for kernel communication to work.
-            const portsUsed = Promise.all([
-                tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
-                tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
-            ]).catch((ex) => {
-                if (cancelToken.isCancellationRequested || deferred.rejected) {
-                    return;
-                }
-                traceError(`waitUntilUsed timed out`, ex);
-                // Throw an error we recognize.
-                // return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
-            });
+            // const portsUsed = Promise.all([
+            //     tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
+            //     tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
+            // ]).catch((ex) => {
+            //     if (cancelToken.isCancellationRequested || deferred.rejected) {
+            //         return;
+            //     }
+            //     traceError(`waitUntilUsed timed out`, ex);
+            //     // Throw an error we recognize.
+            //     // return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
+            // });
             console.error(`Waited ${stopwtach.elapsedTime}ms for kernel to start`);
-            await raceCancellationError(cancelToken, portsUsed, deferred.promise);
+            // await raceCancellationError(cancelToken, deferred.promise);
         } catch (e) {
             const stdErrToLog = (stderrProc || stderr || '').trim();
             if (!cancelToken?.isCancellationRequested && !isCancellationError(e)) {
