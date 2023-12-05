@@ -156,7 +156,7 @@ export class KernelProcess implements IKernelProcess {
         if (cancelToken.isCancellationRequested) {
             throw new CancellationError();
         }
-
+        traceInfo(`Kernel process ${exeObs.proc?.pid}.`);
         let stdout = '';
         let stderr = '';
         let stderrProc = '';
