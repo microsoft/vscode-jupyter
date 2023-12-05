@@ -123,10 +123,8 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
 
     override dispose(): void | undefined {
         super.dispose();
-        if (this.kernelDisposeDelayTimer) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            clearTimeout(this.kernelDisposeDelayTimer as any);
-        }
+        this._cacheUpdateCancelTokenSource?.dispose();
+        this.kernelDisposeDelayTimer?.dispose();
     }
 
     async activate(): Promise<void> {
@@ -274,6 +272,9 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
 
     private async getFromCache(cancelToken?: CancellationToken): Promise<RemoteKernelConnectionMetadata[]> {
         try {
+            if (cancelToken?.isCancellationRequested) {
+                throw new CancellationError();
+            }
             let results: RemoteKernelConnectionMetadata[] = this.cache;
 
             // If not in memory, check memento
