@@ -38,4 +38,3 @@ function tagWithKernelRestarterFailed(stdErrOrStackTrace: string, tags: string[]
         tags.push('KernelRestarter.failed');
     }
 }
-

@@ -128,7 +128,7 @@ export class JupyterSessionWrapper
         this._isDisposed = true;
         // We are only interested in our stack, not in VS Code or others.
         const stack = (new Error().stack || '').split('\n').filter((l) => l.includes(JVSC_EXTENSION_ID));
-        traceVerbose(`Shutdown session - current session, called from ${stack}`);
+        traceVerbose(`Shutdown session - current session, called from \n ${stack.map((l) => `    ${l}`).join('\n')}`);
         const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata.id}`;
         traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
         try {
