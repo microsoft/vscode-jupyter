@@ -169,6 +169,8 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
         // Display a progress indicator only when user refreshes the list.
         await this.loadCache(true, true);
     }
+
+    private numberOfFailures = 0;
     private getListOfKernelsWithCachedConnection(
         displayProgress: boolean,
         ignoreCache: boolean = false
@@ -177,13 +179,19 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
         this.cachedConnection = this.cachedConnection || this.getRemoteConnectionInfo(displayProgress);
         return this.cachedConnection
             .then((connInfo) => {
+                this.numberOfFailures = 0;
                 if (connInfo && !usingCache) {
                     this.cachedConnection = Promise.resolve(connInfo);
                 }
                 return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
             })
             .catch((ex) => {
+                this.numberOfFailures += 1;
                 if (this.isDisposed) {
+                    return Promise.reject(ex);
+                }
+                if (this.numberOfFailures > 9) {
+                    traceWarning(`Remote Kernel Finder: ${this.id} has failed to connect 10 times in a row.`);
                     return Promise.reject(ex);
                 }
                 if (usingCache) {
