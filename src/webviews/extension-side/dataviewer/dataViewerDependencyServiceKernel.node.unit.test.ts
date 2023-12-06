@@ -64,7 +64,11 @@ suite('DataViewerDependencyService (IKernel, Node)', () => {
         const version = '3.3.3';
 
         const stub = sinon.stub(helpers, 'executeSilently');
-        stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
+        stub.returns(
+            Promise.resolve([
+                { ename: 'stdout', output_type: 'stream', text: `${version}\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d` }
+            ])
+        );
 
         const result = await dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         assert.equal(result, undefined);
@@ -78,7 +82,11 @@ suite('DataViewerDependencyService (IKernel, Node)', () => {
         const version = '1.4.2\n';
 
         const stub = sinon.stub(helpers, 'executeSilently');
-        stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
+        stub.returns(
+            Promise.resolve([
+                { ename: 'stdout', output_type: 'stream', text: `${version}\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d` }
+            ])
+        );
 
         const result = await dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         assert.equal(result, undefined);
@@ -92,7 +100,11 @@ suite('DataViewerDependencyService (IKernel, Node)', () => {
         const version = '0.20.0';
 
         const stub = sinon.stub(helpers, 'executeSilently');
-        stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
+        stub.returns(
+            Promise.resolve([
+                { ename: 'stdout', output_type: 'stream', text: `${version}\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d` }
+            ])
+        );
 
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         await assert.isRejected(
@@ -110,7 +122,11 @@ suite('DataViewerDependencyService (IKernel, Node)', () => {
         const version = '0.10.0';
 
         const stub = sinon.stub(helpers, 'executeSilently');
-        stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
+        stub.returns(
+            Promise.resolve([
+                { ename: 'stdout', output_type: 'stream', text: `${version}\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d` }
+            ])
+        );
 
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         await assert.isRejected(
