@@ -376,7 +376,17 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         while (this.pendingMessages.length) {
             try {
-                const msg = JSON.parse(this.pendingMessages[0]) as KernelMessage.IMessage;
+                const message = this.pendingMessages[0];
+                const msg: KernelMessage.IMessage =
+                    typeof message === 'string' ? JSON.parse(message) : this.deserialize(message);
+                if (msg.buffers?.length) {
+                    msg.buffers = msg.buffers.map((buffer) => {
+                        if (buffer instanceof DataView) {
+                            return buffer.buffer;
+                        }
+                        return buffer;
+                    });
+                }
                 if (msg.channel === 'control') {
                     this.kernel.session.kernel!.sendControlMessage(msg as unknown as KernelMessage.IControlMessage);
                 } else {

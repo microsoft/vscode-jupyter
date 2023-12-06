@@ -258,7 +258,14 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
             this.sendChain = this.sendChain
                 .then(() => Promise.all(this.sendHooks.map((s) => s(hookData, noop))))
-                .then(() => this.postToSocket(msg.channel, data));
+                .then(async () => {
+                    try {
+                        await this.postToSocket(msg.channel, data);
+                    } catch (ex) {
+                        traceError(`Failed to write data to the kernel channel ${msg.channel}`, data, ex);
+                        throw ex;
+                    }
+                });
         } else {
             this.sendChain = this.sendChain.then(() => {
                 this.postToSocket(msg.channel, data);
