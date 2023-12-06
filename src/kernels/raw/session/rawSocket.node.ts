@@ -258,7 +258,17 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
             this.sendChain = this.sendChain
                 .then(() => Promise.all(this.sendHooks.map((s) => s(hookData, noop))))
-                .then(() => this.postToSocket(msg.channel, data));
+                .then(async () => {
+                    try {
+                        await this.postToSocket(msg.channel, data);
+                    } catch (ex) {
+                        traceError(`Failed to write data to the kernel channel ${msg.channel}`, data, ex);
+                        // No point throwing this error, as that would mean nothing else works from here on end.
+                        // Lets ignore this error but log it and then continue
+                        // Hopefully users will file bugs and we can fix this (based on the error message).
+                        // throw ex;
+                    }
+                });
         } else {
             this.sendChain = this.sendChain.then(() => {
                 this.postToSocket(msg.channel, data);
