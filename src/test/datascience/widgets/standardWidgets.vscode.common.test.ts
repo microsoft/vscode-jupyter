@@ -574,7 +574,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             for (let output of cell.outputs) {
                 for (let item of output.items) {
                     if (item.mime === 'application/vnd.custom') {
-                        mimeValues.push(Buffer.from(item.data).toString().trim();
+                        mimeValues.push(Buffer.from(item.data).toString().trim());
                     }
                     if (item.mime === 'application/vnd.code.notebook.stdout') {
                         stdOut = Buffer.from(item.data).toString().trim();
@@ -618,7 +618,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             for (let output of cell.outputs) {
                 for (let item of output.items) {
                     if (item.mime === 'application/vnd.custom') {
-                        mimeValues.push(Buffer.from(item.data).toString().trim();
+                        mimeValues.push(Buffer.from(item.data).toString().trim());
                     }
                     if (item.mime === 'application/vnd.code.notebook.stdout') {
                         stdOut = Buffer.from(item.data).toString().trim();
