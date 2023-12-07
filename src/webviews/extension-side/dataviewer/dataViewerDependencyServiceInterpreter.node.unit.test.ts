@@ -57,14 +57,26 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
     teardown(() => resetVSCodeMocks());
     test('All ok, if pandas is installed and version is > 1.20', async () => {
         when(
-            pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
-        ).thenResolve({ stdout: '0.30.0' });
+            pythonExecService.exec(
+                deepEqual([
+                    '-c',
+                    'import pandas;print(pandas.__version__);print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d")'
+                ]),
+                anything()
+            )
+        ).thenResolve({ stdout: '0.30.0\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d' });
         await dependencyService.checkAndInstallMissingDependencies(interpreter);
     });
     test('Throw exception if pandas is installed and version is = 0.20', async () => {
         when(
-            pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
-        ).thenResolve({ stdout: '0.20.0' });
+            pythonExecService.exec(
+                deepEqual([
+                    '-c',
+                    'import pandas;print(pandas.__version__);print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d")'
+                ]),
+                anything()
+            )
+        ).thenResolve({ stdout: '0.20.0\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d' });
 
         const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
@@ -75,8 +87,14 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
     });
     test('Throw exception if pandas is installed and version is < 0.20', async () => {
         when(
-            pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
-        ).thenResolve({ stdout: '0.10.0' });
+            pythonExecService.exec(
+                deepEqual([
+                    '-c',
+                    'import pandas;print(pandas.__version__);print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d")'
+                ]),
+                anything()
+            )
+        ).thenResolve({ stdout: '0.10.0\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d' });
 
         const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
@@ -87,7 +105,13 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
     });
     test('Prompt to install pandas and install pandas', async () => {
         when(
-            pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
+            pythonExecService.exec(
+                deepEqual([
+                    '-c',
+                    'import pandas;print(pandas.__version__);print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d")'
+                ]),
+                anything()
+            )
         ).thenReject(new Error('Not Found'));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything())).thenResolve(
@@ -108,7 +132,13 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
     });
     test('Prompt to install pandas and throw error if user does not install pandas', async () => {
         when(
-            pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
+            pythonExecService.exec(
+                deepEqual([
+                    '-c',
+                    'import pandas;print(pandas.__version__);print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d")'
+                ]),
+                anything()
+            )
         ).thenReject(new Error('Not Found'));
         when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything())).thenResolve();
 

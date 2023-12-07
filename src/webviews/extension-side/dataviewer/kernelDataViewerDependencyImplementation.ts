@@ -9,9 +9,10 @@ import { executeSilently } from '../../../kernels/helpers';
 import { IKernel } from '../../../kernels/types';
 import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
+import { splitLines } from '../../../platform/common/helpers';
 
-export const kernelGetPandasVersion =
-    'import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);del _VSCODE_pandas';
+const separator = '5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d';
+export const kernelGetPandasVersion = `import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);print("${separator}"); del _VSCODE_pandas`;
 
 function kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
     const envType = kernel.kernelConnectionMetadata.interpreter?.envType;
@@ -38,7 +39,14 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
 
     protected async _getVersion(kernel: IKernel): Promise<string | undefined> {
         const outputs = await this.execute(kernelGetPandasVersion, kernel);
-        return outputs.map((text) => (text ? text.toString() : undefined)).find((item) => item);
+        const output = outputs.map((text) => (text ? text.toString() : undefined)).find((item) => item);
+        if (!output?.includes(separator)) {
+            traceWarning(DataScience.failedToGetVersionOfPandas, `Output is ${output}`);
+            return '';
+        }
+        const items = splitLines(output.trim());
+        const indexOfSeparator = items.indexOf(separator);
+        return indexOfSeparator >= 0 ? items[indexOfSeparator - 1] : '';
     }
 
     protected async _doInstall(kernel: IKernel): Promise<void> {
