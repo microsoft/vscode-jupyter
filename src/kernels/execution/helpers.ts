@@ -29,6 +29,7 @@ import {
     getKernelRegistrationInfo
 } from '../helpers';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { getExtensionSpecifcStack } from '../../platform/errors/errors';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -164,10 +165,11 @@ export class NotebookCellStateTracker {
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfoIfCI(
-        `Cell Index:${cell.index}, of document ${uriPath.basename(
-            cell.notebook.uri
-        )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${cell.executionSummary
-            ?.executionOrder}. ${message}.`
+        () =>
+            `Cell Index:${cell.index}, of document ${uriPath.basename(
+                cell.notebook.uri
+            )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${cell.executionSummary
+                ?.executionOrder}. ${message}. called from ${getExtensionSpecifcStack()}`
     );
 }
 
