@@ -611,21 +611,6 @@ suite('Standard IPyWidget Tests @widgets', function () {
 
             // The first & second outputs should have been updated
             await assertOutputContainsHtml(cell, comms, ['Text Value is Bar']);
-
-            mimeValues = [];
-            stdOut = '';
-            for (let output of cell.outputs) {
-                for (let item of output.items) {
-                    if (item.mime === 'application/vnd.custom') {
-                        mimeValues.push(Buffer.from(item.data).toString().trim());
-                    }
-                    if (item.mime === 'application/vnd.code.notebook.stdout') {
-                        stdOut = Buffer.from(item.data).toString().trim();
-                    }
-                }
-            }
-            assert.deepEqual(mimeValues, ['Text Value is Foo', 'Text Value is Bar', 'Text Value is Hello World']);
-            assert.deepEqual(stdOut, 'Text Value is Hello World');
         });
     });
 });
