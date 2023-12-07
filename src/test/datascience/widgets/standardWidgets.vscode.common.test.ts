@@ -555,7 +555,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
 
             // This cannot be displayed by output widget, hence we need to handle this.
             // One of the outputs if a custom mimetype.
-            let mimeValues = [];
+            let mimeValues: string[] = [];
             let stdOut = '';
             for (let output of cell.outputs) {
                 for (let item of output.items) {
@@ -606,7 +606,11 @@ suite('Standard IPyWidget Tests @widgets', function () {
             await comms.setValue(cell, '.widget-text input', 'Bar');
 
             // Wait for the output to get updated.
-            await waitForCondition(() => outputUpdated, 5_000, 'Second output not updated');
+            await waitForCondition(
+                () => outputUpdated,
+                5_000,
+                () => `Second output not updated, items are ${mimeValues.join(', ')} and stdout = ${stdOut}`
+            );
 
             // The first & second outputs should have been updated
             await assertOutputContainsHtml(cell, comms, ['Text Value is Bar']);
