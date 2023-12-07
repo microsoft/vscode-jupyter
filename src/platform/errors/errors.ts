@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { JVSC_EXTENSION_ID } from '../common/constants';
 import { analyzeKernelErrors } from './errorUtils';
 
 const taggers = [tagWithChildProcessExited, tagWithKernelRestarterFailed];
@@ -37,4 +38,8 @@ function tagWithKernelRestarterFailed(stdErrOrStackTrace: string, tags: string[]
     if (stdErrOrStackTrace.includes('KernelRestarter: restart failed'.toLowerCase())) {
         tags.push('KernelRestarter.failed');
     }
+}
+
+export function getExtensionSpecifcStack() {
+    return (new Error().stack || '').split('\n').filter((l) => l.includes(JVSC_EXTENSION_ID));
 }

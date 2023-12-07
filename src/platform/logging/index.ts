@@ -137,9 +137,25 @@ export function traceVerbose(message: string, ...args: Arguments): void {
         loggers.forEach((l) => l.traceVerbose(message, ...args));
     }
 }
-export function traceInfoIfCI(message: string, ...args: Arguments): void {
+export function traceInfoIfCI(msg: () => [message: string, ...args: string[]] | string): void;
+export function traceInfoIfCI(message: string, ...args: string[]): void;
+export function traceInfoIfCI(arg1: any, ...args: Arguments): void {
     if (isCI) {
-        traceInfo(message, ...args);
+        if (typeof arg1 === 'function') {
+            const fn: () => string | [message: string, ...args: string[]] = arg1;
+            const result = fn();
+            let message = '';
+            let rest: string[] = [];
+            if (typeof result === 'string') {
+                message = result;
+            } else {
+                message = result.shift()!;
+                rest = result;
+            }
+            traceInfo(message, ...rest);
+        } else {
+            traceInfo(arg1, ...args);
+        }
     }
 }
 

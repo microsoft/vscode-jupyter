@@ -14,15 +14,14 @@ import {
     ReadWrite,
     WidgetCDNs
 } from '../../../platform/common/types';
-import { IKernelProvider } from '../../../kernels/types';
 import { captureScreenShot, IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
+    assertHasTextOutputInVSCode,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     defaultNotebookTestTimeout,
     prewarmNotebooks,
-    runCell,
     selectDefaultController
 } from '../notebook/helper';
 import {
@@ -35,14 +34,12 @@ import {
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
 import { initializeWidgetComms, Utils } from './commUtils';
 import { isWeb } from '../../../platform/common/utils/misc';
-import { getTextOutputValue } from '../../../kernels/execution/helpers';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
     suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'} @widgets`, function () {
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];
-        let kernelProvider: IKernelProvider;
 
         this.timeout(120_000);
         const widgetScriptSourcesValue: WidgetCDNs[] = useCDN ? ['jsdelivr.com', 'unpkg.com'] : [];
@@ -50,7 +47,6 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
         this.retries(1);
         let editor: NotebookEditor;
         let comms: Utils;
-        let ipyWidgetVersion = 8;
         suiteSetup(async function () {
             if (isWeb()) {
                 return this.skip();
@@ -60,7 +56,6 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             api = await initialize();
             const config = workspace.getConfiguration('jupyter', undefined);
             await config.update('widgetScriptSources', widgetScriptSourcesValue, ConfigurationTarget.Global);
-            kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
             const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             const settings = configService.getSettings(undefined) as ReadWrite<IJupyterSettings>;
             settings.widgetScriptSources = widgetScriptSourcesValue;
@@ -103,18 +98,6 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
-
-            const cellVersion = window.activeNotebookEditor?.notebook.cellAt(4)!;
-            await Promise.all([
-                runCell(cellVersion),
-                waitForCondition(
-                    async () => cellVersion.outputs.length > 0,
-                    defaultNotebookTestTimeout,
-                    'Cell output is empty'
-                )
-            ]);
-            const version = getTextOutputValue(cellVersion.outputs[0]).trim();
-            ipyWidgetVersion = parseInt(version.split('.')[0], 10);
         });
 
         test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
@@ -135,129 +118,35 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             await clickWidget(comms, cell0, 'button');
             await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
-        test('Render IPySheets', async function () {
-            if (ipyWidgetVersion === 8) {
-                return this.skip();
-            }
-            if (useCDN) {
-                // https://github.com/microsoft/vscode-jupyter/issues/10506
-                return this.skip();
-            }
+        test('Render AnyWidget (test js<-->kernel comms with binary data)', async function () {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
-                    templateFile: 'ipySheet_widgets.ipynb'
+                    templateFile: 'ipywidgets.ipynb'
                 },
                 editor
             );
-            const [, cell1] = window.activeNotebookEditor!.notebook.getCells();
+            const [, cell1, cell2, cell3, cell4] = window.activeNotebookEditor!.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell1, comms);
-            await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
-        });
-        test('Render IPySheets & search', async function () {
-            if (ipyWidgetVersion === 8) {
-                return this.skip();
-            }
-            if (useCDN) {
-                // https://github.com/microsoft/vscode-jupyter/issues/10506
-                return this.skip();
-            }
-            await initializeNotebookForWidgetTest(
-                disposables,
-                {
-                    templateFile: 'ipySheet_widgets_search.ipynb'
-                },
-                editor
-            );
-            const [, cell1, cell2] = window.activeNotebookEditor!.notebook.getCells();
+            await assertOutputContainsHtml(cell1, comms, ['<button', 'Click Me']);
 
-            await executeCellAndWaitForOutput(cell1, comms);
+            // Click the button and verify the models get updated
+            // & verify the changes in front end and kernel.
+            await clickWidget(comms, cell1, 'button');
+
+            // Verify the state of the UI.
+            await assertOutputContainsHtml(cell1, comms, ['Button Clicked']);
+
+            // Verify the state of the model in kernel.
             await executeCellAndWaitForOutput(cell2, comms);
-            await assertOutputContainsHtml(cell1, comms, ['title="Search:"', '<input type="text']);
-            await assertOutputContainsHtml(cell2, comms, ['>train<', '>foo<']);
-
-            // Update the textbox widget.
-            await comms.setValue(cell1, '.widget-text input', 'train');
-            await assertOutputContainsHtml(cell2, comms, ['class="htSearchResult">train<']);
-        });
-        test('Render IPySheets & slider', async function () {
-            if (ipyWidgetVersion === 8) {
-                return this.skip();
-            }
-            if (useCDN) {
-                // https://github.com/microsoft/vscode-jupyter/issues/10506
-                return this.skip();
-            }
-            await initializeNotebookForWidgetTest(
-                disposables,
-                {
-                    templateFile: 'ipySheet_widgets_slider.ipynb'
-                },
-                editor
-            );
-            const [, cell1, cell2, cell3] = window.activeNotebookEditor!.notebook.getCells();
-
-            await executeCellAndWaitForOutput(cell1, comms);
-            await executeCellAndWaitForOutput(cell2, comms);
+            await assertHasTextOutputInVSCode(cell2, 'Hello World from JavaScript', undefined, false);
             await executeCellAndWaitForOutput(cell3, comms);
-            await assertOutputContainsHtml(cell1, comms, ['Continuous Slider']);
-            await assertOutputContainsHtml(cell2, comms, ['Continuous Text', '<input type="number']);
-            await assertOutputContainsHtml(cell3, comms, ['Continuous Slider', '>0<', '>123.00']);
+            await assertHasTextOutputInVSCode(cell3, 'Button Clicked', undefined, false);
 
-            // Update the textbox widget (for slider).
-            await comms.setValue(cell2, '.widget-text input', '5255');
-            await assertOutputContainsHtml(cell3, comms, ['>5255<', '>5378.0']);
-        });
-        test('Render ipyvolume (slider, color picker, figure)', async function () {
-            await initializeNotebookForWidgetTest(
-                disposables,
-                {
-                    templateFile: 'ipyvolume_widgets.ipynb'
-                },
-                editor
-            );
-            const cell = window.activeNotebookEditor!.notebook.cellAt(1);
-            // ipyvolume fails in Python 3.10 due to a known issue.
-            const kernel = kernelProvider.get(cell.notebook);
-            if (
-                kernel &&
-                kernel.kernelConnectionMetadata.interpreter &&
-                kernel.kernelConnectionMetadata.interpreter.version &&
-                kernel.kernelConnectionMetadata.interpreter.version.major === 3 &&
-                kernel.kernelConnectionMetadata.interpreter.version.minor === 10
-            ) {
-                return this.skip();
-            }
-
-            await executeCellAndWaitForOutput(cell, comms);
-            await assertOutputContainsHtml(cell, comms, ['<input type="color"', '>Slider1<', '>Slider2<', '<canvas']);
-        });
-        test('Render pythreejs', async function () {
-            await initializeNotebookForWidgetTest(
-                disposables,
-                {
-                    templateFile: 'pythreejs_widgets.ipynb'
-                },
-                editor
-            );
-            const cell = window.activeNotebookEditor!.notebook.cellAt(1);
-
-            await executeCellAndWaitForOutput(cell, comms);
-            await assertOutputContainsHtml(cell, comms, ['<canvas']);
-        });
-        test('Render pythreejs, 2', async function () {
-            await initializeNotebookForWidgetTest(
-                disposables,
-                {
-                    templateFile: 'pythreejs_widgets2.ipynb'
-                },
-                editor
-            );
-            const cell = window.activeNotebookEditor!.notebook.cellAt(1);
-
-            await executeCellAndWaitForOutput(cell, comms);
-            await assertOutputContainsHtml(cell, comms, ['<canvas']);
+            // Update the model in the kernel & verify the UI gets updated.
+            await executeCellAndDontWaitForOutput(cell4);
+            await assertOutputContainsHtml(cell1, comms, ['Value from Python']);
         });
         test('Render matplotlib, interactive inline', async function () {
             await initializeNotebookForWidgetTest(

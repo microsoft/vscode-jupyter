@@ -377,11 +377,19 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         while (this.pendingMessages.length) {
             try {
                 const message = this.pendingMessages[0];
+                // If we do not have a string, then its a binary message.
+                // This happens only when there are some array buffers (binary data) in the message.
+                // Thats why we need to first deserialize the binary into JSON.
                 const msg: KernelMessage.IMessage =
                     typeof message === 'string' ? JSON.parse(message) : this.deserialize(message);
+                // However the buffers can be DataViewers
+                // When sending to the kernel, we need to convert them to ArrayBuffer
                 if (msg.buffers?.length) {
                     msg.buffers = msg.buffers.map((buffer) => {
                         if (buffer instanceof DataView) {
+                            // The underlying buffer is an ArrayBuffer,
+                            // & thats what needs to be sent to the kernel.
+                            // One simple test is FileUpload widget.
                             return buffer.buffer;
                         }
                         return buffer;
