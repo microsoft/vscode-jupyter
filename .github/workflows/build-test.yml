@@ -76,7 +76,7 @@ jobs:
         run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
@@ -156,7 +156,7 @@ jobs:
         run: npm run format-check
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
@@ -386,7 +386,7 @@ jobs:
           echo "TAGS_NAME=${TAGSVAR//[^a-zA-Z]/_}" >> $GITHUB_ENV
 
       - name: Use Python ${{matrix.pythonVersion}}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         if: matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           python-version: ${{matrix.pythonVersion}}
@@ -807,7 +807,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{matrix.python}}
 
