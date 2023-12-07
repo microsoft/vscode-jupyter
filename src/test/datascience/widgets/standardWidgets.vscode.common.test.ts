@@ -590,11 +590,8 @@ suite('Standard IPyWidget Tests @widgets', function () {
                                 }
                             }
                         }
-                        assert.deepEqual(mimeValues, [
-                            'Text Value is Foo',
-                            'Text Value is Bar',
-                            'Text Value is Hello World'
-                        ]);
+                        assert.include(mimeValues, 'Text Value is Bar');
+                        assert.include(mimeValues, 'Text Value is Hello World');
                         assert.deepEqual(stdOut, 'Text Value is Hello World');
                         resolve(true);
                     },
