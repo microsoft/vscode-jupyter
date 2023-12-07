@@ -14,7 +14,7 @@
 - [ ] Disable [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283). (`...` menu > Settings > Processing of new requests: Disabled)
 - [ ] Create a PR to `main` with the following changes... (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
   - [ ] At this point, the vscode engine version should also be the same as in the release branch- will be bumped when the next release happens
-  - [ ] Bump the version number in `main` to the next monthly ("YYYY.M.100") version number (e.g. if the latest is `2022.2.100`, bump it to `2022.3.100`).
+  - [ ] Bump the version number in `main` to the next monthly ("YYYY.M.0") version number (e.g. if the latest is `2022.2.0`, bump it to `2022.3.0`).
     - [ ] Run `npm install` to update `package-lock.json`
 
 ## Monday (Debt/Release week)
@@ -93,8 +93,8 @@
 - [ ] Determine if a hotfix is needed
   - Use the same `release/release-YYYY.MM` branch
 - [ ] Ensure the version in package.json is updated as follows:
-  * If released version is `YYYY.MM.100`, then hot fix will be `YYYY.MM.110`
-  * If released version is `YYYY.MM.110`, then hot fix will be `YYYY.MM.120`
+  * If released version is `YYYY.MM.0`, then hot fix will be `YYYY.MM.1`
+  * If released version is `YYYY.MM.1`, then hot fix will be `YYYY.MM.2`
 - [ ] Verify all candidate issues
 - [ ] Sanity test release candidate VSIX against VS Code RC
   Tip: You can use the dev containers in the this repo for testing against linux (just open the repo and use thd command `Dev Containers: Reopen in Container`)
