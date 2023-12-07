@@ -38,6 +38,7 @@ import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { sleep } from '../../core';
 
 const templateRootPath: Uri =
     workspace.workspaceFolders && workspace.workspaceFolders.length > 0
@@ -553,9 +554,6 @@ suite('Standard IPyWidget Tests @widgets', function () {
             assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), `'Hello World'`);
         });
         test('Interactive Plot', async function () {
-            if (ipyWidgetVersion === 8) {
-                return this.skip();
-            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -570,17 +568,21 @@ suite('Standard IPyWidget Tests @widgets', function () {
             assert.strictEqual(cell.outputs.length, 4, 'Cell should have 4 outputs');
 
             // This cannot be displayed by output widget, hence we need to handle this.
-            assert.strictEqual(cell.outputs[1].items[0].mime, 'application/vnd.custom');
-            assert.strictEqual(Buffer.from(cell.outputs[1].items[0].data).toString(), 'Text Value is Foo');
-
-            assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), 'Text Value is Hello World');
-
-            // This cannot be displayed by output widget, hence we need to handle this.
-            assert.strictEqual(cell.outputs[3].items[0].mime, 'application/vnd.custom');
-            assert.strictEqual(
-                Buffer.from(cell.outputs[3].items[0].data).toString().trim(),
-                'Text Value is Hello World'
-            );
+            // One of the outputs if a custom mimetype.
+            let mimeValues = [];
+            let stdOut = '';
+            for (let output of cell.outputs) {
+                for (let item of output.items) {
+                    if (item.mime === 'application/vnd.custom') {
+                        mimeValues.push(Buffer.from(item.data).toString().trim();
+                    }
+                    if (item.mime === 'application/vnd.code.notebook.stdout') {
+                        stdOut = Buffer.from(item.data).toString().trim();
+                    }
+                }
+            }
+            assert.deepEqual(mimeValues, ['Text Value is Foo', 'Text Value is Hello World']);
+            assert.deepEqual(stdOut, 'Text Value is Hello World');
 
             // Wait for the second output to get updated.
             const outputUpdated = new Promise<boolean>((resolve) => {
@@ -590,9 +592,12 @@ suite('Standard IPyWidget Tests @widgets', function () {
                         if (!currentCellChange || !currentCellChange.outputs || currentCellChange.outputs.length < 4) {
                             return;
                         }
-                        const secondOutput = currentCellChange.outputs[1];
-                        if (Buffer.from(secondOutput.items[0].data).toString() === 'Text Value is Bar') {
-                            resolve(true);
+                        for (let output of cell.outputs) {
+                            for (let item of output.items) {
+                                if (Buffer.from(item.data).toString().trim() === 'Text Value is Bar') {
+                                    resolve(true);
+                                }
+                            }
                         }
                     },
                     undefined,
@@ -607,16 +612,21 @@ suite('Standard IPyWidget Tests @widgets', function () {
 
             // The first & second outputs should have been updated
             await assertOutputContainsHtml(cell, comms, ['Text Value is Bar']);
-            assert.strictEqual(cell.outputs[1].items[0].mime, 'application/vnd.custom');
-            assert.strictEqual(Buffer.from(cell.outputs[1].items[0].data).toString().trim(), 'Text Value is Bar');
 
-            // The last two should not have changed.
-            assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), 'Text Value is Hello World');
-            assert.strictEqual(cell.outputs[3].items[0].mime, 'application/vnd.custom');
-            assert.strictEqual(
-                Buffer.from(cell.outputs[3].items[0].data).toString().trim(),
-                'Text Value is Hello World'
-            );
+            mimeValues = [];
+            stdOut = '';
+            for (let output of cell.outputs) {
+                for (let item of output.items) {
+                    if (item.mime === 'application/vnd.custom') {
+                        mimeValues.push(Buffer.from(item.data).toString().trim();
+                    }
+                    if (item.mime === 'application/vnd.code.notebook.stdout') {
+                        stdOut = Buffer.from(item.data).toString().trim();
+                    }
+                }
+            }
+            assert.deepEqual(mimeValues, ['Text Value is Foo', 'Text Value is Bar', 'Text Value is Hello World']);
+            assert.deepEqual(stdOut, 'Text Value is Hello World');
         });
     });
 });
