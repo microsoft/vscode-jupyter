@@ -8,13 +8,10 @@ pythreejs
 ipywidgets
 anywidget
 ipysheet==0.5.0
-ipyvolume
 # beakerx This forces ipywidtets 7
 # beakerx_kernel_java This forces ipywidtets 7
 py4j
-bqplot
 K3D
-ipyleaflet
 matplotlib
 ipympl
 traitlets

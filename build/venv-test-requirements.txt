@@ -11,13 +11,10 @@ anywidget
 ipysheet==0.5.0
 jupyter_client
 pyzmq
-ipyvolume
 beakerx
 beakerx_kernel_java
 py4j
-bqplot
 K3D
-ipyleaflet
 jinja2
 matplotlib
 ipympl
