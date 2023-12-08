@@ -11,8 +11,7 @@ import type {
     Uri
 } from 'vscode';
 import type { Kernel } from '@jupyterlab/services/lib/kernel';
-import type { Session } from '@jupyterlab/services';
-import type { IDataViewerDataProvider } from './webviews/extension-side/dataviewer/types';
+import type { Contents, KernelSpec, Session, Terminal } from '@jupyterlab/services';
 
 declare module './api' {
     export interface Jupyter {
@@ -308,6 +307,15 @@ declare module './api' {
     export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
     export interface IExportedKernelService {
+        onDidChageServers: Event<void>;
+        readonly servers: readonly Pick<JupyterServer, 'id' | 'label'>[];
+        getServerManager(server: JupyterServer): Promise<{
+            sessionManager: Session.IManager;
+            kernelManager: Kernel.IManager;
+            kernelSpecManager: KernelSpec.IManager;
+            contentsManager: Contents.IManager;
+            terminalManager: Terminal.IManager;
+        }>;
         readonly status: 'discovering' | 'idle';
         /**
          * Changes in kernel state (e.g. discovered kernels, not discovering kernel, etc).
