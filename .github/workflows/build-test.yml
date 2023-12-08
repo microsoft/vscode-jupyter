@@ -531,6 +531,7 @@ jobs:
           python -c "import sys;print(sys.executable)"
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/venv-test-requirements.txt
+          python -m pip packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
           python -m ipykernel install --user
 
@@ -547,6 +548,7 @@ jobs:
           python -m pip install ipywidgets -U
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
+          python -m pip packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
           python -m pip install ipywidgets -U
           python -m ipykernel install --user
@@ -557,6 +559,7 @@ jobs:
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/conda-nonconda-test-requirements.txt
+          python -m pip packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
 
       #   - name: Install matplotlib widgets into user and system paths
