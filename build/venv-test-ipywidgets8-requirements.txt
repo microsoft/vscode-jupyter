@@ -4,7 +4,6 @@ pandas
 # Install jupyter itself so we end up with a kernel
 jupyter
 # List of requirements for conda environments that cannot be installed using conda
-
 pythreejs
 ipywidgets
 anywidget
