@@ -1,5 +1,4 @@
 # List of requirements for conda environments that cannot be installed using conda
-versioneer
 pythreejs
 # Pinned per ipywidget 8 support: https://github.com/microsoft/vscode-jupyter/issues/11598
 ipysheet==0.5.0

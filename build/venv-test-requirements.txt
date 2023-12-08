@@ -4,7 +4,6 @@ pandas
 # Install jupyter itself so we end up with a kernel
 jupyter
 # List of requirements for conda environments that cannot be installed using conda
-versioneer
 pythreejs
 # Pinned per ipywidget 8 support: https://github.com/microsoft/vscode-jupyter/issues/11598
 ipywidgets==7.7.2
