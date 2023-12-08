@@ -60,7 +60,7 @@ export class PlotSaveHandler implements IPlotSaveHandler {
         }
         const workspaceUri =
             (workspace.workspaceFolders?.length || 0) > 0 ? workspace.workspaceFolders![0].uri : undefined;
-        const fileName = `output.${imageExtension}`;
+        const fileName = `output`;
         const defaultUri = workspaceUri ? Uri.joinPath(workspaceUri, fileName) : Uri.file(fileName);
         return window.showSaveDialog({
             defaultUri,
