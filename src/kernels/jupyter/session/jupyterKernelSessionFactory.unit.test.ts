@@ -164,7 +164,7 @@ suite('New Jupyter Kernel Session Factory', () => {
             getRunningSessions: () => Promise.resolve([]),
             sessionManager: instance(sessionManager)
         } as unknown as JupyterLabHelper;
-        sinon.stub(JupyterLabHelper, 'create').callsFake(() => stub);
+        sinon.stub(JupyterLabHelper, 'get').callsFake(() => stub);
 
         factory = new JupyterKernelSessionFactory(
             instance(jupyterNotebookProvider),

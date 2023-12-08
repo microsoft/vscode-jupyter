@@ -332,7 +332,7 @@ async function shutdownRemoteKernels() {
     let sessionManager: JupyterLabHelper | undefined;
     try {
         const connection = await jupyterConnection.createConnectionInfo((await serverUriStorage.getAll())[0].provider);
-        sessionManager = JupyterLabHelper.create(connection.settings);
+        sessionManager = JupyterLabHelper.get(connection.settings);
         const liveKernels = await sessionManager.getRunningKernels();
         await Promise.all(
             liveKernels.filter((item) => item.id).map((item) => KernelAPI.shutdownKernel(item.id!).catch(noop))
@@ -341,7 +341,6 @@ async function shutdownRemoteKernels() {
         // ignore
     } finally {
         cancelToken.dispose();
-        await sessionManager?.dispose().catch(noop);
     }
 }
 export const MockNotebookDocuments: NotebookDocument[] = [];

@@ -350,7 +350,6 @@ export enum Telemetry {
      * An export to a specific format failed
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
-    StartedRemoteJupyterSessionWithBackingFile = 'DS_INTERNAL.JUPYTER_STARTED_SESSION_WITH_BACKING_FILE',
     ZMQSupport = 'DS_INTERNAL.JUPYTER_ZMQ_SUPPORT',
     ZMQSupportFailure = 'DS_INTERNAL.JUPYTER_ZMQ_SUPPORT_FAILURE',
     SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',

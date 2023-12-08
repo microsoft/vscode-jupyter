@@ -1,19 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type {
-    ContentsManager,
-    KernelSpecManager,
-    KernelManager,
-    ServerConnection,
-    Session,
-    SessionManager
-} from '@jupyterlab/services';
+import type { ServerConnection, Session, KernelSpec, Kernel } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
 import { Disposable } from 'vscode';
-import { traceError, traceVerbose } from '../../../platform/logging';
+import { traceError } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
@@ -24,16 +16,13 @@ import { dispose } from '../../../platform/common/utils/lifecycle';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec';
 import { noop } from '../../../platform/common/utils/misc';
+// eslint-disable-next-line import/no-restricted-paths
+import { getJupyterLabManager } from '../../../connection/remote/jupyterlabManagers';
 
 export class JupyterLabHelper {
-    public sessionManager: SessionManager;
-    public kernelSpecManager: KernelSpecManager;
-    public kernelManager: KernelManager;
-    public contentsManager: ContentsManager;
     private _jupyterlab?: typeof import('@jupyterlab/services');
-    private disposed?: boolean;
     public get isDisposed() {
-        return this.disposed === true;
+        return this.sessionManager.isDisposed || this.kernelManager.isDisposed;
     }
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
@@ -42,51 +31,21 @@ export class JupyterLabHelper {
         }
         return this._jupyterlab!;
     }
-    private constructor(private readonly serverSettings: ServerConnection.ISettings) {
-        this.kernelSpecManager = new this.jupyterlab.KernelSpecManager({ serverSettings: this.serverSettings });
-        this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings: this.serverSettings });
-        this.sessionManager = new this.jupyterlab.SessionManager({
-            serverSettings: this.serverSettings,
-            kernelManager: this.kernelManager
-        });
-        this.contentsManager = new this.jupyterlab.ContentsManager({ serverSettings: this.serverSettings });
+    private constructor(
+        public sessionManager: Session.IManager,
+        public kernelSpecManager: KernelSpec.IManager,
+        public kernelManager: Kernel.IManager,
+        private readonly serverSettings: ServerConnection.ISettings
+    ) {}
+    public static get(serverSettings: ServerConnection.ISettings) {
+        const manager = getJupyterLabManager(serverSettings);
+        return new JupyterLabHelper(
+            manager.sessionManager,
+            manager.kernelSpecManager,
+            manager.kernelManager,
+            manager.serverSettings
+        );
     }
-    public static create(serverSettings: ServerConnection.ISettings) {
-        return new JupyterLabHelper(serverSettings);
-    }
-
-    public async dispose() {
-        if (this.disposed) {
-            return;
-        }
-        this.disposed = true;
-        traceVerbose(`Disposing Jupyter Lab Helper`);
-        try {
-            if (this.contentsManager) {
-                traceVerbose('SessionManager - dispose contents manager');
-                this.contentsManager.dispose();
-            }
-            if (this.sessionManager && !this.sessionManager.isDisposed) {
-                traceVerbose('ShutdownSessionAndConnection - dispose session manager');
-                // Make sure it finishes startup.
-                await raceTimeout(10_000, this.sessionManager.ready);
-
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
-            }
-            if (!this.kernelManager?.isDisposed) {
-                this.kernelManager?.dispose();
-            }
-            if (!this.kernelSpecManager?.isDisposed) {
-                this.kernelSpecManager?.dispose();
-            }
-        } catch (e) {
-            traceError(`Exception on Jupyter Lab Helper shutdown: `, e);
-        } finally {
-            traceVerbose('Finished disposing Jupyter Lab Helper');
-        }
-    }
-
     public async getRunningSessions(): Promise<Session.IModel[]> {
         if (!this.sessionManager) {
             return [];
@@ -134,9 +93,6 @@ export class JupyterLabHelper {
     }
 
     public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {
-        if (!this.serverSettings || !this.sessionManager || !this.contentsManager) {
-            throw new SessionDisposedError();
-        }
         try {
             const stopWatch = new StopWatch();
             const specsManager = this.kernelSpecManager;

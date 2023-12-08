@@ -83,6 +83,9 @@ export function createPublicAPIProxy<T extends object>(target: T, membersToHide:
         }
     });
 }
+export function createPublicSealedAPIProxy<T extends object>(target: T, membersToHide: (keyof T)[]): T {
+    return Object.seal(Object.freeze(createPublicAPIProxy(target, membersToHide)));
+}
 
 export function stripCodicons(text: string | undefined) {
     if (!text) {

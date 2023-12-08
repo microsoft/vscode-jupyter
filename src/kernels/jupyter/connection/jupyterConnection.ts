@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { noop } from '../../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../../platform/errors/types';
 import { createJupyterConnectionInfo, handleExpiredCertsError, handleSelfCertsError } from '../jupyterUtils';
@@ -103,8 +102,11 @@ export class JupyterConnection {
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
-            sessionManager = JupyterLabHelper.create(connection.settings);
-            await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs()]);
+            const sessionManager = JupyterLabHelper.get(connection.settings);
+            await sessionManager.getRunningKernels();
+            console.error('Ok');
+            await sessionManager.getKernelSpecs();
+            console.error('Ok');
             // We should throw an exception if any of that fails.
         } catch (err) {
             if (JupyterSelfCertsError.isSelfCertsError(err)) {
@@ -128,9 +130,6 @@ export class JupyterConnection {
             }
         } finally {
             connection.dispose();
-            if (sessionManager) {
-                sessionManager.dispose().catch(noop);
-            }
         }
     }
 

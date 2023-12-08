@@ -37,7 +37,7 @@ import {
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
-import type { KernelSpecManager, SessionManager, KernelManager, ContentsManager, Session } from '@jupyterlab/services';
+import type { Session, KernelSpec, Kernel } from '@jupyterlab/services';
 import { JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { waitForIdleOnSession } from '../../common/helpers';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
@@ -96,9 +96,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
 
             await raceCancellationError(options.token, this.validateLocalKernelDependencies(options));
 
-            const sessionManager = JupyterLabHelper.create(connection.settings);
-            this.asyncDisposables.push(sessionManager);
-            disposablesIfAnyErrors.push(new Disposable(() => sessionManager.dispose().catch(noop)));
+            const sessionManager = JupyterLabHelper.get(connection.settings);
 
             await raceCancellationError(options.token, this.validateRemoteServer(options, sessionManager));
 
@@ -106,7 +104,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             // Hence Session managers should be disposed only if the corresponding session is shutdown.
             const session = await this.connectToOrCreateSession({
                 ...options,
-                contentsManager: sessionManager.contentsManager,
                 sessionManager: sessionManager.sessionManager,
                 kernelManager: sessionManager.kernelManager,
                 kernelSpecManager: sessionManager.kernelSpecManager,
@@ -130,7 +127,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             );
             const disposed = session.disposed;
             const onDidDisposeSession = () => {
-                sessionManager.dispose().catch(noop);
                 disposed.disconnect(onDidDisposeSession);
             };
             this.asyncDisposables.push({
@@ -227,10 +223,9 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         token: CancellationToken;
         idleTimeout: number;
         ui: IDisplayOptions;
-        kernelSpecManager: KernelSpecManager;
-        sessionManager: SessionManager;
-        kernelManager: KernelManager;
-        contentsManager: ContentsManager;
+        kernelSpecManager: KernelSpec.IManager;
+        sessionManager: Session.IManager;
+        kernelManager: Kernel.IManager;
     }) {
         if (options.token.isCancellationRequested) {
             throw new CancellationError();
@@ -300,9 +295,8 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         kernelConnection: KernelConnectionMetadata;
         token: CancellationToken;
         idleTimeout: number;
-        sessionManager: SessionManager;
-        kernelSpecManager?: KernelSpecManager;
-        contentsManager: ContentsManager;
+        sessionManager: Session.IManager;
+        kernelSpecManager?: KernelSpec.IManager;
         ui: IDisplayOptions;
     }): Promise<Session.ISessionConnection> {
         const remoteSessionOptions = getRemoteSessionOptions(options.connection, options.resource);

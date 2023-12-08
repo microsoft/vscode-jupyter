@@ -55,7 +55,9 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
             this.thirdPartyKernelProvider,
             this.disposables,
             this.controllerRegistration,
-            this.serviceContainer
+            this.serviceContainer,
+            this.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry),
+            this.serviceContainer.get<JupyterConnection>(JupyterConnection)
         );
         this.extensionApi.set(accessInfo.extensionId, service);
         return service;
@@ -96,6 +98,25 @@ class JupyterKernelService implements IExportedKernelService {
         return this._onDidChangeStatus.event;
     }
 
+    private static readonly wrappedKernelConnections = new WeakMap<IBaseKernel, IKernelConnectionInfo>();
+    private readonly mapOfServers = new WeakMap<JupyterServerCollection, JupyterServer[]>();
+    private readonly _onDidChangeServers = new EventEmitter<void>();
+    public readonly onDidChageServers = this._onDidChangeServers.event;
+    public get servers(): readonly Pick<JupyterServer, 'id' | 'label'>[] {
+        const servers: JupyterServer[] = [];
+        this.jupyterServerProviders.jupyterCollections.forEach((collection) => {
+            if (this.mapOfServers.has(collection)) {
+                servers.push(...(this.mapOfServers.get(collection) ?? []));
+            }
+        });
+
+        return [this.localServer, ...servers];
+    }
+
+    private readonly localServer: JupyterServer = {
+        id: 'local',
+        label: 'My Compute'
+    };
     constructor(
         private readonly callingExtensionId: string,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
@@ -103,8 +124,43 @@ class JupyterKernelService implements IExportedKernelService {
         @inject(IThirdPartyKernelProvider) private readonly thirdPartyKernelProvider: IThirdPartyKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IJupyterServerProviderRegistry) private jupyterServerProviders: IJupyterServerProviderRegistry,
+        @inject(JupyterConnection) private readonly connection: JupyterConnection
     ) {
+        this.jupyterServerProviders.onDidChangeCollections(() => {
+            this._onDidChangeServers.fire();
+        });
+        const token = new CancellationTokenSource();
+        const buildServersForCollection = (collection: JupyterServerCollection) => {
+            Promise.resolve(collection.serverProvider.provideJupyterServers(token.token))
+                .then((servers) => {
+                    if (!Array.isArray(servers)) {
+                        return;
+                    }
+                    const collectionServers = servers.map((server) => {
+                        return {
+                            id: `${collection.extensionId}#${collection.id}#${server.id}`,
+                            label: server.label
+                        };
+                    });
+                    this.mapOfServers.set(collection, collectionServers);
+                    this._onDidChangeServers.fire();
+                })
+                .catch((ex) => traceError(`Failed to get servers for ${collection.extensionId}#${collection.id}`, ex));
+        };
+        this.jupyterServerProviders.jupyterCollections.forEach((collection) => {
+            buildServersForCollection(collection);
+            if (collection.serverProvider.onDidChangeServers) {
+                collection.serverProvider.onDidChangeServers(
+                    () => {
+                        buildServersForCollection(collection);
+                    },
+                    this,
+                    this.disposables
+                );
+            }
+        });
         this._status = this.kernelFinder.status;
         this.kernelFinder.onDidChangeStatus(
             () => {
@@ -163,6 +219,54 @@ class JupyterKernelService implements IExportedKernelService {
             disposables
         );
         this.controllerRegistration.onDidChange(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
+    }
+    private readonly previouslySentObjects = new WeakMap<Object, Object>();
+    private kernelSpecManager: KernelSpec.IManager;
+    private kernelManager: Kernel.IManager;
+    private sessionManager: Session.IManager;
+
+    async getServerManager(server: JupyterServer): Promise<{
+        sessionManager: Session.IManager;
+        kernelManager: Kernel.IManager;
+        kernelSpecManager: KernelSpec.IManager;
+        contentsManager: Contents.IManager;
+        terminalManager: Terminal.IManager;
+    }> {
+        if (server === this.localServer) {
+            this.kernelSpecManager = this.kernelSpecManager ?? new LocalkernelsApiAdapter(this.kernelFinder);
+            this.kernelManager = this.kernelManager ?? new LocalKernelManagerAdapter();
+            this.sessionManager = this.sessionManager ?? new SessionManager(this.kernelProvider);
+            return {
+                contentsManager: {},
+                kernelManager: this.kernelManager,
+                kernelSpecManager: this.kernelSpecManager,
+                sessionManager: this.sessionManager,
+                terminalManager: {}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any;
+        }
+        const [extensionId, collectionId, serverId] = server.id.split('#');
+        const connection = await this.connection.createConnectionInfo({
+            extensionId,
+            id: collectionId,
+            handle: serverId
+        });
+        const manager = getJupyterLabManager(connection.settings);
+        const keys = ['sessionManager', 'kernelManager', 'kernelSpecManager', 'terminalManager', 'contentsManager'];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const managerToSend: Omit<typeof manager, 'serverSettings'> = {} as any;
+        keys.forEach((k) => {
+            const key = k as keyof Omit<typeof manager, 'serverSettings'>;
+            const value = manager[key];
+            let previouslySentObject = this.previouslySentObjects.get(value) as typeof value;
+            if (!previouslySentObject) {
+                previouslySentObject = value;
+                this.previouslySentObjects.set(value, previouslySentObject);
+            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            managerToSend[key] = previouslySentObject as any;
+        });
+        return managerToSend;
     }
     async getKernelSpecifications(): Promise<KernelConnectionMetadata[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {

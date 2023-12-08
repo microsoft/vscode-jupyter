@@ -331,8 +331,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
     public async listKernelsFromConnection(connInfo: IJupyterConnection): Promise<RemoteKernelConnectionMetadata[]> {
         const disposables: IAsyncDisposable[] = [];
         try {
-            const sessionManager = JupyterLabHelper.create(connInfo.settings);
-            disposables.push(sessionManager);
+            const sessionManager = JupyterLabHelper.get(connInfo.settings);
 
             // Get running and specs at the same time
             const [running, specs, sessions, serverId] = await Promise.all([
