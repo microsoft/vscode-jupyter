@@ -2263,7 +2263,6 @@
         "format": "prettier --write *.js *.json 'src/**/*.ts*' 'build/**/*.js' '.github/**/*.yml' 'build/**/*.yml' 'build/**/*.ts' 'build/**/*.json' gulpfile.js",
         "format-check": "prettier --check *.js *.json 'src/**/*.ts*' 'build/**/*.js' '.github/**/*.yml' 'build/**/*.yml' 'build/**/*.ts' 'build/**/*.json' gulpfile.js",
         "clean": "gulp clean",
-        "updateBuildNumber": "gulp updateBuildNumber",
         "webpack": "webpack",
         "download-api": "npx vscode-dts dev",
         "postdownload-api": "npx vscode-dts main",
