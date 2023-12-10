@@ -209,7 +209,8 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         // Cell also have to support python
         const cell = notebook?.getCells().find((c) => c.document.uri.toString() === uri.toString());
 
-        return interpreterId == notebookId && (!cell || cell.document.languageId === 'python');
+        const shouldAllow = interpreterId == notebookId && cell?.document.languageId === 'python';
+        return shouldAllow;
     }
 
     private getNotebookHeader(uri: Uri) {
