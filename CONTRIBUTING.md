@@ -39,8 +39,6 @@ source .venv/bin/activate
 .venv\Scripts\activate
 # The Python code in the extension is formatted using Black.
 python -m pip install black
-# The Python code required in the extension
-python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
 ```
 
 ### Incremental Build
@@ -111,7 +109,7 @@ Note: Integration tests are those in files with extension `*.vscode.test*.ts`.
 
 1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Some of the tests require specific virtual environments. Run the 'src/test/datascience/setupTestEnvs.cmd` (or equivalent) to create them.
-1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally by using the `./requirements.txt` and `build/test-requirements.txt` files
+1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally by using the `build/test-requirements.txt` file
 1. Run the tests via `npm run` or the Debugger launch options (you can "Start Without Debugging").
 
 You can also run the tests from the command-line (after compiling):
@@ -307,7 +305,6 @@ Steps to build the extension on your machine once you've cloned the repo:
 > npm install -g @vscode/vsce
 # Perform the next steps in the vscode-jupyter folder.
 > npm ci
-> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt --no-user
 > npm run clean
 > npm run package # This step takes around 10 minutes.
 ```
