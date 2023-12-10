@@ -10,9 +10,9 @@ import { commands } from 'vscode';
 export class ExposeUsedAzMLServerHandles implements IExtensionSyncActivationService {
     constructor(@inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage) {}
     activate(): void {
-        commands.registerCommand('jupyter.getUsedAzMLServerHandles', async () => {
+        commands.registerCommand('jupyter.getUsedAzMLServerHandles', () => {
             const usedItems: { id: string; handle: string }[] = [];
-            const items = await this.uriStorage.getAll();
+            const items = this.uriStorage.all;
             items.forEach((item) => {
                 if (item.provider.extensionId.toLowerCase() === 'ms-toolsai.vscode-ai'.toLowerCase()) {
                     usedItems.push(item.provider);

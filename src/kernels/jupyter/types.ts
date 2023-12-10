@@ -163,10 +163,6 @@ export interface IJupyterServerUriStorage {
      * Updates MRU list marking this server as the most recently used.
      */
     update(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
-    /**
-     * @deprecated Use `all` and `onDidLoad` instead.
-     */
-    getAll(): Promise<IJupyterServerUriEntry[]>;
     remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
     add(serverProviderHandle: JupyterServerProviderHandle, options?: { time: number }): Promise<void>;

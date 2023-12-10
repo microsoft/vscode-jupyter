@@ -331,7 +331,7 @@ async function shutdownRemoteKernels() {
     const cancelToken = new CancellationTokenSource();
     let sessionManager: JupyterLabHelper | undefined;
     try {
-        const connection = await jupyterConnection.createConnectionInfo((await serverUriStorage.getAll())[0].provider);
+        const connection = await jupyterConnection.createConnectionInfo(serverUriStorage.all[0].provider);
         sessionManager = JupyterLabHelper.create(connection.settings);
         const liveKernels = await sessionManager.getRunningKernels();
         await Promise.all(
