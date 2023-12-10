@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { ExtensionMode, Uri, commands, window, workspace } from 'vscode';
-import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
+import { CodespacesJupyterServerSelector } from '../../codespaces/codeSpacesServerSelector';
 import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
-import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
+import { CodespaceExtensionId, isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { IDisposable, IExtensionContext, IExtensions } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
@@ -21,8 +21,8 @@ import {
     JupyterServerProvider
 } from '../../api';
 import { stripCodicons } from '../../platform/common/helpers';
-import { jupyterServerUriToCollection } from '../../kernels/jupyter/connection/jupyterServerProviderRegistry';
 import { getKernelsApi } from '../../kernels/api/api';
+import { jupyterServerUriToCollection } from '../../codespaces';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -136,6 +136,9 @@ export function buildApi(
             const extensionId = provider.id.startsWith('_builtin')
                 ? JVSC_EXTENSION_ID
                 : extensions.determineExtensionFromCallStack().extensionId;
+            if (extensionId.toLowerCase() != CodespaceExtensionId.toLowerCase()) {
+                throw new Error('Deprecated API');
+            }
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: extensionId,
                 pemUsed: 'registerRemoteServerProvider'
@@ -170,12 +173,15 @@ export function buildApi(
                 'The API addRemoteJupyterServer has being deprecated and will be removed soon, please use createJupyterServerCollection.'
             );
             const extensionId = extensions.determineExtensionFromCallStack().extensionId;
+            if (extensionId.toLowerCase() != CodespaceExtensionId.toLowerCase()) {
+                throw new Error('Deprecated API');
+            }
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: extensionId,
                 pemUsed: 'addRemoteJupyterServer'
             });
 
-            const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
+            const selector = serviceContainer.get<CodespacesJupyterServerSelector>(CodespacesJupyterServerSelector);
 
             const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
             const controllerCreatedPromise = waitForNotebookControllersCreationForServer(

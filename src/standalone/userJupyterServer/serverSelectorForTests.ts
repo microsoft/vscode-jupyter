@@ -5,8 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri, commands } from 'vscode';
 import { JVSC_EXTENSION_ID, TestingKernelPickerProviderId } from '../../platform/common/constants';
 import { traceInfo } from '../../platform/logging';
-import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
-import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
+import { IJupyterServerProviderRegistry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { computeHash } from '../../platform/common/crypto';
 import { JupyterServer, JupyterServerProvider } from '../../api';
@@ -26,9 +25,9 @@ export class JupyterServerSelectorCommand
     public readonly id = TestingKernelPickerProviderId;
     public readonly displayName = 'Jupyter Server for Testing';
     constructor(
-        @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(IJupyterServerProviderRegistry)
-        private readonly uriProviderRegistration: IJupyterServerProviderRegistry
+        private readonly uriProviderRegistration: IJupyterServerProviderRegistry,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         super();
     }
@@ -67,7 +66,7 @@ export class JupyterServerSelectorCommand
         };
         this.handleMappings.set(handle, { uri: source, server: serverUri });
         // Set the uri directly
-        await this.serverSelector.addJupyterServer({ id: this.id, handle, extensionId: JVSC_EXTENSION_ID });
+        await this.serverUriStorage.add({ id: this.id, handle, extensionId: JVSC_EXTENSION_ID });
         this._onDidChangeHandles.fire();
     }
 }
