@@ -34,13 +34,7 @@ export namespace HelpLinks {
 }
 
 export namespace Settings {
-    export const JupyterServerLocalLaunch = 'local';
-    export const JupyterServerRemoteLaunch = 'remote';
-    export const JupyterServerUriList = 'jupyter.jupyterServer.uriList';
-    export const JupyterServerRemoteLaunchUriListKey = 'remote-uri-list';
-    export const JupyterServerRemoteLaunchUriSeparator = '\r';
     export const JupyterServerRemoteLaunchNameSeparator = '\n';
-    export const JupyterServerRemoteLaunchUriEqualsDisplayName = 'same';
     export const JupyterServerRemoteLaunchService = JVSC_EXTENSION_ID;
     export const JupyterServerUriListMax = 10;
     // If this timeout expires, ignore the completion request sent to Jupyter.
@@ -76,7 +70,6 @@ export function setUnitTestExecution(enabled: boolean) {
 
 export namespace Identifiers {
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
-    export const RawPurpose = 'raw';
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const MatplotLibFigureFormats = '_VSCode_matplotLib_FigureFormats';
     export const DefaultCodeCellMarker = '# %%';
