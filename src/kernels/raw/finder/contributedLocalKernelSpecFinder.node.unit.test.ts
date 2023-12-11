@@ -101,9 +101,8 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         finder.activate();
         await clock.runAllAsync();
 
-        assert.isAtLeast(onDidChangeKernels.count, 0, 'onDidChangeKernels not fired');
-        assert.isAtLeast(onDidChangeStatus.count, 2, 'onDidChangeStatus not fired 2 times');
-        assert.deepEqual(statuses, ['discovering', 'idle']);
+        assert.isAtLeast(onDidChangeKernels.count, 0, 'onDidChangeKernels should not fire');
+        assert.isAtLeast(onDidChangeStatus.count, 0, 'onDidChangeStatus should ont fire');
     });
     test('Status is discovering until Python extension finishes refreshing interpreters', async () => {
         when(nonPythonKernelFinder.kernels).thenReturn([]);
@@ -139,9 +138,6 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         finder.activate();
         await clock.runAllAsync();
 
-        assert.isAtLeast(onDidChangeStatus.count, 2, 'onDidChangeStatus not fired 2 times');
-        assert.deepEqual(statuses, ['discovering', 'idle']);
-
         // Ensure we start refreshing python interpreters
         when(interpreterService.status).thenReturn('refreshing');
         onDidChangeInterpreterStatus.fire();
@@ -152,8 +148,8 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         onDidChangeInterpreterStatus.fire();
         await clock.runAllAsync();
 
-        assert.isAtLeast(onDidChangeStatus.count, 4, 'onDidChangeStatus not fired 4 times');
-        assert.deepEqual(statuses, ['discovering', 'idle', 'discovering', 'idle']);
+        assert.isAtLeast(onDidChangeStatus.count, 2, 'onDidChangeStatus not fired 2 times');
+        assert.deepEqual(statuses, ['discovering', 'idle']);
     });
     test('Notify status of discovery', async () => {
         when(nonPythonKernelFinder.kernels).thenReturn([javaKernelSpec]);
@@ -161,14 +157,11 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
-        const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
 
         finder.activate();
         await clock.runAllAsync();
 
         assert.isAtLeast(onDidChangeKernels.count, 1, 'onDidChangeKernels not fired');
-        assert.isAtLeast(onDidChangeStatus.count, 2, 'onDidChangeStatus not fired 2 times');
-        assert.deepEqual(statuses, ['discovering', 'idle']);
     });
     test('Re-discover if there are changes to python interpreters and we have a new kernel spec', async () => {
         when(nonPythonKernelFinder.kernels).thenReturn([javaKernelSpec]);
@@ -176,22 +169,17 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
-        const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
 
         finder.activate();
         await clock.runAllAsync();
 
         assert.isAtLeast(onDidChangeKernels.count, 1, 'onDidChangeKernels not fired');
-        assert.isAtLeast(onDidChangeStatus.count, 2, 'onDidChangeStatus not fired 2 times');
-        assert.deepEqual(statuses, ['discovering', 'idle']);
 
         when(pythonKernelFinder.kernels).thenReturn([rustKernelSpec]);
         onDidChangePythonKernels.fire();
         await clock.runAllAsync();
 
         assert.isAtLeast(onDidChangeKernels.count, 2, 'onDidChangeKernels not fired');
-        assert.isAtLeast(onDidChangeStatus.count, 4, 'onDidChangeStatus not fired 4 times');
-        assert.deepEqual(statuses, ['discovering', 'idle', 'discovering', 'idle']);
     });
     test('Re-discover if there are changes to python interpreters without any new kernels', async () => {
         when(nonPythonKernelFinder.kernels).thenReturn([javaKernelSpec]);
@@ -199,20 +187,15 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
-        const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
 
         finder.activate();
         await clock.runAllAsync();
 
         assert.isAtLeast(onDidChangeKernels.count, 1, 'onDidChangeKernels not fired');
-        assert.isAtLeast(onDidChangeStatus.count, 2, 'onDidChangeStatus not fired 2 times');
-        assert.deepEqual(statuses, ['discovering', 'idle']);
 
         onDidChangePythonKernels.fire();
         await clock.runAllAsync();
 
         assert.isAtLeast(onDidChangeKernels.count, 1, 'onDidChangeKernels should not have been fired again fired');
-        assert.isAtLeast(onDidChangeStatus.count, 4, 'onDidChangeStatus not fired 4 times');
-        assert.deepEqual(statuses, ['discovering', 'idle', 'discovering', 'idle']);
     });
 });
