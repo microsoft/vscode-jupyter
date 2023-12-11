@@ -287,6 +287,8 @@ export class KernelProcess implements IKernelProcess {
                 if (cancelToken.isCancellationRequested || deferred.rejected) {
                     return;
                 }
+                console.error('ex');
+                console.error(ex);
                 // Do not throw an error, ignore this.
                 // In the case of VPNs the port does not seem to get used.
                 // Possible we're blocking it.
@@ -322,6 +324,7 @@ export class KernelProcess implements IKernelProcess {
                 // If we have the python error message in std outputs, display that.
                 const errorMessage = getErrorMessageFromPythonTraceback(stdErrToLog) || stdErrToLog.substring(0, 100);
                 traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderrProc + '\n' + stderr + '\n');
+                console.error(`KernelDiedError raised`, e);
                 throw new KernelDiedError(
                     DataScience.kernelDied(errorMessage),
                     // Include what ever we have as the stderr.
