@@ -10,7 +10,5 @@ anywidget
 ipysheet==0.5.0
 beakerx
 beakerx_kernel_java
-K3D
-jinja2
 matplotlib
 ipympl
