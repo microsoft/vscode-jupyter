@@ -20,7 +20,7 @@ import {
 import { IKernelConnection, IKernelProcess } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { Cancellation, isCancellationError } from '../../../platform/common/cancellation';
+import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
@@ -36,12 +36,18 @@ import {
 } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
-import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
+import {
+    Resource,
+    IOutputChannel,
+    IJupyterSettings,
+    IExperimentService,
+    Experiments
+} from '../../../platform/common/types';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../errors/kernelDiedError';
-// import { KernelPortNotUsedTimeoutError } from '../../errors/kernelPortNotUsedTimeoutError';
+import { KernelPortNotUsedTimeoutError } from '../../errors/kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { Interrupter, PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
@@ -54,6 +60,7 @@ import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { ServiceContainer } from '../../../platform/ioc/container';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -143,7 +150,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     @capturePerfTelemetry(Telemetry.RawKernelProcessLaunch)
-    public async launch(workingDirectory: string, _timeout: number, cancelToken: CancellationToken): Promise<void> {
+    public async launch(workingDirectory: string, timeout: number, cancelToken: CancellationToken): Promise<void> {
         if (this.launchedOnce) {
             throw new Error('Kernel has already been launched.');
         }
@@ -251,24 +258,41 @@ export class KernelProcess implements IKernelProcess {
             if (deferred.rejected) {
                 await deferred.promise;
             }
-            // const tcpPortUsed = (await import('tcp-port-used')).default;
+            const doNotWaitForZmqPortsToGetused = ServiceContainer.instance
+                .get<IExperimentService>(IExperimentService)
+                .inExperiment(Experiments.DoNotWaitForZmqPortsToBeUsed);
+
+            const tcpPortUsed = (await import('tcp-port-used')).default;
             const stopwtach = new StopWatch();
+
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
             // Kernel must be connected to bo Shell & IoPub channels for kernel communication to work.
-            // const portsUsed = Promise.all([
-            //     tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
-            //     tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
-            // ]).catch((ex) => {
-            //     if (cancelToken.isCancellationRequested || deferred.rejected) {
-            //         return;
-            //     }
-            //     traceError(`waitUntilUsed timed out`, ex);
-            //     // Throw an error we recognize.
-            //     // return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
-            // });
-            console.error(`Waited ${stopwtach.elapsedTime}ms for kernel to start`);
-            // await raceCancellationError(cancelToken, deferred.promise);
+
+            // Default timeout is generally 15s.
+            // For the experiment, lets wait for 15s for the kernel to start.
+            if (doNotWaitForZmqPortsToGetused && timeout > 15_000) {
+                timeout = 15_000;
+            }
+            const portsUsed = Promise.all([
+                tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
+                tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
+            ]).catch((ex) => {
+                if (cancelToken.isCancellationRequested || deferred.rejected) {
+                    return;
+                }
+                // Do not throw an error, ignore this.
+                // In the case of VPNs the port does not seem to get used.
+                // Possible we're blocking it.
+                traceWarning(`Waited ${stopwtach.elapsedTime}ms for kernel to start`, ex);
+
+                // For the new experiment, we don't want to throw an error if the kernel doesn't start.
+                if (!doNotWaitForZmqPortsToGetused) {
+                    // Throw an error we recognize.
+                    return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
+                }
+            });
+            await raceCancellationError(cancelToken, portsUsed, deferred.promise);
         } catch (e) {
             const stdErrToLog = (stderrProc || stderr || '').trim();
             if (!cancelToken?.isCancellationRequested && !isCancellationError(e)) {

@@ -122,6 +122,12 @@ export class ExperimentService implements IExperimentService {
         ) {
             return true;
         }
+        if (
+            experiment === ExperimentGroups.DoNotWaitForZmqPortsToBeUsed &&
+            (getVSCodeChannel() === 'insiders' || isPreReleaseVersion())
+        ) {
+            return true;
+        }
 
         // If getTreatmentVariable returns undefined,
         // it means that the value for this experiment was not found on the server.
@@ -205,6 +211,13 @@ export class ExperimentService implements IExperimentService {
             (getVSCodeChannel() === 'insiders' || isPreReleaseVersion())
         ) {
             traceInfo(Experiments.inGroup(ExperimentGroups.KernelCompletions));
+        }
+        if (
+            experimentsDisabled &&
+            !enabledExperiments.has(ExperimentGroups.DoNotWaitForZmqPortsToBeUsed) &&
+            (getVSCodeChannel() === 'insiders' || isPreReleaseVersion())
+        ) {
+            traceInfo(Experiments.inGroup(ExperimentGroups.DoNotWaitForZmqPortsToBeUsed));
         }
 
         if (!experimentsDisabled) {
