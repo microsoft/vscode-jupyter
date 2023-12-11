@@ -43,7 +43,6 @@ export class LocalKnownPathKernelSpecFinder
         super(fs, extensionChecker, memento, disposables, env, jupyterPaths);
     }
     activate(): void {
-        console.error('Activate');
         this.listKernelsFirstTimeFromMemento(localKernelSpecsCacheKey())
             .then((kernels) => {
                 // If we found kernels even before the cache was restored, then ignore the cached data.
@@ -113,7 +112,6 @@ export class LocalKnownPathKernelSpecFinder
             return newKernelSpecs;
         };
         const promise = fn();
-        console.error('^Yes');
         this.promiseMonitor.push(promise);
         return promise;
     }
