@@ -159,16 +159,6 @@ gulp.task('checkNpmDependencies', (done) => {
     done();
 });
 
-gulp.task('installPythonLibs', async () => {
-    const output = spawnSync(
-        'python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt'
-    );
-    if (output.error) {
-        console.error(output.stderr);
-        throw output.error;
-    }
-});
-
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
