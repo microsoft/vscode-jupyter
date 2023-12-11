@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
@@ -22,6 +22,23 @@ type PendingMessage = {
     resultPromise: Deferred<void>;
     startTime: number;
 };
+
+const kernelCommTargets = new WeakMap<
+    Kernel.IKernelConnection,
+    { targets: Set<string>; registerCommTarget: (targetName: string) => void }
+>();
+
+export function registerCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelConnection, targetName: string) {
+    const targets = kernelCommTargets.get(kernel);
+    if (targets) {
+        targets.targets.add(targetName);
+        targets.registerCommTarget(targetName);
+    }
+}
+
+export function remoteCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelConnection, targetName: string) {
+    kernelCommTargets.get(kernel)?.targets?.delete?.(targetName);
+}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
@@ -220,6 +237,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             return;
         }
 
+        if (!kernelCommTargets.has(kernel.session.kernel)) {
+            kernelCommTargets.set(kernel.session.kernel, {
+                targets: new Set<string>(),
+                registerCommTarget: (targetName: string) => {
+                    this.raisePostMessage(IPyWidgetMessages.IPyWidgets_registerCommTarget, targetName);
+                }
+            });
+        }
+
         this.kernelWasConnectedAtLeastOnce = true;
         const kernelId = kernel.session.kernel?.id;
         const newSocket = kernelId ? KernelSocketMap.get(kernelId) : undefined;
@@ -376,7 +402,25 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         while (this.pendingMessages.length) {
             try {
-                const msg = JSON.parse(this.pendingMessages[0]) as KernelMessage.IMessage;
+                const message = this.pendingMessages[0];
+                // If we do not have a string, then its a binary message.
+                // This happens only when there are some array buffers (binary data) in the message.
+                // Thats why we need to first deserialize the binary into JSON.
+                const msg: KernelMessage.IMessage =
+                    typeof message === 'string' ? JSON.parse(message) : this.deserialize(message);
+                // However the buffers can be DataViewers
+                // When sending to the kernel, we need to convert them to ArrayBuffer
+                if (msg.buffers?.length) {
+                    msg.buffers = msg.buffers.map((buffer) => {
+                        if (buffer instanceof DataView) {
+                            // The underlying buffer is an ArrayBuffer,
+                            // & thats what needs to be sent to the kernel.
+                            // One simple test is FileUpload widget.
+                            return buffer.buffer;
+                        }
+                        return buffer;
+                    });
+                }
                 if (msg.channel === 'control') {
                     this.kernel.session.kernel!.sendControlMessage(msg as unknown as KernelMessage.IControlMessage);
                 } else {
@@ -412,8 +456,12 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             // Skip the predefined target. It should have been registered
             // inside the kernel on startup. However we
             // still need to track it here.
-            if (targetName !== Identifiers.DefaultCommTarget) {
-                kernel.session?.kernel?.registerCommTarget(targetName, noop);
+            if (
+                kernel.session?.kernel &&
+                targetName !== Identifiers.DefaultCommTarget &&
+                !kernelCommTargets.get(kernel.session.kernel)?.targets?.has(targetName)
+            ) {
+                kernel.session.kernel.registerCommTarget(targetName, noop);
             }
         }
     }

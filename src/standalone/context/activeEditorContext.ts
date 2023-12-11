@@ -156,7 +156,9 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
                 ? this.kernelProvider.get(activeEditor.notebook)
                 : undefined;
         if (kernel) {
-            const canStart = kernel.status !== 'unknown';
+            const executionService = this.kernelProvider.getKernelExecution(kernel);
+            const canStart =
+                kernel.status !== 'unknown' || executionService.executionCount > 0 || kernel.startedAtLeastOnce;
             this.canRestartNotebookKernelContext.set(!!canStart).catch(noop);
             const canInterrupt = kernel.status === 'busy';
             this.canInterruptNotebookKernelContext.set(!!canInterrupt).catch(noop);

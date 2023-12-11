@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2024.1.100",
+    "version": "2024.1.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.85.0"
+        "vscode": "^1.86.0"
     },
     "l10n": "./l10n",
     "extensionKind": [
@@ -1255,13 +1255,13 @@
                     "command": "jupyter.exportfileasnotebook",
                     "title": "%jupyter.command.jupyter.exportfileasnotebook.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.hascodecells && jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
+                    "when": "jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.exportfileandoutputasnotebook",
                     "title": "%jupyter.command.jupyter.exportfileandoutputasnotebook.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.hascodecells && jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
+                    "when": "jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.restartkernel",
@@ -1498,7 +1498,8 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "KernelCompletions"
+                            "KernelCompletions",
+                            "DoNotWaitForZmqPortsToBeUsed"
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
@@ -1509,7 +1510,8 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "KernelCompletions"
+                            "KernelCompletions",
+                            "DoNotWaitForZmqPortsToBeUsed"
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
@@ -2243,7 +2245,6 @@
         "esbuild-watch": "npx tsx build/esbuild/build.ts --watch",
         "checkDependencies": "gulp checkDependencies",
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js",
-        "installPythonLibs": "gulp installPythonLibs",
         "test:unittests": "mocha --config ./build/.mocha.unittests.js.json ./out/**/*.unit.test.js",
         "test:cover:report": "nyc report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "preTestJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js",
@@ -2263,7 +2264,6 @@
         "format": "prettier --write *.js *.json 'src/**/*.ts*' 'build/**/*.js' '.github/**/*.yml' 'build/**/*.yml' 'build/**/*.ts' 'build/**/*.json' gulpfile.js",
         "format-check": "prettier --check *.js *.json 'src/**/*.ts*' 'build/**/*.js' '.github/**/*.yml' 'build/**/*.yml' 'build/**/*.ts' 'build/**/*.json' gulpfile.js",
         "clean": "gulp clean",
-        "updateBuildNumber": "gulp updateBuildNumber",
         "webpack": "webpack",
         "download-api": "npx vscode-dts dev",
         "postdownload-api": "npx vscode-dts main",

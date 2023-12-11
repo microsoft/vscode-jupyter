@@ -161,26 +161,19 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
               )
             : Promise.resolve([]);
         const handledServerIds = new Set<string>();
-        const [jupyterServers] = await Promise.all([
-            serversPromise,
-            Promise.all(
-                servers
-                    .filter((s) => s.serverProviderHandle.id === provider.id)
-                    .map(async (server) => {
-                        // remote server
-                        const lastUsedTime = (await this.serverUriStorage.getAll()).find(
-                            (item) =>
-                                generateIdFromRemoteProvider(item.provider) ===
-                                generateIdFromRemoteProvider(server.serverProviderHandle)
-                        );
-                        if (token.isCancellationRequested) {
-                            return;
-                        }
-                        handledServerIds.add(generateIdFromRemoteProvider(server.serverProviderHandle));
-                        serversAndTimes.push({ server, time: lastUsedTime?.time });
-                    })
-            )
-        ]);
+        const jupyterServers = await serversPromise;
+        servers
+            .filter((s) => s.serverProviderHandle.id === provider.id)
+            .map((server) => {
+                // remote server
+                const lastUsedTime = this.serverUriStorage.all.find(
+                    (item) =>
+                        generateIdFromRemoteProvider(item.provider) ===
+                        generateIdFromRemoteProvider(server.serverProviderHandle)
+                );
+                handledServerIds.add(generateIdFromRemoteProvider(server.serverProviderHandle));
+                serversAndTimes.push({ server, time: lastUsedTime?.time });
+            });
         serversAndTimes.sort((a, b) => {
             if (!a.time && !b.time) {
                 return a.server.displayName.localeCompare(b.server.displayName);

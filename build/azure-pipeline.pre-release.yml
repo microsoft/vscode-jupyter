@@ -29,6 +29,7 @@ extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
     ghCreateTag: false
+    standardizedVersioning: true
     l10nSourcePaths: ./src
     buildPlatforms:
       - name: Linux
@@ -82,14 +83,6 @@ extends:
 
       - script: npm run clean
         displayName: Clean
-
-      - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-        displayName: Install Python libs
-
-      - script: npm run updateBuildNumber
-        displayName: Update build number
-        env:
-          VSC_BUILD_ID: $(Build.BuildNumber)
 
       - script: npm run prePublishBundlePreRelease
         displayName: Build

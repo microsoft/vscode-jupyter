@@ -127,7 +127,7 @@ suite('RemoteKernelControllerWatcher', () => {
             instance(remoteLiveKernel)
         ]);
 
-        when(uriStorage.getAll()).thenResolve([
+        when(uriStorage.all).thenReturn([
             {
                 time: 1,
                 displayName: 'Something',
@@ -279,7 +279,7 @@ suite('RemoteKernelControllerWatcher', () => {
             .map((k) => k.connection as RemoteKernelConnectionMetadata)
             .map((c) => c.serverProviderHandle);
         when(controllers.registered).thenReturn([instance(localKernel), ...remoteControllers]);
-        when(uriStorage.getAll()).thenResolve(
+        when(uriStorage.all).thenReturn(
             remoteProviderHandles.map((s) => ({
                 time: 1,
                 displayName: `Server ${s.handle} Collection ${s.id} for Ext ${s.extensionId}`,

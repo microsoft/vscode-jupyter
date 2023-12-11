@@ -78,14 +78,6 @@ extends:
       - script: npm run clean
         displayName: Clean
 
-      - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-        displayName: Install Python libs
-
-      - script: npm run updateBuildNumber
-        displayName: Update build number
-        env:
-          VSC_BUILD_ID: $(Build.BuildNumber)
-
       - script: npm run prePublishBundleStable
         displayName: Build
         env:

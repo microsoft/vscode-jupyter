@@ -123,7 +123,7 @@ export class ResourceMap<T> implements Map<Uri, T> {
         if (typeof thisArg !== 'undefined') {
             clb = clb.bind(thisArg);
         }
-        for (const [_, entry] of this.map) {
+        for (const [, entry] of this.map) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             clb(entry.value, entry.uri, <any>this);
         }

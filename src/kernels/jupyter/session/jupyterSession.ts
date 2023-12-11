@@ -22,6 +22,7 @@ import { getResourceType } from '../../../platform/common/utils';
 import { waitForIdleOnSession } from '../../common/helpers';
 import { BaseJupyterSessionConnection } from '../../common/baseJupyterSessionConnection';
 import { dispose } from '../../../platform/common/utils/lifecycle';
+import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
 export class JupyterSessionWrapper
     extends BaseJupyterSessionConnection<Session.ISessionConnection, 'localJupyter' | 'remoteJupyter'>
@@ -125,7 +126,9 @@ export class JupyterSessionWrapper
             return;
         }
         this._isDisposed = true;
-        traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
+        // We are only interested in our stack, not in VS Code or others.
+        const stack = (new Error().stack || '').split('\n').filter((l) => l.includes(JVSC_EXTENSION_ID));
+        traceVerbose(`Shutdown session - current session, called from \n ${stack.map((l) => `    ${l}`).join('\n')}`);
         const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata.id}`;
         traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
         try {

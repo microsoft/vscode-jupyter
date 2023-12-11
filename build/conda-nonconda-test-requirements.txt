@@ -1,18 +1,5 @@
-# Requirements needed to run install_debugpy.py
-packaging
 # List of requirements for conda environments that cannot be installed using conda
-livelossplot
-versioneer
-pythreejs
 # Pinned per ipywidget 8 support: https://github.com/microsoft/vscode-jupyter/issues/11598
 ipysheet==0.5.0
-ipyvolume
-beakerx
-beakerx_kernel_java
-py4j
-bqplot
-K3D
-ipyleaflet
-jinja2==3.1.2 # https://github.com/microsoft/vscode-jupyter/issues/9468#issuecomment-1078468039
 matplotlib
 ipympl

@@ -130,7 +130,9 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 telemetryName: Telemetry.PythonVariableFetchingCodeFailure
             }
         );
-
+        if (results.length === 0) {
+            return { data: [] };
+        }
         return parseDataFrame(this.deserializeJupyterResult<DataFrameSplitFormat>(results));
     }
 

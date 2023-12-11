@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationError, CancellationToken, CancellationTokenSource, EventEmitter, Uri } from 'vscode';
+import { CancellationError, CancellationToken, CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
@@ -22,7 +22,7 @@ import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
-import { dispose } from '../../../platform/common/utils/lifecycle';
+import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
@@ -42,7 +42,7 @@ export type CacheDataFormat = {
 };
 
 // This class watches a single jupyter server URI and returns kernels from it
-export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
+export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelFinder {
     private _status: 'discovering' | 'idle' = 'idle';
     public get status() {
         return this._status;
@@ -75,10 +75,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     private readonly _onDidChange = new EventEmitter<void>();
     onDidChange = this._onDidChange.event;
 
-    private readonly disposables: IDisposable[] = [];
-
     // Track our delay timer for when we update on kernel dispose
-    private kernelDisposeDelayTimer: NodeJS.Timeout | number | undefined;
+    private kernelDisposeDelayTimer?: Disposable;
 
     private readonly cacheKey: string;
     private readonly cacheFile: Uri;
@@ -109,25 +107,24 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         private readonly fs: IFileSystem,
         private readonly context: IExtensionContext
     ) {
+        super();
         this.cacheFile = Uri.joinPath(context.globalStorageUri, RemoteKernelSpecCacheFileName);
         this.cacheKey = generateIdFromRemoteProvider(serverProviderHandle);
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
-        this.disposables.push(kernelFinder.registerKernelFinder(this));
+        this._register(kernelFinder.registerKernelFinder(this));
 
-        this._onDidChangeKernels.event(() => this._onDidChange.fire(), this, this.disposables);
-        this.disposables.push(this._onDidChangeKernels);
-        this.disposables.push(this._onDidChange);
-        this.disposables.push(this._onDidChangeStatus);
-        this.disposables.push(this.promiseMonitor);
+        this._register(this._onDidChangeKernels.event(() => this._onDidChange.fire(), this));
+        this._register(this._onDidChangeKernels);
+        this._register(this._onDidChange);
+        this._register(this._onDidChangeStatus);
+        this._register(this.promiseMonitor);
     }
 
-    dispose(): void | undefined {
-        if (this.kernelDisposeDelayTimer) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            clearTimeout(this.kernelDisposeDelayTimer as any);
-        }
-        dispose(this.disposables);
+    override dispose(): void | undefined {
+        super.dispose();
+        this._cacheUpdateCancelTokenSource?.dispose();
+        this.kernelDisposeDelayTimer?.dispose();
     }
 
     async activate(): Promise<void> {
@@ -142,38 +139,29 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         // we have live sessions possible)
         // Note, this is a perf optimization for right now. We should not need
         // to check for remote if the future when we support live sessions on local
-        this.kernelProvider.onDidStartKernel(
-            (k) => {
+        this._register(
+            this.kernelProvider.onDidStartKernel((k) => {
                 if (isRemoteConnection(k.kernelConnectionMetadata)) {
                     // update remote kernels
                     this.updateCache().then(noop, noop);
                 }
-            },
-            this,
-            this.disposables
+            }, this)
         );
 
         // For kernel dispose we need to wait a bit, otherwise the list comes back the
         // same
-        this.kernelProvider.onDidDisposeKernel(
-            (k) => {
+        this._register(
+            this.kernelProvider.onDidDisposeKernel((k) => {
                 if (k && isRemoteConnection(k.kernelConnectionMetadata)) {
-                    if (this.kernelDisposeDelayTimer) {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        clearTimeout(this.kernelDisposeDelayTimer as any);
-                        this.kernelDisposeDelayTimer = undefined;
-                    }
+                    this.kernelDisposeDelayTimer?.dispose();
                     const timer = setTimeout(() => {
                         this.updateCache().then(noop, noop);
                     }, REMOTE_KERNEL_REFRESH_INTERVAL);
 
-                    this.kernelDisposeDelayTimer = timer;
-
+                    this.kernelDisposeDelayTimer = new Disposable(() => clearTimeout(timer));
                     return timer;
                 }
-            },
-            this,
-            this.disposables
+            }, this)
         );
     }
 
@@ -181,6 +169,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         // Display a progress indicator only when user refreshes the list.
         await this.loadCache(true, true);
     }
+
+    private numberOfFailures = 0;
     private getListOfKernelsWithCachedConnection(
         displayProgress: boolean,
         ignoreCache: boolean = false
@@ -189,12 +179,21 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         this.cachedConnection = this.cachedConnection || this.getRemoteConnectionInfo(displayProgress);
         return this.cachedConnection
             .then((connInfo) => {
+                this.numberOfFailures = 0;
                 if (connInfo && !usingCache) {
                     this.cachedConnection = Promise.resolve(connInfo);
                 }
                 return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
             })
             .catch((ex) => {
+                this.numberOfFailures += 1;
+                if (this.isDisposed) {
+                    return Promise.reject(ex);
+                }
+                if (this.numberOfFailures > 9) {
+                    traceWarning(`Remote Kernel Finder: ${this.id} has failed to connect 10 times in a row.`, ex);
+                    return Promise.reject(ex);
+                }
                 if (usingCache) {
                     return this.getListOfKernelsWithCachedConnection(displayProgress, ignoreCache);
                 }
@@ -281,6 +280,9 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
     private async getFromCache(cancelToken?: CancellationToken): Promise<RemoteKernelConnectionMetadata[]> {
         try {
+            if (cancelToken?.isCancellationRequested) {
+                throw new CancellationError();
+            }
             let results: RemoteKernelConnectionMetadata[] = this.cache;
 
             // If not in memory, check memento
