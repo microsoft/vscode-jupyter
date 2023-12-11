@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
@@ -22,6 +22,23 @@ type PendingMessage = {
     resultPromise: Deferred<void>;
     startTime: number;
 };
+
+const kernelCommTargets = new WeakMap<
+    Kernel.IKernelConnection,
+    { targets: Set<string>; registerCommTarget: (targetName: string) => void }
+>();
+
+export function registerCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelConnection, targetName: string) {
+    const targets = kernelCommTargets.get(kernel);
+    if (targets) {
+        targets.targets.add(targetName);
+        targets.registerCommTarget(targetName);
+    }
+}
+
+export function remoteCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelConnection, targetName: string) {
+    kernelCommTargets.get(kernel)?.targets?.delete?.(targetName);
+}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
@@ -218,6 +235,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         if (!kernel.session?.kernel?.id || !KernelSocketMap.get(kernel.session?.kernel?.id)) {
             // No kernel socket information, hence nothing much we can do.
             return;
+        }
+
+        if (!kernelCommTargets.has(kernel.session.kernel)) {
+            kernelCommTargets.set(kernel.session.kernel, {
+                targets: new Set<string>(),
+                registerCommTarget: (targetName: string) => {
+                    this.raisePostMessage(IPyWidgetMessages.IPyWidgets_registerCommTarget, targetName);
+                }
+            });
         }
 
         this.kernelWasConnectedAtLeastOnce = true;
@@ -430,8 +456,12 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             // Skip the predefined target. It should have been registered
             // inside the kernel on startup. However we
             // still need to track it here.
-            if (targetName !== Identifiers.DefaultCommTarget) {
-                kernel.session?.kernel?.registerCommTarget(targetName, noop);
+            if (
+                kernel.session?.kernel &&
+                targetName !== Identifiers.DefaultCommTarget &&
+                !kernelCommTargets.get(kernel.session.kernel)?.targets?.has(targetName)
+            ) {
+                kernel.session.kernel.registerCommTarget(targetName, noop);
             }
         }
     }
