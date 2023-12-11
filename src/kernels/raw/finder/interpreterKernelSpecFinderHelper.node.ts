@@ -8,8 +8,7 @@ import {
     createInterpreterKernelSpec,
     getKernelId,
     getKernelRegistrationInfo,
-    isDefaultKernelSpec,
-    isUserRegisteredKernelSpecConnection
+    isDefaultKernelSpec
 } from '../../../kernels/helpers';
 import {
     IJupyterKernelSpec,
