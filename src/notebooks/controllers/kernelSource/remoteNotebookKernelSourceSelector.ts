@@ -15,6 +15,7 @@ import {
     notebooks
 } from 'vscode';
 import { IContributedKernelFinder } from '../../../kernels/internalTypes';
+// eslint-disable-next-line import/no-restricted-paths
 import { CodespacesJupyterServerSelector } from '../../../codespaces/codeSpacesServerSelector';
 import {
     IJupyterServerUriStorage,

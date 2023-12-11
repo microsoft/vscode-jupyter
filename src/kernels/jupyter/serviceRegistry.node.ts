@@ -49,6 +49,7 @@ import { RemoteKernelFinderController } from './finder/remoteKernelFinderControl
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
 import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
 import { IRemoteKernelFinderController } from './finder/types';
+// eslint-disable-next-line import/no-restricted-paths
 import { JupyterServerProviderRegistry } from '../../codespaces';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
