@@ -36,7 +36,13 @@ import {
 } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
-import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
+import {
+    Resource,
+    IOutputChannel,
+    IJupyterSettings,
+    IExperimentService,
+    Experiments
+} from '../../../platform/common/types';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
@@ -54,6 +60,7 @@ import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { ServiceContainer } from '../../../platform/ioc/container';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -153,10 +160,11 @@ export class KernelProcess implements IKernelProcess {
         await this.updateConnectionArgs();
         Cancellation.throwIfCanceled(cancelToken);
         const exeObs = await this.launchAsObservable(workingDirectory, cancelToken);
+        const proc = exeObs.proc;
         if (cancelToken.isCancellationRequested) {
             throw new CancellationError();
         }
-        traceInfo(`Kernel process ${exeObs.proc?.pid}.`);
+        traceInfo(`Kernel process ${proc?.pid}.`);
         let stdout = '';
         let stderr = '';
         let stderrProc = '';
@@ -164,33 +172,35 @@ export class KernelProcess implements IKernelProcess {
         let providedExitCode: number | null;
         const deferred = createDeferred();
         deferred.promise.catch(noop);
-        exeObs.proc!.on('exit', (exitCode) => {
-            exitCode = exitCode || providedExitCode;
-            if (this.disposed) {
-                traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`);
-                return;
-            }
-            traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`, stderrProc);
-            if (!exitEventFired) {
-                this.exitEvent.fire({
-                    exitCode: exitCode || undefined,
-                    reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc) || stderrProc
-                });
-                exitEventFired = true;
-            }
-            if (!cancelToken.isCancellationRequested) {
-                traceInfoIfCI(`KernelProcessExitedError raised`, stderr);
-                deferred.reject(new KernelProcessExitedError(exitCode || -1, stderr, this.kernelConnectionMetadata));
-            }
-        });
 
-        if (exeObs.proc) {
-            exeObs.proc.stdout?.on('data', (data: Buffer | string) => {
+        if (proc) {
+            proc.on('exit', (exitCode) => {
+                exitCode = exitCode || providedExitCode;
+                if (this.disposed) {
+                    traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`);
+                    return;
+                }
+                traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`, stderrProc);
+                if (!exitEventFired) {
+                    this.exitEvent.fire({
+                        exitCode: exitCode || undefined,
+                        reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc) || stderrProc
+                    });
+                    exitEventFired = true;
+                }
+                if (!cancelToken.isCancellationRequested) {
+                    traceInfoIfCI(`KernelProcessExitedError raised`, stderr);
+                    deferred.reject(
+                        new KernelProcessExitedError(exitCode || -1, stderr, this.kernelConnectionMetadata)
+                    );
+                }
+            });
+            proc.stdout?.on('data', (data: Buffer | string) => {
                 traceVerbose(`Kernel output: ${(data || '').toString()}`);
                 this.sendToOutput((data || '').toString());
             });
 
-            exeObs.proc.stderr?.on('data', (data: Buffer | string) => {
+            proc.stderr?.on('data', (data: Buffer | string) => {
                 // We get these from execObs.out.subscribe.
                 // Hence log only using traceLevel = verbose.
                 // But only useful if daemon doesn't start for any reason.
@@ -251,11 +261,25 @@ export class KernelProcess implements IKernelProcess {
             if (deferred.rejected) {
                 await deferred.promise;
             }
+            const doNotWaitForZmqPortsToGetused = ServiceContainer.instance
+                .get<IExperimentService>(IExperimentService)
+                .inExperiment(Experiments.DoNotWaitForZmqPortsToBeUsed);
+
             const tcpPortUsed = (await import('tcp-port-used')).default;
             const stopwtach = new StopWatch();
+
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
             // Kernel must be connected to bo Shell & IoPub channels for kernel communication to work.
+
+            // Default timeout is generally 60s.
+            // For the experiment, lets wait for 10s for the kernel to start.
+            // Wait for 10s, by then kernel process woudl have either crashed (failure to start properly or ports getting used)
+            if (doNotWaitForZmqPortsToGetused && timeout > 10_000) {
+                timeout = 10_000;
+            }
+            // No point waiting for ports to get used, see
+            // https://github.com/microsoft/vscode-jupyter/issues/14835
             const portsUsed = Promise.all([
                 tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
                 tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
@@ -263,11 +287,19 @@ export class KernelProcess implements IKernelProcess {
                 if (cancelToken.isCancellationRequested || deferred.rejected) {
                     return;
                 }
-                traceError(`waitUntilUsed timed out`, ex);
-                // Throw an error we recognize.
-                return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
+                console.error('ex');
+                console.error(ex);
+                // Do not throw an error, ignore this.
+                // In the case of VPNs the port does not seem to get used.
+                // Possible we're blocking it.
+                traceWarning(`Waited ${stopwtach.elapsedTime}ms for kernel to start`, ex);
+
+                // For the new experiment, we don't want to throw an error if the kernel doesn't start.
+                if (!doNotWaitForZmqPortsToGetused) {
+                    // Throw an error we recognize.
+                    return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
+                }
             });
-            console.error(`Waited ${stopwtach.elapsedTime}ms for kernel to start`);
             await raceCancellationError(cancelToken, portsUsed, deferred.promise);
         } catch (e) {
             const stdErrToLog = (stderrProc || stderr || '').trim();
@@ -292,6 +324,7 @@ export class KernelProcess implements IKernelProcess {
                 // If we have the python error message in std outputs, display that.
                 const errorMessage = getErrorMessageFromPythonTraceback(stdErrToLog) || stdErrToLog.substring(0, 100);
                 traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderrProc + '\n' + stderr + '\n');
+                console.error(`KernelDiedError raised`, e);
                 throw new KernelDiedError(
                     DataScience.kernelDied(errorMessage),
                     // Include what ever we have as the stderr.

@@ -1498,7 +1498,8 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "KernelCompletions"
+                            "KernelCompletions",
+                            "DoNotWaitForZmqPortsToBeUsed"
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
@@ -1509,7 +1510,8 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "KernelCompletions"
+                            "KernelCompletions",
+                            "DoNotWaitForZmqPortsToBeUsed"
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
