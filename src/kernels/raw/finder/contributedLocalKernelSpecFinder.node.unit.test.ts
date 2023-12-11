@@ -90,7 +90,7 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         disposables.push(new Disposable(() => clock.uninstall()));
     });
     teardown(() => (disposables = dispose(disposables)));
-    test.only('No change event if there are no kernels', async () => {
+    test('No change event if there are no kernels', async () => {
         when(nonPythonKernelFinder.kernels).thenReturn([]);
         when(pythonKernelFinder.kernels).thenReturn([]);
         const statuses: (typeof finder.status)[] = [];
