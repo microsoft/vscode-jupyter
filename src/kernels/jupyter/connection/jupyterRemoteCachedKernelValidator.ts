@@ -61,9 +61,5 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         } finally {
             token.dispose();
         }
-        // List this old cached kernel even if such a server matching this kernel no longer exists.
-        // This way things don't just disappear from the kernel picker &
-        // user will get notified when they attempt to re-use this kernel.
-        return true;
     }
 }

@@ -231,7 +231,8 @@ export class JupyterServer {
                     `--NotebookApp.token=${token}`,
                     `--ServerAppApp.port=${port}`,
                     `--ServerAppApp.token=${token}`,
-                    `--NotebookApp.allow_origin=*`
+                    `--NotebookApp.allow_origin='*'`,
+                    `--allow-root`
                 ];
                 if (typeof password === 'string') {
                     if (password.length === 0) {
@@ -293,7 +294,7 @@ export class JupyterServer {
                 let allOutput = '';
                 const subscription = result.out.onDidChange((output) => {
                     allOutput += output.out;
-
+                    console.log(`Jupyter Output > ${output.out}`);
                     // When debugging Web Tests using VSCode dfebugger, we'd like to see this info.
                     // This way we can click the link in the output panel easily.
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels') >= 0) {

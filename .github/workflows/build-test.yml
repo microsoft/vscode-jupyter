@@ -89,10 +89,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Install Python libs
-        run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-
       - run: npm i -g @vscode/vsce
 
       - name: Build VSIX
@@ -436,7 +432,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
@@ -445,7 +441,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
@@ -454,7 +450,7 @@ jobs:
         if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
@@ -463,7 +459,7 @@ jobs:
         if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
         with:
           path: ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
@@ -472,7 +468,7 @@ jobs:
         if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
@@ -481,7 +477,7 @@ jobs:
         if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
         with:
           path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
@@ -529,8 +525,8 @@ jobs:
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/venv-test-requirements.txt
+          python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
           python -m ipykernel install --user
 
@@ -545,8 +541,8 @@ jobs:
           python --version
           python -c "import sys;print(sys.executable)"
           python -m pip install ipywidgets -U
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
+          python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
           python -m pip install ipywidgets -U
           python -m ipykernel install --user
@@ -555,23 +551,25 @@ jobs:
         shell: bash -l {0}
         if: matrix.python == 'conda'
         run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/conda-nonconda-test-requirements.txt
+          python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
 
-      #   - name: Install matplotlib widgets into user and system paths
-      #     if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory'
-      #     # This test will ensure widgets work when installed in 3 places
-      #     # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
-      #     # 2. In user's home folder (ipympl will be installed in there)
-      #     # 3. In system folder (all users) (matplotlib will be installed in there)
-      #     run: |
-      #       # Uninstall ipympl from the sys prefix folder and ensure the widget scripts are installed
-      #       # into the user directory.
-      #       export PYTHON_EXECUTABLE=$(which python)
-      #       echo $PYTHON_EXECUTABLE
-      #       python -m jupyter nbextension uninstall --sys-prefix --py ipympl
-      #       sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
+      - name: Install matplotlib widgets into user and system paths
+        if:
+          matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory'
+          # This test will ensure widgets work when installed in 3 places
+          # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
+          # 2. In user's home folder (ipympl will be installed in there)
+          # 3. In system folder (all users) (matplotlib will be installed in there)
+        run: |
+          # Uninstall ipympl from the sys prefix folder and ensure the widget scripts are installed
+          # into the user directory.
+          export PYTHON_EXECUTABLE=$(which python)
+          echo $PYTHON_EXECUTABLE
+          python -m jupyter nbextension uninstall --sys-prefix --py ipympl
+          sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
+
       - name: Pip List
         if: matrix.python != 'noPython'
         run: |
