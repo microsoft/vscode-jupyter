@@ -59,13 +59,6 @@ export class KernelFinder implements IKernelFinder {
             this.disposables
         );
         const onDidChangeDisposable = finder.onDidChangeKernels(() => {
-            if (finder.id === ContributedKernelFinderKind.LocalKernelSpec) {
-                traceError(
-                    'KernelFinder.onDidChangeKernels',
-                    finder.id,
-                    finder.kernels.filter((k) => isUserRegisteredKernelSpecConnection(k)).length
-                );
-            }
             this._onDidChangeKernels.fire();
         });
         this.disposables.push(onDidChangeDisposable);

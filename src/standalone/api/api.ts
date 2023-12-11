@@ -128,14 +128,13 @@ export function buildApi(
             apiProvider.setApi(pythonApi);
         },
         registerRemoteServerProvider(provider: IJupyterUriProvider): IDisposable {
-            traceError(
-                'The API registerRemoteServerProvider has being deprecated and will be removed soon, please use createJupyterServerCollection.'
-            );
-
             const extensions = serviceContainer.get<IExtensions>(IExtensions);
             const extensionId = provider.id.startsWith('_builtin')
                 ? JVSC_EXTENSION_ID
                 : extensions.determineExtensionFromCallStack().extensionId;
+            traceError(
+                `The API registerRemoteServerProvider has being deprecated and will be removed soon, please use createJupyterServerCollection (extension ${extensionId}).`
+            );
             if (extensionId.toLowerCase() != CodespaceExtensionId.toLowerCase()) {
                 throw new Error('Deprecated API');
             }

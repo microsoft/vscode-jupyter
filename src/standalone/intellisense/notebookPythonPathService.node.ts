@@ -117,7 +117,7 @@ export class NotebookPythonPathService implements IExtensionSyncActivationServic
 
         if (!interpreter) {
             // Empty string is special, means do not use any interpreter at all.
-            traceWarning(`No interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}"`);
+            traceInfo(`No interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}"`);
             return '';
         }
         return getFilePath(interpreter.uri);
