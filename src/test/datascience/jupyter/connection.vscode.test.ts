@@ -184,7 +184,7 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         when(encryptedStorage.store(anything(), anything(), anything())).thenResolve();
         sinon.stub(window, 'createInputBox').callsFake(() => inputBox);
         const serverUriStorage = mock<IJupyterServerUriStorage>();
-        when(serverUriStorage.getAll()).thenResolve([]);
+        when(serverUriStorage.all).thenReturn([]);
         const onDidRemoveUriStorage = new EventEmitter<JupyterServerProviderHandle[]>();
         disposables.push(onDidRemoveUriStorage);
         when(serverUriStorage.onDidRemove).thenReturn(onDidRemoveUriStorage.event);

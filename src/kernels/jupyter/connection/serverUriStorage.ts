@@ -1,20 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { EventEmitter, Memento, Uri, env } from 'vscode';
+import { EventEmitter, Memento, env } from 'vscode';
 import { inject, injectable, named } from 'inversify';
-import { IEncryptedStorage } from '../../../platform/common/application/types';
-import { Identifiers, Settings } from '../../../platform/common/constants';
-import { IMemento, GLOBAL_MEMENTO, IExtensionContext, IDisposableRegistry } from '../../../platform/common/types';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
-import {
-    extractJupyterServerHandleAndId,
-    generateIdFromRemoteProvider,
-    getOwnerExtensionOfProviderHandle
-} from '../jupyterUtils';
+import { Settings } from '../../../platform/common/constants';
+import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
+import { traceError, traceInfoIfCI } from '../../../platform/logging';
+import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
-import { IFileSystem } from '../../../platform/common/platform/types';
-import * as path from '../../../platform/vscode-path/resources';
 import { noop } from '../../../platform/common/utils/misc';
 import { DisposableBase } from '../../../platform/common/utils/lifecycle';
 
@@ -58,30 +51,22 @@ export class JupyterServerUriStorage extends DisposableBase implements IJupyterS
     public get onDidAdd() {
         return this._onDidAddUri.event;
     }
-    private readonly oldStorage: OldStorage;
     private readonly newStorage: NewStorage;
     private storageEventsHooked?: boolean;
     private _all: IJupyterServerUriEntry[] = [];
     public get all() {
+        this.updateStore();
         return this._all;
     }
     constructor(
-        @inject(IEncryptedStorage) encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
-        @inject(IFileSystem)
-        fs: IFileSystem,
-        @inject(IExtensionContext)
-        private readonly context: IExtensionContext,
         @inject(IDisposableRegistry)
         disposables: IDisposableRegistry
     ) {
         super();
         disposables.push(this);
-        const storageFile = Uri.joinPath(this.context.globalStorageUri, 'remoteServersMRUList.json');
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.oldStorage = new OldStorage(encryptedStorage, globalMemento);
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.newStorage = this._register(new NewStorage(fs, storageFile, this.oldStorage, globalMemento));
+        this.newStorage = this._register(new NewStorage(globalMemento));
     }
     private hookupStorageEvents() {
         if (this.storageEventsHooked) {
@@ -92,11 +77,10 @@ export class JupyterServerUriStorage extends DisposableBase implements IJupyterS
         this._register(this.newStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this));
         this._register(this.newStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this));
     }
-    public async getAll(): Promise<IJupyterServerUriEntry[]> {
+    private updateStore(): IJupyterServerUriEntry[] {
         this.hookupStorageEvents();
-        await this.newStorage.migrateMRU();
         const previous = this._all;
-        this._all = await this.newStorage.getAll();
+        this._all = this.newStorage.getAll();
         if (previous.length !== this._all.length || JSON.stringify(this._all) !== JSON.stringify(previous)) {
             this._onDidLoad.fire();
         }
@@ -104,14 +88,12 @@ export class JupyterServerUriStorage extends DisposableBase implements IJupyterS
     }
     public async clear(): Promise<void> {
         this.hookupStorageEvents();
-        await this.newStorage.migrateMRU();
-        await Promise.all([this.oldStorage.clear(), this.newStorage.clear()]);
+        await this.newStorage.clear();
         this._all = [];
         this._onDidLoad.fire();
     }
     public async add(jupyterHandle: JupyterServerProviderHandle, options?: { time: number }): Promise<void> {
         this.hookupStorageEvents();
-        await this.newStorage.migrateMRU();
         traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
         const entry: IJupyterServerUriEntry = {
             time: options?.time ?? Date.now(),
@@ -120,83 +102,17 @@ export class JupyterServerUriStorage extends DisposableBase implements IJupyterS
         };
 
         await this.newStorage.add(entry);
-        this.getAll().catch(noop);
+        this.updateStore();
     }
     public async update(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
-        await this.newStorage.migrateMRU();
         await this.newStorage.update(server);
-        this.getAll().catch(noop);
+        this.updateStore();
     }
     public async remove(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
-        await this.newStorage.migrateMRU();
         await this.newStorage.remove(server);
-        this.getAll().catch(noop);
-    }
-}
-
-class OldStorage {
-    constructor(
-        @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
-    ) {}
-    public async getAllRaw(): Promise<IJupyterServerUriEntry[]> {
-        // List is in the global memento, URIs are in encrypted storage
-        const indexes = this.globalMemento.get<{ index: number; time: number }[]>(Settings.JupyterServerUriList);
-        if (!Array.isArray(indexes) || indexes.length === 0) {
-            return [];
-        }
-
-        // Pull out the \r separated URI list (\r is an invalid URI character)
-        const blob = await this.encryptedStorage.retrieve(
-            Settings.JupyterServerRemoteLaunchService,
-            Settings.JupyterServerRemoteLaunchUriListKey
-        );
-        if (!blob) {
-            return [];
-        }
-        // Make sure same length
-        const split = blob.split(Settings.JupyterServerRemoteLaunchUriSeparator);
-        const servers: IJupyterServerUriEntry[] = [];
-        await Promise.all(
-            split.slice(0, Math.min(split.length, indexes.length)).map(async (item, index) => {
-                const uriAndDisplayName = item.split(Settings.JupyterServerRemoteLaunchNameSeparator);
-                const uri = uriAndDisplayName[0];
-                // Old code (we may have stored a bogus url in the past).
-                if (uri === Settings.JupyterServerLocalLaunch) {
-                    return;
-                }
-                try {
-                    const idAndHandle = extractJupyterServerHandleAndId(uri);
-                    // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
-                    const displayName =
-                        uriAndDisplayName[1] === Settings.JupyterServerRemoteLaunchUriEqualsDisplayName ||
-                        !uriAndDisplayName[1]
-                            ? uri
-                            : uriAndDisplayName[1];
-                    servers.push({
-                        time: indexes[index].time,
-                        displayName,
-                        provider: idAndHandle
-                    });
-                } catch (ex) {
-                    if (uri.startsWith(Identifiers.REMOTE_URI)) {
-                        traceError(`Failed to parse stored Uri information`, ex);
-                    }
-                }
-            })
-        );
-
-        traceVerbose(`Found ${servers.length} saved URIs, ${JSON.stringify(servers)}`);
-        return servers;
-    }
-    public async clear(): Promise<void> {
-        // Clear out memento and encrypted storage
-        await this.globalMemento.update(Settings.JupyterServerUriList, []).then(noop, noop);
-        await this.encryptedStorage
-            .store(Settings.JupyterServerRemoteLaunchService, Settings.JupyterServerRemoteLaunchUriListKey, undefined)
-            .then(noop, noop);
+        this.updateStore();
     }
 }
 
@@ -214,15 +130,9 @@ class NewStorage {
         return this._onDidAddUri.event;
     }
 
-    private migration: Promise<void> | undefined;
     private updatePromise = Promise.resolve();
     private readonly mementoKey: string;
-    constructor(
-        private readonly fs: IFileSystem,
-        private readonly storageFile: Uri,
-        private readonly oldStorage: OldStorage,
-        private readonly memento: Memento
-    ) {
+    constructor(private readonly memento: Memento) {
         // Ensure the key is unique per machine,
         // this way when memento is transferred across machines it will not corrupt the memento on that machine.
         this.mementoKey = `MEMENTO_KEY_FOR_STORING_USED_JUPYTER_PROVIDERS_${env.machineId}`;
@@ -231,57 +141,6 @@ class NewStorage {
         this._onDidAddUri.dispose();
         this._onDidChangeUri.dispose();
         this._onDidRemoveUris.dispose();
-    }
-    async migrateMRU() {
-        if (!this.migration) {
-            if (this.memento.get(this.mementoKey)) {
-                this.migration = Promise.resolve();
-                return;
-            }
-            this.migration = this.migrateToStorageFile().then(() => this.migrateToMemento());
-        }
-        return this.migration;
-    }
-    async migrateToStorageFile() {
-        // Do not store the fact that we migrated in memento,
-        // we do not want such state to be transferred across machines.
-        if (await this.fs.exists(this.storageFile)) {
-            return;
-        }
-        const items = await this.oldStorage.getAllRaw();
-        const dir = path.dirname(this.storageFile);
-        if (!(await this.fs.exists(dir))) {
-            await this.fs.createDirectory(dir);
-        }
-        const storageItems = items.map((item) => {
-            return <StorageMRUItem>{
-                serverHandle: item.provider,
-                displayName: item.displayName || '',
-                time: item.time
-            };
-        });
-        await this.fs.writeFile(this.storageFile, JSON.stringify(storageItems));
-    }
-    async migrateToMemento() {
-        if (this.memento.get(this.mementoKey)) {
-            return;
-        }
-        // Do not store the fact that we migrated in memento,
-        // we do not want such state to be transferred across machines.
-        if (!(await this.fs.exists(this.storageFile))) {
-            await this.memento.update(this.mementoKey, []);
-            return;
-        }
-        const json = await this.fs.readFile(this.storageFile);
-        const items: StorageMRUItem[] = [];
-        (JSON.parse(json) as StorageMRUItem[]).map((item) => {
-            item.serverHandle.extensionId =
-                item.serverHandle.extensionId || getOwnerExtensionOfProviderHandle(item.serverHandle.id) || '';
-            if (item.serverHandle.extensionId) {
-                items.push(item);
-            }
-        });
-        await Promise.all([this.fs.delete(this.storageFile).catch(noop), this.memento.update(this.mementoKey, items)]);
     }
     public async add(item: IJupyterServerUriEntry) {
         return (this.updatePromise = this.updatePromise

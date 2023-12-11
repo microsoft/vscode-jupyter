@@ -101,14 +101,14 @@ suite('Remote Execution @kernelCore', function () {
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = editor.notebook.cellAt(0)!;
-        const previousList = await storage.getAll();
+        const previousList = storage.all;
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Wait for MRU to get updated & encrypted storage to get updated.
         let newList = previousList;
         await waitForCondition(
             async () => {
-                newList = await storage.getAll();
+                newList = storage.all;
                 assert.notDeepEqual(previousList, newList, 'MRU not updated');
                 return true;
             },

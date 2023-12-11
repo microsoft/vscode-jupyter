@@ -75,7 +75,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         providerId: string,
         validServerIds: string[]
     ) {
-        const uris = await this.uriStorage.getAll();
+        const uris = this.uriStorage.all;
         await Promise.all(
             uris
                 .filter((item) => item.provider.extensionId === extensionId && item.provider.id === providerId)

@@ -4,10 +4,11 @@
 import { Memento, env, workspace } from 'vscode';
 import { noop } from './utils/misc';
 import { IExtensionSyncActivationService } from '../activation/types';
-import { GLOBAL_MEMENTO, ICryptoUtils, IMemento, WORKSPACE_MEMENTO } from './types';
+import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from './types';
 import { inject, injectable, named } from 'inversify';
 import { getFilePath } from './platform/fs-paths';
 import { getRootFolder } from './application/workspace.base';
+import { Settings } from './constants';
 
 const GlobalMementoKeyPrefixesToRemove = [
     'currentServerHash',
@@ -25,14 +26,16 @@ const GlobalMementoKeyPrefixesToRemove = [
     'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2022_10',
     'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10',
     'user-jupyter-server-uri-list-v2',
-    'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY'
+    'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY',
+    'jupyter.jupyterServer.uriList'
 ];
 @injectable()
 export class OldCacheCleaner implements IExtensionSyncActivationService {
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceState: Memento
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceState: Memento,
+        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
     ) {}
     public activate(): void {
         this.removeOldCachedItems().then(noop, noop);
@@ -56,6 +59,9 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
                     .map((key) => this.globalState.update(key, undefined).then(noop, noop))
             ).flat()
         );
+        await this.extensionContext.secrets
+            .delete(`${Settings.JupyterServerRemoteLaunchService}.remote-uri-list`)
+            .then(noop, noop);
     }
 
     async getUriAccountKey(): Promise<string> {

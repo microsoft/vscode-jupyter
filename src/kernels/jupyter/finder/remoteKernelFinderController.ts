@@ -52,6 +52,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         this.serverUriStorage.onDidAdd((server) => this.validateAndCreateFinder(server), this, this.disposables);
         this.serverUriStorage.onDidChange(this.buildListOfFinders, this, this.disposables);
         this.serverUriStorage.onDidLoad(this.handleProviderChanges, this, this.disposables);
+        this.serverUriStorage.onDidLoad(this.buildListOfFinders, this, this.disposables);
         // Possible some extensions register their providers later.
         // And also possible they load their old server later, hence we need to go through the
         // MRU list again and try to build the finders, as the servers might now exist.
@@ -66,10 +67,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
     }
     private buildListOfFinders() {
         // Add in the URIs that we already know about
-        this.serverUriStorage
-            .getAll()
-            .then((currentServers) => currentServers.map((server) => this.validateAndCreateFinder(server).catch(noop)))
-            .catch(noop);
+        this.serverUriStorage.all.map((server) => this.validateAndCreateFinder(server).catch(noop));
     }
     private handleProviderHandleChanges() {
         this.jupyterPickerRegistration.jupyterCollections.forEach((collection) => {
