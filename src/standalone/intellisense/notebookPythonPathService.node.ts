@@ -8,7 +8,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { PylanceExtension } from '../../platform/common/constants';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceInfo, traceWarning } from '../../platform/logging';
+import { traceInfo } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { isInteractiveInputTab } from '../../interactive-window/helpers';
 import { isRemoteConnection } from '../../kernels/types';
@@ -117,7 +117,7 @@ export class NotebookPythonPathService implements IExtensionSyncActivationServic
 
         if (!interpreter) {
             // Empty string is special, means do not use any interpreter at all.
-            traceWarning(`No interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}"`);
+            traceInfo(`No interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}"`);
             return '';
         }
         return getFilePath(interpreter.uri);

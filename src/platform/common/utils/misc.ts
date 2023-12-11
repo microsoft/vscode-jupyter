@@ -159,5 +159,8 @@ export function areObjectsWithUrisTheSame(obj1?: unknown, obj2?: unknown) {
     if (obj1 && !obj2) {
         return false;
     }
+    if (!obj1 && obj2) {
+        return false;
+    }
     return JSON.stringify(obj1, jsonStringifyUriReplacer) === JSON.stringify(obj2, jsonStringifyUriReplacer);
 }
