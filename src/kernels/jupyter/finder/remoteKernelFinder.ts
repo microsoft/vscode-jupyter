@@ -191,7 +191,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
                     return Promise.reject(ex);
                 }
                 if (this.numberOfFailures > 9) {
-                    traceWarning(`Remote Kernel Finder: ${this.id} has failed to connect 10 times in a row.`);
+                    traceWarning(`Remote Kernel Finder: ${this.id} has failed to connect 10 times in a row.`, ex);
                     return Promise.reject(ex);
                 }
                 if (usingCache) {
