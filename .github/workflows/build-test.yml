@@ -526,6 +526,7 @@ jobs:
           python --version
           python -c "import sys;print(sys.executable)"
           python -m pip --disable-pip-version-check install -r build/venv-test-requirements.txt
+          python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
           python -m ipykernel install --user
 
@@ -541,6 +542,7 @@ jobs:
           python -c "import sys;print(sys.executable)"
           python -m pip install ipywidgets -U
           python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
+          python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
           python -m pip install ipywidgets -U
           python -m ipykernel install --user
@@ -550,6 +552,7 @@ jobs:
         if: matrix.python == 'conda'
         run: |
           python -m pip --disable-pip-version-check install -r build/conda-nonconda-test-requirements.txt
+          python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
 
       #   - name: Install matplotlib widgets into user and system paths
