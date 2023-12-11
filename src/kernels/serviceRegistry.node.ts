@@ -26,7 +26,7 @@ import { PortAttributesProviders } from './portAttributeProvider.node';
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './raw/finder/localKnownPathKernelSpecFinder.node';
-import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptDaemon.node';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.node';
 import { ITrustedKernelPaths } from './raw/finder/types';
@@ -90,9 +90,9 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addBinding(LocalKnownPathKernelSpecFinder, IExtensionSyncActivationService);
 
-    serviceManager.addSingleton<OldLocalPythonAndRelatedNonPythonKernelSpecFinder>(
-        OldLocalPythonAndRelatedNonPythonKernelSpecFinder,
-        OldLocalPythonAndRelatedNonPythonKernelSpecFinder
+    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(
+        LocalPythonAndRelatedNonPythonKernelSpecFinder,
+        LocalPythonAndRelatedNonPythonKernelSpecFinder
     );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
