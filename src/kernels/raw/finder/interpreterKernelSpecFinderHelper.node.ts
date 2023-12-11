@@ -41,7 +41,81 @@ export function localPythonKernelsCacheKey() {
     return `${LocalPythonKernelsCacheKey}:${env.appHost}:${env.remoteName || ''}`;
 }
 
-export async function* findKernelSpecsInInterpreter(
+export async function findKernelSpecsInInterpreter(
+    interpreter: PythonEnvironment,
+    cancelToken: CancellationToken,
+    jupyterPaths: JupyterPaths,
+    kernelSpecFinder: LocalKernelSpecFinder,
+    emitter: EventEmitter<IJupyterKernelSpec>
+): Promise<void> {
+    // Find all the possible places to look for this resource
+    const kernelSearchPath = Uri.file(path.join(interpreter.sysPrefix, baseKernelPath));
+    const rootSpecPaths = await jupyterPaths.getKernelSpecRootPaths(cancelToken);
+    if (cancelToken.isCancellationRequested) {
+        return;
+    }
+    // Exclude the global paths from the list.
+    // What could happens is, we could have a global python interpreter and that returns a global path.
+    // But we could have a kernel spec in global path that points to a completely different interpreter.
+    // We already have a way of identifying the interpreter associated with a global kernel spec.
+    // Hence exclude global paths from the list of interpreter specific paths (as global paths are NOT interpreter specific).
+    if (rootSpecPaths.some((uri) => uriPath.isEqual(uri, kernelSearchPath))) {
+        return;
+    }
+    const kernelSpecs = await kernelSpecFinder.findKernelSpecsInPaths(kernelSearchPath, cancelToken);
+    if (cancelToken.isCancellationRequested) {
+        return;
+    }
+
+    // Filter out duplicates. This can happen when
+    // 1) Conda installs kernel
+    // 2) Same kernel is registered in the global location
+    // We should have extra metadata on the global location pointing to the original
+    const originalSpecFiles = new Set<string>();
+
+    // There was also an old bug where the same item would be registered more than once. Eliminate these dupes
+    // too.
+    const byDisplayName = new Map<string, IJupyterKernelSpec>();
+
+    await Promise.all(
+        kernelSpecs.map(async (kernelSpecFile) => {
+            try {
+                // Add these into our path cache to speed up later finds
+                const kernelSpec = await kernelSpecFinder.loadKernelSpec(kernelSpecFile, cancelToken, interpreter);
+                if (cancelToken.isCancellationRequested) {
+                    return;
+                }
+                if (!kernelSpec) {
+                    return;
+                }
+                if (kernelSpec.metadata?.originalSpecFile) {
+                    if (originalSpecFiles.has(kernelSpec.metadata.originalSpecFile)) {
+                        return;
+                    }
+                    originalSpecFiles.add(kernelSpec.metadata.originalSpecFile);
+                }
+                if (kernelSpec.specFile) {
+                    if (originalSpecFiles.has(kernelSpec.specFile)) {
+                        return;
+                    }
+                    originalSpecFiles.add(kernelSpec.specFile);
+                }
+                const existing = byDisplayName.get(kernelSpec.display_name);
+                if (existing && existing.executable !== kernelSpec.executable) {
+                    // This item has dupe name but has a different path to start the exe
+                    emitter.fire(kernelSpec);
+                } else if (!existing) {
+                    byDisplayName.set(kernelSpec.display_name, kernelSpec);
+                    emitter.fire(kernelSpec);
+                }
+            } catch (ex) {
+                traceError(`Failed to load kernel spec ${kernelSpecFile}`, ex);
+            }
+        })
+    );
+}
+
+export async function* findKernelSpecsInInterpreterx(
     interpreter: PythonEnvironment,
     cancelToken: CancellationToken,
     jupyterPaths: JupyterPaths,
@@ -184,13 +258,8 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
 
         // Then go through all of the kernels and generate their metadata
         const distinctKernelMetadata = new Map<string, LocalKernelConnectionMetadata>();
-
-        for await (const jupyterKernelSpec of findKernelSpecsInInterpreter(
-            this.interpreter,
-            cancelToken,
-            this.jupyterPaths,
-            this.kernelSpecFinder
-        )) {
+        const onFound = new EventEmitter<IJupyterKernelSpec>();
+        const disposable = onFound.event((jupyterKernelSpec) => {
             if (cancelToken.isCancellationRequested) {
                 return;
             }
@@ -209,7 +278,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
                         jupyterKernelSpec.interpreterPath
                     )} and spec ${getDisplayPath(jupyterKernelSpec.specFile)}`
                 );
-                continue;
+                return;
             }
             const kernelSpec = isKernelLaunchedViaLocalPythonIPyKernel(jupyterKernelSpec)
                 ? PythonKernelConnectionMetadata.create({
@@ -231,9 +300,22 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
             if (kernelSpec && !distinctKernelMetadata.has(kernelSpec.id)) {
                 distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
             }
-        }
+        });
 
-        const tempDirForKernelSpecs = await this.jupyterPaths.getKernelSpecTempRegistrationFolder();
+        const [tempDirForKernelSpecs] = await Promise.all([
+            this.jupyterPaths.getKernelSpecTempRegistrationFolder(),
+            findKernelSpecsInInterpreter(
+                this.interpreter,
+                cancelToken,
+                this.jupyterPaths,
+                this.kernelSpecFinder,
+                onFound
+            )
+        ]);
+
+        onFound.dispose();
+        disposable.dispose();
+
         if (cancelToken.isCancellationRequested) {
             return;
         }
