@@ -23,6 +23,7 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { IExportedKernelServiceFactory } from './api';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import type { Session } from '@jupyterlab/services';
+import { wrapKernelSession } from './kernelWrapper';
 
 @injectable()
 export class JupyterKernelServiceFactory implements IExportedKernelServiceFactory {
@@ -239,7 +240,7 @@ class JupyterKernelService implements IExportedKernelService {
         if (kernel?.session) {
             return {
                 metadata: this.translateKernelConnectionMetadataToExportedType(kernel.kernelConnectionMetadata),
-                connection: kernel.session
+                connection: wrapKernelSession(kernel.session)
             };
         }
     }
@@ -276,7 +277,7 @@ class JupyterKernelService implements IExportedKernelService {
         if (!kernel?.session) {
             throw new Error('Not found');
         }
-        return kernel.session;
+        return wrapKernelSession(kernel.session);
     }
     private translateKernelConnectionMetadataToExportedType(
         connection: Readonly<IKernelKernelConnectionMetadata>

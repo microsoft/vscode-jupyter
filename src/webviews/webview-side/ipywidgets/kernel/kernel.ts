@@ -12,6 +12,7 @@ import { Deferred, createDeferred } from '../../../../platform/common/utils/asyn
 import { serializeDataViews, deserializeDataViews } from '../../../../platform/common/utils/serializers';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../messageTypes';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
+import { noop } from '../../../../platform/common/utils/misc';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -297,6 +298,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
 
             case IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled:
                 this.extensionOperationFinished(payload);
+                break;
+
+            case IPyWidgetMessages.IPyWidgets_registerCommTarget:
+                this.realKernel.registerCommTarget(payload, noop);
                 break;
 
             default:
