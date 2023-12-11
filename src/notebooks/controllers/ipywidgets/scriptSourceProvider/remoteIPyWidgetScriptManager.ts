@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import * as path from '../../../../platform/vscode-path/path';
 import { ExtensionMode, Uri } from 'vscode';
 import { IExtensionContext } from '../../../../platform/common/types';
-import { traceError, traceInfoIfCI } from '../../../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
 import { executeSilently, isPythonKernelConnection } from '../../../../kernels/helpers';
 import { IKernel, RemoteKernelConnectionMetadata } from '../../../../kernels/types';
 import { IIPyWidgetScriptManager } from '../types';
@@ -109,13 +109,15 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
             return [];
         }
         try {
+            traceVerbose(`Widget Outputs include, ${output.text}`);
             // Value will be an array of the form `['xyz', 'abc']`
             const items = (output.text as string)
                 .trim()
                 .substring(1) // Trim leading `[`
                 .slice(0, -1) // Trim trailing `]`
                 .split(',')
-                .map((item) => trimQuotes(item.trim()));
+                // Replace back slashes with forward slashes.
+                .map((item) => trimQuotes(item.trim()).replace(/\\\\/g, '/').replace(/\\/g, '/'));
             return items.map((item) => ({
                 uri: Uri.joinPath(Uri.parse(this.kernelConnection.baseUrl), 'nbextensions', item),
                 widgetFolderName: path.dirname(item)
@@ -126,7 +128,7 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         }
     }
     protected async getWidgetScriptSource(script: Uri): Promise<string> {
-        const uri = script.toString();
+        const uri = script.toString(true);
         const httpClient = new HttpClient();
         const response = await httpClient.downloadFile(uri);
         if (response.status === 200) {
