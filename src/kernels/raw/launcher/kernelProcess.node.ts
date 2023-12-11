@@ -160,10 +160,11 @@ export class KernelProcess implements IKernelProcess {
         await this.updateConnectionArgs();
         Cancellation.throwIfCanceled(cancelToken);
         const exeObs = await this.launchAsObservable(workingDirectory, cancelToken);
+        const proc = exeObs.proc;
         if (cancelToken.isCancellationRequested) {
             throw new CancellationError();
         }
-        traceInfo(`Kernel process ${exeObs.proc?.pid}.`);
+        traceInfo(`Kernel process ${proc?.pid}.`);
         let stdout = '';
         let stderr = '';
         let stderrProc = '';
@@ -171,33 +172,35 @@ export class KernelProcess implements IKernelProcess {
         let providedExitCode: number | null;
         const deferred = createDeferred();
         deferred.promise.catch(noop);
-        exeObs.proc!.on('exit', (exitCode) => {
-            exitCode = exitCode || providedExitCode;
-            if (this.disposed) {
-                traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`);
-                return;
-            }
-            traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`, stderrProc);
-            if (!exitEventFired) {
-                this.exitEvent.fire({
-                    exitCode: exitCode || undefined,
-                    reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc) || stderrProc
-                });
-                exitEventFired = true;
-            }
-            if (!cancelToken.isCancellationRequested) {
-                traceInfoIfCI(`KernelProcessExitedError raised`, stderr);
-                deferred.reject(new KernelProcessExitedError(exitCode || -1, stderr, this.kernelConnectionMetadata));
-            }
-        });
 
-        if (exeObs.proc) {
-            exeObs.proc.stdout?.on('data', (data: Buffer | string) => {
+        if (proc) {
+            proc.on('exit', (exitCode) => {
+                exitCode = exitCode || providedExitCode;
+                if (this.disposed) {
+                    traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`);
+                    return;
+                }
+                traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`, stderrProc);
+                if (!exitEventFired) {
+                    this.exitEvent.fire({
+                        exitCode: exitCode || undefined,
+                        reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc) || stderrProc
+                    });
+                    exitEventFired = true;
+                }
+                if (!cancelToken.isCancellationRequested) {
+                    traceInfoIfCI(`KernelProcessExitedError raised`, stderr);
+                    deferred.reject(
+                        new KernelProcessExitedError(exitCode || -1, stderr, this.kernelConnectionMetadata)
+                    );
+                }
+            });
+            proc.stdout?.on('data', (data: Buffer | string) => {
                 traceVerbose(`Kernel output: ${(data || '').toString()}`);
                 this.sendToOutput((data || '').toString());
             });
 
-            exeObs.proc.stderr?.on('data', (data: Buffer | string) => {
+            proc.stderr?.on('data', (data: Buffer | string) => {
                 // We get these from execObs.out.subscribe.
                 // Hence log only using traceLevel = verbose.
                 // But only useful if daemon doesn't start for any reason.
@@ -269,11 +272,14 @@ export class KernelProcess implements IKernelProcess {
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
             // Kernel must be connected to bo Shell & IoPub channels for kernel communication to work.
 
-            // Default timeout is generally 15s.
-            // For the experiment, lets wait for 15s for the kernel to start.
-            if (doNotWaitForZmqPortsToGetused && timeout > 15_000) {
-                timeout = 15_000;
+            // Default timeout is generally 60s.
+            // For the experiment, lets wait for 10s for the kernel to start.
+            // Wait for 10s, by then kernel process woudl have either crashed (failure to start properly or ports getting used)
+            if (doNotWaitForZmqPortsToGetused && timeout > 10_000) {
+                timeout = 10_000;
             }
+            // No point waiting for ports to get used, see
+            // https://github.com/microsoft/vscode-jupyter/issues/14835
             const portsUsed = Promise.all([
                 tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
                 tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
