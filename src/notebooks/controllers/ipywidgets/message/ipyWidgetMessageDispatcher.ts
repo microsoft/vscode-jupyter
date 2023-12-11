@@ -23,10 +23,22 @@ type PendingMessage = {
     startTime: number;
 };
 
-export const kernelCommTargets = new WeakMap<
+const kernelCommTargets = new WeakMap<
     Kernel.IKernelConnection,
     { targets: Set<string>; registerCommTarget: (targetName: string) => void }
 >();
+
+export function registerCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelConnection, targetName: string) {
+    const targets = kernelCommTargets.get(kernel);
+    if (targets) {
+        targets.targets.add(targetName);
+        targets.registerCommTarget(targetName);
+    }
+}
+
+export function remoteCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelConnection, targetName: string) {
+    kernelCommTargets.get(kernel)?.targets?.delete?.(targetName);
+}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**

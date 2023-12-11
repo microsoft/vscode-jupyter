@@ -3,7 +3,10 @@
 
 import type { Kernel, Session } from '@jupyterlab/services';
 import type { ICommOpenMsg } from '@jupyterlab/services/lib/kernel/messages';
-import { kernelCommTargets } from '../../notebooks/controllers/ipywidgets/message/ipyWidgetMessageDispatcher';
+import {
+    registerCommTargetFor3rdPartyExtensions,
+    remoteCommTargetFor3rdPartyExtensions
+} from '../../notebooks/controllers/ipywidgets/message/ipyWidgetMessageDispatcher';
 
 const wrappedSession = new WeakMap<Session.ISessionConnection, Session.ISessionConnection>();
 export function wrapKernelSession(session: Session.ISessionConnection) {
@@ -47,11 +50,7 @@ function createKernelWrapper(kernel: Kernel.IKernelConnection) {
                     targetName: string,
                     callback: (comm: Kernel.IComm, msg: ICommOpenMsg<'iopub' | 'shell'>) => void | PromiseLike<void>
                 ): void => {
-                    const targets = kernelCommTargets.get(kernel);
-                    if (targets) {
-                        targets.targets.add(targetName);
-                        targets.registerCommTarget(targetName);
-                    }
+                    registerCommTargetFor3rdPartyExtensions(kernel, targetName);
                     return Reflect.get(target, p).apply(target, [targetName, callback]);
                 };
             }
@@ -60,8 +59,7 @@ function createKernelWrapper(kernel: Kernel.IKernelConnection) {
                     targetName: string,
                     callback: (comm: Kernel.IComm, msg: ICommOpenMsg<'iopub' | 'shell'>) => void | PromiseLike<void>
                 ): void => {
-                    const targets = kernelCommTargets.get(kernel);
-                    targets?.targets?.delete?.(targetName);
+                    remoteCommTargetFor3rdPartyExtensions(kernel, targetName);
                     return Reflect.get(target, p).apply(target, [targetName, callback]);
                 };
             }
