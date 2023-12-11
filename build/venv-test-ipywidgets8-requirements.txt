@@ -7,7 +7,5 @@ jupyter
 ipywidgets
 anywidget
 ipysheet==0.5.0
-# beakerx This forces ipywidtets 7
-# beakerx_kernel_java This forces ipywidtets 7
 matplotlib
 ipympl

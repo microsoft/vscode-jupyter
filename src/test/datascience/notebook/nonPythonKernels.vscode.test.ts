@@ -35,21 +35,15 @@ suite('Non-Python Kernel @nonPython ', async function () {
     const csharpNb = Uri.file(
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleCSharp.ipynb')
     );
-    const javaNb = Uri.file(
-        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleJavaBeakerX.ipynb')
-    );
 
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let testJuliaNb: Uri;
-    let testJavaNb: Uri;
     let testCSharpNb: Uri;
     let controllerPreferred: ControllerPreferredService;
     let kernelProvider: IKernelProvider;
     let pythonChecker: IPythonExtensionChecker;
     let controllerRegistration: IControllerRegistration;
-    // eslint-disable-next-line local-rules/dont-use-process
-    const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     this.timeout(120_000); // Julia and C# kernels can be slow
     suiteSetup(async function () {
         this.timeout(120_000);
@@ -84,7 +78,6 @@ suite('Non-Python Kernel @nonPython ', async function () {
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testJuliaNb = await createTemporaryNotebookFromFile(juliaNb, disposables);
-        testJavaNb = await createTemporaryNotebookFromFile(javaNb, disposables);
         testCSharpNb = await createTemporaryNotebookFromFile(csharpNb, disposables);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
@@ -93,30 +86,6 @@ suite('Non-Python Kernel @nonPython ', async function () {
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     // https://github.com/microsoft/vscode-jupyter/issues/10900
-    test('Automatically pick java kernel when opening a Java Notebook', async function () {
-        if (!testJavaKernels) {
-            return this.skip();
-        }
-        this.timeout(60_000); // Can be slow to start Julia kernel on CI.
-
-        const notebook = await TestNotebookDocument.openFile(testJavaNb);
-        await waitForCondition(
-            async () => {
-                const preferredController = await controllerPreferred.computePreferred(notebook);
-                if (
-                    preferredController.preferredConnection?.kind === 'startUsingLocalKernelSpec' &&
-                    preferredController.preferredConnection.kernelSpec.language === 'java'
-                ) {
-                    return preferredController.preferredConnection;
-                }
-            },
-            defaultNotebookTestTimeout,
-            `Preferred controller not found for Notebook, currently preferred ${controllerPreferred.getPreferred(
-                notebook
-            )?.connection.kind}:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
-            500
-        );
-    });
     test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
         const notebook = await TestNotebookDocument.openFile(testJuliaNb);
         await waitForCondition(
