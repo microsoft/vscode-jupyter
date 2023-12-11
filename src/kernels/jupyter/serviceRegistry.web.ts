@@ -12,7 +12,6 @@ import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCa
 import { JupyterServerProvider } from './launcher/jupyterServerProvider.web';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
-import { JupyterServerSelector } from './connection/serverSelector';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.web';
 import {
     IJupyterServerUriStorage,
@@ -26,11 +25,17 @@ import {
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
 import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
-import { JupyterServerProviderRegistry } from './connection/jupyterServerProviderRegistry';
 import { IRemoteKernelFinderController } from './finder/types';
+// eslint-disable-next-line import/no-restricted-paths
+import { JupyterServerProviderRegistry } from '../../codespaces';
+// eslint-disable-next-line import/no-restricted-paths
+import { CodespacesJupyterServerSelector } from '../../codespaces/codeSpacesServerSelector';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
-    serviceManager.addSingleton<JupyterServerSelector>(JupyterServerSelector, JupyterServerSelector);
+    serviceManager.addSingleton<CodespacesJupyterServerSelector>(
+        CodespacesJupyterServerSelector,
+        CodespacesJupyterServerSelector
+    );
     serviceManager.addSingleton<IJupyterKernelService>(IJupyterKernelService, JupyterKernelService);
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<IKernelSessionFactory>(IKernelSessionFactory, KernelSessionFactory);

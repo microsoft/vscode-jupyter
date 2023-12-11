@@ -15,7 +15,8 @@ import {
     notebooks
 } from 'vscode';
 import { IContributedKernelFinder } from '../../../kernels/internalTypes';
-import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
+// eslint-disable-next-line import/no-restricted-paths
+import { CodespacesJupyterServerSelector } from '../../../codespaces/codeSpacesServerSelector';
 import {
     IJupyterServerUriStorage,
     IRemoteKernelFinder,
@@ -86,7 +87,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
     constructor(
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
+        @inject(CodespacesJupyterServerSelector) private readonly serverSelector: CodespacesJupyterServerSelector,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IConnectionDisplayDataProvider) private readonly displayDataProvider: IConnectionDisplayDataProvider,
         @inject(IRemoteKernelFinderController)

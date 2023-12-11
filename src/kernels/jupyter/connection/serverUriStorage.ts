@@ -3,13 +3,13 @@
 
 import { EventEmitter, Memento, env } from 'vscode';
 import { inject, injectable, named } from 'inversify';
-import { Settings } from '../../../platform/common/constants';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
 import { traceError, traceInfoIfCI } from '../../../platform/logging';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
 import { noop } from '../../../platform/common/utils/misc';
 import { DisposableBase } from '../../../platform/common/utils/lifecycle';
+import { Settings } from '../../../platform/common/constants';
 
 export type StorageMRUItem = {
     displayName: string;

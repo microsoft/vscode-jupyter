@@ -25,7 +25,8 @@ import { JupyterServerProvider } from './launcher/jupyterServerProvider.node';
 import { JupyterServerStarter } from './launcher/jupyterServerStarter.node';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
-import { JupyterServerSelector } from './connection/serverSelector';
+// eslint-disable-next-line import/no-restricted-paths
+import { CodespacesJupyterServerSelector } from '../../codespaces/codeSpacesServerSelector';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
 import { RequestAgentCreator } from './session/requestAgentCreator.node';
 import {
@@ -47,8 +48,9 @@ import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './ty
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
 import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
-import { JupyterServerProviderRegistry } from './connection/jupyterServerProviderRegistry';
 import { IRemoteKernelFinderController } from './finder/types';
+// eslint-disable-next-line import/no-restricted-paths
+import { JupyterServerProviderRegistry } from '../../codespaces';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
@@ -79,7 +81,10 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterInterpreterStateStore,
         JupyterInterpreterStateStore
     );
-    serviceManager.addSingleton<JupyterServerSelector>(JupyterServerSelector, JupyterServerSelector);
+    serviceManager.addSingleton<CodespacesJupyterServerSelector>(
+        CodespacesJupyterServerSelector,
+        CodespacesJupyterServerSelector
+    );
     serviceManager.addSingleton<IJupyterKernelService>(IJupyterKernelService, JupyterKernelService);
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, JupyterServerProvider);
     serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(
