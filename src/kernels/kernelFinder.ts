@@ -6,6 +6,8 @@ import { Event, EventEmitter } from 'vscode';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
+import { traceError } from '../platform/logging';
+import { isUserRegisteredKernelSpecConnection } from './helpers';
 
 /**
  * Generic class for finding kernels (both remote and local). Handles all of the caching of the results.
@@ -56,7 +58,16 @@ export class KernelFinder implements IKernelFinder {
             this,
             this.disposables
         );
-        const onDidChangeDisposable = finder.onDidChangeKernels(() => this._onDidChangeKernels.fire());
+        const onDidChangeDisposable = finder.onDidChangeKernels(() => {
+            if (finder.id === ContributedKernelFinderKind.LocalKernelSpec) {
+                traceError(
+                    'KernelFinder.onDidChangeKernels',
+                    finder.id,
+                    finder.kernels.filter((k) => isUserRegisteredKernelSpecConnection(k)).length
+                );
+            }
+            this._onDidChangeKernels.fire();
+        });
         this.disposables.push(onDidChangeDisposable);
 
         // Registering a new kernel finder should notify of possible kernel changes

@@ -16,7 +16,6 @@ import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 import { ITrustedKernelPaths } from './types';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { IJupyterKernelSpec } from '../../types';
-import { noop } from '../../../test/core';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
@@ -72,12 +71,15 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix, baseKernelPath));
 
         when(kernelSpecFinder.findKernelSpecsInPaths(uriEquals(searchPath), anything())).thenResolve([]);
-        const kernelSpecs = await findKernelSpecsInInterpreter(
+        const kernelSpecs: IJupyterKernelSpec[] = [];
+        for await (const kernelSpec of findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        );
+        )) {
+            kernelSpecs.push(kernelSpec);
+        }
 
         assert.strictEqual(kernelSpecs.length, 0);
     });
@@ -98,12 +100,15 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         when(kernelSpecFinder.loadKernelSpec(uriEquals(kernelSpecUri), anything(), venvInterpreter)).thenResolve(
             kernelSpec
         );
-        const kernelSpecs = await findKernelSpecsInInterpreter(
+        const kernelSpecs: IJupyterKernelSpec[] = [];
+        for await (const kernelSpec of findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        );
+        )) {
+            kernelSpecs.push(kernelSpec);
+        }
 
         assert.deepEqual(kernelSpecs, [kernelSpec]);
     });
@@ -138,12 +143,15 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         when(kernelSpecFinder.loadKernelSpec(uriEquals(kernelSpecUri2), anything(), venvInterpreter)).thenResolve(
             kernelSpec2
         );
-        const kernelSpecs = await findKernelSpecsInInterpreter(
+        const kernelSpecs: IJupyterKernelSpec[] = [];
+        for await (const kernelSpec of findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        );
+        )) {
+            kernelSpecs.push(kernelSpec);
+        }
 
         assert.strictEqual(kernelSpecs.length, 2);
         assert.deepEqual(kernelSpecs, [kernelSpec1, kernelSpec2]);
@@ -174,56 +182,59 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        ).catch(noop);
+        );
         findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        ).catch(noop);
+        );
         findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        ).catch(noop);
+        );
         findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        ).catch(noop);
+        );
         findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        ).catch(noop);
+        );
         findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        ).catch(noop);
+        );
         findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        ).catch(noop);
+        );
         findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        ).catch(noop);
+        );
         cancelToken.cancel();
-        const kernelSpecs = await findKernelSpecsInInterpreter(
+        const kernelSpecs: IJupyterKernelSpec[] = [];
+        for await (const kernelSpec of findKernelSpecsInInterpreter(
             venvInterpreter,
             cancelToken2.token,
             instance(jupyterPaths),
             instance(kernelSpecFinder)
-        );
+        )) {
+            kernelSpecs.push(kernelSpec);
+        }
 
         assert.deepEqual(kernelSpecs, [kernelSpec]);
     });

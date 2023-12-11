@@ -273,7 +273,7 @@ export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKern
         this.updateCachePromise = this.updateCachePromise.finally(() =>
             this.writeToMementoCache(kernels, localPythonKernelsCacheKey()).catch(noop)
         );
-        await this.updateCachePromise;
+        return this.updateCachePromise;
     }
 
     private async listKernelsImplementation(cancelToken: CancellationToken, forceRefresh: boolean) {
@@ -293,9 +293,19 @@ export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKern
                     );
                     this.disposables.push(finder);
                     this.interpreterKernelSpecs.set(interpreter.id, finder);
+                    finder.onDidChangeKernels(
+                        (e) => {
+                            e.removed.forEach((item) => this._kernels.delete(item.id));
+                            void this.appendNewKernels(e.added);
+                            if (!e.added.length && e.removed.length) {
+                                void this.updateCache();
+                            }
+                        },
+                        this,
+                        this.disposables
+                    );
                 }
-                const kernels = await raceCancellation(cancelToken, [], finder.listKernelSpecs(forceRefresh));
-                await this.appendNewKernels(kernels);
+                await raceCancellation(cancelToken, [], finder.listKernelSpecs(forceRefresh));
             })
         );
 
@@ -311,26 +321,27 @@ export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKern
     private interpreterKernelSpecs = new Map<InterpreterId, InterpreterSpecificKernelSpecsFinder>();
 
     private async appendNewKernels(kernels: LocalKernelConnectionMetadata[]) {
-        if (kernels.length) {
-            kernels.forEach((kernel) => {
-                if (isLocalConnection(kernel) && kernel.kernelSpec.specFile) {
-                    this._kernelsExcludingCachedItems.set(kernel.id, kernel);
-                    if (this._kernels.has(kernel.id)) {
-                        // We probably have an old outdated item in the dict, update that with the latest.
-                        // E.g. its possible this item was previously loaded from cache.
-                        // & now we have discovered the latest information, which is better than the cached data.
-                        this._kernels.set(kernel.id, kernel);
-                    } else {
-                        // This is a new kernel.
-                        this._kernels.set(kernel.id, kernel);
-                    }
-                } else {
-                    traceWarning(`Found a kernel ${kernel.kind}:'${kernel.id}', but excluded as specFile is undefined`);
-                }
-            });
-
-            await this.updateCache();
+        if (!kernels.length) {
+            return;
         }
+        kernels.forEach((kernel) => {
+            if (isLocalConnection(kernel) && kernel.kernelSpec.specFile) {
+                this._kernelsExcludingCachedItems.set(kernel.id, kernel);
+                if (this._kernels.has(kernel.id)) {
+                    // We probably have an old outdated item in the dict, update that with the latest.
+                    // E.g. its possible this item was previously loaded from cache.
+                    // & now we have discovered the latest information, which is better than the cached data.
+                    this._kernels.set(kernel.id, kernel);
+                } else {
+                    // This is a new kernel.
+                    this._kernels.set(kernel.id, kernel);
+                }
+            } else {
+                traceWarning(`Found a kernel ${kernel.kind}:'${kernel.id}', but excluded as specFile is undefined`);
+            }
+        });
+
+        return this.updateCache();
     }
     private listGlobalPythonKernelSpecs(includeKernelsRegisteredByUs: boolean): LocalKernelSpecConnectionMetadata[] {
         const pythonKernelSpecs = this.kernelSpecsFromKnownLocations.kernels
