@@ -316,7 +316,9 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
 
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter, globalInterpreter]);
-        when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(venvInterpreter);
+        when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri), anything())).thenResolve(
+            venvInterpreter
+        );
         when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(true);
 
         const interpreter = await helper.findMatchingInterpreter(kernelSpec, 'startUsingPythonInterpreter');
@@ -340,7 +342,9 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
 
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter, globalInterpreter]);
-        when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(venvInterpreter);
+        when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri), anything())).thenResolve(
+            venvInterpreter
+        );
         when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(false);
 
         const interpreter = await helper.findMatchingInterpreter(kernelSpec, 'startUsingPythonInterpreter');

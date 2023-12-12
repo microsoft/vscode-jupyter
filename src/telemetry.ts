@@ -2121,7 +2121,7 @@ export class IEventNamePropertyMapping {
         /**
          * If the python path is defined, then this property will be set to true if we found the python env.
          */
-        pythonEnvFound?: 'found' | 'foundViaGetEnvDetails' | 'notTrusted' | 'notFound';
+        pythonEnvFound?: 'found' | 'foundViaGetEnvDetails' | 'notTrusted' | 'notFound' | 'matchDisplayName';
         /**
          * Language of the target notebook or interactive window
          */
