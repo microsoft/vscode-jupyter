@@ -317,7 +317,7 @@ suite(`Local Python and related kernels`, async () => {
             condaKernel.interpreter
         ]);
         when(trustedKernels.isTrusted(anything())).thenReturn(true);
-        when(interpreterService.getInterpreterDetails(anything())).thenResolve(undefined);
+        when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve(undefined);
 
         finder.activate();
         await clock.runAllAsync();
@@ -328,7 +328,7 @@ suite(`Local Python and related kernels`, async () => {
         verify(
             trustedKernels.isTrusted(uriEquals(Uri.file(globalPythonKernelSpecUnknownExecutable.kernelSpec.specFile!)))
         ).atLeast(1);
-        verify(interpreterService.getInterpreterDetails(uriEquals(uriOfUnknownExecutable))).atLeast(1);
+        verify(interpreterService.getInterpreterDetails(uriEquals(uriOfUnknownExecutable), anything())).atLeast(1);
     });
     test('Get Python Envs as a Kernel', async () => {
         when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
