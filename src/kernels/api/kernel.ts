@@ -9,9 +9,11 @@ import {
     window,
     Disposable,
     workspace,
-    NotebookDocument
+    NotebookDocument,
+    Event,
+    EventEmitter
 } from 'vscode';
-import { Kernel, OutputItem } from '../../api';
+import { Kernel, KernelStatus, OutputItem } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
@@ -127,6 +129,11 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     private previousProgress?: IDisposable;
     private readonly _api: Kernel;
     public readonly language: string;
+    status: KernelStatus;
+    private readonly _onDidChangeStatus = this._register(new EventEmitter<KernelStatus>());
+    public get onDidChangeStatus(): Event<KernelStatus> {
+        return this._onDidChangeStatus.event;
+    }
     constructor(
         private readonly extensionId: string,
         private readonly kernel: IKernel,
@@ -141,8 +148,13 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 ? PYTHON_LANGUAGE
                 : kernel.kernelConnectionMetadata.kernelSpec.language || PYTHON_LANGUAGE;
         // Plain object returned to 3rd party extensions that cannot be modified or messed with.
+        const that = this;
         this._api = Object.freeze({
             language: this.language,
+            get status() {
+                return that.kernel.status;
+            },
+            onDidChangeStatus: that.onDidChangeStatus,
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token)
         });
     }
