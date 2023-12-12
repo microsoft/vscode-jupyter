@@ -200,8 +200,7 @@ export interface IJupyterRequestCreator {
     getWebsocketCtor(
         cookieString?: string,
         allowUnauthorized?: boolean,
-        getAuthHeaders?: () => Record<string, string>,
-        getWebSocketProtocols?: () => string | string[] | undefined
+        getAuthHeaders?: () => Record<string, string>
     ): ClassType<WebSocket>;
     wrapWebSocketCtor(websocketCtor: ClassType<WebSocketIsomorphic>): ClassType<WebSocketIsomorphic>;
     getRequestInit(): RequestInit;

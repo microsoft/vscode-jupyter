@@ -123,35 +123,15 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
     public getWebsocketCtor(
         _cookieString?: string,
         _allowUnauthorized?: boolean,
-        _getAuthHeaders?: () => Record<string, string>,
-        getWebSocketProtocols?: () => string | string[] | undefined
+        _getAuthHeaders?: () => Record<string, string>
     ) {
-        const getProtocols = (protocols?: string | string[]): string | string[] | undefined => {
-            const authProtocols = getWebSocketProtocols ? getWebSocketProtocols() : undefined;
-            if (!authProtocols && !protocols) {
-                return;
-            }
-            if (!protocols && authProtocols) {
-                return authProtocols;
-            }
-            if (protocols && !authProtocols) {
-                return protocols;
-            }
-            protocols = !protocols ? [] : typeof protocols === 'string' ? [protocols] : protocols;
-            if (Array.isArray(authProtocols)) {
-                protocols.push(...authProtocols);
-            } else if (typeof authProtocols === 'string') {
-                protocols.push(authProtocols);
-            }
-            return protocols;
-        };
         class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
             private kernelId: string | undefined;
             private timer: NodeJS.Timeout | number = 0;
             private boundOpenHandler = this.openHandler.bind(this);
 
             constructor(url: string, protocols?: string | string[] | undefined) {
-                super(url, getProtocols(protocols));
+                super(url, protocols);
                 let timer: NodeJS.Timeout | undefined = undefined;
                 // Parse the url for the kernel id
                 const parsed = /.*\/kernels\/(.*)\/.*/.exec(url);

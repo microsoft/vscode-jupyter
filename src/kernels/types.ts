@@ -559,10 +559,6 @@ export interface IJupyterConnection extends Disposable {
      */
     readonly rootDirectory: Uri;
     getAuthHeader?(): Record<string, string>;
-    /**
-     * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
-     */
-    getWebsocketProtocols?(): string[];
 }
 
 export enum InterruptResult {

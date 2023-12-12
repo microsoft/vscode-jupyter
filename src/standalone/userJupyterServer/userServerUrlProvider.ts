@@ -183,8 +183,7 @@ export class UserJupyterServerUrlProvider
                 headers: serverInfo.authorizationHeader,
                 mappedRemoteNotebookDir: serverInfo.mappedRemoteNotebookDir
                     ? Uri.file(serverInfo.mappedRemoteNotebookDir)
-                    : undefined,
-                webSocketProtocols: serverInfo.webSocketProtocols
+                    : undefined
             }
         };
     }

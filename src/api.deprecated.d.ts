@@ -45,12 +45,6 @@ declare module './api' {
          */
         mappedRemoteNotebookDir?: string;
         /**
-         * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
-         * Useful if there is a custom authentication scheme that needs to be used for WebSocket connections.
-         * Note: The client side npm package @jupyterlab/services uses WebSockets to connect to remote Kernels.
-         */
-        webSocketProtocols?: string[];
-        /**
          * The `fetch` method to use.
          */
         readonly fetch?: (input: RequestInfo, init?: RequestInit) => Promise<Response>;

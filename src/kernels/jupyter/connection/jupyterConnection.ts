@@ -53,8 +53,7 @@ export class JupyterConnection {
             authorizationHeader: server.connectionInformation!.headers || {},
             fetch: server.connectionInformation!.fetch,
             mappedRemoteNotebookDir: undefined,
-            WebSocket: server.connectionInformation!.WebSocket,
-            webSocketProtocols: server.connectionInformation?.webSocketProtocols
+            WebSocket: server.connectionInformation!.WebSocket
         };
 
         return createJupyterConnectionInfo(
@@ -83,8 +82,7 @@ export class JupyterConnection {
                     authorizationHeader: server.connectionInformation!.headers || {},
                     fetch: server.connectionInformation!.fetch,
                     mappedRemoteNotebookDir: undefined,
-                    WebSocket: server.connectionInformation!.WebSocket,
-                    webSocketProtocols: server.connectionInformation?.webSocketProtocols
+                    WebSocket: server.connectionInformation!.WebSocket
                 };
             } else {
                 throw new Error(
