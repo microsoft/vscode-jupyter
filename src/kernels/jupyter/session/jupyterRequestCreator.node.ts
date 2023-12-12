@@ -47,8 +47,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
     public getWebsocketCtor(
         cookieString?: string,
         allowUnauthorized?: boolean,
-        getAuthHeaders?: () => Record<string, string>,
-        getWebSocketProtocols?: () => string | string[] | undefined
+        getAuthHeaders?: () => Record<string, string>
     ): ClassType<WebSocket> {
         const generateOptions = (): WebSocketIsomorphic.ClientOptions => {
             let co: WebSocketIsomorphic.ClientOptions = {};
@@ -73,31 +72,12 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
             }
             return co;
         };
-        const getProtocols = (protocols?: string | string[]): string | string[] | undefined => {
-            const authProtocols = getWebSocketProtocols ? getWebSocketProtocols() : undefined;
-            if (!authProtocols && !protocols) {
-                return;
-            }
-            if (!protocols && authProtocols) {
-                return authProtocols;
-            }
-            if (protocols && !authProtocols) {
-                return protocols;
-            }
-            protocols = !protocols ? [] : typeof protocols === 'string' ? [protocols] : protocols;
-            if (Array.isArray(authProtocols)) {
-                protocols.push(...authProtocols);
-            } else if (typeof authProtocols === 'string') {
-                protocols.push(authProtocols);
-            }
-            return protocols;
-        };
         class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
             private kernelId: string | undefined;
             private timer: NodeJS.Timeout | number;
 
             constructor(url: string, protocols?: string | string[] | undefined) {
-                super(url, getProtocols(protocols), generateOptions());
+                super(url, protocols, generateOptions());
                 let timer: NodeJS.Timeout | undefined = undefined;
                 // Parse the url for the kernel id
                 const parsed = /.*\/kernels\/(.*)\/.*/.exec(url);

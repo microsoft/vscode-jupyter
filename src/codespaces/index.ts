@@ -36,8 +36,7 @@ export function jupyterServerUriToCollection(provider: IJupyterUriProvider): {
                     token: serverUri.token,
                     fetch: serverUri.fetch,
                     headers: serverUri.authorizationHeader,
-                    WebSocket: serverUri.WebSocket,
-                    webSocketProtocols: serverUri.webSocketProtocols
+                    WebSocket: serverUri.WebSocket
                 }
             };
             serverMap.set(handle, { serverUri, server });
