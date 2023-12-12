@@ -71,8 +71,7 @@ function isKernelLaunchedViaLocalPythonProcess(kernel: KernelConnectionMetadata 
         return false;
     }
     const kernelSpec = connection ? connection.kernelSpec : (kernel as IJupyterKernelSpec);
-    const executable = path.basename(kernelSpec.argv[0]).toLowerCase();
-    return executable.startsWith('python'); // This covers cases like python.exe, python3, python3.10;
+    return isLikelyAPythonExecutable(kernelSpec.argv[0]); // This covers cases like python.exe, python3, python3.10;
 }
 
 /**
@@ -97,8 +96,28 @@ export function isKernelLaunchedViaLocalPythonIPyKernel(kernel: KernelConnection
     if (kernelSpec.language && kernelSpec.language.toLowerCase() !== PYTHON_LANGUAGE) {
         return false;
     }
+    if (!isKernelLaunchedViaLocalPythonProcess(kernel)) {
+        return false;
+    }
+    const moduleIndex = kernelSpec.argv.indexOf('-m');
+    if (moduleIndex === -1) {
+        return false;
+    }
+    const moduleName =
+        kernelSpec.argv.length - 1 >= moduleIndex ? kernelSpec.argv[moduleIndex + 1].toLowerCase() : undefined;
+    if (!moduleName) {
+        return false;
+    }
+    // We are only interested in global kernels that don't use ipykernel_launcher.
+    return moduleName.includes('ipykernel_launcher') || moduleName.includes('ipykernel');
+}
+
+export function isLikelyAPythonExecutable(executable: string) {
+    executable = path.basename(executable).trim().toLowerCase();
     return (
-        isKernelLaunchedViaLocalPythonProcess(kernel) &&
-        kernelSpec.argv.some((arg) => arg.includes('ipykernel_launcher') || arg.includes('ipykernel'))
+        executable === 'python' ||
+        executable === 'python3' ||
+        executable === 'python.exe' ||
+        executable === 'python3.exe'
     );
 }
