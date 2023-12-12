@@ -3,7 +3,7 @@
 
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
-import { CancellationToken, CancellationTokenSource, env, EventEmitter, Uri, workspace } from 'vscode';
+import { CancellationToken, CancellationTokenSource, env, EventEmitter, Uri } from 'vscode';
 import {
     createInterpreterKernelSpec,
     getKernelId,
@@ -21,15 +21,14 @@ import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
-import { traceVerbose, traceError, traceWarning, traceInfo } from '../../../platform/logging';
-import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
+import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ITrustedKernelPaths } from './types';
 import { IDisposable } from '../../../platform/common/types';
 import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
-import { raceCancellation } from '../../../platform/common/cancellation';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { isKernelLaunchedViaLocalPythonIPyKernel, isLikelyAPythonExecutable } from '../../helpers.node';
