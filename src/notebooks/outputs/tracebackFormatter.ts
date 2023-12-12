@@ -27,7 +27,7 @@ export class NotebookTracebackFormatter implements ITracebackFormatter {
     }
     private modifyTracebackFrameIPython(cell: NotebookCell, traceFrame: string): string {
         const settings = this.configurationService.getSettings(cell.document.uri);
-        const formatStackTraces = settings?.formatStackTraces ?? true;
+        const formatStackTraces = settings?.formatStackTraces ?? false;
 
         if (formatStackTraces && /^[Cell|Input|File].*?\n.*/.test(traceFrame)) {
             return this.modifyTracebackFrameIPython8(cell, traceFrame);
