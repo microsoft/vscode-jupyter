@@ -98,6 +98,16 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         if (window.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
             this.onDidChangeActiveTextEditor(window.activeTextEditor);
         }
+        workspace.onDidChangeNotebookDocument(
+            (e) => {
+                if (e.notebook === window.activeNotebookEditor?.notebook) {
+                    this.onDidChangeActiveNotebookEditor(window.activeNotebookEditor);
+                }
+            },
+            this,
+            this.disposables
+        );
+
         window.onDidChangeNotebookEditorSelection(
             this.updateNativeNotebookInteractiveWindowOpenContext,
             this,
@@ -197,6 +207,9 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
             this.isJupyterKernelSelected.set(true).catch(noop);
         } else {
             this.isJupyterKernelSelected.set(false).catch(noop);
+        }
+        if (window.activeNotebookEditor?.notebook) {
+            this.updateContextOfActiveNotebookKernel(window.activeNotebookEditor);
         }
     }
     private updateContextOfActiveInteractiveWindowKernel() {
