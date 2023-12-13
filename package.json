@@ -1606,7 +1606,7 @@
                 },
                 "jupyter.interactiveWindow.textEditor.normalizeSelection": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "%jupyter.configuration.jupyter.normalizeSelectionForInteractiveWindow.description%",
                     "scope": "resource"
                 },
