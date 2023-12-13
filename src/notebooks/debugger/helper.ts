@@ -20,9 +20,10 @@ export enum IpykernelCheckResult {
 }
 
 export async function isUsingIpykernel6OrLater(execution: INotebookKernelExecution): Promise<IpykernelCheckResult> {
+    const delimiter = `5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d`;
     const code = `import builtins
 import ipykernel
-builtins.print(ipykernel.__version__)`;
+builtins.print("${delimiter}" + ipykernel.__version__ + "${delimiter}")`;
     const output = await execution.executeHidden(code);
 
     const versionRegex: RegExp = /^(\d+)\.\d+\.\d+$/;
@@ -31,8 +32,11 @@ builtins.print(ipykernel.__version__)`;
     for (const line of output) {
         if (line.output_type !== 'stream') continue;
 
-        const lineText = line.text?.toString().trim() ?? '';
-        const matches: RegExpMatchArray | null = lineText.match(versionRegex);
+        let lineText = line.text?.toString().trim() ?? '';
+        if (!lineText.includes(delimiter)) {
+            continue;
+        }
+        const matches: RegExpMatchArray | null = lineText.split(delimiter)[1].trim().match(versionRegex);
         if (matches) {
             const majorVersion: string = matches[1];
             if (Number(majorVersion) >= 6) {
