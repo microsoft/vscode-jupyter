@@ -288,7 +288,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         traceCellMessage(this.cell, 'Execution disposed');
         dispose(this.disposables);
     }
-    private completedWithErrors(error?: Partial<Error>) {
+    private completedWithErrors(error?: Partial<Error>, completedTime?: number) {
         if (this.cancelHandled) {
             // We cancelled the cell, hence don't do anything.
             return;
@@ -332,7 +332,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             this.execution?.appendOutput(output).then(noop, noop);
         }
 
-        this.endCellTask('failed');
+        this.endCellTask('failed', completedTime);
         traceCellMessage(this.cell, 'Completed with errors, & resolving');
         this._result.resolve(NotebookCellRunState.Error);
     }
@@ -487,7 +487,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             // }
             traceCellMessage(this.cell, 'Jupyter execution completed');
             if (response.content.status === 'error') {
-                this.completedWithErrors();
+                this.completedWithErrors(undefined, completedTime);
             } else {
                 this.completedSuccessfully(completedTime);
             }
