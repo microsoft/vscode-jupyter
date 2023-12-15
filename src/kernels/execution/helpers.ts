@@ -625,11 +625,19 @@ function translateErrorOutput(output?: nbformat.IError): NotebookCellOutput {
     output = output || { output_type: 'error', ename: '', evalue: '', traceback: [] };
     return new NotebookCellOutput(
         [
-            NotebookCellOutputItem.error({
-                name: output?.ename || '',
-                message: output?.evalue || '',
-                stack: (output?.traceback || []).join('\n')
-            })
+            // Do not use `NotebookCellOutputItem.error` as that will only extract the message, name and stact
+            // properties from the object passed into the constructor.
+            // Behind the scenes its just a JSON, so construct the JSON manually.
+            // We want the `traceback` in its original format for 3rd party extensions.
+            NotebookCellOutputItem.json(
+                {
+                    name: output?.ename || '',
+                    message: output?.evalue || '',
+                    stack: (output?.traceback || []).join('\n'),
+                    traceback: output?.traceback || []
+                },
+                'application/vnd.code.notebook.error'
+            )
         ],
         { ...getOutputMetadata(output), originalError: output }
     );
