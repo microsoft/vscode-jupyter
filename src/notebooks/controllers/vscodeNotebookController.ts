@@ -587,7 +587,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                     // Hence we need to ensure we don't clear last execution state if the status is idle.
                     // Completion of cells is marked by status being success or error.
                     // Idle means the cell execution did not complete.
-                    if (state === NotebookCellRunState.Idle) {
+                    if (state === NotebookCellRunState.Busy) {
                         return;
                     }
 

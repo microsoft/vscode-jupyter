@@ -9,7 +9,7 @@ export type IExecution = ICellExecution | ICodeExecution;
 export interface ICellExecution {
     type: 'cell';
     cell: NotebookCell;
-    state?: NotebookCellRunState;
+    state: NotebookCellRunState;
     result: Promise<void>;
     start(session: IKernelSession): Promise<void>;
     cancel(forced?: boolean): Promise<void>;
@@ -20,7 +20,7 @@ export interface ICodeExecution {
     type: 'code';
     executionId: string;
     code: string;
-    state?: NotebookCellRunState;
+    state: NotebookCellRunState;
     result: Promise<void>;
     onRequestSent: Event<void>;
     onRequestAcknowledged: Event<void>;

@@ -171,7 +171,7 @@ export class CellExecutionQueue implements Disposable {
                 ? this.queueOfCellsToExecute.filter((item) => cells.includes(item.cell))
                 : this.queueOfItemsToExecute;
 
-        await Promise.all(cellsToCheck.map((cell) => cell.result.catch(noop).then(() => cell.state))));
+        return Promise.all(cellsToCheck.map((cell) => cell.result.catch(noop).then(() => cell.state)));
     }
     private startExecutingCells() {
         if (!this.startedRunningCells) {

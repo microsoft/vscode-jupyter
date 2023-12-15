@@ -34,8 +34,12 @@ export class CodeExecution implements ICodeExecution, IDisposable {
     public get done(): Promise<void> {
         return this._done.promise;
     }
-    public get result(): Promise<NotebookCellRunState> {
-        return this._done.promise.catch(noop).then(() => NotebookCellRunState.Success);
+    private _state: NotebookCellRunState = NotebookCellRunState.Idle;
+    public get state(): NotebookCellRunState {
+        return this._state;
+    }
+    public get result(): Promise<void> {
+        return this._done.promise;
     }
     private readonly _onDidEmitOutput = new EventEmitter<NotebookCellOutput>();
     public readonly onDidEmitOutput = this._onDidEmitOutput.event;

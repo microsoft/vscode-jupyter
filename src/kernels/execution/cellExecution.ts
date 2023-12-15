@@ -69,11 +69,11 @@ export class CellExecutionFactory {
  */
 export class CellExecution implements ICellExecution, IDisposable {
     public readonly type = 'cell';
-    private _state?: NotebookCellRunState;
+    private _state: NotebookCellRunState = NotebookCellRunState.Idle;
     public get result(): Promise<void> {
         return this._result.promise.then(noop);
     }
-    public get state(): NotebookCellRunState | undefined {
+    public get state(): NotebookCellRunState {
         return this._state;
     }
     public get preExecute(): Event<NotebookCell> {
@@ -349,13 +349,12 @@ export class CellExecution implements ICellExecution, IDisposable {
         traceCellMessage(this.cell, 'Completed successfully');
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
-        const runState = this.isEmptyCodeCell ? undefined : NotebookCellRunState.Success;
+        const runState = this.isEmptyCodeCell ? NotebookCellRunState.Idle : NotebookCellRunState.Success;
 
         let success: 'success' | 'failed' = 'success';
         this.endCellTask('success', completedTime);
         traceCellMessage(this.cell, `Completed successfully & resolving with status = ${success}`);
         this._state = runState;
-        this._state = NotebookCellRunState.Success;
         this._result.resolve();
     }
     private endCellTask(success: 'success' | 'failed' | 'cancelled', completedTime = new Date().getTime()) {

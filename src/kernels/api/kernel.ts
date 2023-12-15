@@ -25,7 +25,7 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, createDeferredFromPromise, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
-import { traceError, traceVerbose } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 
 /**
