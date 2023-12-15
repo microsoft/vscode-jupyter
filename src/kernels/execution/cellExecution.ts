@@ -288,7 +288,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         traceCellMessage(this.cell, 'Execution disposed');
         dispose(this.disposables);
     }
-    private completedWithErrors(error: Partial<Error>) {
+    private completedWithErrors(error?: Partial<Error>, completedTime?: number) {
         if (this.cancelHandled) {
             // We cancelled the cell, hence don't do anything.
             return;
@@ -304,6 +304,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         let errorMessage: string | undefined;
         let output: NotebookCellOutput | undefined;
         if (
+            error &&
             !(error instanceof BaseError) &&
             error.message?.includes('Canceled future for execute_request message before replies were done') &&
             this.session &&
@@ -312,7 +313,9 @@ export class CellExecution implements ICellExecution, IDisposable {
             error = new SessionDisposedError();
         }
         // If the error doesn't derive from BaseError, it came from execution
-        if (!(error instanceof BaseError)) {
+        if (!error) {
+            //
+        } else if (!(error instanceof BaseError)) {
             errorMessage = error.message || error.name || error.stack;
         } else {
             // Otherwise it's an error from the kernel itself. Put it into the cell
@@ -329,7 +332,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             this.execution?.appendOutput(output).then(noop, noop);
         }
 
-        this.endCellTask('failed');
+        this.endCellTask('failed', completedTime);
         traceCellMessage(this.cell, 'Completed with errors, & resolving');
         this._result.resolve(NotebookCellRunState.Error);
     }
@@ -472,7 +475,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             // Solution is to wait for all messages to get processed.
             traceCellMessage(this.cell, 'Wait for jupyter execution');
             // const reply = await this.request.done;
-            await this.request.done;
+            const response = await this.request.done;
             const completedTime = new Date().getTime();
             // try {
             //     // The time from the kernel is more accurate, as that will ignore the network latency.
@@ -483,7 +486,11 @@ export class CellExecution implements ICellExecution, IDisposable {
             //     //
             // }
             traceCellMessage(this.cell, 'Jupyter execution completed');
-            this.completedSuccessfully(completedTime);
+            if (response.content.status === 'error') {
+                this.completedWithErrors(undefined, completedTime);
+            } else {
+                this.completedSuccessfully(completedTime);
+            }
             traceCellMessage(this.cell, 'Executed successfully in executeCell');
         } catch (ex) {
             if (this.cancelHandled) {
