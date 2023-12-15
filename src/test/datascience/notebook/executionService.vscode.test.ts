@@ -221,7 +221,7 @@ suite('Kernel Execution @kernelCore', function () {
     test('Verify output & metadata for executed cell with errors', async () => {
         const cell = await notebook.appendCodeCell('print(abcd)');
 
-        await kernelExecution.executeCell(cell);
+        await assert.isRejected(kernelExecution.executeCell(cell));
 
         assert.isAtLeast(cell.executionSummary?.executionOrder || 0, 1);
         assert.isTrue(hasErrorOutput(cell.outputs));

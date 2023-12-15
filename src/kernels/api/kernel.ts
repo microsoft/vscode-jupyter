@@ -23,7 +23,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
+import { Deferred, createDeferred, createDeferredFromPromise, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
 import { traceError, traceVerbose } from '../../platform/logging';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -215,13 +215,11 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         }
 
         const disposables: IDisposable[] = [];
-        const done = createDeferred<void>();
         disposables.push({
             dispose: () => {
                 measures.duration = stopwatch.elapsedTime;
                 properties.mimeTypes = Array.from(mimeTypes).join(',');
                 completed = true;
-                done.resolve();
                 sendApiExecTelemetry(this.kernel, measures, properties).catch(noop);
             }
         });
@@ -230,44 +228,44 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             .getKernelExecution(this.kernel);
         const outputs: Output[] = [];
         let outputsReceived = createDeferred<void>();
-        kernelExecution
-            .executeCode(code, this.extensionId, token)
-            .then((codeExecution) => {
-                codeExecution.result.finally(() => dispose(disposables)).catch(noop);
-                codeExecution.onRequestSent(
-                    () => {
-                        properties.requestSent = true;
-                        measures.requestSentAfter = stopwatch.elapsedTime;
-                        if (!token.isCancellationRequested) {
-                            const progress = (this.previousProgress = this.progress.show());
-                            disposables.push(progress);
-                        }
-                    },
-                    this,
-                    disposables
-                );
-                codeExecution.onRequestAcknowledged(
-                    () => {
-                        properties.requestAcknowledged = true;
-                        measures.requestAcknowledgedAfter = stopwatch.elapsedTime;
-                    },
-                    this,
-                    disposables
-                );
-                codeExecution.onDidEmitOutput(
-                    (e) => {
-                        e.items.forEach((item) => mimeTypes.add(item.mime));
-                        outputs.push(e);
-                        outputsReceived.resolve();
-                        outputsReceived = createDeferred<void>();
-                    },
-                    this,
-                    disposables
-                );
-            })
-            .catch((ex) => {
-                traceError(`Extension ${this.extensionId} failed to execute code in kernel ${this.extensionId}`, ex);
-            });
+        const codeExecution = await kernelExecution.executeCode(code, this.extensionId, token);
+        const done = createDeferredFromPromise(codeExecution.result);
+        void done.promise.finally(() => dispose(disposables));
+
+        codeExecution.onRequestSent(
+            () => {
+                properties.requestSent = true;
+                measures.requestSentAfter = stopwatch.elapsedTime;
+                if (!token.isCancellationRequested) {
+                    const progress = (this.previousProgress = this.progress.show());
+                    disposables.push(progress);
+                }
+            },
+            this,
+            disposables
+        );
+        codeExecution.onRequestAcknowledged(
+            () => {
+                properties.requestAcknowledged = true;
+                measures.requestAcknowledgedAfter = stopwatch.elapsedTime;
+            },
+            this,
+            disposables
+        );
+        codeExecution.onDidEmitOutput(
+            (e) => {
+                e.items.forEach((item) => mimeTypes.add(item.mime));
+                outputs.push(e);
+                outputsReceived.resolve();
+                outputsReceived = createDeferred<void>();
+            },
+            this,
+            disposables
+        );
+
+        // .catch((ex) => {
+        //     traceError(`Extension ${this.extensionId} failed to execute code in kernel ${this.extensionId}`, ex);
+        // });
         token.onCancellationRequested(
             () => {
                 if (completed) {

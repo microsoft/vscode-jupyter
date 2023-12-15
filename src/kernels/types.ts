@@ -39,9 +39,9 @@ export type LiveKernelModel = IJupyterKernel &
     Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };
 
 export enum NotebookCellRunState {
-    Idle = 'Idle',
-    Success = 'Success',
-    Error = 'Error'
+    Busy = 'Busy',
+    Error = 'Error',
+    Success = 'Success'
 }
 
 async function getConnectionIdHash(connection: KernelConnectionMetadata) {

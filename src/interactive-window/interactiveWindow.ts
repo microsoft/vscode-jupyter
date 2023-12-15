@@ -28,13 +28,7 @@ import uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
-import {
-    IKernel,
-    IKernelProvider,
-    isLocalConnection,
-    KernelConnectionMetadata,
-    NotebookCellRunState
-} from '../kernels/types';
+import { IKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../kernels/types';
 import { chainable } from '../platform/common/utils/decorators';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
 import { DataScience } from '../platform/common/utils/localize';
@@ -437,8 +431,10 @@ export class InteractiveWindow implements IInteractiveWindow {
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             const iwCellMetadata = getInteractiveCellMetadata(cell);
             const execution = this.kernelProvider.getKernelExecution(kernel!);
-            success =
-                (await execution.executeCell(cell, iwCellMetadata?.generatedCode?.code)) !== NotebookCellRunState.Error;
+            success = await execution.executeCell(cell, iwCellMetadata?.generatedCode?.code).then(
+                () => true,
+                () => false
+            );
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
         } finally {
             await detachKernel();

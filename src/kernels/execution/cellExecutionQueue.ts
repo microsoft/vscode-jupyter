@@ -171,7 +171,7 @@ export class CellExecutionQueue implements Disposable {
                 ? this.queueOfCellsToExecute.filter((item) => cells.includes(item.cell))
                 : this.queueOfItemsToExecute;
 
-        return Promise.all(cellsToCheck.map((cell) => cell.result));
+        await Promise.all(cellsToCheck.map((cell) => cell.result.catch(noop).then(() => cell.state))));
     }
     private startExecutingCells() {
         if (!this.startedRunningCells) {
@@ -217,7 +217,7 @@ export class CellExecutionQueue implements Disposable {
                 traceCellMessage(itemToExecute.cell, 'Before Execute individual cell');
             }
 
-            let executionResult: NotebookCellRunState | undefined;
+            let executionResultIsSuccessful: boolean = true;
             try {
                 if (itemToExecute.type === 'cell' && itemToExecute.cell.notebook.isClosed) {
                     notebookClosed = true;
@@ -225,12 +225,15 @@ export class CellExecutionQueue implements Disposable {
                     // Noop.
                 } else {
                     await itemToExecute.start(kernelConnection);
-                    executionResult = await itemToExecute.result;
+                    executionResultIsSuccessful = await itemToExecute.result.then(() => true).catch(() => false);
                 }
             } finally {
                 if (itemToExecute.type === 'cell') {
                     // Once the cell has completed execution, remove it from the queue.
-                    traceCellMessage(itemToExecute.cell, `After Execute individual cell ${executionResult}`);
+                    traceCellMessage(
+                        itemToExecute.cell,
+                        `After Execute individual cell ${executionResultIsSuccessful}`
+                    );
                 }
                 const index = this.queueOfItemsToExecute.indexOf(itemToExecute);
                 if (index >= 0) {
@@ -256,7 +259,7 @@ export class CellExecutionQueue implements Disposable {
             if (
                 notebookClosed ||
                 this.cancelledOrCompletedWithErrors ||
-                (executionResult === NotebookCellRunState.Error && !cellErrorsAllowed)
+                (!executionResultIsSuccessful && !cellErrorsAllowed)
             ) {
                 this.cancelledOrCompletedWithErrors = true;
                 const reasons: string[] = [];
@@ -266,7 +269,7 @@ export class CellExecutionQueue implements Disposable {
                 if (notebookClosed) {
                     reasons.push('Notebook being closed');
                 }
-                if (typeof executionResult === 'number' && executionResult === NotebookCellRunState.Error) {
+                if (typeof executionResultIsSuccessful === 'number' && !executionResultIsSuccessful) {
                     reasons.push('failure in cell execution');
                 }
                 if (reasons.length === 0) {

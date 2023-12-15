@@ -69,13 +69,17 @@ export class CellExecutionFactory {
  */
 export class CellExecution implements ICellExecution, IDisposable {
     public readonly type = 'cell';
-    public get result(): Promise<NotebookCellRunState> {
-        return this._result.promise;
+    private _state?: NotebookCellRunState;
+    public get result(): Promise<void> {
+        return this._result.promise.then(noop);
+    }
+    public get state(): NotebookCellRunState | undefined {
+        return this._state;
     }
     public get preExecute(): Event<NotebookCell> {
         return this._preExecuteEmitter.event;
     }
-    private readonly _result = createDeferred<NotebookCellRunState>();
+    private readonly _result = createDeferred<void>();
 
     private started?: boolean;
 
@@ -186,7 +190,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             traceCellMessage(this.cell, 'Cell has already been started yet CellExecution.Start invoked again');
             traceError(`Cell has already been started yet CellExecution.Start invoked again ${this.cell.index}`);
             // TODO: Send telemetry this should never happen, if it does we have problems.
-            return this.result.then(noop);
+            return this.result.then(noop, noop);
         }
         this.started = true;
 
@@ -215,10 +219,10 @@ export class CellExecution implements ICellExecution, IDisposable {
         }
         if (this.started) {
             traceError(`Cell has already been started yet CellExecution.resume invoked again ${this.cell.index}`);
-            return this.result;
+            return this.result.then(noop, noop);
         }
         this.started = true;
-
+        this._state = NotebookCellRunState.Busy;
         activeNotebookCellExecution.set(this.cell.notebook, this.execution);
         this.execution?.start(info.startTime);
         if (info.executionCount && this.execution) {
@@ -264,7 +268,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             // stop handling execution results & the like from the kernel.
             // The result will resolve when execution completes or kernel is restarted.
             traceCellMessage(this.cell, 'Cell is already running, waiting for it to finish or kernel to start');
-            await this.result;
+            await this.result.catch(noop);
             return;
         }
         if (this.cancelHandled || this._completed) {
@@ -288,7 +292,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         traceCellMessage(this.cell, 'Execution disposed');
         dispose(this.disposables);
     }
-    private completedWithErrors(error?: Partial<Error>, completedTime?: number) {
+    private completedWithErrors(error: Partial<Error>, completedTime?: number, appendErrorToOutput = true) {
         if (this.cancelHandled) {
             // We cancelled the cell, hence don't do anything.
             return;
@@ -300,41 +304,43 @@ export class CellExecution implements ICellExecution, IDisposable {
         }
         traceCellMessage(this.cell, 'Completed with errors');
 
-        traceCellMessage(this.cell, 'Update with error state & output');
-        let errorMessage: string | undefined;
-        let output: NotebookCellOutput | undefined;
-        if (
-            error &&
-            !(error instanceof BaseError) &&
-            error.message?.includes('Canceled future for execute_request message before replies were done') &&
-            this.session &&
-            isKernelSessionDead(this.session)
-        ) {
-            error = new SessionDisposedError();
-        }
-        // If the error doesn't derive from BaseError, it came from execution
-        if (!error) {
-            //
-        } else if (!(error instanceof BaseError)) {
-            errorMessage = error.message || error.name || error.stack;
-        } else {
-            // Otherwise it's an error from the kernel itself. Put it into the cell
-            const failureInfo = analyzeKernelErrors(
-                workspace.workspaceFolders || [],
-                error,
-                getDisplayNameOrNameOfKernelConnection(this.kernelConnection),
-                this.kernelConnection.interpreter?.sysPrefix
-            );
-            errorMessage = failureInfo?.message;
-        }
-        output = createOutputWithErrorMessageForDisplay(errorMessage || '');
-        if (output) {
-            this.execution?.appendOutput(output).then(noop, noop);
+        if (appendErrorToOutput) {
+            let errorMessage: string | undefined;
+            let output: NotebookCellOutput | undefined;
+            if (
+                error &&
+                !(error instanceof BaseError) &&
+                error.message?.includes('Canceled future for execute_request message before replies were done') &&
+                this.session &&
+                isKernelSessionDead(this.session)
+            ) {
+                error = new SessionDisposedError();
+            }
+            // If the error doesn't derive from BaseError, it came from execution
+            if (!error) {
+                //
+            } else if (!(error instanceof BaseError)) {
+                errorMessage = error.message || error.name || error.stack;
+            } else {
+                // Otherwise it's an error from the kernel itself. Put it into the cell
+                const failureInfo = analyzeKernelErrors(
+                    workspace.workspaceFolders || [],
+                    error,
+                    getDisplayNameOrNameOfKernelConnection(this.kernelConnection),
+                    this.kernelConnection.interpreter?.sysPrefix
+                );
+                errorMessage = failureInfo?.message;
+            }
+            output = createOutputWithErrorMessageForDisplay(errorMessage || '');
+            if (output) {
+                this.execution?.appendOutput(output).then(noop, noop);
+            }
         }
 
         this.endCellTask('failed', completedTime);
         traceCellMessage(this.cell, 'Completed with errors, & resolving');
-        this._result.resolve(NotebookCellRunState.Error);
+        this._state = NotebookCellRunState.Error;
+        this._result.reject(error);
     }
     private get isEmptyCodeCell(): boolean {
         return this.cell.document.getText().trim().length === 0;
@@ -343,18 +349,14 @@ export class CellExecution implements ICellExecution, IDisposable {
         traceCellMessage(this.cell, 'Completed successfully');
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
-        let runState = this.isEmptyCodeCell ? NotebookCellRunState.Idle : NotebookCellRunState.Success;
+        const runState = this.isEmptyCodeCell ? undefined : NotebookCellRunState.Success;
 
         let success: 'success' | 'failed' = 'success';
-        // If there are any errors in the cell, then change status to error.
-        if (this.cellExecutionHandler?.hasErrorOutput) {
-            success = 'failed';
-            runState = NotebookCellRunState.Error;
-        }
-
-        this.endCellTask(success, completedTime);
+        this.endCellTask('success', completedTime);
         traceCellMessage(this.cell, `Completed successfully & resolving with status = ${success}`);
-        this._result.resolve(runState);
+        this._state = runState;
+        this._state = NotebookCellRunState.Success;
+        this._result.resolve();
     }
     private endCellTask(success: 'success' | 'failed' | 'cancelled', completedTime = new Date().getTime()) {
         if (this._completed) {
@@ -392,7 +394,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         traceCellMessage(this.cell, 'Completed due to cancellation');
         this.endCellTask('cancelled');
         traceCellMessage(this.cell, 'Cell cancelled & resolving');
-        this._result.resolve(NotebookCellRunState.Idle);
+        this._result.resolve();
     }
 
     private canExecuteCell() {
@@ -433,6 +435,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             traceVerbose(`Cell Index:${this.cell.index} sent to kernel`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
+            this._state = NotebookCellRunState.Busy;
             this.request = kernelConnection.requestExecute(
                 {
                     code,
@@ -487,7 +490,10 @@ export class CellExecution implements ICellExecution, IDisposable {
             // }
             traceCellMessage(this.cell, 'Jupyter execution completed');
             if (response.content.status === 'error') {
-                this.completedWithErrors(undefined, completedTime);
+                const error = new Error(response.content.evalue);
+                error.name = response.content.ename;
+                error.stack = (response.content.traceback || '').join('\n');
+                this.completedWithErrors(error, completedTime, false);
             } else {
                 this.completedSuccessfully(completedTime);
             }

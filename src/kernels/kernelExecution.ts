@@ -212,7 +212,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
         if (executionQueue) {
             await executionQueue.cancel();
-            await executionQueue.waitForCompletion();
+            await executionQueue.waitForCompletion().catch(noop);
         }
     }
     private async onWillCancel() {
@@ -234,7 +234,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
         // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
         const pendingCells = executionQueue
-            ? executionQueue.cancel(true).then(() => executionQueue.waitForCompletion())
+            ? executionQueue.cancel(true).then(() => executionQueue.waitForCompletion().catch(noop))
             : Promise.resolve();
 
         if (!session) {
