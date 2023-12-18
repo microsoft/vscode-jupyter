@@ -2,7 +2,7 @@ module.exports = {
     env: {
         browser: true,
         es6: true,
-        node: true,
+        node: true,,,,
     },
     extends: ['prettier'],
     ignorePatterns: ['*.js', 'vscode.*.d.ts', 'vscode.d.ts', 'types'],
