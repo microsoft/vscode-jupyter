@@ -91,11 +91,11 @@ jobs:
 
       - run: npm i -g @vscode/vsce
 
-      - name: Build VSIX
+      - name: Buil  d VSIX
         uses: ./.github/actions/build-vsix
         id: build-vsix
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
           path: 'ms-toolsai-jupyter-insiders.vsix'
@@ -252,7 +252,7 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
@@ -751,7 +751,7 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
@@ -759,7 +759,7 @@ jobs:
           retention-days: 1
 
       - name: Upload VS code logs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}
@@ -771,7 +771,7 @@ jobs:
         run: npm run printTestResults
 
       - name: Upload test result, screenshots files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}
@@ -822,7 +822,7 @@ jobs:
         run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Download VSIX
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
 
@@ -857,7 +857,7 @@ jobs:
           run: npm run testSmokeLogged
 
       - name: Upload test result, screenshots files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: TestLogs-Smoke-${{matrix.python}}-${{matrix.os}}
@@ -869,7 +869,7 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
@@ -908,7 +908,7 @@ jobs:
       # The name pattern is ${{env.COVERAGE_REPORTS}}-${{runner.os}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
       # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
       - name: Download Ubuntu test coverage artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
           path: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
