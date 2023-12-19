@@ -156,6 +156,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
         const kernelConnection = session.kernel;
         try {
             this.started = true;
+            this._state = NotebookCellRunState.Busy;
             this._onRequestSent.fire();
             traceExecMessage(this.executionId, `Execution Request Sent to Kernel`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
@@ -170,6 +171,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             this.request.done.then(noop, noop);
         } catch (ex) {
             traceError(`Code execution failed without request, for exec ${this.executionId}`, ex);
+            this._state = NotebookCellRunState.Error;
             this._completed = true;
             this._done.reject(ex);
             return;
@@ -192,9 +194,11 @@ export class CodeExecution implements ICodeExecution, IDisposable {
                 error.stack = (response.content.traceback || '').join('\n');
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (error as any).traceback = response.content.traceback;
+                this._state = NotebookCellRunState.Error;
                 this._done.reject(error);
             } else {
                 traceExecMessage(this.executionId, 'Executed successfully');
+                this._state = NotebookCellRunState.Success;
                 this._done.resolve();
             }
         } catch (ex) {
@@ -209,6 +213,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             } else {
                 traceError(`Some other execution error for exec ${this.executionId}`, ex);
             }
+            this._state = NotebookCellRunState.Error;
             this._done.reject(ex);
         }
     }
