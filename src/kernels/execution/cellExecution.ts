@@ -29,7 +29,6 @@ import {
     IKernelSession,
     IKernelController,
     KernelConnectionMetadata,
-    NotebookCellRunState,
     ResumeCellExecutionInformation
 } from '../../kernels/types';
 import { NotebookCellStateTracker, traceCellMessage } from './helpers';
@@ -69,12 +68,8 @@ export class CellExecutionFactory {
  */
 export class CellExecution implements ICellExecution, IDisposable {
     public readonly type = 'cell';
-    private _state: NotebookCellRunState = NotebookCellRunState.Idle;
     public get result(): Promise<void> {
         return this._result.promise.then(noop);
-    }
-    public get state(): NotebookCellRunState {
-        return this._state;
     }
     public get preExecute(): Event<NotebookCell> {
         return this._preExecuteEmitter.event;
@@ -222,7 +217,6 @@ export class CellExecution implements ICellExecution, IDisposable {
             return this.result.then(noop, noop);
         }
         this.started = true;
-        this._state = NotebookCellRunState.Busy;
         activeNotebookCellExecution.set(this.cell.notebook, this.execution);
         this.execution?.start(info.startTime);
         if (info.executionCount && this.execution) {
@@ -339,7 +333,6 @@ export class CellExecution implements ICellExecution, IDisposable {
 
         this.endCellTask('failed', completedTime);
         traceCellMessage(this.cell, 'Completed with errors, & resolving');
-        this._state = NotebookCellRunState.Error;
         this._result.reject(error);
     }
     private get isEmptyCodeCell(): boolean {
@@ -347,14 +340,9 @@ export class CellExecution implements ICellExecution, IDisposable {
     }
     private completedSuccessfully(completedTime?: number) {
         traceCellMessage(this.cell, 'Completed successfully');
-        // If we requested a cancellation, then assume it did not even run.
-        // If it did, then we'd get an interrupt error in the output.
-        const runState = this.isEmptyCodeCell ? NotebookCellRunState.Idle : NotebookCellRunState.Success;
-
         let success: 'success' | 'failed' = 'success';
         this.endCellTask('success', completedTime);
         traceCellMessage(this.cell, `Completed successfully & resolving with status = ${success}`);
-        this._state = runState;
         this._result.resolve();
     }
     private endCellTask(success: 'success' | 'failed' | 'cancelled', completedTime = new Date().getTime()) {
@@ -434,7 +422,6 @@ export class CellExecution implements ICellExecution, IDisposable {
             traceVerbose(`Cell Index:${this.cell.index} sent to kernel`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
-            this._state = NotebookCellRunState.Busy;
             this.request = kernelConnection.requestExecute(
                 {
                     code,

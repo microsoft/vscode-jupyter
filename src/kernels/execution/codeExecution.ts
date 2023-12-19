@@ -9,7 +9,7 @@ import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging'
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
-import { IKernelSession, NotebookCellRunState } from '../../kernels/types';
+import { IKernelSession } from '../../kernels/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import { ICodeExecution } from './types';
 import { executeSilentlyAndEmitOutput } from '../helpers';
@@ -33,10 +33,6 @@ export class CodeExecution implements ICodeExecution, IDisposable {
     public readonly type = 'code';
     public get done(): Promise<void> {
         return this._done.promise;
-    }
-    private _state: NotebookCellRunState = NotebookCellRunState.Idle;
-    public get state(): NotebookCellRunState {
-        return this._state;
     }
     public get result(): Promise<void> {
         return this._done.promise;
@@ -156,7 +152,6 @@ export class CodeExecution implements ICodeExecution, IDisposable {
         const kernelConnection = session.kernel;
         try {
             this.started = true;
-            this._state = NotebookCellRunState.Busy;
             this._onRequestSent.fire();
             traceExecMessage(this.executionId, `Execution Request Sent to Kernel`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
@@ -171,7 +166,6 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             this.request.done.then(noop, noop);
         } catch (ex) {
             traceError(`Code execution failed without request, for exec ${this.executionId}`, ex);
-            this._state = NotebookCellRunState.Error;
             this._completed = true;
             this._done.reject(ex);
             return;
@@ -194,11 +188,9 @@ export class CodeExecution implements ICodeExecution, IDisposable {
                 error.stack = (response.content.traceback || '').join('\n');
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (error as any).traceback = response.content.traceback;
-                this._state = NotebookCellRunState.Error;
                 this._done.reject(error);
             } else {
                 traceExecMessage(this.executionId, 'Executed successfully');
-                this._state = NotebookCellRunState.Success;
                 this._done.resolve();
             }
         } catch (ex) {
@@ -213,7 +205,6 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             } else {
                 traceError(`Some other execution error for exec ${this.executionId}`, ex);
             }
-            this._state = NotebookCellRunState.Error;
             this._done.reject(ex);
         }
     }

@@ -6,8 +6,10 @@ import type {
     CancellationToken,
     Disposable,
     Event,
+    EventEmitter,
     NotebookCell,
     NotebookCellExecution,
+    NotebookCellOutputItem,
     NotebookDocument,
     Uri
 } from 'vscode';
@@ -31,19 +33,11 @@ import {
 } from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { generateIdFromRemoteProvider } from './jupyter/jupyterUtils';
-import { ICodeExecution } from './execution/types';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
 export type LiveKernelModel = IJupyterKernel &
     Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };
-
-export enum NotebookCellRunState {
-    Idle = 'Idle',
-    Busy = 'Busy',
-    Error = 'Error',
-    Success = 'Success'
-}
 
 async function getConnectionIdHash(connection: KernelConnectionMetadata) {
     if (!isWeb() && connection.interpreter?.uri) {
@@ -447,16 +441,24 @@ export interface INotebookKernelExecution {
      * @param cell Cell to execute
      * @param codeOverride Override the code to execute
      */
-    executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
+    executeCell(cell: NotebookCell, codeOverride?: string): Promise<void>;
     /**
      * Executes 3rd party code against the kernel.
      */
-    executeCode(code: string, extensionId: string, token: CancellationToken): Promise<ICodeExecution>;
+    executeCode(
+        code: string,
+        extensionId: string,
+        events: {
+            started: EventEmitter<void>;
+            executionAcknowledged: EventEmitter<void>;
+        },
+        token: CancellationToken
+    ): AsyncGenerator<NotebookCellOutputItem[], void, unknown>;
     /**
      * Given the cell execution message Id and the like , this will resume the execution of a cell from a detached state.
      * E.g. assume user re-loads VS Code, we need to resume the execution of the cell.
      */
-    resumeCellExecution(cell: NotebookCell, info: ResumeCellExecutionInformation): Promise<NotebookCellRunState>;
+    resumeCellExecution(cell: NotebookCell, info: ResumeCellExecutionInformation): Promise<void>;
     /**
      * Executes arbitrary code against the kernel without incrementing the execution count.
      */

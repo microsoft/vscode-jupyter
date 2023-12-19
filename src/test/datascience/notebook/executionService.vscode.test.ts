@@ -58,7 +58,7 @@ import {
     hasErrorOutput,
     translateCellErrorOutput
 } from '../../../kernels/execution/helpers';
-import { IKernel, IKernelProvider, INotebookKernelExecution, NotebookCellRunState } from '../../../kernels/types';
+import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { noop } from '../../core';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
@@ -221,9 +221,8 @@ suite('Kernel Execution @kernelCore', function () {
     test('Verify output & metadata for executed cell with errors', async () => {
         const cell = await notebook.appendCodeCell('print(abcd)');
 
-        const result = await kernelExecution.executeCell(cell);
+        await assert.isRejected(kernelExecution.executeCell(cell));
 
-        assert.strictEqual(result, NotebookCellRunState.Error);
         assert.isAtLeast(cell.executionSummary?.executionOrder || 0, 1);
         assert.isTrue(hasErrorOutput(cell.outputs));
 

@@ -6,12 +6,7 @@ import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { createJupyterCellFromVSCNotebookCell, traceCellMessage } from './helpers';
 import { CellExecutionFactory } from './cellExecution';
-import {
-    IKernelSession,
-    KernelConnectionMetadata,
-    NotebookCellRunState,
-    ResumeCellExecutionInformation
-} from '../../kernels/types';
+import { IKernelSession, KernelConnectionMetadata, ResumeCellExecutionInformation } from '../../kernels/types';
 import { Resource } from '../../platform/common/types';
 import { ICellExecution, ICodeExecution } from './types';
 import { CodeExecution } from './codeExecution';
@@ -84,7 +79,14 @@ export class CellExecutionQueue implements Disposable {
     }
     private enqueue(
         options:
-            | { cell: NotebookCell; codeOverride?: string }
+            | {
+                  cell: NotebookCell;
+                  events?: {
+                      started: EventEmitter<void>;
+                      completed: EventEmitter<void>;
+                  };
+                  codeOverride?: string;
+              }
             | { code: string; extensionId: string; token: CancellationToken }
     ) {
         let executionItem: ICellExecution | ICodeExecution;
@@ -165,13 +167,12 @@ export class CellExecutionQueue implements Disposable {
      * If cells are cancelled, they are not processed, & that too counts as completion.
      * If no cells are provided, then wait on all cells in the current queue.
      */
-    public async waitForCompletion(cells?: NotebookCell[]): Promise<NotebookCellRunState[]> {
-        const cellsToCheck =
-            Array.isArray(cells) && cells.length > 0
-                ? this.queueOfCellsToExecute.filter((item) => cells.includes(item.cell))
-                : this.queueOfItemsToExecute;
+    public async waitForCompletion(cell?: NotebookCell): Promise<void> {
+        const cellsToCheck = cell
+            ? this.queueOfCellsToExecute.filter((item) => cell === item.cell)
+            : this.queueOfItemsToExecute;
 
-        return Promise.all(cellsToCheck.map((cell) => cell.result.catch(noop).then(() => cell.state)));
+        await Promise.all(cellsToCheck.map((cell) => cell.result));
     }
     private startExecutingCells() {
         if (!this.startedRunningCells) {
@@ -280,7 +281,7 @@ export class CellExecutionQueue implements Disposable {
                     this.queueOfCellsToExecute.length === this.queueOfItemsToExecute.length
                 ) {
                     // Only dealing with cells
-                    // Cancel evertyting and stop execution.
+                    // Cancel everything and stop execution.
                     traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
                     await this.cancel();
                     break;

@@ -18,12 +18,12 @@ import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { DisposableBase, dispose } from '../../platform/common/utils/lifecycle';
+import { DisposableBase } from '../../platform/common/utils/lifecycle';
 import { noop } from '../../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { Deferred, createDeferred, createDeferredFromPromise, sleep } from '../../platform/common/utils/async';
+import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
 import { traceVerbose } from '../../platform/logging';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -232,7 +232,12 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         const done = createDeferredFromPromise(codeExecution.result);
         void done.promise.finally(() => dispose(disposables));
 
-        codeExecution.onRequestSent(
+        const events = {
+            started: new EventEmitter<void>(),
+            executionAcknowledged: new EventEmitter<void>()
+        };
+
+        events.started.event(
             () => {
                 properties.requestSent = true;
                 measures.requestSentAfter = stopwatch.elapsedTime;
@@ -244,7 +249,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             this,
             disposables
         );
-        codeExecution.onRequestAcknowledged(
+        events.executionAcknowledged.event(
             () => {
                 properties.requestAcknowledged = true;
                 measures.requestAcknowledgedAfter = stopwatch.elapsedTime;
@@ -263,9 +268,6 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             disposables
         );
 
-        // .catch((ex) => {
-        //     traceError(`Extension ${this.extensionId} failed to execute code in kernel ${this.extensionId}`, ex);
-        // });
         token.onCancellationRequested(
             () => {
                 if (completed) {
@@ -280,17 +282,10 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             this,
             disposables
         );
-        while (true) {
-            await Promise.race([outputsReceived.promise, done.promise]);
-            if (outputsReceived.completed) {
-                outputsReceived = createDeferred<void>();
-            }
-            while (outputs.length) {
-                yield outputs.shift()!;
-            }
-            if (done.completed) {
-                break;
-            }
+
+        for await (const outputs of kernelExecution.executeCode(code, this.extensionId, events, token)) {
+            outputs.forEach((output) => mimeTypes.add(output.mime));
+            yield outputs;
         }
     }
 }
