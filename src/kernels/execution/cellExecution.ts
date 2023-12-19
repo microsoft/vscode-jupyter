@@ -215,7 +215,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         }
         if (this.started) {
             traceError(`Cell has already been started yet CellExecution.resume invoked again ${this.cell.index}`);
-            return this.result.then(noop, noop);
+            return this.result;
         }
         this.started = true;
         activeNotebookCellExecution.set(this.cell.notebook, this.execution);
@@ -241,6 +241,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         );
 
         this.cellExecutionHandler.completed.finally(() => this.completedSuccessfully()).catch(noop);
+        return this.result;
     }
 
     /**
