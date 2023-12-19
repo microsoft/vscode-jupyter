@@ -45,6 +45,7 @@
     "jupyter.command.jupyter.debugCell.title": "Debug Cell",
     "jupyter.command.jupyter.runByLineNext.title": "Run Next Line",
     "jupyter.command.jupyter.runByLineStop.title": "Continue Execution",
+    "jupyter.command.editor.interactiveWindow.context.label": "Run in Interactive Window",
     "jupyter.command.jupyter.runFileInteractive.title": "Run Current File in Interactive Window",
     "jupyter.command.jupyter.debugFileInteractive.title": "Debug Current File in Interactive Window",
     "jupyter.command.jupyter.runallcells.title": "Run All Cells",
