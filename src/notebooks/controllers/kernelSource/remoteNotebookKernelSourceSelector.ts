@@ -24,6 +24,7 @@ import {
 } from '../../../kernels/jupyter/types';
 import { IKernelFinder, KernelConnectionMetadata, RemoteKernelConnectionMetadata } from '../../../kernels/types';
 import {
+    CodespaceExtensionId,
     InteractiveWindowView,
     JUPYTER_HUB_EXTENSION_ID,
     JVSC_EXTENSION_ID,
@@ -433,7 +434,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                             handle: selectedSource.server.id,
                             extensionId: provider.extensionId
                         };
-                        await raceCancellationError(token, this.serverSelector.addJupyterServer(serverId));
+                        if (provider.extensionId.toLowerCase() === CodespaceExtensionId.toLowerCase()) {
+                            await raceCancellationError(token, this.serverSelector.addJupyterServer(serverId));
+                        }
                         return this.kernelFinderController.getOrCreateRemoteKernelFinder(
                             serverId,
                             selectedSource.server.label
@@ -508,7 +511,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 handle: server.id,
                 extensionId: selectedSource.provider.extensionId
             };
-            await raceCancellationError(token, this.serverSelector.addJupyterServer(serverId));
+            if (serverId.extensionId.toLowerCase() === CodespaceExtensionId.toLowerCase()) {
+                await raceCancellationError(token, this.serverSelector.addJupyterServer(serverId));
+            }
             return this.kernelFinderController.getOrCreateRemoteKernelFinder(serverId, server.label);
         })();
 
