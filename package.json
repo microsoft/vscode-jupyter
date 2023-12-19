@@ -817,7 +817,7 @@
         "submenus": [
             {
                 "id": "editor.interactiveWindow.context",
-                "label": "Run in Interactive Window"
+                "label": "%jupyter.command.editor.interactiveWindow.context.label%"
             }
         ],
         "menus": {
