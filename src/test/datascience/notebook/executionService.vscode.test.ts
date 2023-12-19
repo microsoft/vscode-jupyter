@@ -471,7 +471,7 @@ suite('Kernel Execution @kernelCore', function () {
         await notebook.appendCodeCell('raise Exception("<whatever>")');
         const cells = notebook.cells;
         await Promise.all([
-            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))),
+            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))),
             waitForTextOutput(cells[0], '1', 0, false),
             waitForTextOutput(cells[1], '<a href=f>', 0, false),
             waitForTextOutput(cells[2], '<a href=f>', 0, false),
@@ -666,7 +666,7 @@ suite('Kernel Execution @kernelCore', function () {
         const cell2 = await notebook.appendCodeCell('print("after fail")');
 
         await Promise.all([
-            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))),
+            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))),
             waitForExecutionCompletedWithErrors(cell1)
         ]);
 
@@ -887,7 +887,7 @@ suite('Kernel Execution @kernelCore', function () {
         const cell3 = await notebook.appendCodeCell('2');
 
         await Promise.all([
-            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))),
+            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))),
             waitForExecutionCompletedSuccessfully(cell1),
             waitForExecutionCompletedWithErrors(cell2)
         ]);
@@ -896,7 +896,7 @@ suite('Kernel Execution @kernelCore', function () {
 
         // Run cell 2 again, & it should fail again & execution count should increase.
         await Promise.all([
-            kernelExecution.executeCell(cell2),
+            kernelExecution.executeCell(cell2).catch(noop),
             // Give it time to run & fail, this time execution order is greater than previously
             waitForCondition(
                 async () => cell2.executionSummary?.executionOrder === cell1.executionSummary!.executionOrder! + 2,
@@ -913,7 +913,7 @@ suite('Kernel Execution @kernelCore', function () {
 
         // Run all cells again
         await Promise.all([
-            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))),
+            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))),
             waitForCondition(
                 async () => cell2.executionSummary?.executionOrder === lastExecutionOrderOfCell3 + 2,
                 5_000,
