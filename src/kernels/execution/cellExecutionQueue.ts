@@ -225,10 +225,8 @@ export class CellExecutionQueue implements Disposable {
                 } else if (itemToExecute.type === 'cell' && this.cancelledOrCompletedWithErrors) {
                     // Noop.
                 } else {
-                    executionResultIsSuccessful = await await itemToExecute
-                        .start(kernelConnection)
-                        .then(() => true)
-                        .catch(() => false);
+                    await itemToExecute.start(kernelConnection);
+                    executionResultIsSuccessful = await itemToExecute.result.then(() => true).catch(() => false);
                 }
             } finally {
                 if (itemToExecute.type === 'cell') {
