@@ -55,8 +55,7 @@ import {
     IKernelController,
     IKernelProvider,
     isLocalConnection,
-    KernelConnectionMetadata,
-    
+    KernelConnectionMetadata
 } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
