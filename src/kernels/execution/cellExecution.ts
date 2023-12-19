@@ -69,7 +69,7 @@ export class CellExecutionFactory {
 export class CellExecution implements ICellExecution, IDisposable {
     public readonly type = 'cell';
     public get result(): Promise<void> {
-        return this._result.promise.then(noop);
+        return this._result.promise;
     }
     public get preExecute(): Event<NotebookCell> {
         return this._preExecuteEmitter.event;
