@@ -492,6 +492,8 @@ export class CellExecution implements ICellExecution, IDisposable {
                 const error = new Error(response.content.evalue);
                 error.name = response.content.ename;
                 error.stack = (response.content.traceback || '').join('\n');
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (error as any).traceback = response.content.traceback;
                 this.completedWithErrors(error, completedTime, false);
             } else {
                 this.completedSuccessfully(completedTime);

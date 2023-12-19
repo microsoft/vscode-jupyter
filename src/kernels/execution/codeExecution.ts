@@ -171,7 +171,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
         } catch (ex) {
             traceError(`Code execution failed without request, for exec ${this.executionId}`, ex);
             this._completed = true;
-            this._done.resolve();
+            this._done.reject(ex);
             return;
         }
 
@@ -183,10 +183,20 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             // When the request finishes we are done
             // request.done resolves even before all iopub messages have been sent through.
             // Solution is to wait for all messages to get processed.
-            await this.request!.done.catch(noop);
+            const response = await this.request!.done;
             this._completed = true;
-            this._done.resolve();
-            traceExecMessage(this.executionId, 'Executed successfully');
+            if (response.content.status === 'error') {
+                traceExecMessage(this.executionId, 'Executed with errors');
+                const error = new Error(response.content.evalue);
+                error.name = response.content.ename;
+                error.stack = (response.content.traceback || '').join('\n');
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (error as any).traceback = response.content.traceback;
+                this._done.reject(error);
+            } else {
+                traceExecMessage(this.executionId, 'Executed successfully');
+                this._done.resolve();
+            }
         } catch (ex) {
             this._completed = true;
             if (this.cancelHandled) {
@@ -199,7 +209,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             } else {
                 traceError(`Some other execution error for exec ${this.executionId}`, ex);
             }
-            this._done.resolve();
+            this._done.reject(ex);
         }
     }
 }
