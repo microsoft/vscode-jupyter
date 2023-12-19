@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import { assert, expect } from 'chai';
+import { assert, expect, use } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import * as fs from 'fs';
 import * as path from '../../../platform/vscode-path/path';
 import dedent from 'dedent';
@@ -63,6 +64,7 @@ import { createKernelController, TestNotebookDocument } from './executionHelper'
 import { noop } from '../../core';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 import { splitLines } from '../../../platform/common/helpers';
+use(chaiAsPromised);
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
