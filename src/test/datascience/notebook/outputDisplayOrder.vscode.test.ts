@@ -8,7 +8,7 @@ import { traceInfo } from '../../../platform/logging';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { openNotebook } from '../helpers.node';
 import { closeNotebooksAndCleanUpAfterTests } from './helper.node';
-import { Uri, window } from 'vscode';
+import { Uri, window, workspace } from 'vscode';
 import { initialize } from '../../initialize.node';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { cellOutputToVSCCellOutput } from '../../../kernels/execution/helpers';
@@ -36,9 +36,8 @@ suite('Validate Output order', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests());
     test('Verify order of outputs in existing ipynb file', async () => {
-        await openNotebook(Uri.file(templateIPynb));
-        const cells = window.activeNotebookEditor?.notebook?.getCells()!;
-
+        const notebook = await workspace.openNotebookDocument(Uri.file(templateIPynb));
+        const cells = notebook.getCells()!;
         const expectedOutputItemMimeTypes = [
             [['text/html', 'text/plain']],
             [['application/javascript', 'text/plain']],
