@@ -246,53 +246,6 @@ suite('Kernel Execution @kernelCore', function () {
         assert.isAtLeast(displayCell.executionSummary?.executionOrder || 0, 1);
         await waitForTextOutput(displayCell, 'foo', 0, false);
     });
-    test('Clearing output while executing will ensure output is cleared', async function () {
-        let onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
-        const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
-        stub.get(() => onDidChangeNbEventHandler.event);
-        disposables.push(onDidChangeNbEventHandler);
-
-        // Assume you are executing a cell that prints numbers 1-100.
-        // When printing number 50, you click clear.
-        // Cell output should now start printing output from 51 onwards, & not 1.
-        const cell = await notebook.appendCodeCell(
-            dedent`
-                    print("Start")
-                    import time
-                    for i in range(100):
-                        time.sleep(0.1)
-                        print(i)
-
-                    print("End")`
-        );
-        kernelExecution.executeCell(cell).catch(noop);
-
-        await Promise.all([
-            waitForTextOutput(cell, 'Start', 0, false),
-            waitForTextOutput(cell, '0', 0, false),
-            waitForTextOutput(cell, '1', 0, false),
-            waitForTextOutput(cell, '2', 0, false),
-            waitForTextOutput(cell, '3', 0, false),
-            waitForTextOutput(cell, '4', 0, false)
-        ]);
-
-        // Clear the outputs.
-        cell.outputs.length = 0;
-        onDidChangeNbEventHandler.fire({
-            notebook,
-            metadata: undefined,
-            contentChanges: [],
-            cellChanges: [{ cell, document: undefined, executionSummary: undefined, metadata: undefined, outputs: [] }]
-        });
-
-        // Wait till previous output gets cleared & we have new output.
-        await waitForCondition(
-            () => assertNotHasTextOutputInVSCode(cell, 'Start', 0, false) && cell.outputs.length > 0,
-            5_000,
-            'Cell did not get cleared'
-        );
-        await kernel.restart();
-    });
     test('Clearing output via code', async function () {
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
@@ -1081,6 +1034,50 @@ suite('Kernel Execution @kernelCore', function () {
 
         await waitForTextOutput(cell2, 'HI Y', 0, false);
         await waitForTextOutput(cell2, 'HI Z', 1, false);
+    });
+    test('Clearing output while executing will ensure output is cleared', async function () {
+        let onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
+        const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
+        stub.get(() => onDidChangeNbEventHandler.event);
+        disposables.push(onDidChangeNbEventHandler);
+
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        const cell = await notebook.appendCodeCell(
+            dedent`
+                    print("Start")
+                    import time
+                    for i in range(100):
+                        time.sleep(0.1)
+                        print(i)
+
+                    print("End")`
+        );
+        kernelExecution.executeCell(cell).catch(noop);
+
+        await Promise.all([
+            waitForTextOutput(cell, 'Start', 0, false),
+            waitForTextOutput(cell, '0', 0, false),
+            waitForTextOutput(cell, '1', 0, false)
+        ]);
+
+        // Clear the outputs.
+        cell.outputs.length = 0;
+        onDidChangeNbEventHandler.fire({
+            notebook,
+            metadata: undefined,
+            contentChanges: [],
+            cellChanges: [{ cell, document: undefined, executionSummary: undefined, metadata: undefined, outputs: [] }]
+        });
+
+        // Wait till previous output gets cleared & we have new output.
+        await waitForCondition(
+            () => assertNotHasTextOutputInVSCode(cell, 'Start', 0, false) && cell.outputs.length > 0,
+            5_000,
+            'Cell did not get cleared'
+        );
+        await kernel.dispose().catch(noop);
     });
 
     /**
