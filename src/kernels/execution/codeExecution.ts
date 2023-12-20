@@ -14,6 +14,7 @@ import { SessionDisposedError } from '../../platform/errors/sessionDisposedError
 import { ICodeExecution } from './types';
 import { executeSilentlyAndEmitOutput } from '../helpers';
 import { EventEmitter, NotebookCellOutput } from 'vscode';
+import { KernelError } from '../errors/kernelError';
 
 function traceExecMessage(executionId: string, message: string) {
     traceVerbose(`Execution Id:${executionId}. ${message}.`);
@@ -183,12 +184,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             this._completed = true;
             if (response.content.status === 'error') {
                 traceExecMessage(this.executionId, 'Executed with errors');
-                const error = new Error(response.content.evalue);
-                error.name = response.content.ename;
-                error.stack = (response.content.traceback || '').join('\n');
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (error as any).traceback = response.content.traceback;
-                this._done.reject(error);
+                this._done.reject(new KernelError(response.content));
             } else {
                 traceExecMessage(this.executionId, 'Executed successfully');
                 this._done.resolve();

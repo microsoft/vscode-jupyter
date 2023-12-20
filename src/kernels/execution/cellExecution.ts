@@ -36,6 +36,7 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import { isKernelSessionDead } from '../kernel';
 import { ICellExecution } from './types';
+import { KernelError } from '../errors/kernelError';
 
 /**
  * Factory for CellExecution objects.
@@ -478,12 +479,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             // }
             traceCellMessage(this.cell, 'Jupyter execution completed');
             if (response.content.status === 'error') {
-                const error = new Error(response.content.evalue);
-                error.name = response.content.ename;
-                error.stack = (response.content.traceback || '').join('\n');
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (error as any).traceback = response.content.traceback;
-                this.completedWithErrors(error, completedTime, false);
+                this.completedWithErrors(new KernelError(response.content), completedTime, false);
             } else {
                 this.completedSuccessfully(completedTime);
             }

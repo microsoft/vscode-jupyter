@@ -82,6 +82,7 @@ import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessageHandler';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
 import { openInBrowser } from '../../platform/common/net/browser';
+import { KernelError } from '../../kernels/errors/kernelError';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -587,6 +588,10 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 .catch(noop);
             return await promise;
         } catch (ex) {
+            if (ex instanceof KernelError) {
+                // Kernel errors would have been handled and displayed
+                return;
+            }
             if (!isCancellationError(ex)) {
                 traceError(`Error in execution`, ex);
             }
