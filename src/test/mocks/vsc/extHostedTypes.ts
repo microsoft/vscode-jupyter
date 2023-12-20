@@ -110,6 +110,13 @@ export namespace vscMockExtHostedTypes {
         Pending = 2,
         Executing = 3
     }
+    export enum NotebookCellRunState {
+        Running = 1,
+        Idle = 2,
+        Success = 3,
+        Error = 4
+    }
+
     /**
      * Notebook controller affinity for notebook documents.
      *
