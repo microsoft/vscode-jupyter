@@ -11,7 +11,7 @@ import {
     NotebookDocument,
     workspace,
     CancellationToken,
-    NotebookCellOutputItem
+    NotebookCellOutput
 } from 'vscode';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IDisposable, IExtensionContext } from '../platform/common/types';
@@ -176,7 +176,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             executionAcknowledged: EventEmitter<void>;
         },
         token: CancellationToken
-    ): AsyncGenerator<NotebookCellOutputItem[], void, unknown> {
+    ): AsyncGenerator<NotebookCellOutput, void, unknown> {
         const stopWatch = new StopWatch();
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
             this.kernel.resourceUri,
@@ -207,13 +207,12 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             })
             .catch(noop);
         const done = createDeferredFromPromise(result.result);
-        const outputs: NotebookCellOutputItem[][] = [];
+        const outputs: NotebookCellOutput[] = [];
         let outputsReceived = createDeferred<void>();
         disposables.push(result.onRequestSent(() => events.started.fire()));
         disposables.push(result.onRequestAcknowledged(() => events.executionAcknowledged.fire()));
         result.onDidEmitOutput(
             (e) => {
-                // e.forEach((item) => mimeTypes.add(item.mime));
                 outputs.push(e);
                 outputsReceived.resolve();
                 outputsReceived = createDeferred<void>();

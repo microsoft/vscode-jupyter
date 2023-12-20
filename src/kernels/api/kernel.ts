@@ -18,7 +18,7 @@ import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { DisposableBase } from '../../platform/common/utils/lifecycle';
+import { DisposableBase, dispose } from '../../platform/common/utils/lifecycle';
 import { noop } from '../../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { Telemetry, sendTelemetryEvent } from '../../telemetry';
@@ -226,11 +226,6 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         const kernelExecution = ServiceContainer.instance
             .get<IKernelProvider>(IKernelProvider)
             .getKernelExecution(this.kernel);
-        const outputs: Output[] = [];
-        let outputsReceived = createDeferred<void>();
-        const codeExecution = await kernelExecution.executeCode(code, this.extensionId, token);
-        const done = createDeferredFromPromise(codeExecution.result);
-        void done.promise.finally(() => dispose(disposables));
 
         const events = {
             started: new EventEmitter<void>(),
@@ -257,16 +252,6 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             this,
             disposables
         );
-        codeExecution.onDidEmitOutput(
-            (e) => {
-                e.items.forEach((item) => mimeTypes.add(item.mime));
-                outputs.push(e);
-                outputsReceived.resolve();
-                outputsReceived = createDeferred<void>();
-            },
-            this,
-            disposables
-        );
 
         token.onCancellationRequested(
             () => {
@@ -283,9 +268,13 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             disposables
         );
 
-        for await (const outputs of kernelExecution.executeCode(code, this.extensionId, events, token)) {
-            outputs.forEach((output) => mimeTypes.add(output.mime));
-            yield outputs;
+        try {
+            for await (const output of kernelExecution.executeCode(code, this.extensionId, events, token)) {
+                output.items.forEach((output) => mimeTypes.add(output.mime));
+                yield output;
+            }
+        } finally {
+            dispose(disposables);
         }
     }
 }

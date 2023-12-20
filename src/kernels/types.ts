@@ -9,7 +9,7 @@ import type {
     EventEmitter,
     NotebookCell,
     NotebookCellExecution,
-    NotebookCellOutputItem,
+    NotebookCellOutput,
     NotebookDocument,
     Uri
 } from 'vscode';
@@ -453,7 +453,7 @@ export interface INotebookKernelExecution {
             executionAcknowledged: EventEmitter<void>;
         },
         token: CancellationToken
-    ): AsyncGenerator<NotebookCellOutputItem[], void, unknown>;
+    ): AsyncGenerator<NotebookCellOutput, void, unknown>;
     /**
      * Given the cell execution message Id and the like , this will resume the execution of a cell from a detached state.
      * E.g. assume user re-loads VS Code, we need to resume the execution of the cell.
