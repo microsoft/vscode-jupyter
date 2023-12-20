@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Event, NotebookCell, NotebookCellOutputItem } from 'vscode';
+import { Event, NotebookCell, NotebookCellOutput } from 'vscode';
 import { IKernelSession, NotebookCellRunState } from '../types';
 
 export type IExecution = ICellExecution | ICodeExecution;
@@ -22,7 +22,7 @@ export interface ICodeExecution {
     result: Promise<NotebookCellRunState>;
     onRequestSent: Event<void>;
     onRequestAcknowledged: Event<void>;
-    onDidEmitOutput: Event<NotebookCellOutputItem[]>;
+    onDidEmitOutput: Event<NotebookCellOutput>;
     start(session: IKernelSession): Promise<void>;
     cancel(forced?: boolean): Promise<void>;
     dispose(): void;

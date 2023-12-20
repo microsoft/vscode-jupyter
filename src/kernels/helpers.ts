@@ -13,7 +13,7 @@ import {
     PythonKernelConnectionMetadata,
     IJupyterKernelSpec
 } from './types';
-import { NotebookCellOutputItem, Uri, workspace } from 'vscode';
+import { NotebookCellOutput, Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
@@ -141,7 +141,7 @@ export function isDefaultKernelSpec(kernelspec: IJupyterKernelSpec) {
     // // E.g. assume we're loading a kernlespec for a default Python kernel, the name would be `python3`
     // // However we give this a completely different name, and at that point its not possible to determine
     // // whether this is a default kernel or not.
-    // // Hence determine the original name baesed on the original kernelspec file.
+    // // Hence determine the original name based on the original kernelspec file.
     const originalSpecFile = kernelspec.metadata?.vscode?.originalSpecFile || kernelspec.metadata?.originalSpecFile;
     const name = originalSpecFile ? path.basename(path.dirname(originalSpecFile)) : kernelspec.name || '';
     const displayName = kernelspec.metadata?.vscode?.originalDisplayName || kernelspec.display_name || '';
@@ -162,7 +162,7 @@ export function isDefaultKernelSpec(kernelspec: IJupyterKernelSpec) {
 /**
  * When creating remote sessions, we generate bogus names for the notebook.
  * These names are prefixed with the same local file name, and a random suffix.
- * However the random part does contain an identifier, and we can stip this off
+ * However the random part does contain an identifier, and we can strip this off
  * to get the original local ipynb file name.
  */
 export function removeNotebookSuffixAddedByExtension(notebookPath: string) {
@@ -702,7 +702,7 @@ export function executeSilentlyAndEmitOutput(
     kernelConnection: Kernel.IKernelConnection,
     code: string,
     onStarted: () => void,
-    onOutput: (outputs: NotebookCellOutputItem[]) => void
+    onOutput: (output: NotebookCellOutput) => void
 ) {
     code = code.replace(/\r\n/g, '\n');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -727,7 +727,7 @@ export function executeSilentlyAndEmitOutput(
                     output_type: 'stream',
                     name: msg.content.name,
                     text: msg.content.text
-                }).items
+                })
             );
         } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
             onOutput(
@@ -738,7 +738,7 @@ export function executeSilentlyAndEmitOutput(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     transient: msg.content.transient as any, // NOSONAR
                     execution_count: msg.content.execution_count
-                }).items
+                })
             );
         } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
             onOutput(
@@ -748,7 +748,7 @@ export function executeSilentlyAndEmitOutput(
                     metadata: msg.content.metadata,
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     transient: msg.content.transient as any // NOSONAR
-                }).items
+                })
             );
         } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
             onOutput(
@@ -757,7 +757,7 @@ export function executeSilentlyAndEmitOutput(
                     ename: msg.content.ename,
                     evalue: msg.content.evalue,
                     traceback: msg.content.traceback
-                }).items
+                })
             );
         } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg) || jupyterLab.KernelMessage.isStatusMsg(msg)) {
             //
