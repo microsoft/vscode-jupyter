@@ -5,7 +5,15 @@ import { assert } from 'chai';
 import { CancellationTokenSource, NotebookCellOutputItem, NotebookDocument } from 'vscode';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
-import { captureScreenShot, initialize, startJupyterServer, suiteMandatory, testMandatory } from '../../test/common';
+import {
+    captureScreenShot,
+    createEventHandler,
+    initialize,
+    startJupyterServer,
+    suiteMandatory,
+    testMandatory,
+    waitForCondition
+} from '../../test/common';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
@@ -19,7 +27,7 @@ import { raceTimeoutError } from '../../platform/common/utils/async';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IKernel, IKernelProvider } from '../types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
-import { Kernels, OutputItem } from '../../api';
+import { Kernels, Output } from '../../api';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../test/constants';
 
 suiteMandatory('Kernel API Tests @python', function () {
@@ -73,7 +81,8 @@ suiteMandatory('Kernel API Tests @python', function () {
 
         assert.isUndefined(kernel, 'Kernel should not be returned as no code was executed');
     });
-    testMandatory('Get Kernel and execute code', async function () {
+    // testMandatory('Get Kernel and execute code', async function () {
+    test('Get Kernel and execute code', async function () {
         // No kernel unless we execute code against this kernel.
         assert.isUndefined(await kernels.getKernel(notebook.uri));
 
@@ -90,7 +99,7 @@ suiteMandatory('Kernel API Tests @python', function () {
         if (!kernel) {
             throw new Error('Kernel not found');
         }
-        // const statusChange = createEventHandler(kernel, 'onDidChangeStatus', disposables);
+        const statusChange = createEventHandler(kernel, 'onDidChangeStatus', disposables);
 
         // Verify we can execute code using the kernel.
         traceInfo(`Execute code silently`);
@@ -98,15 +107,15 @@ suiteMandatory('Kernel API Tests @python', function () {
         const token = new CancellationTokenSource();
         await waitForOutput(kernel.executeCode('print(1234)', token.token), '1234', expectedMime);
         traceInfo(`Execute code silently completed`);
-        // // Wait for kernel to be idle.
-        // await waitForCondition(
-        //     () => kernel.status === 'idle',
-        //     5_000,
-        //     `Kernel did not become idle, current status is ${kernel.status}`
-        // );
+        // Wait for kernel to be idle.
+        await waitForCondition(
+            () => kernel.status === 'idle',
+            5_000,
+            `Kernel did not become idle, current status is ${kernel.status}`
+        );
 
-        // // Verify state transition.
-        // assert.deepEqual(Array.from(new Set(statusChange.all)), ['busy', 'idle'], 'States are incorrect');
+        // Verify state transition.
+        assert.deepEqual(Array.from(new Set(statusChange.all)), ['busy', 'idle'], 'States are incorrect');
 
         // Verify we can execute code using the kernel in parallel.
         await Promise.all([
@@ -115,24 +124,46 @@ suiteMandatory('Kernel API Tests @python', function () {
             waitForOutput(kernel.executeCode('print(3)', token.token), '3', expectedMime)
         ]);
 
-        // // Wait for kernel to be idle.
-        // await waitForCondition(
-        //     () => kernel.status === 'idle',
-        //     5_000,
-        //     `Kernel did not become idle, current status is ${kernel.status}`
-        // );
+        // Wait for kernel to be idle.
+        await waitForCondition(
+            () => kernel.status === 'idle',
+            5_000,
+            `Kernel did not become idle, current status is ${kernel.status}`
+        );
+
+        // When we execute code that fails, we should get the error information.
+        const errorOutputs: Output[] = [];
+        for await (const output of kernel.executeCode('Kaboom', token.token)) {
+            errorOutputs.push(output);
+        }
+        assert.strictEqual(errorOutputs.length, 1, 'Incorrect number of outputs');
+        assert.strictEqual(errorOutputs[0].items.length, 1, 'Incorrect number of output items');
+        assert.strictEqual(
+            errorOutputs[0].items[0].mime,
+            NotebookCellOutputItem.error(new Error('')).mime,
+            'Expected an error output'
+        );
+        const error = JSON.parse(new TextDecoder().decode(errorOutputs[0].items[0].data));
+        assert.include(error.message, 'Kaboom');
+        assert.isOk(errorOutputs[0].metadata, 'No error metadata found');
+        assert.isArray(errorOutputs[0].metadata?.originalError?.traceback, 'No traceback found in original error');
+        assert.include(
+            errorOutputs[0].metadata?.originalError?.traceback?.join(''),
+            'Kaboom',
+            'Traceback does not contain original error'
+        );
     });
 
     async function waitForOutput(
-        executionResult: AsyncIterable<OutputItem[]>,
+        executionResult: AsyncIterable<Output>,
         expectedOutput: string,
         expectedMimetype: string
     ) {
         const disposables: IDisposable[] = [];
         const outputsReceived: string[] = [];
         const outputPromise = new Promise<void>(async (resolve, reject) => {
-            for await (const items of executionResult) {
-                items.forEach((item) => {
+            for await (const output of executionResult) {
+                output.items.forEach((item) => {
                     if (item.mime === expectedMimetype) {
                         const output = new TextDecoder().decode(item.data).trim();
                         if (output === expectedOutput.trim()) {

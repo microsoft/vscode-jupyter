@@ -13,7 +13,7 @@ import { IKernelSession, NotebookCellRunState } from '../../kernels/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import { ICodeExecution } from './types';
 import { executeSilentlyAndEmitOutput } from '../helpers';
-import { EventEmitter, NotebookCellOutputItem } from 'vscode';
+import { EventEmitter, NotebookCellOutput } from 'vscode';
 
 function traceExecMessage(executionId: string, message: string) {
     traceVerbose(`Execution Id:${executionId}. ${message}.`);
@@ -37,7 +37,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
     public get result(): Promise<NotebookCellRunState> {
         return this._done.promise.catch(noop).then(() => NotebookCellRunState.Success);
     }
-    private readonly _onDidEmitOutput = new EventEmitter<NotebookCellOutputItem[]>();
+    private readonly _onDidEmitOutput = new EventEmitter<NotebookCellOutput>();
     public readonly onDidEmitOutput = this._onDidEmitOutput.event;
     private readonly _onRequestSent = new EventEmitter<void>();
     public readonly onRequestSent = this._onRequestSent.event;
@@ -160,11 +160,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
                 kernelConnection,
                 code,
                 () => this._onRequestAcknowledge.fire(),
-                (outputs) => {
-                    if (outputs.length) {
-                        this._onDidEmitOutput.fire(outputs);
-                    }
-                }
+                (output) => this._onDidEmitOutput.fire(output)
             );
             // Don't want dangling promises.
             this.request.done.then(noop, noop);
