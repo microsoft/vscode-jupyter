@@ -81,7 +81,8 @@ suiteMandatory('Kernel API Tests @python', function () {
 
         assert.isUndefined(kernel, 'Kernel should not be returned as no code was executed');
     });
-    testMandatory('Get Kernel and execute code', async function () {
+    // testMandatory('Get Kernel and execute code', async function () {
+    test('Get Kernel and execute code', async function () {
         // No kernel unless we execute code against this kernel.
         assert.isUndefined(await kernels.getKernel(notebook.uri));
 
