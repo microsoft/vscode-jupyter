@@ -278,13 +278,11 @@ jobs:
         packageVersion: ['']
         tags:
           [
-            '^[^@]+$|@mandatory',
-            '@kernelCore',
+            '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter',
             '@widgets',
             '@iw',
             '@webview|@export|@lsp|@variableViewer',
-            '@debugger',
-            '@python|@jupyter'
+            '@debugger'
           ]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
