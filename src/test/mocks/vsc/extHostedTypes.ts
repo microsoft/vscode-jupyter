@@ -132,10 +132,6 @@ export namespace vscMockExtHostedTypes {
          */
         Preferred = 2
     }
-    export enum NotebookRunState {
-        Running = 1,
-        Idle = 2
-    }
 
     export interface IRelativePattern {
         base: string;
