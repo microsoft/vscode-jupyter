@@ -229,13 +229,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         failWithInvalidPassword?: boolean;
     }) {
         const config = workspace.getConfiguration('jupyter');
-        await config.update('allowUnauthorizedRemoteConnection', false);
-        const prompt = await hijackPrompt(
-            'showErrorMessage',
-            { contains: 'certificate' },
-            { result: DataScience.jupyterSelfCertEnable, clickImmediately: true }
-        );
-        disposables.push(prompt);
         const displayName = 'Test Remove Server Name';
         void env.clipboard.writeText(userUri);
         sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser').resolves({
@@ -243,7 +236,16 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
             jupyterServerUri: parseUri(userUri, '')!
         });
         const baseUrl = `${new URL(userUri).protocol}//localhost:${new URL(userUri).port}/`;
-        const computedBaseUrl = await getBaseJupyterUrl(userUri, requestCreator);
+        const [prompt, computedBaseUrl] = await Promise.all([
+            hijackPrompt(
+                'showErrorMessage',
+                { contains: 'certificate' },
+                { result: DataScience.jupyterSelfCertEnable, clickImmediately: true }
+            ),
+            getBaseJupyterUrl(userUri, requestCreator),
+            config.update('allowUnauthorizedRemoteConnection', false)
+        ]);
+        disposables.push(prompt);
         assert.strictEqual(computedBaseUrl?.endsWith('/') ? computedBaseUrl : `${computedBaseUrl}/`, baseUrl);
         sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections').resolves(true);
         sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName').resolves(displayName);
