@@ -25,7 +25,7 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForTextOutput
 } from '../notebook/helper';
-import { IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { isWeb } from '../../../platform/common/utils/misc';
 
 suiteMandatory('Remote Tests', function () {
     const disposables: IDisposable[] = [];
@@ -34,7 +34,7 @@ suiteMandatory('Remote Tests', function () {
     this.retries(1);
     let editor: NotebookEditor;
     suiteSetup(async function () {
-        if (!IS_REMOTE_NATIVE_TEST()) {
+        if (!isWeb()) {
             return this.skip();
         }
         traceInfo('Suite Setup Remote Tests');
