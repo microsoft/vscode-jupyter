@@ -13,7 +13,7 @@ import {
     Event,
     EventEmitter
 } from 'vscode';
-import { Kernel, KernelStatus, OutputItem } from '../../api';
+import { Kernel, KernelStatus, Output } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
@@ -103,11 +103,11 @@ class KernelExecutionProgressIndicator {
 
 /**
  * Design guidelines for separate kernel per extension.
- * Asseume extrension A & B use the same kernel and use this API.
+ * Assume extension A & B use the same kernel and use this API.
  * Both can send code and so can the user via a notebook/iw.
  * Assume user executes code via notebook/iw and that is busy.
- * 1. Extension A executes code `1` agaist kernel,
- * 2. Laster extension A excecutes another block of code `2` against the kernel.
+ * 1. Extension A executes code `1` against kernel,
+ * 2. Laster extension A executes another block of code `2` against the kernel.
  * When executing code `2`, extension A would like to cancel the first request `1`.
  * However the kernel is busy running user code, extension A should not be aware of this knowledge.
  * We should keep track of this, and prevent Extension A from interrupting user code.
@@ -129,7 +129,9 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     private previousProgress?: IDisposable;
     private readonly _api: Kernel;
     public readonly language: string;
-    status: KernelStatus;
+    get status(): KernelStatus {
+        return this.kernel.status;
+    }
     private readonly _onDidChangeStatus = this._register(new EventEmitter<KernelStatus>());
     public get onDidChangeStatus(): Event<KernelStatus> {
         return this._onDidChangeStatus.event;
@@ -147,6 +149,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
                 ? PYTHON_LANGUAGE
                 : kernel.kernelConnectionMetadata.kernelSpec.language || PYTHON_LANGUAGE;
+        this._register(this.kernel.onStatusChanged(() => this._onDidChangeStatus.fire(this.kernel.status), this));
         // Plain object returned to 3rd party extensions that cannot be modified or messed with.
         const that = this;
         this._api = Object.freeze({
@@ -169,7 +172,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         return wrapper._api;
     }
 
-    async *executeCode(code: string, token: CancellationToken): AsyncGenerator<OutputItem[], void, unknown> {
+    async *executeCode(code: string, token: CancellationToken): AsyncGenerator<Output, void, unknown> {
         if (!this.kernelAccess.accessAllowed) {
             throw new Error(l10n.t('Access to Jupyter Kernel has been revoked'));
         }
@@ -225,7 +228,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         const kernelExecution = ServiceContainer.instance
             .get<IKernelProvider>(IKernelProvider)
             .getKernelExecution(this.kernel);
-        const outputs: OutputItem[][] = [];
+        const outputs: Output[] = [];
         let outputsReceived = createDeferred<void>();
         kernelExecution
             .executeCode(code, this.extensionId, token)
@@ -253,7 +256,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 );
                 codeExecution.onDidEmitOutput(
                     (e) => {
-                        e.forEach((item) => mimeTypes.add(item.mime));
+                        e.items.forEach((item) => mimeTypes.add(item.mime));
                         outputs.push(e);
                         outputsReceived.resolve();
                         outputsReceived = createDeferred<void>();
