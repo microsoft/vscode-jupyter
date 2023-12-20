@@ -278,10 +278,9 @@ jobs:
         packageVersion: ['']
         tags:
           [
-            '^[^@]+$|@mandatory|@kernelCore|@iw|@debugger',
+            '^[^@]+$|@mandatory|@kernelCore|@iw|@debugger|@kernelPicker|@python|@jupyter',
             '@widgets',
             '@webview|@export|@lsp|@variableViewer',
-            '@kernelPicker|@python|@jupyter',
             '@kernelInstall'
           ]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
