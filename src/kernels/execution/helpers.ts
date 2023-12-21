@@ -833,17 +833,22 @@ export async function endCellAndDisplayErrorsInCell(
     errorMessage: string,
     isCancelled: boolean
 ) {
-    const execution = CellExecutionCreator.getOrCreate(cell, controller);
     const output = createOutputWithErrorMessageForDisplay(errorMessage);
     if (!output) {
-        if (execution.started) {
+        const execution = CellExecutionCreator.get(cell);
+        if (isCancelled && execution?.started) {
             execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
         }
         return;
     }
+    if (!CellExecutionCreator.get(cell)) {
+        // If we don't have an execution, then we can end the execution that we end up creating
+        isCancelled = true;
+    }
+
     // Start execution if not already (Cell execution wrapper will ensure it won't start twice)
-    const started = execution.started;
-    if (!started) {
+    const execution = CellExecutionCreator.getOrCreate(cell, controller);
+    if (!execution.started) {
         execution.start(cell.executionSummary?.timing?.endTime);
         execution.executionOrder = cell.executionSummary?.executionOrder;
     }

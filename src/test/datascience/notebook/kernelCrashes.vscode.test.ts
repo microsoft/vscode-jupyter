@@ -67,7 +67,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
     let kernelProvider: IKernelProvider;
     let notebook: TestNotebookDocument;
     const kernelCrashFailureMessageInCell =
-        'The Kernel crashed while executing code in the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure';
+        'The Kernel crashed while executing code in the current cell or a previous cell.';
     this.timeout(120_000);
     let kernelConnectionMetadata: KernelConnectionMetadata;
     // let kernel: IKernel;

@@ -325,7 +325,7 @@ export namespace DataScience {
         });
     export const kernelCrashedDueToCodeInCurrentOrPreviousCell = l10n.t({
         message:
-            "The Kernel crashed while executing code in the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details.",
+            "The Kernel crashed while executing code in the current cell or a previous cell. \nPlease review the code in the cell(s) to identify a possible cause of the failure. \nClick <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
         comment: [
             'Do not translate the text "command:jupyter.viewOutput", that is a command Id that will be used by VS Code to open the output panel',
             'Do not translate the link https://aka.ms/vscodeJupyterKernelCrash'

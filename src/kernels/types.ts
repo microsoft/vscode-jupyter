@@ -567,7 +567,8 @@ export interface IJupyterConnection extends Disposable {
 export enum InterruptResult {
     Success = 'success',
     TimedOut = 'timeout',
-    Restarted = 'restart'
+    Restarted = 'restart',
+    Dead = 'dead'
 }
 
 /**
