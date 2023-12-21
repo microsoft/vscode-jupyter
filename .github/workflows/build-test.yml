@@ -607,10 +607,8 @@ jobs:
         with:
           deno-version: ${{ env.DENO_VERSION}}
 
-      - name: Deno Version
-        run: deno --version
-
       - name: Install Deno Kernel
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
         run: npx tsx ./build/installDenoKernel.ts
 
       - name: Create Virtual Env for Tests
