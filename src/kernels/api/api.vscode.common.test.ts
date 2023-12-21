@@ -29,6 +29,7 @@ import { IKernel, IKernelProvider } from '../types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { Kernels, Output } from '../../api';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../test/constants';
+import { KernelError } from '../errors/kernelError';
 
 suiteMandatory('Kernel API Tests @python', function () {
     const disposables: IDisposable[] = [];
@@ -132,9 +133,16 @@ suiteMandatory('Kernel API Tests @python', function () {
 
         // When we execute code that fails, we should get the error information.
         const errorOutputs: Output[] = [];
-        for await (const output of kernel.executeCode('Kaboom', token.token)) {
-            errorOutputs.push(output);
+        let exceptionThrown = false;
+        try {
+            for await (const output of kernel.executeCode('Kaboom', token.token)) {
+                errorOutputs.push(output);
+            }
+        } catch (ex) {
+            exceptionThrown = true;
+            assert.instanceOf(ex, KernelError, 'Error thrown is not a kernel error');
         }
+        assert.isTrue(exceptionThrown, 'Kernel Execution should fail with an error');
         assert.strictEqual(errorOutputs.length, 1, 'Incorrect number of outputs');
         assert.strictEqual(errorOutputs[0].items.length, 1, 'Incorrect number of output items');
         assert.strictEqual(

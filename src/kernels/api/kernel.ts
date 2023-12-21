@@ -25,7 +25,7 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
-import { traceError, traceVerbose } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 
 /**
@@ -215,59 +215,44 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         }
 
         const disposables: IDisposable[] = [];
-        const done = createDeferred<void>();
         disposables.push({
             dispose: () => {
                 measures.duration = stopwatch.elapsedTime;
                 properties.mimeTypes = Array.from(mimeTypes).join(',');
                 completed = true;
-                done.resolve();
                 sendApiExecTelemetry(this.kernel, measures, properties).catch(noop);
             }
         });
         const kernelExecution = ServiceContainer.instance
             .get<IKernelProvider>(IKernelProvider)
             .getKernelExecution(this.kernel);
-        const outputs: Output[] = [];
-        let outputsReceived = createDeferred<void>();
-        kernelExecution
-            .executeCode(code, this.extensionId, token)
-            .then((codeExecution) => {
-                codeExecution.result.finally(() => dispose(disposables)).catch(noop);
-                codeExecution.onRequestSent(
-                    () => {
-                        properties.requestSent = true;
-                        measures.requestSentAfter = stopwatch.elapsedTime;
-                        if (!token.isCancellationRequested) {
-                            const progress = (this.previousProgress = this.progress.show());
-                            disposables.push(progress);
-                        }
-                    },
-                    this,
-                    disposables
-                );
-                codeExecution.onRequestAcknowledged(
-                    () => {
-                        properties.requestAcknowledged = true;
-                        measures.requestAcknowledgedAfter = stopwatch.elapsedTime;
-                    },
-                    this,
-                    disposables
-                );
-                codeExecution.onDidEmitOutput(
-                    (e) => {
-                        e.items.forEach((item) => mimeTypes.add(item.mime));
-                        outputs.push(e);
-                        outputsReceived.resolve();
-                        outputsReceived = createDeferred<void>();
-                    },
-                    this,
-                    disposables
-                );
-            })
-            .catch((ex) => {
-                traceError(`Extension ${this.extensionId} failed to execute code in kernel ${this.extensionId}`, ex);
-            });
+
+        const events = {
+            started: new EventEmitter<void>(),
+            executionAcknowledged: new EventEmitter<void>()
+        };
+
+        events.started.event(
+            () => {
+                properties.requestSent = true;
+                measures.requestSentAfter = stopwatch.elapsedTime;
+                if (!token.isCancellationRequested) {
+                    const progress = (this.previousProgress = this.progress.show());
+                    disposables.push(progress);
+                }
+            },
+            this,
+            disposables
+        );
+        events.executionAcknowledged.event(
+            () => {
+                properties.requestAcknowledged = true;
+                measures.requestAcknowledgedAfter = stopwatch.elapsedTime;
+            },
+            this,
+            disposables
+        );
+
         token.onCancellationRequested(
             () => {
                 if (completed) {
@@ -282,17 +267,14 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             this,
             disposables
         );
-        while (true) {
-            await Promise.race([outputsReceived.promise, done.promise]);
-            if (outputsReceived.completed) {
-                outputsReceived = createDeferred<void>();
+
+        try {
+            for await (const output of kernelExecution.executeCode(code, this.extensionId, events, token)) {
+                output.items.forEach((output) => mimeTypes.add(output.mime));
+                yield output;
             }
-            while (outputs.length) {
-                yield outputs.shift()!;
-            }
-            if (done.completed) {
-                break;
-            }
+        } finally {
+            dispose(disposables);
         }
     }
 }

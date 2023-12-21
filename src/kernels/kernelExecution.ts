@@ -10,7 +10,8 @@ import {
     NotebookCellExecutionState,
     NotebookDocument,
     workspace,
-    CancellationToken
+    CancellationToken,
+    NotebookCellOutput
 } from 'vscode';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IDisposable, IExtensionContext } from '../platform/common/types';
@@ -29,19 +30,18 @@ import {
     IKernelSession,
     INotebookKernelExecution,
     ITracebackFormatter,
-    NotebookCellRunState,
     ResumeCellExecutionInformation
 } from './types';
 import { SessionDisposedError } from '../platform/errors/sessionDisposedError';
-import { ICodeExecution } from './execution/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { noop } from '../platform/common/utils/misc';
-
 // Disable ES Lint rule for now, as this is only for telemetry (hence not a layer breaking change)
 import {
     pendingInspectRequests
     // eslint-disable-next-line import/no-restricted-paths
 } from '../standalone/intellisense/resolveCompletionItem';
+import { createDeferred, createDeferredFromPromise } from '../platform/common/utils/async';
+import { dispose } from '../platform/common/utils/lifecycle';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -95,16 +95,13 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         return this.documentExecutions.get(this.notebook)?.queue || [];
     }
 
-    public async resumeCellExecution(
-        cell: NotebookCell,
-        info: ResumeCellExecutionInformation
-    ): Promise<NotebookCellRunState> {
+    public async resumeCellExecution(cell: NotebookCell, info: ResumeCellExecutionInformation): Promise<void> {
         traceCellMessage(
             cell,
             `NotebookKernelExecution.resumeCellExecution (start), ${getDisplayPath(cell.notebook.uri)}`
         );
         if (cell.kind == NotebookCellKind.Markup) {
-            return NotebookCellRunState.Success;
+            return;
         }
 
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
@@ -115,24 +112,25 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         const sessionPromise = this.kernel.start(new DisplayOptions(false));
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
         executionQueue.resumeCell(cell, info);
-        const result = await executionQueue.waitForCompletion([cell]);
+        const success = await executionQueue
+            .waitForCompletion(cell)
+            .then(() => true)
+            .catch(() => false);
 
         traceCellMessage(
             cell,
             `NotebookKernelExecution.resumeCellExecution (completed), ${getDisplayPath(cell.notebook.uri)}`
         );
-        traceVerbose(`Cell ${cell.index} executed with state ${result[0]}`);
-
-        return result[0];
+        traceVerbose(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
     }
-    public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<NotebookCellRunState> {
+    public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<void> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
         const pendingInspectRequestsBefore = this.kernel.session?.kernel
             ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
             : 0;
         const stopWatch = new StopWatch();
         if (cell.kind == NotebookCellKind.Markup) {
-            return NotebookCellRunState.Success;
+            return;
         }
 
         traceCellMessage(cell, `NotebookKernelExecution.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
@@ -148,25 +146,37 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (2), ${getDisplayPath(cell.notebook.uri)}`);
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
         executionQueue.queueCell(cell, codeOverride);
-        const result = await executionQueue.waitForCompletion([cell]);
-
-        traceCellMessage(
-            cell,
-            `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
-        );
-        traceVerbose(`Cell ${cell.index} executed with state ${result[0]}`);
-        const pendingInspectRequestsAfter = this.kernel.session?.kernel
-            ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
-            : 0;
-        sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell, {
-            duration: stopWatch.elapsedTime,
-            pendingInspectRequestsAfter,
-            pendingInspectRequestsBefore
-        });
-
-        return result[0];
+        let success = true;
+        try {
+            await executionQueue.waitForCompletion(cell);
+        } catch (ex) {
+            success = false;
+            throw ex;
+        } finally {
+            traceCellMessage(
+                cell,
+                `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
+            );
+            traceVerbose(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
+            const pendingInspectRequestsAfter = this.kernel.session?.kernel
+                ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
+                : 0;
+            sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell, {
+                duration: stopWatch.elapsedTime,
+                pendingInspectRequestsAfter,
+                pendingInspectRequestsBefore
+            });
+        }
     }
-    public async executeCode(code: string, extensionId: string, token: CancellationToken): Promise<ICodeExecution> {
+    public async *executeCode(
+        code: string,
+        extensionId: string,
+        events: {
+            started: EventEmitter<void>;
+            executionAcknowledged: EventEmitter<void>;
+        },
+        token: CancellationToken
+    ): AsyncGenerator<NotebookCellOutput, void, unknown> {
         const stopWatch = new StopWatch();
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
             this.kernel.resourceUri,
@@ -180,8 +190,11 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
         const result = executionQueue.queueCode(code, extensionId, token);
         traceVerbose(`Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`);
+        let completed = false;
+        const disposables: IDisposable[] = [];
         result.result
             .finally(() => {
+                completed = true;
                 !token.isCancellationRequested &&
                     traceInfo(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`);
                 sendKernelTelemetryEvent(
@@ -190,9 +203,45 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                     { duration: stopWatch.elapsedTime },
                     { extensionId }
                 );
+                dispose(disposables);
             })
             .catch(noop);
-        return result;
+        const done = createDeferredFromPromise(result.result);
+        const outputs: NotebookCellOutput[] = [];
+        let outputsReceived = createDeferred<void>();
+        disposables.push(result.onRequestSent(() => events.started.fire()));
+        disposables.push(result.onRequestAcknowledged(() => events.executionAcknowledged.fire()));
+        result.onDidEmitOutput(
+            (e) => {
+                outputs.push(e);
+                outputsReceived.resolve();
+                outputsReceived = createDeferred<void>();
+            },
+            this,
+            disposables
+        );
+        token.onCancellationRequested(
+            () => {
+                if (completed) {
+                    return;
+                }
+                traceVerbose(`Code execution cancelled by extension ${extensionId}`);
+            },
+            this,
+            disposables
+        );
+        while (true) {
+            await Promise.race([outputsReceived.promise, done.promise]);
+            if (completed) {
+                outputsReceived = createDeferred<void>();
+            }
+            while (outputs.length) {
+                yield outputs.shift()!;
+            }
+            if (done.completed) {
+                break;
+            }
+        }
     }
     executeHidden(code: string): Promise<IOutput[]> {
         const sessionPromise = this.kernel.start();
@@ -212,7 +261,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
         if (executionQueue) {
             await executionQueue.cancel();
-            await executionQueue.waitForCompletion();
+            await executionQueue.waitForCompletion().catch(noop);
         }
     }
     private async onWillCancel() {
@@ -234,7 +283,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
         // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
         const pendingCells = executionQueue
-            ? executionQueue.cancel(true).then(() => executionQueue.waitForCompletion())
+            ? executionQueue.cancel(true).then(() => executionQueue.waitForCompletion().catch(noop))
             : Promise.resolve();
 
         if (!session) {
