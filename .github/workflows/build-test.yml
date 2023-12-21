@@ -30,7 +30,7 @@ env:
   NODE_VERSION: 18.15.0
   NPM_VERSION: 9.5.0
   PYTHON_VERSION: 3.8
-  JULIA_VERSION: 1.5.2
+  DENO_VERSION: '~1.37'
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   CACHE_NPM_DEPS: cache-npm
   CACHE_OUT_DIRECTORY: cache-out-directory
@@ -47,7 +47,6 @@ env:
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install pre-release in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
-  DOTNET_VERSION: 8.0.x
 
 jobs:
   # Make sure to cancel previous runs on a push
@@ -602,35 +601,15 @@ jobs:
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
-      - name: Install Julia
+      - name: Install Deno
         if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
-        uses: julia-actions/setup-julia@v1
+        uses: denoland/setup-deno@v1
         with:
-          version: ${{env.JULIA_VERSION}}
+          deno-version: ${{ env.DENO_VERSION}}
 
-      - name: Install Julia Kernel
+      - name: Install Deno Kernel
         if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
-        shell: bash
-        run: |
-          julia -e '
-            using Pkg
-            Pkg.add("IJulia")'
-
-      - name: Install Dot.net
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
-        uses: actions/setup-dotnet@v4.0.0
-        with:
-          dotnet-version: ${{env.DOTNET_VERSION}}
-
-      - name: Install .NET Interactive
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
-        shell: bash -l {0}
-        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-
-      - name: Install .NET Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
-        shell: bash -l {0}
-        run: dotnet interactive jupyter install
+        run: npx tsx ./build/installDenoKernel.ts
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
