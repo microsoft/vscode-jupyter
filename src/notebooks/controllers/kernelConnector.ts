@@ -435,7 +435,7 @@ export class KernelConnector {
                     }
 
                     // If the kernel is dead, ask the user if they want to restart
-                    if (isKernelDead(kernel) && !options.disableUI) {
+                    if (isKernelDead(kernel) && !options.disableUI && currentContext !== 'interrupt') {
                         await KernelConnector.notifyAndRestartDeadKernel(kernel);
                     }
                 }
