@@ -99,7 +99,6 @@ async function setPythonPathInWorkspace(
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (!value || value[prop] !== pythonPath) {
-        console.log(`Updating Interpreter path to ${pythonPath} in workspace`);
         await settings.update('pythonPath', pythonPath, config).then(noop, noop);
         await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         if (config === vscode.ConfigurationTarget.Global) {
@@ -190,7 +189,6 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
     try {
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });
-        console.info(`Screenshot captured into ${filename}`);
     } catch (ex) {
         console.error(`Failed to capture screenshot into ${filename}`, ex);
     }
@@ -247,7 +245,6 @@ export function initializeCommonNodeApi() {
                 await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(url));
                 return { url, dispose: noop };
             } else {
-                console.info(`Jupyter not started and set to local`); // This is the default
                 return { url: '', dispose: noop };
             }
         },

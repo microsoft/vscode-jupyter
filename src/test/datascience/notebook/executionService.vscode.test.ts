@@ -64,6 +64,7 @@ import { createKernelController, TestNotebookDocument } from './executionHelper'
 import { noop } from '../../core';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 import { splitLines } from '../../../platform/common/helpers';
+import { isCI } from '../../../platform/vscode-path/platform';
 use(chaiAsPromised);
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -82,6 +83,11 @@ suite('Kernel Execution @kernelCore', function () {
     let kernel: IKernel;
     let kernelExecution: INotebookKernelExecution;
     suiteSetup(async function () {
+        // No need to run this test on windows on CI.
+        // Running these is very slow on windows & we have other tests that run on windows (interrupts and restarts).
+        if (getOSType() === OSType.Windows && isCI) {
+            return this.skip();
+        }
         traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         try {

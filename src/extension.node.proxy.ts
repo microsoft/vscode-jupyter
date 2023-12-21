@@ -15,7 +15,9 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         realEntryPoint = eval('require')(entryPoint); // CodeQL [SM04509] Usage of eval in this context is safe (we do not want bundlers to import code when it sees `require`).
         return realEntryPoint.activate(context);
     } catch (ex) {
-        console.error('Failed to activate extension, falling back to `./extension.node`', ex);
+        if (!ex.toString().includes(`Cannot find module '../out/extension.node'`)) {
+            console.error('Failed to activate extension, falling back to `./extension.node`', ex);
+        }
         // In smoke tests, we do not want to load the out/extension.node.
         realEntryPoint = eval('require')('./extension.node'); // CodeQL [SM04509] Usage of eval in this context is safe (we do not want bundlers to import code when it sees `require`)
         return realEntryPoint.activate(context);
