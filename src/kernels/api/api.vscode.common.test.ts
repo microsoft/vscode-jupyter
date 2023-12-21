@@ -2,23 +2,21 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { CancellationTokenSource, NotebookCellOutputItem, NotebookDocument } from 'vscode';
+import { CancellationTokenSource, NotebookCellOutputItem, NotebookDocument, commands, window, workspace } from 'vscode';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import {
     captureScreenShot,
     createEventHandler,
     initialize,
-    startJupyterServer,
     suiteMandatory,
     testMandatory,
     waitForCondition
 } from '../../test/common';
 import {
     closeNotebooksAndCleanUpAfterTests,
-    createEmptyPythonNotebook,
+    createTemporaryNotebook,
     insertCodeCell,
-    prewarmNotebooks,
     runCell,
     waitForExecutionCompletedSuccessfully
 } from '../../test/datascience/notebook/helper';
@@ -30,6 +28,7 @@ import { IControllerRegistration, IVSCodeNotebookController } from '../../notebo
 import { Kernels, Output } from '../../api';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../test/constants';
 import { KernelError } from '../errors/kernelError';
+import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 
 suiteMandatory('Kernel API Tests @python', function () {
     const disposables: IDisposable[] = [];
@@ -46,20 +45,36 @@ suiteMandatory('Kernel API Tests @python', function () {
         const api = await initialize();
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-        traceInfo('Suite Setup, Step 2');
-        await startJupyterServer();
-        traceInfo('Suite Setup, Step 3');
-        await prewarmNotebooks();
-        traceInfo('Suite Setup, Step 4');
         kernels = await Promise.resolve(getKernelsApi(JVSC_EXTENSION_ID_FOR_TESTS));
+        // Wait till deno kernel has been discovered.
+        const connection = await waitForCondition(
+            async () =>
+                controllerRegistration.all.find(
+                    (k) => k.kind === 'startUsingLocalKernelSpec' && k.kernelSpec.language === 'typescript'
+                )!,
+            15_000,
+            'Deno kernel not found'
+        );
+        controller = controllerRegistration.get(connection, 'jupyter-notebook')!;
         traceInfo('Suite Setup (completed)');
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
-        const notebookEditor = (await createEmptyPythonNotebook(disposables)).editor;
-        notebook = notebookEditor.notebook;
-        await insertCodeCell('print("1234")', { index: 0 });
-        controller = controllerRegistration.getSelected(notebook)!;
+        const uri = await createTemporaryNotebook(
+            [],
+            disposables,
+            { name: 'deno', display_name: 'Deno' },
+            undefined,
+            undefined,
+            'typescript'
+        );
+        notebook = await workspace.openNotebookDocument(uri);
+        await window.showNotebookDocument(notebook);
+        await commands.executeCommand('notebook.selectKernel', {
+            id: controller!.id,
+            extension: JVSC_EXTENSION_ID
+        });
+        await insertCodeCell('console.log(1234)', { index: 0, language: 'typescript' });
         realKernel = kernelProvider.getOrCreate(notebook, {
             controller: controller.controller,
             metadata: controller.connection,
@@ -86,10 +101,10 @@ suiteMandatory('Kernel API Tests @python', function () {
         // No kernel unless we execute code against this kernel.
         assert.isUndefined(await kernels.getKernel(notebook.uri));
 
-        // Even after starting a kernel the API should not return anyting,
+        // Even after starting a kernel the API should not return anything,
         // as no code has been executed against this kernel.
         await realKernel.start();
-        await kernels.getKernel(notebook.uri);
+        assert.isUndefined(await kernels.getKernel(notebook.uri));
 
         // Ensure user has executed some code against this kernel.
         const cell = notebook.cellAt(0)!;
@@ -105,7 +120,7 @@ suiteMandatory('Kernel API Tests @python', function () {
         traceInfo(`Execute code silently`);
         const expectedMime = NotebookCellOutputItem.stdout('').mime;
         const token = new CancellationTokenSource();
-        await waitForOutput(kernel.executeCode('print(1234)', token.token), '1234', expectedMime);
+        await waitForOutput(kernel.executeCode('console.log(1234)', token.token), '1234', expectedMime);
         traceInfo(`Execute code silently completed`);
         // Wait for kernel to be idle.
         await waitForCondition(
@@ -119,9 +134,9 @@ suiteMandatory('Kernel API Tests @python', function () {
 
         // Verify we can execute code using the kernel in parallel.
         await Promise.all([
-            waitForOutput(kernel.executeCode('print(1)', token.token), '1', expectedMime),
-            waitForOutput(kernel.executeCode('print(2)', token.token), '2', expectedMime),
-            waitForOutput(kernel.executeCode('print(3)', token.token), '3', expectedMime)
+            waitForOutput(kernel.executeCode('console.log(1)', token.token), '1', expectedMime),
+            waitForOutput(kernel.executeCode('console.log(2)', token.token), '2', expectedMime),
+            waitForOutput(kernel.executeCode('console.log(3)', token.token), '3', expectedMime)
         ]);
 
         // Wait for kernel to be idle.
