@@ -591,13 +591,11 @@ jobs:
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Deno
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
         uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION}}
 
       - name: Install Deno Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
         run: npx tsx ./build/installDenoKernel.ts
 
       - name: Create Virtual Env for Tests
