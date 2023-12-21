@@ -30,7 +30,7 @@ env:
   NODE_VERSION: 18.15.0
   NPM_VERSION: 9.5.0
   PYTHON_VERSION: 3.8
-  DENO_VERSION: "~1.37"
+  DENO_VERSION: '~1.37'
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   CACHE_NPM_DEPS: cache-npm
   CACHE_OUT_DIRECTORY: cache-out-directory
@@ -598,6 +598,9 @@ jobs:
 
       - name: Deno Version
         run: deno --version
+
+      - name: Install Deno Kernel
+        run: npx tsx ./build/installDenoKernel.ts
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
