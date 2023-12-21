@@ -557,13 +557,6 @@ jobs:
           python -m jupyter nbextension uninstall --sys-prefix --py ipympl
           sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
-      - name: Pip List
-        if: matrix.python != 'noPython'
-        run: |
-          python --version
-          python -c "import sys;print(sys.executable)"
-          python -m pip list
-
         # This step is slow.
 
       # Run npm install (we need chrome to get downloaded)
