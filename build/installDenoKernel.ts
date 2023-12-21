@@ -67,11 +67,12 @@ function getDenoKernelSpecPath() {
 }
 
 function registerKernel() {
-    if (fs.existsSync(getDenoKernelSpecPath())) {
+    const denoKernelSpecPath = getDenoKernelSpecPath();
+    if (fs.existsSync(denoKernelSpecPath)) {
+        console.log(`Deno kernel already registered at ${denoKernelSpecPath}`);
         return;
     }
 
-    const denoKernelSpecPath = getDenoKernelSpecPath();
     fs.mkdirpSync(path.dirname(denoKernelSpecPath));
     fs.writeFileSync(
         denoKernelSpecPath,
@@ -85,6 +86,7 @@ function registerKernel() {
             4
         )
     );
+    console.log(`Deno kernel registered at ${denoKernelSpecPath}`);
 }
 
 registerKernel();
