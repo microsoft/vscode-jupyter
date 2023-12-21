@@ -59,7 +59,7 @@ function getKernelSpecRootPath() {
 }
 
 function getDenoExec() {
-    return execSync('which deno').toString();
+    return execSync('which deno').toString().trim();
 }
 
 function getDenoKernelSpecPath() {
