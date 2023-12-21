@@ -94,7 +94,7 @@ jobs:
         uses: ./.github/actions/build-vsix
         id: build-vsix
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
           path: 'ms-toolsai-jupyter-insiders.vsix'
@@ -251,7 +251,7 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
         with:
           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
@@ -710,7 +710,7 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
         with:
           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
@@ -718,7 +718,7 @@ jobs:
           retention-days: 1
 
       - name: Upload VS code logs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}-${{matrix.ipywidgetsVersion}}
@@ -730,7 +730,7 @@ jobs:
         run: npm run printTestResults
 
       - name: Upload test result, screenshots files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}-${{matrix.ipywidgetsVersion}}
