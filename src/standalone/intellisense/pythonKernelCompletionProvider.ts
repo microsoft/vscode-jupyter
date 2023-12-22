@@ -281,18 +281,19 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
                 result ? JSON.stringify(result) : 'empty'
             }`
         );
-        traceVerbose(`Jupyter completion time: ${stopWatch.elapsedTime}`);
-        if (result && result.content) {
-            if ('matches' in result.content) {
-                return {
-                    matches: result.content.matches,
-                    cursor: {
-                        start: result.content.cursor_start,
-                        end: result.content.cursor_end
-                    },
-                    metadata: result.content.metadata
-                };
-            }
+        const matches = result && result.content && 'matches' in result.content ? result.content.matches : [];
+        traceVerbose(
+            `Jupyter completion for ${cellCode} (cancelled=${cancelToken?.isCancellationRequested}) with ${matches.length} items, in ${stopWatch.elapsedTime}`
+        );
+        if (result && result.content && 'matches' in result.content) {
+            return {
+                matches,
+                cursor: {
+                    start: result.content.cursor_start,
+                    end: result.content.cursor_end
+                },
+                metadata: result.content.metadata
+            };
         }
         return {
             matches: [],
