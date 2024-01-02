@@ -532,7 +532,7 @@ ${actualCode}
         );
     });
 
-    test.only('Cells from python files and the input box are executed in correct order', async () => {
+    test('Cells from python files and the input box are executed in correct order', async () => {
         const source = ['# %%', 'x = 1', '# %%', 'import time', 'time.sleep(3)', '# %%', 'print(x)', ''].join('\n');
         const tempFile = await createTemporaryFile({ contents: 'print(42)', extension: '.py' });
         await vscode.window.showTextDocument(tempFile.file);
