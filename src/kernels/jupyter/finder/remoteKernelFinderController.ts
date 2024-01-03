@@ -26,7 +26,7 @@ import { JupyterServerCollection, JupyterServerProvider } from '../../../api';
 import { CancellationTokenSource } from 'vscode';
 import { traceError } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from './types';
-import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { CodespaceExtensionId } from '../../../platform/common/constants';
 
 @injectable()
 export class RemoteKernelFinderController implements IRemoteKernelFinderController, IExtensionSyncActivationService {
@@ -187,7 +187,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
             const displayName = await this.jupyterPickerRegistration.jupyterCollections.find(
                 (c) =>
                     c.extensionId === serverUri.provider.extensionId &&
-                    c.extensionId !== JVSC_EXTENSION_ID &&
+                    c.extensionId === CodespaceExtensionId &&
                     c.id === serverUri.provider.id
             )?.label;
             if (displayName) {
