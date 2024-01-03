@@ -26,6 +26,7 @@ import { JupyterServerCollection, JupyterServerProvider } from '../../../api';
 import { CancellationTokenSource } from 'vscode';
 import { traceError } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from './types';
+import { CodespaceExtensionId } from '../../../platform/common/constants';
 
 @injectable()
 export class RemoteKernelFinderController implements IRemoteKernelFinderController, IExtensionSyncActivationService {
@@ -184,7 +185,10 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         };
         const getDisplayNameFromOldApi = async () => {
             const displayName = await this.jupyterPickerRegistration.jupyterCollections.find(
-                (c) => c.extensionId === serverUri.provider.extensionId && c.id === serverUri.provider.id
+                (c) =>
+                    c.extensionId === serverUri.provider.extensionId &&
+                    c.extensionId === CodespaceExtensionId &&
+                    c.id === serverUri.provider.id
             )?.label;
             if (displayName) {
                 // If display name is empty/undefined, then the extension has not yet loaded or provider not yet registered.
