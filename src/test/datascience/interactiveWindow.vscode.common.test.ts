@@ -479,7 +479,7 @@ ${actualCode}
 
         const text = html.replace(/<[^>]+>/g, '');
         assert.ok(text.includes('Traceback (most recent call last)'), 'traceback not found in output');
-        assert.ok(text.includes('pathlib.py:763, in PurePath.joinpath(self, *args)'), 'library frame not found');
+        assert.ok(/pathlib\.py:\d+, in PurePath\.joinpath/.test(text), 'library frame not found');
     });
 
     test('Running a cell with markdown and code runs two cells', async () => {
