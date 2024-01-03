@@ -25,16 +25,9 @@ import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE, isWebExtension } from '..
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
-
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
-import {
-    IKernel,
-    IKernelProvider,
-    isLocalConnection,
-    KernelConnectionMetadata,
-    NotebookCellRunState
-} from '../kernels/types';
+import { IKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../kernels/types';
 import { chainable } from '../platform/common/utils/decorators';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
 import { DataScience } from '../platform/common/utils/localize';
@@ -219,7 +212,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         if (this.controller.controller) {
             this.controller.startKernel().catch(noop);
         } else {
-            traceInfo('No controller selected for Interactive Window initilization');
+            traceInfo('No controller selected for Interactive Window initialization');
             this.controller.setInfoMessageCell(DataScience.selectKernelForEditor);
         }
     }
@@ -437,8 +430,10 @@ export class InteractiveWindow implements IInteractiveWindow {
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             const iwCellMetadata = getInteractiveCellMetadata(cell);
             const execution = this.kernelProvider.getKernelExecution(kernel!);
-            success =
-                (await execution.executeCell(cell, iwCellMetadata?.generatedCode?.code)) !== NotebookCellRunState.Error;
+            success = await execution.executeCell(cell, iwCellMetadata?.generatedCode?.code).then(
+                () => true,
+                () => false
+            );
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
         } finally {
             await detachKernel();

@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import { assert, expect } from 'chai';
+import { assert, expect, use } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import * as fs from 'fs';
 import * as path from '../../../platform/vscode-path/path';
 import dedent from 'dedent';
@@ -63,6 +64,8 @@ import { createKernelController, TestNotebookDocument } from './executionHelper'
 import { noop } from '../../core';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 import { splitLines } from '../../../platform/common/helpers';
+import { isCI } from '../../../platform/vscode-path/platform';
+use(chaiAsPromised);
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -80,6 +83,11 @@ suite('Kernel Execution @kernelCore', function () {
     let kernel: IKernel;
     let kernelExecution: INotebookKernelExecution;
     suiteSetup(async function () {
+        // No need to run this test on windows on CI.
+        // Running these is very slow on windows & we have other tests that run on windows (interrupts and restarts).
+        if (getOSType() === OSType.Windows && isCI) {
+            return this.skip();
+        }
         traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         try {
@@ -221,7 +229,7 @@ suite('Kernel Execution @kernelCore', function () {
     test('Verify output & metadata for executed cell with errors', async () => {
         const cell = await notebook.appendCodeCell('print(abcd)');
 
-        await kernelExecution.executeCell(cell);
+        await assert.isRejected(kernelExecution.executeCell(cell));
 
         assert.isAtLeast(cell.executionSummary?.executionOrder || 0, 1);
         assert.isTrue(hasErrorOutput(cell.outputs));
@@ -245,53 +253,6 @@ suite('Kernel Execution @kernelCore', function () {
         assert.lengthOf(displayCell.outputs, 1, 'Incorrect output');
         assert.isAtLeast(displayCell.executionSummary?.executionOrder || 0, 1);
         await waitForTextOutput(displayCell, 'foo', 0, false);
-    });
-    test('Clearing output while executing will ensure output is cleared', async function () {
-        let onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
-        const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
-        stub.get(() => onDidChangeNbEventHandler.event);
-        disposables.push(onDidChangeNbEventHandler);
-
-        // Assume you are executing a cell that prints numbers 1-100.
-        // When printing number 50, you click clear.
-        // Cell output should now start printing output from 51 onwards, & not 1.
-        const cell = await notebook.appendCodeCell(
-            dedent`
-                    print("Start")
-                    import time
-                    for i in range(100):
-                        time.sleep(0.1)
-                        print(i)
-
-                    print("End")`
-        );
-        kernelExecution.executeCell(cell).catch(noop);
-
-        await Promise.all([
-            waitForTextOutput(cell, 'Start', 0, false),
-            waitForTextOutput(cell, '0', 0, false),
-            waitForTextOutput(cell, '1', 0, false),
-            waitForTextOutput(cell, '2', 0, false),
-            waitForTextOutput(cell, '3', 0, false),
-            waitForTextOutput(cell, '4', 0, false)
-        ]);
-
-        // Clear the outputs.
-        cell.outputs.length = 0;
-        onDidChangeNbEventHandler.fire({
-            notebook,
-            metadata: undefined,
-            contentChanges: [],
-            cellChanges: [{ cell, document: undefined, executionSummary: undefined, metadata: undefined, outputs: [] }]
-        });
-
-        // Wait till previous output gets cleared & we have new output.
-        await waitForCondition(
-            () => assertNotHasTextOutputInVSCode(cell, 'Start', 0, false) && cell.outputs.length > 0,
-            5_000,
-            'Cell did not get cleared'
-        );
-        await kernel.restart();
     });
     test('Clearing output via code', async function () {
         // Assume you are executing a cell that prints numbers 1-100.
@@ -518,7 +479,7 @@ suite('Kernel Execution @kernelCore', function () {
         await notebook.appendCodeCell('raise Exception("<whatever>")');
         const cells = notebook.cells;
         await Promise.all([
-            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))),
+            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))),
             waitForTextOutput(cells[0], '1', 0, false),
             waitForTextOutput(cells[1], '<a href=f>', 0, false),
             waitForTextOutput(cells[2], '<a href=f>', 0, false),
@@ -713,7 +674,7 @@ suite('Kernel Execution @kernelCore', function () {
         const cell2 = await notebook.appendCodeCell('print("after fail")');
 
         await Promise.all([
-            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))),
+            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))),
             waitForExecutionCompletedWithErrors(cell1)
         ]);
 
@@ -934,7 +895,7 @@ suite('Kernel Execution @kernelCore', function () {
         const cell3 = await notebook.appendCodeCell('2');
 
         await Promise.all([
-            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))),
+            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))),
             waitForExecutionCompletedSuccessfully(cell1),
             waitForExecutionCompletedWithErrors(cell2)
         ]);
@@ -943,7 +904,7 @@ suite('Kernel Execution @kernelCore', function () {
 
         // Run cell 2 again, & it should fail again & execution count should increase.
         await Promise.all([
-            kernelExecution.executeCell(cell2),
+            kernelExecution.executeCell(cell2).catch(noop),
             // Give it time to run & fail, this time execution order is greater than previously
             waitForCondition(
                 async () => cell2.executionSummary?.executionOrder === cell1.executionSummary!.executionOrder! + 2,
@@ -960,7 +921,7 @@ suite('Kernel Execution @kernelCore', function () {
 
         // Run all cells again
         await Promise.all([
-            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))),
+            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))),
             waitForCondition(
                 async () => cell2.executionSummary?.executionOrder === lastExecutionOrderOfCell3 + 2,
                 5_000,
@@ -1081,6 +1042,50 @@ suite('Kernel Execution @kernelCore', function () {
 
         await waitForTextOutput(cell2, 'HI Y', 0, false);
         await waitForTextOutput(cell2, 'HI Z', 1, false);
+    });
+    test('Clearing output while executing will ensure output is cleared', async function () {
+        let onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
+        const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
+        stub.get(() => onDidChangeNbEventHandler.event);
+        disposables.push(onDidChangeNbEventHandler);
+
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        const cell = await notebook.appendCodeCell(
+            dedent`
+                    print("Start")
+                    import time
+                    for i in range(100):
+                        time.sleep(0.1)
+                        print(i)
+
+                    print("End")`
+        );
+        kernelExecution.executeCell(cell).catch(noop);
+
+        await Promise.all([
+            waitForTextOutput(cell, 'Start', 0, false),
+            waitForTextOutput(cell, '0', 0, false),
+            waitForTextOutput(cell, '1', 0, false)
+        ]);
+
+        // Clear the outputs.
+        cell.outputs.length = 0;
+        onDidChangeNbEventHandler.fire({
+            notebook,
+            metadata: undefined,
+            contentChanges: [],
+            cellChanges: [{ cell, document: undefined, executionSummary: undefined, metadata: undefined, outputs: [] }]
+        });
+
+        // Wait till previous output gets cleared & we have new output.
+        await waitForCondition(
+            () => assertNotHasTextOutputInVSCode(cell, 'Start', 0, false) && cell.outputs.length > 0,
+            5_000,
+            'Cell did not get cleared'
+        );
+        await kernel.dispose().catch(noop);
     });
 
     /**

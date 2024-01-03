@@ -9,9 +9,11 @@ import {
     window,
     Disposable,
     workspace,
-    NotebookDocument
+    NotebookDocument,
+    Event,
+    EventEmitter
 } from 'vscode';
-import { Kernel, OutputItem } from '../../api';
+import { Kernel, KernelStatus, Output } from '../../api';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
@@ -23,7 +25,7 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
 import { once } from '../../platform/common/utils/events';
-import { traceError, traceVerbose } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 
 /**
@@ -101,11 +103,11 @@ class KernelExecutionProgressIndicator {
 
 /**
  * Design guidelines for separate kernel per extension.
- * Asseume extrension A & B use the same kernel and use this API.
+ * Assume extension A & B use the same kernel and use this API.
  * Both can send code and so can the user via a notebook/iw.
  * Assume user executes code via notebook/iw and that is busy.
- * 1. Extension A executes code `1` agaist kernel,
- * 2. Laster extension A excecutes another block of code `2` against the kernel.
+ * 1. Extension A executes code `1` against kernel,
+ * 2. Laster extension A executes another block of code `2` against the kernel.
  * When executing code `2`, extension A would like to cancel the first request `1`.
  * However the kernel is busy running user code, extension A should not be aware of this knowledge.
  * We should keep track of this, and prevent Extension A from interrupting user code.
@@ -127,6 +129,13 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     private previousProgress?: IDisposable;
     private readonly _api: Kernel;
     public readonly language: string;
+    get status(): KernelStatus {
+        return this.kernel.status;
+    }
+    private readonly _onDidChangeStatus = this._register(new EventEmitter<KernelStatus>());
+    public get onDidChangeStatus(): Event<KernelStatus> {
+        return this._onDidChangeStatus.event;
+    }
     constructor(
         private readonly extensionId: string,
         private readonly kernel: IKernel,
@@ -140,9 +149,15 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
                 ? PYTHON_LANGUAGE
                 : kernel.kernelConnectionMetadata.kernelSpec.language || PYTHON_LANGUAGE;
+        this._register(this.kernel.onStatusChanged(() => this._onDidChangeStatus.fire(this.kernel.status), this));
         // Plain object returned to 3rd party extensions that cannot be modified or messed with.
+        const that = this;
         this._api = Object.freeze({
             language: this.language,
+            get status() {
+                return that.kernel.status;
+            },
+            onDidChangeStatus: that.onDidChangeStatus,
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token)
         });
     }
@@ -157,7 +172,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         return wrapper._api;
     }
 
-    async *executeCode(code: string, token: CancellationToken): AsyncGenerator<OutputItem[], void, unknown> {
+    async *executeCode(code: string, token: CancellationToken): AsyncGenerator<Output, void, unknown> {
         if (!this.kernelAccess.accessAllowed) {
             throw new Error(l10n.t('Access to Jupyter Kernel has been revoked'));
         }
@@ -200,59 +215,44 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         }
 
         const disposables: IDisposable[] = [];
-        const done = createDeferred<void>();
         disposables.push({
             dispose: () => {
                 measures.duration = stopwatch.elapsedTime;
                 properties.mimeTypes = Array.from(mimeTypes).join(',');
                 completed = true;
-                done.resolve();
                 sendApiExecTelemetry(this.kernel, measures, properties).catch(noop);
             }
         });
         const kernelExecution = ServiceContainer.instance
             .get<IKernelProvider>(IKernelProvider)
             .getKernelExecution(this.kernel);
-        const outputs: OutputItem[][] = [];
-        let outputsReceived = createDeferred<void>();
-        kernelExecution
-            .executeCode(code, this.extensionId, token)
-            .then((codeExecution) => {
-                codeExecution.result.finally(() => dispose(disposables)).catch(noop);
-                codeExecution.onRequestSent(
-                    () => {
-                        properties.requestSent = true;
-                        measures.requestSentAfter = stopwatch.elapsedTime;
-                        if (!token.isCancellationRequested) {
-                            const progress = (this.previousProgress = this.progress.show());
-                            disposables.push(progress);
-                        }
-                    },
-                    this,
-                    disposables
-                );
-                codeExecution.onRequestAcknowledged(
-                    () => {
-                        properties.requestAcknowledged = true;
-                        measures.requestAcknowledgedAfter = stopwatch.elapsedTime;
-                    },
-                    this,
-                    disposables
-                );
-                codeExecution.onDidEmitOutput(
-                    (e) => {
-                        e.forEach((item) => mimeTypes.add(item.mime));
-                        outputs.push(e);
-                        outputsReceived.resolve();
-                        outputsReceived = createDeferred<void>();
-                    },
-                    this,
-                    disposables
-                );
-            })
-            .catch((ex) => {
-                traceError(`Extension ${this.extensionId} failed to execute code in kernel ${this.extensionId}`, ex);
-            });
+
+        const events = {
+            started: new EventEmitter<void>(),
+            executionAcknowledged: new EventEmitter<void>()
+        };
+
+        events.started.event(
+            () => {
+                properties.requestSent = true;
+                measures.requestSentAfter = stopwatch.elapsedTime;
+                if (!token.isCancellationRequested) {
+                    const progress = (this.previousProgress = this.progress.show());
+                    disposables.push(progress);
+                }
+            },
+            this,
+            disposables
+        );
+        events.executionAcknowledged.event(
+            () => {
+                properties.requestAcknowledged = true;
+                measures.requestAcknowledgedAfter = stopwatch.elapsedTime;
+            },
+            this,
+            disposables
+        );
+
         token.onCancellationRequested(
             () => {
                 if (completed) {
@@ -267,17 +267,14 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             this,
             disposables
         );
-        while (true) {
-            await Promise.race([outputsReceived.promise, done.promise]);
-            if (outputsReceived.completed) {
-                outputsReceived = createDeferred<void>();
+
+        try {
+            for await (const output of kernelExecution.executeCode(code, this.extensionId, events, token)) {
+                output.items.forEach((output) => mimeTypes.add(output.mime));
+                yield output;
             }
-            while (outputs.length) {
-                yield outputs.shift()!;
-            }
-            if (done.completed) {
-                break;
-            }
+        } finally {
+            dispose(disposables);
         }
     }
 }

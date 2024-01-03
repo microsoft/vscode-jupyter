@@ -6,15 +6,12 @@ import assert from 'assert';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IKernelProvider } from '../../../kernels/types';
-import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IDisposable } from '../../../platform/common/types';
 import { traceInfo } from '../../../platform/logging';
 import * as path from '../../../platform/vscode-path/path';
 import { IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
-import { noop } from '../../core';
 import { initialize } from '../../initialize.node';
 import { ControllerPreferredService } from './controllerPreferredService';
 import { TestNotebookDocument, createKernelController } from './executionHelper';
@@ -29,24 +26,16 @@ import {
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Non-Python Kernel @nonPython ', async function () {
-    const juliaNb = Uri.file(
-        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleJulia.ipynb')
-    );
-    const csharpNb = Uri.file(
-        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleCSharp.ipynb')
+    const denoNb = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleDeno.ipynb')
     );
 
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let testJuliaNb: Uri;
-    let testCSharpNb: Uri;
+    let testDenoNb: Uri;
     let controllerPreferred: ControllerPreferredService;
     let kernelProvider: IKernelProvider;
-    let pythonChecker: IPythonExtensionChecker;
-    let controllerRegistration: IControllerRegistration;
-    this.timeout(120_000); // Julia and C# kernels can be slow
     suiteSetup(async function () {
-        this.timeout(120_000);
         api = await initialize();
         verifyPromptWasNotDisplayed();
         if (
@@ -60,9 +49,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
         sinon.restore();
         verifyPromptWasNotDisplayed();
         controllerPreferred = ControllerPreferredService.create(api.serviceContainer);
-        controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     });
     function verifyPromptWasNotDisplayed() {
         assert.strictEqual(
@@ -77,8 +64,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
         await closeNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        testJuliaNb = await createTemporaryNotebookFromFile(juliaNb, disposables);
-        testCSharpNb = await createTemporaryNotebookFromFile(csharpNb, disposables);
+        testDenoNb = await createTemporaryNotebookFromFile(denoNb, disposables);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async () => {
@@ -86,14 +72,14 @@ suite('Non-Python Kernel @nonPython ', async function () {
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     // https://github.com/microsoft/vscode-jupyter/issues/10900
-    test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
-        const notebook = await TestNotebookDocument.openFile(testJuliaNb);
+    test('Automatically pick Deno kernel when opening a Deno Notebook', async () => {
+        const notebook = await TestNotebookDocument.openFile(testDenoNb);
         await waitForCondition(
             async () => {
                 const preferredController = await controllerPreferred.computePreferred(notebook);
                 if (
                     preferredController.preferredConnection?.kind === 'startUsingLocalKernelSpec' &&
-                    preferredController.preferredConnection.kernelSpec.language === 'julia'
+                    preferredController.preferredConnection.kernelSpec.language === 'typescript'
                 ) {
                     return preferredController.preferredConnection;
                 }
@@ -105,48 +91,14 @@ suite('Non-Python Kernel @nonPython ', async function () {
             500
         );
     });
-    test('Automatically pick csharp kernel when opening a csharp notebook', async function () {
-        // C# Kernels can only be installed when you have Jupyter
-        // On CI we install Jupyter only when testing with Python extension.
-        if (!pythonChecker.isPythonExtensionInstalled) {
-            return this.skip();
-        }
-
-        const notebook = await TestNotebookDocument.openFile(testCSharpNb);
-        await waitForCondition(
-            async () => {
-                const preferredController = await controllerPreferred.computePreferred(notebook);
-                if (
-                    preferredController.preferredConnection?.kind === 'startUsingLocalKernelSpec' &&
-                    preferredController.preferredConnection.kernelSpec.language === 'C#'
-                ) {
-                    return preferredController.preferredConnection;
-                }
-            },
-            defaultNotebookTestTimeout,
-            `Preferred controller not found for Notebook, currently preferred ${controllerPreferred.getPreferred(
-                notebook
-            )?.connection.kind}:${controllerPreferred.getPreferred(notebook)?.connection
-                .id}, current controllers include ${controllerRegistration.all
-                .map(
-                    (item) =>
-                        `${item.kind}:${item.id}(${
-                            item.kind === 'startUsingLocalKernelSpec' ? item.kernelSpec.language : ''
-                        })`
-                )
-                .join(',')}`,
-            500
-        );
-    });
-    test('Bogus test', noop);
-    test('Can run a Julia notebook', async function () {
-        const notebook = await TestNotebookDocument.openFile(testJuliaNb);
+    test('Can run a Deno notebook', async function () {
+        const notebook = await TestNotebookDocument.openFile(testDenoNb);
         const metadata = await waitForCondition(
             async () => {
                 const preferredController = await controllerPreferred.computePreferred(notebook);
                 if (
                     preferredController.preferredConnection?.kind === 'startUsingLocalKernelSpec' &&
-                    preferredController.preferredConnection.kernelSpec.language === 'julia'
+                    preferredController.preferredConnection.kernelSpec.language === 'typescript'
                 ) {
                     return preferredController.preferredConnection;
                 }
@@ -157,7 +109,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
             )?.connection.kind}:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
             500
         );
-        const cell = await notebook.appendCodeCell('123456', 'julia');
+        const cell = await notebook.appendCodeCell('123456', 'typescript');
         const kernel = kernelProvider.getOrCreate(notebook, {
             controller: createKernelController(),
             metadata,
@@ -170,53 +122,5 @@ suite('Non-Python Kernel @nonPython ', async function () {
             waitForExecutionCompletedSuccessfully(cell, 60_000),
             waitForTextOutput(cell, '123456', 0, false)
         ]);
-    });
-    test('Can run a CSharp notebook', async function () {
-        // C# Kernels can only be installed when you have Jupyter
-        // On CI we install Jupyter only when testing with Python extension.
-        if (!pythonChecker.isPythonExtensionInstalled) {
-            return this.skip();
-        }
-
-        const notebook = await TestNotebookDocument.openFile(testCSharpNb);
-        const metadata = await waitForCondition(
-            async () => {
-                const preferredController = await controllerPreferred.computePreferred(notebook);
-                if (
-                    preferredController.preferredConnection?.kind === 'startUsingLocalKernelSpec' &&
-                    preferredController.preferredConnection.kernelSpec.language === 'C#'
-                ) {
-                    return preferredController.preferredConnection;
-                }
-            },
-            defaultNotebookTestTimeout,
-            `Preferred controller not found for Notebook, currently preferred ${controllerPreferred.getPreferred(
-                notebook
-            )?.connection.kind}:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
-            500
-        );
-        const kernel = kernelProvider.getOrCreate(notebook, {
-            controller: createKernelController(),
-            metadata,
-            resourceUri: notebook.uri
-        });
-        const kernelExecution = kernelProvider.getKernelExecution(kernel);
-
-        const cell = notebook.cellAt(0);
-        // Wait till execution count changes and status is success.
-        await Promise.all([kernelExecution.executeCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
-
-        // For some reason C# kernel sends multiple outputs.
-        // First output can contain `text/html` with some Jupyter UI specific stuff.
-        try {
-            traceInfo(`Cell output length ${cell.outputs.length}`);
-            await waitForTextOutput(cell, 'Hello', 0, false, 5_000);
-        } catch (ex) {
-            if (cell.outputs.length > 1) {
-                await waitForTextOutput(cell, 'Hello', 1, false);
-            } else {
-                throw ex;
-            }
-        }
     });
 });

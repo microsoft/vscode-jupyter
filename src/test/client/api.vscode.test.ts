@@ -4,23 +4,16 @@
 import { assert } from 'chai';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
-import {
-    closeNotebooksAndCleanUpAfterTests,
-    defaultNotebookTestTimeout,
-    startJupyterServer
-} from '../datascience/notebook/helper.node';
+import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from '../datascience/notebook/helper.node';
 import { initialize } from '../initialize.node';
 import * as sinon from 'sinon';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, waitForCondition } from '../common.node';
-import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { executeSilently } from '../../kernels/helpers';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { createKernelController, TestNotebookDocument } from '../datascience/notebook/executionHelper';
-import { IKernelProvider, IKernelFinder } from '../../kernels/types';
-import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { TestNotebookDocument } from '../datascience/notebook/executionHelper';
+import { IKernelProvider, LocalKernelConnectionMetadata } from '../../kernels/types';
 import { KernelConnectionMetadata } from '../../api';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 suite('3rd Party Kernel Service API @kernelCore', function () {
     let api: IExtensionTestApi;
@@ -46,28 +39,22 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
     setup(async function () {
         notebook.cells.length = 0;
         const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const kernelFiner = api.serviceContainer.get<IKernelFinder>(IKernelFinder);
-        const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreter = await interpreterService.getActiveInterpreter();
-        if (!interpreter) {
-            throw new Error('Active Interpreter is undefined.0');
-        }
-        const metadata = await waitForCondition(
-            () =>
-                kernelFiner.kernels.find(
-                    (item) =>
-                        item.kind === 'startUsingPythonInterpreter' &&
-                        areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
-                ),
-            defaultNotebookTestTimeout,
-            () =>
-                `Kernel Connection pointing to active interpreter not found, active kernels include ${kernelFiner.kernels
-                    .map((item) => `${item.kind}, id=${item.id}, interpreter ${getDisplayPath(item.interpreter?.uri)}`)
-                    .join(', ')}`
+        const controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        // Wait till deno kernel has been discovered.
+        const connection = await waitForCondition(
+            async () =>
+                controllerRegistration.all.find(
+                    (k) => k.kind === 'startUsingLocalKernelSpec' && k.kernelSpec.language === 'typescript'
+                )!,
+            15_000,
+            'Deno kernel not found'
         );
-
-        const controller = createKernelController();
-        const kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
+        const controller = controllerRegistration.get(connection, 'jupyter-notebook')!;
+        const kernel = kernelProvider.getOrCreate(notebook, {
+            metadata: connection,
+            resourceUri: notebook.uri,
+            controller: controller.controller
+        });
         kernelProvider.getKernelExecution(kernel);
 
         sinon.restore();
@@ -89,40 +76,28 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
     });
     test('Start Kernel', async function () {
         const kernelService = await api.getKernelService();
-        const interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
-        const activeInterpreter = await interpreterService.getActiveInterpreter();
-        if (!activeInterpreter) {
-            throw new Error('Active Interpreter is undefined.1');
-        }
-        assert.isOk(activeInterpreter);
-        let kernelSpecs: KernelConnectionMetadata[] = [];
-        const pythonKernel = await waitForCondition(
-            async () => {
-                kernelSpecs = await kernelService!.getKernelSpecifications();
-                return IS_REMOTE_NATIVE_TEST()
-                    ? kernelSpecs.find(
-                          (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
-                      )
-                    : kernelSpecs.find(
-                          (item) =>
-                              item.kind === 'startUsingPythonInterpreter' &&
-                              areInterpreterPathsSame(item.interpreter.uri, activeInterpreter.uri)
-                      );
-            },
-            defaultNotebookTestTimeout,
-            () =>
-                `Python Kernel not found, active interpreter is ${activeInterpreter.uri.toString()}, found kernel specs ${
-                    kernelSpecs.length
-                }: ${kernelSpecs
-                    .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri?.path}`)
-                    .join('\n')}, \n ${JSON.stringify(kernelSpecs, undefined, 2)}`
+        const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        const controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        const connection = await waitForCondition(
+            async () =>
+                controllerRegistration.all.find(
+                    (k) => k.kind === 'startUsingLocalKernelSpec' && k.kernelSpec.language === 'typescript'
+                )!,
+            15_000,
+            'Deno kernel not found'
         );
-        assert.isOk(pythonKernel, 'Python Kernel Spec not found');
+        const controller = controllerRegistration.get(connection, 'jupyter-notebook')!;
+        const pythonKernel = kernelProvider.getOrCreate(notebook, {
+            metadata: connection,
+            resourceUri: notebook.uri,
+            controller: controller.controller
+        });
+        assert.isOk(pythonKernel, 'Kernel Spec not found');
 
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        const kernelInfo = await kernelService?.startKernel(pythonKernel!, notebook.uri!);
+        const kernelInfo = await kernelService?.startKernel(connection as KernelConnectionMetadata, notebook.uri!);
 
         assert.isOk(kernelInfo, 'Kernel Connection is undefined');
 
@@ -136,9 +111,13 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
             'Kernel notebook is not the active notebook'
         );
 
-        assert.strictEqual(kernels![0].metadata.id, pythonKernel?.id, 'Kernel Connection is not the same');
+        const metadata = kernels![0].metadata as unknown as LocalKernelConnectionMetadata;
+        assert.strictEqual(metadata.kind, 'startUsingLocalKernelSpec', 'Kernel Connection is not the same');
+        assert.strictEqual(metadata.kernelSpec.language, 'typescript');
+        assert.strictEqual(metadata.kernelSpec.name, 'deno');
+
         const kernel = kernelService?.getKernel(notebook.uri);
-        assert.strictEqual(kernels![0].metadata.id, kernel!.metadata.id, 'Kernel Connection not same for the document');
+        assert.strictEqual(metadata.id, kernel!.metadata.id, 'Kernel Connection not same for the document');
 
         // Verify we can run some code against this kernel.
         const outputs = await executeSilently(kernel?.connection.kernel!, '98765');

@@ -15,7 +15,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './const
 
 class TestRunner {
     public async start() {
-        console.log('Start Test Runner');
         await this.extractLatestExtension(SMOKE_TEST_EXTENSIONS_DIR);
         await this.launchSmokeTests();
     }
@@ -28,7 +27,6 @@ class TestRunner {
         await this.launchTest(env);
     }
     private async launchTest(customEnvVars: Record<string, {}>) {
-        console.log('Launch tests in test runner');
         await new Promise<void>((resolve, reject) => {
             const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: 'smoke.test*',

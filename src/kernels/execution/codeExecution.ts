@@ -9,11 +9,12 @@ import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging'
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
-import { IKernelSession, NotebookCellRunState } from '../../kernels/types';
+import { IKernelSession } from '../../kernels/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import { ICodeExecution } from './types';
 import { executeSilentlyAndEmitOutput } from '../helpers';
-import { EventEmitter, NotebookCellOutputItem } from 'vscode';
+import { EventEmitter, NotebookCellOutput } from 'vscode';
+import { KernelError } from '../errors/kernelError';
 
 function traceExecMessage(executionId: string, message: string) {
     traceVerbose(`Execution Id:${executionId}. ${message}.`);
@@ -34,10 +35,10 @@ export class CodeExecution implements ICodeExecution, IDisposable {
     public get done(): Promise<void> {
         return this._done.promise;
     }
-    public get result(): Promise<NotebookCellRunState> {
-        return this._done.promise.catch(noop).then(() => NotebookCellRunState.Success);
+    public get result(): Promise<void> {
+        return this._done.promise;
     }
-    private readonly _onDidEmitOutput = new EventEmitter<NotebookCellOutputItem[]>();
+    private readonly _onDidEmitOutput = new EventEmitter<NotebookCellOutput>();
     public readonly onDidEmitOutput = this._onDidEmitOutput.event;
     private readonly _onRequestSent = new EventEmitter<void>();
     public readonly onRequestSent = this._onRequestSent.event;
@@ -160,18 +161,14 @@ export class CodeExecution implements ICodeExecution, IDisposable {
                 kernelConnection,
                 code,
                 () => this._onRequestAcknowledge.fire(),
-                (outputs) => {
-                    if (outputs.length) {
-                        this._onDidEmitOutput.fire(outputs);
-                    }
-                }
+                (output) => this._onDidEmitOutput.fire(output)
             );
             // Don't want dangling promises.
             this.request.done.then(noop, noop);
         } catch (ex) {
             traceError(`Code execution failed without request, for exec ${this.executionId}`, ex);
             this._completed = true;
-            this._done.resolve();
+            this._done.reject(ex);
             return;
         }
 
@@ -183,10 +180,15 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             // When the request finishes we are done
             // request.done resolves even before all iopub messages have been sent through.
             // Solution is to wait for all messages to get processed.
-            await this.request!.done.catch(noop);
+            const response = await this.request!.done;
             this._completed = true;
-            this._done.resolve();
-            traceExecMessage(this.executionId, 'Executed successfully');
+            if (response.content.status === 'error') {
+                traceExecMessage(this.executionId, 'Executed with errors');
+                this._done.reject(new KernelError(response.content));
+            } else {
+                traceExecMessage(this.executionId, 'Executed successfully');
+                this._done.resolve();
+            }
         } catch (ex) {
             this._completed = true;
             if (this.cancelHandled) {
@@ -199,7 +201,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             } else {
                 traceError(`Some other execution error for exec ${this.executionId}`, ex);
             }
-            this._done.resolve();
+            this._done.reject(ex);
         }
     }
 }

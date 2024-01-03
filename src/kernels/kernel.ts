@@ -514,13 +514,28 @@ abstract class BaseKernel implements IBaseKernel {
         }
 
         const promise = (async () => {
+            // Sometimes kernels can die during interrupt, so wait for the session to die (if not already dead and only when busy)
+            // I.e. we do not want to handle cases where kernel dies when not busy.
+            const timedOutPromiseDueToDeadKernel = createDeferred<InterruptResult>();
+            if (this.status === 'busy') {
+                this.onDisposed(() => timedOutPromiseDueToDeadKernel.resolve(InterruptResult.Dead), this, disposables);
+                this.onStatusChanged(
+                    () =>
+                        this.status === 'dead'
+                            ? timedOutPromiseDueToDeadKernel.resolve(InterruptResult.Dead)
+                            : undefined,
+                    this,
+                    disposables
+                );
+            }
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire
                 return await raceTimeout(
                     this.kernelSettings.interruptTimeout,
                     InterruptResult.TimedOut,
                     pendingExecutions.then(() => InterruptResult.Success),
-                    restarted.promise.then(() => InterruptResult.Restarted)
+                    restarted.promise.then(() => InterruptResult.Restarted),
+                    timedOutPromiseDueToDeadKernel.promise
                 );
             } catch (exc) {
                 // Something failed. See if we restarted or not.

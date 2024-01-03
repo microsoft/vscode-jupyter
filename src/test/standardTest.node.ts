@@ -157,8 +157,6 @@ async function getExtensionsDir(): Promise<string> {
 }
 
 async function start() {
-    console.log('*'.repeat(100));
-    console.log('Start Standard tests');
     const platform = computePlatform();
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform);
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];

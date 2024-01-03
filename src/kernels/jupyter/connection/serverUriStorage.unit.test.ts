@@ -69,11 +69,12 @@ suite('Server Uri Storage', async () => {
         const itemsInNewStorage = generateDummyData(2).slice();
         const all = serverUriStorage.all;
         assert.strictEqual(all.length, 2, 'Should have 2 items');
+        // Strip the last few chars from time, to account for the fact that we store time in ms and it can be off a little.
         assert.deepEqual(
             all
                 .map((a) => {
                     return {
-                        time: a.time,
+                        time: a.time.toString().substring(0, -4),
                         displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.provider)
                     };
@@ -82,7 +83,7 @@ suite('Server Uri Storage', async () => {
             itemsInNewStorage
                 .map((a) => {
                     return {
-                        time: a.time,
+                        time: a.time.toString().substring(0, -4),
                         displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.serverHandle)
                     };

@@ -13,45 +13,6 @@ import { vscUri } from './uri';
 import { generateUuid } from './uuid';
 
 export namespace vscMockExtHostedTypes {
-    export class NotebookCellMetadata {
-        constructor(
-            public readonly editable?: boolean,
-            public readonly breakpointMargin?: boolean,
-            public readonly runnable?: boolean,
-            public readonly executionOrder?: number,
-            public readonly runState?: NotebookCellRunState,
-            public readonly runStartTime?: number,
-            public readonly statusMessage?: string,
-            public readonly lastRunDuration?: number,
-            public readonly custom?: Record<string, any>
-        ) {}
-
-        // todo@API write a proper signature
-        with(change: {
-            editable?: boolean | null;
-            breakpointMargin?: boolean | null;
-            runnable?: boolean | null;
-            executionOrder?: number | null;
-            runState?: NotebookCellRunState | null;
-            runStartTime?: number | null;
-            statusMessage?: string | null;
-            lastRunDuration?: number | null;
-            custom?: Record<string, any> | null;
-        }): NotebookCellMetadata {
-            return new NotebookCellMetadata(
-                change.editable || this.editable,
-                change.breakpointMargin || this.breakpointMargin,
-                change.runnable || this.runnable,
-                change.executionOrder || this.executionOrder,
-                change.runState || this.runState,
-                change.runStartTime || this.runStartTime,
-                change.statusMessage || this.statusMessage,
-                change.lastRunDuration || this.lastRunDuration,
-                change.custom || this.custom
-            );
-        }
-    }
-
     export class NotebookCellOutputItem {
         static isNotebookCellOutputItem(obj: unknown): obj is vscode.NotebookCellOutputItem {
             if (obj instanceof NotebookCellOutputItem) {
@@ -170,10 +131,6 @@ export namespace vscMockExtHostedTypes {
          * A controller is preferred for a notebook.
          */
         Preferred = 2
-    }
-    export enum NotebookRunState {
-        Running = 1,
-        Idle = 2
     }
 
     export interface IRelativePattern {

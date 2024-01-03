@@ -30,7 +30,7 @@ env:
   NODE_VERSION: 18.15.0
   NPM_VERSION: 9.5.0
   PYTHON_VERSION: 3.8
-  JULIA_VERSION: 1.5.2
+  DENO_VERSION: '~1.37'
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   CACHE_NPM_DEPS: cache-npm
   CACHE_OUT_DIRECTORY: cache-out-directory
@@ -47,7 +47,6 @@ env:
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install pre-release in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
-  DOTNET_VERSION: 8.0.x
 
 jobs:
   # Make sure to cancel previous runs on a push
@@ -253,7 +252,7 @@ jobs:
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v3
-        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
+        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
         with:
           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
           path: .nyc_output
@@ -278,14 +277,11 @@ jobs:
         packageVersion: ['']
         tags:
           [
-            '^[^@]+$|@mandatory',
-            '@kernelCore',
+            '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter',
             '@widgets',
             '@iw',
             '@webview|@export|@lsp|@variableViewer',
-            '@debugger',
-            '@kernelPicker|@python|@jupyter',
-            '@kernelInstall'
+            '@debugger'
           ]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
@@ -356,16 +352,10 @@ jobs:
             os: ubuntu-latest
             ipywidgetsVersion: ''
           # Misc
-          - jupyterConnection: local
-            python: python
-            pythonVersion: '3.10'
-            tags: '@kernelCore|@kernelInstall'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
           - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
-            tags: '@kernelPicker|@kernelCore'
+            tags: '@kernelCore'
             os: ubuntu-latest
             ipywidgetsVersion: ''
 
@@ -410,10 +400,6 @@ jobs:
         if: matrix.python == 'conda'
         with:
           PYTHON_VERSION: ${{matrix.pythonVersion}}
-
-      - name: Upgrade pip
-        run: python -m pip install -U pip
-        if: matrix.python != 'conda' && matrix.python != 'noPython'
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v4
@@ -570,13 +556,6 @@ jobs:
           python -m jupyter nbextension uninstall --sys-prefix --py ipympl
           sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
-      - name: Pip List
-        if: matrix.python != 'noPython'
-        run: |
-          python --version
-          python -c "import sys;print(sys.executable)"
-          python -m pip list
-
         # This step is slow.
 
       # Run npm install (we need chrome to get downloaded)
@@ -611,35 +590,13 @@ jobs:
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
-      - name: Install Julia
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
-        uses: julia-actions/setup-julia@v1
+      - name: Install Deno
+        uses: denoland/setup-deno@v1
         with:
-          version: ${{env.JULIA_VERSION}}
+          deno-version: ${{ env.DENO_VERSION}}
 
-      - name: Install Julia Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
-        shell: bash
-        run: |
-          julia -e '
-            using Pkg
-            Pkg.add("IJulia")'
-
-      - name: Install Dot.net
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
-        uses: actions/setup-dotnet@v4.0.0
-        with:
-          dotnet-version: ${{env.DOTNET_VERSION}}
-
-      - name: Install .NET Interactive
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
-        shell: bash -l {0}
-        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-
-      - name: Install .NET Kernel
-        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@widgets' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@iw' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@kernelInstall'
-        shell: bash -l {0}
-        run: dotnet interactive jupyter install
+      - name: Install Deno Kernel
+        run: npx tsx ./build/installDenoKernel.ts
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
@@ -752,7 +709,7 @@ jobs:
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v3
-        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
+        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
         with:
           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
           path: .nyc_output
@@ -762,7 +719,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}
+          name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}-${{matrix.ipywidgetsVersion}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
@@ -774,7 +731,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}
+          name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}-${{matrix.ipywidgetsVersion}}
           path: './logs/*'
           retention-days: 60
 
@@ -809,9 +766,6 @@ jobs:
         id: set-python
         with:
           PYTHON_VERSION: ${{matrix.python}}
-
-      - name: Upgrade pip
-        run: python -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v4
@@ -856,31 +810,11 @@ jobs:
         with:
           run: npm run testSmokeLogged
 
-      - name: Upload test result, screenshots files
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: TestLogs-Smoke-${{matrix.python}}-${{matrix.os}}
-          path: './logs/*'
-          retention-days: 60
-
-      - name: Create coverage folder (if not created)
-        run: npm run createNycFolder
-
-      # Upload unit test coverage reports for later use in the "reports" job.
-      - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
-          path: .nyc_output
-          retention-days: 1
-
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
-    if: (success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'
-    needs: [ts_tests, vscodeTests, smoke-tests]
+    if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
+    needs: [ts_tests, vscodeTests]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
