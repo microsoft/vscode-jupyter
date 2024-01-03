@@ -1981,6 +1981,12 @@
                     "markdownDescription": "%jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription%",
                     "scope": "application"
                 },
+                "jupyter.formatStackTraces": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%jupyter.configuration.jupyter.formatStackTraces.description%",
+                    "scope": "application"
+                },
                 "jupyter.completionTriggerCharacters": {
                     "type": "object",
                     "patternProperties": {
