@@ -82,7 +82,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
         let location: string | undefined;
 
         const cellRegex = /Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
-        const inputRegex = /Input\s+?In\s*\[(?<executionCount>\d+)\].*line: (?<lineNumber>\d).*/;
+        const inputRegex = /Input\s+?(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\].*line: (?<lineNumber>\d).*/;
         const inputMatch = inputRegex.exec(traceFrame);
         const cellMatch = cellRegex.exec(traceFrame);
 

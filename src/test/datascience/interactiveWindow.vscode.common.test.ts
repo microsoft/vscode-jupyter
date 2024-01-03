@@ -417,9 +417,10 @@ ${actualCode}
         // Convert to html for easier parsing
         const ansiToHtml = require('ansi-to-html') as typeof import('ansi-to-html');
         const converter = new ansiToHtml();
-        const html = converter.toHtml(errorOutput.traceback.join('\n'));
+        const html = converter.toHtml(errorOutput.traceback.join('\n')) as string;
 
-        html.includes('Traceback (most recent call last)');
+        assert.ok(html.includes('Traceback (most recent call last)'), 'traceback not found in output');
+        assert.ok(/tmp-[^\.]*\.py:3/.test(html), 'link to file not found');
     });
 
     test('Raising an exception from within a function has a stack trace', async function () {
@@ -447,7 +448,9 @@ ${actualCode}
         const converter = new ansiToHtml();
         const html = converter.toHtml(errorOutput.traceback.join('\n')) as string;
 
-        html.includes('Traceback (most recent call last)');
+        const text = html.replace(/<[^>]+>/g, '');
+        assert.ok(text.includes('Traceback (most recent call last)'), 'traceback not found in output');
+        assert.ok(text.includes('def raiser():'), 'function definition not found in stack trace');
     });
 
     test('Raising an exception from system code has a stack trace', async function () {
@@ -474,7 +477,9 @@ ${actualCode}
         const converter = new ansiToHtml();
         const html = converter.toHtml(errorOutput.traceback.join('\n'));
 
-        html.includes('Traceback (most recent call last)');
+        const text = html.replace(/<[^>]+>/g, '');
+        assert.ok(text.includes('Traceback (most recent call last)'), 'traceback not found in output');
+        assert.ok(text.includes('pathlib.py:763, in PurePath.joinpath(self, *args)'), 'library frame not found');
     });
 
     test('Running a cell with markdown and code runs two cells', async () => {
