@@ -27,6 +27,7 @@ import { noop } from '../../../../platform/common/utils/misc';
  * If user has not configured antying, user will be presented with a prompt.
  */
 export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
+    id: 'all';
     private readonly scriptProviders: IWidgetScriptSourceProvider[];
     private get configuredScriptSources(): readonly WidgetCDNs[] {
         const settings = this.configurationSettings.getSettings(undefined);
@@ -94,9 +95,15 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
         this.sendTelemetryForWidgetModule(moduleName, moduleVersion, '', found.source).catch(noop);
         if (!found.scriptUri) {
-            traceError(`Script source for Widget ${moduleName}@${moduleVersion} not found`);
+            traceError(
+                `Script source for Widget ${moduleName}@${moduleVersion} not found in ${
+                    (this.scriptProviders || []).map((item) => item.id).join(', ') || 'None'
+                } providers`
+            );
         } else {
-            traceInfo(`Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source}`);
+            traceInfo(
+                `Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source} and ${found.scriptUri}`
+            );
         }
         return found;
     }

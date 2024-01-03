@@ -8,7 +8,7 @@ import { GLOBAL_MEMENTO, IConfigurationService, IMemento, WidgetCDNs } from '../
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { noop } from '../../../../platform/common/utils/misc';
-import { traceError, traceInfo, traceVerbose } from '../../../../platform/logging';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
 import { ConsoleForegroundColors } from '../../../../platform/logging/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from '../types';
@@ -68,6 +68,7 @@ function getCDNPrefix(cdn?: WidgetCDNs): string | undefined {
  */
 @injectable()
 export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
+    id: 'cdn';
     private cache = new Map<string, Promise<WidgetScriptSource>>();
     private isOnCDNCache = new Map<string, Promise<boolean>>();
     private readonly notifiedUserAboutWidgetScriptNotFound = new Set<string>();
@@ -123,6 +124,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     ): Promise<WidgetScriptSource> {
         // If the webview is not online, then we cannot use the CDN.
         if (isWebViewOnline === false) {
+            traceInfoIfCI(`Webview is offline, cannot use CDN for ${moduleName}`);
             this.warnIfNoAccessToInternetFromWebView(moduleName).catch(noop);
             return {
                 moduleName
@@ -132,6 +134,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             this.cdnProviders.length === 0 &&
             this.globalMemento.get<boolean>(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, false)
         ) {
+            traceInfoIfCI(`No CDN providers and user configured CDN`);
             return {
                 moduleName
             };

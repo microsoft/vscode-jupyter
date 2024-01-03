@@ -258,7 +258,8 @@ export class CommonMessageCoordinator {
     private async handleWidgetLoadFailure(webview: IWebviewCommunication, payload: ILoadIPyWidgetClassFailureAction) {
         try {
             let errorMessage: string = payload.error.toString();
-            const cdnsEnabled = this.configService.getSettings(undefined).widgetScriptSources.length > 0;
+            const widgetScriptSources = this.configService.getSettings(undefined).widgetScriptSources;
+            const cdnsEnabled = widgetScriptSources.length > 0;
             const key = `${payload.moduleName}:${payload.moduleVersion}`;
             if (!payload.isOnline) {
                 errorMessage = DataScience.loadClassFailedWithNoInternet(payload.moduleName, payload.moduleVersion);
@@ -283,7 +284,7 @@ export class CommonMessageCoordinator {
                         }
                     }, noop);
             }
-            traceError(`Widget load failure ${errorMessage}`, payload);
+            traceError(`Widget load failure ${errorMessage}`, widgetScriptSources, payload);
 
             sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
                 isOnline: payload.isOnline,

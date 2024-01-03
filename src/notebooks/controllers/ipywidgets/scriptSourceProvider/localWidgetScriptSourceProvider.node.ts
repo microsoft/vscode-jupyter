@@ -17,6 +17,7 @@ import {
  * <python folder>/share/jupyter/nbextensions/bqplot/index.js
  */
 export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
+    id: 'local';
     constructor(
         private readonly kernel: IKernel,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
