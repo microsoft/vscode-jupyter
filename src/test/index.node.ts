@@ -65,8 +65,7 @@ process.on('unhandledRejection', (ex: Error, _a) => {
         msg.includes('Error: custom request failed') ||
         msg.includes('ms-python.python') || // We don't care about unhanded promise rejections from the Python extension.
         msg.includes('ms-python.isort') || // We don't care about unhanded promise rejections from the Python related extensions.
-        msg.includes('extensions/git/dist/main.js') || // git extension often throws errors from calling extension APIs after EH has been disconnected
-        msg.includes('@vscode/lsp-notebook-concat/dist/index.js') // Flaky LSP issues.
+        msg.includes('extensions/git/dist/main.js') // git extension often throws errors from calling extension APIs after EH has been disconnected
     ) {
         // Some error from VS Code, we can ignore this.
         return;

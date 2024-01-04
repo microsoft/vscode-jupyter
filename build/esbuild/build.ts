@@ -30,9 +30,7 @@ const deskTopNodeModulesToExternalize = [
     'svg-to-pdfkit',
     // Lazy loaded modules.
     'vscode-languageclient/node',
-    '@vscode/jupyter-lsp-middleware',
     '@vscode/extension-telemetry',
-    '@vscode/lsp-notebook-concat',
     '@jupyterlab/services',
     '@jupyterlab/nbformat',
     '@jupyterlab/services/lib/kernel/serialize',

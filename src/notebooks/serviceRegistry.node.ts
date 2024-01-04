@@ -40,14 +40,13 @@ import { NotebookEditorProvider } from './notebookEditorProvider';
 import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker.node';
-import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
+import { INotebookEditorProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LiveKernelSwitcher);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NotebookCommandListener);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
-    serviceManager.addBinding(INotebookCompletionProvider, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RemoteKernelControllerWatcher
