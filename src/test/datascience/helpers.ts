@@ -190,7 +190,7 @@ export async function runCurrentFile(interactiveWindowProvider: IInteractiveWind
     await vscode.window.showTextDocument(file, vscode.ViewColumn.One);
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(file.uri)) as InteractiveWindow;
     await waitForInteractiveWindow(activeInteractiveWindow);
-    await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows, file.uri);
+    await vscode.commands.executeCommand(Commands.RunAllCells, file.uri);
     return activeInteractiveWindow;
 }
 

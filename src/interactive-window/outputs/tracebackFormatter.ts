@@ -11,6 +11,7 @@ import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-p
 import { IPlatformService } from '../../platform/common/platform/types';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { InteractiveWindowView } from '../../platform/common/constants';
+import { IConfigurationService } from '../../platform/common/types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
@@ -25,7 +26,8 @@ const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
 export class InteractiveWindowTracebackFormatter implements ITracebackFormatter {
     constructor(
         @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory,
-        @inject(IPlatformService) private platformService: IPlatformService
+        @inject(IPlatformService) private platformService: IPlatformService,
+        @inject(IConfigurationService) private configurationService: IConfigurationService
     ) {}
     public format(cell: NotebookCell, traceback: string[]): string[] {
         if (cell.notebook.notebookType !== InteractiveWindowView) {
@@ -37,18 +39,25 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
             // nothing to modify for IPython7 if we don't have any code to look up (standalone Interactive Window)
             return traceback;
         }
+
+        const settings = this.configurationService.getSettings(cell.document.uri);
+        const linkifyLineNumbers = settings?.formatStackTraces ?? false;
+
         return traceback.map((traceFrame) => {
             // Check IPython8. We handle that one special
             if (useIPython8Format) {
-                return this.modifyTracebackFrameIPython8(traceFrame, storage?.all);
-            } else {
+                return this.modifyTracebackFrameIPython8(traceFrame, storage?.all, linkifyLineNumbers);
+            } else if (linkifyLineNumbers) {
                 return this.modifyTracebackFrameIPython7(traceFrame, storage!.all);
+            } else {
+                return traceFrame;
             }
         });
     }
     private modifyTracebackFrameIPython8(
         traceFrame: string,
-        generatedCodes: IFileGeneratedCodes[] | undefined
+        generatedCodes: IFileGeneratedCodes[] | undefined,
+        linkifyLineNumbers: boolean
     ): string {
         // Ansi colors are described here:
         // https://en.wikipedia.org/wiki/ANSI_escape_code under the SGR section
@@ -71,15 +80,18 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
 
         let executionCount: number | undefined;
         let location: string | undefined;
-        const inputMatch = /^Input.*?\[.*32mIn\s+\[(\d+).*?0;36m(.*?)\n.*/.exec(traceFrame);
-        const cellMatch = /^Cell.*?\[.*32mIn\s*\[(\d+)\], (.*).\[0m\n/.exec(traceFrame);
 
-        if (inputMatch && inputMatch.length > 1) {
-            executionCount = parseInt(inputMatch[1]);
-            location = inputMatch[2];
-        } else if (cellMatch && cellMatch.length > 1) {
-            executionCount = parseInt(cellMatch[1]);
-            location = cellMatch[2];
+        const cellRegex = /Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
+        const inputRegex = /Input\s+?(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\].*line: (?<lineNumber>\d).*/;
+        const inputMatch = inputRegex.exec(traceFrame);
+        const cellMatch = cellRegex.exec(traceFrame);
+
+        if (inputMatch && inputMatch.groups?.executionCount && inputMatch.groups?.lineNumber) {
+            executionCount = parseInt(inputMatch.groups.executionCount);
+            location = inputMatch.groups?.lineNumber;
+        } else if (cellMatch && cellMatch.groups?.executionCount && cellMatch.groups?.lineNumber) {
+            executionCount = parseInt(cellMatch.groups.executionCount);
+            location = cellMatch.groups.lineNumber;
         }
 
         if (generatedCodes && executionCount) {
@@ -96,32 +108,35 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
             }
             if (match && matchUri) {
                 // We have a match, replace source lines first
-                const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
-                    const n = parseInt(num, 10);
-                    const lineNumberOfFirstLineInCell = match!.hasCellMarker ? match!.line - 1 : match!.line;
-                    const lineIndexOfFirstLineInCell = lineNumberOfFirstLineInCell - 1;
-                    const newLine = lineIndexOfFirstLineInCell + match!.lineOffsetRelativeToIndexOfFirstLineInCell + n;
-                    return `${prefix}<a href='${matchUri?.toString()}?line=${newLine - 1}'>${newLine}</a>${suffix}`;
-                });
+                let result = traceFrame;
+                if (linkifyLineNumbers) {
+                    result = result.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
+                        const n = parseInt(num, 10);
+                        const lineNumberOfFirstLineInCell = match!.hasCellMarker ? match!.line - 1 : match!.line;
+                        const lineIndexOfFirstLineInCell = lineNumberOfFirstLineInCell - 1;
+                        const newLine =
+                            lineIndexOfFirstLineInCell + match!.lineOffsetRelativeToIndexOfFirstLineInCell + n;
+                        return `${prefix}<a href='${matchUri?.toString()}?line=${newLine - 1}'>${newLine}</a>${suffix}`;
+                    });
+                }
 
                 // Then replace the input line with our uri for this cell
-                return afterLineReplace.replace(
-                    /.*?\n/,
-                    `\u001b[1;32m${getFilePath(matchUri)}\u001b[0m in \u001b[0;36m${location}\n`
-                );
+                return result.replace(/.*?\n/, `File \u001b[1;32m${getFilePath(matchUri)}:${location}\u001b[0m\n`);
             }
         }
 
-        const fileMatch = /^File.*?\[\d;32m(.*):\d+.*\u001b.*\n/.exec(traceFrame);
-        if (fileMatch && fileMatch.length > 1) {
-            // We need to untilde the file path here for the link to work in VS Code
-            const detildePath = untildify(fileMatch[1], getFilePath(this.platformService.homeDir));
-            const fileUri = Uri.file(detildePath);
-            // We have a match, replace source lines with hrefs
-            return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
-                const n = parseInt(num, 10);
-                return `${prefix}<a href='${fileUri?.toString()}?line=${n - 1}'>${n}</a>${suffix}`;
-            });
+        if (linkifyLineNumbers) {
+            const fileMatch = /^File.*?\[\d;32m(.*):\d+.*\u001b.*\n/.exec(traceFrame);
+            if (fileMatch && fileMatch.length > 1) {
+                // We need to untilde the file path here for the link to work in VS Code
+                const detildePath = untildify(fileMatch[1], getFilePath(this.platformService.homeDir));
+                const fileUri = Uri.file(detildePath);
+                // We have a match, replace source lines with hrefs
+                return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
+                    const n = parseInt(num, 10);
+                    return `${prefix}<a href='${fileUri?.toString()}?line=${n - 1}'>${n}</a>${suffix}`;
+                });
+            }
         }
 
         return traceFrame;

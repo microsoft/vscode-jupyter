@@ -417,11 +417,10 @@ ${actualCode}
         // Convert to html for easier parsing
         const ansiToHtml = require('ansi-to-html') as typeof import('ansi-to-html');
         const converter = new ansiToHtml();
-        const html = converter.toHtml(errorOutput.traceback.join('\n'));
+        const html = converter.toHtml(errorOutput.traceback.join('\n')) as string;
 
-        // Should be three hrefs for the two lines in the call stack
-        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
-        assert.equal(hrefs?.length, 4, '4 hrefs not found in traceback');
+        assert.ok(html.includes('Traceback (most recent call last)'), 'traceback not found in output');
+        assert.ok(/tmp-[^\.]*\.py:3/.test(html), 'link to file not found');
     });
 
     test('Raising an exception from within a function has a stack trace', async function () {
@@ -447,15 +446,11 @@ ${actualCode}
         // Convert to html for easier parsing
         const ansiToHtml = require('ansi-to-html') as typeof import('ansi-to-html');
         const converter = new ansiToHtml();
-        const html = converter.toHtml(errorOutput.traceback.join('\n'));
+        const html = converter.toHtml(errorOutput.traceback.join('\n')) as string;
 
-        // Should be three hrefs for the two lines in the call stack
-        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm)!;
-        assert.equal(hrefs.length, 4, '4 hrefs not found in traceback');
-        assert.ok(hrefs[0].endsWith("line=3'"), `Wrong first ref line : ${hrefs[0]}`);
-        assert.ok(hrefs[1].endsWith("line=4'"), `Wrong second ref line : ${hrefs[1]}`);
-        assert.ok(hrefs[2].endsWith("line=1'"), `Wrong last ref line : ${hrefs[2]}`);
-        assert.ok(hrefs[3].endsWith("line=2'"), `Wrong last ref line : ${hrefs[2]}`);
+        const text = html.replace(/<[^>]+>/g, '');
+        assert.ok(text.includes('Traceback (most recent call last)'), 'traceback not found in output');
+        assert.ok(text.includes('def raiser():'), 'function definition not found in stack trace');
     });
 
     test('Raising an exception from system code has a stack trace', async function () {
@@ -473,9 +468,6 @@ ${actualCode}
             'Outputs not available'
         );
 
-        const ipythonVersionCell = activeInteractiveWindow.notebookDocument?.cellAt(lastCell.index - 1);
-        const ipythonVersion = parseInt(getTextOutputValue(ipythonVersionCell!.outputs[0]));
-
         // Parse the last cell's error output
         const errorOutput = translateCellErrorOutput(lastCell.outputs[0]);
         assert.ok(errorOutput, 'No error output found');
@@ -485,13 +477,9 @@ ${actualCode}
         const converter = new ansiToHtml();
         const html = converter.toHtml(errorOutput.traceback.join('\n'));
 
-        // Should be more than 3 hrefs if ipython 8 or not
-        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm)!;
-        if (ipythonVersion >= 8) {
-            assert.isAtLeast(hrefs.length, 4, 'Wrong number of hrefs found in traceback for IPython 8');
-        } else {
-            assert.isAtLeast(hrefs.length, 1, 'Wrong number of hrefs found in traceback for IPython 7 or earlier');
-        }
+        const text = html.replace(/<[^>]+>/g, '');
+        assert.ok(text.includes('Traceback (most recent call last)'), 'traceback not found in output');
+        assert.ok(/pathlib\.py:\d+, in PurePath\.joinpath/.test(text), 'library frame not found');
     });
 
     test('Running a cell with markdown and code runs two cells', async () => {
@@ -553,7 +541,7 @@ ${actualCode}
         const source = ['# %%', 'x = 1', '# %%', 'import time', 'time.sleep(3)', '# %%', 'print(x)', ''].join('\n');
         const tempFile = await createTemporaryFile({ contents: 'print(42)', extension: '.py' });
         await vscode.window.showTextDocument(tempFile.file);
-        await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows);
+        await vscode.commands.executeCommand(Commands.RunAllCells);
 
         const edit = new vscode.WorkspaceEdit();
         const textEdit = vscode.TextEdit.replace(new vscode.Range(0, 0, 0, 9), source);
@@ -561,7 +549,7 @@ ${actualCode}
         await vscode.workspace.applyEdit(edit);
         await waitForCodeLenses(tempFile.file, Commands.DebugCell);
 
-        let runFilePromise = vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows);
+        let runFilePromise = vscode.commands.executeCommand(Commands.RunAllCells);
 
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         const mode = (await settings.get('interactiveWindow.creationMode')) as InteractiveWindowMode;
