@@ -1,0 +1,40 @@
+{
+	"$schema": "https://raw.githubusercontent.com/microsoft/vscode-github-triage-actions/stable/classifier-deep/apply/apply-labels/deep-classifier-config.schema.json",
+	"vacation": [],
+	"assignees": {
+		"nameToOverrideAccuracyOf": {"accuracy": 0.8}
+	},
+	"labels": {
+        "accessibility": {"assign": ["amunger"]},
+        "api-proposal": {"assign": ["DonJayamanne"]},
+        "data-viewer": {"assign": ["amunger"]},
+        "documentation": {"assign": ["DonJayamanne"]},
+        "interactive-window": {"assign": ["amunger"]},
+        "interactive-window-debugging": {"assign": ["DonJayamanne"]},
+        "ipywidgets": {"assign": ["DonJayamanne"]},
+        "language-any": {"assign": ["DonJayamanne"]},
+        "localization": {"assign": ["DonJayamanne"]},
+        "notebook-commands": {"assign": ["rebornix"]},
+        "notebook-debugging": {"assign": ["DonJayamanne"]},
+        "notebook-getting-started": {"assign": ["rebornix"]},
+        "notebook-import-export": {"assign": ["amunger"]},
+        "notebook-intellisense": {"assign": ["DonJayamanne"]},
+        "notebook-kernel": {"assign": ["DonJayamanne"]},
+        "notebook-kernel-picker": {"assign": ["DonJayamanne"]},
+        "notebook-liveshare": {"assign": ["rebornix"]},
+        "notebook-output": {"assign": ["amunger"]},
+        "notebook-remote": {"assign": ["rebornix"]},
+        "notebook-run-by-line": {"assign": ["DonJayamanne"]},
+        "notebook-serialization": {"assign": ["DonJayamanne"]},
+        "notebook-workflow": {"assign": ["rebornix"]},
+        "output-renderer": {"assign": ["amunger"]},
+        "plot-viewer": {"assign": ["DonJayamanne"]},
+        "tensorboard": {"assign": ["DonJayamanne"]},
+        "upstream-pylance": {"assign": ["DonJayamanne"]},
+        "upstream-python": {"assign": ["DonJayamanne"]},
+        "upstream-vscode": {"assign": ["rebornix"]},
+        "user-setup": {"assign": ["DonJayamanne"]},
+        "variable-explorer": {"assign": ["amunger"]},
+        "zmq": {"assign": ["DonJayamanne"]}
+    }
+}
