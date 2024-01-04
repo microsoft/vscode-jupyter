@@ -118,7 +118,7 @@ export class IPyWidgetScriptSource {
         if (!this.kernel?.session) {
             return;
         }
-        if (this.scriptProvider) {
+        if (this.scriptProvider && !this.scriptProvider.isDisposed) {
             return;
         }
         this.scriptProvider = new IPyWidgetScriptSourceProvider(
