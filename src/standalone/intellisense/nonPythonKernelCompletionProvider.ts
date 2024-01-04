@@ -36,7 +36,7 @@ import { translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { DisposableBase, DisposableStore } from '../../platform/common/utils/lifecycle';
-import { raceTimeout, sleep } from '../../platform/common/utils/async';
+import { createDeferredFromPromise, raceTimeout, sleep } from '../../platform/common/utils/async';
 import { TelemetryMeasures, TelemetryProperties, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
@@ -76,17 +76,20 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
         try {
             // Request completions from other language providers.
             // Do this early, as we know kernel completions will take longer.
-            const completionsFromOtherSourcesPromise = raceCancellation(
-                token,
-                (
-                    Promise.resolve(
-                        commands.executeCommand('vscode.executeCompletionItemProvider', document.uri, position)
-                    ) as Promise<CompletionList | undefined>
-                ).then((result) => result?.items || [])
+            const completionsFromOtherSourcesPromise = createDeferredFromPromise(
+                raceCancellation(
+                    token,
+                    (
+                        Promise.resolve(
+                            commands.executeCommand('vscode.executeCompletionItemProvider', document.uri, position)
+                        ) as Promise<CompletionList | undefined>
+                    ).then((result) => result?.items || [])
+                )
             );
 
             // Wait for 100ms, as we do not want to flood the kernel with too many messages.
             // if after 100ms, the token isn't cancelled, then send the request.
+            const stopWatch = new StopWatch();
             await sleep(100);
             if (token.isCancellationRequested) {
                 return [];
@@ -99,7 +102,18 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
             // If kernel is faster than other language providers, then so be it.
             // Adding delays here could just slow things down in VS Code.
             // NOTE: We have already waited for 100ms earlier.
-            const otherCompletions = await raceTimeout(0, completionsFromOtherSourcesPromise);
+            let otherCompletions = await raceTimeout(0, completionsFromOtherSourcesPromise.promise);
+            if (
+                isPythonKernelConnection(this.kernel.kernelConnectionMetadata) &&
+                !completionsFromOtherSourcesPromise.completed &&
+                stopWatch.elapsedTime < 300
+            ) {
+                // Wait another 100ms, hoping that the other language providers will return something.
+                // Else we could end up with duplicates,
+                // So the goal is to try to avoid duplicates by waiting for other language providers to return something.
+                // But not wait for too long, in this case we wait for max of 300ms
+                otherCompletions = await raceTimeout(200, completionsFromOtherSourcesPromise.promise);
+            }
 
             const existingCompletionItems = new Set(
                 (otherCompletions || []).map((item) => (typeof item.label === 'string' ? item.label : item.label.label))
