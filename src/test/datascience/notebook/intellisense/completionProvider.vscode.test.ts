@@ -5,25 +5,9 @@
 import { assert } from 'chai';
 import * as path from '../../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import {
-    CancellationToken,
-    commands,
-    CompletionContext,
-    ConfigurationTarget,
-    Position,
-    TextDocument,
-    Uri,
-    window,
-    workspace,
-    WorkspaceConfiguration,
-    WorkspaceEdit
-} from 'vscode';
+import { ConfigurationTarget, Position, Uri, window, workspace, WorkspaceConfiguration, WorkspaceEdit } from 'vscode';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
-import {
-    PythonKernelCompletionProvider,
-    setIntellisenseTimeout
-} from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { IExtensionTestApi } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../../initialize.node';
@@ -38,7 +22,8 @@ import {
     getCellOutputs,
     waitForCompletions
 } from '../helper.node';
-import { Settings } from '../../../../platform/common/constants';
+import { NonPythonKernelCompletionProvider } from '../../../../standalone/intellisense/nonPythonKernelCompletionProvider';
+import { IKernelProvider } from '../../../../kernels/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 [true, false].forEach((useJedi) => {
@@ -49,7 +34,7 @@ import { Settings } from '../../../../platform/common/constants';
         function () {
             let api: IExtensionTestApi;
             const disposables: IDisposable[] = [];
-            let completionProvider: PythonKernelCompletionProvider;
+            let kernelCompletionProviderRegistry: NonPythonKernelCompletionProvider;
             this.timeout(120_000);
             let previousPythonCompletionTriggerCharactersValue: string | undefined;
             let jupyterConfig: WorkspaceConfiguration;
@@ -72,8 +57,9 @@ import { Settings } from '../../../../platform/common/constants';
                 await startJupyterServer();
                 await prewarmNotebooks();
                 sinon.restore();
-                completionProvider =
-                    api.serviceContainer.get<PythonKernelCompletionProvider>(PythonKernelCompletionProvider);
+                kernelCompletionProviderRegistry = api.serviceContainer.get<NonPythonKernelCompletionProvider>(
+                    NonPythonKernelCompletionProvider
+                );
                 traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
             });
             // Use same notebook without starting kernel in every single test (use one for whole suite).
@@ -82,13 +68,11 @@ import { Settings } from '../../../../platform/common/constants';
                 sinon.restore();
                 await startJupyterServer();
                 await createEmptyPythonNotebook(disposables, Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp'))); // TODO, can't do this on web tests
-                setIntellisenseTimeout(30000);
                 traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
             });
             teardown(async function () {
                 sinon.restore();
                 traceInfo(`Ended Test ${this.currentTest?.title}`);
-                setIntellisenseTimeout(Settings.IntellisenseTimeout);
                 await closeNotebooksAndCleanUpAfterTests(disposables);
                 traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
             });
@@ -158,6 +142,10 @@ import { Settings } from '../../../../platform/common/constants';
                     cellCode.includes('"') || cellCode.includes("'") ? cellCode.length - 1 : cellCode.length
                 );
                 traceInfo('Get completions in test');
+                const kernel = api.serviceContainer
+                    .get<IKernelProvider>(IKernelProvider)
+                    .get(window.activeNotebookEditor!.notebook)!;
+                const completionProvider = kernelCompletionProviderRegistry.kernelCompletionProviders.get(kernel)!;
                 let completions = await waitForCompletions(completionProvider, cell4, position, triggerCharacter);
                 let items = completions.map((item) => item.label);
                 assert.isOk(items.length);
@@ -238,32 +226,6 @@ import { Settings } from '../../../../platform/common/constants';
             test('File path completions with single quotes', async () => {
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions(`'${fileName.substring(0, 1)}'`, undefined, fileName);
-            });
-            test('Provider is registered', async () => {
-                await insertCodeCell('print(1)', {
-                    index: 0
-                });
-                let stubCalled = false;
-                const stub = sinon.stub(completionProvider, 'provideCompletionItems');
-                stub.callsFake(
-                    async (
-                        _document: TextDocument,
-                        _position: Position,
-                        _token: CancellationToken,
-                        _context: CompletionContext
-                    ) => {
-                        stubCalled = true;
-                        return [];
-                    }
-                );
-                await insertCodeCell('a.', { index: 1 });
-                const cell2 = window.activeNotebookEditor!.notebook.cellAt(1);
-
-                const position = new Position(0, 2);
-                traceInfo('Get completions in test');
-                // Executing the command `vscode.executeCompletionItemProvider` to simulate triggering completion
-                await commands.executeCommand('vscode.executeCompletionItemProvider', cell2.document.uri, position);
-                assert.ok(stubCalled, 'Completion provider not registered');
             });
         }
     );

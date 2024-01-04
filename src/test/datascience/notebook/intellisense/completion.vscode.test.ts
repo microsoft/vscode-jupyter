@@ -19,8 +19,6 @@ import {
     prewarmNotebooks,
     createEmptyPythonNotebook
 } from '../helper.node';
-import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
-import { Settings } from '../../../../platform/common/constants';
 import { getTextOutputValue } from '../../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -46,12 +44,10 @@ suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', funct
         sinon.restore();
         await startJupyterServer();
         await createEmptyPythonNotebook(disposables);
-        setIntellisenseTimeout(30000);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        setIntellisenseTimeout(Settings.IntellisenseTimeout);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }

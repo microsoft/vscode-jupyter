@@ -44,6 +44,7 @@ class RequestTimedoutError extends Error {
 
 export async function resolveCompletionItem(
     item: CompletionItem,
+    originalCompletionItem: undefined | CompletionItem,
     token: CancellationToken,
     kernel: IKernel,
     kernelId: string,
@@ -88,7 +89,7 @@ export async function resolveCompletionItem(
         return item;
     }
     properties.requestSent = true;
-    const message = generateInspectRequestMessage(item, document, position);
+    const message = generateInspectRequestMessage(originalCompletionItem || item, document, position);
     const request = sendInspectRequest(message, kernel.session.kernel, token, properties, measures, toDispose);
 
     try {

@@ -18,7 +18,7 @@ import {
     workspace
 } from 'vscode';
 import { raceCancellation } from '../../platform/common/cancellation';
-import { traceInfo, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import {
     Experiments,
     IDisposable,
@@ -39,7 +39,7 @@ import { DisposableBase, DisposableStore } from '../../platform/common/utils/lif
 import { raceTimeout, sleep } from '../../platform/common/utils/async';
 import { TelemetryMeasures, TelemetryProperties, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { generateSortString } from './helpers';
 import { resolveCompletionItem } from './resolveCompletionItem';
 
@@ -50,17 +50,17 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
         private readonly monacoLanguage: string,
         private readonly toDispose: DisposableStore
     ) {}
-
+    public allowStringFilterForPython: boolean;
     private pendingCompletionRequest = new WeakMap<TextDocument, { position: Position; version: number }>();
     private previousCompletionItems = new WeakMap<
         CompletionItem,
-        { documentRef: WeakRef<TextDocument>; position: Position }
+        { documentRef: WeakRef<TextDocument>; position: Position; originalCompletionItem: CompletionItem }
     >();
     async provideCompletionItems(
         document: TextDocument,
         position: Position,
         token: CancellationToken,
-        _context: CompletionContext
+        context: CompletionContext
     ): Promise<CompletionItem[]> {
         if (!this.kernel.session?.kernel) {
             return [];
@@ -91,7 +91,7 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
             if (token.isCancellationRequested) {
                 return [];
             }
-            const completions = await this.provideCompletionItemsFromKernel(document, position, token);
+            const completions = await this.provideCompletionItemsFromKernel(document, position, token, context);
             if (token.isCancellationRequested) {
                 return [];
             }
@@ -119,7 +119,8 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
     async provideCompletionItemsFromKernel(
         document: TextDocument,
         position: Position,
-        token: CancellationToken
+        token: CancellationToken,
+        context: CompletionContext
     ): Promise<CompletionItem[]> {
         if (token.isCancellationRequested || !this.kernel.session?.kernel) {
             return [];
@@ -195,14 +196,14 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
             position: document.positionAt(result.cursor.start)
         };
         const range = new Range(document.positionAt(result.cursor.start), document.positionAt(result.cursor.end));
-
+        let items: CompletionItem[] = [];
         if (
             Array.isArray(experimentMatches) &&
             experimentMatches.length >= result.matches.length &&
             experimentMatches.every((item) => item && typeof item.text === 'string')
         ) {
             // This works for Julia and Python kernels, haven't tested others.
-            return kernelCompletions.content.matches.map((label, index) => {
+            items = kernelCompletions.content.matches.map((label, index) => {
                 const item = experimentMatches[index];
                 const type = item.type ? mapJupyterKind.get(item.type) : CompletionItemKind.Field;
 
@@ -215,24 +216,55 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
                 }
                 completionItem.insertText = item.text;
                 completionItem.sortText = generateSortString(index);
-                this.previousCompletionItems.set(completionItem, dataToStore);
+                if (
+                    isPythonKernelConnection(this.kernel.kernelConnectionMetadata) &&
+                    (label.startsWith('%') || label.startsWith('!'))
+                ) {
+                    // Update magics to have a much lower sort order than other strings.
+                    // Also change things that start with our current word to eliminate the
+                    // extra long label.
+                    completionItem.sortText = `ZZZ${completionItem.sortText}`;
+                }
+
+                this.previousCompletionItems.set(completionItem, {
+                    ...dataToStore,
+                    originalCompletionItem: JSON.parse(JSON.stringify(completionItem)) // Used to resolve completion items.
+                });
                 return completionItem;
             });
         } else {
-            return result.matches.map((label, index) => {
+            items = result.matches.map((label, index) => {
                 const completionItem = new CompletionItem(label);
 
                 completionItem.range = range;
                 completionItem.sortText = generateSortString(index);
-                this.previousCompletionItems.set(completionItem, dataToStore);
+                if (
+                    isPythonKernelConnection(this.kernel.kernelConnectionMetadata) &&
+                    (label.startsWith('%') || label.startsWith('!'))
+                ) {
+                    // Update magics to have a much lower sort order than other strings.
+                    // Also change things that start with our current word to eliminate the
+                    // extra long label.
+                    completionItem.sortText = `ZZZ${completionItem.sortText}`;
+                }
+                this.previousCompletionItems.set(completionItem, {
+                    ...dataToStore,
+                    originalCompletionItem: completionItem
+                });
                 return completionItem;
             });
         }
+        if (isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
+            return generatePythonCompletions(
+                context.triggerCharacter,
+                this.allowStringFilterForPython,
+                items,
+                document,
+                position
+            );
+        }
+        return items;
     }
-    /**
-     * Kernel provider will use the inspect request to lazy-load the content
-     * for document panel.
-     */
     async resolveCompletionItem(item: CompletionItem, token: CancellationToken): Promise<CompletionItem> {
         if (!item.range || !this.kernel.session?.kernel) {
             // We always set a range in the completion item we send.
@@ -242,13 +274,14 @@ export class NotebookCellSpecificKernelCompletionProvider implements CompletionI
         if (!info) {
             return item;
         }
-        const { documentRef, position } = info;
+        const { documentRef, position, originalCompletionItem } = info;
         const document = documentRef.deref();
         if (!document) {
             return item;
         }
         return resolveCompletionItem(
             item,
+            originalCompletionItem,
             token,
             this.kernel,
             this.kernelId,
@@ -266,6 +299,8 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
     private completionProvider?: IDisposable;
     private readonly monacoLanguage = getKernelLanguageAsMonacoLanguage(this.kernel);
     private readonly toDispose = this._register(new DisposableStore());
+    private allowStringFilterForPython: boolean;
+
     constructor(
         private readonly kernel: IKernel,
         private readonly notebookEditorProvider: INotebookEditorProvider
@@ -283,7 +318,10 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
                         this.registerCompletionProvider();
                     }
                 }
-                if (!e.affectsConfiguration('jupyter.completionTriggerCharacters')) {
+                if (
+                    !e.affectsConfiguration('jupyter.completionTriggerCharacters') &&
+                    !e.affectsConfiguration('jupyter.pythonCompletionTriggerCharacters')
+                ) {
                     return;
                 }
                 this.completionProvider?.dispose();
@@ -308,6 +346,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
                 this.kernel.kernelConnectionMetadata
             )} for language ${this.monacoLanguage}`
         );
+        this.allowStringFilterForPython = triggerCharacters.includes("'") || triggerCharacters.includes('"');
         this.completionProvider = languages.registerCompletionItemProvider(
             this.monacoLanguage,
             this,
@@ -339,6 +378,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
             );
             this.cellCompletionProviders.set(document, provider);
         }
+        provider.allowStringFilterForPython = this.allowStringFilterForPython;
         return provider.provideCompletionItems(document, position, token, _context).then((items) => {
             items.forEach((item) => this.completionItemsSent.set(item, provider!));
             return items;
@@ -355,7 +395,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
  */
 @injectable()
 export class NonPythonKernelCompletionProvider extends DisposableBase implements IExtensionSyncActivationService {
-    private readonly kernelCompletionProviders = new WeakMap<IKernel, KernelSpecificCompletionProvider>();
+    public readonly kernelCompletionProviders = new WeakMap<IKernel, KernelSpecificCompletionProvider>();
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         super();
         disposables.push(this);
@@ -364,12 +404,28 @@ export class NonPythonKernelCompletionProvider extends DisposableBase implements
         const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
         this._register(
             kernelProvider.onDidStartKernel(async (e) => {
+                if (e.session?.kernel && isPythonKernelConnection(e.kernelConnectionMetadata)) {
+                    /**
+                     * Do not wait for completions,
+                     * If the completions request crashes then we don't get a response for this request,
+                     * Hence we end up waiting indefinitely.
+                     * https://github.com/microsoft/vscode-jupyter/issues/9014
+                     *
+                     * We send this request to ensure the completion provider in the kernel has bee pre-warmed.
+                     * This way things are faster when the user actually triggers a completion.
+                     */
+                    void e.session.kernel.requestComplete({ code: '__file__.', cursor_pos: 9 });
+                }
+
                 const experiment = ServiceContainer.instance.get<IExperimentService>(IExperimentService);
-                if (!experiment.inExperiment(Experiments.KernelCompletions)) {
+                const language = getKernelLanguageAsMonacoLanguage(e);
+                if (!language) {
                     return;
                 }
-                const language = getKernelLanguageAsMonacoLanguage(e);
-                if (!language || language.toLowerCase() === PYTHON_LANGUAGE.toLowerCase()) {
+                if (
+                    !experiment.inExperiment(Experiments.KernelCompletions) &&
+                    language.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()
+                ) {
                     return;
                 }
                 if (this.kernelCompletionProviders.has(e)) {
@@ -417,6 +473,12 @@ function isKernelCompletionEnabled(resource: Resource) {
 }
 
 function getCompletionTriggerCharacter(kernel: IKernel) {
+    if (isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
+        return workspace
+            .getConfiguration('jupyter', kernel.notebook.uri)
+            .get<string[]>('pythonCompletionTriggerCharacters', ['.', '%', "'", '"']);
+    }
+
     const triggerCharacters = workspace
         .getConfiguration('jupyter', kernel.notebook.uri)
         .get<Record<string, string[]>>('completionTriggerCharacters');
@@ -464,4 +526,152 @@ function logHowToEnableKernelCompletion(kernel: IKernel) {
             )
         );
     }
+}
+
+function positionInsideString(line: string, position: Position) {
+    const indexDoubleQuote = line.indexOf('"');
+    const indexSingleQuote = line.indexOf("'");
+    const lastIndexDoubleQuote = line.lastIndexOf('"');
+    const lastIndexSingleQuote = line.lastIndexOf("'");
+    const index = indexDoubleQuote >= 0 ? indexDoubleQuote : indexSingleQuote;
+    const lastIndex = lastIndexDoubleQuote >= 0 ? lastIndexDoubleQuote : lastIndexSingleQuote;
+    return index >= 0 && position.character > index && position.character <= lastIndex;
+}
+
+export function generatePythonCompletions(
+    triggerCharacter: string | undefined,
+    allowStringFilter: boolean,
+    completions: CompletionItem[],
+    cell: TextDocument,
+    position: Position
+) {
+    let result = completions;
+    const charBeforeCursorPosition =
+        position.character === 0
+            ? undefined
+            : new Range(position.line, position.character - 1, position.line, position.character);
+    const charBeforeCursor = charBeforeCursorPosition ? cell.getText(charBeforeCursorPosition) : undefined;
+    const isPreviousCharTriggerCharacter = charBeforeCursor === '.';
+    const wordRange = cell.getWordRangeAtPosition(
+        isPreviousCharTriggerCharacter || triggerCharacter === '.'
+            ? new Position(position.line, position.character - 1)
+            : position
+    );
+    const wordRangeWithTriggerCharacter =
+        wordRange && charBeforeCursorPosition ? wordRange.union(charBeforeCursorPosition) : undefined;
+    const line = cell.lineAt(position.line).text;
+    const word = wordRangeWithTriggerCharacter ? cell.getText(wordRangeWithTriggerCharacter) : line;
+    const wordDot = word.endsWith('.') || isPreviousCharTriggerCharacter;
+    const insideString =
+        allowStringFilter &&
+        (triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(line, position));
+
+    traceInfoIfCI(`Jupyter completions filtering applied: ${insideString} on ${line}`);
+
+    // Update magics to have a much lower sort order than other strings.
+    // Also change things that start with our current word to eliminate the
+    // extra long label.
+    result = result
+        .map((r, i) => {
+            let itemText = typeof r.label === 'string' ? r.label : r.label.label;
+            let label = typeof r.label === 'string' ? r.label : r.label.label;
+            if (label.startsWith('%') || label.startsWith('!')) {
+                return {
+                    ...r,
+                    sortText: `ZZZ${r.sortText}`
+                };
+            }
+            // Do nothing for paths and the like inside strings.
+            if (insideString) {
+                return r;
+            }
+
+            const wordIndex = word ? label.indexOf(word) : -1;
+            let newLabel: string | undefined = undefined;
+            let newText: string | undefined = undefined;
+            let newRange: Range | { inserting: Range; replacing: Range } | undefined = undefined;
+
+            // Two cases for filtering. We're at the '.', then the word we have is the beginning of the string.
+            // Example, user typed 'df.' and label is 'df.PassengerId'. Word would be 'df.' in this case.
+            if (word && wordDot && label.includes(word)) {
+                newLabel = label.substring(label.indexOf(word) + (wordDot ? word.length : 0));
+                newText = label.substring(label.indexOf(word) + word.length);
+                const changeInCharacters =
+                    (typeof r.label === 'string' ? r.label.length : r.label.label.length) - newText.length;
+                newRange =
+                    r.range && 'start' in r.range
+                        ? new Range(
+                              new Position(r.range.start.line, r.range.start.character + changeInCharacters),
+                              r.range.end
+                          )
+                        : r.range;
+            }
+            // We're after the '.' and the user is typing more. We are in the middle of the string then.
+            // Example, user typed 'df.Pass' and label is 'df.PassengerId'. Word would be 'Pass' in this case.
+            if (!newText && wordIndex > 0) {
+                newLabel = label.substring(label.indexOf(word) + (wordDot ? word.length : 0));
+                newText = label.substring(label.indexOf(word) + word.length);
+                const changeInCharacters =
+                    (typeof r.label === 'string' ? r.label.length : r.label.label.length) - newText.length;
+                newRange =
+                    r.range && 'start' in r.range
+                        ? new Range(
+                              new Position(r.range.start.line, r.range.start.character + changeInCharacters),
+                              r.range.end
+                          )
+                        : r.range;
+            }
+            if (newLabel && newText && newRange) {
+                r.label = newLabel;
+                itemText = newText;
+                r.insertText = newText;
+                r.filterText = wordDot ? `.${newText}` : newText;
+                r.range = newRange;
+                r.sortText = generateSortString(i);
+            }
+            // If inside a string and ending with '/', then add a command to force a suggestion right after
+            if (itemText.endsWith('/')) {
+                return {
+                    ...r,
+                    command: {
+                        command: 'editor.action.triggerSuggest',
+                        title: ''
+                    }
+                };
+            }
+            // Sometimes we have items with spaces, and Jupyter escapes spaces with `\ `
+            if (itemText.includes(' ')) {
+                itemText = itemText.replace(/\\ /g, ' ');
+                if (typeof r.label === 'string') {
+                    r.label = r.label.replace(/\\ /g, ' ');
+                } else {
+                    r.label.label = r.label.label.replace(/\\ /g, ' ');
+                }
+            }
+            // If not inside of a string, filter out file names (things that end with '/')
+            if (!insideString) {
+                if (!itemText.includes('.') && !itemText.endsWith('/')) {
+                    return r;
+                } else {
+                    return undefined;
+                }
+            }
+
+            return r;
+        })
+        .filter((r) => r !== undefined) as CompletionItem[];
+
+    traceInfoIfCI(
+        `Jupyter completions for ${word} at pos ${position.line}:${
+            position.character
+        } with trigger: ${triggerCharacter}\n   ${completions.map((r) => r.label).join(',')}`
+    );
+
+    traceInfoIfCI(
+        `Jupyter results for ${word} at pos ${position.line}:${
+            position.character
+        } with trigger: ${triggerCharacter}\n   ${result.map((r) => r.label).join(',')}`
+    );
+
+    return result;
 }

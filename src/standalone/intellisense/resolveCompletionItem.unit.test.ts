@@ -89,6 +89,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             when(kernel.status).thenReturn(status);
             const result = await resolveCompletionItem(
                 completionItem,
+                undefined,
                 token,
                 instance(kernel),
                 kernelId,
@@ -127,6 +128,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
 
         const resultPromise = resolveCompletionItem(
             completionItem,
+            undefined,
             token,
             instance(kernel),
             kernelId,
@@ -149,6 +151,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
 
         const resultPromise = resolveCompletionItem(
             completionItem,
+            undefined,
             token,
             instance(kernel),
             kernelId,
@@ -186,6 +189,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
 
         const resultPromise = resolveCompletionItem(
             completionItem,
+            undefined,
             token,
             instance(kernel),
             kernelId,
@@ -218,6 +222,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
 
         const resultPromise = resolveCompletionItem(
             completionItem,
+            undefined,
             token,
             instance(kernel),
             kernelId,
@@ -252,6 +257,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
 
         const resultPromise = resolveCompletionItem(
             completionItem,
+            undefined,
             token,
             instance(kernel),
             kernelId,
@@ -272,6 +278,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         const sendRequest = () =>
             resolveCompletionItem(
                 completionItem,
+                undefined,
                 token,
                 instance(kernel),
                 kernelId,
@@ -298,6 +305,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         when(kernelConnection.requestInspect(anything())).thenReturn(deferred.promise);
         const resultPromise = resolveCompletionItem(
             completionItem,
+            undefined,
             token,
             instance(kernel),
             kernelId,
@@ -325,6 +333,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         const sendRequest = () =>
             resolveCompletionItem(
                 completionItem,
+                undefined,
                 token,
                 instance(kernel),
                 kernelId,
