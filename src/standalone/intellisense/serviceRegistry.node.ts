@@ -9,30 +9,21 @@ import { IntellisenseProvider } from './intellisenseProvider.node';
 import { LogReplayService } from './logReplayService.node';
 import { NonPythonKernelCompletionProvider } from './nonPythonKernelCompletionProvider';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
-import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
-import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     if (isDevMode) {
         serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LogReplayService);
     }
 
-    serviceManager.addSingleton<PythonKernelCompletionProvider>(
-        PythonKernelCompletionProvider,
-        PythonKernelCompletionProvider
-    ); // Used in tests
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        PythonKernelCompletionProviderRegistration
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         NotebookCellBangInstallDiagnosticsProvider
     );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
+    serviceManager.addSingleton<NonPythonKernelCompletionProvider>(
+        NonPythonKernelCompletionProvider,
         NonPythonKernelCompletionProvider
     );
+    serviceManager.addBinding(NonPythonKernelCompletionProvider, IExtensionSyncActivationService);
 
     serviceManager.addSingleton<NotebookPythonPathService>(NotebookPythonPathService, NotebookPythonPathService);
     serviceManager.addBinding(NotebookPythonPathService, IExtensionSyncActivationService);

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import * as vscode from 'vscode';
-import { JupyterCompletionItem, filterCompletions } from './pythonKernelCompletionProvider';
+import { CompletionItem, CompletionItemKind, Position, Range } from 'vscode';
 import { MockDocument } from '../../test/datascience/mockDocument';
 import { generateSortString } from './helpers';
+import { generatePythonCompletions } from './nonPythonKernelCompletionProvider';
 
 suite('Jupyter Completion Unit Tests', () => {
     let mockDocument: MockDocument;
@@ -16,31 +16,28 @@ suite('Jupyter Completion Unit Tests', () => {
     function createCompletionItem(
         label: string,
         index: number,
-        range?: vscode.Range,
-        kind?: vscode.CompletionItemKind
-    ): JupyterCompletionItem {
+        range?: Range,
+        kind?: CompletionItemKind
+    ): CompletionItem {
         return {
             label,
             sortText: generateSortString(index),
-            itemText: label,
-            range: range ?? new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)),
+            range: range ?? new Range(new Position(0, 0), new Position(0, 0)),
             kind
         };
     }
 
     test('Filter paths', async () => {
-        const jupyterCompletions: JupyterCompletionItem[] = [
+        const jupyterCompletions: CompletionItem[] = [
             createCompletionItem('%bar', 0),
             createCompletionItem('test.ipynb', 1)
         ];
-        const pylanceCompletions: JupyterCompletionItem[] = [];
-        const filtered = filterCompletions(
+        const filtered = generatePythonCompletions(
             undefined,
             false,
             jupyterCompletions,
-            pylanceCompletions,
             mockDocument,
-            new vscode.Position(1, 0)
+            new Position(1, 0)
         );
         assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
         assert.equal(filtered.length, 1, 'Wrong number of filtered results');
@@ -53,18 +50,16 @@ suite('Jupyter Completion Unit Tests', () => {
     test('Labels are minimized', async () => {
         mockDocument = new MockDocument('print(1)\ndf.', 'test.ipynb', () => Promise.resolve(false));
 
-        const jupyterCompletions: JupyterCompletionItem[] = [
+        const jupyterCompletions: CompletionItem[] = [
             createCompletionItem('df.foobar', 0),
             createCompletionItem('df.BAZ', 1)
         ];
-        const pylanceCompletions: JupyterCompletionItem[] = [];
-        const filtered = filterCompletions(
+        const filtered = generatePythonCompletions(
             undefined,
             false,
             jupyterCompletions,
-            pylanceCompletions,
             mockDocument,
-            new vscode.Position(1, 3)
+            new Position(1, 3)
         );
         assert.isNotEmpty(filtered, 'Filtered list should have items in it');
         assert.equal(filtered.length, 2, 'Wrong number of filtered results');
@@ -75,19 +70,11 @@ suite('Jupyter Completion Unit Tests', () => {
     });
 
     test('Show paths in a string', async () => {
-        const jupyterCompletions: JupyterCompletionItem[] = [
+        const jupyterCompletions: CompletionItem[] = [
             createCompletionItem('%bar', 0),
             createCompletionItem('test.ipynb', 1)
         ];
-        const pylanceCompletions: JupyterCompletionItem[] = [];
-        const filtered = filterCompletions(
-            '"',
-            true,
-            jupyterCompletions,
-            pylanceCompletions,
-            mockDocument,
-            new vscode.Position(1, 1)
-        );
+        const filtered = generatePythonCompletions('"', true, jupyterCompletions, mockDocument, new Position(1, 1));
         assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
         assert.equal(filtered.length, 2, 'Wrong number of filtered results');
         assert.ok(
@@ -98,19 +85,17 @@ suite('Jupyter Completion Unit Tests', () => {
 
     test('Show paths in a string from inside string', async () => {
         mockDocument = new MockDocument('print(1)\nprint("")', 'test.ipynb', () => Promise.resolve(false));
-        const jupyterCompletions: JupyterCompletionItem[] = [
+        const jupyterCompletions: CompletionItem[] = [
             createCompletionItem('%bar', 0),
             createCompletionItem('test.ipynb', 1),
             createCompletionItem('foo/', 2)
         ];
-        const pylanceCompletions: JupyterCompletionItem[] = [];
-        const filtered = filterCompletions(
+        const filtered = generatePythonCompletions(
             undefined,
             true,
             jupyterCompletions,
-            pylanceCompletions,
             mockDocument,
-            new vscode.Position(1, 7)
+            new Position(1, 7)
         );
         assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
         assert.equal(filtered.length, 3, 'Wrong number of filtered results');
@@ -124,43 +109,19 @@ suite('Jupyter Completion Unit Tests', () => {
         );
     });
 
-    test('Duplicates are removed (and pylance trumps dupes)', async () => {
-        mockDocument = new MockDocument('print(1)\ndf.', 'test.ipynb', () => Promise.resolve(false));
-
-        const jupyterCompletions: JupyterCompletionItem[] = [
-            createCompletionItem('df.foobar', 0),
-            createCompletionItem('df.BAZ', 1)
-        ];
-        const pylanceCompletions: JupyterCompletionItem[] = [
-            createCompletionItem('foobar', 0, undefined, vscode.CompletionItemKind.Function),
-            createCompletionItem('BAZ', 1, undefined, vscode.CompletionItemKind.Function)
-        ];
-        const filtered = filterCompletions(
-            undefined,
-            false,
-            jupyterCompletions,
-            pylanceCompletions,
-            mockDocument,
-            new vscode.Position(1, 3)
-        );
-        assert.isEmpty(filtered, 'Filtered list should not have any items in it');
-    });
-
     test('Multi level Labels are minimized', async () => {
         mockDocument = new MockDocument('print(1)\ndf.Age.', 'test.ipynb', () => Promise.resolve(false));
 
-        const jupyterCompletions: JupyterCompletionItem[] = [
+        const jupyterCompletions: CompletionItem[] = [
             createCompletionItem('df.Age.value_count', 0),
             createCompletionItem('df.Age.boxxing', 1)
         ];
-        const pylanceCompletions: JupyterCompletionItem[] = [];
-        const filtered = filterCompletions(
+        const filtered = generatePythonCompletions(
             undefined,
             true,
             jupyterCompletions,
-            pylanceCompletions,
             mockDocument,
-            new vscode.Position(1, 7)
+            new Position(1, 7)
         );
         assert.isNotEmpty(filtered, 'Filtered list should have items in it');
         assert.equal(filtered.length, 2, 'Wrong number of filtered results');
