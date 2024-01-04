@@ -43,6 +43,7 @@ export type WidgetScriptSource = {
  * Used to get an entry for widget (or all of them).
  */
 export interface IWidgetScriptSourceProvider extends IDisposable {
+    readonly id: string;
     /**
      * Return the script path for the requested module.
      * This is called when ipywidgets needs a source for a particular widget.
