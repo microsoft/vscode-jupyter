@@ -31,7 +31,6 @@ const deskTopNodeModulesToExternalize = [
     // Lazy loaded modules.
     'vscode-languageclient/node',
     '@vscode/extension-telemetry',
-    '@vscode/lsp-notebook-concat',
     '@jupyterlab/services',
     '@jupyterlab/nbformat',
     '@jupyterlab/services/lib/kernel/serialize',
