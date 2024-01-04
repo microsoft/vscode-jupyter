@@ -1,4 +1,4 @@
-name: "Classifier: Trainer"
+name: 'Classifier: Trainer'
 on:
   schedule:
     - cron: 0 0 6 * *
@@ -20,7 +20,7 @@ jobs:
         run: npm install --production --prefix ./actions
       - name: Install Additional Dependencies
         run: npm install @azure/storage-blob@12
-      - name: "Run Classifier: Scraper"
+      - name: 'Run Classifier: Scraper'
         uses: ./actions/classifier/train/fetch-issues
         with:
           areas: accessibility|api-proposal|data-viewer|documentation|interactive-window|interactive-window-debugging|ipywidgets|language-any|localization|notebook-commands|notebook-debugging|notebook-getting-started|notebook-import-export|notebook-intellisense|notebook-kernel|notebook-kernel-picker|notebook-liveshare|notebook-output|notebook-remote|notebook-run-by-line|notebook-serialization|notebook-workflow|output-renderer|plot-viewer|tensorboard|upstream-pylance|upstream-python|upstream-vscode|user-setup|variable-explorer|zmq
@@ -33,9 +33,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --upgrade numpy scipy scikit-learn joblib nltk
-      - name: "Run Classifier: Generator"
+      - name: 'Run Classifier: Generator'
         run: python ./actions/classifier/train/generate-models/generate.py category
-      - name: "Run Classifier: Upload"
+      - name: 'Run Classifier: Upload'
         uses: ./actions/classifier/train/upload-models
         with:
           blobContainerName: vscode-jupyter-models
