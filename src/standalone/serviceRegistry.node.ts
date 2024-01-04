@@ -81,7 +81,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     );
 
     // Intellisense
-    registerIntellisenseTypes(serviceManager, isDevMode);
+    registerIntellisenseTypes(serviceManager);
 
     // Dev Tools
     registerDevToolTypes(context, isDevMode);

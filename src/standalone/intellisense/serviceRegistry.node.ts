@@ -1,20 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { INotebookCompletionProvider } from '../../notebooks/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
-import { IntellisenseProvider } from './intellisenseProvider.node';
-import { LogReplayService } from './logReplayService.node';
 import { NonPythonKernelCompletionProvider } from './nonPythonKernelCompletionProvider';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
 
-export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
-    if (isDevMode) {
-        serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LogReplayService);
-    }
-
+export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         NotebookCellBangInstallDiagnosticsProvider
@@ -27,5 +20,4 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
 
     serviceManager.addSingleton<NotebookPythonPathService>(NotebookPythonPathService, NotebookPythonPathService);
     serviceManager.addBinding(NotebookPythonPathService, IExtensionSyncActivationService);
-    serviceManager.addSingleton<INotebookCompletionProvider>(INotebookCompletionProvider, IntellisenseProvider);
 }
