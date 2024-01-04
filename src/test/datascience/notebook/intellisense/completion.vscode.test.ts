@@ -8,7 +8,6 @@ import { commands, CompletionList, Position, window } from 'vscode';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
 import { captureScreenShot } from '../../../common.node';
-import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { initialize } from '../../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -27,10 +26,6 @@ suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', funct
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo(`Start Suite Code Completion via Jupyter`);
-        if (IS_REMOTE_NATIVE_TEST()) {
-            // https://github.com/microsoft/vscode-jupyter/issues/6331
-            return this.skip();
-        }
         this.timeout(120_000);
         await initialize();
         await startJupyterServer();
