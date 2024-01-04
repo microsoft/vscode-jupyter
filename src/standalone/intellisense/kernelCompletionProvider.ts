@@ -43,7 +43,7 @@ import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from
 import { generateSortString } from './helpers';
 import { resolveCompletionItem } from './resolveCompletionItem';
 
-export class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProvider {
+class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProvider {
     constructor(
         private readonly kernelId: string,
         private readonly kernel: IKernel,
@@ -405,10 +405,10 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
 }
 
 /**
- * This class implements a CompletionItemProvider for non-python kernels using the jupyter requestCompletions message.
+ * This class implements a CompletionItemProvider for kernels using the jupyter requestCompletions message.
  */
 @injectable()
-export class NonPythonKernelCompletionProvider extends DisposableBase implements IExtensionSyncActivationService {
+export class KernelCompletionProvider extends DisposableBase implements IExtensionSyncActivationService {
     public readonly kernelCompletionProviders = new WeakMap<IKernel, KernelSpecificCompletionProvider>();
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         super();
