@@ -22,7 +22,7 @@ import {
     getCellOutputs,
     waitForCompletions
 } from '../helper.node';
-import { NonPythonKernelCompletionProvider } from '../../../../standalone/intellisense/nonPythonKernelCompletionProvider';
+import { KernelCompletionProvider } from '../../../../standalone/intellisense/kernelCompletionProvider';
 import { IKernelProvider } from '../../../../kernels/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -34,7 +34,7 @@ import { IKernelProvider } from '../../../../kernels/types';
         function () {
             let api: IExtensionTestApi;
             const disposables: IDisposable[] = [];
-            let kernelCompletionProviderRegistry: NonPythonKernelCompletionProvider;
+            let kernelCompletionProviderRegistry: KernelCompletionProvider;
             this.timeout(120_000);
             let previousPythonCompletionTriggerCharactersValue: string | undefined;
             let jupyterConfig: WorkspaceConfiguration;
@@ -57,9 +57,8 @@ import { IKernelProvider } from '../../../../kernels/types';
                 await startJupyterServer();
                 await prewarmNotebooks();
                 sinon.restore();
-                kernelCompletionProviderRegistry = api.serviceContainer.get<NonPythonKernelCompletionProvider>(
-                    NonPythonKernelCompletionProvider
-                );
+                kernelCompletionProviderRegistry =
+                    api.serviceContainer.get<KernelCompletionProvider>(KernelCompletionProvider);
                 traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
             });
             // Use same notebook without starting kernel in every single test (use one for whole suite).

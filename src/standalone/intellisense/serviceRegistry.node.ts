@@ -4,7 +4,7 @@
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
-import { NonPythonKernelCompletionProvider } from './nonPythonKernelCompletionProvider';
+import { KernelCompletionProvider } from './kernelCompletionProvider';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -12,11 +12,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         NotebookCellBangInstallDiagnosticsProvider
     );
-    serviceManager.addSingleton<NonPythonKernelCompletionProvider>(
-        NonPythonKernelCompletionProvider,
-        NonPythonKernelCompletionProvider
-    );
-    serviceManager.addBinding(NonPythonKernelCompletionProvider, IExtensionSyncActivationService);
+    serviceManager.addSingleton<KernelCompletionProvider>(KernelCompletionProvider, KernelCompletionProvider);
+    serviceManager.addBinding(KernelCompletionProvider, IExtensionSyncActivationService);
 
     serviceManager.addSingleton<NotebookPythonPathService>(NotebookPythonPathService, NotebookPythonPathService);
     serviceManager.addBinding(NotebookPythonPathService, IExtensionSyncActivationService);

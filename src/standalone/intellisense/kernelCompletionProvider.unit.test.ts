@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import { CompletionItem, CompletionItemKind, Position, Range } from 'vscode';
 import { MockDocument } from '../../test/datascience/mockDocument';
 import { generateSortString } from './helpers';
-import { generatePythonCompletions } from './nonPythonKernelCompletionProvider';
+import { generatePythonCompletions } from './kernelCompletionProvider';
 
 suite('Jupyter Completion Unit Tests', () => {
     let mockDocument: MockDocument;
