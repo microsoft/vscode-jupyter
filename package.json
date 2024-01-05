@@ -1979,7 +1979,10 @@
                     "type": "boolean",
                     "default": true,
                     "markdownDescription": "%jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription%",
-                    "scope": "application"
+                    "scope": "application",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "jupyter.formatStackTraces": {
                     "type": "boolean",
