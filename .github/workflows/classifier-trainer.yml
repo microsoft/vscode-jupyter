@@ -26,7 +26,7 @@ jobs:
           areas: accessibility|api-proposal|data-viewer|documentation|interactive-window|interactive-window-debugging|ipywidgets|language-any|localization|notebook-commands|notebook-debugging|notebook-getting-started|notebook-import-export|notebook-intellisense|notebook-kernel|notebook-kernel-picker|notebook-liveshare|notebook-output|notebook-remote|notebook-run-by-line|notebook-serialization|notebook-workflow|output-renderer|plot-viewer|tensorboard|upstream-pylance|upstream-python|upstream-vscode|user-setup|variable-explorer|zmq
           assignees: amunger|DonJayamanne|rebornix
       - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: 3.7
       - name: Install dependencies

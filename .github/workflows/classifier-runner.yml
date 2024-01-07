@@ -29,7 +29,7 @@ jobs:
           blobContainerName: vscode-jupyter-models
           blobStorageKey: ${{secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING}}
       - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: 3.7
       - name: Install dependencies
