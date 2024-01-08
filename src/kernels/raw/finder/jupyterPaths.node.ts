@@ -152,7 +152,10 @@ export class JupyterPaths {
         return this.cachedDataDirs.get(key)!;
     }
 
-    @traceDecoratorVerbose('getDataDirsImpl', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose(
+        'getDataDirsImpl',
+        TraceOptions.BeforeCall | TraceOptions.Arguments | TraceOptions.ReturnValue
+    )
     private async getDataDirsImpl(
         resource: Resource,
         @logValue<PythonEnvironment>('id') interpreter?: PythonEnvironment
@@ -184,8 +187,10 @@ export class JupyterPaths {
                             dataDir.set(sitePath, dataDir.size);
                         }
                     } else {
-                        traceWarning(`Got a non-existent Jupyer Data Dir ${sitePath}`);
+                        traceWarning(`Got a non-existent Jupyter Data Dir ${sitePath}`);
                     }
+                } else {
+                    traceWarning(`Got an empty Jupyter Data Dir from ${interpreter.id}, stderr = ${result.stderr}`);
                 }
             } catch (ex) {
                 traceError(`Failed to get DataDir based on ENABLE_USER_SITE for ${interpreter.displayName}`, ex);
