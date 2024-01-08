@@ -68,7 +68,7 @@ function getCDNPrefix(cdn?: WidgetCDNs): string | undefined {
  */
 @injectable()
 export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
-    id: 'cdn';
+    id = 'cdn';
     private cache = new Map<string, Promise<WidgetScriptSource>>();
     private isOnCDNCache = new Map<string, Promise<boolean>>();
     private readonly notifiedUserAboutWidgetScriptNotFound = new Set<string>();

@@ -27,7 +27,7 @@ import { noop } from '../../../../platform/common/utils/misc';
  * If user has not configured antying, user will be presented with a prompt.
  */
 export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWidgetScriptSourceProvider {
-    id: 'all';
+    id = 'all';
     private readonly scriptProviders: IWidgetScriptSourceProvider[];
     private get configuredScriptSources(): readonly WidgetCDNs[] {
         const settings = this.configurationSettings.getSettings(undefined);
@@ -44,6 +44,11 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
     ) {
         super();
         this.scriptProviders = this.sourceProviderFactory.getProviders(this.kernel, this.localResourceUriConverter);
+        traceInfoIfCI(
+            `Widget Script Providers: ${this.scriptProviders
+                .map((item) => (item as Object).constructor.name)
+                .join(', ')}`
+        );
         traceInfoIfCI(`Widget Script Providers: ${this.scriptProviders.map((item) => item.id).join(', ')}`);
         this.scriptProviders.forEach((c) => this._register(c));
         this.monitorKernel();
@@ -89,6 +94,10 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
             if (source.scriptUri) {
                 found = source;
                 break;
+            } else {
+                traceInfoIfCI(
+                    `Widget Script Source not found for ${moduleName}@${moduleVersion} from ${scriptProvider.id}`
+                );
             }
         }
         this.sendTelemetryForWidgetModule(moduleName, moduleVersion, '', found.source).catch(noop);
@@ -96,7 +105,9 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
             traceError(
                 `Script source for Widget ${moduleName}@${moduleVersion} not found in ${
                     this.scriptProviders.map((item) => item.id).join(', ') || 'None'
-                } (${this.scriptProviders.length}) providers & ${this.isDisposed ? 'Disposed' : 'Not Disposed'}`
+                } (${this.scriptProviders.map((item) => (item as Object).constructor.name).join(', ')}) (${
+                    this.scriptProviders.length
+                }) providers & ${this.isDisposed ? 'Disposed' : 'Not Disposed'}`
             );
         } else {
             traceVerbose(

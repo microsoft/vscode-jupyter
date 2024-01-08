@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { IKernel } from '../../../../kernels/types';
+import { traceInfoIfCI } from '../../../../platform/logging';
 import {
     IIPyWidgetScriptManagerFactory,
     ILocalResourceUriConverter,
@@ -17,7 +18,7 @@ import {
  * <python folder>/share/jupyter/nbextensions/bqplot/index.js
  */
 export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
-    id: 'local';
+    id = 'local';
     constructor(
         private readonly kernel: IKernel,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
@@ -43,8 +44,14 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
                     return <WidgetScriptSource>{ moduleName, scriptUri, source: 'local' };
                 })
             );
+            traceInfoIfCI(
+                `Local Widget scripts found for kernel ${this.kernel.kernelConnectionMetadata.id} are ${JSON.stringify(
+                    sources
+                )}`
+            );
             return sources;
         }
+        traceInfoIfCI(`No Local widget scripts found for kernel ${this.kernel.kernelConnectionMetadata.id}`);
         return [];
     }
     public async getBaseUrl() {
