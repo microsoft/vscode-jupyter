@@ -47,7 +47,11 @@ import { IKernelProvider } from '../../../../kernels/types';
                 this.timeout(120_000);
                 jupyterConfig = workspace.getConfiguration('jupyter', undefined);
                 previousJediSetting = jupyterConfig.get<boolean>('enableExtendedPythonKernelCompletions');
-                await jupyterConfig.update('enableExtendedPythonKernelCompletions', useJedi, ConfigurationTarget.Global);
+                await jupyterConfig.update(
+                    'enableExtendedPythonKernelCompletions',
+                    useJedi,
+                    ConfigurationTarget.Global
+                );
                 api = await initialize();
                 await startJupyterServer();
                 await prewarmNotebooks();
