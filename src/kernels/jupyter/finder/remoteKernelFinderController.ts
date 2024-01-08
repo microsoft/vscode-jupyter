@@ -27,6 +27,7 @@ import { CancellationTokenSource } from 'vscode';
 import { traceError } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from './types';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { trackRemoteServerDisplayName } from '../connection/jupyterServerProviderRegistry';
 
 @injectable()
 export class RemoteKernelFinderController implements IRemoteKernelFinderController, IExtensionSyncActivationService {
@@ -140,6 +141,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
                 };
                 const serverId = generateIdFromRemoteProvider(serverProviderHandle);
                 currentServerIds.add(serverId);
+                trackRemoteServerDisplayName(serverProviderHandle, server.label);
                 // If this sever was never used in the past, then no need to create a finder for this.
                 if (this.mappedServers.has(serverId) || !usedServers.has(serverId)) {
                     return;

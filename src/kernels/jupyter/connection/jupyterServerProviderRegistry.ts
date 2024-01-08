@@ -11,6 +11,7 @@ import {
     JupyterServerCommandProvider,
     JupyterServerProvider
 } from '../../../api';
+import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { IJupyterServerProviderRegistry, JupyterServerProviderHandle } from '../types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { injectable } from 'inversify';
@@ -21,6 +22,10 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { raceCancellationError } from '../../../platform/common/cancellation';
 import { stripCodicons } from '../../../platform/common/helpers';
 
+const displayNames = new Map<string, string>();
+export function trackRemoteServerDisplayName(serverHandle: JupyterServerProviderHandle, displayName: string) {
+    displayNames.set(generateIdFromRemoteProvider(serverHandle), displayName);
+}
 export function getJupyterDisplayName(
     serverHandle: JupyterServerProviderHandle,
     jupyterUriProviderRegistration: IJupyterServerProviderRegistry,
@@ -29,7 +34,12 @@ export function getJupyterDisplayName(
     const collection = jupyterUriProviderRegistration.jupyterCollections.find(
         (c) => c.extensionId === serverHandle.extensionId && c.id === serverHandle.id
     );
-    return collection?.label || defaultValue || `${serverHandle.id}:${serverHandle.handle}`;
+    return (
+        displayNames.get(generateIdFromRemoteProvider(serverHandle)) ||
+        collection?.label ||
+        defaultValue ||
+        `${serverHandle.id}:${serverHandle.handle}`
+    );
 }
 
 export function jupyterServerUriToCollection(provider: IJupyterUriProvider): {
