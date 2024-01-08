@@ -17,13 +17,11 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         notebookFileRoot: '${fileDirname}',
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,
-        searchForJupyter: true,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         variableExplorerExclude: 'module;function;builtin_function_or_method',
-        generateSVGPlots: false,
         interactiveWindowMode: 'multiple',
         extraSettings: {
             editor: {
@@ -47,7 +45,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         },
         runStartupCommands: '',
         debugJustMyCode: true,
-        variableQueries: [],
         widgetScriptSources: []
     };
 
