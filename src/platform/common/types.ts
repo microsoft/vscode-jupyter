@@ -53,7 +53,6 @@ export interface IJupyterSettings {
     readonly jupyterLaunchRetries: number;
     readonly notebookFileRoot: string;
     readonly useDefaultConfigForJupyter: boolean;
-    readonly searchForJupyter: boolean;
     readonly enablePythonKernelLogging: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly normalizeSelectionForInteractiveWindow: boolean;
@@ -61,14 +60,12 @@ export interface IJupyterSettings {
     readonly markdownRegularExpression: string;
     readonly codeRegularExpression: string;
     readonly errorBackgroundColor: string;
-    readonly ignoreVscodeTheme: boolean;
     readonly variableExplorerExclude: string;
     readonly decorateCells: 'currentCell' | 'allCells' | 'disabled';
     readonly enableCellCodeLens: boolean;
     askForLargeDataFrames: boolean;
     readonly enableAutoMoveToNextCell: boolean;
     readonly askForKernelRestart: boolean;
-    readonly generateSVGPlots: boolean;
     readonly codeLenses: string;
     readonly debugCodeLenses: string;
     readonly debugpyDistPath: string;
@@ -76,14 +73,12 @@ export interface IJupyterSettings {
     readonly magicCommandsAsComments: boolean;
     readonly pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert';
     readonly stopOnError: boolean;
-    readonly remoteDebuggerPort: number;
     readonly addGotoCodeLenses: boolean;
     readonly runStartupCommands: string | string[];
     readonly debugJustMyCode: boolean;
     readonly defaultCellMarker: string;
     readonly verboseLogging: boolean;
     readonly themeMatplotlibPlots: boolean;
-    readonly variableQueries: IVariableQuery[];
     readonly disableJupyterAutoStart: boolean;
     readonly development: boolean;
     readonly jupyterCommandLineArguments: string[];
@@ -98,12 +93,7 @@ export interface IJupyterSettings {
     readonly logKernelOutputSeparately: boolean;
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
-    readonly enableExtendedPythonKernelCompletions: boolean;
-    /**
-     * To be removed in the future (remove around April 2023)
-     * Added as a fallback in case the new approach of resolving Python env variables for Kernels fails or does not work as expected.
-     */
-    readonly useOldKernelResolve: boolean;
+    readonly enableExtendedKernelCompletions: boolean;
     readonly formatStackTraces: boolean;
     /**
      * Trigger characters for Jupyter completion, per language.
@@ -137,12 +127,6 @@ export interface IExperiments {
      * Experiments user requested to opt out from manually
      */
     readonly optOutFrom: string[];
-}
-
-export interface IVariableQuery {
-    language: string;
-    query: string;
-    parseExpr: string;
 }
 
 export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';

@@ -9,12 +9,6 @@ export function createKernelSettings(configService: IConfigurationService, resou
         get enableExtendedPythonKernelCompletions() {
             return configService.getSettings(resource).enableExtendedPythonKernelCompletions;
         },
-        get generateSVGPlots() {
-            return configService.getSettings(resource).generateSVGPlots;
-        },
-        get ignoreVscodeTheme() {
-            return configService.getSettings(resource).ignoreVscodeTheme;
-        },
         get interruptTimeout() {
             return configService.getSettings(resource).jupyterInterruptTimeout;
         },

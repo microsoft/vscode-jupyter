@@ -927,20 +927,12 @@ abstract class BaseKernel implements IBaseKernel {
 
             // TODO: This must be joined with the previous request (else we send two separate requests unnecessarily).
             const useDark = window.activeColorTheme.kind === ColorThemeKind.Dark;
-            if (!this.kernelSettings.ignoreVscodeTheme) {
-                // Reset the matplotlib style based on if dark or not.
-                results.push(
-                    useDark
-                        ? "matplotlib.style.use('dark_background')"
-                        : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
-                );
-            }
-        }
-
-        // Add in SVG to the figure formats if needed
-        if (this.kernelSettings.generateSVGPlots) {
-            results.push(...splitLines(CodeSnippets.AppendSVGFigureFormat, { trim: false }));
-            traceVerbose('Add SVG to matplotlib figure formats');
+            // Reset the matplotlib style based on if dark or not.
+            results.push(
+                useDark
+                    ? "matplotlib.style.use('dark_background')"
+                    : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
+            );
         }
 
         return results;

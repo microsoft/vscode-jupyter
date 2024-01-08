@@ -18,7 +18,6 @@ import {
     ILoggingSettings,
     InteractiveWindowMode,
     InteractiveWindowViewColumn,
-    IVariableQuery,
     IWatchableJupyterSettings,
     LoggingLevelSettingType,
     Resource,
@@ -49,21 +48,18 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public jupyterLaunchRetries: number = 3;
     public notebookFileRoot: string = '';
     public useDefaultConfigForJupyter: boolean = false;
-    public searchForJupyter: boolean = false;
     public sendSelectionToInteractiveWindow: boolean = false;
     public normalizeSelectionForInteractiveWindow: boolean = true;
     public splitRunFileIntoCells: boolean = true;
     public markdownRegularExpression: string = '';
     public codeRegularExpression: string = '';
     public errorBackgroundColor: string = '';
-    public ignoreVscodeTheme: boolean = false;
     public variableExplorerExclude: string = '';
     public decorateCells: 'currentCell' | 'allCells' | 'disabled' = 'currentCell';
     public enableCellCodeLens: boolean = false;
     public askForLargeDataFrames: boolean = false;
     public enableAutoMoveToNextCell: boolean = false;
     public askForKernelRestart: boolean = false;
-    public generateSVGPlots: boolean = false;
     public codeLenses: string = '';
     public debugCodeLenses: string = '';
     public debugpyDistPath: string = '';
@@ -71,13 +67,11 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public magicCommandsAsComments: boolean = false;
     public pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert' = 'direct';
     public stopOnError: boolean = false;
-    public remoteDebuggerPort: number = 0;
     public addGotoCodeLenses: boolean = false;
     public runStartupCommands: string | string[] = [];
     public debugJustMyCode: boolean = false;
     public defaultCellMarker: string = '';
     public themeMatplotlibPlots: boolean = false;
-    public variableQueries: IVariableQuery[] = [];
     public disableJupyterAutoStart: boolean = false;
     public enablePythonKernelLogging: boolean = false;
     public jupyterCommandLineArguments: string[] = [];
@@ -96,8 +90,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public development: boolean = false;
     public poetryPath: string = '';
     public excludeUserSitePackages: boolean = false;
-    public enableExtendedPythonKernelCompletions: boolean = false;
-    public useOldKernelResolve: boolean = false;
+    public enableExtendedKernelCompletions: boolean = false;
     public formatStackTraces: boolean = false;
     // Privates should start with _ so that they are not read from the settings.json
     private _changeEmitter = new EventEmitter<void>();

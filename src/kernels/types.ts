@@ -874,8 +874,6 @@ export interface IStartupCodeProvider {
 export interface IKernelSettings {
     enableExtendedPythonKernelCompletions: boolean;
     themeMatplotlibPlots: boolean;
-    ignoreVscodeTheme: boolean;
-    generateSVGPlots: boolean;
     launchTimeout: number;
     interruptTimeout: number;
     runStartupCommands: string | string[];

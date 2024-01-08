@@ -1574,13 +1574,6 @@
                     "markdownDescription": "%jupyter.configuration.jupyter.notebookFileRoot.description%",
                     "scope": "resource"
                 },
-                "jupyter.searchForJupyter": {
-                    "type": "boolean",
-                    "default": true,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.searchForJupyter.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.searchForJupyter.description%",
-                    "scope": "resource"
-                },
                 "jupyter.useDefaultConfigForJupyter": {
                     "type": "boolean",
                     "default": true,
@@ -1661,12 +1654,6 @@
                     "description": "%jupyter.configuration.jupyter.markdownRegularExpression.description%",
                     "scope": "resource"
                 },
-                "jupyter.ignoreVscodeTheme": {
-                    "type": "boolean",
-                    "default": false,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.ignoreVscodeTheme.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.ignoreVscodeTheme.description%"
-                },
                 "jupyter.themeMatplotlibPlots": {
                     "type": "boolean",
                     "default": false,
@@ -1721,13 +1708,6 @@
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.allowUnauthorizedRemoteConnection.description%"
                 },
-                "jupyter.generateSVGPlots": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "%jupyter.configuration.jupyter.generateSVGPlots.description%",
-                    "deprecationMessage": "%jupyter.configuration.jupyter.generateSVGPlots.deprecationMessage%",
-                    "scope": "resource"
-                },
                 "jupyter.codeLenses": {
                     "type": "string",
                     "default": "jupyter.runcell, jupyter.runallcellsabove, jupyter.debugcell",
@@ -1766,13 +1746,6 @@
                     "description": "%jupyter.configuration.jupyter.stopOnFirstLineWhileDebugging.description%",
                     "scope": "resource"
                 },
-                "jupyter.remoteDebuggerPort": {
-                    "type": "number",
-                    "default": -1,
-                    "description": "%jupyter.configuration.jupyter.remoteDebuggerPort.description%",
-                    "deprecationMessage": "%jupyter.configuration.jupyter.remoteDebuggerPort.deprecationMessage%",
-                    "scope": "resource"
-                },
                 "jupyter.disableJupyterAutoStart": {
                     "type": "boolean",
                     "default": false,
@@ -1790,26 +1763,6 @@
                     "default": true,
                     "description": "%jupyter.configuration.jupyter.addGotoCodeLenses.description%",
                     "scope": "resource"
-                },
-                "jupyter.variableQueries": {
-                    "type": "array",
-                    "markdownDescription": "%jupyter.configuration.jupyter.variableQueries.markdownDescription%",
-                    "deprecationMessage": "%jupyter.configuration.jupyter.variableQueries.deprecationMessage%",
-                    "scope": "machine",
-                    "examples": [
-                        [
-                            {
-                                "language": "python",
-                                "query": "_rwho_ls = %who_ls\\nprint(_rwho_ls)",
-                                "parseExpr": "'(\\w+)'"
-                            },
-                            {
-                                "language": "julia",
-                                "query": "whos",
-                                "parseExpr": "'(\\w+)'"
-                            }
-                        ]
-                    ]
                 },
                 "jupyter.kernels.excludePythonEnvironments": {
                     "type": "array",
