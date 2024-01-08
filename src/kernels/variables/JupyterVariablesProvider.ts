@@ -3,15 +3,17 @@
 
 import {
     CancellationToken,
-    Event,
     NotebookDocument,
     NotebookVariableProvider,
     Variable,
-    VariablesRequestKind,
-    VariablesResult
+    NotebookVariablesRequestKind,
+    VariablesResult,
+    EventEmitter
 } from 'vscode';
-import { IJupyterVariables, IJupyterVariablesRequest } from './types';
-import { IKernelProvider } from '../types';
+import { IJupyterVariable, IJupyterVariables, IJupyterVariablesRequest, IJupyterVariablesResponse } from './types';
+import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
+
+const pythonRawTypes = ['int', 'float', 'str', 'bool'];
 
 export class JupyterVariablesProvider implements NotebookVariableProvider {
     constructor(
@@ -19,21 +21,65 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
         private readonly kernelProvider: IKernelProvider
     ) {}
 
-    onDidChangeVariables: Event<void>;
+    _onDidChangeVariables = new EventEmitter<NotebookDocument>();
+    onDidChangeVariables = this._onDidChangeVariables.event;
 
     async *provideVariables(
         notebook: NotebookDocument,
-        _parent: Variable | undefined,
-        _kind: VariablesRequestKind,
+        parent: Variable | undefined,
+        kind: NotebookVariablesRequestKind,
         start: number,
-        _token: CancellationToken
+        token: CancellationToken
     ): AsyncIterable<VariablesResult> {
+        if (token.isCancellationRequested) {
+            return;
+        }
         const kernel = this.kernelProvider.get(notebook);
         if (!kernel) {
             return;
         }
 
         const execution = this.kernelProvider.getKernelExecution(kernel);
+
+        if (parent) {
+            if ('getChildren' in parent && typeof parent.getChildren === 'function') {
+                await parent.getChildren(kind);
+            }
+        } else {
+            const variables = await this.getRootVariables(execution, start, kernel);
+
+            for (const variable of variables.pageResponse) {
+                const result = { name: variable.name, value: variable.value ?? '' };
+                const hasNamedChildren = !pythonRawTypes.includes(variable.type);
+                const indexedChildrenCount = variable.type === 'list' ? variable.count : 0;
+                yield {
+                    variable: result,
+                    hasNamedChildren,
+                    indexedChildrenCount
+                    //getChildren: (kind: NotebookVariablesRequestKind) => this.getChildren(variable, kernel, kind, start)
+                } as VariablesResult;
+            }
+        }
+    }
+
+    // async getChildren(
+    //     variable: IJupyterVariable,
+    //     kernel: IKernel,
+    //     kind: NotebookVariablesRequestKind,
+    //     start: number
+    // ): Promise<IJupyterVariablesResponse> {
+    //     if (kind === NotebookVariablesRequestKind.Indexed) {
+
+    //     } else {
+
+    //     }
+    // }
+
+    private async getRootVariables(
+        execution: INotebookKernelExecution,
+        start: number,
+        kernel: IKernel
+    ): Promise<IJupyterVariablesResponse> {
         const request: IJupyterVariablesRequest = {
             executionCount: execution.executionCount,
             sortAscending: true,
@@ -44,15 +90,6 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
         };
         const response = this.jupyterVariables.getVariables(request, kernel);
 
-        const variables = await response;
-
-        for (const variable of variables.pageResponse) {
-            const result = { name: variable.name, value: variable.value ?? '' };
-            yield {
-                variable: result,
-                namedChildrenCount: 0,
-                indexedChildrenCount: 0
-            };
-        }
+        return response;
     }
 }
