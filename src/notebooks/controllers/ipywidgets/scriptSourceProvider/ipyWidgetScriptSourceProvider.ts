@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceError, traceInfo } from '../../../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
 import { WidgetCDNs, IConfigurationService } from '../../../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
@@ -44,6 +44,7 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
     ) {
         super();
         this.scriptProviders = this.sourceProviderFactory.getProviders(this.kernel, this.localResourceUriConverter);
+        traceInfoIfCI(`Widget Script Providers: ${this.scriptProviders.map((item) => item.id).join(', ')}`);
         this.scriptProviders.forEach((c) => this._register(c));
         this.monitorKernel();
     }
@@ -95,11 +96,15 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
             traceError(
                 `Script source for Widget ${moduleName}@${moduleVersion} not found in ${
                     this.scriptProviders.map((item) => item.id).join(', ') || 'None'
-                } providers & ${this.isDisposed ? 'Disposed' : 'Not Disposed'}`
+                } (${this.scriptProviders.length}) providers & ${this.isDisposed ? 'Disposed' : 'Not Disposed'}`
             );
         } else {
-            traceInfo(
-                `Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source} and ${found.scriptUri}`
+            traceVerbose(
+                `Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source} and ${
+                    found.scriptUri
+                }, from ${this.scriptProviders.map((item) => item.id).join(', ') || 'None'} (${
+                    this.scriptProviders.length
+                }) providers`
             );
         }
         return found;
