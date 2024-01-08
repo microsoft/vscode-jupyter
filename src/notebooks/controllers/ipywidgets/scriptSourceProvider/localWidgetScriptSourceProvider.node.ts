@@ -35,6 +35,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
     public async getWidgetScriptSources(): Promise<Readonly<WidgetScriptSource[]>> {
         const scriptManager = this.scriptManagerFactory.getOrCreate(this.kernel);
         const widgetModuleMappings = await scriptManager.getWidgetModuleMappings();
+        traceInfoIfCI(`Widget Module mappings for Local Widget Scripts is ${JSON.stringify(widgetModuleMappings)}`);
         if (widgetModuleMappings && Object.keys(widgetModuleMappings).length) {
             const sources = await Promise.all(
                 Object.keys(widgetModuleMappings).map(async (moduleName) => {

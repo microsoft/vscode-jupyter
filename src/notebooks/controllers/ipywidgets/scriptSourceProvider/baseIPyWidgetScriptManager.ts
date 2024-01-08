@@ -205,7 +205,10 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
         const widgetConfigs = await Promise.all(
             entryPoints.map((entry) => this.getConfigFromWidget(baseUrl, entry.uri, entry.widgetFolderName))
         );
-
+        traceInfoIfCI(`Widget entry points ${JSON.stringify(entryPoints)}`);
+        traceInfoIfCI(
+            `Widget Configs for kernel ${this.kernel.kernelConnectionMetadata.id} are ${JSON.stringify(widgetConfigs)}`
+        );
         const config = widgetConfigs.reduce((prev, curr) => Object.assign(prev || {}, curr), {});
         // Exclude entries that are not required (widgets that we have already bundled with our code).
         if (config && Object.keys(config).length) {
