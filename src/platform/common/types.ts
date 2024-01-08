@@ -90,11 +90,10 @@ export interface IJupyterSettings {
     readonly forceIPyKernelDebugger?: boolean;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
-    readonly pythonCompletionTriggerCharacters?: string;
     readonly logKernelOutputSeparately: boolean;
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
-    readonly enableExtendedKernelCompletions: boolean;
+    readonly enableExtendedPythonKernelCompletions: boolean;
     readonly formatStackTraces: boolean;
     /**
      * Trigger characters for Jupyter completion, per language.

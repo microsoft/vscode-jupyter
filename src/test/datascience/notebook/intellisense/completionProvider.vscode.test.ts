@@ -36,7 +36,6 @@ import { IKernelProvider } from '../../../../kernels/types';
             const disposables: IDisposable[] = [];
             let kernelCompletionProviderRegistry: KernelCompletionProvider;
             this.timeout(120_000);
-            let previousPythonCompletionTriggerCharactersValue: string | undefined;
             let jupyterConfig: WorkspaceConfiguration;
             let previousJediSetting: boolean | undefined;
 
@@ -47,12 +46,12 @@ import { IKernelProvider } from '../../../../kernels/types';
                 traceInfo(`Start Suite Code Completion via Jupyter`);
                 this.timeout(120_000);
                 jupyterConfig = workspace.getConfiguration('jupyter', undefined);
-                previousPythonCompletionTriggerCharactersValue = jupyterConfig.get<string>(
-                    'pythonCompletionTriggerCharacters'
+                previousJediSetting = jupyterConfig.get<boolean>('enableExtendedPythonKernelCompletions');
+                await jupyterConfig.update(
+                    'enableExtendedPythonKernelCompletions',
+                    useJedi,
+                    ConfigurationTarget.Global
                 );
-                previousJediSetting = jupyterConfig.get<boolean>('enableExtendedKernelCompletions');
-                await jupyterConfig.update('enableExtendedKernelCompletions', useJedi, ConfigurationTarget.Global);
-                await jupyterConfig.update('pythonCompletionTriggerCharacters', '.%"\'', ConfigurationTarget.Global);
                 api = await initialize();
                 await startJupyterServer();
                 await prewarmNotebooks();
@@ -76,15 +75,8 @@ import { IKernelProvider } from '../../../../kernels/types';
                 traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
             });
             suiteTeardown(async () => {
-                await workspace
-                    .getConfiguration('jupyter', undefined)
-                    .update(
-                        'pythonCompletionTriggerCharacters',
-                        previousPythonCompletionTriggerCharactersValue,
-                        ConfigurationTarget.Global
-                    );
                 await jupyterConfig.update(
-                    'enableExtendedKernelCompletions',
+                    'enableExtendedPythonKernelCompletions',
                     previousJediSetting,
                     ConfigurationTarget.Global
                 );

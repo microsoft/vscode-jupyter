@@ -86,12 +86,11 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;
-    public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
     public development: boolean = false;
     public poetryPath: string = '';
     public excludeUserSitePackages: boolean = false;
-    public enableExtendedKernelCompletions: boolean = false;
+    public enableExtendedPythonKernelCompletions: boolean = false;
     public formatStackTraces: boolean = false;
     // Privates should start with _ so that they are not read from the settings.json
     private _changeEmitter = new EventEmitter<void>();

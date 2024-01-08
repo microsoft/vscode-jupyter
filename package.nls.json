@@ -218,6 +218,7 @@
     "jupyter.configuration.jupyter.newCellOnRunLast.description": "Append a new empty cell to an interactive window file on running the currently last cell.",
     "jupyter.configuration.jupyter.newCellOnRunLast.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.autoAddNewCell.",
     "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description": "Characters which trigger auto completion on a python jupyter kernel.",
+    "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.deprecationMessage": "This setting has been deprecated in favor of jupyter.completionTriggerCharacters.",
     "jupyter.configuration.jupyter.completionTriggerCharacters.markdownDescription": "Mapping of characters which trigger auto completion in a Jupyter Kernel language. Following is an example of trigger characters for rust and julia kernel languages:\n```json \n{\n  \"julia\": [\".\"],\n  \"rust\": [\".\",\":\"] \n}\n```",
     "jupyter.configuration.jupyter.logKernelOutputSeparately.description": "Creates separate output panels for kernels/jupyter server console output",
     "jupyter.configuration.jupyter.excludeUserSitePackages.description": {
@@ -225,6 +226,7 @@
         "comment": ["{Locked='PYTHONNOUSERSITE'}", "{Locked='PYTHONPATH'}"]
     },
     "jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Python Jupyter kernels for Python (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
+    "jupyter.configuration.jupyter.enableExtendedKernelCompletions.deprecationMessage": "This setting has been deprecated in favor of jupyter.enableExtendedPythonKernelCompletions.",
     "jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription": "Enable code completions in Notebooks and Interactive Windows using results from the associated Jupyter Kernel.",
     "jupyter.configuration.jupyter.formatStackTraces.description": "Inject stack frame links into the stored traceback for the notebook.",
     "DataScience.exportDialogTitle": {

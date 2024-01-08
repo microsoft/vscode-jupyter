@@ -872,7 +872,7 @@ export interface IStartupCodeProvider {
 }
 
 export interface IKernelSettings {
-    enableExtendedKernelCompletions: boolean;
+    enableExtendedPythonKernelCompletions: boolean;
     themeMatplotlibPlots: boolean;
     launchTimeout: number;
     interruptTimeout: number;

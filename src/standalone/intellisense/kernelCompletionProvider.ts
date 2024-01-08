@@ -487,12 +487,6 @@ function isKernelCompletionEnabled(resource: Resource) {
 }
 
 function getCompletionTriggerCharacter(kernel: IKernel) {
-    if (isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
-        return workspace
-            .getConfiguration('jupyter', kernel.notebook.uri)
-            .get<string[]>('pythonCompletionTriggerCharacters', ['.', '%', "'", '"']);
-    }
-
     const triggerCharacters = workspace
         .getConfiguration('jupyter', kernel.notebook.uri)
         .get<Record<string, string[]>>('completionTriggerCharacters');
