@@ -6,8 +6,8 @@ import { IKernelSettings } from './types';
 
 export function createKernelSettings(configService: IConfigurationService, resource: Resource): IKernelSettings {
     return {
-        get enableExtendedKernelCompletions() {
-            return configService.getSettings(resource).enableExtendedKernelCompletions;
+        get enableExtendedPythonKernelCompletions() {
+            return configService.getSettings(resource).enableExtendedPythonKernelCompletions;
         },
         get generateSVGPlots() {
             return configService.getSettings(resource).generateSVGPlots;

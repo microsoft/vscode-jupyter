@@ -95,11 +95,10 @@ export interface IJupyterSettings {
     readonly forceIPyKernelDebugger?: boolean;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
-    readonly pythonCompletionTriggerCharacters?: string;
     readonly logKernelOutputSeparately: boolean;
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
-    readonly enableExtendedKernelCompletions: boolean;
+    readonly enableExtendedPythonKernelCompletions: boolean;
     /**
      * To be removed in the future (remove around April 2023)
      * Added as a fallback in case the new approach of resolving Python env variables for Kernels fails or does not work as expected.

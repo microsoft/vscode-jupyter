@@ -1949,6 +1949,7 @@
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
                     "default": ".%'\"",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.deprecationMessage%",
                     "description": "%jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description%",
                     "scope": "application"
                 },
@@ -1964,6 +1965,13 @@
                     "scope": "application"
                 },
                 "jupyter.enableExtendedKernelCompletions": {
+                    "type": "boolean",
+                    "default": false,
+                    "deprecationMessage": "%jupyter.configuration.jupyter.enableExtendedKernelCompletions.deprecationMessage%",
+                    "markdownDescription": "%jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription%",
+                    "scope": "application"
+                },
+                "jupyter.enableExtendedPythonKernelCompletions": {
                     "type": "boolean",
                     "default": false,
                     "markdownDescription": "%jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription%",
@@ -2014,6 +2022,12 @@
                             "/",
                             "@"
                         ],
+                        "python": [
+                            ".",
+                            "%",
+                            "'",
+                            "\""
+                        ],
                         "julia": [
                             "."
                         ],
@@ -2043,7 +2057,7 @@
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.completionTriggerCharacters.markdownDescription%",
-                    "scope": "machine-overridable",
+                    "scope": "application",
                     "examples": [
                         {
                             "bash": [

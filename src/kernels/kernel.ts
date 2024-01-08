@@ -894,7 +894,7 @@ abstract class BaseKernel implements IBaseKernel {
             if (file) {
                 result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
             }
-            if (!this.kernelSettings.enableExtendedKernelCompletions) {
+            if (!this.kernelSettings.enableExtendedPythonKernelCompletions) {
                 result.push(CodeSnippets.DisableJedi);
             }
 
