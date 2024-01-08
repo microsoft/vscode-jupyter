@@ -28,7 +28,6 @@
     "webview.experimental.useIframes": true,
     // Python experiments have to be on for insiders to work
     "python.experiments.enabled": true,
-    "jupyter.generateSVGPlots": false,
     // See https://github.com/microsoft/vscode-jupyter/issues/10258
     "jupyter.forceIPyKernelDebugger": false,
     "python.defaultInterpreterPath": "python",
