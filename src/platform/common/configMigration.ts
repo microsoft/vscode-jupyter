@@ -122,11 +122,7 @@ export class ConfigMigration {
         }
         if (oldDetails?.globalValue !== undefined) {
             let promise: Thenable<void> = Promise.resolve();
-            if (
-                newDetails?.globalValue === undefined &&
-                typeof newDetails?.defaultValue !== 'undefined' && // No need to write the new value if its the same as the default.
-                oldDetails?.globalValue !== newDetails?.defaultValue
-            ) {
+            if (newDetails?.globalValue === undefined) {
                 promise = this.jupyterConfig.update(newSetting, oldDetails.globalValue, ConfigurationTarget.Global);
             }
             migratedSettings.push(
