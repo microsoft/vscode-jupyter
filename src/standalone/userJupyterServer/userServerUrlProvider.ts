@@ -76,6 +76,7 @@ import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { isWeb } from '../../platform/vscode-path/platform';
 import { DisposableBase } from '../../platform/common/utils/lifecycle';
+import { trackRemoteServerDisplayName } from '../../kernels/jupyter/connection/jupyterServerProviderRegistry';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
@@ -724,6 +725,15 @@ export class UserJupyterServerUrlProvider
                 uri: url,
                 serverInfo: jupyterServerUri
             });
+            trackRemoteServerDisplayName(
+                {
+                    extensionId: this.extensionId,
+                    id: this.id,
+                    handle
+                },
+                jupyterServerUri.displayName
+            );
+
             sendRemoteTelemetryForAdditionOfNewRemoteServer(handle, jupyterServerUri.baseUrl, isJupyterHub);
             return handle;
         } catch (ex) {
