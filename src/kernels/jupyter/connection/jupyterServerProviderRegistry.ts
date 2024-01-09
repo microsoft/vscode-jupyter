@@ -47,6 +47,7 @@ export function jupyterServerUriToCollection(provider: IJupyterUriProvider): {
     commandProvider?: JupyterServerCommandProvider;
 } {
     const serverMap = new Map<string, { serverUri: IJupyterServerUri; server: JupyterServer }>();
+    const knownHandles = new Set<string>();
     const serverUriToServer = (handle: string, serverUri: IJupyterServerUri): JupyterServer => {
         if (!serverMap.has(handle)) {
             const server: JupyterServer = {
@@ -69,7 +70,9 @@ export function jupyterServerUriToCollection(provider: IJupyterUriProvider): {
 
     const serverProvider: JupyterServerProvider = {
         async provideJupyterServers(token) {
-            const handles = provider.getHandles ? await raceCancellationError(token, provider.getHandles()) : [];
+            let handles = provider.getHandles ? await raceCancellationError(token, provider.getHandles()) : [];
+            handles = Array.isArray(handles) ? handles : [];
+            knownHandles.forEach((h) => handles!.push(h));
             if (!handles || handles.length === 0) {
                 return [];
             }
@@ -103,6 +106,7 @@ export function jupyterServerUriToCollection(provider: IJupyterUriProvider): {
                 throw new CancellationError();
             }
             const server = await provider.getServerUri(handle);
+            knownHandles.add(handle);
             return serverUriToServer(handle, server);
         },
         async provideCommands(_value, token) {
