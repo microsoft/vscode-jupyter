@@ -188,6 +188,7 @@ export class JupyterPaths {
                 });
                 const pythonFile = Uri.joinPath(this.context.extensionUri, 'pythonFiles', 'printJupyterDataDir.py');
                 const result = await factory.exec([pythonFile.fsPath], {});
+                traceInfoIfCI(`Got a stdoutput/stderr for Jupyter Data Dir ${result.stdout} & ${result.stderr}`);
                 if (result.stdout.trim().length) {
                     const sitePath = Uri.file(result.stdout.trim());
                     traceInfoIfCI(`Got a stdoutput for Jupyter Data Dir ${sitePath.fsPath}`);
