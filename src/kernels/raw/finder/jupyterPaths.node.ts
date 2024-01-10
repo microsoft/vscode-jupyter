@@ -7,7 +7,14 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { ignoreLogging, logValue, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
+import {
+    ignoreLogging,
+    logValue,
+    traceError,
+    traceInfoIfCI,
+    traceVerbose,
+    traceWarning
+} from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IMemento,
@@ -174,6 +181,7 @@ export class JupyterPaths {
         // 2. Add the paths based on ENABLE_USER_SITE
         if (interpreter) {
             try {
+                traceInfoIfCI(`Getting Jupyter Data Dir for ${interpreter.uri.fsPath}`);
                 const factory = await this.pythonExecFactory.createActivatedEnvironment({
                     interpreter,
                     resource
@@ -182,9 +190,13 @@ export class JupyterPaths {
                 const result = await factory.exec([pythonFile.fsPath], {});
                 if (result.stdout.trim().length) {
                     const sitePath = Uri.file(result.stdout.trim());
+                    traceInfoIfCI(`Got a stdoutput for Jupyter Data Dir ${sitePath.fsPath}`);
                     if (await this.fs.exists(sitePath)) {
                         if (!dataDir.has(sitePath)) {
+                            traceInfoIfCI(`Added Jupyter Data Dir ${sitePath.fsPath}`);
                             dataDir.set(sitePath, dataDir.size);
+                        } else {
+                            traceInfoIfCI(`Duplicate not added, Jupyter Data Dir ${sitePath.fsPath}`);
                         }
                     } else {
                         traceWarning(`Got a non-existent Jupyter Data Dir ${sitePath}`);
@@ -195,6 +207,8 @@ export class JupyterPaths {
             } catch (ex) {
                 traceError(`Failed to get DataDir based on ENABLE_USER_SITE for ${interpreter.displayName}`, ex);
             }
+        } else {
+            traceInfoIfCI(`Not Getting Jupyter Data Dir for Interpreter`);
         }
 
         // 3. Add the paths based on user and env data directories
