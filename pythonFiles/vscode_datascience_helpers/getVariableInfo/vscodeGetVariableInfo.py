@@ -3,6 +3,80 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     import json as _VSCODE_json
     import builtins as _VSCODE_builtins
 
+    maxStringLength = 50
+
+    def truncateString(value):
+        if builtins.len(value) > maxStringLength:
+            return value[: maxStringLength - 1] + "..."
+        else:
+            return value
+
+    def getValue(variable, nested=False):
+        if _VSCODE_builtins.type(variable) == str:
+            return truncateString(variable)
+        elif (
+            _VSCODE_builtins.type(variable) == int
+            or _VSCODE_builtins.type(variable) == float
+        ):
+            return str(variable)
+        elif _VSCODE_builtins.type(variable) == list:
+            return "[...]"
+        elif _VSCODE_builtins.type(variable) == tuple:
+            return "(...)"
+        elif _VSCODE_builtins.type(variable) == set:
+            return "{...}"
+        elif _VSCODE_builtins.type(variable) == dict:
+            return "{...}"
+        else:
+            return truncateString(str(variable))
+
+    def getPropertyNames(variable):
+        props = []
+        for prop in builtins.dir(variable):
+            if not prop.startswith("__"):
+                props.append(prop)
+        return props
+
+    def getChildProperty(root, propertyChain):
+        variable = root
+        for property in propertyChain:
+            if _VSCODE_builtins.type(property) == int:
+                if _VSCODE_builtins.hasattr(variable, "__getitem__"):
+                    variable = variable[property]
+                elif _VSCODE_builtins.type(variable) == set:
+                    variable = list(variable)[property]
+                else:
+                    return None
+            elif _VSCODE_builtins.hasattr(variable, property):
+                variable = getattr(variable, property)
+            elif _VSCODE_builtins.type(variable) == dict and property in variable:
+                variale = variable[property]
+            else:
+                return None
+        return variable
+
+    def _VSCODE_getVariableDescription(rootVarName, propertyChain=[]):
+        result = {}
+        root = globals()[rootVarName]
+        variable = root
+        if len(propertyChain) > 0:
+            variable = getChildProperty(root, propertyChain)
+
+        if variable is not None:
+            result["type"] = _VSCODE_builtins.type(variable).__name__
+            if _VSCODE_builtins.hasattr(variable, "__len__"):
+                result["len"] = _VSCODE_builtins.len(variable)
+            if _VSCODE_builtins.hasattr(variable, "__dict__"):
+                result["properties"] = getPropertyNames(variable)
+            elif _VSCODE_builtins.type(variable) == dict:
+                result["properties"] = list(variable.keys())
+
+        result["value"] = getValue(variable)
+        if is_debugging:
+            return _VSCODE_json.dumps(result)
+        else:
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(result))
+
     # Function to do our work. It will return the object
     def _VSCODE_getVariableInfo(var):
         # Start out without the information
@@ -42,7 +116,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             except _VSCODE_builtins.TypeError:
                 pass
 
-        if hasattr(var, "__len__"):
+        if _VSCODE_builtins.hasattr(var, "__len__"):
             try:
                 result["count"] = _VSCODE_builtins.len(var)
             except _VSCODE_builtins.TypeError:
@@ -85,6 +159,8 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             return _VSCODE_getVariableProperties(*args)
         elif what_to_get == "info":
             return _VSCODE_getVariableInfo(*args)
+        elif what_to_get == "description":
+            return _VSCODE_getVariableDescription(*args)
         else:
             return _VSCODE_getVariableTypes(*args)
     finally:
