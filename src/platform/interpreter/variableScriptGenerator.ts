@@ -70,7 +70,7 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
     }) {
         const scriptCode = await this.getContentsOfScript();
         const isDebugging = options.isDebugging ? 'True' : 'False';
-        const initializeCode = parent ? scriptCode : `${scriptCode}\n\n_VSCODE_rwho_ls = %who_ls\n`;
+        const initializeCode = options.parent ? scriptCode : `${scriptCode}\n\n_VSCODE_rwho_ls = %who_ls\n`;
         const cleanupWhoLsCode = dedent`
         try:
             del _VSCODE_rwho_ls
@@ -87,7 +87,7 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
             return {
                 initializeCode,
                 code,
-                cleanupCode: parent ? cleanupCode : `${cleanupCode}\n${cleanupWhoLsCode}`
+                cleanupCode: options.parent ? cleanupCode : `${cleanupCode}\n${cleanupWhoLsCode}`
             };
         } else {
             return {

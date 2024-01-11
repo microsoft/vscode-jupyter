@@ -15,7 +15,8 @@ import {
     IJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
-    IKernelVariableRequester
+    IKernelVariableRequester,
+    IVariableDescription
 } from './types';
 import type { Kernel } from '@jupyterlab/services';
 
@@ -71,6 +72,19 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     // IJupyterVariables implementation
+    public async getAllVariableDiscriptions(
+        kernel: IKernel,
+        parent: IVariableDescription | undefined,
+        token?: CancellationToken
+    ): Promise<IVariableDescription[]> {
+        const languageId = getKernelConnectionLanguage(kernel.kernelConnectionMetadata) || PYTHON_LANGUAGE;
+        const variableRequester = this.variableRequesters.get(languageId);
+        if (variableRequester) {
+            return variableRequester.getAllVariableDiscriptions(kernel, parent, token);
+        }
+        return [];
+    }
+
     public async getVariables(request: IJupyterVariablesRequest, kernel: IKernel): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
         return this.getVariablesBasedOnKernel(kernel, request);

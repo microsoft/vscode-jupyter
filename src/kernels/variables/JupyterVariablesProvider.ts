@@ -10,15 +10,12 @@ import {
     VariablesResult,
     EventEmitter
 } from 'vscode';
-import { IKernelVariableRequester, IVariableDescription } from './types';
+import { IJupyterVariables, IVariableDescription } from './types';
 import { IKernel, IKernelProvider } from '../types';
-import { named } from 'inversify';
-import { Identifiers } from '../../platform/common/constants';
 
 export class JupyterVariablesProvider implements NotebookVariableProvider {
     constructor(
-        @named(Identifiers.PYTHON_VARIABLES_REQUESTER)
-        private readonly pythonVariableRequester: IKernelVariableRequester,
+        private readonly variables: IJupyterVariables,
         private readonly kernelProvider: IKernelProvider
     ) {}
 
@@ -42,26 +39,32 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
 
         if (parent) {
             if ('getChildren' in parent && typeof parent.getChildren === 'function') {
-                await parent.getChildren(start);
+                const variables = await parent.getChildren(start);
+                for (const variable of variables) {
+                    yield this.createVariableResult(variable, kernel);
+                }
             }
         } else {
-            const variables = await this.pythonVariableRequester.getAllVariableDiscriptions(kernel, undefined);
+            const variables = await this.variables.getAllVariableDiscriptions(kernel, undefined);
 
             for (const variable of variables) {
-                const hasNamedChildren = variable.properties && variable.properties?.length > 0;
-                const indexedChildrenCount = variable.count && variable.count > 0;
-                yield {
-                    variable,
-                    hasNamedChildren,
-                    indexedChildrenCount,
-                    getChildren: (start: number) => this.getChildren(variable, start, kernel)
-                } as VariablesResult;
+                yield this.createVariableResult(variable, kernel);
             }
         }
     }
 
+    private createVariableResult(result: IVariableDescription, kernel: IKernel): VariablesResult {
+        const hasNamedChildren = !!result.properties;
+        const indexedChildrenCount = result.count ?? 0;
+        const variable = {
+            getChildren: (start: number) => this.getChildren(variable, start, kernel),
+            ...result
+        } as Variable;
+        return { variable, hasNamedChildren, indexedChildrenCount };
+    }
+
     async getChildren(variable: Variable, _start: number, kernel: IKernel): Promise<IVariableDescription[]> {
         const parent = variable as IVariableDescription;
-        return await this.pythonVariableRequester.getAllVariableDiscriptions(kernel, parent);
+        return await this.variables.getAllVariableDiscriptions(kernel, parent);
     }
 }

@@ -29,6 +29,11 @@ export interface IJupyterVariable {
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
+    getAllVariableDiscriptions(
+        kernel: IKernel,
+        parent: IVariableDescription | undefined,
+        token?: CancellationToken
+    ): Promise<IVariableDescription[]>;
     getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse>;
     getFullVariable(
         variable: IJupyterVariable,

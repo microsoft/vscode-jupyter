@@ -75,12 +75,11 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
     ### Get info on variables at the root level
     def _VSCODE_getAllVariableDescriptions(varNames):
-        variables = []
-        for varName in varNames:
-            variables = [
-                {"name": varName, **getVariableDescription(globals()[varName])}
-                for varName in globals()
-            ]
+        variables = [
+            {"name": varName, **getVariableDescription(globals()[varName])}
+            for varName in varNames
+            if varName in globals()
+        ]
 
         if is_debugging:
             return _VSCODE_json.dumps(variables)
@@ -90,34 +89,36 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     ### Get info on children of a variable reached through the given property chain
     def _VSCODE_getAllChildrenDescriptions(rootVarName, propertyChain=[]):
         root = globals()[rootVarName]
+        if root is None:
+            return []
+
         parent = root
         if _VSCODE_builtins.len(propertyChain) > 0:
             parent = getChildProperty(root, propertyChain)
 
         children = []
-        if parent is not None:
-            parentInfo = getVariableDescription(parent)
-            if "count" in parentInfo:
-                if parentInfo["count"] > 0:
-                    children = [
-                        {
-                            **getVariableDescription(getChildProperty(parent, [i])),
-                            "name": str(i),
-                            "root": rootVarName,
-                            "propertyChain": propertyChain + [i],
-                        }
-                        for i in _VSCODE_builtins.range(_VSCODE_builtins.len(parent))
-                    ]
-            elif "properties" in parentInfo:
+        parentInfo = getVariableDescription(parent)
+        if "count" in parentInfo:
+            if parentInfo["count"] > 0:
                 children = [
                     {
-                        **getVariableDescription(getChildProperty(parent, [prop])),
-                        "name": prop,
+                        **getVariableDescription(getChildProperty(parent, [i])),
+                        "name": str(i),
                         "root": rootVarName,
-                        "propertyChain": propertyChain + [prop],
+                        "propertyChain": propertyChain + [i],
                     }
-                    for prop in parentInfo["properties"]
+                    for i in _VSCODE_builtins.range(_VSCODE_builtins.len(parent))
                 ]
+        elif "properties" in parentInfo:
+            children = [
+                {
+                    **getVariableDescription(getChildProperty(parent, [prop])),
+                    "name": prop,
+                    "root": rootVarName,
+                    "propertyChain": propertyChain + [prop],
+                }
+                for prop in parentInfo["properties"]
+            ]
 
         if is_debugging:
             return _VSCODE_json.dumps(children)
