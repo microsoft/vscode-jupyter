@@ -10,14 +10,15 @@ import {
     VariablesResult,
     EventEmitter
 } from 'vscode';
-import { IJupyterVariable, IJupyterVariables, IJupyterVariablesRequest, IJupyterVariablesResponse } from './types';
-import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
-
-const pythonRawTypes = ['int', 'float', 'str', 'bool'];
+import { IKernelVariableRequester, IVariableDescription } from './types';
+import { IKernel, IKernelProvider } from '../types';
+import { named } from 'inversify';
+import { Identifiers } from '../../platform/common/constants';
 
 export class JupyterVariablesProvider implements NotebookVariableProvider {
     constructor(
-        private readonly jupyterVariables: IJupyterVariables,
+        @named(Identifiers.PYTHON_VARIABLES_REQUESTER)
+        private readonly pythonVariableRequester: IKernelVariableRequester,
         private readonly kernelProvider: IKernelProvider
     ) {}
 
@@ -27,7 +28,7 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
     async *provideVariables(
         notebook: NotebookDocument,
         parent: Variable | undefined,
-        kind: NotebookVariablesRequestKind,
+        _kind: NotebookVariablesRequestKind,
         start: number,
         token: CancellationToken
     ): AsyncIterable<VariablesResult> {
@@ -39,57 +40,28 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
             return;
         }
 
-        const execution = this.kernelProvider.getKernelExecution(kernel);
-
         if (parent) {
             if ('getChildren' in parent && typeof parent.getChildren === 'function') {
-                await parent.getChildren(kind);
+                await parent.getChildren(start);
             }
         } else {
-            const variables = await this.getRootVariables(execution, start, kernel);
+            const variables = await this.pythonVariableRequester.getAllVariableDiscriptions(kernel, undefined);
 
-            for (const variable of variables.pageResponse) {
-                const result = { name: variable.name, value: variable.value ?? '' };
-                const hasNamedChildren = !pythonRawTypes.includes(variable.type);
-                const indexedChildrenCount = variable.type === 'list' ? variable.count : 0;
+            for (const variable of variables) {
+                const hasNamedChildren = variable.properties && variable.properties?.length > 0;
+                const indexedChildrenCount = variable.count && variable.count > 0;
                 yield {
-                    variable: result,
+                    variable,
                     hasNamedChildren,
-                    indexedChildrenCount
-                    //getChildren: (kind: NotebookVariablesRequestKind) => this.getChildren(variable, kernel, kind, start)
+                    indexedChildrenCount,
+                    getChildren: (start: number) => this.getChildren(variable, start, kernel)
                 } as VariablesResult;
             }
         }
     }
 
-    // async getChildren(
-    //     variable: IJupyterVariable,
-    //     kernel: IKernel,
-    //     kind: NotebookVariablesRequestKind,
-    //     start: number
-    // ): Promise<IJupyterVariablesResponse> {
-    //     if (kind === NotebookVariablesRequestKind.Indexed) {
-
-    //     } else {
-
-    //     }
-    // }
-
-    private async getRootVariables(
-        execution: INotebookKernelExecution,
-        start: number,
-        kernel: IKernel
-    ): Promise<IJupyterVariablesResponse> {
-        const request: IJupyterVariablesRequest = {
-            executionCount: execution.executionCount,
-            sortAscending: true,
-            sortColumn: 'name',
-            pageSize: 10,
-            refreshCount: 0,
-            startIndex: start
-        };
-        const response = this.jupyterVariables.getVariables(request, kernel);
-
-        return response;
+    async getChildren(variable: Variable, _start: number, kernel: IKernel): Promise<IVariableDescription[]> {
+        const parent = variable as IVariableDescription;
+        return await this.pythonVariableRequester.getAllVariableDiscriptions(kernel, parent);
     }
 }

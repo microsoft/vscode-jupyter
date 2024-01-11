@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, Uri } from 'vscode';
+import { CancellationToken, Event, Uri, Variable } from 'vscode';
 import { IKernel } from '../types';
 import type { JSONObject } from '@lumino/coreutils';
 
@@ -80,9 +80,23 @@ export interface IJupyterVariablesResponse {
     refreshCount: number;
 }
 
+export interface IVariableDescription extends Variable {
+    // The name of the variable at the root scope
+    root: string;
+    // How to look up the specific property of the root variable
+    propertyChain: (string | number)[];
+    count?: number;
+    properties?: string[];
+}
+
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
 
 export interface IKernelVariableRequester {
+    getAllVariableDiscriptions(
+        kernel: IKernel,
+        parent: IVariableDescription | undefined,
+        token?: CancellationToken
+    ): Promise<IVariableDescription[]>;
     getVariableNamesAndTypesFromKernel(kernel: IKernel, token?: CancellationToken): Promise<IJupyterVariable[]>;
     getFullVariable(
         targetVariable: IJupyterVariable,

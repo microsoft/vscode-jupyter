@@ -77,7 +77,10 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     def _VSCODE_getAllVariableDescriptions(varNames):
         variables = []
         for varName in varNames:
-            variables.append(getVariableDescription(globals()[varName]))
+            variables = [
+                {"name": varName, **getVariableDescription(globals()[varName])}
+                for varName in globals()
+            ]
 
         if is_debugging:
             return _VSCODE_json.dumps(variables)
@@ -96,19 +99,25 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             parentInfo = getVariableDescription(parent)
             if "count" in parentInfo:
                 if parentInfo["count"] > 0:
-                    for i in range(parentInfo["count"]):
-                        child = getChildProperty(parent, [i])
-                        childInfo = getVariableDescription(child)
-                        childInfo["root"] = rootVarName
-                        childInfo["propertyChain"] = propertyChain + [i]
-                        children.append(childInfo)
+                    children = [
+                        {
+                            **getVariableDescription(getChildProperty(parent, [i])),
+                            "name": str(i),
+                            "root": rootVarName,
+                            "propertyChain": propertyChain + [i],
+                        }
+                        for i in _VSCODE_builtins.range(_VSCODE_builtins.len(parent))
+                    ]
             elif "properties" in parentInfo:
-                for prop in parentInfo["properties"]:
-                    child = getChildProperty(parent, [prop])
-                    childInfo = getVariableDescription(child)
-                    childInfo["root"] = rootVarName
-                    childInfo["propertyChain"] = propertyChain + [prop]
-                    children.append(childInfo)
+                children = [
+                    {
+                        **getVariableDescription(getChildProperty(parent, [prop])),
+                        "name": prop,
+                        "root": rootVarName,
+                        "propertyChain": propertyChain + [prop],
+                    }
+                    for prop in parentInfo["properties"]
+                ]
 
         if is_debugging:
             return _VSCODE_json.dumps(children)
