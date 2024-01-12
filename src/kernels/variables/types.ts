@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, Uri } from 'vscode';
+import { CancellationToken, Event, Uri, Variable } from 'vscode';
 import { IKernel } from '../types';
 import type { JSONObject } from '@lumino/coreutils';
 
@@ -29,6 +29,11 @@ export interface IJupyterVariable {
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
+    getAllVariableDiscriptions(
+        kernel: IKernel,
+        parent: IVariableDescription | undefined,
+        token?: CancellationToken
+    ): Promise<IVariableDescription[]>;
     getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse>;
     getFullVariable(
         variable: IJupyterVariable,
@@ -80,9 +85,25 @@ export interface IJupyterVariablesResponse {
     refreshCount: number;
 }
 
+export interface IVariableDescription extends Variable {
+    /** The name of the variable at the root scope */
+    root: string;
+    /** How to look up the specific property of the root variable */
+    propertyChain: (string | number)[];
+    /** The number of children for collection types */
+    count?: number;
+    /** names of children */
+    properties?: string[];
+}
+
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
 
 export interface IKernelVariableRequester {
+    getAllVariableDiscriptions(
+        kernel: IKernel,
+        parent: IVariableDescription | undefined,
+        token?: CancellationToken
+    ): Promise<IVariableDescription[]>;
     getVariableNamesAndTypesFromKernel(kernel: IKernel, token?: CancellationToken): Promise<IJupyterVariable[]>;
     getFullVariable(
         targetVariable: IJupyterVariable,

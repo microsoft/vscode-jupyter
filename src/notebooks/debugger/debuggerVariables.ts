@@ -14,7 +14,8 @@ import {
     IConditionalJupyterVariables,
     IJupyterVariable,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse
+    IJupyterVariablesResponse,
+    IVariableDescription
 } from '../../kernels/variables/types';
 import { IDebugService } from '../../platform/common/application/types';
 import { Identifiers } from '../../platform/common/constants';
@@ -74,6 +75,10 @@ export class DebuggerVariables
     }
 
     // IJupyterVariables implementation
+    getAllVariableDiscriptions(): Promise<IVariableDescription[]> {
+        throw new Error('Method not implemented.');
+    }
+
     public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
         // Listen to notebook events if we haven't already
         if (kernel) {

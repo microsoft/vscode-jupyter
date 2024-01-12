@@ -310,6 +310,10 @@ export interface IVariableScriptGenerator {
         stringifiedAttributeNameList: string;
     }): Promise<ScriptCode>;
     generateCodeToGetVariableTypes(options: { isDebugging: boolean }): Promise<ScriptCode>;
+    generateCodeToGetAllVariableDescriptions(options: {
+        isDebugging: boolean;
+        parent: { root: string; propertyChain: (string | number)[] } | undefined;
+    }): Promise<ScriptCode>;
 }
 export const IDataFrameScriptGenerator = Symbol('IDataFrameScriptGenerator');
 export interface IDataFrameScriptGenerator {

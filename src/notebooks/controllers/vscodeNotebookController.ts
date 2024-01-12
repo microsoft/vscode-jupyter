@@ -83,6 +83,8 @@ import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessa
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
 import { openInBrowser } from '../../platform/common/net/browser';
 import { KernelError } from '../../kernels/errors/kernelError';
+import { JupyterVariablesProvider } from '../../kernels/variables/JupyterVariablesProvider';
+import { IJupyterVariables } from '../../kernels/variables/types';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -157,7 +159,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         configuration: IConfigurationService,
         extensionChecker: IPythonExtensionChecker,
         serviceContainer: IServiceContainer,
-        displayDataProvider: IConnectionDisplayDataProvider
+        displayDataProvider: IConnectionDisplayDataProvider,
+        jupyterVariables: IJupyterVariables
     ): IVSCodeNotebookController {
         return new VSCodeNotebookController(
             kernelConnection,
@@ -170,7 +173,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             configuration,
             extensionChecker,
             serviceContainer,
-            displayDataProvider
+            displayDataProvider,
+            jupyterVariables
         );
     }
     constructor(
@@ -184,7 +188,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly configuration: IConfigurationService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly displayDataProvider: IConnectionDisplayDataProvider
+        private readonly displayDataProvider: IConnectionDisplayDataProvider,
+        jupyterVariables: IJupyterVariables
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -207,6 +212,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
+        this.controller.variableProvider = new JupyterVariablesProvider(jupyterVariables, this.kernelProvider);
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
         workspace.onDidCloseNotebookDocument(

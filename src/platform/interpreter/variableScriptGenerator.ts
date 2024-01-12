@@ -64,6 +64,37 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
             };
         }
     }
+    async generateCodeToGetAllVariableDescriptions(options: {
+        isDebugging: boolean;
+        parent: { root: string; propertyChain: (string | number)[] } | undefined;
+    }) {
+        const scriptCode = await this.getContentsOfScript();
+        const isDebugging = options.isDebugging ? 'True' : 'False';
+        const initializeCode = options.parent ? scriptCode : `${scriptCode}\n\n_VSCODE_rwho_ls = %who_ls\n`;
+        const cleanupWhoLsCode = dedent`
+        try:
+            del _VSCODE_rwho_ls
+        except:
+            pass
+        `;
+
+        const code = options.parent
+            ? `${VariableFunc}("AllChildrenDescriptions", ${isDebugging}, "${options.parent.root}", ${JSON.stringify(
+                  options.parent.propertyChain
+              )})`
+            : `${VariableFunc}("AllVariableDescriptions", ${isDebugging}, _VSCODE_rwho_ls)`;
+        if (options.isDebugging) {
+            return {
+                initializeCode,
+                code,
+                cleanupCode: options.parent ? cleanupCode : `${cleanupCode}\n${cleanupWhoLsCode}`
+            };
+        } else {
+            return {
+                code: `${initializeCode}\n\n${code}\n\n${cleanupCode}`
+            };
+        }
+    }
     async generateCodeToGetVariableTypes(options: { isDebugging: boolean }) {
         const scriptCode = await this.getContentsOfScript();
         const initializeCode = `${scriptCode}\n\n_VSCODE_rwho_ls = %who_ls\n`;

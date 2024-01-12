@@ -13,7 +13,8 @@ import {
     IConditionalJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
-    IJupyterVariable
+    IJupyterVariable,
+    IVariableDescription
 } from './types';
 
 /**
@@ -39,6 +40,14 @@ export class JupyterVariables implements IJupyterVariables {
     }
 
     // IJupyterVariables implementation
+    getAllVariableDiscriptions(
+        kernel: IKernel,
+        parent: IVariableDescription | undefined,
+        token?: CancellationToken
+    ): Promise<IVariableDescription[]> {
+        return this.variableHandler.getAllVariableDiscriptions(kernel, parent, token);
+    }
+
     @capturePerfTelemetry(Telemetry.VariableExplorerFetchTime)
     public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
         return this.variableHandler.getVariables(request, kernel);
