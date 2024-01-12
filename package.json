@@ -2193,7 +2193,8 @@
         "notebookKernelSource",
         "interactiveWindow",
         "quickPickItemTooltip",
-        "notebookExecution"
+        "notebookExecution",
+        "notebookVariableProvider"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
