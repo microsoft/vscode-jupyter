@@ -96,7 +96,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
             const platform = api.serviceContainer.get<IPlatformService>(IPlatformService);
             const interpreters = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-            const jupyterVariables = api.serviceContainer.get<IJupyterVariables>(IJupyterVariables);
+            const jupyterVariables = mock<IJupyterVariables>();
             kernelConnectionMetadata = await getDefaultKernelConnection();
             const displayDataProvider = new ConnectionDisplayDataProvider(
                 platform,
