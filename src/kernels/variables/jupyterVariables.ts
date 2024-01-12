@@ -44,10 +44,9 @@ export class JupyterVariables implements IJupyterVariables {
         kernel: IKernel,
         parent: IVariableDescription | undefined,
         token?: CancellationToken
-    ): Promise<IVariableDescription[]>{
+    ): Promise<IVariableDescription[]> {
         return this.variableHandler.getAllVariableDiscriptions(kernel, parent, token);
     }
-
 
     @capturePerfTelemetry(Telemetry.VariableExplorerFetchTime)
     public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
