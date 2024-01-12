@@ -76,7 +76,12 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     ### Get info on variables at the root level
     def _VSCODE_getAllVariableDescriptions(varNames):
         variables = [
-            {"name": varName, **getVariableDescription(globals()[varName])}
+            {
+                "name": varName,
+                **getVariableDescription(globals()[varName]),
+                "root": varName,
+                "propertyChain": [],
+            }
             for varName in varNames
             if varName in globals()
         ]

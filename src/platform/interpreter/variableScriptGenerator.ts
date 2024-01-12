@@ -79,9 +79,9 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
         `;
 
         const code = options.parent
-            ? `${VariableFunc}("AllChildrenDescriptions", ${isDebugging}, ${options.parent.root}, ${JSON.stringify(
+            ? `${VariableFunc}("AllChildrenDescriptions", ${isDebugging}, "${options.parent.root}", ${JSON.stringify(
                   options.parent.propertyChain
-              )}`
+              )})`
             : `${VariableFunc}("AllVariableDescriptions", ${isDebugging}, _VSCODE_rwho_ls)`;
         if (options.isDebugging) {
             return {
