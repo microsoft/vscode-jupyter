@@ -49,8 +49,8 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             result["count"] = _VSCODE_builtins.len(variable)
         if _VSCODE_builtins.hasattr(variable, "__dict__"):
             result["properties"] = getPropertyNames(variable)
-        elif _VSCODE_builtins.type(variable) == dict:
-            result["properties"] = list(variable.keys())
+        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict:
+            result["properties"] = _VSCODE_builtins.list(variable.keys())
 
         result["value"] = getValue(variable)
         return result
@@ -58,16 +58,19 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     def getChildProperty(root, propertyChain):
         variable = root
         for property in propertyChain:
-            if _VSCODE_builtins.type(property) == int:
+            if _VSCODE_builtins.type(property) == _VSCODE_builtins.int:
                 if _VSCODE_builtins.hasattr(variable, "__getitem__"):
                     variable = variable[property]
-                elif _VSCODE_builtins.type(variable) == set:
-                    variable = list(variable)[property]
+                elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.set:
+                    variable = _VSCODE_builtins.list(variable)[property]
                 else:
                     return None
             elif _VSCODE_builtins.hasattr(variable, property):
                 variable = getattr(variable, property)
-            elif _VSCODE_builtins.type(variable) == dict and property in variable:
+            elif (
+                _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict
+                and property in variable
+            ):
                 variable = variable[property]
             else:
                 return None

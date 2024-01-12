@@ -86,11 +86,13 @@ export interface IJupyterVariablesResponse {
 }
 
 export interface IVariableDescription extends Variable {
-    // The name of the variable at the root scope
+    /** The name of the variable at the root scope */
     root: string;
-    // How to look up the specific property of the root variable
+    /** How to look up the specific property of the root variable */
     propertyChain: (string | number)[];
+    /** The number of children for collection types */
     count?: number;
+    /** names of children */
     properties?: string[];
 }
 
