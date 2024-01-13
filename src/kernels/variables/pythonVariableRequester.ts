@@ -153,7 +153,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         parent: IVariableDescription | undefined,
         token?: CancellationToken
     ): Promise<IVariableDescription[]> {
-        if (!kernel.session || token?.isCancellationRequested) {
+        if (!kernel.session) {
             return [];
         }
 

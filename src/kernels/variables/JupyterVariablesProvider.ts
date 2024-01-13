@@ -12,15 +12,18 @@ import {
 } from 'vscode';
 import { IJupyterVariables, IVariableDescription } from './types';
 import { IKernel, IKernelProvider } from '../types';
+import { VariableResultCache } from './variableResultCache';
 
 export class JupyterVariablesProvider implements NotebookVariableProvider {
+    private variableResultCache = new VariableResultCache();
+
+    _onDidChangeVariables = new EventEmitter<NotebookDocument>();
+    onDidChangeVariables = this._onDidChangeVariables.event;
+
     constructor(
         private readonly variables: IJupyterVariables,
         private readonly kernelProvider: IKernelProvider
     ) {}
-
-    _onDidChangeVariables = new EventEmitter<NotebookDocument>();
-    onDidChangeVariables = this._onDidChangeVariables.event;
 
     async *provideVariables(
         notebook: NotebookDocument,
@@ -37,19 +40,31 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
             return;
         }
 
-        if (parent) {
-            if ('getChildren' in parent && typeof parent.getChildren === 'function') {
-                const variables = await parent.getChildren(start);
-                for (const variable of variables) {
-                    yield this.createVariableResult(variable, kernel);
-                }
-            }
-        } else {
-            const variables = await this.variables.getAllVariableDiscriptions(kernel, undefined);
+        const executionCount = this.kernelProvider.getKernelExecution(kernel).executionCount;
 
-            for (const variable of variables) {
-                yield this.createVariableResult(variable, kernel);
+        const cacheKey = this.variableResultCache.getCacheKey(notebook.uri.toString(), parent);
+        let results = this.variableResultCache.getResults(executionCount, cacheKey);
+
+        if (!results) {
+            if (parent) {
+                if ('getChildren' in parent && typeof parent.getChildren === 'function') {
+                    const variables = (await parent.getChildren(start, token)) as IVariableDescription[];
+                    results = variables.map((variable) => this.createVariableResult(variable, kernel));
+                }
+            } else {
+                const variables = await this.variables.getAllVariableDiscriptions(kernel, undefined, token);
+                results = variables.map((variable) => this.createVariableResult(variable, kernel));
             }
+        }
+
+        if (!results) {
+            return;
+        }
+
+        this.variableResultCache.setResults(executionCount, cacheKey, results);
+
+        for (const result of results) {
+            yield result;
         }
     }
 
@@ -57,14 +72,19 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
         const hasNamedChildren = !!result.properties;
         const indexedChildrenCount = result.count ?? 0;
         const variable = {
-            getChildren: (start: number) => this.getChildren(variable, start, kernel),
+            getChildren: (start: number, token: CancellationToken) => this.getChildren(variable, start, kernel, token),
             ...result
         } as Variable;
         return { variable, hasNamedChildren, indexedChildrenCount };
     }
 
-    async getChildren(variable: Variable, _start: number, kernel: IKernel): Promise<IVariableDescription[]> {
+    async getChildren(
+        variable: Variable,
+        _start: number,
+        kernel: IKernel,
+        token: CancellationToken
+    ): Promise<IVariableDescription[]> {
         const parent = variable as IVariableDescription;
-        return await this.variables.getAllVariableDiscriptions(kernel, parent);
+        return await this.variables.getAllVariableDiscriptions(kernel, parent, token);
     }
 }
