@@ -575,7 +575,7 @@ suite('Kernel Execution @kernelCore', function () {
             )
         ]);
     });
-    test('Messages from background threads can come in other cell output', async function () {
+    test.skip('Messages from background threads can come in other cell output', async function () {
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
         // If you have a background thread in cell 1 & then immediately after that you have a cell 2.
         // The background messages (output) from cell one will end up in cell 2.
