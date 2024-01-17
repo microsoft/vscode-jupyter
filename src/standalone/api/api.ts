@@ -23,6 +23,7 @@ import {
 import { stripCodicons } from '../../platform/common/helpers';
 import { getKernelsApi } from '../../kernels/api/api';
 import { jupyterServerUriToCollection } from '../../codespaces';
+import { isWeb } from '../../platform/common/utils/misc';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -190,15 +191,23 @@ export function buildApi(
             await selector.addJupyterServer({ id: providerId, handle, extensionId });
             await controllerCreatedPromise;
         },
-        openNotebook: async (uri: Uri, kernelId: string) => {
+        openNotebook: async (uri: Uri, kernelOrPythonEnvId: string) => {
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: extensions.determineExtensionFromCallStack().extensionId,
                 pemUsed: 'openNotebook'
             });
             const controllers = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-            const id = controllers.all.find((controller) => controller.id === kernelId)?.id;
+            let id = controllers.all.find((controller) => controller.id === kernelOrPythonEnvId)?.id;
+            if (!id && !isWeb()) {
+                // Look for a python environment with this id.
+                id = controllers.all.find(
+                    (controller) =>
+                        controller.kind === 'startUsingPythonInterpreter' &&
+                        controller.interpreter.id === kernelOrPythonEnvId
+                )?.id;
+            }
             if (!id) {
-                throw new Error(`Kernel ${kernelId} not found.`);
+                throw new Error(`Kernel ${kernelOrPythonEnvId} not found.`);
             }
             const notebookEditor =
                 window.activeNotebookEditor?.notebook?.uri?.toString() === uri.toString()
