@@ -14,7 +14,7 @@ import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { pythonEnvToJupyterEnv } from '../../../platform/api/pythonApi';
 import { createInterpreterKernelSpec, getKernelId } from '../../../kernels/helpers';
-import { Environment } from '@vscode/python-extension';
+import { Environment, EnvironmentPath } from '@vscode/python-extension';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { KernelFinder } from '../../../kernels/kernelFinder';
@@ -22,6 +22,10 @@ import { LocalPythonKernelSelector } from './localPythonKernelSelector.node';
 import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { ILocalPythonNotebookKernelSourceSelector } from '../types';
 import { DisposableBase } from '../../../platform/common/utils/lifecycle';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { traceWarning } from '../../../platform/logging';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectionMetadata> = {
     notebook: NotebookDocument;
@@ -118,6 +122,35 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         } finally {
             dispose(disposables);
         }
+    }
+    public async getKernelConnection(env: EnvironmentPath): Promise<PythonKernelConnectionMetadata | undefined> {
+        const interpreters = ServiceContainer.instance.get<IInterpreterService>(IInterpreterService);
+        const jupyterPaths = ServiceContainer.instance.get<JupyterPaths>(JupyterPaths);
+        const interpreter = await interpreters.getInterpreterDetails(env.path);
+        if (!interpreter) {
+            traceWarning(`Python Env ${getDisplayPath(env.id)} not found}`);
+            return;
+        }
+        if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
+            traceWarning(`Python Env hidden via filter: ${getDisplayPath(interpreter.id)}`);
+            return;
+        }
+
+        const spec = await createInterpreterKernelSpec(
+            interpreter,
+            await jupyterPaths.getKernelSpecTempRegistrationFolder()
+        );
+        const kernelConnection = PythonKernelConnectionMetadata.create({
+            kernelSpec: spec,
+            interpreter: interpreter,
+            id: getKernelId(spec, interpreter)
+        });
+        const existingConnection = this._kernels.get(kernelConnection.id);
+        if (existingConnection) {
+            return existingConnection;
+        }
+        this.addUpdateKernel(kernelConnection);
+        return kernelConnection;
     }
     private addUpdateKernel(kernel: PythonKernelConnectionMetadata) {
         const existing = this._kernels.get(kernel.id);
