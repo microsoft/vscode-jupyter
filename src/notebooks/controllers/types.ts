@@ -13,6 +13,7 @@ import {
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
 import { JupyterServerCollection } from '../../api';
+import { EnvironmentPath } from '@vscode/python-extension';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
 
@@ -124,6 +125,7 @@ export interface ILocalNotebookKernelSourceSelector {
 export const ILocalPythonNotebookKernelSourceSelector = Symbol('ILocalPythonNotebookKernelSourceSelector');
 export interface ILocalPythonNotebookKernelSourceSelector {
     selectLocalKernel(notebook: vscode.NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined>;
+    getKernelConnection(env: EnvironmentPath): Promise<PythonKernelConnectionMetadata | undefined>;
 }
 
 export interface IConnectionDisplayData extends IDisposable {
