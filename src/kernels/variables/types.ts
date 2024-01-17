@@ -32,7 +32,8 @@ export interface IJupyterVariables {
     getAllVariableDiscriptions(
         kernel: IKernel,
         parent: IVariableDescription | undefined,
-        token?: CancellationToken
+        startIndex: number,
+        token: CancellationToken
     ): Promise<IVariableDescription[]>;
     getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse>;
     getFullVariable(
@@ -92,8 +93,10 @@ export interface IVariableDescription extends Variable {
     propertyChain: (string | number)[];
     /** The number of children for collection types */
     count?: number;
-    /** names of children */
+    /** Names of children */
     properties?: string[];
+    /** A method to get the children of this variable */
+    getChildren?: (start: number, token: CancellationToken) => Promise<IVariableDescription[]>;
 }
 
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
@@ -102,6 +105,7 @@ export interface IKernelVariableRequester {
     getAllVariableDiscriptions(
         kernel: IKernel,
         parent: IVariableDescription | undefined,
+        startIndex: number,
         token?: CancellationToken
     ): Promise<IVariableDescription[]>;
     getVariableNamesAndTypesFromKernel(kernel: IKernel, token?: CancellationToken): Promise<IJupyterVariable[]>;

@@ -313,6 +313,7 @@ export interface IVariableScriptGenerator {
     generateCodeToGetAllVariableDescriptions(options: {
         isDebugging: boolean;
         parent: { root: string; propertyChain: (string | number)[] } | undefined;
+        startIndex: number;
     }): Promise<ScriptCode>;
 }
 export const IDataFrameScriptGenerator = Symbol('IDataFrameScriptGenerator');

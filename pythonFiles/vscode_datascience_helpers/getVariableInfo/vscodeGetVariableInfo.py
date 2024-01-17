@@ -5,6 +5,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
     maxStringLength = 50
     collectionTypes = ["list", "tuple", "set"]
+    arrayPageSize = 50
 
     def truncateString(string):
         if _VSCODE_builtins.len(string) > maxStringLength:
@@ -95,7 +96,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             return _VSCODE_builtins.print(_VSCODE_json.dumps(variables))
 
     ### Get info on children of a variable reached through the given property chain
-    def _VSCODE_getAllChildrenDescriptions(rootVarName, propertyChain=[]):
+    def _VSCODE_getAllChildrenDescriptions(rootVarName, propertyChain, startIndex):
         root = globals()[rootVarName]
         if root is None:
             return []
@@ -108,6 +109,10 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         parentInfo = getVariableDescription(parent)
         if "count" in parentInfo:
             if parentInfo["count"] > 0:
+                lastItem = _VSCODE_builtins.min(
+                    parentInfo["count"], startIndex + arrayPageSize
+                )
+                range = _VSCODE_builtins.range(startIndex, lastItem)
                 children = [
                     {
                         **getVariableDescription(getChildProperty(parent, [i])),
@@ -115,7 +120,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                         "root": rootVarName,
                         "propertyChain": propertyChain + [i],
                     }
-                    for i in _VSCODE_builtins.range(_VSCODE_builtins.len(parent))
+                    for i in range
                 ]
         elif "properties" in parentInfo:
             children = [
