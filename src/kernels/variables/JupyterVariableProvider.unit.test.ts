@@ -41,6 +41,19 @@ suite('JupyterVariablesProvider', () => {
         };
     }
 
+    function setVariablesForParent(
+        parent: IVariableDescription | undefined,
+        result: IVariableDescription[],
+        updated?: IVariableDescription[]
+    ) {
+        const whenCallHappens = when(variables.getAllVariableDiscriptions(anything(), parent, 0, anything()));
+
+        whenCallHappens.thenReturn(Promise.resolve(result));
+        if (updated) {
+            whenCallHappens.thenReturn(Promise.resolve(updated));
+        }
+    }
+
     async function provideVariables(parent: Variable | undefined) {
         const results: VariablesResult[] = [];
         for await (const result of provider.provideVariables(
@@ -67,9 +80,7 @@ suite('JupyterVariablesProvider', () => {
         const kernel = mock<IKernel>();
 
         when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        when(variables.getAllVariableDiscriptions(anything(), undefined, anything())).thenReturn(
-            Promise.resolve([objectVariable])
-        );
+        setVariablesForParent(undefined, [objectVariable]);
         when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
 
         const results = await provideVariables(undefined);
@@ -83,24 +94,11 @@ suite('JupyterVariablesProvider', () => {
         const kernel = mock<IKernel>();
 
         when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        when(variables.getAllVariableDiscriptions(anything(), undefined, anything())).thenReturn(
-            Promise.resolve([objectVariable])
-        );
-        when(
-            variables.getAllVariableDiscriptions(
-                anything(),
-                objectContaining({ root: 'myObject', propertyChain: [] }),
-                anything()
-            )
-        ).thenReturn(Promise.resolve([listVariable]));
-        when(
-            variables.getAllVariableDiscriptions(
-                anything(),
-                objectContaining({ root: 'myObject', propertyChain: ['myList'] }),
-                anything()
-            )
-        ).thenReturn(Promise.resolve(listVariableItems));
         when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
+
+        setVariablesForParent(undefined, [objectVariable]);
+        setVariablesForParent(objectContaining({ root: 'myObject', propertyChain: [] }), [listVariable]);
+        setVariablesForParent(objectContaining({ root: 'myObject', propertyChain: ['myList'] }), listVariableItems);
 
         // pass each the result as the parent in the next call
         let rootVariable = (await provideVariables(undefined))[0];
@@ -126,13 +124,11 @@ suite('JupyterVariablesProvider', () => {
         };
 
         when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        when(variables.getAllVariableDiscriptions(anything(), undefined, anything()))
-            .thenReturn(Promise.resolve([intVariable]))
-            .thenReturn(Promise.resolve([{ ...intVariable, value: '2' }]));
-
         when(kernelProvider.getKernelExecution(anything()))
             .thenReturn({ executionCount: 1 } as any)
             .thenReturn({ executionCount: 2 } as any);
+
+        setVariablesForParent(undefined, [intVariable], [{ ...intVariable, value: '2' }]);
 
         const first = await provideVariables(undefined);
         const second = await provideVariables(undefined);
@@ -153,11 +149,9 @@ suite('JupyterVariablesProvider', () => {
         };
 
         when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        when(variables.getAllVariableDiscriptions(anything(), undefined, anything())).thenReturn(
-            Promise.resolve([intVariable])
-        );
-
         when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
+
+        setVariablesForParent(undefined, [intVariable]);
 
         const first = await provideVariables(undefined);
         const second = await provideVariables(undefined);
@@ -166,6 +160,6 @@ suite('JupyterVariablesProvider', () => {
         assert.equal(second.length, 1);
         assert.equal(first[0].variable.value, '1');
 
-        verify(variables.getAllVariableDiscriptions(anything(), undefined, anything())).once();
+        verify(variables.getAllVariableDiscriptions(anything(), anything(), anything(), anything())).once();
     });
 });

@@ -40,6 +40,11 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
             return;
         }
 
+        const arr = [];
+        for (let i = 0; i < 10000; i++) {
+            arr.push(i);
+        }
+
         const executionCount = this.kernelProvider.getKernelExecution(kernel).executionCount;
 
         const cacheKey = this.variableResultCache.getCacheKey(notebook.uri.toString(), parent);
@@ -52,7 +57,7 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
                     results = variables.map((variable) => this.createVariableResult(variable, kernel));
                 }
             } else {
-                const variables = await this.variables.getAllVariableDiscriptions(kernel, undefined, token);
+                const variables = await this.variables.getAllVariableDiscriptions(kernel, undefined, start, token);
                 results = variables.map((variable) => this.createVariableResult(variable, kernel));
             }
         }
@@ -80,11 +85,11 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
 
     async getChildren(
         variable: Variable,
-        _start: number,
+        start: number,
         kernel: IKernel,
         token: CancellationToken
     ): Promise<IVariableDescription[]> {
         const parent = variable as IVariableDescription;
-        return await this.variables.getAllVariableDiscriptions(kernel, parent, token);
+        return await this.variables.getAllVariableDiscriptions(kernel, parent, start, token);
     }
 }

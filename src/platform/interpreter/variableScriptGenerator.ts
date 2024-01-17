@@ -67,6 +67,7 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
     async generateCodeToGetAllVariableDescriptions(options: {
         isDebugging: boolean;
         parent: { root: string; propertyChain: (string | number)[] } | undefined;
+        startIndex: number;
     }) {
         const scriptCode = await this.getContentsOfScript();
         const isDebugging = options.isDebugging ? 'True' : 'False';
@@ -81,7 +82,7 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
         const code = options.parent
             ? `${VariableFunc}("AllChildrenDescriptions", ${isDebugging}, "${options.parent.root}", ${JSON.stringify(
                   options.parent.propertyChain
-              )})`
+              )}, ${options.startIndex})`
             : `${VariableFunc}("AllVariableDescriptions", ${isDebugging}, _VSCODE_rwho_ls)`;
         if (options.isDebugging) {
             return {

@@ -75,12 +75,13 @@ export class KernelVariables implements IJupyterVariables {
     public async getAllVariableDiscriptions(
         kernel: IKernel,
         parent: IVariableDescription | undefined,
-        token?: CancellationToken
+        startIndex: number,
+        token: CancellationToken
     ): Promise<IVariableDescription[]> {
         const languageId = getKernelConnectionLanguage(kernel.kernelConnectionMetadata) || PYTHON_LANGUAGE;
         const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {
-            return variableRequester.getAllVariableDiscriptions(kernel, parent, token);
+            return variableRequester.getAllVariableDiscriptions(kernel, parent, startIndex, token);
         }
         return [];
     }

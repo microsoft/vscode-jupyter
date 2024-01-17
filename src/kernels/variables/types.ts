@@ -32,7 +32,8 @@ export interface IJupyterVariables {
     getAllVariableDiscriptions(
         kernel: IKernel,
         parent: IVariableDescription | undefined,
-        token?: CancellationToken
+        startIndex: number,
+        token: CancellationToken
     ): Promise<IVariableDescription[]>;
     getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse>;
     getFullVariable(
@@ -102,6 +103,7 @@ export interface IKernelVariableRequester {
     getAllVariableDiscriptions(
         kernel: IKernel,
         parent: IVariableDescription | undefined,
+        startIndex: number,
         token?: CancellationToken
     ): Promise<IVariableDescription[]>;
     getVariableNamesAndTypesFromKernel(kernel: IKernel, token?: CancellationToken): Promise<IJupyterVariable[]>;

@@ -151,6 +151,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     public async getAllVariableDiscriptions(
         kernel: IKernel,
         parent: IVariableDescription | undefined,
+        startIndex: number,
         token?: CancellationToken
     ): Promise<IVariableDescription[]> {
         if (!kernel.session) {
@@ -160,7 +161,8 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const { code, cleanupCode, initializeCode } =
             await this.varScriptGenerator.generateCodeToGetAllVariableDescriptions({
                 isDebugging: false,
-                parent
+                parent,
+                startIndex
             });
 
         const results = await safeExecuteSilently(
