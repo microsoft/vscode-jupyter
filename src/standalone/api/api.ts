@@ -9,7 +9,7 @@ import { CodespaceExtensionId, isTestExecution, JVSC_EXTENSION_ID, Telemetry } f
 import { IDisposable, IExtensionContext, IExtensions } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
-import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { IControllerRegistration, ILocalPythonNotebookKernelSourceSelector } from '../../notebooks/controllers/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { isRemoteConnection } from '../../kernels/types';
 import {
@@ -24,6 +24,7 @@ import { stripCodicons } from '../../platform/common/helpers';
 import { getKernelsApi } from '../../kernels/api/api';
 import { jupyterServerUriToCollection } from '../../codespaces';
 import { isWeb } from '../../platform/common/utils/misc';
+import { EnvironmentPath } from '@vscode/python-extension';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -191,20 +192,29 @@ export function buildApi(
             await selector.addJupyterServer({ id: providerId, handle, extensionId });
             await controllerCreatedPromise;
         },
-        openNotebook: async (uri: Uri, kernelOrPythonEnvId: string) => {
+        openNotebook: async (uri: Uri, kernelOrPythonEnvId: string | EnvironmentPath) => {
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
                 clientExtId: extensions.determineExtensionFromCallStack().extensionId,
                 pemUsed: 'openNotebook'
             });
             const controllers = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-            let id = controllers.all.find((controller) => controller.id === kernelOrPythonEnvId)?.id;
-            if (!id && !isWeb()) {
+            const kernelId = typeof kernelOrPythonEnvId === 'string' ? kernelOrPythonEnvId : undefined;
+            const pythonEnv = typeof kernelOrPythonEnvId === 'string' ? undefined : kernelOrPythonEnvId;
+            let id = kernelId && controllers.all.find((controller) => controller.id === kernelOrPythonEnvId)?.id;
+            if (!id && pythonEnv && !isWeb()) {
                 // Look for a python environment with this id.
                 id = controllers.all.find(
                     (controller) =>
-                        controller.kind === 'startUsingPythonInterpreter' &&
-                        controller.interpreter.id === kernelOrPythonEnvId
+                        controller.kind === 'startUsingPythonInterpreter' && controller.interpreter.id === pythonEnv.id
                 )?.id;
+                if (!id) {
+                    // Controller has not yet been created.
+                    const selector = serviceContainer.get<ILocalPythonNotebookKernelSourceSelector>(
+                        ILocalPythonNotebookKernelSourceSelector
+                    );
+                    const connection = await selector.getKernelConnection(pythonEnv);
+                    id = connection && controllers.all.find((controller) => controller.id === connection?.id)?.id;
+                }
             }
             if (!id) {
                 throw new Error(`Kernel ${kernelOrPythonEnvId} not found.`);
