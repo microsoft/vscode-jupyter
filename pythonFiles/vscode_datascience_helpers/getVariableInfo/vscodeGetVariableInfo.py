@@ -5,7 +5,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
     maxStringLength = 50
     collectionTypes = ["list", "tuple", "set"]
-    maxItems = 100
+    arrayPageSize = 50
 
     def truncateString(string):
         if _VSCODE_builtins.len(string) > maxStringLength:
@@ -110,7 +110,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         if "count" in parentInfo:
             if parentInfo["count"] > 0:
                 lastItem = _VSCODE_builtins.min(
-                    parentInfo["count"], startIndex + maxItems
+                    parentInfo["count"], startIndex + arrayPageSize
                 )
                 range = _VSCODE_builtins.range(startIndex, lastItem)
                 children = [

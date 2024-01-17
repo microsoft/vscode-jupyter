@@ -8,11 +8,11 @@ export class VariableResultCache {
     private cache = new Map<string, VariablesResult[]>();
     private executionCount = 0;
 
-    getCacheKey(notebookUri: string, parent: Variable | undefined): string {
+    getCacheKey(notebookUri: string, parent: Variable | undefined, start: number): string {
         let parentKey = '';
         const parentDescription = parent as IVariableDescription;
         if (parentDescription) {
-            parentKey = `${parentDescription.name}.${parentDescription.propertyChain.join('.')}`;
+            parentKey = `${parentDescription.name}.${parentDescription.propertyChain.join('.')}[[${start}`;
         }
         return `${notebookUri}:${parentKey}`;
     }

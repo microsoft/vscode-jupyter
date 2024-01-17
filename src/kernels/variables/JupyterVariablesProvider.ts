@@ -28,7 +28,7 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
     async *provideVariables(
         notebook: NotebookDocument,
         parent: Variable | undefined,
-        _kind: NotebookVariablesRequestKind,
+        kind: NotebookVariablesRequestKind,
         start: number,
         token: CancellationToken
     ): AsyncIterable<VariablesResult> {
@@ -40,36 +40,53 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
             return;
         }
 
-        const arr = [];
-        for (let i = 0; i < 10000; i++) {
-            arr.push(i);
-        }
-
         const executionCount = this.kernelProvider.getKernelExecution(kernel).executionCount;
 
-        const cacheKey = this.variableResultCache.getCacheKey(notebook.uri.toString(), parent);
+        const cacheKey = this.variableResultCache.getCacheKey(notebook.uri.toString(), parent, start);
         let results = this.variableResultCache.getResults(executionCount, cacheKey);
 
-        if (!results) {
-            if (parent) {
-                if ('getChildren' in parent && typeof parent.getChildren === 'function') {
-                    const variables = (await parent.getChildren(start, token)) as IVariableDescription[];
-                    results = variables.map((variable) => this.createVariableResult(variable, kernel));
-                }
+        if (parent) {
+            const parentDescription = parent as IVariableDescription;
+            if (!results && parentDescription.getChildren) {
+                const variables = await parentDescription.getChildren(start, token);
+                results = variables.map((variable) => this.createVariableResult(variable, kernel));
+                this.variableResultCache.setResults(executionCount, cacheKey, results);
             } else {
+                // no cached results and no way to get children, so return empty
+                return;
+            }
+
+            for (const result of results) {
+                yield result;
+            }
+
+            // check if we have more indexed children to return
+            if (
+                kind === 2 &&
+                parentDescription.count &&
+                results.length > 0 &&
+                parentDescription.count > start + results.length
+            ) {
+                for await (const result of this.provideVariables(
+                    notebook,
+                    parent,
+                    kind,
+                    start + results.length,
+                    token
+                )) {
+                    yield result;
+                }
+            }
+        } else {
+            if (!results) {
                 const variables = await this.variables.getAllVariableDiscriptions(kernel, undefined, start, token);
                 results = variables.map((variable) => this.createVariableResult(variable, kernel));
+                this.variableResultCache.setResults(executionCount, cacheKey, results);
             }
-        }
 
-        if (!results) {
-            return;
-        }
-
-        this.variableResultCache.setResults(executionCount, cacheKey, results);
-
-        for (const result of results) {
-            yield result;
+            for (const result of results) {
+                yield result;
+            }
         }
     }
 

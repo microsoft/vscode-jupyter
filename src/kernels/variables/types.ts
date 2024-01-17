@@ -93,8 +93,10 @@ export interface IVariableDescription extends Variable {
     propertyChain: (string | number)[];
     /** The number of children for collection types */
     count?: number;
-    /** names of children */
+    /** Names of children */
     properties?: string[];
+    /** A method to get the children of this variable */
+    getChildren?: (start: number, token: CancellationToken) => Promise<IVariableDescription[]>;
 }
 
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
