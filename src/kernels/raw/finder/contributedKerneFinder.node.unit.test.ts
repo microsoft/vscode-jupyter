@@ -10,7 +10,6 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { InterpreterService } from '../../../platform/api/pythonApi';
 import {
@@ -58,7 +57,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
 [false, true].forEach((isWindows) => {
     suite(`Contributed Local Kernel Spec Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let kernelFinder: KernelFinder;
-        let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
         let fs: FileSystem;
         let extensionChecker: IPythonExtensionChecker;
@@ -96,7 +94,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             cancelToken = new CancellationTokenSource();
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
-            interpreterService = mock(InterpreterService);
+            const interpreterService = mock(InterpreterService);
             onDidChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();
             onDidChangeInterpreters = new EventEmitter<PythonEnvironment[]>();
             onDidChangeInterpreterStatus = new EventEmitter<void>();
