@@ -317,13 +317,13 @@ jobs:
             tags: '^[^@]+$|@mandatory'
             os: windows-latest
             ipywidgetsVersion: ''
-          IPyWidgets 8
+          # IPyWidgets 8
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
             tags: '@widgets'
             os: ubuntu-latest
-          # ipywidgetsVersion: '8'
+            ipywidgetsVersion: '8'
           - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
