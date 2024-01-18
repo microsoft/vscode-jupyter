@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceError, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../../platform/logging';
 import { WidgetCDNs, IConfigurationService } from '../../../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
@@ -89,7 +89,7 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
                 found = source;
                 break;
             } else {
-                traceInfoIfCI(
+                traceWarning(
                     `Widget Script Source not found for ${moduleName}@${moduleVersion} from ${scriptProvider.id}`
                 );
             }
