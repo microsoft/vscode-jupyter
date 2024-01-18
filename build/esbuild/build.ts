@@ -336,7 +336,14 @@ async function buildAll() {
                     });
                 })
         );
-        builders.push(copyJQuery(), copyAminya(), copyZeroMQ(), copyZeroMQOld(), buildVSCodeJsonRPC());
+        builders.push(
+            copyJQuery(),
+            copyAminya(),
+            copyZeroMQ(),
+            copyZeroMQOld(),
+            copyNodeGypBuild(),
+            buildVSCodeJsonRPC()
+        );
     }
 
     await Promise.all(builders);
@@ -383,6 +390,13 @@ async function copyZeroMQOld() {
         recursive: true,
         filter: (src) => shouldCopyFileFromZmqFolder(src)
     });
+}
+async function copyNodeGypBuild() {
+    const source = path.join(extensionFolder, 'node_modules', 'node-gyp-build');
+    const target = path.join(extensionFolder, 'dist', 'node_modules', 'node-gyp-build');
+    await fs.ensureDir(path.dirname(target));
+    await fs.ensureDir(target);
+    await fs.copy(source, target, { recursive: true });
 }
 async function buildVSCodeJsonRPC() {
     const source = path.join(extensionFolder, 'node_modules', 'vscode-jsonrpc');
