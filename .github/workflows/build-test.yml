@@ -81,7 +81,7 @@ jobs:
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -116,19 +116,19 @@ jobs:
         run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Cache pip files
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}
 
       - name: Cache npm files
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Cache the out/ directory
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
@@ -197,7 +197,7 @@ jobs:
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.os != 'windows-latest'
         with:
           path: ~/.npm
@@ -211,7 +211,7 @@ jobs:
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
       - name: Cache npm on windows
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.os == 'windows-latest'
         with:
           path: ${{ steps.npm-cache.outputs.dir }}
@@ -222,7 +222,7 @@ jobs:
       - name: Cache compiled TS files
         # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
         id: out-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
@@ -414,7 +414,7 @@ jobs:
       # Cache Python Dependencies.
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~/.cache/pip
@@ -423,7 +423,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
       - name: Cache pip on linux
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
         with:
           path: ~/.cache/pip
@@ -432,7 +432,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       - name: Cache pip on mac
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~/Library/Caches/pip
@@ -441,7 +441,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
       - name: Cache pip on mac
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
         with:
           path: ~/Library/Caches/pip
@@ -450,7 +450,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       - name: Cache pip on windows
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~\AppData\Local\pip\Cache
@@ -459,7 +459,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
       - name: Cache pip on windows
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
         with:
           path: ~\AppData\Local\pip\Cache
@@ -469,7 +469,7 @@ jobs:
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.os != 'windows-latest'
         with:
           path: ~/.npm
@@ -483,7 +483,7 @@ jobs:
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
       - name: Cache npm on windows
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.os == 'windows-latest'
         with:
           path: ${{ steps.npm-cache.outputs.dir }}
@@ -827,7 +827,7 @@ jobs:
 
       - name: Cache compiled TS files
         id: out-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
