@@ -97,19 +97,13 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
         this.sendTelemetryForWidgetModule(moduleName, moduleVersion, '', found.source).catch(noop);
         if (!found.scriptUri) {
             traceError(
-                `Script source for Widget ${moduleName}@${moduleVersion} not found in ${
-                    this.scriptProviders.map((item) => item.id).join(', ') || 'None'
-                } (${this.scriptProviders.map((item) => (item as Object).constructor.name).join(', ')}) (${
-                    this.scriptProviders.length
-                }) providers & ${this.isDisposed ? 'Disposed' : 'Not Disposed'}`
+                `Script source for Widget ${moduleName}@${moduleVersion} not found in ${this.scriptProviders
+                    .map((item) => item.id)
+                    .join(', ')}`
             );
         } else {
             traceVerbose(
-                `Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source} and ${
-                    found.scriptUri
-                }, from ${this.scriptProviders.map((item) => item.id).join(', ') || 'None'} (${
-                    this.scriptProviders.length
-                }) providers`
+                `Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source} and ${found.scriptUri}`
             );
         }
         return found;
