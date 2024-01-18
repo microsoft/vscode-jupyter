@@ -2386,7 +2386,7 @@
         "@vscode/dts": "^0.4.0",
         "@vscode/test-electron": "^2.3.8",
         "@vscode/test-web": "^0.0.44",
-        "@vscode/zeromq": "^0.2.0",
+        "@vscode/zeromq": "^0.2.1",
         "acorn": "^8.9.0",
         "babel-polyfill": "^6.26.0",
         "bufferutil": "^4.0.6",
