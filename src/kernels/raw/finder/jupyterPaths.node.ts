@@ -33,6 +33,7 @@ import { IPythonExecutionFactory } from '../../../platform/interpreter/types.nod
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { ResourceMap, ResourceSet } from '../../../platform/common/utils/map';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -61,7 +62,8 @@ export class JupyterPaths {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystemNode) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
+        @inject(IInterpreterService) private readonly interpreters: IInterpreterService
     ) {
         this.envVarsProvider.onDidEnvironmentVariablesChange(
             () => {
@@ -213,6 +215,12 @@ export class JupyterPaths {
         }
 
         // 3. Add the paths based on user and env data directories
+        if (interpreter && !interpreter.sysPrefix) {
+            traceWarning(`sysPrefix was not set for ${interpreter.id}`);
+            const details = await this.interpreters.getInterpreterDetails(interpreter.uri);
+            interpreter.sysPrefix = details?.sysPrefix || interpreter.sysPrefix;
+            traceInfoIfCI(`sysPrefix after getting details ${interpreter.sysPrefix}`);
+        }
         const possibleEnvJupyterPath = interpreter?.sysPrefix
             ? Uri.joinPath(Uri.file(interpreter.sysPrefix), 'share', 'jupyter')
             : undefined;
