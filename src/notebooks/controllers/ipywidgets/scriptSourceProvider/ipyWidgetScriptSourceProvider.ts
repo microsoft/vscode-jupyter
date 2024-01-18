@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../../platform/logging';
+import { traceError, traceVerbose, traceWarning } from '../../../../platform/logging';
 import { WidgetCDNs, IConfigurationService } from '../../../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
