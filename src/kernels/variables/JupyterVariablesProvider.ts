@@ -51,7 +51,7 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
                 const variables = await parentDescription.getChildren(start, token);
                 results = variables.map((variable) => this.createVariableResult(variable, kernel));
                 this.variableResultCache.setResults(executionCount, cacheKey, results);
-            } else {
+            } else if (!results) {
                 // no cached results and no way to get children, so return empty
                 return;
             }
