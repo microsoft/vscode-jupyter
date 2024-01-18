@@ -155,6 +155,9 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             const pythonExecFactory = mock<IPythonExecutionFactory>();
             pythonExecService = mock<IPythonExecutionService>();
             (instance(pythonExecService) as any).then = undefined;
+            const interpreterService = mock<IInterpreterService>();
+            when(interpreterService.getInterpreterDetails(anything())).thenResolve();
+            when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve();
             when(pythonExecFactory.create(anything())).thenResolve(instance(pythonExecService));
             jupyterPaths = new JupyterPaths(
                 instance(platformService),
@@ -163,7 +166,8 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                 instance(memento),
                 instance(fs),
                 instance(context),
-                instance(pythonExecFactory)
+                instance(pythonExecFactory),
+                instance(interpreterService)
             );
 
             const kernelSpecsBySpecFile = new Map<string, KernelSpec.ISpecModel>();
