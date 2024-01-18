@@ -33,6 +33,7 @@ import {
 } from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { generateIdFromRemoteProvider } from './jupyter/jupyterUtils';
+import { traceInfoIfCI } from '../platform/logging';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -286,6 +287,11 @@ export class PythonKernelConnectionMetadata {
         };
     }
     public updateInterpreter(interpreter: PythonEnvironment) {
+        if (!interpreter.sysPrefix) {
+            traceInfoIfCI(
+                `WARNING: Interpreter ${interpreter.id} has no sysPrefix and existing item ${this.interpreter.sysPrefix} will be blown away`
+            );
+        }
         Object.assign(this.interpreter, interpreter);
     }
     public static fromJSON(options: Record<string, unknown> | PythonKernelConnectionMetadata) {
