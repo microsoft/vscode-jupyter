@@ -575,7 +575,7 @@ suite('Kernel Execution @kernelCore', function () {
             )
         ]);
     });
-    test.skip('Messages from background threads can come in other cell output', async function () {
+    test('Messages from background threads can come in other cell output', async function () {
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
         // If you have a background thread in cell 1 & then immediately after that you have a cell 2.
         // The background messages (output) from cell one will end up in cell 2.
@@ -617,7 +617,10 @@ suite('Kernel Execution @kernelCore', function () {
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                () => `'iteration 9' and 'HELLO' not in second cell Output => '${getTextOutputValues(cell2)}'`
+                () =>
+                    `'iteration 9' and 'HELLO' not in second cell Output => '${getTextOutputValues(
+                        cell2
+                    )}', output in first cell => '${getTextOutputValues(cell1)}'`
             )
         ]);
     });
