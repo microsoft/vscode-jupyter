@@ -216,13 +216,16 @@ export class JupyterPaths {
         const possibleEnvJupyterPath = interpreter?.sysPrefix
             ? Uri.joinPath(Uri.file(interpreter.sysPrefix), 'share', 'jupyter')
             : undefined;
-
+        traceInfoIfCI(
+            `Possible Jupyter Data Dir from Interpreter ${possibleEnvJupyterPath?.fsPath} based on sysPrefix ${interpreter?.sysPrefix}`
+        );
         const systemDataDirectories = this.getSystemJupyterPaths();
         const envJupyterPath = possibleEnvJupyterPath
             ? new ResourceSet(systemDataDirectories).has(possibleEnvJupyterPath)
                 ? undefined
                 : possibleEnvJupyterPath
             : undefined;
+        traceInfoIfCI(`Possible Jupyter Data Dir from Interpreter 2 ${envJupyterPath?.fsPath}`);
         const userDataDirectory = this.getJupyterDataDir();
         // If the JUPYTER_PREFER_ENV_PATH environment variable is set, the environment-level
         // directories will have priority over user-level directories.
@@ -252,6 +255,7 @@ export class JupyterPaths {
         });
 
         const sortedEntries = Array.from(dataDir.entries()).sort((a, b) => a[1] - b[1]);
+        traceInfoIfCI(`FInal Jupyter Data Dir ${sortedEntries.map(([uri]) => uri.fsPath).join(', ')}`);
         return sortedEntries.map((item) => item[0]);
     }
     private getJupyterConfigDir() {
