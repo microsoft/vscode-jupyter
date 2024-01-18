@@ -190,16 +190,11 @@ export class JupyterPaths {
                 });
                 const pythonFile = Uri.joinPath(this.context.extensionUri, 'pythonFiles', 'printJupyterDataDir.py');
                 const result = await factory.exec([pythonFile.fsPath], {});
-                traceInfoIfCI(`Got a stdoutput/stderr for Jupyter Data Dir ${result.stdout} & ${result.stderr}`);
                 if (result.stdout.trim().length) {
                     const sitePath = Uri.file(result.stdout.trim());
-                    traceInfoIfCI(`Got a stdoutput for Jupyter Data Dir ${sitePath.fsPath}`);
                     if (await this.fs.exists(sitePath)) {
                         if (!dataDir.has(sitePath)) {
-                            traceInfoIfCI(`Added Jupyter Data Dir ${sitePath.fsPath}`);
                             dataDir.set(sitePath, dataDir.size);
-                        } else {
-                            traceInfoIfCI(`Duplicate not added, Jupyter Data Dir ${sitePath.fsPath}`);
                         }
                     } else {
                         traceWarning(`Got a non-existent Jupyter Data Dir ${sitePath}`);
@@ -210,8 +205,6 @@ export class JupyterPaths {
             } catch (ex) {
                 traceError(`Failed to get DataDir based on ENABLE_USER_SITE for ${interpreter.displayName}`, ex);
             }
-        } else {
-            traceInfoIfCI(`Not Getting Jupyter Data Dir for Interpreter`);
         }
 
         // 3. Add the paths based on user and env data directories
