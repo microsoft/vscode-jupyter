@@ -5,7 +5,7 @@ import { Uri } from 'vscode';
 import { splitLines, trimQuotes } from '../../../../platform/common/helpers';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../../platform/common/types';
-import { traceError, traceInfoIfCI, traceWarning } from '../../../../platform/logging';
+import { traceError, traceWarning } from '../../../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { IKernel, isLocalConnection } from '../../../../kernels/types';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
@@ -205,10 +205,6 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
         const widgetConfigs = await Promise.all(
             entryPoints.map((entry) => this.getConfigFromWidget(baseUrl, entry.uri, entry.widgetFolderName))
         );
-        traceInfoIfCI(`Widget entry points ${JSON.stringify(entryPoints)}`);
-        traceInfoIfCI(
-            `Widget Configs for kernel ${this.kernel.kernelConnectionMetadata.id} are ${JSON.stringify(widgetConfigs)}`
-        );
         const config = widgetConfigs.reduce((prev, curr) => Object.assign(prev || {}, curr), {});
         // Exclude entries that are not required (widgets that we have already bundled with our code).
         if (config && Object.keys(config).length) {
@@ -216,12 +212,6 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
             delete config['@jupyter-widgets/base'];
             delete config['@jupyter-widgets/controls'];
             delete config['@jupyter-widgets/output'];
-        } else {
-            traceInfoIfCI(
-                `No config, entryPoints = ${JSON.stringify(entryPoints)}, widgetConfigs = ${JSON.stringify(
-                    widgetConfigs
-                )}`
-            );
         }
         sendTelemetryEvent(
             Telemetry.DiscoverIPyWidgetNamesPerf,

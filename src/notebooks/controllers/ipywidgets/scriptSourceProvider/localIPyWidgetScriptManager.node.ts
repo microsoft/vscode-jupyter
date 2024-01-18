@@ -12,7 +12,7 @@ import { IKernel } from '../../../../kernels/types';
 import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, INbExtensionsPathProvider } from '../types';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
-import { traceInfoIfCI } from '../../../../platform/logging';
+import { traceWarning } from '../../../../platform/logging';
 
 type KernelConnectionId = string;
 /**
@@ -70,7 +70,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
             const stopWatch = new StopWatch();
             this.sourceNbExtensionsPath = await this.nbExtensionsPathProvider.getNbExtensionsParentPath(this.kernel);
             if (!this.sourceNbExtensionsPath) {
-                traceInfoIfCI(`No nbextensions folder found for kernel ${this.kernel.kernelConnectionMetadata.id}`);
+                traceWarning(`No nbextensions folder found for kernel ${this.kernel.kernelConnectionMetadata.id}`);
                 return;
             }
             const kernelHash = await getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
@@ -85,7 +85,6 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
                 this.fs.createDirectory(targetNbExtensions)
             ]);
             const nbExtensionFolders = jupyterDataDirectories.map((dataDir) => Uri.joinPath(dataDir, 'nbextensions'));
-            traceInfoIfCI(`Local nbExtensionFolders ${nbExtensionFolders.map((p) => p.toString()).join(', ')}`);
             // The nbextensions folder is sorted in order of priority.
             // Hence when copying, copy the lowest priority nbextensions folder first.
             // This way contents get overwritten with contents of highest priority (thereby adhering to the priority).

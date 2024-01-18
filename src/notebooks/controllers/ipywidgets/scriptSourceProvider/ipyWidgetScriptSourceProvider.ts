@@ -44,12 +44,6 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
     ) {
         super();
         this.scriptProviders = this.sourceProviderFactory.getProviders(this.kernel, this.localResourceUriConverter);
-        traceInfoIfCI(
-            `Widget Script Providers: ${this.scriptProviders
-                .map((item) => (item as Object).constructor.name)
-                .join(', ')}`
-        );
-        traceInfoIfCI(`Widget Script Providers: ${this.scriptProviders.map((item) => item.id).join(', ')}`);
         this.scriptProviders.forEach((c) => this._register(c));
         this.monitorKernel();
     }

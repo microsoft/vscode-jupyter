@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { IKernel } from '../../../../kernels/types';
-import { traceInfoIfCI } from '../../../../platform/logging';
 import {
     IIPyWidgetScriptManagerFactory,
     ILocalResourceUriConverter,
@@ -35,7 +34,6 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
     public async getWidgetScriptSources(): Promise<Readonly<WidgetScriptSource[]>> {
         const scriptManager = this.scriptManagerFactory.getOrCreate(this.kernel);
         const widgetModuleMappings = await scriptManager.getWidgetModuleMappings();
-        traceInfoIfCI(`Widget Module mappings for Local Widget Scripts is ${JSON.stringify(widgetModuleMappings)}`);
         if (widgetModuleMappings && Object.keys(widgetModuleMappings).length) {
             const sources = await Promise.all(
                 Object.keys(widgetModuleMappings).map(async (moduleName) => {
@@ -45,14 +43,8 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
                     return <WidgetScriptSource>{ moduleName, scriptUri, source: 'local' };
                 })
             );
-            traceInfoIfCI(
-                `Local Widget scripts found for kernel ${this.kernel.kernelConnectionMetadata.id} are ${JSON.stringify(
-                    sources
-                )}`
-            );
             return sources;
         }
-        traceInfoIfCI(`No Local widget scripts found for kernel ${this.kernel.kernelConnectionMetadata.id}`);
         return [];
     }
     public async getBaseUrl() {
