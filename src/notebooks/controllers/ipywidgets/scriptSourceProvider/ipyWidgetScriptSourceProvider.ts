@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceError, traceInfo } from '../../../../platform/logging';
+import { traceError, traceVerbose, traceWarning } from '../../../../platform/logging';
 import { WidgetCDNs, IConfigurationService } from '../../../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
@@ -27,7 +27,7 @@ import { noop } from '../../../../platform/common/utils/misc';
  * If user has not configured antying, user will be presented with a prompt.
  */
 export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWidgetScriptSourceProvider {
-    id: 'all';
+    id = 'all';
     private readonly scriptProviders: IWidgetScriptSourceProvider[];
     private get configuredScriptSources(): readonly WidgetCDNs[] {
         const settings = this.configurationSettings.getSettings(undefined);
@@ -88,17 +88,21 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
             if (source.scriptUri) {
                 found = source;
                 break;
+            } else {
+                traceWarning(
+                    `Widget Script Source not found for ${moduleName}@${moduleVersion} from ${scriptProvider.id}`
+                );
             }
         }
         this.sendTelemetryForWidgetModule(moduleName, moduleVersion, '', found.source).catch(noop);
         if (!found.scriptUri) {
             traceError(
-                `Script source for Widget ${moduleName}@${moduleVersion} not found in ${
-                    this.scriptProviders.map((item) => item.id).join(', ') || 'None'
-                } providers & ${this.isDisposed ? 'Disposed' : 'Not Disposed'}`
+                `Script source for Widget ${moduleName}@${moduleVersion} not found in ${this.scriptProviders
+                    .map((item) => item.id)
+                    .join(', ')}`
             );
         } else {
-            traceInfo(
+            traceVerbose(
                 `Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source} and ${found.scriptUri}`
             );
         }

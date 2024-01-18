@@ -12,6 +12,7 @@ import { IKernel } from '../../../../kernels/types';
 import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, INbExtensionsPathProvider } from '../types';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
+import { traceWarning } from '../../../../platform/logging';
 
 type KernelConnectionId = string;
 /**
@@ -69,6 +70,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
             const stopWatch = new StopWatch();
             this.sourceNbExtensionsPath = await this.nbExtensionsPathProvider.getNbExtensionsParentPath(this.kernel);
             if (!this.sourceNbExtensionsPath) {
+                traceWarning(`No nbextensions folder found for kernel ${this.kernel.kernelConnectionMetadata.id}`);
                 return;
             }
             const kernelHash = await getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);

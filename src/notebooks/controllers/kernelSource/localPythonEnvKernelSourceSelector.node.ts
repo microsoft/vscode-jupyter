@@ -224,11 +224,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         });
 
         const existingInterpreterInfo = this._kernels.get(e.id);
-        if (existingInterpreterInfo) {
-            existingInterpreterInfo.updateInterpreter(result.interpreter);
-            this._kernels.set(e.id, Object.assign(existingInterpreterInfo, result));
-            this._onDidChangeKernels.fire({});
-        } else {
+        if (!existingInterpreterInfo) {
             this._kernels.set(e.id, result);
             this._onDidChangeKernels.fire({});
         }

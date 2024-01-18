@@ -556,8 +556,6 @@ jobs:
           python -m jupyter nbextension uninstall --sys-prefix --py ipympl
           sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
-        # This step is slow.
-
       # Run npm install (we need chrome to get downloaded)
       - name: npm ci
         if: matrix.jupyterConnection == 'web'

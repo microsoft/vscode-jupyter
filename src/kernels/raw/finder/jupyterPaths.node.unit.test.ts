@@ -19,6 +19,7 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import * as path from '../../../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../test/constants.node';
 import { uriEquals } from '../../../test/datascience/helpers';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
 suite('Jupyter Paths', () => {
     let disposables: IDisposable[] = [];
@@ -64,6 +65,8 @@ suite('Jupyter Paths', () => {
         context = mock<ExtensionContext>();
         when(context.extensionUri).thenReturn(extensionUri);
         when(envVarsProvider.getEnvironmentVariables(anything(), anything())).thenResolve(process.env);
+        const interpreterService = mock<IInterpreterService>();
+        when(interpreterService.getInterpreterDetails(anything())).thenResolve();
         jupyterPaths = new JupyterPaths(
             instance(platformService),
             instance(envVarsProvider),
@@ -71,7 +74,8 @@ suite('Jupyter Paths', () => {
             instance(memento),
             instance(fs),
             instance(context),
-            instance(pythonExecFactory)
+            instance(pythonExecFactory),
+            instance(interpreterService)
         );
         delete process.env['JUPYTER_PATH'];
         delete process.env['APPDATA'];
