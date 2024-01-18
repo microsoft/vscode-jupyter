@@ -575,52 +575,6 @@ suite('Kernel Execution @kernelCore', function () {
             )
         ]);
     });
-    test.skip('Messages from background threads can come in other cell output', async function () {
-        // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
-        // If you have a background thread in cell 1 & then immediately after that you have a cell 2.
-        // The background messages (output) from cell one will end up in cell 2.
-        const cell1 = await notebook.appendCodeCell(
-            dedent`
-        import time
-        import threading
-        from IPython.display import display
-
-        def work():
-            for i in range(10):
-                print('iteration %d'%i)
-                time.sleep(0.1)
-
-        def spawn():
-            thread = threading.Thread(target=work)
-            thread.start()
-            time.sleep(0.3)
-
-        spawn()
-        print('main thread started')
-        `
-        );
-        const cell2 = await notebook.appendCodeCell('print("HELLO")');
-
-        await Promise.all([
-            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))),
-            waitForCondition(
-                () => getTextOutputValues(cell1).includes('main thread started'),
-                defaultNotebookTestTimeout,
-                () => `'main thread started' not in output => '${getTextOutputValues(cell1)}'`
-            ),
-            waitForCondition(
-                async () => {
-                    const secondCellOutput = getTextOutputValues(cell2);
-                    expect(secondCellOutput).to.include('HELLO');
-                    // The last output from the first cell should end up in the second cell.
-                    expect(secondCellOutput).to.include('iteration 9');
-                    return true;
-                },
-                defaultNotebookTestTimeout,
-                () => `'iteration 9' and 'HELLO' not in second cell Output => '${getTextOutputValues(cell2)}'`
-            )
-        ]);
-    });
     test('Stderr & stdout outputs should go into separate outputs', async function () {
         const cell = await notebook.appendCodeCell(
             dedent`
