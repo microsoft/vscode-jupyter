@@ -14,6 +14,7 @@ suite('JupyterVariablesProvider', () => {
     let provider: JupyterVariablesProvider;
     const notebook = mock<NotebookDocument>();
     const cancellationToken = new CancellationTokenSource().token;
+    const kernel = mock<IKernel>();
 
     const objectVariable: IVariableDescription = {
         name: 'myObject',
@@ -69,14 +70,12 @@ suite('JupyterVariablesProvider', () => {
         variables = mock<IJupyterVariables>();
         kernelProvider = mock<IKernelProvider>();
         provider = new JupyterVariablesProvider(instance(variables), instance(kernelProvider));
+        when(kernelProvider.get(anything())).thenReturn(instance(kernel));
     });
 
     test('provideVariables without parent should yield variables', async () => {
-        const kernel = mock<IKernel>();
-
-        when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        setVariablesForParent(undefined, [objectVariable]);
         when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
+        setVariablesForParent(undefined, [objectVariable]);
 
         const results = await provideVariables(undefined);
 
@@ -86,9 +85,6 @@ suite('JupyterVariablesProvider', () => {
     });
 
     test('provideVariables with a parent should call get children correctly', async () => {
-        const kernel = mock<IKernel>();
-
-        when(kernelProvider.get(anything())).thenReturn(instance(kernel));
         when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
 
         const listVariableItems = [0, 1, 2].map(createListItem);
@@ -111,7 +107,7 @@ suite('JupyterVariablesProvider', () => {
     });
 
     test('All indexed variables should be returned when requested', async () => {
-        const kernel = mock<IKernel>();
+        when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
 
         const listVariable: IVariableDescription = {
             name: 'myList',
@@ -120,9 +116,6 @@ suite('JupyterVariablesProvider', () => {
             root: 'myList',
             propertyChain: []
         };
-
-        when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
 
         const firstPage = [0, 1, 2].map(createListItem);
         const secondPage = [3, 4, 5].map(createListItem);
@@ -146,7 +139,7 @@ suite('JupyterVariablesProvider', () => {
     });
 
     test('Getting less indexed items than the specified count is handled', async () => {
-        const kernel = mock<IKernel>();
+        when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
 
         const listVariable: IVariableDescription = {
             name: 'myList',
@@ -155,9 +148,6 @@ suite('JupyterVariablesProvider', () => {
             root: 'myList',
             propertyChain: []
         };
-
-        when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
 
         const firstPage = [0, 1, 2].map(createListItem);
         const secondPage = [3, 4].map(createListItem);
@@ -182,19 +172,16 @@ suite('JupyterVariablesProvider', () => {
     });
 
     test('Getting variables again with new execution count should get updated variables', async () => {
-        const kernel = mock<IKernel>();
+        when(kernelProvider.getKernelExecution(anything()))
+            .thenReturn({ executionCount: 1 } as any)
+            .thenReturn({ executionCount: 2 } as any);
+
         const intVariable: IVariableDescription = {
             name: 'myInt',
             value: '1',
             root: '',
             propertyChain: []
         };
-
-        when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        when(kernelProvider.getKernelExecution(anything()))
-            .thenReturn({ executionCount: 1 } as any)
-            .thenReturn({ executionCount: 2 } as any);
-
         setVariablesForParent(undefined, [intVariable], [{ ...intVariable, value: '2' }]);
 
         const first = await provideVariables(undefined);
@@ -207,16 +194,14 @@ suite('JupyterVariablesProvider', () => {
     });
 
     test('Getting variables again with same execution count should not make another call', async () => {
-        const kernel = mock<IKernel>();
+        when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
+
         const intVariable: IVariableDescription = {
             name: 'myInt',
             value: '1',
             root: '',
             propertyChain: []
         };
-
-        when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
 
         setVariablesForParent(undefined, [intVariable]);
 
@@ -228,5 +213,45 @@ suite('JupyterVariablesProvider', () => {
         assert.equal(first[0].variable.value, '1');
 
         verify(variables.getAllVariableDiscriptions(anything(), anything(), anything(), anything())).once();
+    });
+
+    test('Cache pages of indexed children correctly', async () => {
+        when(kernelProvider.getKernelExecution(anything())).thenReturn({ executionCount: 1 } as any);
+
+        const listVariable: IVariableDescription = {
+            name: 'myList',
+            value: '[...]',
+            count: 6,
+            root: 'myList',
+            propertyChain: []
+        };
+
+        const firstPage = [0, 1, 2].map(createListItem);
+        const secondPage = [3, 4, 5].map(createListItem);
+        setVariablesForParent(undefined, [listVariable]);
+        setVariablesForParent(objectContaining({ root: 'myList', propertyChain: [] }), firstPage, undefined, 0);
+        setVariablesForParent(
+            objectContaining({ root: 'myList', propertyChain: [] }),
+            secondPage,
+            undefined,
+            firstPage.length
+        );
+
+        const rootVariable = (await provideVariables(undefined))[0];
+        await provideVariables(rootVariable!.variable, 2);
+
+        // once for the parent and once for each of the two pages of list items
+        verify(variables.getAllVariableDiscriptions(anything(), anything(), anything(), anything())).thrice();
+
+        const listItemResult = await provideVariables(rootVariable!.variable, 2);
+
+        assert.equal(listItemResult.length, 6, 'full list of items should be returned');
+        listItemResult.forEach((item, index) => {
+            assert.equal(item.variable.name, index.toString());
+            assert.equal(item.variable.value, `value${index}`);
+        });
+
+        // no extra calls for getting the children again
+        verify(variables.getAllVariableDiscriptions(anything(), anything(), anything(), anything())).thrice();
     });
 });
