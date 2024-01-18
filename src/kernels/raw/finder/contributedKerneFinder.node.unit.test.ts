@@ -125,6 +125,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             when(interpreterService.resolvedEnvironments).thenReturn(Array.from(distinctInterpreters));
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve();
+            when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve();
             platformService = mock(PlatformService);
             when(platformService.isWindows).thenReturn(isWindows);
             when(platformService.isLinux).thenReturn(!isWindows);
@@ -155,9 +156,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             const pythonExecFactory = mock<IPythonExecutionFactory>();
             pythonExecService = mock<IPythonExecutionService>();
             (instance(pythonExecService) as any).then = undefined;
-            const interpreterService = mock<IInterpreterService>();
-            when(interpreterService.getInterpreterDetails(anything())).thenResolve();
-            when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve();
             when(pythonExecFactory.create(anything())).thenResolve(instance(pythonExecService));
             jupyterPaths = new JupyterPaths(
                 instance(platformService),
