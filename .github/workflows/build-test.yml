@@ -563,7 +563,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.tags == '@widgets'
         run: python -c "import sys;import os;from pathlib import Path;result = list(Path(os.path.join(sys.exec_prefix,'share','jupyter','nbextensions')).rglob('*.*'));print(result)"
 
-
       # Run npm install (we need chrome to get downloaded)
       - name: npm ci
         if: matrix.jupyterConnection == 'web'
