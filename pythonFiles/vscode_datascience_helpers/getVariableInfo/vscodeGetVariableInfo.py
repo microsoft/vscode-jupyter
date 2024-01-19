@@ -15,7 +15,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
     def getValue(variable, nested=False):
         if _VSCODE_builtins.type(variable) == _VSCODE_builtins.str:
-            return truncateString(variable)
+            return f"'{truncateString(variable)}'"
         elif (
             _VSCODE_builtins.type(variable) == _VSCODE_builtins.int
             or _VSCODE_builtins.type(variable) == _VSCODE_builtins.float
