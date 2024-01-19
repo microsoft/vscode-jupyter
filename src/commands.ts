@@ -11,10 +11,10 @@ import {
     Uri,
     ViewColumn
 } from 'vscode';
-import { IShowDataViewerFromVariablePanel } from './messageTypes';
 import { Commands as DSCommands, CommandSource } from './platform/common/constants';
 import { PythonEnvironment } from './platform/pythonEnvironments/info';
 import { Channel } from './platform/common/application/types';
+import { IJupyterVariable } from './kernels/variables/types';
 
 export type CommandIds = keyof ICommandNameArgumentTypeMapping;
 
@@ -178,7 +178,7 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];
     [DSCommands.NotebookEditorCollapseAllCells]: [];
-    [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
+    [DSCommands.ShowDataViewer]: [IJupyterVariable];
     [DSCommands.RefreshDataViewer]: [];
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.RunByLine]: [NotebookCell];
