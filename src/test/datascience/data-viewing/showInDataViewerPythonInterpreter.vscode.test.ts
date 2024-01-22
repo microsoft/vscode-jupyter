@@ -14,6 +14,7 @@ import { waitForCondition } from '../../common.node';
 import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { dispose } from '../../../platform/common/utils/lifecycle';
+import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataViewer @webview', function () {
@@ -105,12 +106,14 @@ suite('DataViewer @webview', function () {
         await stoppedDef.promise;
 
         // Properties that we want to show the data viewer with
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const props: any = {
-            evaluateName: 'my_list',
-            name: 'my_list',
-            value: '[1, 2, 3]',
-            variablesReference
+        const props: IShowDataViewerFromVariablePanel = {
+            container: {},
+            variable: {
+                evaluateName: 'my_list',
+                name: 'my_list',
+                value: '[1, 2, 3]',
+                variablesReference
+            }
         };
 
         // Run our command to actually open the variable view
