@@ -19,7 +19,7 @@ import { IKernelSocket, LocalKernelConnectionMetadata } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { Signal } from '@lumino/signaling';
 import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
-import { CancellationError, CancellationToken, CancellationTokenSource, Uri } from 'vscode';
+import { CancellationError, CancellationToken, CancellationTokenSource, Uri, workspace } from 'vscode';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
@@ -632,6 +632,11 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
         username,
         model
     });
+    if (workspace.getConfiguration('jupyter').get('enablePythonKernelLogging', false)) {
+        realKernel.anyMessage.connect((_, msg) => {
+            traceVerbose(`[AnyMessage Event] [${msg.direction}] [${kernelProcess.pid}] ${JSON.stringify(msg.msg)}`);
+        });
+    }
 
     KernelSocketMap.set(realKernel.id, socketInstance!);
     socketInstance!.emit('open');

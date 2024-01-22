@@ -5,7 +5,14 @@ import { ISignal, Signal } from '@lumino/signaling';
 import * as sinon from 'sinon';
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { mock, when, instance, verify, anything } from 'ts-mockito';
-import { CancellationError, CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
+import {
+    CancellationError,
+    CancellationTokenSource,
+    Disposable,
+    EventEmitter,
+    Uri,
+    WorkspaceConfiguration
+} from 'vscode';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../types';
 import { noop } from '../../../test/core';
 import { assert } from 'chai';
@@ -17,6 +24,7 @@ import { waitForCondition } from '../../../test/common';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import { RawSessionConnection } from './rawSessionConnection.node';
 import { createDeferred } from '../../../platform/common/utils/async';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 const nonSerializingKernel =
     require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -164,6 +172,9 @@ suite('Raw Session & Raw Kernel Connection', () => {
             reason?: string | undefined;
         }>();
         nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
+        const workspaceConfig = mock<WorkspaceConfiguration>();
+        when(workspaceConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
+        when(mockedVSCodeNamespaces.workspace.getConfiguration(anything())).thenReturn(instance(workspaceConfig));
         token = new CancellationTokenSource();
         disposables.push(token);
         session = mock<RawSessionConnection>();
