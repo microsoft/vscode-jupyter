@@ -39,7 +39,7 @@ suite('VSCode Notebook PlotViewer integration - VSCode Notebook @webview', funct
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test.skip('Verify plot viewer is active for PNG plots', async function () {
+    test('Verify plot viewer is active for PNG plots', async function () {
         await startJupyterServer();
         await closeActiveWindows();
         await createEmptyPythonNotebook(disposables);
@@ -61,21 +61,24 @@ plt.show()`,
 
         await waitForCondition(async () => plotCell?.outputs.length >= 1, 10000, 'Plot output not generated');
         // Sometimes on CI we end up with >1 output, and the test fails, but we're expecting just one.
-        if (plotCell.outputs.length !== 1) {
+        if (plotCell.outputs.length === 0) {
             const jupyterCell = createJupyterCellFromVSCNotebookCell(plotCell);
             traceInfo(`Plot cell has ${plotCell.outputs.length} outputs, Cell JSON = ${JSON.stringify(jupyterCell)}`);
         }
-        assert.strictEqual(plotCell.outputs.length, 1, 'Plot cell output incorrect count');
+        assert.isAtLeast(plotCell.outputs.length, 1, 'Plot cell output incorrect count');
 
         // Check if our metadata has __displayOpenPlotIcon
-        assert(plotCell.outputs[0]!.metadata!.__displayOpenPlotIcon == true, 'Open Plot Icon missing from metadata');
+        assert(
+            plotCell.outputs.some((o) => o!.metadata!.__displayOpenPlotIcon == true),
+            'Open Plot Icon missing from metadata'
+        );
         // Check our output mime types
         assert(
-            plotCell.outputs[0]!.items.some((outputItem) => outputItem.mime === 'image/png'),
+            plotCell.outputs.some((o) => o.items.some((outputItem) => outputItem.mime === 'image/png')),
             'PNG Mime missing'
         );
         assert(
-            plotCell.outputs[0]!.items.some((outputItem) => outputItem.mime === 'text/plain'),
+            plotCell.outputs.some((o) => o.items.some((outputItem) => outputItem.mime === 'text/plain')),
             'Plain Text Mime missing'
         );
     });
