@@ -57,7 +57,7 @@ suite('DataViewer @webview', function () {
         await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
     });
     // Start debugging using the python extension
-    test.skip('Open from Python debug variables', async () => {
+    test('Open from Python debug variables', async () => {
         // First off, open up our python test file and make sure editor and groups are how we want them
         const textDocument = await openFile(testPythonFile);
 
