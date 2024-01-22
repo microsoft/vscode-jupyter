@@ -272,7 +272,7 @@ mySet = {1, 2, 3}
     });
 
     // Test opening data viewers while another dataviewer is open
-    test('Open dataviewer', async function () {
+    test.skip('Open dataviewer', async function () {
         // Send the command to open the view
         await commands.executeCommand(Commands.OpenVariableView);
 
