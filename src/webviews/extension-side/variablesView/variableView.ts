@@ -148,14 +148,11 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                 } else if (variableViewers.length === 1) {
                     const command = variableViewers[0].jupyterVariableViewers.command;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    return commands.executeCommand(command as any, request.variable);
+                    return commands.executeCommand(command as any, {
+                        container: {},
+                        variable: request.variable
+                    });
                 } else {
-                    const thirdPartyViewers = variableViewers.filter((d) => d.extension.id !== JVSC_EXTENSION_ID);
-                    if (thirdPartyViewers.length === 1) {
-                        const command = thirdPartyViewers[0].jupyterVariableViewers.command;
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        return commands.executeCommand(command as any, request.variable);
-                    }
                     // show quick pick
                     const quickPick = window.createQuickPick<QuickPickItem & { command: string }>();
                     quickPick.title = 'Select DataFrame Viewer';
@@ -172,14 +169,20 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                             quickPick.hide();
                             commands
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                .executeCommand(item.command as any, request.variable)
+                                .executeCommand(item.command as any, {
+                                    container: {},
+                                    variable: request.variable
+                                })
                                 .then(noop, noop);
                         }
                     });
                     quickPick.show();
                 }
             } else {
-                return commands.executeCommand(Commands.ShowDataViewer, request.variable);
+                return commands.executeCommand(Commands.ShowDataViewer, {
+                    container: {},
+                    variable: request.variable
+                });
             }
         } catch (e) {
             traceError(e);
@@ -204,6 +207,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                     e.packageJSON?.contributes?.jupyterVariableViewers &&
                     e.packageJSON?.contributes?.jupyterVariableViewers.length
             )
+            .filter((e) => e.id !== JVSC_EXTENSION_ID)
             .map((e) => {
                 const contributes = e.packageJSON?.contributes;
                 if (contributes?.jupyterVariableViewers) {

@@ -5,7 +5,7 @@ import { inject, injectable, named, optional } from 'inversify';
 import { DebugConfiguration, Uri, commands, window, workspace } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
-import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
+import { IJupyterVariables } from '../../../kernels/variables/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandNameArgumentTypeMapping } from '../../../commands';
 import { IDebugService } from '../../../platform/common/application/types';
@@ -17,6 +17,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { untildify } from '../../../platform/common/utils/platform';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceError, traceInfo } from '../../../platform/logging';
+import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../platform/telemetry/constants';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
@@ -72,7 +73,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         const disposable = commands.registerCommand(command, callback, this);
         this.disposables.push(disposable);
     }
-    private async onVariablePanelShowDataViewerRequest(request: IJupyterVariable) {
+    private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
         if (
             this.debugService?.activeDebugSession &&
@@ -96,7 +97,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
                 }
 
                 const variable = convertDebugProtocolVariableToIJupyterVariable(
-                    request as unknown as DebugProtocol.Variable
+                    request.variable as DebugProtocol.Variable
                 );
                 const jupyterVariable = await this.variableProvider.getFullVariable(variable);
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
@@ -122,11 +123,11 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
                 if (activeKernel && this.jupyterVariableDataProviderFactory && this.dataViewerFactory) {
                     // Create a variable data provider and pass it to the data viewer factory to create the data viewer
                     const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
-                        request,
+                        request.variable,
                         activeKernel
                     );
 
-                    const title: string = `${DataScience.dataExplorerTitle} - ${request.name}`;
+                    const title: string = `${DataScience.dataExplorerTitle} - ${request.variable.name}`;
                     return await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                 }
             } catch (e) {
