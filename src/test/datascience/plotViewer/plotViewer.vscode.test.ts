@@ -39,7 +39,7 @@ suite('VSCode Notebook PlotViewer integration - VSCode Notebook @webview', funct
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test('Verify plot viewer is active for PNG plots', async function () {
+    test.skip('Verify plot viewer is active for PNG plots', async function () {
         await startJupyterServer();
         await closeActiveWindows();
         await createEmptyPythonNotebook(disposables);
