@@ -25,6 +25,7 @@ import { IDataViewerDependencyService, IDataViewerFactory, IJupyterVariableDataP
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IKernelProvider } from '../../../kernels/types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
+import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 
 @injectable()
 export class DataViewerCommandRegistry implements IExtensionSyncActivationService {
@@ -72,7 +73,8 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         const disposable = commands.registerCommand(command, callback, this);
         this.disposables.push(disposable);
     }
-    private async onVariablePanelShowDataViewerRequest(request: IJupyterVariable) {
+    private async onVariablePanelShowDataViewerRequest(request: IJupyterVariable | IShowDataViewerFromVariablePanel) {
+        const requestVariable = 'variable' in request ? request.variable : request;
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
         if (
             this.debugService?.activeDebugSession &&
@@ -96,7 +98,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
                 }
 
                 const variable = convertDebugProtocolVariableToIJupyterVariable(
-                    request as unknown as DebugProtocol.Variable
+                    requestVariable as unknown as DebugProtocol.Variable
                 );
                 const jupyterVariable = await this.variableProvider.getFullVariable(variable);
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
@@ -122,11 +124,11 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
                 if (activeKernel && this.jupyterVariableDataProviderFactory && this.dataViewerFactory) {
                     // Create a variable data provider and pass it to the data viewer factory to create the data viewer
                     const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
-                        request,
+                        requestVariable,
                         activeKernel
                     );
 
-                    const title: string = `${DataScience.dataExplorerTitle} - ${request.name}`;
+                    const title: string = `${DataScience.dataExplorerTitle} - ${requestVariable.name}`;
                     return await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                 }
             } catch (e) {
