@@ -128,6 +128,12 @@ export class ExperimentService implements IExperimentService {
         ) {
             return true;
         }
+        if (
+            experiment === ExperimentGroups.DataViewerContribution &&
+            (getVSCodeChannel() === 'insiders' || isPreReleaseVersion())
+        ) {
+            return true;
+        }
 
         // If getTreatmentVariable returns undefined,
         // it means that the value for this experiment was not found on the server.
