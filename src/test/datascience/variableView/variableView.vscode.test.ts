@@ -19,8 +19,6 @@ import { waitForVariablesToMatch } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../platform/logging';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { Commands } from '../../../platform/common/constants';
 import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
@@ -32,7 +30,6 @@ suite('VariableView @variableViewer', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let variableViewProvider: ITestVariableViewProvider;
-    let activeInterpreter: PythonEnvironment;
     let kernelProvider: IKernelProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
@@ -47,10 +44,6 @@ suite('VariableView @variableViewer', function () {
 
         sinon.restore();
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const interpreter = await api.serviceContainer
-            .get<IInterpreterService>(IInterpreterService)
-            .getActiveInterpreter();
-        activeInterpreter = interpreter!;
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
@@ -189,10 +182,6 @@ suite('VariableView @variableViewer', function () {
 
     // Test that we are working will a larger set of basic types
     test('VariableView basic types A (webview-test)', async function () {
-        if (activeInterpreter.version?.major === 3 && activeInterpreter.version.minor >= 10) {
-            // https://github.com/microsoft/vscode-jupyter/issues/8523
-            return this.skip();
-        }
         // Send the command to open the view
         await commands.executeCommand(Commands.OpenVariableView);
 
