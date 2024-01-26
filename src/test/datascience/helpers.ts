@@ -11,7 +11,7 @@ import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { createTemporaryFile, initialize, waitForCondition } from '../common';
+import { IExtensionTestApi, createTemporaryFile, initialize, waitForCondition } from '../common';
 import {
     defaultNotebookTestTimeout,
     waitForCellExecutionToComplete,
@@ -101,6 +101,40 @@ export async function insertIntoInputEditor(source: string, interactiveWindow?: 
         editBuilder.insert(new vscode.Position(0, 0), source);
     });
     return vscode.window.activeTextEditor;
+}
+
+export async function initializeVenvInterpreters(api: IExtensionTestApi) {
+    const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
+    const pythonApi = await pythonApiProvider.getNewApi();
+    await pythonApi?.environments.refreshEnvironments({ forceRefresh: true });
+    const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+    const interpreters = interpreterService.resolvedEnvironments;
+    traceVerbose('discovering interpreters');
+    await waitForCondition(
+        () => {
+            const venvNoKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvnokernel'));
+            const venvKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvkernel'));
+            return venvNoKernelInterpreter && venvKernelInterpreter ? true : false;
+        },
+        defaultNotebookTestTimeout,
+        'Waiting for interpreters to be discovered'
+    );
+    traceVerbose(`found ${interpreters.length} interpreters`);
+    const venvNoKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvnokernel'));
+    const venvKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvkernel'));
+
+    if (!venvNoKernelInterpreter || !venvKernelInterpreter) {
+        throw new Error(
+            `Unable to find matching kernels. List of kernels is ${interpreters
+                .map((i) => getFilePath(i.uri))
+                .join('\n')}`
+        );
+    }
+    return {
+        venNoKernelPath: venvNoKernelInterpreter.uri,
+        venvKernelPath: venvKernelInterpreter.uri,
+        originalActiveInterpreter: await interpreterService.getActiveInterpreter()
+    };
 }
 
 export async function setActiveInterpreter(

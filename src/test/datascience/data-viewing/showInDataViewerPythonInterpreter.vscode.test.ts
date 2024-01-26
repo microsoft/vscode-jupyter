@@ -7,7 +7,7 @@ import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, openFile } from '../../common.node';
+import { IExtensionTestApi, captureScreenShot, openFile } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { waitForCondition } from '../../common.node';
@@ -15,9 +15,16 @@ import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
+import { IPythonApiProvider } from '../../../platform/api/types';
+import { initializeVenvInterpreters, setActiveInterpreter } from '../helpers';
+import { PythonEnvironment } from '../../../api';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataViewer @webview', function () {
+    let api: IExtensionTestApi;
+    let originalInterpreter: PythonEnvironment | undefined;
+    let pythonApiProvider: IPythonApiProvider;
+
     const disposables: IDisposable[] = [];
     const testPythonFile = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -32,7 +39,8 @@ suite('DataViewer @webview', function () {
         traceInfo('Suite Setup');
         this.timeout(120_000);
         try {
-            await initialize();
+            api = await initialize();
+            pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
             sinon.restore();
             traceInfo('Suite Setup (completed)');
         } catch (e) {
@@ -51,6 +59,11 @@ suite('DataViewer @webview', function () {
         await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
     });
     teardown(async () => {
+        if (originalInterpreter) {
+            const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
+            await setActiveInterpreter(pythonApiProvider, undefined, originalInterpreter.uri);
+        }
+
         // Close documents and stop debugging
         await vscode.commands.executeCommand('workbench.action.closeAllEditors');
         await vscode.commands.executeCommand('workbench.action.closeAllGroups');
@@ -58,7 +71,7 @@ suite('DataViewer @webview', function () {
         await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
     });
     // Start debugging using the python extension
-    test('Open from Python debug variables', async () => {
+    test.only('Open from Python debug variables', async () => {
         // First off, open up our python test file and make sure editor and groups are how we want them
         const textDocument = await openFile(testPythonFile);
 
@@ -71,6 +84,11 @@ suite('DataViewer @webview', function () {
             `Waiting for editor to switch`
         );
         const textEditor = vscode.window.activeTextEditor!;
+
+        // Select an env with pandas
+        const { originalActiveInterpreter, venvKernelPath } = await initializeVenvInterpreters(api);
+        originalInterpreter = originalActiveInterpreter;
+        await setActiveInterpreter(pythonApiProvider, undefined, venvKernelPath);
 
         // Next, place a breakpoint on the second line
         const bpPosition = new vscode.Position(1, 0);
