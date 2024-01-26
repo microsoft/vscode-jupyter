@@ -58,7 +58,7 @@ suite('DataViewer @webview', function () {
         await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
     });
     // Start debugging using the python extension
-    test.skip('Open from Python debug variables', async () => {
+    test('Open from Python debug variables', async () => {
         // First off, open up our python test file and make sure editor and groups are how we want them
         const textDocument = await openFile(testPythonFile);
 
@@ -125,6 +125,7 @@ suite('DataViewer @webview', function () {
                 // return vscode.window.tabGroups.all[1].activeTab?.label === 'Data Viewer - my_list';
                 let tabFound = false;
                 vscode.window.tabGroups.all.forEach((tg) => {
+                    traceInfo(`active tab in tab group: ${tg.activeTab?.label}`);
                     if (
                         tg.tabs.some((tab) => {
                             return tab.label === 'Data Viewer - my_list';
@@ -136,7 +137,8 @@ suite('DataViewer @webview', function () {
                 return tabFound;
             },
             40_000,
-            'Failed to open the data viewer from python variables'
+            'Failed to open the data viewer from python variables',
+            1000
         );
     });
 });

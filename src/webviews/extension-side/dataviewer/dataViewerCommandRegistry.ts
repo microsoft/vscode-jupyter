@@ -74,6 +74,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         this.disposables.push(disposable);
     }
     private async onVariablePanelShowDataViewerRequest(request: IJupyterVariable | IShowDataViewerFromVariablePanel) {
+        traceInfo(`Request to show data viewer for ${JSON.stringify(request)}`);
         const requestVariable = 'variable' in request ? request.variable : request;
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
         if (
