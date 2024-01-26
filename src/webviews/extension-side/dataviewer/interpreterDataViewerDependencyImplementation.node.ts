@@ -14,7 +14,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { splitLines } from '../../../platform/common/helpers';
 
 const separator = '5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d';
-export const kernelGetPandasVersion = `import pandas;print(pandas.__version__);print("${separator}")`;
+export const kernelGetPandasVersion = `import warnings as _VSCODE_warnings;_VSCODE_warnings.filterwarnings("ignore", category=DeprecationWarning);import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);print("${separator}"); del _VSCODE_pandas; del _VSCODE_warnings`;
 
 /**
  * Uses the Python interpreter to manage dependencies of a Data Viewer.
