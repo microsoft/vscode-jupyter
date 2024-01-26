@@ -47,14 +47,17 @@ suite('VSCode Notebook PlotViewer integration - VSCode Notebook @webview', funct
         await insertCodeCell(
             `import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-x = np.linspace(0, 20, 100)
+import matplotlib.pyplot as plt`,
+            { index: 1 }
+        );
+        await insertCodeCell(
+            `x = np.linspace(0, 20, 100)
 plt.plot(x, np.sin(x))
 plt.show()`,
-            { index: 0 }
+            { index: 1 }
         );
 
-        const plotCell = window.activeNotebookEditor?.notebook.cellAt(0)!;
+        const plotCell = window.activeNotebookEditor?.notebook.cellAt(1)!;
 
         await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(plotCell);
