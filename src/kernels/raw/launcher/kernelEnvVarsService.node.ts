@@ -8,7 +8,8 @@ import { IConfigurationService, Resource } from '../../../platform/common/types'
 import { noop } from '../../../platform/common/utils/misc';
 import {
     IEnvironmentVariablesService,
-    ICustomEnvironmentVariablesProvider
+    ICustomEnvironmentVariablesProvider,
+    EnvironmentVariables
 } from '../../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -101,6 +102,15 @@ export class KernelEnvironmentVariablesService {
         kernelEnv = kernelEnv || {};
         customEnvVars = customEnvVars || {};
 
+        // Keep a list of the kernelSpec variables that need to be substituted.
+        const kernelSpecVariablesRequiringSubstitution: Record<string, string> = {};
+        for (const [key, value] of Object.entries(kernelEnv || {})) {
+            if (typeof value === 'string' && substituteEnvVars(key, value, process.env) !== value) {
+                kernelSpecVariablesRequiringSubstitution[key] = value;
+                delete kernelEnv[key];
+            }
+        }
+
         if (isPythonKernel || interpreter) {
             // Merge the env variables with that of the kernel env.
             interpreterEnv = interpreterEnv || customEnvVars;
@@ -128,6 +138,40 @@ export class KernelEnvironmentVariablesService {
             `Kernel Env Variables for ${kernelSpec.specFile || kernelSpec.name}, PATH value is ${mergedVars.PATH}`
         );
 
+        // env variables in kernelSpecs can contain variables that need to be substituted
+        for (const [key, value] of Object.entries(kernelSpecVariablesRequiringSubstitution)) {
+            mergedVars[key] = substituteEnvVars(key, value, mergedVars);
+        }
+
         return mergedVars;
     }
+}
+
+const SUBST_REGEX = /\${([a-zA-Z]\w*)?([^}\w].*)?}/g;
+
+function substituteEnvVars(key: string, value: string, globalVars: EnvironmentVariables): string {
+    if (!value.includes('$')) {
+        return value;
+    }
+    // Substitution here is inspired a little by dotenv-expand:
+    //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
+
+    let invalid = false;
+    let replacement = value;
+    replacement = replacement.replace(SUBST_REGEX, (match, substName, bogus, offset, orig) => {
+        if (offset > 0 && orig[offset - 1] === '\\') {
+            return match;
+        }
+        if ((bogus && bogus !== '') || !substName || substName === '') {
+            invalid = true;
+            return match;
+        }
+        return globalVars[substName] || '';
+    });
+    if (!invalid && replacement !== value) {
+        traceVerbose(`${key} value in kernelSpec updated from ${value} to ${replacement}`);
+        value = replacement;
+    }
+
+    return value.replace(/\\\$/g, '$');
 }
