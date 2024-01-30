@@ -227,8 +227,8 @@ suite('Kernel Environment Variables Service', () => {
         kernelSpec.env = {
             ONE: '1',
             TWO: '2',
-            THREE:'HELLO_${ONE}',
-            PATH:"some_path;${PATH};${ONE}"
+            THREE: 'HELLO_${ONE}',
+            PATH: 'some_path;${PATH};${ONE}'
         };
         // undefined for interpreter here, interpreterPath from the spec should be used
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
