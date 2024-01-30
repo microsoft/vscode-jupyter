@@ -642,6 +642,10 @@ export interface IJupyterKernelSpec {
          * @deprecated (use metadata.jupyter.originalSpecFile)
          */
         originalSpecFile?: string;
+        /**
+         * Whether the kernels supports the debugger Protocol.
+         */
+        debugger?: boolean;
     };
     readonly argv: string[];
     /**
