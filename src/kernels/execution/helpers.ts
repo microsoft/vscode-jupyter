@@ -30,6 +30,7 @@ import {
 } from '../helpers';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { getExtensionSpecifcStack } from '../../platform/errors/errors';
+import { getVersion } from '../../platform/interpreter/helpers';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -706,12 +707,11 @@ export async function updateNotebookMetadata(
         const interpreter = isPythonConnection
             ? getInterpreterFromKernelConnectionMetadata(kernelConnection)
             : undefined;
-        const version = interpreter?.version
-            ? `${interpreter.version.major}.${interpreter.version.minor}.${interpreter.version.patch}`
-            : '';
+        const versionInfo = await getVersion(interpreter);
+        const version = versionInfo ? `${versionInfo.major}.${versionInfo.minor}.${versionInfo.micro}` : '';
         if (
             interpreter &&
-            interpreter.version &&
+            versionInfo &&
             metadata &&
             metadata.language_info &&
             metadata.language_info.version !== version

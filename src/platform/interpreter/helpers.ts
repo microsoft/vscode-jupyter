@@ -31,11 +31,11 @@ export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environ
         }
         return nameWithVersion;
     }
-    const pythonVersion = (getTelemetrySafeVersion(interpreter.version?.raw || '') || '').trim();
+    const pythonVersion = getTelemetrySafeVersion(getCachedVersion(interpreter) || '').trim();
     // If this is a conda environment without Python, then don't display `Python` in it.
     const isCondaEnvWithoutPython =
         interpreter.envType === EnvironmentType.Conda && interpreter.isCondaEnvWithoutPython === true;
-    const nameWithVersion = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
+    const nameWithVersion = pythonVersion ? `Python ${pythonVersion}` : 'Python';
     const envName = getPythonEnvironmentName(interpreter);
     if (isCondaEnvWithoutPython && envName) {
         return envName;
@@ -155,4 +155,33 @@ export function getCachedSysPrefix(interpreter?: { id: string }) {
     }
     const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
     return cachedInfo?.executable?.sysPrefix;
+}
+export async function getVersion(interpreter?: { id?: string }) {
+    if (!interpreter?.id) {
+        return;
+    }
+    if (pythonApi) {
+        const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
+        if (cachedInfo?.version) {
+            return cachedInfo.version;
+        }
+    }
+
+    const api = await PythonExtension.api();
+    const info = await api.environments.resolveEnvironment(interpreter.id);
+    if (!info?.version) {
+        traceWarning(`Unable to find Version for interpreter ${getDisplayPath(interpreter.id)}`);
+    }
+    return info?.version;
+}
+
+export function getCachedVersion(interpreter?: { id?: string }) {
+    if (!interpreter?.id) {
+        return;
+    }
+    if (!pythonApi) {
+        throw new Error('Python API not initialized');
+    }
+    const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
+    return cachedInfo?.version;
 }

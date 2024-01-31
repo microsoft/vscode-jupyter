@@ -26,7 +26,7 @@ import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { sendTelemetryEvent } from '../telemetry';
 import { IPlatformService } from '../platform/common/platform/types';
 import { splitLines } from '../platform/common/helpers';
-import { getPythonEnvironmentName } from '../platform/interpreter/helpers';
+import { getCachedVersion, getPythonEnvironmentName } from '../platform/interpreter/helpers';
 import { cellOutputToVSCCellOutput } from './execution/helpers';
 import { handleTensorBoardDisplayDataOutput } from './execution/executionHelpers';
 import { once } from '../platform/common/utils/functional';
@@ -261,7 +261,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
                     const pythonVersion = `Python ${
-                        getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                        getTelemetrySafeVersion(getCachedVersion(kernelConnection.interpreter)) || ''
                     }`.trim();
                     return kernelConnection.interpreter.envName
                         ? `${oldDisplayName} (${pythonVersion})`
@@ -276,7 +276,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         }
         case 'startUsingPythonInterpreter':
             const pythonVersion = (
-                getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                getTelemetrySafeVersion(getCachedVersion(kernelConnection.interpreter)) || ''
             ).trim();
             if (
                 kernelConnection.interpreter.envType &&

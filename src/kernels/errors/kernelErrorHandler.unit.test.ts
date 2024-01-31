@@ -46,6 +46,7 @@ import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { PythonExtension } from '@vscode/python-extension';
 import { resolvableInstance } from '../../test/datascience/helpers';
+import { setPythonApi } from '../../platform/interpreter/helpers';
 
 suite('Error Handler Unit Tests', () => {
     let dataScienceErrorHandler: DataScienceErrorHandler;
@@ -108,6 +109,9 @@ suite('Error Handler Unit Tests', () => {
         disposables.push({ dispose: () => sinon.restore() });
         environments = mock<PythonExtension['environments']>();
         when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
         when(environments.resolveEnvironment(jupyterInterpreter.id)).thenResolve({
             executable: { sysPrefix: '' }
         } as any);
