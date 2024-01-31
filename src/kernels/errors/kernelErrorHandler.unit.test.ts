@@ -105,7 +105,7 @@ suite('Error Handler Unit Tests', () => {
 
         const mockedApi = mock<PythonExtension>();
         sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
-        disposables.push({dispose: () => sinon.restore()});
+        disposables.push({ dispose: () => sinon.restore() });
         environments = mock<PythonExtension['environments']>();
         when(mockedApi.environments).thenReturn(instance(environments));
         when(environments.resolveEnvironment(jupyterInterpreter.id)).thenResolve({

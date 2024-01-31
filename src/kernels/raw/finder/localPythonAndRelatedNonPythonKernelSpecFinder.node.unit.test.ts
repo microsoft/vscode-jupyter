@@ -249,7 +249,6 @@ suite(`Local Python and related kernels`, async () => {
         when(environments.resolveEnvironment(venvInterpreter.id)).thenResolve({
             executable: { sysPrefix: 'home/venvPython' }
         } as any);
-
     });
     teardown(async function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
