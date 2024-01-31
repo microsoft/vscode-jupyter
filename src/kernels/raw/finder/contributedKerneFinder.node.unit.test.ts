@@ -47,12 +47,14 @@ import { IJupyterServerUriStorage } from '../../jupyter/types';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { uriEquals } from '../../../test/datascience/helpers';
+import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { ContributedLocalKernelSpecFinder } from './contributedLocalKernelSpecFinder.node';
 import { ITrustedKernelPaths } from './types';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
+import { PythonExtension } from '@vscode/python-extension';
+import { setPythonApi } from '../../../platform/interpreter/helpers';
 
 [false, true].forEach((isWindows) => {
     suite(`Contributed Local Kernel Spec Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -266,11 +268,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             nonPythonKernelSpecFinder.activate();
             pythonKernelFinderWrapper.activate();
         }
-        teardown(() => {
-            disposables = dispose(disposables);
-            sinon.restore();
-        });
-
         const juliaKernelSpec: KernelSpec.ISpecModel = {
             argv: ['julia', 'start', 'kernel'],
             display_name: 'Julia Kernel',
@@ -426,7 +423,16 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                 }
             }
         };
-        suiteSetup(async () => {
+        setup(async () => {
+            const mockedApi = mock<PythonExtension>();
+            sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+            disposables.push({ dispose: () => sinon.restore() });
+            const environments = mock<PythonExtension['environments']>();
+            when(mockedApi.environments).thenReturn(instance(environments));
+            when(environments.known).thenReturn([]);
+            setPythonApi(instance(mockedApi));
+            disposables.push({ dispose: () => setPythonApi(undefined as any) });
+
             kernelspecRegisteredByOlderVersionOfExtension = {
                 argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
                 display_name: 'Kernelspec registered by older version of extension',
@@ -440,6 +446,10 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                     HELLO: 'World'
                 }
             };
+        });
+        teardown(() => {
+            disposables = dispose(disposables);
+            sinon.restore();
         });
 
         async function generateExpectedKernels(
