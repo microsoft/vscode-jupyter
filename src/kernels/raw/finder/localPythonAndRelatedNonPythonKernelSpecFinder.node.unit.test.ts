@@ -129,12 +129,10 @@ suite(`Local Python and related kernels`, async () => {
     const venvInterpreter: PythonEnvironment = {
         id: 'venvPython',
         sysPrefix: 'home/venvPython',
-        uri: Uri.file('home/venvPython/bin/python'),
-        version: { major: 3, minor: 10, patch: 0, raw: '3.10.0' }
+        uri: Uri.file('home/venvPython/bin/python')
     };
     const cachedVenvInterpreterWithOlderVersionOfPython = {
-        ...deserializePythonEnvironment(serializePythonEnvironment(venvInterpreter), venvInterpreter.id)!,
-        version: { major: 3, minor: 8, patch: 0, raw: '3.8.0' }
+        ...deserializePythonEnvironment(serializePythonEnvironment(venvInterpreter), venvInterpreter.id)!
     };
 
     let venvPythonKernel: PythonKernelConnectionMetadata;

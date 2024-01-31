@@ -162,8 +162,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                 instance(memento),
                 instance(fs),
                 instance(context),
-                instance(pythonExecFactory),
-                instance(interpreterService)
+                instance(pythonExecFactory)
             );
 
             const kernelSpecsBySpecFile = new Map<string, KernelSpec.ISpecModel>();
@@ -318,27 +317,21 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             id: Uri.file(isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27').fsPath,
             sysPrefix: isWindows ? 'C:/Python/Python2' : '/usr',
             displayName: 'Python 2.7',
-            envType: EnvironmentType.Unknown,
-            sysVersion: '2.7.0',
-            version: { major: 2, minor: 7, patch: 0, raw: '2.7.0' }
+            envType: EnvironmentType.Unknown
         };
         const python36Global: PythonEnvironment = {
             uri: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36'),
             id: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36').fsPath,
             sysPrefix: isWindows ? 'C:/Python/Python3.6' : '/usr',
             displayName: 'Python 3.6',
-            envType: EnvironmentType.Unknown,
-            sysVersion: '3.6.0',
-            version: { major: 3, minor: 6, patch: 0, raw: '3.6.0' }
+            envType: EnvironmentType.Unknown
         };
         const python37Global: PythonEnvironment = {
             uri: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37'),
             id: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37').fsPath,
             sysPrefix: isWindows ? 'C:/Python/Python3.7' : '/usr',
             displayName: 'Python 3.7',
-            envType: EnvironmentType.Unknown,
-            sysVersion: '3.7.0',
-            version: { major: 3, minor: 7, patch: 0, raw: '3.6.0' }
+            envType: EnvironmentType.Unknown
         };
         const python39PyEnv_HelloWorld: PythonEnvironment = {
             uri: Uri.file(
@@ -349,9 +342,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp' : '/users/username/pyenv/envs/temp',
             displayName: 'Temporary Python 3.9',
             envName: 'temp',
-            envType: EnvironmentType.Pyenv,
-            sysVersion: '3.9.0',
-            version: { major: 3, minor: 9, patch: 0, raw: '3.9.0' }
+            envType: EnvironmentType.Pyenv
         };
         const python38VenvEnv: PythonEnvironment = {
             uri: Uri.file(
@@ -362,9 +353,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             sysPrefix: isWindows ? 'C:/temp/venv/.venv' : '/users/username/temp/.venv',
             displayName: 'Virtual Env Python 3.8',
             envName: '.venv',
-            envType: EnvironmentType.VirtualEnv,
-            sysVersion: '3.8.0',
-            version: { major: 3, minor: 8, patch: 0, raw: '3.8.0' }
+            envType: EnvironmentType.VirtualEnv
         };
         const condaEnv1: PythonEnvironment = {
             uri: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python'),
@@ -372,9 +361,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             sysPrefix: isWindows ? 'C:/conda/envs/env1' : '/conda/envs/env1',
             envName: 'env1',
             displayName: 'Conda Env1 3.6',
-            envType: EnvironmentType.Conda,
-            sysVersion: '3.6.0',
-            version: { major: 3, minor: 6, patch: 0, raw: '3.6.0' }
+            envType: EnvironmentType.Conda
         };
         const javaKernelSpec: KernelSpec.ISpecModel = {
             argv: ['java', 'xyz.jar', '{connection_file}', 'moreargs'],

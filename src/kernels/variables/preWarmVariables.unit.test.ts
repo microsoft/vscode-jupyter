@@ -27,8 +27,7 @@ suite('PreWarm Env Vars', () => {
         interpreter = {
             uri: Uri.file(''),
             id: Uri.file('').fsPath,
-            sysPrefix: '',
-            sysVersion: ''
+            sysPrefix: ''
         };
         onDidChangeInterpreter = new EventEmitter<PythonEnvironment>();
         envActivationService = mock<IEnvironmentActivationService>();

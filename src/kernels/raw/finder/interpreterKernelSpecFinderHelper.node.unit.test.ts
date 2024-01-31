@@ -61,8 +61,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         venvInterpreter = {
             id: 'venvPython',
             sysPrefix: 'home/venvPython',
-            uri: Uri.file('home/venvPython/bin/python'),
-            version: { major: 3, minor: 10, patch: 0, raw: '3.10.0' }
+            uri: Uri.file('home/venvPython/bin/python')
         };
         disposables.push(helper);
         const mockedApi = mock<PythonExtension>();

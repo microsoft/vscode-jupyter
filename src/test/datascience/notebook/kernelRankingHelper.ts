@@ -22,6 +22,7 @@ import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging'
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import * as path from '../../../platform/vscode-path/path';
+import { getCachedVersion } from '../../../platform/interpreter/helpers';
 
 /**
  * Given an interpreter, find the kernel connection that matches this interpreter.
@@ -347,18 +348,9 @@ export function compareKernels(
             if (!a.interpreter && b.interpreter) {
                 return -1;
             }
-            const aSysVersion = a.interpreter?.sysPrefix || '';
-            const aVersion =
-                a.interpreter?.version?.major ||
-                (aSysVersion.length && !isNaN(parseInt(aSysVersion.substring(0)))
-                    ? parseInt(aSysVersion.substring(0))
-                    : 0);
-            const bSysVersion = a.interpreter?.sysPrefix || '';
-            const bVersion =
-                a.interpreter?.version?.major ||
-                (bSysVersion.length && !isNaN(parseInt(bSysVersion.substring(0)))
-                    ? parseInt(bSysVersion.substring(0))
-                    : 0);
+            // const version =
+            const aVersion = getCachedVersion(a.interpreter)?.major || 0;
+            const bVersion = getCachedVersion(b.interpreter)?.major || 0;
             if (aVersion !== bVersion) {
                 return aVersion > bVersion ? 1 : -1;
             }
@@ -639,7 +631,7 @@ function compareKernelSpecOrEnvNames(
         const majorVersion = parseInt(notebookMetadata.kernelspec.name.toLowerCase().replace('python', ''), 10);
         if (
             majorVersion &&
-            a.interpreter?.version?.major === b.interpreter?.version?.major &&
+            getCachedVersion(a.interpreter)?.major === getCachedVersion(b.interpreter)?.major &&
             a.kind === b.kind &&
             comparisonOfDisplayNames === 0 &&
             comparisonOfInterpreter === 0
@@ -657,8 +649,8 @@ function compareKernelSpecOrEnvNames(
             }
         } else if (
             majorVersion &&
-            a.interpreter?.version?.major !== b.interpreter?.version?.major &&
-            a.interpreter?.version?.major === majorVersion &&
+            getCachedVersion(a.interpreter)?.major !== getCachedVersion(b.interpreter)?.major &&
+            getCachedVersion(a.interpreter)?.major === majorVersion &&
             a.kind !== 'startUsingRemoteKernelSpec' &&
             comparisonOfDisplayNames >= 0 &&
             comparisonOfInterpreter >= 0
@@ -666,8 +658,8 @@ function compareKernelSpecOrEnvNames(
             return 1;
         } else if (
             majorVersion &&
-            a.interpreter?.version?.major !== b.interpreter?.version?.major &&
-            b.interpreter?.version?.major === majorVersion &&
+            getCachedVersion(a.interpreter)?.major !== getCachedVersion(b.interpreter)?.major &&
+            getCachedVersion(b.interpreter)?.major === majorVersion &&
             b.kind !== 'startUsingRemoteKernelSpec' &&
             comparisonOfDisplayNames <= 0 &&
             comparisonOfInterpreter <= 0

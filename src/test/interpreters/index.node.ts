@@ -58,7 +58,6 @@ export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<P
                 uri: Uri.file(json.exe),
                 displayName: `Python${rawVersion}`,
                 version: parsePythonVersion(rawVersion),
-                sysVersion: json.sysVersion,
                 sysPrefix: json.sysPrefix
             };
         } catch (ex) {
