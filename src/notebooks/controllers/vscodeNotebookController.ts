@@ -85,6 +85,7 @@ import { openInBrowser } from '../../platform/common/net/browser';
 import { KernelError } from '../../kernels/errors/kernelError';
 import { JupyterVariablesProvider } from '../../kernels/variables/JupyterVariablesProvider';
 import { IJupyterVariables } from '../../kernels/variables/types';
+import { getVersion } from '../../platform/interpreter/helpers';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -386,18 +387,18 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // Notebook is trusted. Continue to execute cells
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
-    private warnWhenUsingOutdatedPython() {
-        const pyVersion = this.kernelConnection.interpreter?.version;
+    private async warnWhenUsingOutdatedPython() {
+        const pyVersion = await getVersion(this.kernelConnection.interpreter);
         if (
             !pyVersion ||
-            pyVersion.major >= 4 ||
+            (pyVersion.major || 0) >= 4 ||
             (this.kernelConnection.kind !== 'startUsingLocalKernelSpec' &&
                 this.kernelConnection.kind !== 'startUsingPythonInterpreter')
         ) {
             return;
         }
 
-        if (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor <= 5)) {
+        if ((pyVersion.major || 0) < 3 || (pyVersion.major === 3 && (pyVersion.minor || 0) <= 5)) {
             window
                 .showWarningMessage(DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion, Common.learnMore)
                 .then((selection) => {
@@ -443,7 +444,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!workspace.isTrusted) {
             return;
         }
-        this.warnWhenUsingOutdatedPython();
+        await this.warnWhenUsingOutdatedPython();
         const deferred = createDeferred<void>();
         traceInfoIfCI(
             `Controller ${this.connection.kind}:${this.id} associated with nb ${getDisplayPath(event.notebook.uri)}`
