@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import dedent from 'dedent';
+import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
@@ -43,6 +44,8 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { JupyterServer, JupyterServerCollection, JupyterServerProvider } from '../../api';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 import { dispose } from '../../platform/common/utils/lifecycle';
+import { PythonExtension } from '@vscode/python-extension';
+import { resolvableInstance } from '../../test/datascience/helpers';
 
 suite('Error Handler Unit Tests', () => {
     let dataScienceErrorHandler: DataScienceErrorHandler;
@@ -62,6 +65,7 @@ suite('Error Handler Unit Tests', () => {
         sysPrefix: ''
     };
     let disposables: IDisposable[] = [];
+    let environments: PythonExtension['environments'];
     setup(() => {
         resetVSCodeMocks();
         disposables.push(new Disposable(() => resetVSCodeMocks()));
@@ -98,6 +102,15 @@ suite('Error Handler Unit Tests', () => {
         when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything())).thenResolve();
         // reset(mockedVSCodeNamespaces.env);
         when(mockedVSCodeNamespaces.env.openExternal(anything())).thenReturn(Promise.resolve(true));
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.resolveEnvironment(jupyterInterpreter.id)).thenResolve({
+            executable: { sysPrefix: '' }
+        } as any);
     });
     teardown(() => {
         disposables = dispose(disposables);
@@ -174,6 +187,9 @@ suite('Error Handler Unit Tests', () => {
                     executable: ''
                 }
             });
+            when(environments.resolveEnvironment(kernelConnection.interpreter.id)).thenResolve({
+                executable: { sysPrefix: 'Something else' }
+            } as any);
         });
         const stdErrorMessages = {
             userOverridingRandomPyFile_Unix: dedent`

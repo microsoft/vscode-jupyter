@@ -4,7 +4,9 @@
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { getTelemetrySafeVersion } from '../telemetry/helpers';
 import { basename } from '../../platform/vscode-path/resources';
-import { Environment, KnownEnvironmentTools, KnownEnvironmentTypes } from '@vscode/python-extension';
+import { Environment, KnownEnvironmentTools, KnownEnvironmentTypes, PythonExtension } from '@vscode/python-extension';
+import { traceWarning } from '../logging';
+import { getDisplayPath } from '../common/platform/fs-paths';
 
 export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment) {
     if ('executable' in interpreter) {
@@ -100,4 +102,57 @@ export function getEnvironmentType(env: Environment): EnvironmentType {
 
 export function isCondaEnvironmentWithoutPython(env: Environment) {
     return getEnvironmentType(env) === EnvironmentType.Conda && !env.executable.uri;
+}
+
+export async function getInterpreterInfo(interpreter?: { id: string }) {
+    if (!interpreter?.id) {
+        return;
+    }
+    const api = await PythonExtension.api();
+    return api.environments.resolveEnvironment(interpreter.id);
+}
+
+let pythonApi: PythonExtension;
+export function setPythonApi(api: PythonExtension) {
+    pythonApi = api;
+}
+
+export function getCachedInterpreterInfo(interpreter?: { id: string }) {
+    if (!interpreter) {
+        return;
+    }
+    if (!pythonApi) {
+        throw new Error('Python API not initialized');
+    }
+    return pythonApi.environments.known.find((i) => i.id === interpreter.id);
+}
+
+export async function getSysPrefix(interpreter?: { id: string }) {
+    if (!interpreter?.id) {
+        return;
+    }
+    if (pythonApi) {
+        const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
+        if (cachedInfo?.executable?.sysPrefix) {
+            return cachedInfo.executable.sysPrefix;
+        }
+    }
+
+    const api = await PythonExtension.api();
+    const sysPrefix = await api.environments.resolveEnvironment(interpreter.id).then((i) => i?.executable?.sysPrefix);
+    if (!sysPrefix) {
+        traceWarning(`Unable to find sysPrefix for interpreter ${getDisplayPath(interpreter.id)}`);
+    }
+    return sysPrefix;
+}
+
+export function getCachedSysPrefix(interpreter?: { id: string }) {
+    if (!interpreter?.id) {
+        return;
+    }
+    if (!pythonApi) {
+        throw new Error('Python API not initialized');
+    }
+    const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
+    return cachedInfo?.executable?.sysPrefix;
 }
