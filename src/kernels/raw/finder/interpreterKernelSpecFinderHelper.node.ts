@@ -34,6 +34,7 @@ import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helper
 import { isKernelLaunchedViaLocalPythonIPyKernel, isLikelyAPythonExecutable } from '../../helpers.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
+import { getSysPrefix } from '../../../platform/interpreter/helpers';
 
 export function localPythonKernelsCacheKey() {
     const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2023_3';
@@ -48,7 +49,12 @@ export async function findKernelSpecsInInterpreter(
     emitter: EventEmitter<IJupyterKernelSpec>
 ): Promise<void> {
     // Find all the possible places to look for this resource
-    const kernelSearchPath = Uri.file(path.join(interpreter.sysPrefix, baseKernelPath));
+    const sysPrefix = await getSysPrefix(interpreter);
+    if (!sysPrefix) {
+        traceWarning(`Failed to get sysPrefix for interpreter ${getDisplayPath(interpreter.id)}`);
+        return;
+    }
+    const kernelSearchPath = Uri.file(path.join(sysPrefix, baseKernelPath));
     const rootSpecPaths = await jupyterPaths.getKernelSpecRootPaths(cancelToken);
     if (cancelToken.isCancellationRequested) {
         return;

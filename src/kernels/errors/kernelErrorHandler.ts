@@ -59,7 +59,7 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platform/errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 import { fileToCommandArgument } from '../../platform/common/helpers';
-import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
+import { getPythonEnvDisplayName, getSysPrefix } from '../../platform/interpreter/helpers';
 import { JupyterServerCollection } from '../../api';
 import { getJupyterDisplayName } from '../jupyter/connection/jupyterServerProviderRegistry';
 
@@ -177,12 +177,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             // its possible the kernel failed to start due to missing dependencies.
             return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
         } else if (error instanceof BaseKernelError || error instanceof WrappedKernelError) {
-            const files = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
+            const [files, sysPrefix] = await Promise.all([
+                this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource),
+                getSysPrefix(error.kernelConnectionMetadata.interpreter)
+            ]);
             const failureInfo = analyzeKernelErrors(
                 workspace.workspaceFolders || [],
                 error,
                 getDisplayNameOrNameOfKernelConnection(error.kernelConnectionMetadata),
-                error.kernelConnectionMetadata.interpreter?.sysPrefix,
+                sysPrefix,
                 files.map((f) => f.uri)
             );
             if (failureInfo) {
@@ -472,12 +475,16 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 tokenSource.dispose();
             }
         } else {
-            const files = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
+            const [files, sysPrefix] = await Promise.all([
+                this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource),
+                getSysPrefix(kernelConnection.interpreter)
+            ]);
+
             const failureInfo = analyzeKernelErrors(
                 workspace.workspaceFolders || [],
                 err,
                 getDisplayNameOrNameOfKernelConnection(kernelConnection),
-                kernelConnection.interpreter?.sysPrefix,
+                sysPrefix,
                 files.map((f) => f.uri)
             );
             this.sendKernelTelemetry(err, errorContext, resource, failureInfo?.reason);

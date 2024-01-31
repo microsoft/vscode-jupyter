@@ -40,7 +40,7 @@ import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivat
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
 import { getOSType, OSType } from '../common/utils/platform';
 import { SemVer } from 'semver';
-import { getEnvironmentType } from '../interpreter/helpers';
+import { getEnvironmentType, setPythonApi } from '../interpreter/helpers';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
 
 export function deserializePythonEnvironment(
@@ -249,6 +249,9 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         const extension = extensions.getExtension<PythonExtensionApi>(PythonExtension);
         if (extension?.packageJSON?.version) {
             this._pythonExtensionVersion = new SemVer(extension?.packageJSON?.version);
+        }
+        if (extension?.exports) {
+            setPythonApi(extension.exports);
         }
         return extension?.exports;
     }

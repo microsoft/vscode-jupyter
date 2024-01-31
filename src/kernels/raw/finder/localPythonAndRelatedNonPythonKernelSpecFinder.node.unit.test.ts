@@ -24,12 +24,13 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc';
 import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
-import { uriEquals } from '../../../test/datascience/helpers';
+import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 import { ResourceMap } from '../../../platform/common/utils/map';
+import { PythonExtension } from '@vscode/python-extension';
 
 suite(`Local Python and related kernels`, async () => {
     let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
@@ -230,6 +231,25 @@ suite(`Local Python and related kernels`, async () => {
         });
         disposables.push(new Disposable(() => loadKernelSpecStub.restore()));
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        const environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.resolveEnvironment(pythonKernelSpec.id)).thenResolve({
+            executable: { sysPrefix: 'home/python' }
+        } as any);
+        when(environments.resolveEnvironment(condaInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/conda' }
+        } as any);
+        when(environments.resolveEnvironment(globalInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/global' }
+        } as any);
+        when(environments.resolveEnvironment(venvInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/venvPython' }
+        } as any);
+
     });
     teardown(async function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
