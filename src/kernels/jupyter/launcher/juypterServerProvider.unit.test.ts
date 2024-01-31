@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { SemVer } from 'semver';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
@@ -32,8 +31,6 @@ suite('Jupyter Server Provider', () => {
     const workingPython: PythonEnvironment = {
         uri: Uri.file('/foo/bar/python.exe'),
         id: Uri.file('/foo/bar/python.exe').fsPath,
-        version: new SemVer('3.6.6-final'),
-        sysVersion: '1.0.0.0',
         sysPrefix: 'Python'
     };
     let disposables: Disposable[] = [];

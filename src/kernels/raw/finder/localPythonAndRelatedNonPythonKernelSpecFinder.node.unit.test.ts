@@ -31,6 +31,7 @@ import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 import { ResourceMap } from '../../../platform/common/utils/map';
 import { PythonExtension } from '@vscode/python-extension';
+import { setPythonApi } from '../../../platform/interpreter/helpers';
 
 suite(`Local Python and related kernels`, async () => {
     let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
@@ -129,12 +130,10 @@ suite(`Local Python and related kernels`, async () => {
     const venvInterpreter: PythonEnvironment = {
         id: 'venvPython',
         sysPrefix: 'home/venvPython',
-        uri: Uri.file('home/venvPython/bin/python'),
-        version: { major: 3, minor: 10, patch: 0, raw: '3.10.0' }
+        uri: Uri.file('home/venvPython/bin/python')
     };
     const cachedVenvInterpreterWithOlderVersionOfPython = {
-        ...deserializePythonEnvironment(serializePythonEnvironment(venvInterpreter), venvInterpreter.id)!,
-        version: { major: 3, minor: 8, patch: 0, raw: '3.8.0' }
+        ...deserializePythonEnvironment(serializePythonEnvironment(venvInterpreter), venvInterpreter.id)!
     };
 
     let venvPythonKernel: PythonKernelConnectionMetadata;
@@ -175,6 +174,27 @@ suite(`Local Python and related kernels`, async () => {
         when(jupyterPaths.getKernelSpecRootPaths(anything())).thenResolve([]);
         when(jupyterPaths.getKernelSpecRootPath()).thenResolve(globalKernelRootPath);
         when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        const environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
+        when(environments.resolveEnvironment(pythonKernelSpec.id)).thenResolve({
+            executable: { sysPrefix: 'home/python' }
+        } as any);
+        when(environments.resolveEnvironment(condaInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/conda' }
+        } as any);
+        when(environments.resolveEnvironment(globalInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/global' }
+        } as any);
+        when(environments.resolveEnvironment(venvInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/venvPython' }
+        } as any);
 
         // Initialize the kernel specs (test data).
         let kernelSpec = await createInterpreterKernelSpec(venvInterpreter, tempDirForKernelSpecs);
@@ -231,24 +251,6 @@ suite(`Local Python and related kernels`, async () => {
         });
         disposables.push(new Disposable(() => loadKernelSpecStub.restore()));
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
-
-        const mockedApi = mock<PythonExtension>();
-        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
-        disposables.push({ dispose: () => sinon.restore() });
-        const environments = mock<PythonExtension['environments']>();
-        when(mockedApi.environments).thenReturn(instance(environments));
-        when(environments.resolveEnvironment(pythonKernelSpec.id)).thenResolve({
-            executable: { sysPrefix: 'home/python' }
-        } as any);
-        when(environments.resolveEnvironment(condaInterpreter.id)).thenResolve({
-            executable: { sysPrefix: 'home/conda' }
-        } as any);
-        when(environments.resolveEnvironment(globalInterpreter.id)).thenResolve({
-            executable: { sysPrefix: 'home/global' }
-        } as any);
-        when(environments.resolveEnvironment(venvInterpreter.id)).thenResolve({
-            executable: { sysPrefix: 'home/venvPython' }
-        } as any);
     });
     teardown(async function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);

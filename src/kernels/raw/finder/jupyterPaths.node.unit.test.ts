@@ -74,8 +74,7 @@ suite('Jupyter Paths', () => {
             instance(memento),
             instance(fs),
             instance(context),
-            instance(pythonExecFactory),
-            instance(interpreterService)
+            instance(pythonExecFactory)
         );
         delete process.env['JUPYTER_PATH'];
         delete process.env['APPDATA'];

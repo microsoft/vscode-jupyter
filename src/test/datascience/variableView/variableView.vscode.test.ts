@@ -27,6 +27,7 @@ import { IVariableViewProvider } from '../../../webviews/extension-side/variable
 import { IKernelProvider } from '../../../kernels/types';
 import { trimQuotes } from '../../../platform/common/helpers';
 import { commands, window } from 'vscode';
+import { getVersion } from '../../../platform/interpreter/helpers';
 
 suite('VariableView @variableViewer', function () {
     let api: IExtensionTestApi;
@@ -189,7 +190,8 @@ suite('VariableView @variableViewer', function () {
 
     // Test that we are working will a larger set of basic types
     test('VariableView basic types A (webview-test)', async function () {
-        if (activeInterpreter.version?.major === 3 && activeInterpreter.version.minor >= 10) {
+        const version = await getVersion(activeInterpreter);
+        if (version?.major === 3 && (version.minor || 0) >= 10) {
             // https://github.com/microsoft/vscode-jupyter/issues/8523
             return this.skip();
         }

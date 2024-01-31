@@ -290,7 +290,6 @@ suite('Kernel Connection Helpers', () => {
                         id: Uri.file('pyPath').fsPath,
                         sysPrefix: 'sysPrefix',
                         envName: '',
-                        version: undefined,
                         displayName: 'Something',
                         envType: EnvironmentType.Pipenv
                     }
@@ -338,12 +337,6 @@ suite('Kernel Connection Helpers', () => {
                         sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something 64-bit',
-                        version: {
-                            major: 9,
-                            minor: 8,
-                            patch: 1,
-                            raw: '9.8.7.6-pre'
-                        },
                         envType: EnvironmentType.Conda
                     }
                 })
@@ -379,12 +372,6 @@ suite('Kernel Connection Helpers', () => {
                         sysPrefix: 'sysPrefix',
                         envName: '.env',
                         displayName: 'Something 64-bit',
-                        version: {
-                            major: 9,
-                            minor: 8,
-                            patch: 7,
-                            raw: '9.8.7.6-pre'
-                        },
                         envType: EnvironmentType.Conda
                     }
                 })
@@ -420,12 +407,6 @@ suite('Kernel Connection Helpers', () => {
                         sysPrefix: 'sysPrefix',
                         envName: '.env',
                         displayName: 'Something 64-bit',
-                        version: {
-                            major: 9,
-                            minor: 8,
-                            patch: 7,
-                            raw: '9.8.7.6-pre'
-                        },
                         envType: EnvironmentType.Conda
                     }
                 })
@@ -507,7 +488,6 @@ suite('Kernel Connection Helpers', () => {
                         id: Uri.file('pyPath').fsPath,
                         sysPrefix: 'sysPrefix',
                         envName: '',
-                        version: { major: 1, minor: 2, patch: 3, raw: '1.2.3' },
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Unknown
                     }
@@ -567,12 +547,6 @@ suite('Kernel Connection Helpers', () => {
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
             when(interpreter.envName).thenReturn('');
-            when(interpreter.version).thenReturn({
-                major: 9,
-                minor: 8,
-                patch: 1,
-                raw: '9.8.7.6-pre'
-            });
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(interpreter.envType).thenReturn(EnvironmentType.Pipenv);
             when(environments.known).thenReturn([
@@ -603,12 +577,6 @@ suite('Kernel Connection Helpers', () => {
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
             when(interpreter.envName).thenReturn('.env');
-            when(interpreter.version).thenReturn({
-                major: 9,
-                minor: 8,
-                patch: 7,
-                raw: '9.8.7.6-pre'
-            });
             when(interpreter.displayName).thenReturn('Something');
             when(interpreter.envType).thenReturn(EnvironmentType.Conda);
             when(environments.known).thenReturn([
@@ -639,12 +607,6 @@ suite('Kernel Connection Helpers', () => {
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
             when(interpreter.envName).thenReturn('.env');
-            when(interpreter.version).thenReturn({
-                major: 9,
-                minor: 8,
-                patch: 7,
-                raw: '9.8.7.6-pre'
-            });
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(interpreter.envType).thenReturn(EnvironmentType.Conda);
             when(environments.known).thenReturn([

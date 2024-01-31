@@ -34,7 +34,8 @@ import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helper
 import { isKernelLaunchedViaLocalPythonIPyKernel, isLikelyAPythonExecutable } from '../../helpers.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
-import { getSysPrefix } from '../../../platform/interpreter/helpers';
+import { getCachedSysPrefix, getCachedVersion, getSysPrefix } from '../../../platform/interpreter/helpers';
+import { Environment } from '@vscode/python-extension';
 
 export function localPythonKernelsCacheKey() {
     const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2023_3';
@@ -129,6 +130,8 @@ export async function findKernelSpecsInInterpreter(
 export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
     private cancelToken = new CancellationTokenSource();
     private kernelSpecPromise?: Promise<void>;
+    private lastKnownInterpreterVersion?: Environment['version'];
+    private lastKnownInterpreterSysPrefix?: string;
     private _kernels = new Map<string, PythonKernelConnectionMetadata | LocalKernelConnectionMetadata>();
     private _onDidChangeKernels = this._register(
         new EventEmitter<{
@@ -145,6 +148,8 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
         private readonly kernelSpecFinder: LocalKernelSpecFinder
     ) {
         super();
+        this.lastKnownInterpreterVersion = getCachedVersion(interpreter);
+        this.lastKnownInterpreterSysPrefix = getCachedSysPrefix(interpreter);
         this._register({ dispose: () => this.cancelToken.cancel() });
         this._register(this.cancelToken);
         this._register(this.interpreterService.onDidChangeInterpreter(this.clearCacheWhenInterpretersChange, this));
@@ -174,13 +179,17 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
         if (!interpreter) {
             return;
         }
+        const version = getCachedVersion(interpreter);
+        const sysPrefix = getCachedSysPrefix(interpreter);
         if (
             // If the version, syspath has changed, then we need to re-discover the kernels.
             this.interpreter.envPath !== interpreter.envPath ||
-            this.interpreter.version?.raw !== interpreter.version?.raw ||
+            this.lastKnownInterpreterVersion?.sysVersion !== version?.sysVersion ||
             this.interpreter.envType !== interpreter.envType ||
-            this.interpreter.sysPrefix !== interpreter.sysPrefix
+            this.lastKnownInterpreterSysPrefix !== sysPrefix
         ) {
+            this.lastKnownInterpreterVersion = version;
+            this.lastKnownInterpreterSysPrefix = sysPrefix;
             this.listKernelSpecs(true).catch(noop);
         }
     }

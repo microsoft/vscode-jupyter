@@ -40,7 +40,7 @@ import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivat
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
 import { getOSType, OSType } from '../common/utils/platform';
 import { SemVer } from 'semver';
-import { getEnvironmentType, setPythonApi } from '../interpreter/helpers';
+import { getCachedVersion, getEnvironmentType, setPythonApi } from '../interpreter/helpers';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
 
 export function deserializePythonEnvironment(
@@ -128,15 +128,7 @@ export function resolvedPythonEnvToJupyterEnv(
         uri,
         displayName: env.environment?.name || '',
         envType,
-        isCondaEnvWithoutPython,
-        version: env.version
-            ? {
-                  major: env.version.major,
-                  minor: env.version.minor,
-                  patch: env.version.micro,
-                  raw: env.version.sysVersion
-              }
-            : undefined
+        isCondaEnvWithoutPython
     };
 }
 export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: boolean): PythonEnvironment | undefined {
@@ -172,15 +164,7 @@ export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: b
         uri,
         displayName: env.environment?.name || '',
         envType,
-        isCondaEnvWithoutPython,
-        version: env.version
-            ? {
-                  major: env.version.major || 0,
-                  minor: env.version.minor || 0,
-                  patch: env.version.micro || 0,
-                  raw: env.version.sysVersion || ''
-              }
-            : undefined
+        isCondaEnvWithoutPython
     };
 }
 
@@ -590,11 +574,11 @@ export class InterpreterService implements IInterpreterService {
                         return;
                     }
                     this.lastLoggedResourceAndInterpreterId = key;
+                    const version = getCachedVersion(item);
                     traceInfo(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
-                        )} (${item?.envType}, '${item?.envName}', ${item?.version?.major}.${item?.version?.minor}.${item
-                            ?.version?.patch})`
+                        )} (${item?.envType}, '${item?.envName}', ${version?.major}.${version?.minor}.${version?.micro})`
                     );
                 })
                 .catch(noop);

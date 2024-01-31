@@ -68,8 +68,7 @@ suite('JupyterKernelService', () => {
                 id: '/usr/bin/python3',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                sysPrefix: 'python'
             },
             id: '0'
         }),
@@ -125,8 +124,7 @@ suite('JupyterKernelService', () => {
                 id: '/usr/bin/python3',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                sysPrefix: 'python'
             },
             id: '2'
         }),
@@ -160,8 +158,7 @@ suite('JupyterKernelService', () => {
                 id: '/usr/bin/python',
                 displayName: 'Python 2 Environment',
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python'),
-                sysPrefix: 'python',
-                version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
+                sysPrefix: 'python'
             },
             id: '4'
         }),
@@ -192,8 +189,7 @@ suite('JupyterKernelService', () => {
                 id: '/usr/bin/python3',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                sysPrefix: 'python'
             },
             id: '5'
         }),
@@ -227,8 +223,7 @@ suite('JupyterKernelService', () => {
                 id: '/usr/bin/python',
                 displayName: 'Python 2 Environment',
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python'),
-                sysPrefix: 'python',
-                version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
+                sysPrefix: 'python'
             },
             id: '7'
         }),
@@ -259,8 +254,7 @@ suite('JupyterKernelService', () => {
                 id: '/usr/bin/python3',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                sysPrefix: 'python'
             },
             id: '8'
         }),
@@ -294,8 +288,7 @@ suite('JupyterKernelService', () => {
                 id: '/usr/bin/python',
                 displayName: 'Python 2 Environment',
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python'),
-                sysPrefix: 'python',
-                version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
+                sysPrefix: 'python'
             },
             id: '10'
         }),
@@ -378,8 +371,7 @@ suite('JupyterKernelService', () => {
                         ? '/usr/don/home/envs/sample/bin/python.exe'
                         : '/usr/don/home/envs/sample/bin/python'
                 ),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                sysPrefix: 'python'
             },
             id: '12'
         }),
@@ -417,8 +409,7 @@ suite('JupyterKernelService', () => {
                         ? '/usr/don/home/envs/sample/bin/python.exe'
                         : '/usr/don/home/envs/sample/bin/python'
                 ),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                sysPrefix: 'python'
             },
             id: '13'
         }),
@@ -453,8 +444,7 @@ suite('JupyterKernelService', () => {
                         ? '/usr/don/home/envs/sample/bin/python.exe'
                         : '/usr/don/home/envs/sample/bin/python'
                 ),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                sysPrefix: 'python'
             },
             id: '14'
         })

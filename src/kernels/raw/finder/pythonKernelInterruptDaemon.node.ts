@@ -34,13 +34,8 @@ function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironm
     return false;
 }
 function isSupportedPythonVersion(interpreter: PythonEnvironment) {
-    let major = interpreter?.version?.major ?? 3;
-    let minor = interpreter?.version?.minor ?? 6;
-    const version = getCachedVersion(interpreter);
-    if (version) {
-        major = version.major || major;
-        minor = version.minor || minor;
-    }
+    let major = getCachedVersion(interpreter)?.major ?? 3;
+    let minor = getCachedVersion(interpreter)?.minor ?? 6;
     if (
         major >= 3 &&
         // Even thought 3.6 is no longer supported, we know this works well enough for what we want.

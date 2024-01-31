@@ -39,7 +39,6 @@ type PythonVersionInfo = [number, number, number, ReleaseLevel, number];
 export type PythonEnvInfo = {
     versionInfo: PythonVersionInfo;
     sysPrefix: string;
-    sysVersion: string;
     is64Bit: boolean;
     exe: string;
 };

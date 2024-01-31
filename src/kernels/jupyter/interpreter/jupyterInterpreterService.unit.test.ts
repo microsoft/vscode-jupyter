@@ -33,14 +33,12 @@ suite('Jupyter Interpreter Service', () => {
     const pythonInterpreter: PythonEnvironment = {
         uri: Uri.file('some path'),
         id: Uri.file('some path').fsPath,
-        sysPrefix: '',
-        sysVersion: ''
+        sysPrefix: ''
     };
     const secondPythonInterpreter: PythonEnvironment = {
         uri: Uri.file('second interpreter path'),
         id: Uri.file('second interpreter path').fsPath,
-        sysPrefix: '',
-        sysVersion: ''
+        sysPrefix: ''
     };
     let disposables: IDisposable[] = [];
 
