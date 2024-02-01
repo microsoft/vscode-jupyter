@@ -11,8 +11,10 @@ import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-p
 import { traceInfo } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { isInteractiveInputTab } from '../../interactive-window/helpers';
-import { isRemoteConnection } from '../../kernels/types';
+import { IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { noop } from '../../platform/common/utils/misc';
+import { raceTimeout } from '../../platform/common/utils/async';
+import * as fs from 'fs-extra';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -29,7 +31,8 @@ export class NotebookPythonPathService implements IExtensionSyncActivationServic
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         if (!this._isPylanceExtensionInstalled()) {
             this.extensionChangeHandler = extensions.onDidChange(this.extensionsChangeHandler.bind(this));
@@ -110,7 +113,43 @@ export class NotebookPythonPathService implements IExtensionSyncActivationServic
         const controller = this.controllerRegistration.getSelected(notebook);
         if (controller && isRemoteConnection(controller.connection)) {
             // Empty string is special, means do not use any interpreter at all.
-            return '';
+            // Could be a server started for local machine, github codespaces, azml, 3rd party api, etc
+            const kernel = this.kernelProvider.get(notebook);
+            if (!kernel) {
+                return;
+            }
+            const disposables: Disposable[] = [];
+            if (!kernel.startedAtLeastOnce) {
+                const kernelStarted = new Promise((resolve) => kernel!.onStarted(resolve, undefined, disposables));
+                await raceTimeout(5_000, undefined, kernelStarted);
+            }
+            if (!kernel.startedAtLeastOnce) {
+                return;
+            }
+            const execution = this.kernelProvider.getKernelExecution(kernel);
+            const code = `
+import os as _VSCODE_os
+import sys as _VSCODE_sys
+import builtins as _VSCODE_builtins
+
+if _VSCODE_os.path.exists("${__filename}"):
+    _VSCODE_builtins.print(f"EXECUTABLE{_VSCODE_sys.executable}EXECUTABLE")
+
+del _VSCODE_os, _VSCODE_sys, _VSCODE_builtins
+`;
+            const outputs = (await execution.executeHidden(code).catch(noop)) || [];
+            const output = outputs.find((item) => item.output_type === 'stream' && item.name === 'stdout');
+            if (!output || !(output.text || '').toString().includes('EXECUTABLE')) {
+                return;
+            }
+            let text = (output.text || '').toString();
+            text = text.substring(text.indexOf('EXECUTABLE'));
+            const items = text.split('EXECUTABLE').filter((x) => x.trim().length);
+            const executable = items.length ? items[0].trim() : '';
+            if (!executable || !(await fs.pathExists(executable))) {
+                return;
+            }
+            return executable;
         }
 
         const interpreter = controller?.connection?.interpreter;
