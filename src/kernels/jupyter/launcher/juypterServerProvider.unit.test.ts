@@ -30,8 +30,7 @@ suite('Jupyter Server Provider', () => {
     let interpreterService: IInterpreterService;
     const workingPython: PythonEnvironment = {
         uri: Uri.file('/foo/bar/python.exe'),
-        id: Uri.file('/foo/bar/python.exe').fsPath,
-        sysPrefix: 'Python'
+        id: Uri.file('/foo/bar/python.exe').fsPath
     };
     let disposables: Disposable[] = [];
     let source: CancellationTokenSource;

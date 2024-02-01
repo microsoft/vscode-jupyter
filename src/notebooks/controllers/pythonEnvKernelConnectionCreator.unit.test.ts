@@ -52,7 +52,6 @@ suite('Python Environment Kernel Connection Creator', () => {
         },
         interpreter: {
             id: 'venv',
-            sysPrefix: '',
             uri: Uri.file('venv')
         }
     });
@@ -67,7 +66,6 @@ suite('Python Environment Kernel Connection Creator', () => {
         },
         interpreter: {
             id: 'conda',
-            sysPrefix: '',
             uri: Uri.file('.conda/bin/python'),
             envType: EnvironmentType.Conda
         }

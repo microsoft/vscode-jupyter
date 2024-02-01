@@ -23,7 +23,7 @@ import { GlobalPythonExecutablePathService } from './globalPythonExePathService.
 import { noop } from '../common/utils/misc';
 import { CancellationToken, workspace } from 'vscode';
 import { raceCancellation } from '../common/cancellation';
-import { getEnvironmentType, getPythonEnvDisplayName, isCondaEnvironmentWithoutPython } from './helpers';
+import { getEnvironmentType, getPythonEnvDisplayName, getSysPrefix, isCondaEnvironmentWithoutPython } from './helpers';
 import { Environment } from '@vscode/python-extension';
 
 const ENV_VAR_CACHE_TIMEOUT = 60_000;
@@ -230,9 +230,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
             // Patch for conda envs.
             if (getEnvironmentType(environment) === EnvironmentType.Conda) {
-                const sysPrefix =
-                    this.interpreterService.known.find((e) => e.id === environment.id)?.executable.sysPrefix ||
-                    (await this.interpreterService.resolveEnvironment(environment))?.executable.sysPrefix;
+                const sysPrefix = await getSysPrefix(environment);
                 if (sysPrefix) {
                     env.CONDA_PREFIX = sysPrefix;
                 } else {

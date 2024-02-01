@@ -33,8 +33,7 @@ import { dispose } from '../../../../platform/common/utils/lifecycle';
         id: 'localPythonKernelSpec',
         kernelSpec: mock<IJupyterKernelSpec>(),
         interpreter: {
-            id: 'interpreterId',
-            sysPrefix: __dirname
+            id: 'interpreterId'
         } as any
     });
     const serverProviderHandle = { handle: 'handle', id: 'id', extensionId: '' };

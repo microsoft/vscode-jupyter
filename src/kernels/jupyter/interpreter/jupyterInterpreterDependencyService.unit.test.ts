@@ -24,8 +24,7 @@ suite('Jupyter Interpreter Configuration', () => {
     let command: IJupyterCommand;
     const pythonInterpreter: PythonEnvironment = {
         uri: Uri.file(''),
-        id: Uri.file('').fsPath,
-        sysPrefix: ''
+        id: Uri.file('').fsPath
     };
     let disposables: Disposable[] = [];
     setup(() => {

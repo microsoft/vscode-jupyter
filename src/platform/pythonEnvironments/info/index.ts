@@ -29,7 +29,6 @@ export type InterpreterId = string;
 export type InterpreterInformation = {
     id: InterpreterId;
     uri: Uri;
-    sysPrefix: string;
 };
 
 /**

@@ -3,7 +3,6 @@
 
 import * as path from '../../platform/vscode-path/path';
 import { traceError } from '../../platform/logging';
-import { PythonEnvInfo } from '../../platform/interpreter/internal/scripts/index.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { parsePythonVersion } from '../../platform/pythonEnvironments/info/pythonVersion.node';
@@ -25,6 +24,12 @@ const defaultShells = {
 };
 
 const defaultShell = defaultShells[getOSType()];
+type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
+type PythonVersionInfo = [number, number, number, ReleaseLevel, number];
+type PythonEnvInfo = {
+    versionInfo: PythonVersionInfo;
+    exe: string;
+};
 
 const interpreterInfoCache = new Map<string, Promise<PythonEnvironment | undefined>>();
 export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<PythonEnvironment | undefined> {
@@ -57,8 +62,7 @@ export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<P
                 id: json.exe,
                 uri: Uri.file(json.exe),
                 displayName: `Python${rawVersion}`,
-                version: parsePythonVersion(rawVersion),
-                sysPrefix: json.sysPrefix
+                version: parsePythonVersion(rawVersion)
             };
         } catch (ex) {
             traceError('Failed to get Activated env Variables: ', ex);

@@ -50,7 +50,6 @@ export function deserializePythonEnvironment(
     if (pythonVersion) {
         const result = {
             ...pythonVersion,
-            sysPrefix: pythonVersion.sysPrefix || '',
             uri: Uri.file(pythonVersion.path || ''),
             id: pythonEnvId || (pythonVersion as any).id,
             envPath: pythonVersion.envPath ? Uri.file(pythonVersion.envPath) : undefined,
@@ -100,13 +99,9 @@ export function resolvedPythonEnvToJupyterEnv(
     let isCondaEnvWithoutPython = false;
     let uri: Uri;
     let id = env.id;
-    let sysPrefix = env.executable.sysPrefix;
     if (!env.executable.uri) {
         if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
             isCondaEnvWithoutPython = true;
-            // sysprefix is the same as the env path.
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            sysPrefix = sysPrefix || env.environment?.folderUri?.fsPath || '';
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -121,7 +116,6 @@ export function resolvedPythonEnvToJupyterEnv(
 
     return {
         id,
-        sysPrefix: sysPrefix || '',
         envPath: env.environment?.folderUri,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
@@ -136,13 +130,9 @@ export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: b
     let isCondaEnvWithoutPython = false;
     let uri: Uri;
     let id = env.id;
-    let sysPrefix = env.executable.sysPrefix;
     if (!env.executable.uri) {
         if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
             isCondaEnvWithoutPython = true;
-            // sysprefix is the same as the env path.
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            sysPrefix = sysPrefix || env.environment?.folderUri?.fsPath || '';
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -157,7 +147,6 @@ export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: b
 
     return {
         id,
-        sysPrefix: sysPrefix || '',
         envPath: env.environment?.folderUri,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',

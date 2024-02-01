@@ -18,8 +18,7 @@ const info: PythonEnvironment = {
     envName: '',
     uri: Uri.file(''),
     id: Uri.file('').fsPath,
-    envType: EnvironmentType.Unknown,
-    sysPrefix: ''
+    envType: EnvironmentType.Unknown
 };
 
 suite('Installation - channel messages', () => {
