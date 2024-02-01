@@ -79,7 +79,7 @@ export function getPngDimensions(buffer: Uint8Array): { width: number; height: n
     }
     // The dimensions of a PNG are the first 8 bytes (width then height) of the IHDR chunk. The
     // IHDR chunk starts at offset 8.
-    const view = new DataView(buffer.buffer);
+    const view = new DataView(new Uint8Array(buffer).buffer);
     return {
         width: view.getUint32(16, false),
         height: view.getUint32(20, false)
