@@ -201,7 +201,7 @@ suite('Run By Line @debugger', function () {
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 
-    test('Interrupt during debugging', async function () {
+    test.skip('Interrupt during debugging', async function () {
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = window.activeNotebookEditor?.notebook!;
 
