@@ -7,6 +7,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter, Memento } from 'vscode';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import {
+    IJupyterConnection,
     IKernel,
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
@@ -31,6 +32,8 @@ import { NbExtensionsPathProvider } from './nbExtensionsPathProvider.node';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import { ScriptSourceProviderFactory } from './scriptSourceProviderFactory.node';
 import { mockedVSCodeNamespaces } from '../../../../test/vscode-mock';
+import { JupyterConnection } from '../../../../kernels/jupyter/connection/jupyterConnection';
+import { resolvableInstance } from '../../../../test/datascience/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
@@ -80,12 +83,16 @@ suite('ipywidget - Widget Script Source Provider', () => {
         const resourceConverter = mock<ILocalResourceUriConverter>();
         const fs = mock<IFileSystemNode>();
         jupyterPaths = mock<JupyterPaths>();
+        const mockedConnection = mock<JupyterConnection>();
+        const connection = mock<IJupyterConnection>();
+        when(mockedConnection.createConnectionInfo(anything())).thenResolve(resolvableInstance(connection));
         const scriptManagerFactory = new IPyWidgetScriptManagerFactory(
             new NbExtensionsPathProvider(),
             instance(fs),
             instance(context),
             instance(jupyterPaths),
-            disposables
+            disposables,
+            mockedConnection
         );
         scriptSourceFactory = new ScriptSourceProviderFactory(
             instance(configService),
