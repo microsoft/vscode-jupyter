@@ -32,18 +32,6 @@ const SCRIPTS_DIR = _SCRIPTS_DIR;
 //  * install_debugpy.py  (used only for extension development)
 
 //============================
-// interpreterInfo.py
-
-type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
-type PythonVersionInfo = [number, number, number, ReleaseLevel, number];
-export type PythonEnvInfo = {
-    versionInfo: PythonVersionInfo;
-    sysPrefix: string;
-    is64Bit: boolean;
-    exe: string;
-};
-
-//============================
 // normalizeSelection.py
 
 export function normalizeSelection(): [string[], (out: string) => string] {

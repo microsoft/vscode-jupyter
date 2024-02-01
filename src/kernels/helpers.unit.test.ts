@@ -96,8 +96,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -116,7 +115,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envType: EnvironmentType.Unknown
                     }
                 })
@@ -136,7 +134,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something',
                         envType: EnvironmentType.Pipenv
@@ -158,7 +155,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Pipenv
@@ -180,7 +176,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '.env',
                         displayName: 'Something',
                         envType: EnvironmentType.Conda
@@ -202,7 +197,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '.env',
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Conda
@@ -243,7 +237,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '.env',
                         displayName: 'Something 64-bit'
                     }
@@ -265,7 +258,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '.env',
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Unknown
@@ -288,7 +280,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something',
                         envType: EnvironmentType.Pipenv
@@ -311,7 +302,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Pipenv
@@ -334,7 +324,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Conda
@@ -369,7 +358,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '.env',
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Conda
@@ -404,7 +392,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '.env',
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Conda
@@ -429,7 +416,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something 64-bit'
                     }
@@ -451,7 +437,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Unknown
@@ -486,7 +471,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Unknown
@@ -509,7 +493,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something',
                         envType: EnvironmentType.Pipenv
@@ -532,7 +515,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
                         envName: '',
                         displayName: 'Something 64-bit',
                         envType: EnvironmentType.Pipenv

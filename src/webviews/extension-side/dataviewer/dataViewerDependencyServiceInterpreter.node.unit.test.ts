@@ -30,8 +30,7 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
         interpreter = {
             displayName: '',
             id: Uri.file(path.join('users', 'python', 'bin', 'python.exe')).fsPath,
-            uri: Uri.file(path.join('users', 'python', 'bin', 'python.exe')),
-            sysPrefix: ''
+            uri: Uri.file(path.join('users', 'python', 'bin', 'python.exe'))
         };
         pythonExecService = mock<IPythonExecutionService>();
         installer = mock(ProductInstaller);

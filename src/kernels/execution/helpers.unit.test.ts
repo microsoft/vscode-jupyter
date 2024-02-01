@@ -20,7 +20,6 @@ suite(`UpdateNotebookMetadata`, () => {
     const python36Global: PythonEnvironment = {
         uri: Uri.file('/usr/bin/python36'),
         id: Uri.file('/usr/bin/python36').fsPath,
-        sysPrefix: '/usr',
         displayName: 'Python 3.6',
         envType: EnvironmentType.Unknown
     };
@@ -33,7 +32,6 @@ suite(`UpdateNotebookMetadata`, () => {
     const python37Global: PythonEnvironment = {
         uri: Uri.file('/usr/bin/python37'),
         id: Uri.file('/usr/bin/python37').fsPath,
-        sysPrefix: '/usr',
         displayName: 'Python 3.7',
         envType: EnvironmentType.Unknown
     };

@@ -87,8 +87,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
 
         when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(anything())).thenReturn();
@@ -101,8 +100,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
         const settings = mock(JupyterSettings);
 
@@ -119,8 +117,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')),
-            id: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')).fsPath,
-            sysPrefix: '0'
+            id: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')).fsPath
         };
 
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));
@@ -138,8 +135,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
 
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));
@@ -157,8 +153,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
 
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));

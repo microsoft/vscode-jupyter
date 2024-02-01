@@ -35,7 +35,6 @@ suite('Kernel Connector', () => {
         id: 'python',
         interpreter: {
             id: 'id',
-            sysPrefix: '',
             uri: Uri.file('python')
         },
         kernelSpec: {
@@ -59,7 +58,6 @@ suite('Kernel Connector', () => {
         id: 'python',
         interpreter: {
             id: 'id',
-            sysPrefix: '',
             uri: Uri.file('python')
         },
         kernelSpec: {

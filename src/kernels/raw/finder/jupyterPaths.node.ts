@@ -207,15 +207,11 @@ export class JupyterPaths {
         }
 
         // 3. Add the paths based on user and env data directories
-        if (interpreter && !interpreter.sysPrefix) {
-            traceWarning(`sysPrefix was not set for ${interpreter.id}`);
-            const sysPrefix = await getSysPrefix(interpreter);
-            interpreter.sysPrefix = sysPrefix || interpreter.sysPrefix;
-            traceInfoIfCI(`sysPrefix after getting details ${interpreter.sysPrefix}`);
+        let sysPrefix: string | undefined;
+        if (interpreter) {
+            sysPrefix = await getSysPrefix(interpreter);
         }
-        const possibleEnvJupyterPath = interpreter?.sysPrefix
-            ? Uri.joinPath(Uri.file(interpreter.sysPrefix), 'share', 'jupyter')
-            : undefined;
+        const possibleEnvJupyterPath = sysPrefix ? Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter') : undefined;
 
         const systemDataDirectories = this.getSystemJupyterPaths();
         const envJupyterPath = possibleEnvJupyterPath

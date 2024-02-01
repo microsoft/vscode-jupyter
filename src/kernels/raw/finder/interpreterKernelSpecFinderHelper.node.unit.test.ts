@@ -29,13 +29,13 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
     let interpreterService: IInterpreterService;
     let extensionChecker: IPythonExtensionChecker;
     let trustedKernels: ITrustedKernelPaths;
-    let venvInterpreter: PythonEnvironment;
-    const condaInterpreter: PythonEnvironment = {
+    let venvInterpreter: PythonEnvironment & { sysPrefix: string };
+    const condaInterpreter: PythonEnvironment & { sysPrefix: string } = {
         id: 'conda',
         sysPrefix: 'home/conda',
         uri: Uri.file('conda')
     };
-    const globalInterpreter: PythonEnvironment = {
+    const globalInterpreter: PythonEnvironment & { sysPrefix: string } = {
         id: 'globalInterpreter',
         sysPrefix: 'home/global',
         uri: Uri.joinPath(Uri.file('globalSys'), 'bin', 'python')

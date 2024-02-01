@@ -62,8 +62,7 @@ suite('Error Handler Unit Tests', () => {
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
         uri: Uri.file('Some Path'),
-        id: Uri.file('Some Path').fsPath,
-        sysPrefix: ''
+        id: Uri.file('Some Path').fsPath
     };
     let disposables: IDisposable[] = [];
     let environments: PythonExtension['environments'];
@@ -181,7 +180,6 @@ suite('Error Handler Unit Tests', () => {
                 interpreter: {
                     uri: Uri.file('Hello There'),
                     id: Uri.file('Hello There').fsPath,
-                    sysPrefix: 'Something else',
                     displayName: 'Hello (Some Path)'
                 },
                 kernelSpec: {

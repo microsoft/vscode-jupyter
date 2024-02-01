@@ -73,7 +73,6 @@ suite('kernel Launcher', () => {
             id: '1',
             interpreter: {
                 id: '2',
-                sysPrefix: '',
                 uri: Uri.file('python')
             },
             kernelSpec: {

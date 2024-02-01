@@ -77,9 +77,6 @@ suite('Kernel Dependency Service', () => {
             kernelSpec: await createInterpreterKernelSpec(interpreter, Uri.file('')),
             id: '1'
         });
-        // when(environments.resolveEnvironment(jupyterInterpreter.id)).thenResolve({
-        //     executable: { sysPrefix: '' }
-        // } as any);
     });
     teardown(() => (disposables = dispose(disposables)));
     [undefined, Uri.file('test.py'), Uri.file('test.ipynb')].forEach((resource) => {

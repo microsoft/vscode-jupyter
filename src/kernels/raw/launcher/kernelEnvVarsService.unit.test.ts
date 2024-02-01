@@ -33,8 +33,7 @@ suite('Kernel Environment Variables Service', () => {
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
         uri: pathFile,
-        id: pathFile.fsPath,
-        sysPrefix: '0'
+        id: pathFile.fsPath
     };
     let kernelSpec: IJupyterKernelSpec;
     let processEnv: NodeJS.ProcessEnv;
@@ -173,8 +172,7 @@ suite('Kernel Environment Variables Service', () => {
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
             envType: EnvironmentType.Conda,
             uri: Uri.joinPath(Uri.file('env'), 'foopath'),
-            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath,
-            sysPrefix: 'foosysprefix'
+            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath
         });
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'pathInInterpreterEnv'
@@ -193,8 +191,7 @@ suite('Kernel Environment Variables Service', () => {
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
             envType: EnvironmentType.Conda,
             uri: Uri.joinPath(Uri.file('env'), 'foopath'),
-            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath,
-            sysPrefix: 'foosysprefix'
+            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath
         });
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'pathInInterpreterEnv'
@@ -215,8 +212,7 @@ suite('Kernel Environment Variables Service', () => {
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
             envType: EnvironmentType.Conda,
             uri: Uri.joinPath(Uri.file('env'), 'foopath'),
-            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath,
-            sysPrefix: 'foosysprefix'
+            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath
         });
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'pathInInterpreterEnv'
@@ -242,8 +238,7 @@ suite('Kernel Environment Variables Service', () => {
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
             envType,
             uri: Uri.file('foopath'),
-            id: Uri.file('foopath').fsPath,
-            sysPrefix: 'foosysprefix'
+            id: Uri.file('foopath').fsPath
         });
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'

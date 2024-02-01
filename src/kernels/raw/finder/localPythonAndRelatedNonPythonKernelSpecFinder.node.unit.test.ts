@@ -56,7 +56,6 @@ suite(`Local Python and related kernels`, async () => {
         id: 'python',
         interpreter: {
             id: 'python',
-            sysPrefix: 'home/python',
             uri: Uri.file('python')
         },
         kernelSpec: {
@@ -68,12 +67,10 @@ suite(`Local Python and related kernels`, async () => {
     });
     const condaInterpreter: PythonEnvironment = {
         id: 'conda',
-        sysPrefix: 'home/conda',
         uri: Uri.file('conda')
     };
     const globalInterpreter: PythonEnvironment = {
         id: 'globalInterpreter',
-        sysPrefix: 'home/global',
         uri: Uri.joinPath(Uri.file('globalSys'), 'bin', 'python')
     };
     let condaKernel: PythonKernelConnectionMetadata;
@@ -129,7 +126,6 @@ suite(`Local Python and related kernels`, async () => {
     });
     const venvInterpreter: PythonEnvironment = {
         id: 'venvPython',
-        sysPrefix: 'home/venvPython',
         uri: Uri.file('home/venvPython/bin/python')
     };
     const cachedVenvInterpreterWithOlderVersionOfPython = {
@@ -599,10 +595,9 @@ suite(`Local Python and related kernels`, async () => {
         when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
         when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter]);
         // Conda kernel should have a java kernelspec.
-        findKernelSpecsInPathsReturnValue.set(
-            Uri.joinPath(Uri.file(condaKernel.interpreter.sysPrefix!), baseKernelPath),
-            [Uri.file(javaKernelSpec.kernelSpec.specFile!)]
-        );
+        findKernelSpecsInPathsReturnValue.set(Uri.joinPath(Uri.file('home/conda'), baseKernelPath), [
+            Uri.file(javaKernelSpec.kernelSpec.specFile!)
+        ]);
         // Java Kernel spec should load and return the kernelspec json.
         loadKernelSpecReturnValue.set(Uri.file(javaKernelSpec.kernelSpec.specFile!), javaKernelSpec.kernelSpec);
         const onDidChange = createEventHandler(finder, 'onDidChangeKernels', disposables);

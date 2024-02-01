@@ -63,8 +63,7 @@ suite('DataScienceInstaller install', async () => {
             envName: 'test',
             envPath: interpreterPath,
             id: interpreterPath.fsPath,
-            uri: interpreterPath,
-            sysPrefix: ''
+            uri: interpreterPath
         };
         installationChannelManager
             .setup((c) => c.getInstallationChannels(TypeMoq.It.isAny()))
@@ -79,8 +78,7 @@ suite('DataScienceInstaller install', async () => {
             envName: 'test',
             envPath: interpreterPath,
             id: interpreterPath.fsPath,
-            uri: interpreterPath,
-            sysPrefix: ''
+            uri: interpreterPath
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
         testInstaller.setup((c) => c.type).returns(() => ModuleInstallerType.Conda);
@@ -110,8 +108,7 @@ suite('DataScienceInstaller install', async () => {
             envName: 'test',
             envPath: interpreterPath,
             id: interpreterPath.fsPath,
-            uri: interpreterPath,
-            sysPrefix: ''
+            uri: interpreterPath
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
         testInstaller.setup((c) => c.type).returns(() => ModuleInstallerType.Conda);
@@ -141,8 +138,7 @@ suite('DataScienceInstaller install', async () => {
             envName: 'test',
             envPath: interpreterPath,
             uri: interpreterPath,
-            id: interpreterPath.fsPath,
-            sysPrefix: ''
+            id: interpreterPath.fsPath
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
 
@@ -173,8 +169,7 @@ suite('DataScienceInstaller install', async () => {
             envName: 'test',
             envPath: interpreterPath,
             id: interpreterPath.fsPath,
-            uri: interpreterPath,
-            sysPrefix: ''
+            uri: interpreterPath
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
 
@@ -205,8 +200,7 @@ suite('DataScienceInstaller install', async () => {
             envName: 'test',
             envPath: interpreterPath,
             id: interpreterPath.fsPath,
-            uri: interpreterPath,
-            sysPrefix: ''
+            uri: interpreterPath
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
 
