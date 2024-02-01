@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
-import { IKernel, IKernelSession } from '../../../kernels/types';
+import { IKernel, IKernelController, IKernelSession } from '../../../kernels/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import * as helpers from '../../../kernels/helpers';
 import * as sinon from 'sinon';
@@ -35,6 +35,7 @@ suite('DataViewerDependencyService (IKernel, Node)', () => {
         session = mock<IKernelSession>();
         when(session.kernel).thenReturn(instance(mock<Kernel.IKernelConnection>()));
         when(kernel.session).thenReturn(instance(session));
+        when(kernel.controller).thenReturn(instance(mock<IKernelController>()));
 
         dependencyService = new DataViewerDependencyService(
             instance(installer),

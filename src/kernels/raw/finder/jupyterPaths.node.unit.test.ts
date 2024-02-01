@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable local-rules/dont-use-process */
 
+import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, ExtensionContext, Memento, Uri } from 'vscode';
@@ -18,8 +19,10 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import * as path from '../../../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../test/constants.node';
-import { uriEquals } from '../../../test/datascience/helpers';
+import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { PythonExtension } from '@vscode/python-extension';
+import { setPythonApi } from '../../../platform/interpreter/helpers';
 
 suite('Jupyter Paths', () => {
     let disposables: IDisposable[] = [];
@@ -38,8 +41,8 @@ suite('Jupyter Paths', () => {
     const oldALLUSERSPROFILE = process.env['ALLUSERSPROFILE'];
     const windowsHomeDir = Uri.file('C:/users/username');
     const extensionUri = Uri.file('extension');
+    const sysPrefix = `PythonEnv${path.sep}PythonSysPrefix`;
     const interpreter: PythonEnvironment = {
-        sysPrefix: `PythonEnv${path.sep}PythonSysPrefix`,
         uri: Uri.file('PythonEnv'),
         id: Uri.file('PythonEnv').fsPath
     };
@@ -74,8 +77,7 @@ suite('Jupyter Paths', () => {
             instance(memento),
             instance(fs),
             instance(context),
-            instance(pythonExecFactory),
-            instance(interpreterService)
+            instance(pythonExecFactory)
         );
         delete process.env['JUPYTER_PATH'];
         delete process.env['APPDATA'];
@@ -83,6 +85,18 @@ suite('Jupyter Paths', () => {
         delete process.env['JUPYTER_CONFIG_DIR'];
         delete process.env['JUPYTER_DATA_DIR'];
         delete process.env['ALLUSERSPROFILE'];
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        const environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
+        when(environments.resolveEnvironment(interpreter.id)).thenResolve({
+            executable: { sysPrefix }
+        } as any);
     });
     teardown(async () => {
         disposables = dispose(disposables);
@@ -187,10 +201,7 @@ suite('Jupyter Paths', () => {
         assert.strictEqual(dataDirs[1].toString(), Uri.file(jupyter_Paths[1]).toString());
         assert.strictEqual(dataDirs[2].toString(), Uri.file(jupyter_Paths[2]).toString());
         assert.strictEqual(dataDirs[3].toString(), Uri.file(jupyterDataDir).toString());
-        assert.strictEqual(
-            dataDirs[4].toString(),
-            Uri.joinPath(Uri.file(interpreter.sysPrefix!), 'share', 'jupyter').toString()
-        );
+        assert.strictEqual(dataDirs[4].toString(), Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter').toString());
     });
 
     test('Get datadir for python kernel on Windows with Python DataDir, JUPYTER_CONFIG_DIR, PROGRAMDATA, JUPYTER_DATA_DIR & JUPYTER_PATH', async () => {
@@ -215,10 +226,7 @@ suite('Jupyter Paths', () => {
         assert.strictEqual(dataDirs[2].toString(), Uri.file(jupyter_Paths[2]).toString());
         assert.strictEqual(dataDirs[3].toString(), Uri.file('JupyterDataDirFromPython').toString());
         assert.strictEqual(dataDirs[4].toString(), Uri.file(jupyterDataDir).toString());
-        assert.strictEqual(
-            dataDirs[5].toString(),
-            Uri.joinPath(Uri.file(interpreter.sysPrefix!), 'share', 'jupyter').toString()
-        );
+        assert.strictEqual(dataDirs[5].toString(), Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter').toString());
     });
 
     test('Get datadir for non-python kernel on Unix', async () => {
@@ -279,10 +287,7 @@ suite('Jupyter Paths', () => {
 
         assert.strictEqual(dataDirs.length, 2);
         assert.strictEqual(dataDirs[0].toString(), Uri.file(jupyterDataDir).toString());
-        assert.strictEqual(
-            dataDirs[1].toString(),
-            Uri.joinPath(Uri.file(interpreter.sysPrefix!), 'share', 'jupyter').toString()
-        );
+        assert.strictEqual(dataDirs[1].toString(), Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter').toString());
     });
     test('Get datadir for python kernel on mac with Python DataDir, JUPYTER_CONFIG_DIR, PROGRAMDATA, JUPYTER_DATA_DIR & JUPYTER_PATH', async () => {
         when(platformService.homeDir).thenReturn(macHomeDir);
@@ -306,10 +311,7 @@ suite('Jupyter Paths', () => {
         assert.strictEqual(dataDirs[2].toString(), Uri.file(jupyter_Paths[2]).toString());
         assert.strictEqual(dataDirs[3].toString(), Uri.file('JupyterDataDirFromPython').toString());
         assert.strictEqual(dataDirs[4].toString(), Uri.file(jupyterDataDir).toString());
-        assert.strictEqual(
-            dataDirs[5].toString(),
-            Uri.joinPath(Uri.file(interpreter.sysPrefix!), 'share', 'jupyter').toString()
-        );
+        assert.strictEqual(dataDirs[5].toString(), Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter').toString());
     });
 
     test('Get kernelspec root paths on Windows', async () => {

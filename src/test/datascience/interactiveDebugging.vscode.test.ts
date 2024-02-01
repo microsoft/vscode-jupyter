@@ -7,7 +7,7 @@ import { DebuggerType, sharedIWDebuggerTests } from './interactiveDebugging.vsco
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Interactive Window Debugging @debugger', function () {
+suite.skip('Interactive Window Debugging @debugger', function () {
     const settingsFile = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',

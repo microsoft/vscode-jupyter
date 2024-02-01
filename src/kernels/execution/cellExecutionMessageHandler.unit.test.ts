@@ -418,7 +418,10 @@ suite(`Cell Execution Message Handler`, () => {
                     })
                 ];
             });
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'Hello');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'Hello'
+            );
             // Update the display data again.
             await executeCellWithOutput(notebook.cellAt(1), codeToUpdateDisplayDataWorld, 1, (producer) => {
                 return [
@@ -429,7 +432,10 @@ suite(`Cell Execution Message Handler`, () => {
                     })
                 ];
             });
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'World');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'World'
+            );
         });
 
         test('Execute cell and add Display output (even if Cell DOM has not yet been updated) ', async () => {
@@ -471,7 +477,10 @@ suite(`Cell Execution Message Handler`, () => {
                     })
                 ];
             });
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'Hello');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'Hello'
+            );
             // Update the display data again.
             await executeCellWithOutput(notebook.cellAt(1), codeToUpdateDisplayDataWorld, 1, (producer) => {
                 return [
@@ -482,7 +491,10 @@ suite(`Cell Execution Message Handler`, () => {
                     })
                 ];
             });
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'World');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'World'
+            );
         });
         test('Updates to two separate display updates in the same cell output', async () => {
             const notebook = createNotebook([
@@ -520,8 +532,14 @@ suite(`Cell Execution Message Handler`, () => {
             assert.strictEqual((output1.transient as any).display_id, display_id);
             const output2 = translateCellDisplayOutput(notebook.cellAt(0).outputs[1]);
             assert.strictEqual((output2.transient as any).display_id, display_id2);
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'Hello');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[1].items[0].data).toString(), 'World');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'Hello'
+            );
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[1].items[0].data).toString(),
+                'World'
+            );
 
             // Update the first display data.
             await executeCellWithOutput(notebook.cellAt(1), codeToUpdateDisplayData1ILike, 2, (producer) => {
@@ -534,8 +552,14 @@ suite(`Cell Execution Message Handler`, () => {
                 ];
             });
             // await executeAndUpdateDisplayData(notebook, codeToUpdateDisplayData1ILike, 2, outputsFromILikeUpdate);
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'I Like');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[1].items[0].data).toString(), 'World');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'I Like'
+            );
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[1].items[0].data).toString(),
+                'World'
+            );
 
             // Update the second display data.
             await executeCellWithOutput(notebook.cellAt(2), codeToUpdateDisplayData1Pizza, 3, (producer) => {
@@ -548,8 +572,14 @@ suite(`Cell Execution Message Handler`, () => {
                 ];
             });
             // await executeAndUpdateDisplayData(notebook, codeToUpdateDisplayData1Pizza, 3, outputsFromPizzaUpdate);
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'I Like');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[1].items[0].data).toString(), 'Pizza');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'I Like'
+            );
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[1].items[0].data).toString(),
+                'Pizza'
+            );
         });
 
         test('Updates to two separate display updates in the same cell output (update second display update)', async () => {
@@ -589,8 +619,14 @@ suite(`Cell Execution Message Handler`, () => {
             assert.strictEqual((output1.transient as any).display_id, display_id);
             const output2 = translateCellDisplayOutput(notebook.cellAt(0).outputs[1]);
             assert.strictEqual((output2.transient as any).display_id, display_id2);
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'Hello');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[1].items[0].data).toString(), 'World');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'Hello'
+            );
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[1].items[0].data).toString(),
+                'World'
+            );
 
             // Update the second display data.
             await executeCellWithOutput(notebook.cellAt(1), codeToUpdateDisplayData1Pizza, 2, (producer) => {
@@ -604,8 +640,14 @@ suite(`Cell Execution Message Handler`, () => {
             });
 
             // await executeAndUpdateDisplayData(notebook, codeToUpdateDisplayData1Pizza, 2, outputsFromPizzaUpdate);
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'Hello');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[1].items[0].data).toString(), 'Pizza');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'Hello'
+            );
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[1].items[0].data).toString(),
+                'Pizza'
+            );
 
             // Update the first display data.
             await executeCellWithOutput(notebook.cellAt(2), codeToUpdateDisplayData1ILike, 3, (producer) => {
@@ -618,8 +660,14 @@ suite(`Cell Execution Message Handler`, () => {
                 ];
             });
             // await executeAndUpdateDisplayData(notebook, codeToUpdateDisplayData1ILike, 3, outputsFromILikeUpdate);
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'I Like');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[1].items[0].data).toString(), 'Pizza');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'I Like'
+            );
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[1].items[0].data).toString(),
+                'Pizza'
+            );
         });
 
         test('Updates to two separate display updates in the same cell output (even if Cell DOM has not yet been updated)', async () => {
@@ -667,8 +715,14 @@ suite(`Cell Execution Message Handler`, () => {
                     })
                 ];
             });
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'Hello');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[1].items[0].data).toString(), 'Pizza');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'Hello'
+            );
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[1].items[0].data).toString(),
+                'Pizza'
+            );
 
             // Update the first display data.
             await executeCellWithOutput(notebook.cellAt(2), codeToUpdateDisplayData1ILike, 3, (producer) => {
@@ -680,8 +734,14 @@ suite(`Cell Execution Message Handler`, () => {
                     })
                 ];
             });
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'I Like');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[1].items[0].data).toString(), 'Pizza');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'I Like'
+            );
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[1].items[0].data).toString(),
+                'Pizza'
+            );
         });
 
         test('Updates display updates in the same cell output within the same execution (even if Cell DOM has not yet been updated) (Issue 12755, 13105, 13163)', async () => {
@@ -741,11 +801,23 @@ suite(`Cell Execution Message Handler`, () => {
                     producer.stream({ name: 'stdout', text: 'Pizza\n' })
                 ];
             });
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[0].items[0].data).toString(), 'Touch me not\n');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[1].items[0].data).toString(), 'C');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[2].items[0].data).toString(), 'Hello\n');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[2].items[1].data).toString(), 'World\n');
-            assert.strictEqual(Buffer.from(notebook.cellAt(0).outputs[2].items[2].data).toString(), 'Pizza\n');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[0].items[0].data).toString(),
+                'Touch me not\n'
+            );
+            assert.strictEqual(new TextDecoder().decode(notebook.cellAt(0).outputs[1].items[0].data).toString(), 'C');
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[2].items[0].data).toString(),
+                'Hello\n'
+            );
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[2].items[1].data).toString(),
+                'World\n'
+            );
+            assert.strictEqual(
+                new TextDecoder().decode(notebook.cellAt(0).outputs[2].items[2].data).toString(),
+                'Pizza\n'
+            );
         });
     });
 
@@ -792,7 +864,7 @@ suite(`Cell Execution Message Handler`, () => {
             for (let index = 0; index < cell.outputs[0].items.length; index++) {
                 const item = cell.outputs[0].items[index];
                 assert.strictEqual(item.mime, 'application/vnd.code.notebook.stdout');
-                assert.strictEqual(Buffer.from(item.data).toString(), `${index}\n`);
+                assert.strictEqual(new TextDecoder().decode(item.data).toString(), `${index}\n`);
             }
 
             // Now assume we closed VS Code, and then opened it again.
@@ -828,9 +900,9 @@ suite(`Cell Execution Message Handler`, () => {
                 const item = cell.outputs[0].items[index];
                 assert.strictEqual(item.mime, 'application/vnd.code.notebook.stdout');
                 if (index >= 50) {
-                    assert.strictEqual(Buffer.from(item.data).toString(), `${25 + index}\n`);
+                    assert.strictEqual(new TextDecoder().decode(item.data).toString(), `${25 + index}\n`);
                 } else {
-                    assert.strictEqual(Buffer.from(item.data).toString(), `${index}\n`);
+                    assert.strictEqual(new TextDecoder().decode(item.data).toString(), `${index}\n`);
                 }
             }
         }

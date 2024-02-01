@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import assert from 'assert';
-import { SemVer } from 'semver';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../../platform/ioc/container';
@@ -19,10 +18,7 @@ const info: PythonEnvironment = {
     envName: '',
     uri: Uri.file(''),
     id: Uri.file('').fsPath,
-    envType: EnvironmentType.Unknown,
-    version: new SemVer('0.0.0-alpha'),
-    sysPrefix: '',
-    sysVersion: ''
+    envType: EnvironmentType.Unknown
 };
 
 suite('Installation - channel messages', () => {

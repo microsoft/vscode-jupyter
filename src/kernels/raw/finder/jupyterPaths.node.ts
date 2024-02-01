@@ -33,7 +33,7 @@ import { IPythonExecutionFactory } from '../../../platform/interpreter/types.nod
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { ResourceMap, ResourceSet } from '../../../platform/common/utils/map';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { getSysPrefix } from '../../../platform/interpreter/helpers';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -62,8 +62,7 @@ export class JupyterPaths {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystemNode) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
     ) {
         this.envVarsProvider.onDidEnvironmentVariablesChange(
             () => {
@@ -208,15 +207,11 @@ export class JupyterPaths {
         }
 
         // 3. Add the paths based on user and env data directories
-        if (interpreter && !interpreter.sysPrefix) {
-            traceWarning(`sysPrefix was not set for ${interpreter.id}`);
-            const details = await this.interpreters.getInterpreterDetails(interpreter.uri);
-            interpreter.sysPrefix = details?.sysPrefix || interpreter.sysPrefix;
-            traceInfoIfCI(`sysPrefix after getting details ${interpreter.sysPrefix}`);
+        let sysPrefix: string | undefined;
+        if (interpreter) {
+            sysPrefix = await getSysPrefix(interpreter);
         }
-        const possibleEnvJupyterPath = interpreter?.sysPrefix
-            ? Uri.joinPath(Uri.file(interpreter.sysPrefix), 'share', 'jupyter')
-            : undefined;
+        const possibleEnvJupyterPath = sysPrefix ? Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter') : undefined;
 
         const systemDataDirectories = this.getSystemJupyterPaths();
         const envJupyterPath = possibleEnvJupyterPath

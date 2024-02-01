@@ -706,7 +706,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             return true;
         }
         if (mime === WIDGET_MIMETYPE) {
-            const data: WidgetData = JSON.parse(Buffer.from(outputItem.data).toString());
+            const data: WidgetData = JSON.parse(new TextDecoder().decode(outputItem.data));
             // Jupyter Output widgets cannot be rendered properly by the widget manager,
             // We need to render that.
             if (typeof data.model_id === 'string' && this.commIdsMappedToWidgetOutputModels.has(data.model_id)) {
@@ -763,7 +763,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                     return false;
                 }
                 try {
-                    const value = JSON.parse(Buffer.from(outputItem.data).toString()) as { model_id?: string };
+                    const value = JSON.parse(new TextDecoder().decode(outputItem.data)) as { model_id?: string };
                     return value.model_id === expectedModelId;
                 } catch (ex) {
                     traceWarning(`Failed to deserialize the widget data`, ex);

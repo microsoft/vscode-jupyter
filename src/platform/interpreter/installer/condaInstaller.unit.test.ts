@@ -47,8 +47,7 @@ suite('Common - Conda Installer', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
 
         installer._isCondaAvailable = false;
@@ -61,8 +60,7 @@ suite('Common - Conda Installer', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
         when(condaService.isCondaAvailable()).thenResolve(false);
 
@@ -74,8 +72,7 @@ suite('Common - Conda Installer', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
         const settings = mock(JupyterSettings);
 
@@ -90,8 +87,7 @@ suite('Common - Conda Installer', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
         const settings = mock(JupyterSettings);
 
@@ -107,7 +103,6 @@ suite('Common - Conda Installer', () => {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath,
-            sysPrefix: '0',
             envName: 'baz'
         };
         const settings = mock(JupyterSettings);
@@ -128,7 +123,6 @@ suite('Common - Conda Installer', () => {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath,
-            sysPrefix: '0',
             envName: 'baz'
         };
         const settings = mock(JupyterSettings);
@@ -148,8 +142,7 @@ suite('Common - Conda Installer', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('baz/foobar/python.exe'),
-            id: Uri.file('baz/foobar/python.exe').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('baz/foobar/python.exe').fsPath
         };
         const condaPath = Uri.file('some Conda Path');
 
@@ -168,8 +161,7 @@ suite('Common - Conda Installer', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('baz/foobar/bin/python.exe'),
-            id: Uri.file('baz/foobar/bin/python.exe').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('baz/foobar/bin/python.exe').fsPath
         };
         const condaPath = Uri.file('some Conda Path');
 

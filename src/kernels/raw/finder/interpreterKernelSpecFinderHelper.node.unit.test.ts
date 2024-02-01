@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import * as path from '../../../platform/vscode-path/path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, EventEmitter, Uri } from 'vscode';
@@ -14,10 +15,11 @@ import { GlobalPythonKernelSpecFinder, findKernelSpecsInInterpreter } from './in
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 import { ITrustedKernelPaths } from './types';
-import { uriEquals } from '../../../test/datascience/helpers';
+import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
 import { IJupyterKernelSpec } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import { PythonExtension } from '@vscode/python-extension';
 
 suite('Interpreter Kernel Spec Finder Helper', () => {
     let helper: GlobalPythonKernelSpecFinder;
@@ -27,17 +29,18 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
     let interpreterService: IInterpreterService;
     let extensionChecker: IPythonExtensionChecker;
     let trustedKernels: ITrustedKernelPaths;
-    let venvInterpreter: PythonEnvironment;
-    const condaInterpreter: PythonEnvironment = {
+    let venvInterpreter: PythonEnvironment & { sysPrefix: string };
+    const condaInterpreter: PythonEnvironment & { sysPrefix: string } = {
         id: 'conda',
         sysPrefix: 'home/conda',
         uri: Uri.file('conda')
     };
-    const globalInterpreter: PythonEnvironment = {
+    const globalInterpreter: PythonEnvironment & { sysPrefix: string } = {
         id: 'globalInterpreter',
         sysPrefix: 'home/global',
         uri: Uri.joinPath(Uri.file('globalSys'), 'bin', 'python')
     };
+    let environments: PythonExtension['environments'];
     setup(() => {
         jupyterPaths = mock<JupyterPaths>();
         when(jupyterPaths.getKernelSpecRootPath()).thenResolve();
@@ -58,10 +61,23 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         venvInterpreter = {
             id: 'venvPython',
             sysPrefix: 'home/venvPython',
-            uri: Uri.file('home/venvPython/bin/python'),
-            version: { major: 3, minor: 10, patch: 0, raw: '3.10.0' }
+            uri: Uri.file('home/venvPython/bin/python')
         };
         disposables.push(helper);
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.resolveEnvironment(venvInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/venvPython' }
+        } as any);
+        when(environments.resolveEnvironment(condaInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/conda' }
+        } as any);
+        when(environments.resolveEnvironment(globalInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/global' }
+        } as any);
     });
     teardown(() => (disposables = dispose(disposables)));
 

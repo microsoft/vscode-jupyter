@@ -37,6 +37,7 @@ import { SessionDisposedError } from '../../platform/errors/sessionDisposedError
 import { isKernelSessionDead } from '../kernel';
 import { ICellExecution } from './types';
 import { KernelError } from '../errors/kernelError';
+import { getCachedSysPrefix } from '../../platform/interpreter/helpers';
 
 /**
  * Factory for CellExecution objects.
@@ -324,7 +325,7 @@ export class CellExecution implements ICellExecution, IDisposable {
                     workspace.workspaceFolders || [],
                     error,
                     getDisplayNameOrNameOfKernelConnection(this.kernelConnection),
-                    this.kernelConnection.interpreter?.sysPrefix
+                    getCachedSysPrefix(this.kernelConnection.interpreter)
                 );
                 errorMessage = failureInfo?.message;
             }

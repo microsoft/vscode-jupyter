@@ -3,7 +3,6 @@
 
 import { assert } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
-import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -16,6 +15,7 @@ import { pandasMinimumVersionSupportedByVariableViewer } from '../../../webviews
 import { PythonExecutionFactory } from '../../../platform/interpreter/pythonExecutionFactory.node';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/interpreter/types.node';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
+import { interpreterGetPandasVersion } from './interpreterDataViewerDependencyImplementation.node';
 
 suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
     let dependencyService: DataViewerDependencyService;
@@ -30,10 +30,7 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
         interpreter = {
             displayName: '',
             id: Uri.file(path.join('users', 'python', 'bin', 'python.exe')).fsPath,
-            uri: Uri.file(path.join('users', 'python', 'bin', 'python.exe')),
-            sysPrefix: '',
-            sysVersion: '',
-            version: new SemVer('3.3.3')
+            uri: Uri.file(path.join('users', 'python', 'bin', 'python.exe'))
         };
         pythonExecService = mock<IPythonExecutionService>();
         installer = mock(ProductInstaller);
@@ -56,27 +53,15 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
     });
     teardown(() => resetVSCodeMocks());
     test('All ok, if pandas is installed and version is > 1.20', async () => {
-        when(
-            pythonExecService.exec(
-                deepEqual([
-                    '-c',
-                    'import pandas;print(pandas.__version__);print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d")'
-                ]),
-                anything()
-            )
-        ).thenResolve({ stdout: '0.30.0\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d' });
+        when(pythonExecService.exec(deepEqual(['-c', interpreterGetPandasVersion]), anything())).thenResolve({
+            stdout: '0.30.0\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d'
+        });
         await dependencyService.checkAndInstallMissingDependencies(interpreter);
     });
     test('Throw exception if pandas is installed and version is = 0.20', async () => {
-        when(
-            pythonExecService.exec(
-                deepEqual([
-                    '-c',
-                    'import pandas;print(pandas.__version__);print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d")'
-                ]),
-                anything()
-            )
-        ).thenResolve({ stdout: '0.20.0\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d' });
+        when(pythonExecService.exec(deepEqual(['-c', interpreterGetPandasVersion]), anything())).thenResolve({
+            stdout: '0.20.0\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d'
+        });
 
         const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
@@ -86,15 +71,9 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
         );
     });
     test('Throw exception if pandas is installed and version is < 0.20', async () => {
-        when(
-            pythonExecService.exec(
-                deepEqual([
-                    '-c',
-                    'import pandas;print(pandas.__version__);print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d")'
-                ]),
-                anything()
-            )
-        ).thenResolve({ stdout: '0.10.0\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d' });
+        when(pythonExecService.exec(deepEqual(['-c', interpreterGetPandasVersion]), anything())).thenResolve({
+            stdout: '0.10.0\n5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d'
+        });
 
         const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 

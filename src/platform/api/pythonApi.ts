@@ -40,7 +40,7 @@ import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivat
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
 import { getOSType, OSType } from '../common/utils/platform';
 import { SemVer } from 'semver';
-import { getEnvironmentType } from '../interpreter/helpers';
+import { getCachedVersion, getEnvironmentType, setPythonApi } from '../interpreter/helpers';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
 
 export function deserializePythonEnvironment(
@@ -50,7 +50,6 @@ export function deserializePythonEnvironment(
     if (pythonVersion) {
         const result = {
             ...pythonVersion,
-            sysPrefix: pythonVersion.sysPrefix || '',
             uri: Uri.file(pythonVersion.path || ''),
             id: pythonEnvId || (pythonVersion as any).id,
             envPath: pythonVersion.envPath ? Uri.file(pythonVersion.envPath) : undefined,
@@ -100,13 +99,9 @@ export function resolvedPythonEnvToJupyterEnv(
     let isCondaEnvWithoutPython = false;
     let uri: Uri;
     let id = env.id;
-    let sysPrefix = env.executable.sysPrefix;
     if (!env.executable.uri) {
         if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
             isCondaEnvWithoutPython = true;
-            // sysprefix is the same as the env path.
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            sysPrefix = sysPrefix || env.environment?.folderUri?.fsPath || '';
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -121,22 +116,13 @@ export function resolvedPythonEnvToJupyterEnv(
 
     return {
         id,
-        sysPrefix: sysPrefix || '',
         envPath: env.environment?.folderUri,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
         uri,
         displayName: env.environment?.name || '',
         envType,
-        isCondaEnvWithoutPython,
-        version: env.version
-            ? {
-                  major: env.version.major,
-                  minor: env.version.minor,
-                  patch: env.version.micro,
-                  raw: env.version.sysVersion
-              }
-            : undefined
+        isCondaEnvWithoutPython
     };
 }
 export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: boolean): PythonEnvironment | undefined {
@@ -144,13 +130,9 @@ export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: b
     let isCondaEnvWithoutPython = false;
     let uri: Uri;
     let id = env.id;
-    let sysPrefix = env.executable.sysPrefix;
     if (!env.executable.uri) {
         if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
             isCondaEnvWithoutPython = true;
-            // sysprefix is the same as the env path.
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            sysPrefix = sysPrefix || env.environment?.folderUri?.fsPath || '';
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -165,22 +147,13 @@ export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: b
 
     return {
         id,
-        sysPrefix: sysPrefix || '',
         envPath: env.environment?.folderUri,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
         uri,
         displayName: env.environment?.name || '',
         envType,
-        isCondaEnvWithoutPython,
-        version: env.version
-            ? {
-                  major: env.version.major || 0,
-                  minor: env.version.minor || 0,
-                  patch: env.version.micro || 0,
-                  raw: env.version.sysVersion || ''
-              }
-            : undefined
+        isCondaEnvWithoutPython
     };
 }
 
@@ -249,6 +222,9 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         const extension = extensions.getExtension<PythonExtensionApi>(PythonExtension);
         if (extension?.packageJSON?.version) {
             this._pythonExtensionVersion = new SemVer(extension?.packageJSON?.version);
+        }
+        if (extension?.exports) {
+            setPythonApi(extension.exports);
         }
         return extension?.exports;
     }
@@ -587,11 +563,11 @@ export class InterpreterService implements IInterpreterService {
                         return;
                     }
                     this.lastLoggedResourceAndInterpreterId = key;
+                    const version = getCachedVersion(item);
                     traceInfo(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
-                        )} (${item?.envType}, '${item?.envName}', ${item?.version?.major}.${item?.version?.minor}.${item
-                            ?.version?.patch})`
+                        )} (${item?.envType}, '${item?.envName}', ${version?.major}.${version?.minor}.${version?.micro})`
                     );
                 })
                 .catch(noop);

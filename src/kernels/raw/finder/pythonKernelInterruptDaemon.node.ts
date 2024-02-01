@@ -13,6 +13,7 @@ import { EOL } from 'os';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
+import { getCachedVersion } from '../../../platform/interpreter/helpers';
 function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
     // Give preference to globally installed python environments.
     // The assumption is that users are more likely to uninstall/delete local python environments
@@ -33,11 +34,13 @@ function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironm
     return false;
 }
 function isSupportedPythonVersion(interpreter: PythonEnvironment) {
+    let major = getCachedVersion(interpreter)?.major ?? 3;
+    let minor = getCachedVersion(interpreter)?.minor ?? 6;
     if (
-        (interpreter?.version?.major ?? 3) >= 3 &&
+        major >= 3 &&
         // Even thought 3.6 is no longer supported, we know this works well enough for what we want.
         // This way we don't need to update this every time the supported version changes.
-        (interpreter?.version?.minor ?? 6) >= 6
+        minor >= 6
     ) {
         return true;
     }

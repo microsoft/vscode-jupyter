@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as path from '../../../../platform/vscode-path/path';
+import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { when, mock, instance } from 'ts-mockito';
 import { Uri } from 'vscode';
@@ -19,6 +20,9 @@ import {
 import { INbExtensionsPathProvider } from '../types';
 import { NbExtensionsPathProvider } from './nbExtensionsPathProvider.node';
 import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExtensionsPathProvider.web';
+import { PythonExtension } from '@vscode/python-extension';
+import { resolvableInstance } from '../../../../test/datascience/helpers';
+import { dispose } from '../../../../platform/common/utils/lifecycle';
 
 [false, true].forEach((isWeb) => {
     const localNonPythonKernelSpec = LocalKernelSpecConnectionMetadata.create({
@@ -26,10 +30,10 @@ import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExt
         kernelSpec: mock<IJupyterKernelSpec>()
     });
     const localPythonKernelSpec = PythonKernelConnectionMetadata.create({
-        id: '',
+        id: 'localPythonKernelSpec',
         kernelSpec: mock<IJupyterKernelSpec>(),
         interpreter: {
-            sysPrefix: __dirname
+            id: 'interpreterId'
         } as any
     });
     const serverProviderHandle = { handle: 'handle', id: 'id', extensionId: '' };
@@ -48,10 +52,23 @@ import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExt
     suite(`NBExtension Path Provider for ${isWeb ? 'Web' : 'Node'}`, () => {
         let provider: INbExtensionsPathProvider;
         let kernel: IKernel;
+        let disposables: { dispose(): void }[] = [];
         setup(() => {
             kernel = mock<IKernel>();
             provider = isWeb ? new WebNbExtensionsPathProvider() : new NbExtensionsPathProvider();
+            const mockedApi = mock<PythonExtension>();
+            sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+            disposables.push({ dispose: () => sinon.restore() });
+            const environments = mock<PythonExtension['environments']>();
+            when(mockedApi.environments).thenReturn(instance(environments));
+            when(environments.resolveEnvironment(localPythonKernelSpec.interpreter.id)).thenResolve({
+                executable: { sysPrefix: __dirname }
+            } as any);
         });
+        teardown(() => {
+            disposables = dispose(disposables);
+        });
+
         test('Returns base url for local non-python kernelspec', async () => {
             when(kernel.kernelConnectionMetadata).thenReturn(localNonPythonKernelSpec);
             assert.isUndefined(await provider.getNbExtensionsParentPath(instance(kernel)));
@@ -62,10 +79,7 @@ import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExt
             if (isWeb) {
                 assert.isUndefined(baseUrl);
             } else {
-                assert.strictEqual(
-                    baseUrl?.toString(),
-                    Uri.file(path.join(localPythonKernelSpec.interpreter.sysPrefix, 'share', 'jupyter')).toString()
-                );
+                assert.strictEqual(baseUrl?.toString(), Uri.file(path.join(__dirname, 'share', 'jupyter')).toString());
             }
         });
         test('Returns base url for remote kernelspec', async () => {

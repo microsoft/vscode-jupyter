@@ -18,8 +18,6 @@ export function createPythonInterpreter(info?: Partial<PythonEnvironment>): Pyth
         displayName: `Something${rnd}`,
         id: Uri.file(`somePath${rnd}`).path,
         uri: Uri.file(`somePath${rnd}`),
-        sysPrefix: `someSysPrefix${rnd}`,
-        sysVersion: `1.1.1`,
         ...(info || {})
     };
 }

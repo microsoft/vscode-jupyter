@@ -3,7 +3,6 @@
 
 
 import { Uri } from 'vscode';
-import { PythonVersion } from './pythonVersion';
 
 /**
  * The supported Python environment types.
@@ -25,15 +24,11 @@ export type InterpreterId = string;
  *
  * @prop path - the location of the executable file
  * @prop version - the runtime version
- * @prop sysVersion - the raw value of `sys.version`
  * @prop sysPrefix - the environment's install root (`sys.prefix`)
  */
 export type InterpreterInformation = {
     id: InterpreterId;
     uri: Uri;
-    version?: PythonVersion;
-    sysVersion?: string;
-    sysPrefix: string;
 };
 
 /**

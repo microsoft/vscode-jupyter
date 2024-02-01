@@ -83,7 +83,7 @@ export class PlotSaveHandler implements IPlotSaveHandler {
             );
         }
 
-        await this.fs.writeFile(target, Buffer.from(data.data));
+        await this.fs.writeFile(target, data.data);
     }
 
     protected async saveAsPdf(_output: NotebookCellOutput, _target: Uri) {

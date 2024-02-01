@@ -84,8 +84,7 @@ suite('Pip installer', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
         when(pythonExecutionService.isModuleInstalled('pip')).thenResolve(true);
 
@@ -98,8 +97,7 @@ suite('Pip installer', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
 
         when(pythonExecutionService.isModuleInstalled('pip')).thenResolve(false);
@@ -113,8 +111,7 @@ suite('Pip installer', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            sysPrefix: '0'
+            id: Uri.file('foobar').fsPath
         };
         when(pythonExecutionService.isModuleInstalled('pip')).thenReject(
             new Error('Unable to check if module is installed')
@@ -131,8 +128,7 @@ suite('Pip installer', async () => {
                 const interpreter: PythonEnvironment = {
                     envType,
                     uri: Uri.file('foobar'),
-                    id: Uri.file('foobar').fsPath,
-                    sysPrefix: '0'
+                    id: Uri.file('foobar').fsPath
                 };
                 when(pythonExecutionService.isModuleInstalled('pip')).thenReject(
                     new Error('Unable to check if module is installed')

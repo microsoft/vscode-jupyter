@@ -24,12 +24,14 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc';
 import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
-import { uriEquals } from '../../../test/datascience/helpers';
+import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 import { ResourceMap } from '../../../platform/common/utils/map';
+import { PythonExtension } from '@vscode/python-extension';
+import { setPythonApi } from '../../../platform/interpreter/helpers';
 
 suite(`Local Python and related kernels`, async () => {
     let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
@@ -54,7 +56,6 @@ suite(`Local Python and related kernels`, async () => {
         id: 'python',
         interpreter: {
             id: 'python',
-            sysPrefix: 'home/python',
             uri: Uri.file('python')
         },
         kernelSpec: {
@@ -66,12 +67,10 @@ suite(`Local Python and related kernels`, async () => {
     });
     const condaInterpreter: PythonEnvironment = {
         id: 'conda',
-        sysPrefix: 'home/conda',
         uri: Uri.file('conda')
     };
     const globalInterpreter: PythonEnvironment = {
         id: 'globalInterpreter',
-        sysPrefix: 'home/global',
         uri: Uri.joinPath(Uri.file('globalSys'), 'bin', 'python')
     };
     let condaKernel: PythonKernelConnectionMetadata;
@@ -127,13 +126,10 @@ suite(`Local Python and related kernels`, async () => {
     });
     const venvInterpreter: PythonEnvironment = {
         id: 'venvPython',
-        sysPrefix: 'home/venvPython',
-        uri: Uri.file('home/venvPython/bin/python'),
-        version: { major: 3, minor: 10, patch: 0, raw: '3.10.0' }
+        uri: Uri.file('home/venvPython/bin/python')
     };
     const cachedVenvInterpreterWithOlderVersionOfPython = {
-        ...deserializePythonEnvironment(serializePythonEnvironment(venvInterpreter), venvInterpreter.id)!,
-        version: { major: 3, minor: 8, patch: 0, raw: '3.8.0' }
+        ...deserializePythonEnvironment(serializePythonEnvironment(venvInterpreter), venvInterpreter.id)!
     };
 
     let venvPythonKernel: PythonKernelConnectionMetadata;
@@ -174,6 +170,27 @@ suite(`Local Python and related kernels`, async () => {
         when(jupyterPaths.getKernelSpecRootPaths(anything())).thenResolve([]);
         when(jupyterPaths.getKernelSpecRootPath()).thenResolve(globalKernelRootPath);
         when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        const environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
+        when(environments.resolveEnvironment(pythonKernelSpec.id)).thenResolve({
+            executable: { sysPrefix: 'home/python' }
+        } as any);
+        when(environments.resolveEnvironment(condaInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/conda' }
+        } as any);
+        when(environments.resolveEnvironment(globalInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/global' }
+        } as any);
+        when(environments.resolveEnvironment(venvInterpreter.id)).thenResolve({
+            executable: { sysPrefix: 'home/venvPython' }
+        } as any);
 
         // Initialize the kernel specs (test data).
         let kernelSpec = await createInterpreterKernelSpec(venvInterpreter, tempDirForKernelSpecs);
@@ -578,10 +595,9 @@ suite(`Local Python and related kernels`, async () => {
         when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
         when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter]);
         // Conda kernel should have a java kernelspec.
-        findKernelSpecsInPathsReturnValue.set(
-            Uri.joinPath(Uri.file(condaKernel.interpreter.sysPrefix!), baseKernelPath),
-            [Uri.file(javaKernelSpec.kernelSpec.specFile!)]
-        );
+        findKernelSpecsInPathsReturnValue.set(Uri.joinPath(Uri.file('home/conda'), baseKernelPath), [
+            Uri.file(javaKernelSpec.kernelSpec.specFile!)
+        ]);
         // Java Kernel spec should load and return the kernelspec json.
         loadKernelSpecReturnValue.set(Uri.file(javaKernelSpec.kernelSpec.specFile!), javaKernelSpec.kernelSpec);
         const onDidChange = createEventHandler(finder, 'onDidChangeKernels', disposables);

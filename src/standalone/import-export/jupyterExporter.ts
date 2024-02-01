@@ -16,6 +16,7 @@ import { IJupyterServerHelper, INotebookExporter } from '../../kernels/jupyter/t
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { noop } from '../../platform/common/utils/misc';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
+import { getVersion } from '../../platform/interpreter/helpers';
 
 /**
  * Provides export for the interactive window
@@ -145,6 +146,7 @@ export class JupyterExporter implements INotebookExporter {
         }
         // Use the active interpreter
         const usableInterpreter = await this.jupyterServerHelper.getUsableJupyterPython();
-        return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
+        const version = await getVersion(usableInterpreter);
+        return (usableInterpreter && version && version.major) || 3;
     };
 }

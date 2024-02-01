@@ -17,6 +17,7 @@ import { joinPath } from '../../../platform/vscode-path/resources';
 import { noop } from '../../../platform/common/utils/misc';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { base64ToUint8Array } from '../../../platform/common/utils/string';
 
 @injectable()
 export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
@@ -135,7 +136,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
                 const ext = path.extname(file.path);
                 switch (ext.toLowerCase()) {
                     case '.png':
-                        const buffer = Buffer.from(payload.png.replace('data:image/png;base64', ''), 'base64');
+                        const buffer = base64ToUint8Array(payload.png.replace('data:image/png;base64', ''));
                         await this.fs.writeFile(file, buffer);
                         break;
 

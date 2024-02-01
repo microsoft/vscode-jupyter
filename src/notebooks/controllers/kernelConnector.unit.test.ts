@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { NotebookDocument, Uri } from 'vscode';
@@ -25,13 +26,15 @@ import { createKernelController, TestNotebookDocument } from '../../test/datasci
 import { KernelConnector } from './kernelConnector';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 import { Disposable } from 'vscode';
+import { PythonExtension } from '@vscode/python-extension';
+import { setPythonApi } from '../../platform/interpreter/helpers';
+import { resolvableInstance } from '../../test/datascience/helpers';
 
 suite('Kernel Connector', () => {
     const pythonConnection = PythonKernelConnectionMetadata.create({
         id: 'python',
         interpreter: {
             id: 'id',
-            sysPrefix: '',
             uri: Uri.file('python')
         },
         kernelSpec: {
@@ -55,7 +58,6 @@ suite('Kernel Connector', () => {
         id: 'python',
         interpreter: {
             id: 'id',
-            sysPrefix: '',
             uri: Uri.file('python')
         },
         kernelSpec: {
@@ -65,6 +67,8 @@ suite('Kernel Connector', () => {
             name: 'python'
         }
     });
+    let environments: PythonExtension['environments'];
+
     setup(() => {
         resetVSCodeMocks();
         disposables.push(new Disposable(() => resetVSCodeMocks()));
@@ -89,6 +93,16 @@ suite('Kernel Connector', () => {
             instance(errorHandler)
         );
         when(kernelProvider.getOrCreate(anything(), anything())).thenReturn(instance(kernel));
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
+
         controller = createKernelController(pythonConnection.id);
     });
     teardown(() => (disposables = dispose(disposables)));

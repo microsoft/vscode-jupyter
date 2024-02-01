@@ -15,6 +15,7 @@ import { Commands as DSCommands, CommandSource } from './platform/common/constan
 import { PythonEnvironment } from './platform/pythonEnvironments/info';
 import { Channel } from './platform/common/application/types';
 import { IJupyterVariable } from './kernels/variables/types';
+import { IShowDataViewerFromVariablePanel } from './messageTypes';
 
 export type CommandIds = keyof ICommandNameArgumentTypeMapping;
 
@@ -178,7 +179,7 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];
     [DSCommands.NotebookEditorCollapseAllCells]: [];
-    [DSCommands.ShowDataViewer]: [IJupyterVariable];
+    [DSCommands.ShowDataViewer]: [IJupyterVariable | IShowDataViewerFromVariablePanel];
     [DSCommands.RefreshDataViewer]: [];
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.RunByLine]: [NotebookCell];
