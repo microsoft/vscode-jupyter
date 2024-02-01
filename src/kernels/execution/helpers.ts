@@ -31,6 +31,7 @@ import {
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { getExtensionSpecifcStack } from '../../platform/errors/errors';
 import { getVersion } from '../../platform/interpreter/helpers';
+import { base64ToUint8Array, uint8ArrayToBase64 } from '../../platform/common/utils/string';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -112,7 +113,7 @@ const orderOfMimeTypes = [
 function isEmptyVendoredMimeType(outputItem: NotebookCellOutputItem) {
     if (outputItem.mime.startsWith('application/vnd.')) {
         try {
-            return Buffer.from(outputItem.data).toString().length === 0;
+            return new TextDecoder().decode(outputItem.data).length === 0;
         } catch {}
     }
     return false;
@@ -372,7 +373,7 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
         };
     }
     const originalError: undefined | nbformat.IError = output.metadata?.originalError;
-    const value: Error = JSON.parse(Buffer.from(firstItem.data as Uint8Array).toString('utf8'));
+    const value: Error = JSON.parse(new TextDecoder().decode(firstItem.data));
     return {
         output_type: 'error',
         ename: value.name,
@@ -400,17 +401,7 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
         } else if (mime.startsWith('image/') && mime !== 'image/svg+xml') {
             // Images in Jupyter are stored in base64 encoded format.
             // VS Code expects bytes when rendering images.
-            if (typeof Buffer !== 'undefined' && typeof Buffer.from === 'function') {
-                return Buffer.from(value).toString('base64');
-            } else {
-                // https://developer.mozilla.org/en-US/docs/Glossary/Base64#solution_1_%E2%80%93_escaping_the_string_before_encoding_it
-                const stringValue = textDecoder.decode(value);
-                return btoa(
-                    encodeURIComponent(stringValue).replace(/%([0-9A-F]{2})/g, function (_match, p1) {
-                        return String.fromCharCode(Number.parseInt('0x' + p1));
-                    })
-                );
-            }
+            return uint8ArrayToBase64(value);
         } else if (
             mime.toLowerCase().startsWith('application/vnd.holoviews_load.v') &&
             mime.toLowerCase().endsWith('+json')
@@ -450,12 +441,7 @@ function convertJupyterOutputToBuffer(mime: string, value: unknown): NotebookCel
         } else if (mime.startsWith('image/') && typeof value === 'string' && mime !== 'image/svg+xml') {
             // Images in Jupyter are stored in base64 encoded format.
             // VS Code expects bytes when rendering images.
-            if (typeof Buffer !== 'undefined' && typeof Buffer.from === 'function') {
-                return new NotebookCellOutputItem(Buffer.from(value, 'base64'), mime);
-            } else {
-                const data = Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
-                return new NotebookCellOutputItem(data, mime);
-            }
+            return new NotebookCellOutputItem(base64ToUint8Array(value), mime);
         } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
             return NotebookCellOutputItem.text(JSON.stringify(value), mime);
         } else {

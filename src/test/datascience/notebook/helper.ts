@@ -192,7 +192,7 @@ async function createTemporaryNotebookFromNotebook(
     prefix?: string
 ) {
     const uri = await generateTemporaryFilePath('.ipynb', disposables, rootFolder, prefix);
-    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(notebook)));
+    await workspace.fs.writeFile(uri, new TextEncoder().encode(JSON.stringify(notebook)));
 
     return uri;
 }
@@ -1145,7 +1145,7 @@ function getOutputText(output: NotebookCellOutputItem) {
     ) {
         return '';
     }
-    return Buffer.from(output.data).toString('utf8');
+    return new TextDecoder().decode(output.data);
 }
 function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExactMatch = true) {
     if (
@@ -1158,7 +1158,7 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
         return false;
     }
     try {
-        const haystack = Buffer.from(output.data).toString('utf8');
+        const haystack = new TextDecoder().decode(output.data);
         return isExactMatch
             ? haystack === value || haystack.trim() === value
             : haystack.toLowerCase().includes(value.toLowerCase());

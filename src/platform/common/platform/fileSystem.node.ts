@@ -109,13 +109,13 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
             await this.vscfs.createDirectory(uri);
         }
     }
-    override async writeFile(uri: Uri, text: string | Buffer): Promise<void> {
+    override async writeFile(uri: Uri, text: string | Uint8Array): Promise<void> {
         if (isLocalFile(uri)) {
             const filename = getFilePath(uri);
             await fs.ensureDir(path.dirname(filename));
-            return fs.writeFile(filename, text);
+            return fs.writeFile(filename, typeof text === 'string' ? Buffer.from(text) : text);
         } else {
-            await this.vscfs.writeFile(uri, typeof text === 'string' ? Buffer.from(text) : text);
+            await this.vscfs.writeFile(uri, typeof text === 'string' ? new TextEncoder().encode(text) : text);
         }
     }
     override async copy(source: Uri, destination: Uri, options?: { overwrite: boolean }): Promise<void> {
