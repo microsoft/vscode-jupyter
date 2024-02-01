@@ -149,7 +149,7 @@ export class ExportBase implements IExportBase {
                 });
                 const bytes = this.b64toBlob(content.content, 'application/pdf');
                 const buffer = await bytes.arrayBuffer();
-                await this.fs.writeFile(target!, Buffer.from(buffer));
+                await this.fs.writeFile(target!, new Uint8Array(buffer));
             } else {
                 const content = await contentsManager.get(tempTarget, {
                     type: 'file',

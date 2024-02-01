@@ -45,7 +45,7 @@ export function initializeCommonWebApi() {
             const file = Uri.joinPath(tmpDir, `${uuid()}${extension}`);
             const contents = options.contents || '';
 
-            await workspace.fs.writeFile(file, Buffer.from(contents));
+            await workspace.fs.writeFile(file, new TextEncoder().encode(contents));
             return {
                 file,
                 dispose: () => {
