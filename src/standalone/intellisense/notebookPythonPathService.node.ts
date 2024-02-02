@@ -15,6 +15,7 @@ import { IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { noop } from '../../platform/common/utils/misc';
 import { raceTimeout } from '../../platform/common/utils/async';
 import * as fs from 'fs-extra';
+import { getNotebookUriFromInputBoxUri } from './notebookPythonPathService';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -182,13 +183,4 @@ del _VSCODE_os, _VSCODE_sys, _VSCODE_builtins
         });
         return result;
     }
-}
-
-export function getNotebookUriFromInputBoxUri(textDocumentUri: Uri): Uri | undefined {
-    if (textDocumentUri.scheme !== 'vscode-interactive-input') {
-        return undefined;
-    }
-
-    const notebookPath = `${textDocumentUri.path.replace('InteractiveInput-', 'Interactive-')}.interactive`;
-    return workspace.notebookDocuments.find((doc) => doc.uri.path === notebookPath)?.uri;
 }
