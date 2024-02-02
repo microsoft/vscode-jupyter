@@ -53,8 +53,8 @@ import { Commands } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { format } from 'util';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
-import { getNotebookUriFromInputBoxUri } from '../../standalone/intellisense/notebookPythonPathService.node';
 import { isSysInfoCell } from '../../interactive-window/systemInfoCell';
+import { getNotebookUriFromInputBoxUri } from '../../standalone/intellisense/notebookPythonPathService';
 
 suite(`Interactive window execution @iw`, async function () {
     this.timeout(120_000);
