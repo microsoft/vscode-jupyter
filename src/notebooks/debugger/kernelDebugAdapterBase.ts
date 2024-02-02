@@ -131,7 +131,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         );
         this.disposables.push(
             this.debugService.onDidTerminateDebugSession((e) => {
-                if (e === this.session) {
+                if (e.id === this.session.id) {
                     this.disconnect().catch(noop);
                 }
             })
@@ -230,7 +230,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     public async disconnect() {
         if (!this.disconnected) {
             this.disconnected = true;
-            if (this.debugService.activeDebugSession === this.session) {
+            if (this.debugService.activeDebugSession?.id === this.session.id) {
                 try {
                     await Promise.all([
                         this.deleteDumpedFiles().catch((ex) =>
