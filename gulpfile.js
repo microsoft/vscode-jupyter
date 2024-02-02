@@ -166,13 +166,6 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
         await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
-gulp.task('webpack-dependencies', async () => {
-    // No need to build dependencies for web.
-    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
-        return;
-    }
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
-});
 
 function modifyJson(jsonFile, cb) {
     const json = fs.readFileSync(jsonFile).toString('utf-8');
