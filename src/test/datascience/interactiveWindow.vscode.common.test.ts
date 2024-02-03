@@ -246,7 +246,7 @@ suite(`Interactive window execution @iw`, async function () {
 
 
     print('bar')`;
-    const dedentedCode = `print('foo')
+        const dedentedCode = `print('foo')
 
 
 
