@@ -240,7 +240,7 @@ suite(`Interactive window execution @iw`, async function () {
         );
     });
 
-    test.only('Leading and trailing empty lines in #%% cell are trimmed', async () => {
+    test('Leading and trailing empty lines in #%% cell are trimmed', async () => {
         const actualCode = `    print('foo')
 
 
