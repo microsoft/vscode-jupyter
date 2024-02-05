@@ -34,6 +34,7 @@ import { TraceOptions } from '../../platform/logging/types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
+import { dedentCode } from '../../platform/common/helpers';
 
 function getIndex(index: number, length: number): number {
     // return index within the length range with negative indexing
@@ -1046,7 +1047,7 @@ export class CodeWatcher implements ICodeWatcher {
         const nextRunCellLens = this.getNextCellLens(range.start);
 
         if (currentRunCellLens && this.document) {
-            const code = this.document.getText(currentRunCellLens.range);
+            const code = dedentCode(this.document.getText(currentRunCellLens.range));
 
             // Move the next cell if allowed.
             if (advance) {

@@ -6,6 +6,7 @@ import { Position, Range, TextEditor, Uri, window, workspace } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ICodeExecutionHelper } from '../types';
 import { noop } from '../../common/utils/misc';
+import { dedentCode } from '../../common/helpers';
 
 /**
  * Handles trimming code sent to a terminal so it actually runs.
@@ -49,7 +50,8 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
         } else {
             code = this.getMultiLineSelectionText(textEditor);
         }
-        return this.dedentCode(code.trimEnd());
+
+        return dedentCode(code.trimEnd());
     }
 
     public async saveFileIfDirty(file: Uri): Promise<void> {
@@ -57,23 +59,6 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
         if (docs.length === 1 && docs[0].isDirty) {
             await docs[0].save();
         }
-    }
-
-    private dedentCode(code: string) {
-        const lines = code.split('\n');
-        const firstNonEmptyLine = lines.find((line) => line.trim().length > 0);
-        if (firstNonEmptyLine) {
-            const leadingSpaces = firstNonEmptyLine.match(/^\s*/)![0];
-            return lines
-                .map((line) => {
-                    if (line.startsWith(leadingSpaces)) {
-                        return line.replace(leadingSpaces, '');
-                    }
-                    return line;
-                })
-                .join('\n');
-        }
-        return code;
     }
 
     private getSingleLineSelectionText(textEditor: TextEditor): string {

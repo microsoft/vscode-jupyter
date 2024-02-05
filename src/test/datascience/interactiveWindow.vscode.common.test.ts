@@ -246,6 +246,11 @@ suite(`Interactive window execution @iw`, async function () {
 
 
     print('bar')`;
+        const dedentedCode = `print('foo')
+
+
+
+print('bar')`;
         const codeWithWhitespace = `    # %%
 
 
@@ -265,7 +270,7 @@ ${actualCode}
         traceInfoIfCI('After submitting');
         const lastCell = await waitForLastCellToComplete(interactiveWindow);
         const actualCellText = lastCell.document.getText();
-        assert.equal(actualCellText, actualCode);
+        assert.equal(actualCellText, dedentedCode);
     });
 
     test('Run current file in interactive window (with cells)', async () => {
