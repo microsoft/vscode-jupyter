@@ -275,8 +275,7 @@ jobs:
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
         packageVersion: ['']
-        tags:
-          [
+        tags: [
             '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter',
             # '@widgets',
             '@iw',
@@ -318,18 +317,18 @@ jobs:
             os: windows-latest
             ipywidgetsVersion: ''
           # IPyWidgets 8
-        #   - jupyterConnection: raw
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     tags: '@widgets'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: '8'
-        #   - jupyterConnection: remote
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     tags: '@widgets'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: '8'
+          #   - jupyterConnection: raw
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     tags: '@widgets'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: '8'
+          #   - jupyterConnection: remote
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     tags: '@widgets'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: '8'
           # Conda
           - jupyterConnection: raw
             python: conda
