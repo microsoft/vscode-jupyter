@@ -5,7 +5,7 @@ import type { Kernel, Session } from '@jupyterlab/services';
 import type { ICommOpenMsg } from '@jupyterlab/services/lib/kernel/messages';
 import {
     registerCommTargetFor3rdPartyExtensions,
-    remoteCommTargetFor3rdPartyExtensions
+    removeCommTargetFor3rdPartyExtensions
 } from '../../notebooks/controllers/ipywidgets/message/ipyWidgetMessageDispatcher';
 
 const wrappedSession = new WeakMap<Session.ISessionConnection, Session.ISessionConnection>();
@@ -59,7 +59,7 @@ function createKernelWrapper(kernel: Kernel.IKernelConnection) {
                     targetName: string,
                     callback: (comm: Kernel.IComm, msg: ICommOpenMsg<'iopub' | 'shell'>) => void | PromiseLike<void>
                 ): void => {
-                    remoteCommTargetFor3rdPartyExtensions(kernel, targetName);
+                    removeCommTargetFor3rdPartyExtensions(kernel, targetName);
                     return Reflect.get(target, p).apply(target, [targetName, callback]);
                 };
             }
