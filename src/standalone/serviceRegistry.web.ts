@@ -8,9 +8,8 @@ import { ActiveEditorContextService } from './context/activeEditorContext';
 import { GlobalActivation } from './activation/globalActivation';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { JupyterExporter } from './import-export/jupyterExporter';
-import { JupyterKernelServiceFactory } from './api/kernelApi';
-import { IExportedKernelServiceFactory } from './api/api';
-import { ApiAccessService } from './api/apiAccessService';
+import { JupyterKernelServiceFactory } from './api/unstable/kernelApi';
+import { ApiAccessService } from './api/unstable/apiAccessService';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { IExtensionContext } from '../platform/common/types';
@@ -20,8 +19,10 @@ import { ImportTracker } from './import-export/importTracker';
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
 import { CommandRegistry as CodespaceCommandRegistry } from './codespace/commandRegistry';
-import { EagerlyActivateJupyterUriProviders } from './api/activateJupyterProviderExtensions';
-import { ExposeUsedAzMLServerHandles } from './api/usedAzMLServerHandles';
+import { EagerlyActivateJupyterUriProviders } from './api/unstable/activateJupyterProviderExtensions';
+import { ExposeUsedAzMLServerHandles } from './api/unstable/usedAzMLServerHandles.deprecated';
+import { IExportedKernelServiceFactory } from './api/unstable/types';
+import { KernelApi } from './api/kernels/accessManagement';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -82,4 +83,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         ExposeUsedAzMLServerHandles
     );
+
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelApi);
 }

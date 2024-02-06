@@ -6,13 +6,13 @@ import * as sinon from 'sinon';
 import { when, instance, mock, anything, verify, reset } from 'ts-mockito';
 import { Disposable, EventEmitter, Extension, ExtensionMode, SecretStorage, SecretStorageChangeEvent } from 'vscode';
 import { clearApiAccess, requestApiAccess, updateListOfExtensionsAllowedToAccessApi } from './apiAccess';
-import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
-import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
-import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platform/common/types';
-import { dispose } from '../../platform/common/utils/lifecycle';
-import { Common } from '../../platform/common/utils/localize';
-import { ServiceContainer } from '../../platform/ioc/container';
-import { noop } from '../../test/core';
+import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
+import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
+import { dispose } from '../../../platform/common/utils/lifecycle';
+import { Common } from '../../../platform/common/utils/localize';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { noop } from '../../../test/core';
 
 suite('Kernel Api Access', () => {
     let disposables: IDisposable[] = [];

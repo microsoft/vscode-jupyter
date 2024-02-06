@@ -3,13 +3,13 @@
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { dispose } from '../../platform/common/utils/lifecycle';
-import { IDisposable, IExtensions } from '../../platform/common/types';
-import { traceInfo } from '../../platform/logging';
-import { IExtensionTestApi, waitForCondition } from '../../test/common';
-import { noop } from '../../test/core';
-import { initialize } from '../../test/initialize';
-import { closeNotebooksAndCleanUpAfterTests, createTemporaryNotebook } from '../../test/datascience/notebook/helper';
+import { dispose } from '../../../platform/common/utils/lifecycle';
+import { IDisposable, IExtensions } from '../../../platform/common/types';
+import { traceInfo } from '../../../platform/logging';
+import { IExtensionTestApi, waitForCondition } from '../../../test/common';
+import { noop } from '../../../test/core';
+import { initialize } from '../../../test/initialize';
+import { closeNotebooksAndCleanUpAfterTests, createTemporaryNotebook } from '../../../test/datascience/notebook/helper';
 import {
     CancellationToken,
     CancellationTokenSource,
@@ -23,12 +23,12 @@ import {
     commands,
     notebooks
 } from 'vscode';
-import { JupyterServer, JupyterServerProvider } from '../../api';
-import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
-import { JupyterServer as JupyterServerStarter } from '../../test/datascience/jupyterServer.node';
-import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../test/constants';
-import { isWeb } from '../../platform/common/utils/misc';
-import { MultiStepInput } from '../../platform/common/utils/multiStepInput';
+import { JupyterServer, JupyterServerProvider } from '../../../api';
+import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
+import { JupyterServer as JupyterServerStarter } from '../../../test/datascience/jupyterServer.node';
+import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../../test/constants';
+import { isWeb } from '../../../platform/common/utils/misc';
+import { MultiStepInput } from '../../../platform/common/utils/multiStepInput';
 
 suite('Jupyter Provider Tests', function () {
     // On conda these take longer for some reason.
