@@ -22,6 +22,7 @@ import { CommandRegistry as CodespaceCommandRegistry } from './codespace/command
 import { EagerlyActivateJupyterUriProviders } from './api/unstable/activateJupyterProviderExtensions';
 import { ExposeUsedAzMLServerHandles } from './api/unstable/usedAzMLServerHandles.deprecated';
 import { IExportedKernelServiceFactory } from './api/unstable/types';
+import { KernelApi } from './api/kernels/accessManagement';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -82,4 +83,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         ExposeUsedAzMLServerHandles
     );
+
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelApi);
 }
