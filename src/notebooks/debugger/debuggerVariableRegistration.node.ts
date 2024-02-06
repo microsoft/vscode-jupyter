@@ -23,6 +23,7 @@ export class DebuggerVariableRegistration implements IExtensionSyncActivationSer
     ) {}
     public activate() {
         this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(PYTHON_LANGUAGE, this));
+        this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory('debugpy', this));
         this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(pythonKernelDebugAdapter, this));
         this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(pythonIWKernelDebugAdapter, this));
     }
