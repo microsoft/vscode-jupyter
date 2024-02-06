@@ -11,15 +11,14 @@ import {
     workspace,
     NotebookDocument,
     Event,
-    EventEmitter,
-    CancellationError
+    EventEmitter
 } from 'vscode';
 import { Kernel, KernelStatus, Output } from '../../../api';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
-import { DisposableBase, ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
+import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
 import { noop } from '../../../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
@@ -28,11 +27,6 @@ import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/
 import { once } from '../../../platform/common/utils/events';
 import { traceVerbose } from '../../../platform/logging';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import type { IComm } from '@jupyterlab/services/lib/kernel/kernel';
-import { wrapKernel } from '../unstable/kernelWrapper';
-type CommData = {
-    data: unknown;
-};
 
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.
@@ -164,8 +158,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 return that.kernel.status;
             },
             onDidChangeStatus: that.onDidChangeStatus,
-            executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
-            createCommTarget: (token: CancellationToken) => this.createCommTarget(token)
+            executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token)
         });
     }
     static createApiKernel(
@@ -283,64 +276,6 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         } finally {
             dispose(disposables);
         }
-    }
-
-    async createCommTarget(token: CancellationToken): Promise<
-        {
-            onMessage: Event<CommData>;
-            send(data: unknown, buffers?: (ArrayBuffer | ArrayBufferView)[]): void;
-        } & ObservableDisposable
-    > {
-        if (token.isCancellationRequested) {
-            throw new CancellationError();
-        }
-        const kernel = this.kernel.session?.kernel ? wrapKernel(this.kernel.session.kernel) : undefined;
-        if (!kernel) {
-            throw new Error('Kernel session not available');
-        }
-        let isClosed = false;
-        const onMessage = new EventEmitter<CommData>();
-        let sender: undefined | ((data: unknown) => void);
-        const commObject = new (class extends ObservableDisposable {
-            readonly onMessage = onMessage.event;
-            constructor() {
-                super();
-                this._register(onMessage);
-            }
-            send(data: unknown): void {
-                if (isClosed || this.isDisposed) {
-                    throw new Error('Comm is closed');
-                }
-                if (!sender) {
-                    throw new Error('Comm is not ready');
-                }
-                if (this.isDisposed) {
-                    throw new Error('Comm is disposed');
-                }
-                sender(data);
-            }
-        })();
-
-        return new Promise<typeof commObject>((resolve, reject) => {
-            const callback = (comm: IComm) => {
-                if (token.isCancellationRequested) {
-                    comm.close();
-                    return reject(new CancellationError());
-                }
-                commObject._register(new Disposable(() => (isClosed ? noop() : comm.close())));
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                sender = (data) => comm.send((data as any) || null);
-                comm.onMsg = (e) => onMessage.fire({ data: e.content.data });
-                comm.onClose = () => {
-                    isClosed = true;
-                    commObject.dispose();
-                };
-                resolve(commObject);
-            };
-
-            commObject._register(new Disposable(() => kernel.removeCommTarget(this.extensionId, callback)));
-            kernel.registerCommTarget(this.extensionId, callback);
-        });
     }
 }
 
