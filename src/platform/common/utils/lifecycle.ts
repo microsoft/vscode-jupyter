@@ -175,7 +175,7 @@ export abstract class DisposableBase implements IDisposable {
     /**
      * Adds `o` to the collection of disposables managed by this object.
      */
-    protected _register<T extends IDisposable>(o: T): T {
+    public _register<T extends IDisposable>(o: T): T {
         if ((o as unknown as DisposableBase) === this) {
             throw new Error('Cannot register a disposable on itself!');
         }

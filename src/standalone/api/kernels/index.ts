@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { Uri, workspace } from 'vscode';
-import { Kernel, Kernels } from '../../api';
-import { ServiceContainer } from '../../platform/ioc/container';
-import { IKernel, IKernelProvider, isRemoteConnection } from '../types';
+import { Kernel, Kernels } from '../../../api';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { IKernel, IKernelProvider, isRemoteConnection } from '../../../kernels/types';
 import { createKernelApiForExtension as createKernelApiForExtension } from './kernel';
-import { Telemetry, sendTelemetryEvent } from '../../telemetry';
+import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { requestApiAccess } from './apiAccess';
 
 const kernelCache = new WeakMap<IKernel, Kernel>();

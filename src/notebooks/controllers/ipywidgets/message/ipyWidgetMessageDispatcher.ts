@@ -36,7 +36,7 @@ export function registerCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelCo
     }
 }
 
-export function remoteCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelConnection, targetName: string) {
+export function removeCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelConnection, targetName: string) {
     kernelCommTargets.get(kernel)?.targets?.delete?.(targetName);
 }
 

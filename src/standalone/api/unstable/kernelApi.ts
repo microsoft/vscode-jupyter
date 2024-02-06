@@ -9,21 +9,21 @@ import {
     IThirdPartyKernelProvider,
     BaseKernelConnectionMetadata,
     IKernelFinder
-} from '../../kernels/types';
-import { traceVerbose, traceInfoIfCI } from '../../platform/logging';
-import { IDisposableRegistry, IExtensions } from '../../platform/common/types';
-import { PromiseChain } from '../../platform/common/utils/async';
-import { sendTelemetryEvent } from '../../telemetry';
+} from '../../../kernels/types';
+import { traceVerbose, traceInfoIfCI } from '../../../platform/logging';
+import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
+import { PromiseChain } from '../../../platform/common/utils/async';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { ApiAccessService } from './apiAccessService';
-import { ActiveKernel, IExportedKernelService, KernelConnectionMetadata } from '../../api';
-import { JupyterNotebookView, Telemetry } from '../../platform/common/constants';
-import { KernelConnector } from '../../notebooks/controllers/kernelConnector';
-import { DisplayOptions } from '../../kernels/displayOptions';
-import { IServiceContainer } from '../../platform/ioc/types';
-import { IExportedKernelServiceFactory } from './api';
-import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { ActiveKernel, IExportedKernelService, KernelConnectionMetadata } from '../../../api';
+import { JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
+import { KernelConnector } from '../../../notebooks/controllers/kernelConnector';
+import { DisplayOptions } from '../../../kernels/displayOptions';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import type { Session } from '@jupyterlab/services';
 import { wrapKernelSession } from './kernelWrapper';
+import { IExportedKernelServiceFactory } from './types';
 
 @injectable()
 export class JupyterKernelServiceFactory implements IExportedKernelServiceFactory {
@@ -240,7 +240,7 @@ class JupyterKernelService implements IExportedKernelService {
         if (kernel?.session) {
             return {
                 metadata: this.translateKernelConnectionMetadataToExportedType(kernel.kernelConnectionMetadata),
-                connection: wrapKernelSession(kernel.session)
+                connection: wrapKernelSession(kernel.session, this.callingExtensionId)
             };
         }
     }
@@ -277,7 +277,7 @@ class JupyterKernelService implements IExportedKernelService {
         if (!kernel?.session) {
             throw new Error('Not found');
         }
-        return wrapKernelSession(kernel.session);
+        return wrapKernelSession(kernel.session, this.callingExtensionId);
     }
     private translateKernelConnectionMetadataToExportedType(
         connection: Readonly<IKernelKernelConnectionMetadata>

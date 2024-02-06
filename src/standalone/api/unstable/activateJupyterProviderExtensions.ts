@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { noop } from '../../platform/common/utils/misc';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { noop } from '../../../platform/common/utils/misc';
 import { extensions } from 'vscode';
 
 /**

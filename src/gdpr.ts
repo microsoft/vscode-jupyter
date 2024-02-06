@@ -414,6 +414,28 @@
      ]
    }
  */
+//Telemetry.JupyterKernelApiKernelPEMUsage
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_KERNEL_API_KERNEL_PEM_USAGE" : {
+     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the Jupyter KernelConnection class.","owner":"donjayamanne"},
+     "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the member of the KernelConnection class used.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.JupyterKernelApiSessionPEMUsage
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_KERNEL_API_SESSION_PEM_USAGE" : {
+     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the Jupyter Session class.","owner":"donjayamanne"},
+     "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the member of the Session class used.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.JupyterKernelApiUsage
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_API_USAGE" : {

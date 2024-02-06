@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { ExtensionMode, Uri, env, extensions, l10n, window, workspace } from 'vscode';
-import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
-import { ServiceContainer } from '../../platform/ioc/container';
-import { traceError } from '../../platform/logging';
-import { IDisposableRegistry, IExtensionContext } from '../../platform/common/types';
-import { once } from '../../platform/common/utils/functional';
-import { Common } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
+import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { traceError } from '../../../platform/logging';
+import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
+import { once } from '../../../platform/common/utils/functional';
+import { Common } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 
 const extensionApiAccess = new Map<string, ReturnType<typeof requestKernelAccessImpl>>();
 const extensionsTriedAccessingApi = new Set<string>();

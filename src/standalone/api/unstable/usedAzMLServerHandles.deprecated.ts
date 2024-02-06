@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { injectable, inject } from 'inversify';
 import { commands } from 'vscode';
 

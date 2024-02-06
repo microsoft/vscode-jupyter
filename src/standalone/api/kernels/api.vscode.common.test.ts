@@ -3,8 +3,8 @@
 
 import { assert } from 'chai';
 import { CancellationTokenSource, NotebookCellOutputItem, NotebookDocument, commands, window, workspace } from 'vscode';
-import { traceInfo } from '../../platform/logging';
-import { IDisposable } from '../../platform/common/types';
+import { traceInfo } from '../../../platform/logging';
+import { IDisposable } from '../../../platform/common/types';
 import {
     captureScreenShot,
     createEventHandler,
@@ -12,23 +12,23 @@ import {
     suiteMandatory,
     testMandatory,
     waitForCondition
-} from '../../test/common';
+} from '../../../test/common';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     insertCodeCell,
     runCell,
     waitForExecutionCompletedSuccessfully
-} from '../../test/datascience/notebook/helper';
-import { getKernelsApi } from './api';
-import { raceTimeoutError } from '../../platform/common/utils/async';
-import { dispose } from '../../platform/common/utils/lifecycle';
-import { IKernel, IKernelProvider } from '../types';
-import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
-import { Kernels, Output } from '../../api';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../test/constants';
-import { KernelError } from '../errors/kernelError';
-import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
+} from '../../../test/datascience/notebook/helper';
+import { getKernelsApi } from '.';
+import { raceTimeoutError } from '../../../platform/common/utils/async';
+import { dispose } from '../../../platform/common/utils/lifecycle';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
+import { Kernels, Output } from '../../../api';
+import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../../test/constants';
+import { KernelError } from '../../../kernels/errors/kernelError';
+import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
 suiteMandatory('Kernel API Tests @python', function () {
     const disposables: IDisposable[] = [];

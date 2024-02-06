@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Uri, Event } from 'vscode';
-import { IExtensionApi } from '../standalone/api/api';
+import { IExtensionApi } from '../standalone/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { dispose } from '../platform/common/utils/lifecycle';
