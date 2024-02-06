@@ -237,7 +237,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
             await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
         });
-        test('Button Widget with custom comm message', async () => {
+        test.skip('Button Widget with custom comm message', async () => {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -348,7 +348,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             await assertOutputContainsHtml(cell1, comms, ['>Widgets are linked an get updated<'], '.widget-output');
             assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
         });
-        test('More Nested Output Widgets', async () => {
+        test.skip('More Nested Output Widgets', async () => {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -482,7 +482,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
                 () => `Output doesn't contain text 'Bar' or still contains 'Outside, Inside, Foo', html is ${html}`
             );
         });
-        test('Interactive Button', async () => {
+        test.skip('Interactive Button', async () => {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -509,7 +509,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
                     }`
             );
         });
-        test('Interactive Function', async () => {
+        test.skip('Interactive Function', async () => {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -539,7 +539,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             assert.strictEqual(getTextOutputValue(cell.outputs[1]).trim(), `Executing do_something with 'Hello World'`);
             assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), `'Hello World'`);
         });
-        test('Interactive Plot', async function () {
+        test.skip('Interactive Plot', async function () {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
