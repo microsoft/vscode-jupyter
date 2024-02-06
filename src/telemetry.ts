@@ -20,6 +20,8 @@ import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
 import { IExtensionApi } from './standalone/api';
 import { IExportedKernelService, Kernel, Kernels } from './api';
+import type { Session } from '@jupyterlab/services';
+import type { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 
 export * from './platform/telemetry/index';
 export type DurationMeasurement = {
@@ -3583,6 +3585,62 @@ export class IEventNamePropertyMapping {
          * Name of the API member used.
          */
         pemUsed: keyof IExportedKernelService;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            extensionId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            pemUsed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+
+    /**
+     * Telemetry sent when an extension uses our 3rd party Kernel API.
+     */
+    [Telemetry.JupyterKernelApiSessionPEMUsage]: TelemetryEventInfo<{
+        /**
+         * Extension Id that's attempting to use the Jupyter Session class.
+         */
+        extensionId: string;
+        /**
+         * Name of the member of the Session class used.
+         */
+        pemUsed: keyof Session.ISessionConnection;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            extensionId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            pemUsed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+
+    /**
+     * Telemetry sent when an extension uses our 3rd party Kernel API.
+     */
+    [Telemetry.JupyterKernelApiKernelPEMUsage]: TelemetryEventInfo<{
+        /**
+         * Extension Id that's attempting to use the Jupyter KernelConnection class.
+         */
+        extensionId: string;
+        /**
+         * Name of the member of the KernelConnection class used.
+         */
+        pemUsed: keyof IKernelConnection;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',

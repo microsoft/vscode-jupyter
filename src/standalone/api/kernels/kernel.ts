@@ -29,7 +29,7 @@ import { once } from '../../../platform/common/utils/events';
 import { traceVerbose } from '../../../platform/logging';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import type { IComm } from '@jupyterlab/services/lib/kernel/kernel';
-import { wrapKernel } from '../unstable/kernelWrapper';
+import { wrapKernelSession } from '../unstable/kernelWrapper';
 type CommData = {
     data: unknown;
 };
@@ -294,7 +294,8 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         if (token.isCancellationRequested) {
             throw new CancellationError();
         }
-        const kernel = this.kernel.session?.kernel ? wrapKernel(this.kernel.session.kernel) : undefined;
+        const session = this.kernel.session ? wrapKernelSession(this.kernel.session, this.extensionId) : undefined;
+        const kernel = session?.kernel;
         if (!kernel) {
             throw new Error('Kernel session not available');
         }

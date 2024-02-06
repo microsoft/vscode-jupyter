@@ -240,7 +240,7 @@ class JupyterKernelService implements IExportedKernelService {
         if (kernel?.session) {
             return {
                 metadata: this.translateKernelConnectionMetadataToExportedType(kernel.kernelConnectionMetadata),
-                connection: wrapKernelSession(kernel.session)
+                connection: wrapKernelSession(kernel.session, this.callingExtensionId)
             };
         }
     }
@@ -277,7 +277,7 @@ class JupyterKernelService implements IExportedKernelService {
         if (!kernel?.session) {
             throw new Error('Not found');
         }
-        return wrapKernelSession(kernel.session);
+        return wrapKernelSession(kernel.session, this.callingExtensionId);
     }
     private translateKernelConnectionMetadataToExportedType(
         connection: Readonly<IKernelKernelConnectionMetadata>
