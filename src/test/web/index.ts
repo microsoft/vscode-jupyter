@@ -17,7 +17,7 @@ setTestSettings({
 // E.g. when extension activates, the isCI would have been set and necessary loggers setup & the like.
 import * as extension from '../../extension.web';
 import * as vscode from 'vscode';
-import type { IExtensionApi } from '../../standalone/api/api';
+import type { IExtensionApi } from '../../standalone/api';
 import type { IExtensionContext } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';

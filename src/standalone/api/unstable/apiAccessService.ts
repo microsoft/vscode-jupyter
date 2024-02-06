@@ -3,15 +3,15 @@
 
 import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento, window } from 'vscode';
-import { JVSC_EXTENSION_ID, Telemetry, unknownExtensionId } from '../../platform/common/constants';
-import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../platform/common/types';
-import { PromiseChain } from '../../platform/common/utils/async';
-import { Common, DataScience } from '../../platform/common/utils/localize';
-import { sendTelemetryEvent } from '../../telemetry';
-import { traceError, traceWarning } from '../../platform/logging';
-import { noop } from '../../platform/common/utils/misc';
+import { JVSC_EXTENSION_ID, Telemetry, unknownExtensionId } from '../../../platform/common/constants';
+import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../../platform/common/types';
+import { PromiseChain } from '../../../platform/common/utils/async';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { traceError, traceWarning } from '../../../platform/logging';
+import { noop } from '../../../platform/common/utils/misc';
 import { extensions } from 'vscode';
-import { getVSCodeChannel } from '../../platform/common/application/applicationEnvironment';
+import { getVSCodeChannel } from '../../../platform/common/application/applicationEnvironment';
 
 type ApiExtensionInfo = {
     extensionId: string;

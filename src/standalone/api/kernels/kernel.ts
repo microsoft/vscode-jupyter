@@ -14,23 +14,22 @@ import {
     EventEmitter,
     CancellationError
 } from 'vscode';
-import { Kernel, KernelStatus, Output } from '../../api';
-import { ServiceContainer } from '../../platform/ioc/container';
-import { IKernel, IKernelProvider, INotebookKernelExecution } from '../types';
-import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { DisposableBase, ObservableDisposable, dispose } from '../../platform/common/utils/lifecycle';
-import { noop } from '../../platform/common/utils/misc';
-import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { Telemetry, sendTelemetryEvent } from '../../telemetry';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { Deferred, createDeferred, sleep } from '../../platform/common/utils/async';
-import { once } from '../../platform/common/utils/events';
-import { traceVerbose } from '../../platform/logging';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { Kernel, KernelStatus, Output } from '../../../api';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
+import { DisposableBase, ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
+import { noop } from '../../../platform/common/utils/misc';
+import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
+import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/async';
+import { once } from '../../../platform/common/utils/events';
+import { traceVerbose } from '../../../platform/logging';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import type { IComm } from '@jupyterlab/services/lib/kernel/kernel';
-// eslint-disable-next-line import/no-restricted-paths
-import { wrapKernel } from '../../standalone/api/kernelWrapper';
+import { wrapKernel } from '../unstable/kernelWrapper';
 type CommData = {
     data: unknown;
 };

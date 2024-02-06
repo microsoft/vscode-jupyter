@@ -11,9 +11,8 @@ import { ExtensionRecommendationService } from './recommendation/extensionRecomm
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { IImportTracker, ImportTracker } from './import-export/importTracker';
 import { GlobalActivation } from './activation/globalActivation';
-import { JupyterKernelServiceFactory } from './api/kernelApi';
-import { IExportedKernelServiceFactory } from './api/api';
-import { ApiAccessService } from './api/apiAccessService';
+import { JupyterKernelServiceFactory } from './api/unstable/kernelApi';
+import { ApiAccessService } from './api/unstable/apiAccessService';
 import { WorkspaceActivation } from './activation/workspaceActivation.node';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurveyBanner.node';
@@ -24,8 +23,9 @@ import { PythonExtensionRestartNotification } from './notification/pythonExtensi
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
 import { CommandRegistry as CodespaceCommandRegistry } from './codespace/commandRegistry';
-import { EagerlyActivateJupyterUriProviders } from './api/activateJupyterProviderExtensions';
-import { ExposeUsedAzMLServerHandles } from './api/usedAzMLServerHandles';
+import { EagerlyActivateJupyterUriProviders } from './api/unstable/activateJupyterProviderExtensions';
+import { ExposeUsedAzMLServerHandles } from './api/unstable/usedAzMLServerHandles.deprecated';
+import { IExportedKernelServiceFactory } from './api/unstable/types';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);

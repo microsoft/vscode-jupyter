@@ -53,7 +53,7 @@ import {
     window,
     workspace
 } from 'vscode';
-import { buildApi, IExtensionApi } from './standalone/api/api';
+import { buildApi, IExtensionApi } from './standalone/api';
 import { traceError } from './platform/logging';
 import {
     GLOBAL_MEMENTO,

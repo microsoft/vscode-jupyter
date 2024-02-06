@@ -6,7 +6,7 @@ import type { ICommOpenMsg } from '@jupyterlab/services/lib/kernel/messages';
 import {
     registerCommTargetFor3rdPartyExtensions,
     removeCommTargetFor3rdPartyExtensions
-} from '../../notebooks/controllers/ipywidgets/message/ipyWidgetMessageDispatcher';
+} from '../../../notebooks/controllers/ipywidgets/message/ipyWidgetMessageDispatcher';
 
 const wrappedSession = new WeakMap<Session.ISessionConnection, Session.ISessionConnection>();
 export function wrapKernelSession(session: Session.ISessionConnection) {

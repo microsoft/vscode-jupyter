@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import { clearPendingChainedUpdatesForTests } from '../kernels/execution/notebookUpdater';
-import { IExtensionApi } from '../standalone/api/api';
+import { IExtensionApi } from '../standalone/api';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { IDisposable } from '../platform/common/types';
 import { sleep } from '../platform/common/utils/async';

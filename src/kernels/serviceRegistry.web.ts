@@ -36,7 +36,7 @@ import { KernelDependencyService } from './kernelDependencyService.web';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.web';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
-import { KernelApi } from './api/accessManagement';
+import { KernelApi } from '../standalone/api/kernels/accessManagement';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
