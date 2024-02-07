@@ -165,13 +165,14 @@ export class NotebookCellStateTracker {
     }
 }
 
-export function traceCellMessage(cell: NotebookCell, message: string) {
+export function traceCellMessage(cell: NotebookCell, message: string | (() => string)) {
+    let messageToLog = typeof message === 'string' ? () => message : message;
     traceInfoIfCI(
         () =>
             `Cell Index:${cell.index}, of document ${uriPath.basename(
                 cell.notebook.uri
             )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${cell.executionSummary
-                ?.executionOrder}. ${message}. called from ${getExtensionSpecifcStack()}`
+                ?.executionOrder}. ${messageToLog()}. called from ${getExtensionSpecifcStack()}`
     );
 }
 
