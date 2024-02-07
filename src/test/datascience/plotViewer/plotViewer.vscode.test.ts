@@ -16,6 +16,7 @@ import {
 } from '../notebook/helper.node';
 import { createJupyterCellFromVSCNotebookCell } from '../../../kernels/execution/helpers';
 import { window } from 'vscode';
+import { captureScreenShot } from '../../common';
 
 suite('VSCode Notebook PlotViewer integration - VSCode Notebook @webview', function () {
     const disposables: IDisposable[] = [];
@@ -34,6 +35,9 @@ suite('VSCode Notebook PlotViewer integration - VSCode Notebook @webview', funct
 
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this);
+        }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });

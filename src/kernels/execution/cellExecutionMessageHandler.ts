@@ -638,7 +638,10 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (this.cell.document.isClosed) {
             return;
         }
-        traceCellMessage(this.cell, 'Update output');
+        traceCellMessage(
+            this.cell,
+            () => `Update output with mimes ${cellOutput.items.map((item) => item.mime).toString()}`
+        );
         // Append to the data (we would push here but VS code requires a recreation of the array)
         // Possible execution of cell has completed (the task would have been disposed).
         // This message could have come from a background thread.
