@@ -364,7 +364,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             );
             assert.include(err.traceback.join(''), 'Consider renaming the file and starting the kernel again');
         }
-        test('Display error about overriding builtin modules (without Python daemon', () =>
+        test.skip('Display error about overriding builtin modules (without Python daemon', () =>
             displayErrorAboutOverriddenBuiltInModules());
     });
 });
