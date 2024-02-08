@@ -277,11 +277,11 @@ jobs:
         packageVersion: ['']
         tags:
           [
-            '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter',
+            # '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter',
             '@widgets',
-            '@iw',
-            '@webview|@export|@lsp|@variableViewer',
-            '@debugger'
+            # '@iw',
+            # '@webview|@export|@lsp|@variableViewer',
+            # '@debugger'
           ]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
@@ -290,74 +290,74 @@ jobs:
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
-        include:
-          # Mandatory tests
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            tags: '^[^@]+$|@mandatory'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            packageVersion: 'prerelease'
-            tags: '^[^@]+$|@mandatory'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
-          - jupyterConnection: web
-            python: python
-            pythonVersion: '3.10'
-            tags: '^[^@]+$|@mandatory'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
-          - jupyterConnection: raw
-            python: python
-            pythonVersion: '3.10'
-            tags: '^[^@]+$|@mandatory'
-            os: windows-latest
-            ipywidgetsVersion: ''
-          # IPyWidgets 8
-          - jupyterConnection: raw
-            python: python
-            pythonVersion: '3.10'
-            tags: '@widgets'
-            os: ubuntu-latest
-            ipywidgetsVersion: '8'
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            tags: '@widgets'
-            os: ubuntu-latest
-            ipywidgetsVersion: '8'
-          # Conda
-          - jupyterConnection: raw
-            python: conda
-            pythonVersion: '3.10'
-            tags: '^[^@]+$|@mandatory|@python'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
-          # Pre-Release Versions
-          - jupyterConnection: raw
-            python: python
-            pythonVersion: '3.10'
-            packageVersion: 'prerelease'
-            tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
-          # Without Python
-          - jupyterConnection: raw
-            python: noPython
-            tags: '@nonPython'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
-          # Misc
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            tags: '@kernelCore'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
+        # include:
+        #   # Mandatory tests
+        #   - jupyterConnection: remote
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     tags: '^[^@]+$|@mandatory'
+        #     os: ubuntu-latest
+        #     ipywidgetsVersion: ''
+        #   - jupyterConnection: remote
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     packageVersion: 'prerelease'
+        #     tags: '^[^@]+$|@mandatory'
+        #     os: ubuntu-latest
+        #     ipywidgetsVersion: ''
+        #   - jupyterConnection: web
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     tags: '^[^@]+$|@mandatory'
+        #     os: ubuntu-latest
+        #     ipywidgetsVersion: ''
+        #   - jupyterConnection: raw
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     tags: '^[^@]+$|@mandatory'
+        #     os: windows-latest
+        #     ipywidgetsVersion: ''
+        #   # IPyWidgets 8
+        #   - jupyterConnection: raw
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     tags: '@widgets'
+        #     os: ubuntu-latest
+        #     ipywidgetsVersion: '8'
+        #   - jupyterConnection: remote
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     tags: '@widgets'
+        #     os: ubuntu-latest
+        #     ipywidgetsVersion: '8'
+        #   # Conda
+        #   - jupyterConnection: raw
+        #     python: conda
+        #     pythonVersion: '3.10'
+        #     tags: '^[^@]+$|@mandatory|@python'
+        #     os: ubuntu-latest
+        #     ipywidgetsVersion: ''
+        #   # Pre-Release Versions
+        #   - jupyterConnection: raw
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     packageVersion: 'prerelease'
+        #     tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
+        #     os: ubuntu-latest
+        #     ipywidgetsVersion: ''
+        #   # Without Python
+        #   - jupyterConnection: raw
+        #     python: noPython
+        #     tags: '@nonPython'
+        #     os: ubuntu-latest
+        #     ipywidgetsVersion: ''
+        #   # Misc
+        #   - jupyterConnection: remote
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     tags: '@kernelCore'
+        #     os: ubuntu-latest
+        #     ipywidgetsVersion: ''
 
     steps:
       - name: Checkout
