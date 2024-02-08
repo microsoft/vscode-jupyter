@@ -327,7 +327,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             assert.isOk(window.activeNotebookEditor, 'No active notebook');
             await waitForKernelToGetAutoSelected(window.activeNotebookEditor!, PYTHON_LANGUAGE);
         }
-        async function displayErrorAboutOverriddenBuiltInModules() {
+        test('Display error about overriding builtin modules', async () => {
             await closeNotebooksAndCleanUpAfterTests(disposables);
             const randomFile = path.join(
                 EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -363,8 +363,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 'seems to be overriding built in modules and interfering with the startup of the kernel'
             );
             assert.include(err.traceback.join(''), 'Consider renaming the file and starting the kernel again');
-        }
-        test.skip('Display error about overriding builtin modules (without Python daemon', () =>
-            displayErrorAboutOverriddenBuiltInModules());
+        });
     });
 });
