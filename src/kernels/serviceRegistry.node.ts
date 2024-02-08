@@ -49,6 +49,7 @@ import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
+import { KernelChatStartupCodeProvider } from './chat/kernelStartupCodeProvider';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
@@ -151,4 +152,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<IStartupCodeProviders>(IStartupCodeProviders, KernelStartupCodeProviders);
     serviceManager.addSingleton<PythonKernelInterruptDaemon>(PythonKernelInterruptDaemon, PythonKernelInterruptDaemon);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelChatStartupCodeProvider
+    );
 }

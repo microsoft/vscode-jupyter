@@ -11,12 +11,13 @@ import {
     workspace,
     NotebookDocument,
     Event,
-    EventEmitter
+    EventEmitter,
+    NotebookCellOutput
 } from 'vscode';
 import { Kernel, KernelStatus, Output } from '../../../api';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../../kernels/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
 import { noop } from '../../../platform/common/utils/misc';
@@ -26,7 +27,8 @@ import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { once } from '../../../platform/common/utils/events';
 import { traceVerbose } from '../../../platform/logging';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { PYTHON_LANGUAGE, unknownExtensionId } from '../../../platform/common/constants';
+import { ChatMime } from '../../../kernels/chat/types';
 
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.
@@ -158,7 +160,12 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 return that.kernel.status;
             },
             onDidChangeStatus: that.onDidChangeStatus,
-            executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token)
+            executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
+            executeChatCode: (
+                code: string,
+                handlers: Record<string, (...data: unknown[]) => Promise<unknown>>,
+                token: CancellationToken
+            ) => this.executeChatCode(code, handlers, token)
         });
     }
     static createApiKernel(
@@ -173,6 +180,28 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     }
 
     async *executeCode(code: string, token: CancellationToken): AsyncGenerator<Output, void, unknown> {
+        for await (const output of this.executeCodeInternal(code, undefined, token)) {
+            yield output;
+        }
+    }
+    async *executeChatCode(
+        code: string,
+        handlers: Record<string, (...data: unknown[]) => Promise<unknown>>,
+        token: CancellationToken
+    ): AsyncGenerator<Output, void, unknown> {
+        if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
+            throw new Error('Chat code execution is only supported for Python kernels');
+        }
+        for await (const output of this.executeCodeInternal(code, handlers, token)) {
+            yield output;
+        }
+    }
+
+    async *executeCodeInternal(
+        code: string,
+        handlers: Record<string, (...data: unknown[]) => Promise<unknown>> = {},
+        token: CancellationToken
+    ): AsyncGenerator<Output, void, unknown> {
         if (!this.kernelAccess.accessAllowed) {
             throw new Error(l10n.t('Access to Jupyter Kernel has been revoked'));
         }
@@ -271,12 +300,83 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         try {
             for await (const output of kernelExecution.executeCode(code, this.extensionId, events, token)) {
                 output.items.forEach((output) => mimeTypes.add(output.mime));
-                yield output;
+                if (handlers && hasChatOutput(output)) {
+                    for await (const chatOutput of this.handleChatOutput(
+                        output,
+                        kernelExecution,
+                        events,
+                        mimeTypes,
+                        handlers,
+                        token
+                    )) {
+                        yield chatOutput;
+                    }
+                } else {
+                    yield output;
+                }
             }
         } finally {
             dispose(disposables);
         }
     }
+    async *handleChatOutput(
+        output: NotebookCellOutput,
+        kernelExecution: INotebookKernelExecution,
+        events: {
+            started: EventEmitter<void>;
+            executionAcknowledged: EventEmitter<void>;
+        },
+        mimeTypes: Set<string>,
+        handlers: Record<string, (...data: unknown[]) => Promise<unknown>> = {},
+        token: CancellationToken
+    ): AsyncGenerator<Output, void, unknown> {
+        const chatOutput = output.items.find((i) => i.mime === ChatMime);
+        if (!chatOutput) {
+            return;
+        }
+        const json = JSON.parse(new TextDecoder().decode(chatOutput.data));
+        const meta = (output.metadata || {})['metadata'] || {};
+        const functionId = meta.function || '';
+        const id = meta.id || '';
+        const handler = handlers[functionId];
+        if (!handler) {
+            throw new Error(`Chat Function ${functionId} not found`);
+        }
+        const result = await handler(functionId, json);
+
+        // Send the result back to the chat window.
+        const code = `
+import vscode as __vscode
+import json as __vscode_json
+try:
+    data = __vscode_json.loads('${JSON.stringify({ payload: result }).replace(/\n/g, '//\n')}').get('payload')
+    __vscode.chat.__on_message('${id}', data)
+finally:
+    del __vscode
+    del __vscode_json
+`;
+        for await (const output of kernelExecution.executeCode(code, this.extensionId, events, token)) {
+            output.items.forEach((output) => mimeTypes.add(output.mime));
+            if (hasChatOutput(output)) {
+                for await (const chatOutput of this.handleChatOutput(
+                    output,
+                    kernelExecution,
+                    events,
+                    mimeTypes,
+                    handlers,
+                    token
+                )) {
+                    yield chatOutput;
+                }
+            } else {
+                yield output;
+            }
+        }
+    }
+}
+
+function hasChatOutput(output: NotebookCellOutput) {
+    return output.items.some((i) => i.mime === ChatMime);
 }
 
 async function sendApiTelemetry(extensionId: string, kernel: IKernel, pemUsed: keyof Kernel, executionCount: number) {
