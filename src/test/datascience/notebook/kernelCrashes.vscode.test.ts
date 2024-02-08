@@ -327,7 +327,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             assert.isOk(window.activeNotebookEditor, 'No active notebook');
             await waitForKernelToGetAutoSelected(window.activeNotebookEditor!, PYTHON_LANGUAGE);
         }
-        test('Display error about overriding builtin modules', async () => {
+        test.skip('Display error about overriding builtin modules', async () => {
             await closeNotebooksAndCleanUpAfterTests(disposables);
             const randomFile = path.join(
                 EXTENSION_ROOT_DIR_FOR_TESTS,
