@@ -3,7 +3,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     import json as _VSCODE_json
     import builtins as _VSCODE_builtins
 
-    maxStringLength = 50
+    maxStringLength = 1000
     collectionTypes = ["list", "tuple", "set"]
     arrayPageSize = 50
 
@@ -13,24 +13,8 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         else:
             return string
 
-    def getValue(variable, nested=False):
-        if _VSCODE_builtins.type(variable) == _VSCODE_builtins.str:
-            return f"'{truncateString(variable)}'"
-        elif (
-            _VSCODE_builtins.type(variable) == _VSCODE_builtins.int
-            or _VSCODE_builtins.type(variable) == _VSCODE_builtins.float
-        ):
-            return _VSCODE_builtins.str(variable)
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.list:
-            return "[...]"
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.tuple:
-            return "(...)"
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.set:
-            return "{...}"
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict:
-            return "{...}"
-        else:
-            return truncateString(str(variable))
+    def getValue(variable):
+        return truncateString(_VSCODE_builtins.str(variable))
 
     def getPropertyNames(variable):
         props = []
@@ -78,7 +62,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         return variable
 
     ### Get info on variables at the root level
-    def _VSCODE_getAllVariableDescriptions(varNames):
+    def _VSCODE_getVariableDescriptions(varNames):
         variables = [
             {
                 "name": varName,
@@ -221,7 +205,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         elif what_to_get == "info":
             return _VSCODE_getVariableInfo(*args)
         elif what_to_get == "AllVariableDescriptions":
-            return _VSCODE_getAllVariableDescriptions(*args)
+            return _VSCODE_getVariableDescriptions(*args)
         elif what_to_get == "AllChildrenDescriptions":
             return _VSCODE_getAllChildrenDescriptions(*args)
         else:
