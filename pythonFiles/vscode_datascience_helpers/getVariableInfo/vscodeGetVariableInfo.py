@@ -69,6 +69,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                 **getVariableDescription(globals()[varName]),
                 "root": varName,
                 "propertyChain": [],
+                "language": "python",
             }
             for varName in varNames
             if varName in globals()
@@ -103,6 +104,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                         "name": str(i),
                         "root": rootVarName,
                         "propertyChain": propertyChain + [i],
+                        "language": "python",
                     }
                     for i in range
                 ]
