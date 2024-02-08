@@ -237,7 +237,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
             await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
         });
-        test.skip('Button Widget with custom comm message', async () => {
+        test('Button Widget with custom comm message', async () => {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
