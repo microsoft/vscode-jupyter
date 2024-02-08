@@ -27,7 +27,7 @@ import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { once } from '../../../platform/common/utils/events';
 import { traceVerbose } from '../../../platform/logging';
-import { PYTHON_LANGUAGE, unknownExtensionId } from '../../../platform/common/constants';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { ChatMime } from '../../../kernels/chat/types';
 
 /**
