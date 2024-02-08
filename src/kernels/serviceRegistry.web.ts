@@ -36,6 +36,7 @@ import { KernelDependencyService } from './kernelDependencyService.web';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.web';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
+import { KernelChatStartupCodeProvider } from './chat/kernelStartupCodeProvider';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -103,5 +104,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         CellOutputDisplayIdTracker
+    );
+
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelChatStartupCodeProvider
     );
 }
