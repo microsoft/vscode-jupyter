@@ -46,7 +46,7 @@ fs.readdirSync(path.join(__dirname, '../src')).forEach((file) => {
             })
             .join(EOL);
 
-            // Remove the trailing `}`
+        // Remove the trailing `}`
         // Do not trim leading spaces, as we need to preserve the indentation.
         proposedApi += ('1' + newSource).trim().slice(0, -1).substring(1) + EOL;
     }
