@@ -138,7 +138,10 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     @swallowExceptions()
     public async showDataViewer(request: IShowDataViewer) {
         try {
-            if (this.experiments.inExperiment(Experiments.DataViewerContribution)) {
+            if (
+                this.experiments.inExperiment(Experiments.DataViewerContribution) &&
+                !request.variable.fileName?.path.endsWith('.interactive')
+            ) {
                 // jupyterVariableViewers
                 const variableViewers = this.getMatchingVariableViewers(request.variable);
                 if (variableViewers.length === 0) {
