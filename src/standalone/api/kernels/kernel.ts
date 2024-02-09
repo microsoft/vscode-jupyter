@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
     l10n,
     CancellationToken,
@@ -28,7 +30,7 @@ import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/
 import { once } from '../../../platform/common/utils/events';
 import { traceVerbose } from '../../../platform/logging';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { ChatMime } from '../../../kernels/chat/types';
+import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/types';
 
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.
@@ -163,7 +165,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
             executeChatCode: (
                 code: string,
-                handlers: Record<string, (...data: unknown[]) => Promise<unknown>>,
+                handlers: Record<string, (...data: any[]) => Promise<any>>,
                 token: CancellationToken
             ) => this.executeChatCode(code, handlers, token)
         });
@@ -186,7 +188,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     }
     async *executeChatCode(
         code: string,
-        handlers: Record<string, (...data: unknown[]) => Promise<unknown>>,
+        handlers: Record<string, (...data: any[]) => Promise<any>>,
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
         if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
@@ -199,7 +201,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
 
     async *executeCodeInternal(
         code: string,
-        handlers: Record<string, (...data: unknown[]) => Promise<unknown>> = {},
+        handlers: Record<string, (...data: any[]) => Promise<any>> = {},
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
         if (!this.kernelAccess.accessAllowed) {
@@ -327,14 +329,14 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             executionAcknowledged: EventEmitter<void>;
         },
         mimeTypes: Set<string>,
-        handlers: Record<string, (...data: unknown[]) => Promise<unknown>> = {},
+        handlers: Record<string, (...data: any[]) => Promise<any>> = {},
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
         const chatOutput = output.items.find((i) => i.mime === ChatMime);
         if (!chatOutput) {
             return;
         }
-        const json = JSON.parse(new TextDecoder().decode(chatOutput.data));
+        const json: { arguments: any[] } = JSON.parse(new TextDecoder().decode(chatOutput.data));
         const meta = (output.metadata || {})['metadata'] || {};
         const functionId = meta.function || '';
         const id = meta.id || '';
@@ -342,19 +344,10 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         if (!handler) {
             throw new Error(`Chat Function ${functionId} not found`);
         }
-        const result = await handler(functionId, json);
+        const result = await handler(...json.arguments);
 
         // Send the result back to the chat window.
-        const code = `
-import vscode as __vscode
-import json as __vscode_json
-try:
-    data = __vscode_json.loads('${JSON.stringify({ payload: result }).replace(/\n/g, '//\n')}').get('payload')
-    __vscode.chat.__on_message('${id}', data)
-finally:
-    del __vscode
-    del __vscode_json
-`;
+        const code = generatePythonCodeToInvokeCallback(id, result);
         for await (const output of kernelExecution.executeCode(code, this.extensionId, events, token)) {
             output.items.forEach((output) => mimeTypes.add(output.mime));
             if (hasChatOutput(output)) {

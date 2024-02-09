@@ -6,7 +6,10 @@ export const ChatMime = 'application/vnd.vscode.chat_message';
 export const chatStartupPythonCode = `
 def __VSCODE_inject_module():
 
-    def __VSCODE_send_chat_message__(function, data, callback):
+    def __VSCODE_call_function(function, callback, *args):
+        __VSCODE_send_chat_message__(function, *args, callback=callback)
+
+    def __VSCODE_send_chat_message__(function, *args, callback):
         requests = {}
         try:
             requests = __VSCODE_send_chat_message__.__requests
@@ -28,7 +31,7 @@ def __VSCODE_inject_module():
 
         # Convert object to JSON
         id = str(__VSCODE_send_chat_message__uuid.uuid4())
-        json_data = __VSCODE_send_chat_message__json.dumps(data, cls=DateTimeEncoder)
+        json_data = __VSCODE_send_chat_message__json.dumps({"arguments": list(args)}, cls=DateTimeEncoder)
         requests[id] = callback
         __VSCODE_send_chat_message__ipython_display.display({"${ChatMime}": json_data}, metadata={"id":id, "function": function}, raw=True)
 
@@ -53,6 +56,7 @@ def __VSCODE_inject_module():
     import IPython as __VSCODE_send_chat_message__IPython
     chat = type(__VSCODE_send_chat_message__IPython)("chat")
     chat.send_message = __VSCODE_send_chat_message__
+    chat.call_function = __VSCODE_call_function
     chat.__on_message = __VSCODE_on_chat_message
     __VSCODE_send_chat_message__sys.modules["vscode"] = type(__VSCODE_send_chat_message__IPython)("vscode")
     __VSCODE_send_chat_message__sys.modules["vscode"].chat = chat
@@ -63,3 +67,16 @@ def __VSCODE_inject_module():
 __VSCODE_inject_module()
 del __VSCODE_inject_module
 `;
+
+export function generatePythonCodeToInvokeCallback(requestId: string, response: unknown): string {
+    return `
+import vscode as __vscode
+import json as __vscode_json
+try:
+    data = __vscode_json.loads('${JSON.stringify({ payload: response }).replace(/\n/g, '//\n')}').get('payload')
+    __vscode.chat.__on_message('${requestId}', data)
+finally:
+    del __vscode
+    del __vscode_json
+`;
+}
