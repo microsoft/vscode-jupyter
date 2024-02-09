@@ -808,69 +808,69 @@ jobs:
 #         with:
 #           run: npm run testSmokeLogged
 
-  coverage:
-    name: Coverage reports upload
-    runs-on: ubuntu-latest
-    if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
-    needs: [ts_tests, vscodeTests]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+#   coverage:
+#     name: Coverage reports upload
+#     runs-on: ubuntu-latest
+#     if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
+#     needs: [ts_tests, vscodeTests]
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{env.NODE_VERSION}}
+#       - name: Install Node
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: ${{env.NODE_VERSION}}
 
-      - name: npm ci
-        uses: ./.github/actions/npm-ci
+#       - name: npm ci
+#         uses: ./.github/actions/npm-ci
 
-      - name: Cache compiled TS files
-        id: out-cache
-        uses: actions/cache@v4
-        with:
-          path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+#       - name: Cache compiled TS files
+#         id: out-cache
+#         uses: actions/cache@v4
+#         with:
+#           path: ./out
+#           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
-      - name: Compile if not cached
-        run: npm run prePublishNonBundle
-        if: steps.out-cache.outputs.cache-hit != 'true'
+#       - name: Compile if not cached
+#         run: npm run prePublishNonBundle
+#         if: steps.out-cache.outputs.cache-hit != 'true'
 
-      # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
-      # The name pattern is ${{env.COVERAGE_REPORTS}}-${{runner.os}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
-      # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
-      - name: Download Ubuntu test coverage artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
-          path: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
+#       # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
+#       # The name pattern is ${{env.COVERAGE_REPORTS}}-${{runner.os}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
+#       # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
+#       - name: Download Ubuntu test coverage artifacts
+#         uses: actions/download-artifact@v3
+#         with:
+#           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
+#           path: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
 
-      - name: Extract Ubuntu coverage artifacts to ./nyc_output
-        run: |
-          pwd
-          mkdir .nyc_output
-          mv ${{env.COVERAGE_REPORTS}}-${{runner.os}}/* .nyc_output
-          rm -r ${{env.COVERAGE_REPORTS}}-${{runner.os}}
+#       - name: Extract Ubuntu coverage artifacts to ./nyc_output
+#         run: |
+#           pwd
+#           mkdir .nyc_output
+#           mv ${{env.COVERAGE_REPORTS}}-${{runner.os}}/* .nyc_output
+#           rm -r ${{env.COVERAGE_REPORTS}}-${{runner.os}}
 
-      - name: Merge coverage reports
-        run: |
-          pwd
-          npx nyc merge ./.nyc_output
-          rm -r .nyc_output
-          mkdir .nyc_output
-          mv coverage.json ./.nyc_output
-        continue-on-error: true
+#       - name: Merge coverage reports
+#         run: |
+#           pwd
+#           npx nyc merge ./.nyc_output
+#           rm -r .nyc_output
+#           mkdir .nyc_output
+#           mv coverage.json ./.nyc_output
+#         continue-on-error: true
 
-      - name: Generate coverage reports
-        run: npm run test:cover:report
-        continue-on-error: true
+#       - name: Generate coverage reports
+#         run: npm run test:cover:report
+#         continue-on-error: true
 
-      - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/cobertura-coverage.xml
-          path_to_write_report: ./coverage/codecov_report.txt
-      # Alternative method for uploading
-      # - name: Upload coverage to codecov
-      #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v
+#       - name: Upload coverage to codecov
+#         uses: codecov/codecov-action@v1
+#         with:
+#           token: ${{ secrets.CODECOV_TOKEN }}
+#           file: ./coverage/cobertura-coverage.xml
+#           path_to_write_report: ./coverage/codecov_report.txt
+#       # Alternative method for uploading
+#       # - name: Upload coverage to codecov
+#       #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v
