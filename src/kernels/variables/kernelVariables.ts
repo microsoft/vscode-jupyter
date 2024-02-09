@@ -213,7 +213,8 @@ export class KernelVariables implements IJupyterVariables {
                         size: 0,
                         shape: '',
                         count: 0,
-                        truncated: true
+                        truncated: true,
+                        fileName: kernel.notebook.uri
                     };
                 })
             };
