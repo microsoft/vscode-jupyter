@@ -23,7 +23,6 @@ const tab = '    '; // 4 spaces used as tab size in source formatting.
 const newModuleDeclaration = `declare module '@vscode/jupyter-extension' {`;
 fs.readdirSync(path.join(__dirname, '../src')).forEach((file) => {
     if (file.startsWith('api.proposed.') && file.endsWith('.d.ts')) {
-        console.error(file);
         let source = fs.readFileSync(path.join(__dirname, '../src', file), 'utf8').toString();
         let foundFirstExport = false;
         const newSource = source
@@ -47,7 +46,7 @@ fs.readdirSync(path.join(__dirname, '../src')).forEach((file) => {
             })
             .join(EOL);
 
-        // Remove the trailing `}`
+            // Remove the trailing `}`
         // Do not trim leading spaces, as we need to preserve the indentation.
         proposedApi += ('1' + newSource).trim().slice(0, -1).substring(1) + EOL;
     }
