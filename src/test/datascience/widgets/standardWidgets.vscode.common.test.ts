@@ -193,7 +193,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // Verify the slider has changed.
             await assertOutputContainsHtml(cell2, comms, ['60'], '.widget-readout');
         });
-        test('Checkbox Widget', async () => {
+        test.only('Checkbox Widget', async () => {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -221,7 +221,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
             await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
         });
-        test.only('Button Widget (click button in output of another cell)', async () => {
+        test('Button Widget (click button in output of another cell)', async () => {
             await initializeNotebookForWidgetTest(disposables, { templateFile: 'button_widgets.ipynb' }, editor);
             const [cell0, cell1, cell2] = window.activeNotebookEditor!.notebook.getCells();
 
