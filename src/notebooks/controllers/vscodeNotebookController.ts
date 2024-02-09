@@ -213,7 +213,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
-        this.controller.variableProvider = new JupyterVariablesProvider(jupyterVariables, this.kernelProvider);
+        if (this.controller.supportedLanguages.includes('python')) {
+            this.controller.variableProvider = new JupyterVariablesProvider(jupyterVariables, this.kernelProvider);
+        }
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
         workspace.onDidCloseNotebookDocument(
