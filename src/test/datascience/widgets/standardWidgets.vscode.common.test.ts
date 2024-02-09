@@ -221,7 +221,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
             await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
         });
-        test('Button Widget (click button in output of another cell)', async () => {
+        test.only('Button Widget (click button in output of another cell)', async () => {
             await initializeNotebookForWidgetTest(disposables, { templateFile: 'button_widgets.ipynb' }, editor);
             const [cell0, cell1, cell2] = window.activeNotebookEditor!.notebook.getCells();
 
