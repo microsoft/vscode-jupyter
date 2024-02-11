@@ -502,7 +502,7 @@ jobs:
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
-          python -m pip install jupyter notebook ipykernel==6.29.0 ipython nbconvert nbformat jupyterlab traitlets --pre
+          python -m pip install jupyter notebook ipykernel=='6.29.0' ipython nbconvert nbformat jupyterlab traitlets --pre
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
@@ -514,7 +514,7 @@ jobs:
           python -m pip --disable-pip-version-check install -r build/venv-test-requirements.txt
           python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
-          python -m ipykernel==6.29.0 install --user
+          python -m ipykernel=='6.29.0' install --user
 
       - name: Install Jupyter Notebook and Lab
         if: matrix.jupyterConnection == 'remote' || matrix.jupyterConnection == 'web'
@@ -526,12 +526,12 @@ jobs:
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
-          python -m pip install ipywidgets==8.1.1
+          python -m pip install ipywidgets=='8.1.1'
           python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
           python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
-          python -m pip install ipywidgets==8.1.1
-          python -m ipykernel==6.29.0 install --user
+          python -m pip install ipywidgets=='8.1.1'
+          python -m ipykernel=='6.29.0' install --user
 
       - name: Install Python Libs for conda
         shell: bash -l {0}
