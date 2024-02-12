@@ -30,7 +30,7 @@ runs:
         source .venvkernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
-        python -m pip install 'ipykernel==6.29.0'
+        python -m pip install ipykernel
         python -m ipykernel install --user --name .venvkernel --display-name .venvkernel
         python -m pip uninstall jedi --yes
         python -m pip install jedi==0.17.2
@@ -41,7 +41,7 @@ runs:
         source .venvnokernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
-        python -m pip install install 'ipykernel==6.29.0'
+        python -m pip install install ipykernel
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
         python -m pip uninstall jedi --yes
         python -m pip install jedi==0.17.2
@@ -62,7 +62,7 @@ runs:
         source .venvkernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
-        python -m pip install install 'ipykernel==6.29.0'
+        python -m pip install install ipykernel
         python -m ipykernel install --user --name .venvkernel --display-name .venvkernel
         python -m pip uninstall jedi --yes
         python -m pip install jedi==0.17.2
@@ -73,7 +73,7 @@ runs:
         source .venvnokernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
-        python -m pip install install 'ipykernel==6.29.0'
+        python -m pip install install ipykernel
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
         python -m pip uninstall jedi --yes
         python -m pip install jedi==0.17.2

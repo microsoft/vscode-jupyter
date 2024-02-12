@@ -174,89 +174,89 @@ jobs:
       - name: Validate TELEMETRY files
         run: npm run validateTelemetry
 
-#   ts_tests:
-#     name: Type Script Tests
-#     runs-on: ${{ matrix.os }}
-#     if: github.repository == 'microsoft/vscode-jupyter'
-#     strategy:
-#       fail-fast: false
-#       matrix:
-#         os: ['ubuntu-latest', 'windows-latest']
-#         test-suite: [ts-unit]
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
+  #   ts_tests:
+  #     name: Type Script Tests
+  #     runs-on: ${{ matrix.os }}
+  #     if: github.repository == 'microsoft/vscode-jupyter'
+  #     strategy:
+  #       fail-fast: false
+  #       matrix:
+  #         os: ['ubuntu-latest', 'windows-latest']
+  #         test-suite: [ts-unit]
+  #     steps:
+  #       - name: Checkout
+  #         uses: actions/checkout@v4
 
-#       - name: Use Node ${{env.NODE_VERSION}}
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: ${{env.NODE_VERSION}}
+  #       - name: Use Node ${{env.NODE_VERSION}}
+  #         uses: actions/setup-node@v4
+  #         with:
+  #           node-version: ${{env.NODE_VERSION}}
 
-#       - name: Use Npm ${{env.NPM_VERSION}}
-#         run: npm i -g npm@${{env.NPM_VERSION}}
+  #       - name: Use Npm ${{env.NPM_VERSION}}
+  #         run: npm i -g npm@${{env.NPM_VERSION}}
 
-#       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
-#       - name: Cache npm on linux/mac
-#         uses: actions/cache@v4
-#         if: matrix.os != 'windows-latest'
-#         with:
-#           path: ~/.npm
-#           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-#           restore-keys: |
-#             ${{ runner.os }}-node-
+  #       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
+  #       - name: Cache npm on linux/mac
+  #         uses: actions/cache@v4
+  #         if: matrix.os != 'windows-latest'
+  #         with:
+  #           path: ~/.npm
+  #           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+  #           restore-keys: |
+  #             ${{ runner.os }}-node-
 
-#       - name: Get npm cache directory
-#         if: matrix.os == 'windows-latest'
-#         id: npm-cache
-#         run: |
-#           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-#       - name: Cache npm on windows
-#         uses: actions/cache@v4
-#         if: matrix.os == 'windows-latest'
-#         with:
-#           path: ${{ steps.npm-cache.outputs.dir }}
-#           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-#           restore-keys: |
-#             ${{ runner.os }}-node-
+  #       - name: Get npm cache directory
+  #         if: matrix.os == 'windows-latest'
+  #         id: npm-cache
+  #         run: |
+  #           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+  #       - name: Cache npm on windows
+  #         uses: actions/cache@v4
+  #         if: matrix.os == 'windows-latest'
+  #         with:
+  #           path: ${{ steps.npm-cache.outputs.dir }}
+  #           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+  #           restore-keys: |
+  #             ${{ runner.os }}-node-
 
-#       - name: Cache compiled TS files
-#         # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
-#         id: out-cache
-#         uses: actions/cache@v4
-#         with:
-#           path: ./out
-#           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+  #       - name: Cache compiled TS files
+  #         # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
+  #         id: out-cache
+  #         uses: actions/cache@v4
+  #         with:
+  #           path: ./out
+  #           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
-#       # This is faster than running `npm ci`, we do not want to build zmq, etc.
-#       # Let that happen in other jobs, this job needs to be fast
-#       - name: npm ci
-#         run: npm ci --ignore-scripts --prefer-offline --no-audit
+  #       # This is faster than running `npm ci`, we do not want to build zmq, etc.
+  #       # Let that happen in other jobs, this job needs to be fast
+  #       - name: npm ci
+  #         run: npm ci --ignore-scripts --prefer-offline --no-audit
 
-#       - name: npm run postinstall
-#         run: npm run postinstall
+  #       - name: npm run postinstall
+  #         run: npm run postinstall
 
-#       - name: Compile if not cached
-#         run: npm run prePublishNonBundle
-#         if: steps.out-cache.outputs.cache-hit != 'true'
+  #       - name: Compile if not cached
+  #         run: npm run prePublishNonBundle
+  #         if: steps.out-cache.outputs.cache-hit != 'true'
 
-#       - name: Run TypeScript unit tests
-#         id: test_unittests
-#         run: npm run test:unittests
+  #       - name: Run TypeScript unit tests
+  #         id: test_unittests
+  #         run: npm run test:unittests
 
-#       - name: Verify there are no unhandled errors
-#         run: npm run verifyUnhandledErrors
+  #       - name: Verify there are no unhandled errors
+  #         run: npm run verifyUnhandledErrors
 
-#       - name: Create coverage folder (if not created)
-#         run: npm run createNycFolder
+  #       - name: Create coverage folder (if not created)
+  #         run: npm run createNycFolder
 
-#       # Upload unit test coverage reports for later use in the "reports" job.
-#       - name: Upload unit test coverage reports
-#         uses: actions/upload-artifact@v3
-#         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
-#         with:
-#           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
-#           path: .nyc_output
-#           retention-days: 1
+  #       # Upload unit test coverage reports for later use in the "reports" job.
+  #       - name: Upload unit test coverage reports
+  #         uses: actions/upload-artifact@v3
+  #         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
+  #         with:
+  #           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
+  #           path: .nyc_output
+  #           retention-days: 1
 
   vscodeTests:
     name: Tests # These tests run with Python extension & real Jupyter
@@ -275,10 +275,9 @@ jobs:
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
         packageVersion: ['']
-        tags:
-          [
+        tags: [
             # '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter',
-            '@widgets',
+            '@widgets'
             # '@iw',
             # '@webview|@export|@lsp|@variableViewer',
             # '@debugger'
@@ -502,7 +501,7 @@ jobs:
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
-          python -m pip install jupyter notebook 'ipykernel==6.29.0' ipython nbconvert nbformat jupyterlab traitlets --pre
+          python -m pip install jupyter notebook ipykernel ipython nbconvert nbformat jupyterlab traitlets --pre
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
@@ -526,11 +525,11 @@ jobs:
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
-          python -m pip install 'ipywidgets==8.1.1'
+          python -m pip install ipywidgets
           python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
           python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
-          python -m pip install 'ipywidgets==8.1.1'
+          python -m pip install ipywidgets
           python -m ipykernel install --user
 
       - name: Install Python Libs for conda
@@ -735,7 +734,6 @@ jobs:
 
       - name: Verify there are no unhandled errors
         run: npm run verifyUnhandledErrors
-
 #   smoke-tests:
 #     timeout-minutes: 30
 #     name: Smoke tests
