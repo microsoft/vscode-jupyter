@@ -514,7 +514,7 @@ jobs:
           python -m pip --disable-pip-version-check install -r build/venv-test-requirements.txt
           python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
-          python -m 'ipykernel==6.29.0' install --user
+          python -m ipykernel install --user
 
       - name: Install Jupyter Notebook and Lab
         if: matrix.jupyterConnection == 'remote' || matrix.jupyterConnection == 'web'
@@ -531,7 +531,7 @@ jobs:
           python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
           python -m pip install 'ipywidgets==8.1.1'
-          python -m 'ipykernel==6.29.0' install --user
+          python -m ipykernel install --user
 
       - name: Install Python Libs for conda
         shell: bash -l {0}
