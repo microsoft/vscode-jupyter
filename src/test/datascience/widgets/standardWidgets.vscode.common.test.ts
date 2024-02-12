@@ -539,7 +539,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             assert.strictEqual(getTextOutputValue(cell.outputs[1]).trim(), `Executing do_something with 'Hello World'`);
             assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), `'Hello World'`);
         });
-        test'Interactive Plot', async function () {
+        test('Interactive Plot', async function () {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
