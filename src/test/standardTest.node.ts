@@ -34,9 +34,9 @@ function requiresPythonExtensionToBeInstalled() {
     return isRunningVSCodeTests || IS_SMOKE_TEST() || IS_PERF_TEST();
 }
 
-const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
-    ? 'insiders'
-    : 'stable';
+// const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
+//     ? 'insiders'
+//     : 'stable';
 
 function computePlatform() {
     switch (process.platform) {
@@ -158,7 +158,7 @@ async function getExtensionsDir(): Promise<string> {
 
 async function start() {
     const platform = computePlatform();
-    const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform);
+    const vscodeExecutablePath = await downloadAndUnzipVSCode('1.85', platform);
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
     const userDataDirectory = await createSettings();
     const extensionsDir = await getExtensionsDir();
