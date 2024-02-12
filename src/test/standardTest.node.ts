@@ -34,10 +34,9 @@ function requiresPythonExtensionToBeInstalled() {
     return isRunningVSCodeTests || IS_SMOKE_TEST() || IS_PERF_TEST();
 }
 
-// const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
-//     ? 'insiders'
-//     : 'stable';
-const channel = '1.85.0';
+const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
+    ? 'insiders'
+    : 'stable';
 
 function computePlatform() {
     switch (process.platform) {
