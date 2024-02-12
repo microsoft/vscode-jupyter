@@ -178,7 +178,7 @@ async function start() {
             .concat(['--extensions-dir', extensionsDir])
             .concat(['--user-data-dir', userDataDirectory]),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
-        version: channel,
+        version: '1.85',
         extensionTestsEnv: { ...process.env, DISABLE_INSIDERS_EXTENSION: '1' }
     });
 }
