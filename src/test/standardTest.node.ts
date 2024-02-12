@@ -158,7 +158,7 @@ async function getExtensionsDir(): Promise<string> {
 
 async function start() {
     const platform = computePlatform();
-    const vscodeExecutablePath = await downloadAndUnzipVSCode('1.85', platform);
+    const vscodeExecutablePath = await downloadAndUnzipVSCode('1.85.2', platform);
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
     const userDataDirectory = await createSettings();
     const extensionsDir = await getExtensionsDir();
@@ -178,7 +178,7 @@ async function start() {
             .concat(['--extensions-dir', extensionsDir])
             .concat(['--user-data-dir', userDataDirectory]),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
-        version: '1.85',
+        version: '1.85.2',
         extensionTestsEnv: { ...process.env, DISABLE_INSIDERS_EXTENSION: '1' }
     });
 }
