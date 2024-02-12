@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable no-only-tests/no-only-tests */
 import { assert } from 'chai';
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as urlPath from '../../../platform/vscode-path/resources';
