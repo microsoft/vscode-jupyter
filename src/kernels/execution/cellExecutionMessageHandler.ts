@@ -1075,13 +1075,18 @@ export class CellExecutionMessageHandler implements IDisposable {
             traceback
         };
 
-        const lineRegex = /----> (\d+)/;
+        const cellRegex =
+            /(?<prefix>Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*)(?<lineLabel>line (?<lineNumber>\d+)).*/;
+        // older versions of IPython ~8.3.0
+        const inputRegex =
+            /(?<prefix>Input\s+?(?:\u001b\[.+?m)(?<cellLabel>In\s*\[(?<executionCount>\d+)\]))(?<postfix>.*)/;
         let lineNumber: number | undefined = undefined;
-
+        let executionCount: number | undefined = undefined;
         for (const line of traceback) {
-            const lineMatch = lineRegex.exec(line);
-            if (lineMatch) {
-                lineNumber = parseInt(lineMatch[1]);
+            const lineMatch = cellRegex.exec(line) ?? inputRegex.exec(line);
+            if (lineMatch && lineMatch.groups) {
+                lineNumber = parseInt(lineMatch.groups['lineNumber']);
+                executionCount = parseInt(lineMatch.groups['executionCount']);
                 break;
             }
         }
@@ -1091,7 +1096,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             diagnostics.set(this.cell.document.uri, [
                 {
                     code: '',
-                    message: `${msg.content}: ${msg.content.evalue}`,
+                    message: `${msg.content.ename}: ${msg.content.evalue}`,
                     range: new Range(new Position(lineNumber - 1, 0), new Position(lineNumber - 1, 5)),
                     severity: DiagnosticSeverity.Error,
                     source: 'Cell Execution Failure',
@@ -1099,17 +1104,32 @@ export class CellExecutionMessageHandler implements IDisposable {
                 }
             ]);
 
-            let listener: IDisposable;
-            listener = workspace.onDidChangeNotebookDocument((e) => {
-                if (e.notebook.uri.toString() === this.cell.notebook.uri.toString()) {
-                    for (const cellChange of e.cellChanges) {
-                        if (cellChange.cell.document.uri.toString() === this.cell.document.uri.toString()) {
-                            diagnostics.clear();
-                            listener.dispose();
+            let listeners: IDisposable[] = [];
+            listeners.push(
+                workspace.onDidChangeNotebookDocument((e) => {
+                    if (e.notebook.uri.toString() === this.cell.notebook.uri.toString()) {
+                        for (const cellChange of e.cellChanges) {
+                            if (
+                                cellChange.cell.document.uri.toString() === this.cell.document.uri.toString() &&
+                                cellChange.executionSummary?.executionOrder &&
+                                cellChange.executionSummary.executionOrder !== executionCount
+                            ) {
+                                diagnostics.clear();
+                                listeners.forEach((l) => l.dispose());
+                            }
                         }
                     }
-                }
-            });
+                })
+            );
+
+            listeners.push(
+                workspace.onDidChangeTextDocument((e) => {
+                    if (e.document.uri.toString() === this.cell.document.uri.toString()) {
+                        diagnostics.clear();
+                        listeners.forEach((l) => l.dispose());
+                    }
+                })
+            );
         }
 
         this.addToCellData(output, msg);
