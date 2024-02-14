@@ -21,7 +21,10 @@ import {
     NotebookEdit,
     NotebookCellOutputItem,
     Disposable,
-    window
+    window,
+    languages,
+    DiagnosticSeverity,
+    Position
 } from 'vscode';
 
 import type { Kernel } from '@jupyterlab/services';
@@ -1071,6 +1074,31 @@ export class CellExecutionMessageHandler implements IDisposable {
             evalue: msg.content.evalue,
             traceback
         };
+
+        const lineRegex = /----> (\d+)/;
+        let lineNumber: number | undefined = undefined;
+
+        for (const line of traceback) {
+            const lineMatch = lineRegex.exec(line);
+            if (lineMatch) {
+                lineNumber = parseInt(lineMatch[1]);
+                break;
+            }
+        }
+
+        if (lineNumber && msg.content.ename !== 'KeyboardInterrupt') {
+            const diagnostics = languages.createDiagnosticCollection('cellFailure');
+            diagnostics.set(this.cell.document.uri, [
+                {
+                    code: '',
+                    message: msg.content.evalue,
+                    range: new Range(new Position(lineNumber - 1, 1), new Position(lineNumber - 1, 5)),
+                    severity: DiagnosticSeverity.Error,
+                    source: 'Cell Execution Failure',
+                    relatedInformation: []
+                }
+            ]);
+        }
 
         this.addToCellData(output, msg);
         this.cellHasErrorsInOutput = true;
