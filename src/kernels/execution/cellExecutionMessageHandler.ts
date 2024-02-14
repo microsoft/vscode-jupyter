@@ -1091,13 +1091,25 @@ export class CellExecutionMessageHandler implements IDisposable {
             diagnostics.set(this.cell.document.uri, [
                 {
                     code: '',
-                    message: msg.content.evalue,
-                    range: new Range(new Position(lineNumber - 1, 1), new Position(lineNumber - 1, 5)),
+                    message: `${msg.content}: ${msg.content.evalue}`,
+                    range: new Range(new Position(lineNumber - 1, 0), new Position(lineNumber - 1, 5)),
                     severity: DiagnosticSeverity.Error,
                     source: 'Cell Execution Failure',
                     relatedInformation: []
                 }
             ]);
+
+            let listener: IDisposable;
+            listener = workspace.onDidChangeNotebookDocument((e) => {
+                if (e.notebook.uri.toString() === this.cell.notebook.uri.toString()) {
+                    for (const cellChange of e.cellChanges) {
+                        if (cellChange.cell.document.uri.toString() === this.cell.document.uri.toString()) {
+                            diagnostics.clear();
+                            listener.dispose();
+                        }
+                    }
+                }
+            });
         }
 
         this.addToCellData(output, msg);
