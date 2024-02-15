@@ -2,6 +2,8 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     # Query Jupyter server for the info about a dataframe
     import json as _VSCODE_json
     import builtins as _VSCODE_builtins
+    from collections import namedtuple as _VSCODE_namedtuple
+    import importlib.util as _VSCODE_importlib_util
 
     maxStringLength = 1000
     collectionTypes = ["list", "tuple", "set"]
@@ -61,19 +63,48 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                 return None
         return variable
 
+    DisplayOptions = _VSCODE_namedtuple("DisplayOptions", ["width", "max_columns"])
+
+    def set_pandas_display_options(display_options=None):
+        if _VSCODE_importlib_util.find_spec("pandas") is not None:
+            try:
+                import pandas as _VSCODE_PD
+
+                original_display = DisplayOptions(
+                    width=_VSCODE_PD.options.display.width,
+                    max_columns=_VSCODE_PD.options.display.max_columns,
+                )
+
+                if display_options:
+                    _VSCODE_PD.options.display.max_columns = display_options.max_columns
+                    _VSCODE_PD.options.display.width = display_options.width
+                else:
+                    _VSCODE_PD.options.display.max_columns = 100
+                    _VSCODE_PD.options.display.width = 1000
+
+                return original_display
+            except ImportError:
+                pass
+
     ### Get info on variables at the root level
     def _VSCODE_getVariableDescriptions(varNames):
-        variables = [
-            {
-                "name": varName,
-                **getVariableDescription(globals()[varName]),
-                "root": varName,
-                "propertyChain": [],
-                "language": "python",
-            }
-            for varName in varNames
-            if varName in globals()
-        ]
+        original_display = set_pandas_display_options()
+
+        try:
+            variables = [
+                {
+                    "name": varName,
+                    **getVariableDescription(globals()[varName]),
+                    "root": varName,
+                    "propertyChain": [],
+                    "language": "python",
+                }
+                for varName in varNames
+                if varName in globals()
+            ]
+        finally:
+            if original_display:
+                set_pandas_display_options(original_display)
 
         if is_debugging:
             return _VSCODE_json.dumps(variables)
@@ -82,42 +113,48 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
     ### Get info on children of a variable reached through the given property chain
     def _VSCODE_getAllChildrenDescriptions(rootVarName, propertyChain, startIndex):
-        root = globals()[rootVarName]
-        if root is None:
-            return []
+        original_display = set_pandas_display_options()
 
-        parent = root
-        if _VSCODE_builtins.len(propertyChain) > 0:
-            parent = getChildProperty(root, propertyChain)
+        try:
+            root = globals()[rootVarName]
+            if root is None:
+                return []
 
-        children = []
-        parentInfo = getVariableDescription(parent)
-        if "count" in parentInfo:
-            if parentInfo["count"] > 0:
-                lastItem = _VSCODE_builtins.min(
-                    parentInfo["count"], startIndex + arrayPageSize
-                )
-                range = _VSCODE_builtins.range(startIndex, lastItem)
+            parent = root
+            if _VSCODE_builtins.len(propertyChain) > 0:
+                parent = getChildProperty(root, propertyChain)
+
+            children = []
+            parentInfo = getVariableDescription(parent)
+            if "count" in parentInfo:
+                if parentInfo["count"] > 0:
+                    lastItem = _VSCODE_builtins.min(
+                        parentInfo["count"], startIndex + arrayPageSize
+                    )
+                    range = _VSCODE_builtins.range(startIndex, lastItem)
+                    children = [
+                        {
+                            **getVariableDescription(getChildProperty(parent, [i])),
+                            "name": str(i),
+                            "root": rootVarName,
+                            "propertyChain": propertyChain + [i],
+                            "language": "python",
+                        }
+                        for i in range
+                    ]
+            elif "properties" in parentInfo:
                 children = [
                     {
-                        **getVariableDescription(getChildProperty(parent, [i])),
-                        "name": str(i),
+                        **getVariableDescription(getChildProperty(parent, [prop])),
+                        "name": prop,
                         "root": rootVarName,
-                        "propertyChain": propertyChain + [i],
-                        "language": "python",
+                        "propertyChain": propertyChain + [prop],
                     }
-                    for i in range
+                    for prop in parentInfo["properties"]
                 ]
-        elif "properties" in parentInfo:
-            children = [
-                {
-                    **getVariableDescription(getChildProperty(parent, [prop])),
-                    "name": prop,
-                    "root": rootVarName,
-                    "propertyChain": propertyChain + [prop],
-                }
-                for prop in parentInfo["properties"]
-            ]
+        finally:
+            if original_display:
+                set_pandas_display_options(original_display)
 
         if is_debugging:
             return _VSCODE_json.dumps(children)

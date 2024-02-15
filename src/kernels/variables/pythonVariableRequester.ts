@@ -179,7 +179,12 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             return [];
         }
 
-        return this.deserializeJupyterResult(results) as Promise<IVariableDescription[]>;
+        try {
+            return this.deserializeJupyterResult(results) as Promise<IVariableDescription[]>;
+        } catch (ex) {
+            traceError(ex);
+            return [];
+        }
     }
 
     public async getVariableNamesAndTypesFromKernel(
