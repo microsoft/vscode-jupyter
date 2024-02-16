@@ -196,10 +196,28 @@ interface OutputItem {
      */
     data: Uint8Array;
 }
+export type KernelStatus =
+    | 'unknown'
+    | 'starting'
+    | 'idle'
+    | 'busy'
+    | 'terminating'
+    | 'restarting'
+    | 'autorestarting'
+    | 'dead';
+
 /**
  * Represents a Jupyter Kernel.
  */
 export interface Kernel {
+    /**
+     * The current status of the kernel.
+     */
+    readonly status: KernelStatus;
+    /**
+     * An event emitted when the kernel status changes.
+     */
+    onDidChangeStatus: Event<KernelStatus>;
     /**
      * Language of the kernel.
      * E.g. python, r, julia, etc.
