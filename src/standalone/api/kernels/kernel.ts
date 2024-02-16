@@ -30,7 +30,7 @@ import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/
 import { once } from '../../../platform/common/utils/events';
 import { traceVerbose } from '../../../platform/logging';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/types';
+import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/generator';
 
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.
@@ -165,7 +165,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
             executeChatCode: (
                 code: string,
-                handlers: Record<string, (...data: any[]) => Promise<any>>,
+                handlers: Record<string, (data?: string) => Promise<string | undefined>>,
                 token: CancellationToken
             ) => this.executeChatCode(code, handlers, token)
         });
@@ -188,7 +188,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     }
     async *executeChatCode(
         code: string,
-        handlers: Record<string, (...data: any[]) => Promise<any>>,
+        handlers: Record<string, (data?: string) => Promise<string | undefined>>,
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
         if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
@@ -329,22 +329,27 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             executionAcknowledged: EventEmitter<void>;
         },
         mimeTypes: Set<string>,
-        handlers: Record<string, (...data: any[]) => Promise<any>> = {},
+        handlers: Record<string, (data?: string) => Promise<string | undefined>> = {},
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
         const chatOutput = output.items.find((i) => i.mime === ChatMime);
         if (!chatOutput) {
             return;
         }
-        const json: { arguments: any[] } = JSON.parse(new TextDecoder().decode(chatOutput.data));
-        const meta = (output.metadata || {})['metadata'] || {};
-        const functionId = meta.function || '';
-        const id = meta.id || '';
+        type Metadata = {
+            id: string;
+            function: string;
+            dataIsNone: boolean;
+        };
+        const metadata: Metadata = (output.metadata || {})['metadata'];
+        const functionId = metadata.function;
+        const id = metadata.id;
+        const data = metadata.dataIsNone ? undefined : new TextDecoder().decode(chatOutput.data);
         const handler = handlers[functionId];
         if (!handler) {
             throw new Error(`Chat Function ${functionId} not found`);
         }
-        const result = await handler(...json.arguments);
+        const result = await handler(data);
 
         // Send the result back to the chat window.
         const code = generatePythonCodeToInvokeCallback(id, result);

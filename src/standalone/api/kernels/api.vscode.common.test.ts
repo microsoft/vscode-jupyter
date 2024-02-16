@@ -16,6 +16,7 @@ import {
 import {
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
+    getDefaultKernelConnection,
     insertCodeCell,
     runCell,
     waitForExecutionCompletedSuccessfully
@@ -29,8 +30,9 @@ import { Kernels, Output } from '../../../api';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../../test/constants';
 import { KernelError } from '../../../kernels/errors/kernelError';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { escapeStringToEmbedInPythonCode } from '../../../kernels/chat/generator';
 
-suiteMandatory('Kernel API Tests @python', function () {
+suiteMandatory('Kernel API Tests @typescript', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     let kernelProvider: IKernelProvider;
@@ -206,4 +208,125 @@ suiteMandatory('Kernel API Tests @python', function () {
             outputPromise
         ).finally(() => dispose(disposables));
     }
+});
+
+suiteMandatory('Kernel API Tests @typescript/@python', function () {
+    const disposables: IDisposable[] = [];
+    this.timeout(120_000);
+    let notebook: NotebookDocument;
+    let controller: IVSCodeNotebookController;
+    let kernels: Kernels;
+    let controllerRegistration: IControllerRegistration;
+    suiteSetup(async function () {
+        this.timeout(120_000);
+        traceInfo('Suite Setup, Step 1');
+        const api = await initialize();
+        controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        kernels = await Promise.resolve(getKernelsApi(JVSC_EXTENSION_ID_FOR_TESTS));
+        const pythonMetadata = await getDefaultKernelConnection();
+        controller = controllerRegistration.get(pythonMetadata, 'jupyter-notebook')!;
+        traceInfo('Suite Setup (completed)');
+    });
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+        const uri = await createTemporaryNotebook([], disposables);
+        notebook = await workspace.openNotebookDocument(uri);
+        await window.showNotebookDocument(notebook);
+        await commands.executeCommand('notebook.selectKernel', {
+            id: controller!.id,
+            extension: JVSC_EXTENSION_ID
+        });
+        await insertCodeCell('print(1234)', { index: 0, language: 'python' });
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+    });
+
+    teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this);
+        }
+
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+    });
+    testMandatory('Execute chat code', async function () {
+        // Ensure user has executed some code against this kernel.
+        const cell = notebook.cellAt(0)!;
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
+
+        const kernel = await kernels.getKernel(notebook.uri);
+        if (!kernel) {
+            throw new Error('Kernel not found');
+        }
+
+        const text = ` Hello There\nNewLine\r\nAnotherNewLine\t containing spaces & \t tabs and oh yes even \b back spaces and lots of single ' quotes's and also " double quotes with \ back slashes \\ and more \\\\. \\\ `;
+        const mime = 'application/vnd.custom.extension.message';
+        const pythonCode = `
+from vscode import chat
+data_from_last_callback = None
+def step1():
+    chat.call_function("callback1", step2)
+
+def step2(data):
+    chat.call_function("callback2", step3, data)
+
+def step3(data):
+    chat.call_function("callback3", step4, "${escapeStringToEmbedInPythonCode(text)}")
+
+def step4(data):
+    import IPython.display
+    display({"application/vnd.custom.extension.message": {"status":"ok", "output": data}}, raw=True)
+
+step1()
+`;
+        // Verify we can execute code using the kernel.
+        const callbacksInvoked: string[] = [];
+        const callbackArgs: (string | undefined)[] = [];
+        traceInfo(`Execute code`);
+        const token = new CancellationTokenSource();
+        const handlers = {
+            callback1: async (data?: string) => {
+                callbacksInvoked.push('callback1');
+                callbackArgs.push(data);
+                return data;
+            },
+            callback2: async (data?: string) => {
+                callbacksInvoked.push('callback2');
+                callbackArgs.push(data);
+                return data;
+            },
+            callback3: async (data?: string) => {
+                callbacksInvoked.push('callback3');
+                callbackArgs.push(data);
+                return data;
+            }
+        };
+        type Result = {
+            status: string;
+            output: string;
+        };
+        let result: Result | undefined = undefined;
+        let resultsReturned = '';
+        for await (const output of kernel.executeChatCode(pythonCode, handlers, token.token)) {
+            const item = output.items.find((i) => i.mime === mime);
+            if (item) {
+                result = JSON.parse(new TextDecoder().decode(item.data));
+                break;
+            } else {
+                output.items.forEach((i) => {
+                    resultsReturned += `Output ${i.mime} ${new TextDecoder().decode(i.data)}\n`;
+                });
+            }
+        }
+
+        assert.isOk(result, `No result returned, returned items include ${resultsReturned}`);
+        assert.strictEqual(result!.status, 'ok', 'Status is not ok');
+        assert.strictEqual(result!.output, text, 'Final result is not right');
+        assert.deepEqual(callbacksInvoked, ['callback1', 'callback2', 'callback3'], 'Not all callbacks invoked');
+        assert.deepEqual(
+            callbackArgs,
+            [undefined, undefined, text],
+            'Not all callbacks invoked with the right arguments'
+        );
+    });
 });

@@ -19,7 +19,7 @@ declare module './api' {
          */
         executeChatCode(
             code: string,
-            handlers: Record<string, (...data: any[]) => Promise<any>>,
+            handlers: Record<string, (data?: string) => Promise<string | undefined>>,
             token: CancellationToken
         ): AsyncIterable<Output>;
     }
