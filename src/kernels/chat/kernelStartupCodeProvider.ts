@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IKernel, IStartupCodeProvider, IStartupCodeProviders, StartupCodePriority } from '../types';
 import { isPythonKernelConnection } from '../helpers';
-import { chatStartupPythonCode } from './types';
+import { chatStartupPythonCode } from './generator';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
 
 @injectable()

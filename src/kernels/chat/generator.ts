@@ -6,10 +6,10 @@ export const ChatMime = 'application/vnd.vscode.chat_message';
 export const chatStartupPythonCode = `
 def __VSCODE_inject_module():
 
-    def __VSCODE_call_function(function, callback, *args):
-        __VSCODE_send_chat_message__(function, *args, callback=callback)
+    def __VSCODE_call_function(function, callback, data=None):
+        __VSCODE_send_chat_message__(function, data, callback=callback)
 
-    def __VSCODE_send_chat_message__(function, *args, callback):
+    def __VSCODE_send_chat_message__(function, data, callback):
         requests = {}
         try:
             requests = __VSCODE_send_chat_message__.__requests
@@ -18,26 +18,14 @@ def __VSCODE_inject_module():
 
         import uuid as __VSCODE_send_chat_message__uuid
         import IPython.display as __VSCODE_send_chat_message__ipython_display
-        import json as __VSCODE_send_chat_message__json
-        import datetime as __VSCODE_send_chat_message__datetime
-        ISO8601 = "%Y-%m-%dT%H:%M:%S.%f"
 
-        class DateTimeEncoder(__VSCODE_send_chat_message__json.JSONEncoder):
-            def default(self, obj):
-                if isinstance(obj, __VSCODE_send_chat_message__datetime):
-                    # return obj.isoformat()
-                    return obj.strftime(ISO8601)
-                return super().default(obj)
-
-        # Convert object to JSON
         id = str(__VSCODE_send_chat_message__uuid.uuid4())
-        json_data = __VSCODE_send_chat_message__json.dumps({"arguments": list(args)}, cls=DateTimeEncoder)
         requests[id] = callback
-        __VSCODE_send_chat_message__ipython_display.display({"${ChatMime}": json_data}, metadata={"id":id, "function": function}, raw=True)
+        data_is_none = data is None
+        __VSCODE_send_chat_message__ipython_display.display({"${ChatMime}": data}, metadata={"id":id, "function": function, "dataIsNone": data_is_none}, raw=True)
 
         del __VSCODE_send_chat_message__ipython_display
-        del __VSCODE_send_chat_message__json
-        del __VSCODE_send_chat_message__datetime
+        del __VSCODE_send_chat_message__uuid
 
     def __VSCODE_on_chat_message(id, data):
         requests = {}
@@ -68,15 +56,35 @@ __VSCODE_inject_module()
 del __VSCODE_inject_module
 `;
 
-export function generatePythonCodeToInvokeCallback(requestId: string, response: unknown): string {
+const replacements: [toEscape: RegExp, replacement: string][] = [
+    [new RegExp('\\\\', 'g'), '\\\\'],
+    [new RegExp('"', 'g'), '\\"'],
+    [new RegExp("'", 'g'), `\'`],
+    [new RegExp('\\\b', 'g'), '\\b'],
+    [new RegExp('\\f', 'g'), '\\f'],
+    [new RegExp('\\n', 'g'), '\\n'],
+    [new RegExp('\\r', 'g'), '\\r'],
+    [new RegExp('\\t', 'g'), '\\t']
+];
+
+export function generatePythonCodeToInvokeCallback(requestId: string, response?: string): string {
+    const escaped = escapeStringToEmbedInPythonCode(response);
+    const value = typeof escaped === 'string' ? `"${escaped}"` : 'None';
     return `
 import vscode as __vscode
-import json as __vscode_json
 try:
-    data = __vscode_json.loads('${JSON.stringify({ payload: response }).replace(/\n/g, '//\n')}').get('payload')
-    __vscode.chat.__on_message('${requestId}', data)
+    __vscode.chat.__on_message('${requestId}', ${value})
 finally:
     del __vscode
-    del __vscode_json
 `;
+}
+
+export function escapeStringToEmbedInPythonCode(value: string | undefined): string | undefined {
+    if (typeof value !== 'string') {
+        return value;
+    }
+    for (const [toEscape, replacement] of replacements) {
+        value = value.replace(toEscape, replacement);
+    }
+    return value;
 }
