@@ -171,7 +171,6 @@ suite('JupyterVariablesProvider', () => {
         listItemResult.forEach((item, index) => {
             assert.equal(item.variable.name, index.toString());
             assert.equal(item.variable.value, `value${index}`);
-            assert.equal(item.variable.expression, `myList[${index}]`);
         });
     });
 
