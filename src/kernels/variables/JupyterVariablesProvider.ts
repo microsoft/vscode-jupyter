@@ -95,6 +95,7 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
         const indexedChildrenCount = result.count ?? 0;
         const variable = {
             getChildren: (start: number, token: CancellationToken) => this.getChildren(variable, start, kernel, token),
+            expression: createExpression(result.root, result.propertyChain),
             ...result
         } as Variable;
         return { variable, hasNamedChildren, indexedChildrenCount };
@@ -109,4 +110,16 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
         const parent = variable as IVariableDescription;
         return await this.variables.getAllVariableDiscriptions(kernel, parent, start, token);
     }
+}
+
+function createExpression(root: string, propertyChain: (string | number)[]): string {
+    let expression = root;
+    for (const property of propertyChain) {
+        if (typeof property === 'string') {
+            expression += `.${property}`;
+        } else {
+            expression += `[${property}]`;
+        }
+    }
+    return expression;
 }
