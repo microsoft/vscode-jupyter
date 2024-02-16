@@ -37,6 +37,8 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                 return original_display
             except ImportError:
                 pass
+            finally:
+                del _VSCODE_PD
 
     def getValue(variable):
         original_display = None
