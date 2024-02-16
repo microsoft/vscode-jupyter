@@ -82,6 +82,7 @@ suite('JupyterVariablesProvider', () => {
         assert.isNotEmpty(results);
         assert.equal(results.length, 1);
         assert.equal(results[0].variable.name, 'myObject');
+        assert.equal(results[0].variable.expression, 'myObject');
     });
 
     test('provideVariables with a parent should call get children correctly', async () => {
@@ -98,11 +99,13 @@ suite('JupyterVariablesProvider', () => {
         const listItems = await provideVariables(listResult!.variable, 2);
 
         assert.equal(listResult.variable.name, 'myList');
+        assert.equal(listResult.variable.expression, 'myObject.myList');
         assert.isNotEmpty(listItems);
         assert.equal(listItems.length, 3);
         listItems.forEach((item, index) => {
             assert.equal(item.variable.name, index.toString());
             assert.equal(item.variable.value, `value${index}`);
+            assert.equal(item.variable.expression, `myObject.myList[${index}]`);
         });
     });
 
@@ -168,6 +171,7 @@ suite('JupyterVariablesProvider', () => {
         listItemResult.forEach((item, index) => {
             assert.equal(item.variable.name, index.toString());
             assert.equal(item.variable.value, `value${index}`);
+            assert.equal(item.variable.expression, `myList[${index}]`);
         });
     });
 
