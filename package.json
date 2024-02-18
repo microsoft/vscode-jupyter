@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.87.0"
+        "vscode": "^1.86.0"
     },
     "l10n": "./l10n",
     "extensionKind": [
@@ -2079,8 +2079,7 @@
         "notebookKernelSource",
         "interactiveWindow",
         "quickPickItemTooltip",
-        "notebookExecution",
-        "notebookVariableProvider"
+        "notebookExecution"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
