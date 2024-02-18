@@ -69,12 +69,21 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         }
         const version = document.version;
         // Most likely being called again by us in getCompletionsFromOtherLanguageProviders
-        if (
-            this.pendingCompletionRequest.get(document)?.position.isEqual(position) &&
-            this.pendingCompletionRequest.get(document)?.version === version
-        ) {
+        if (this.pendingCompletionRequest.get(document)?.position.isEqual(position)) {
+            traceVerbose(
+                `No need to request completions again for ${document.uri.toString()} at ${position.line}:${
+                    position.character
+                } as we're already waiting for completions and version ${version}, pending for ${this.pendingCompletionRequest.get(
+                    document
+                )?.version}`
+            );
             return [];
         }
+        traceVerbose(
+            `Got request for completions for ${document.uri.toString()} at ${position.line}:${
+                position.character
+            } and version ${version}`
+        );
         this.pendingCompletionRequest.set(document, { position, version });
         const disposable = new Disposable(() => {
             if (
@@ -103,10 +112,12 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             const stopWatch = new StopWatch();
             await sleep(100);
             if (token.isCancellationRequested) {
+                traceVerbose(`Completions cancelled.1`);
                 return [];
             }
             const completions = await this.provideCompletionItemsFromKernel(document, position, token, context);
             if (token.isCancellationRequested) {
+                traceVerbose(`Completions cancelled.2`);
                 return [];
             }
             // Wait no longer than the kernel takes to provide the completions,
@@ -119,6 +130,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
                 !completionsFromOtherSourcesPromise.completed &&
                 stopWatch.elapsedTime < 300
             ) {
+                traceVerbose(`Waiting for completions.1`);
                 // Wait another 100ms, hoping that the other language providers will return something.
                 // Else we could end up with duplicates,
                 // So the goal is to try to avoid duplicates by waiting for other language providers to return something.
@@ -129,9 +141,13 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             const existingCompletionItems = new Set(
                 (otherCompletions || []).map((item) => (typeof item.label === 'string' ? item.label : item.label.label))
             );
+            traceVerbose(`Completions completed.1`);
             return completions.filter(
                 (item) => !existingCompletionItems.has(typeof item.label === 'string' ? item.label : item.label.label)
             );
+        } catch (ex) {
+            traceVerbose(`Completions failed`, ex);
+            throw ex;
         } finally {
             disposable.dispose();
         }
@@ -143,6 +159,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         context: CompletionContext
     ): Promise<CompletionItem[]> {
         if (token.isCancellationRequested || !this.kernel.session?.kernel) {
+            traceVerbose(`Completions cancelled.3`);
             return [];
         }
         const stopWatch = new StopWatch();
@@ -165,6 +182,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         // Even if we're busy restarting, then no point, by the time it starts, the user would have typed something else
         // Hence no point sending requests that would unnecessarily slow things down.
         if (this.kernel.status !== 'idle') {
+            traceVerbose(`Completions cancelled.4`);
             return [];
         }
         const code = document.getText();
@@ -185,10 +203,12 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         measures.requestDuration = token.isCancellationRequested ? 0 : stopWatch.elapsedTime;
 
         if (token.isCancellationRequested) {
+            traceVerbose(`Completions cancelled.5`);
             return [];
         }
 
         if (kernelCompletions?.content?.status !== 'ok' || (kernelCompletions?.content?.matches?.length ?? 0) === 0) {
+            traceVerbose(`Completions cancelled.6`);
             sendCompletionTelemetry(this.kernel, measures, properties);
             return [];
         }
@@ -402,6 +422,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
         }
         let provider = this.cellCompletionProviders.get(document);
         if (!provider) {
+            traceVerbose(`Create Notebook Cell Completion Provider for ${document.uri.toString()}`);
             const kernelId = await getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
             provider = new NotebookCellSpecificKernelCompletionProvider(kernelId, this.kernel, this.monacoLanguage);
             this.cellCompletionProviders.set(document, provider);
