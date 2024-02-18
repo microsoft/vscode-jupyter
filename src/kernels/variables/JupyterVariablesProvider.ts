@@ -4,7 +4,6 @@
 import {
     CancellationToken,
     NotebookDocument,
-    NotebookVariableProvider,
     Variable,
     NotebookVariablesRequestKind,
     VariablesResult,
@@ -14,7 +13,7 @@ import { IJupyterVariables, IVariableDescription } from './types';
 import { IKernel, IKernelProvider } from '../types';
 import { VariableResultCache } from './variableResultCache';
 
-export class JupyterVariablesProvider implements NotebookVariableProvider {
+export class JupyterVariablesProvider {
     private variableResultCache = new VariableResultCache();
 
     _onDidChangeVariables = new EventEmitter<NotebookDocument>();
