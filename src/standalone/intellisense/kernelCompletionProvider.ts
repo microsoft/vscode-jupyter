@@ -35,7 +35,7 @@ import { INotebookCompletion } from './types';
 import { translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ServiceContainer } from '../../platform/ioc/container';
-import { DisposableBase, DisposableStore } from '../../platform/common/utils/lifecycle';
+import { DisposableBase } from '../../platform/common/utils/lifecycle';
 import { createDeferredFromPromise, raceTimeout, sleep } from '../../platform/common/utils/async';
 import { TelemetryMeasures, TelemetryProperties, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
@@ -43,12 +43,13 @@ import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from
 import { generateSortString } from './helpers';
 import { resolveCompletionItem } from './resolveCompletionItem';
 
+const lastSentCompletionTimes = new WeakMap<IKernel, StopWatch>();
+
 class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProvider {
     constructor(
         private readonly kernelId: string,
         private readonly kernel: IKernel,
-        private readonly monacoLanguage: string,
-        private readonly toDispose: DisposableStore
+        private readonly monacoLanguage: string
     ) {}
     public allowStringFilterForPython: boolean;
     private pendingCompletionRequest = new WeakMap<TextDocument, { position: Position; version: number }>();
@@ -159,7 +160,6 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         // Even if we're busy restarting, then no point, by the time it starts, the user would have typed something else
         // Hence no point sending requests that would unnecessarily slow things down.
         if (this.kernel.status !== 'idle') {
-            sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
             return [];
         }
         const code = document.getText();
@@ -179,12 +179,12 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         properties.kernelStatusAfterRequest = this.kernel.status;
         measures.requestDuration = token.isCancellationRequested ? 0 : stopWatch.elapsedTime;
 
-        if (
-            token.isCancellationRequested ||
-            kernelCompletions?.content?.status !== 'ok' ||
-            (kernelCompletions?.content?.matches?.length ?? 0) === 0
-        ) {
-            sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
+        if (token.isCancellationRequested) {
+            return [];
+        }
+
+        if (kernelCompletions?.content?.status !== 'ok' || (kernelCompletions?.content?.matches?.length ?? 0) === 0) {
+            sendCompletionTelemetry(this.kernel, measures, properties);
             return [];
         }
         const result: INotebookCompletion = {
@@ -198,7 +198,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
 
         const experimentMatches = result.metadata ? result.metadata._jupyter_types_experimental : [];
         measures.completionItems = result.matches.length;
-        sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
+        sendCompletionTelemetry(this.kernel, measures, properties);
 
         // Check if we have more information about the completion items & whether its valid.
         // This will ensure that we don't regress (as long as all items are valid & we have the same number of completions items
@@ -301,9 +301,24 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             this.kernelId,
             this.monacoLanguage,
             document,
-            position,
-            this.toDispose
+            position
         );
+    }
+}
+
+function sendCompletionTelemetry(
+    kernel: IKernel,
+    measures: TelemetryMeasures<Telemetry.KernelCodeCompletion>,
+    properties: TelemetryProperties<Telemetry.KernelCodeCompletion>
+) {
+    let lastSentCompletionTime = lastSentCompletionTimes.get(kernel);
+    if (!lastSentCompletionTime) {
+        sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
+        lastSentCompletionTime = new StopWatch();
+        lastSentCompletionTimes.set(kernel, new StopWatch());
+    } else if (lastSentCompletionTime.elapsedTime > 30_000) {
+        sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
+        lastSentCompletionTime.reset();
     }
 }
 
@@ -312,7 +327,6 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
     private completionItemsSent = new WeakMap<CompletionItem, NotebookCellSpecificKernelCompletionProvider>();
     private completionProvider?: IDisposable;
     private readonly monacoLanguage = getKernelLanguageAsMonacoLanguage(this.kernel);
-    private readonly toDispose = this._register(new DisposableStore());
     private allowStringFilterForPython: boolean;
 
     constructor(
@@ -384,12 +398,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
         let provider = this.cellCompletionProviders.get(document);
         if (!provider) {
             const kernelId = await getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
-            provider = new NotebookCellSpecificKernelCompletionProvider(
-                kernelId,
-                this.kernel,
-                this.monacoLanguage,
-                this.toDispose
-            );
+            provider = new NotebookCellSpecificKernelCompletionProvider(kernelId, this.kernel, this.monacoLanguage);
             this.cellCompletionProviders.set(document, provider);
         }
         provider.allowStringFilterForPython = this.allowStringFilterForPython;
