@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, Uri, Variable } from 'vscode';
+import { CancellationToken, Event, Uri } from 'vscode';
 import { IKernel } from '../types';
 import type { JSONObject } from '@lumino/coreutils';
 
@@ -86,7 +86,7 @@ export interface IJupyterVariablesResponse {
     refreshCount: number;
 }
 
-export interface IVariableDescription extends Variable {
+export interface IVariableDescription  {
     /** The name of the variable at the root scope */
     root: string;
     /** How to look up the specific property of the root variable */
