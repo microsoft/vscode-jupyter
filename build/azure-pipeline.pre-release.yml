@@ -88,3 +88,4 @@ extends:
           VSC_VSCE_TARGET: $(vsceTarget)
 
     publishExtension: ${{ parameters.publishExtension }}
+    signExtension: true
