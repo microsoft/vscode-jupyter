@@ -2,6 +2,8 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     # Query Jupyter server for the info about a dataframe
     import json as _VSCODE_json
     import builtins as _VSCODE_builtins
+    from collections import namedtuple as _VSCODE_namedtuple
+    import importlib.util as _VSCODE_importlib_util
 
     maxStringLength = 1000
     collectionTypes = ["list", "tuple", "set"]
@@ -13,8 +15,44 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         else:
             return string
 
+    DisplayOptions = _VSCODE_namedtuple("DisplayOptions", ["width", "max_columns"])
+
+    def set_pandas_display_options(display_options=None):
+        if _VSCODE_importlib_util.find_spec("pandas") is not None:
+            try:
+                import pandas as _VSCODE_PD
+
+                original_display = DisplayOptions(
+                    width=_VSCODE_PD.options.display.width,
+                    max_columns=_VSCODE_PD.options.display.max_columns,
+                )
+
+                if display_options:
+                    _VSCODE_PD.options.display.max_columns = display_options.max_columns
+                    _VSCODE_PD.options.display.width = display_options.width
+                else:
+                    _VSCODE_PD.options.display.max_columns = 100
+                    _VSCODE_PD.options.display.width = 1000
+
+                return original_display
+            except ImportError:
+                pass
+            finally:
+                del _VSCODE_PD
+
     def getValue(variable):
-        return truncateString(_VSCODE_builtins.str(variable))
+        original_display = None
+        if (
+            _VSCODE_builtins.type(variable).__name__ == "DataFrame"
+            and _VSCODE_importlib_util.find_spec("pandas") is not None
+        ):
+            original_display = set_pandas_display_options()
+
+        try:
+            return truncateString(_VSCODE_builtins.str(variable))
+        finally:
+            if original_display:
+                set_pandas_display_options(original_display)
 
     def getPropertyNames(variable):
         props = []
@@ -215,3 +253,5 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     finally:
         del _VSCODE_json
         del _VSCODE_builtins
+        del _VSCODE_namedtuple
+        del _VSCODE_importlib_util
