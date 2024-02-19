@@ -29,7 +29,7 @@ import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { once } from '../../../platform/common/utils/events';
 import { traceVerbose } from '../../../platform/logging';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/generator';
 
 /**
@@ -191,6 +191,10 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         handlers: Record<string, (data?: string) => Promise<string | undefined>>,
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
+        const allowedList = ['ms-vscode.dscopilot-agent', JVSC_EXTENSION_ID];
+        if (!allowedList.includes(this.extensionId.toLowerCase())) {
+            throw new Error(`Proposed API is not supported for extension ${this.extensionId}`);
+        }
         if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
             throw new Error('Chat code execution is only supported for Python kernels');
         }
