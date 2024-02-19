@@ -457,28 +457,6 @@
      ]
    }
  */
-//Telemetry.KernelCodeCompletionResolve
-/* __GDPR__
-   "DATASCIENCE.JUPYTER_KERNEL_CODE_COMPLETION_RESOLVE" : {
-     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"What kind of kernel spec did we fail to create.","owner":"donjayamanne"},
-     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Language of the kernel spec.","owner":"donjayamanne"},
-     "monacoLanguage": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Translated Monaco Language.","owner":"donjayamanne"},
-     "kernelId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id.","owner":"donjayamanne"},
-     "cancelled": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the completion request was cancelled or not.","owner":"donjayamanne"},
-     "kernelStatusBeforeRequest": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Status of the kernel at the time we make a request for the resolve completion information","owner":"donjayamanne"},
-     "kernelStatusAfterRequest": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Status of the kernel at the time we make a request for the resolve completion information","owner":"donjayamanne"},
-     "requestTimedout": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we timedout waiting for the request to complete.","owner":"donjayamanne"},
-     "completedWithData": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether the kernel completion resolve request returned any data.","owner":"donjayamanne"},
-     "requestSent": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we send the request to resolve the completion item.","owner":"donjayamanne"},
-     "completed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we resolved the documentation or not.","owner":"donjayamanne"},
-     "requestDuration": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total time taken to resolve the documentation.","owner":"donjayamanne","isMeasurement":true},
-     "pendingRequests": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of pending requests.","owner":"donjayamanne","isMeasurement":true},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.JupyterKernelFilterUsed
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_FILTER_USED" : {

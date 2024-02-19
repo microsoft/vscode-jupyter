@@ -95,8 +95,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
                 kernelId,
                 'python',
                 document,
-                new Position(0, 4),
-                toDispose
+                new Position(0, 4)
             );
 
             assert.strictEqual(result.documentation, completionItem.documentation);
@@ -134,8 +133,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             kernelId,
             'python',
             document,
-            new Position(0, 4),
-            toDispose
+            new Position(0, 4)
         );
         // Cancel the request 1s later
         void sleep(1000, disposables).then(() => tokenSource.cancel());
@@ -157,8 +155,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             kernelId,
             'python',
             document,
-            new Position(0, 4),
-            toDispose
+            new Position(0, 4)
         );
 
         const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
@@ -195,8 +192,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             kernelId,
             'python',
             document,
-            new Position(0, 4),
-            toDispose
+            new Position(0, 4)
         );
         const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
         assert.strictEqual((result.documentation as MarkdownString).value, 'Some documentation');
@@ -228,8 +224,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             kernelId,
             'python',
             document,
-            new Position(0, 4),
-            toDispose
+            new Position(0, 4)
         );
         const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
         assert.isUndefined(result.documentation);
@@ -263,8 +258,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             kernelId,
             'python',
             document,
-            new Position(0, 4),
-            toDispose
+            new Position(0, 4)
         );
         const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
         assert.strictEqual((result.documentation as MarkdownString).value, 'Some documentation');
@@ -284,8 +278,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
                 kernelId,
                 'python',
                 document,
-                new Position(0, 4),
-                toDispose
+                new Position(0, 4)
             );
 
         for (let index = 0; index < MAX_PENDING_REQUESTS; index++) {
@@ -311,8 +304,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             kernelId,
             'python',
             document,
-            new Position(0, 4),
-            toDispose
+            new Position(0, 4)
         );
         const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
         assert.strictEqual(result.documentation, completionItem.documentation);
@@ -339,8 +331,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
                 kernelId,
                 'python',
                 document,
-                new Position(0, 4),
-                toDispose
+                new Position(0, 4)
             );
         for (let index = 0; index < MAX_PENDING_REQUESTS; index++) {
             void sendRequest();
