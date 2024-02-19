@@ -191,6 +191,9 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         handlers: Record<string, (data?: string) => Promise<string | undefined>>,
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
+        if (this.extensionId.toLowerCase() !== 'ms-vscode.dscopilot-agent') {
+            throw new Error('Proposed API is not supported');
+        }
         if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
             throw new Error('Chat code execution is only supported for Python kernels');
         }
