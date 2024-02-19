@@ -9,6 +9,7 @@ import {
     CompletionItemKind,
     CompletionItemProvider,
     CompletionList,
+    Disposable,
     Position,
     Range,
     TextDocument,
@@ -66,14 +67,23 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         if (!this.kernel.session?.kernel) {
             return [];
         }
+        const version = document.version;
         // Most likely being called again by us in getCompletionsFromOtherLanguageProviders
         if (
             this.pendingCompletionRequest.get(document)?.position.isEqual(position) &&
-            this.pendingCompletionRequest.get(document)?.version === document.version
+            this.pendingCompletionRequest.get(document)?.version === version
         ) {
             return [];
         }
-        this.pendingCompletionRequest.set(document, { position, version: document.version });
+        this.pendingCompletionRequest.set(document, { position, version });
+        const disposable = new Disposable(() => {
+            if (
+                this.pendingCompletionRequest.get(document)?.position.isEqual(position) &&
+                this.pendingCompletionRequest.get(document)?.version === version
+            ) {
+                this.pendingCompletionRequest.delete(document);
+            }
+        });
         try {
             // Request completions from other language providers.
             // Do this early, as we know kernel completions will take longer.
@@ -123,12 +133,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
                 (item) => !existingCompletionItems.has(typeof item.label === 'string' ? item.label : item.label.label)
             );
         } finally {
-            if (
-                this.pendingCompletionRequest.get(document)?.position.isEqual(position) &&
-                this.pendingCompletionRequest.get(document)?.version === document.version
-            ) {
-                this.pendingCompletionRequest.delete(document);
-            }
+            disposable.dispose();
         }
     }
     async provideCompletionItemsFromKernel(
