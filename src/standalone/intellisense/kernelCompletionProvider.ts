@@ -80,6 +80,16 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             );
             return [];
         }
+        if (this.pendingCompletionRequest.get(document)) {
+            traceVerbose(
+                `No need to request completions (2) again for ${document.uri.toString()} at ${position.line}:${
+                    position.character
+                } as we're already waiting for completions and version ${version}, pending for ${this.pendingCompletionRequest.get(
+                    document
+                )?.version}`
+            );
+            return [];
+        }
         traceVerbose(
             `Got request for completions for ${document.uri.toString()} at ${position.line}:${
                 position.character
