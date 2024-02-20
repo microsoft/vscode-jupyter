@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import {
+    CancellationError,
     CancellationToken,
     CompletionContext,
     CompletionItem,
@@ -69,10 +70,8 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         }
         const version = document.version;
         // Most likely being called again by us in getCompletionsFromOtherLanguageProviders
-        if (
-            this.pendingCompletionRequest.get(document)?.position.isEqual(position) &&
-            this.pendingCompletionRequest.get(document)?.version === version
-        ) {
+        // Or a previous request for completions has not yet completed, hence no point trying another.
+        if (this.pendingCompletionRequest.has(document)) {
             return [];
         }
         this.pendingCompletionRequest.set(document, { position, version });
@@ -132,6 +131,11 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             return completions.filter(
                 (item) => !existingCompletionItems.has(typeof item.label === 'string' ? item.label : item.label.label)
             );
+        } catch (ex) {
+            if (!(ex instanceof CancellationError)) {
+                traceVerbose(`Completions failed`, ex);
+            }
+            throw ex;
         } finally {
             disposable.dispose();
         }
