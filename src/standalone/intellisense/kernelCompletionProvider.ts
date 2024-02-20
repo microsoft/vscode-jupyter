@@ -83,7 +83,9 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         traceVerbose(
             `Got request for completions for ${document.uri.toString()} at ${position.line}:${
                 position.character
-            } and version ${version}`
+            } and version ${version}, existing ${this.pendingCompletionRequest
+                .get(document)
+                ?.position.toString()} and version ${this.pendingCompletionRequest.get(document)?.version}`
         );
         this.pendingCompletionRequest.set(document, { position, version });
         const disposable = new Disposable(() => {
