@@ -83,7 +83,6 @@ import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessa
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
 import { openInBrowser } from '../../platform/common/net/browser';
 import { KernelError } from '../../kernels/errors/kernelError';
-import { JupyterVariablesProvider } from '../../kernels/variables/JupyterVariablesProvider';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { getVersion } from '../../platform/interpreter/helpers';
 
@@ -190,7 +189,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
         private readonly displayDataProvider: IConnectionDisplayDataProvider,
-        jupyterVariables: IJupyterVariables
+        _jupyterVariables: IJupyterVariables
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -213,9 +212,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
-        if (this.controller.supportedLanguages.includes('python')) {
-            this.controller.variableProvider = new JupyterVariablesProvider(jupyterVariables, this.kernelProvider);
-        }
+        // if (this.controller.supportedLanguages.includes('python')) {
+        //     this.controller.variableProvider = new JupyterVariablesProvider(jupyterVariables, this.kernelProvider);
+        // }
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
         workspace.onDidCloseNotebookDocument(
