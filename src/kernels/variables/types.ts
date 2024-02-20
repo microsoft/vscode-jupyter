@@ -86,7 +86,7 @@ export interface IJupyterVariablesResponse {
     refreshCount: number;
 }
 
-export interface IVariableDescription  {
+export interface IVariableDescription {
     /** The name of the variable at the root scope */
     root: string;
     /** How to look up the specific property of the root variable */
