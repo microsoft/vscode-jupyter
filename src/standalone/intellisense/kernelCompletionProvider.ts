@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import {
+    CancellationError,
     CancellationToken,
     CompletionContext,
     CompletionItem,
@@ -146,7 +147,9 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
                 (item) => !existingCompletionItems.has(typeof item.label === 'string' ? item.label : item.label.label)
             );
         } catch (ex) {
-            traceVerbose(`Completions failed`, ex);
+            if (!(ex instanceof CancellationError)) {
+                traceVerbose(`Completions failed`, ex);
+            }
             throw ex;
         } finally {
             disposable.dispose();
