@@ -377,4 +377,65 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         await clock.tickAsync(500); // Wait for backoff strategy to work.
         verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 1);
     });
+    test('Cache the responses', async () => {
+        completionItem = new CompletionItem('One');
+        completionItem.range = new Range(0, 4, 0, 4);
+        when(kernel.status).thenReturn('idle');
+        const deferred = createDeferred<IInspectReplyMsg>();
+        deferred.resolve({
+            channel: 'shell',
+            content: {
+                status: 'ok',
+                data: {
+                    'text/plain': 'Some documentation'
+                },
+                found: true,
+                metadata: {}
+            },
+            header: {} as any,
+            metadata: {} as any,
+            parent_header: {} as any
+        });
+        when(kernelConnection.requestInspect(anything())).thenReturn(deferred.promise);
+
+        const resultPromise = resolveCompletionItem(
+            completionItem,
+            undefined,
+            token,
+            instance(kernel),
+            kernelId,
+            'python',
+            document,
+            new Position(0, 4)
+        );
+        const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
+        const resultPromise2 = resolveCompletionItem(
+            completionItem,
+            undefined,
+            token,
+            instance(kernel),
+            kernelId,
+            'python',
+            document,
+            new Position(0, 4)
+        );
+        const [result2] = await Promise.all([resultPromise2, clock.tickAsync(5_000)]);
+        assert.deepEqual(result, result2);
+        // Only one request should have been sent
+        verify(kernelConnection.requestInspect(anything())).once();
+
+        const resultPromise3 = resolveCompletionItem(
+            completionItem,
+            undefined,
+            token,
+            instance(kernel),
+            kernelId,
+            'python',
+            document,
+            new Position(0, 1)
+        );
+        await Promise.all([resultPromise3, clock.tickAsync(5_000)]);
+        // Should have sent the new request (as we do not have a cache for this)
+        verify(kernelConnection.requestInspect(anything())).twice();
+    });
 });
