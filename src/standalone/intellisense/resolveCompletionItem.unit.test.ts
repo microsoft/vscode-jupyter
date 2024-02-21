@@ -310,7 +310,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         assert.strictEqual(result.documentation, completionItem.documentation);
         verify(kernelConnection.requestInspect(anything())).never();
     });
-    test('Never queue more than 5 requests', async () => {
+    test('Never queue more than 1 requests', async () => {
         completionItem = new CompletionItem('One');
         completionItem.range = new Range(0, 4, 0, 4);
         when(kernel.status).thenReturn('idle');
@@ -365,7 +365,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         // Complete one of the requests, this should allow another request to be sent
         requests.pop()?.resolve({ content: { status: 'ok', data: {}, found: false, metadata: {} } } as any);
         await clock.tickAsync(500); // Wait for backoff strategy to work.
-        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 2);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 1);
 
         // Even if the token is cancelled, the pending requests queue should not be cleared.
         // This is because we want to ensure we don't send too many requests to the kernel.
@@ -375,6 +375,6 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         void sendRequest();
         tokenSource.cancel();
         await clock.tickAsync(500); // Wait for backoff strategy to work.
-        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 2);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 1);
     });
 });
