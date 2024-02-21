@@ -310,7 +310,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         assert.strictEqual(result.documentation, completionItem.documentation);
         verify(kernelConnection.requestInspect(anything())).never();
     });
-    test('Never queue more than 5 requests', async () => {
+    test('Never queue more than 1 requests', async () => {
         completionItem = new CompletionItem('One');
         completionItem.range = new Range(0, 4, 0, 4);
         when(kernel.status).thenReturn('idle');
@@ -365,7 +365,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         // Complete one of the requests, this should allow another request to be sent
         requests.pop()?.resolve({ content: { status: 'ok', data: {}, found: false, metadata: {} } } as any);
         await clock.tickAsync(500); // Wait for backoff strategy to work.
-        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 2);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 1);
 
         // Even if the token is cancelled, the pending requests queue should not be cleared.
         // This is because we want to ensure we don't send too many requests to the kernel.
@@ -375,6 +375,67 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         void sendRequest();
         tokenSource.cancel();
         await clock.tickAsync(500); // Wait for backoff strategy to work.
-        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 2);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 1);
+    });
+    test('Cache the responses', async () => {
+        completionItem = new CompletionItem('One');
+        completionItem.range = new Range(0, 4, 0, 4);
+        when(kernel.status).thenReturn('idle');
+        const deferred = createDeferred<IInspectReplyMsg>();
+        deferred.resolve({
+            channel: 'shell',
+            content: {
+                status: 'ok',
+                data: {
+                    'text/plain': 'Some documentation'
+                },
+                found: true,
+                metadata: {}
+            },
+            header: {} as any,
+            metadata: {} as any,
+            parent_header: {} as any
+        });
+        when(kernelConnection.requestInspect(anything())).thenReturn(deferred.promise);
+
+        const resultPromise = resolveCompletionItem(
+            completionItem,
+            undefined,
+            token,
+            instance(kernel),
+            kernelId,
+            'python',
+            document,
+            new Position(0, 4)
+        );
+        const [result] = await Promise.all([resultPromise, clock.tickAsync(5_000)]);
+        const resultPromise2 = resolveCompletionItem(
+            completionItem,
+            undefined,
+            token,
+            instance(kernel),
+            kernelId,
+            'python',
+            document,
+            new Position(0, 4)
+        );
+        const [result2] = await Promise.all([resultPromise2, clock.tickAsync(5_000)]);
+        assert.deepEqual(result, result2);
+        // Only one request should have been sent
+        verify(kernelConnection.requestInspect(anything())).once();
+
+        const resultPromise3 = resolveCompletionItem(
+            completionItem,
+            undefined,
+            token,
+            instance(kernel),
+            kernelId,
+            'python',
+            document,
+            new Position(0, 1)
+        );
+        await Promise.all([resultPromise3, clock.tickAsync(5_000)]);
+        // Should have sent the new request (as we do not have a cache for this)
+        verify(kernelConnection.requestInspect(anything())).twice();
     });
 });
