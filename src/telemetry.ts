@@ -3345,6 +3345,10 @@ export class IEventNamePropertyMapping {
              */
             requestDuration: number;
             /**
+             * Total number of times we exceeded the timeout.
+             */
+            timesExceededTimeout: number;
+            /**
              * Status of the kernel at the time we make a request for the resolve completion information
              */
             kernelStatusBeforeRequest?: string;
@@ -3360,6 +3364,11 @@ export class IEventNamePropertyMapping {
         measures: {
             ...commonClassificationForDurationProperties(),
             requestDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            timesExceededTimeout: {
                 classification: 'SystemMetaData',
                 purpose: 'PerformanceAndHealth',
                 isMeasurement: true
