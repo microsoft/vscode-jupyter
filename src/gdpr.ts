@@ -438,6 +438,7 @@
      "kernelStatusBeforeRequest": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Status of the kernel at the time we make a request for the resolve completion information","owner":"donjayamanne"},
      "requestSent": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Whether we send the request to resolve the completion item.","owner":"donjayamanne"},
      "requestDuration": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total time taken to complete the request.","owner":"donjayamanne","isMeasurement":true},
+     "timesExceededTimeout": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of times we exceeded the timeout.","owner":"donjayamanne","isMeasurement":true},
      "completionItems": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Number of items returned.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"

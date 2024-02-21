@@ -19,7 +19,7 @@ import { IDisposable } from '../../platform/common/types';
 import { splitLines } from '../../platform/common/helpers';
 
 // Not all kernels support requestInspect method.
-// E.g. deno does not support this, hence waiting for this to complete is poinless.
+// E.g. deno does not support this, hence waiting for this to complete is pointless.
 // As that results in a `loading...` method to appear against the completion item.
 // If we have n consecutive attempts where the response never comes back in 1s,
 // then we'll always ignore `requestInspect` method for this kernel.
@@ -34,7 +34,7 @@ const MAX_TIMEOUT_WAITING_FOR_RESOLVE_COMPLETION = Settings.IntellisenseTimeout;
 const MAX_NUMBER_OF_TIMES_ALLOWED_TO_EXCEED_TIMEOUT_BEFORE_IGNORING_ALL_REQUESTS = 5;
 
 const kernelIdsThatToNotSupportCompletionResolveOrAreTooSlowToReply = new Set<string>();
-const totalNumberOfTimeoutsWaitingForResolveCompletionPerKernel = new Map<string, number>();
+const totalNumberOfTimeoutsWaitingForResolveCompletionPerKernel = new WeakMap<IKernel, number>();
 
 class RequestTimedoutError extends Error {
     constructor() {
@@ -103,9 +103,9 @@ function handleKernelRequestTimeout(kernel: IKernel, monacoLanguage: string) {
     if (kernelIdsThatToNotSupportCompletionResolveOrAreTooSlowToReply.has(kernelId)) {
         return;
     }
-    let numberOfFailedAttempts = totalNumberOfTimeoutsWaitingForResolveCompletionPerKernel.get(kernelId) || 0;
+    let numberOfFailedAttempts = totalNumberOfTimeoutsWaitingForResolveCompletionPerKernel.get(kernel) || 0;
     numberOfFailedAttempts += 1;
-    totalNumberOfTimeoutsWaitingForResolveCompletionPerKernel.set(kernelId, numberOfFailedAttempts);
+    totalNumberOfTimeoutsWaitingForResolveCompletionPerKernel.set(kernel, numberOfFailedAttempts);
     if (numberOfFailedAttempts >= MAX_ATTEMPTS_BEFORE_IGNORING_RESOLVE_COMPLETION) {
         traceWarning(
             `Failed to inspect code in kernel ${getDisplayNameOrNameOfKernelConnection(

@@ -32,7 +32,7 @@ import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IKernelProvider, IKernel } from '../../kernels/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { mapJupyterKind } from './conversion';
-import { PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
+import { PYTHON_LANGUAGE, Settings, Telemetry } from '../../platform/common/constants';
 import { INotebookCompletion } from './types';
 import { translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
@@ -44,8 +44,6 @@ import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { generateSortString } from './helpers';
 import { resolveCompletionItem } from './resolveCompletionItem';
-
-const lastSentCompletionTimes = new WeakMap<IKernel, StopWatch>();
 
 class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProvider {
     constructor(
@@ -152,6 +150,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         const stopWatch = new StopWatch();
         const measures: TelemetryMeasures<Telemetry.KernelCodeCompletion> = {
             duration: 0,
+            timesExceededTimeout: 0,
             requestDuration: 0,
             completionItems: 0
         };
@@ -315,19 +314,36 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
     }
 }
 
+const lastSentCompletionTimes = new WeakMap<IKernel, StopWatch>();
+const lastTelemetryExceedingMaxTimeout = new WeakMap<
+    IKernel,
+    {
+        count: number;
+        measures: TelemetryMeasures<Telemetry.KernelCodeCompletion>;
+        properties: TelemetryProperties<Telemetry.KernelCodeCompletion>;
+    }
+>();
+
 function sendCompletionTelemetry(
     kernel: IKernel,
     measures: TelemetryMeasures<Telemetry.KernelCodeCompletion>,
     properties: TelemetryProperties<Telemetry.KernelCodeCompletion>
 ) {
     let lastSentCompletionTime = lastSentCompletionTimes.get(kernel);
+    let timesExceededTimeout = lastTelemetryExceedingMaxTimeout.get(kernel)?.count || 0;
+    if (measures.duration >= Settings.IntellisenseTimeout) {
+        lastTelemetryExceedingMaxTimeout.set(kernel, { count: timesExceededTimeout + 1, measures, properties });
+    }
+    measures.timesExceededTimeout = timesExceededTimeout;
     if (!lastSentCompletionTime) {
         sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
         lastSentCompletionTime = new StopWatch();
         lastSentCompletionTimes.set(kernel, new StopWatch());
-    } else if (lastSentCompletionTime.elapsedTime > 30_000) {
+        lastTelemetryExceedingMaxTimeout.delete(kernel);
+    } else if (lastSentCompletionTime.elapsedTime > 60_000) {
         sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
         lastSentCompletionTime.reset();
+        lastTelemetryExceedingMaxTimeout.delete(kernel);
     }
 }
 
