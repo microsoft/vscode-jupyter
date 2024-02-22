@@ -277,9 +277,10 @@ jobs:
         packageVersion: ['']
         tags:
           [
+            '^[^@]+$|@mandatory|@kernelCore|@kernelPicker|@python|@jupyter',
             '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter',
-            '@widgets',
             '@iw',
+            '@widgets',
             '@webview|@export|@lsp|@variableViewer',
             '@debugger'
           ]
@@ -295,7 +296,7 @@ jobs:
           - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
-            tags: '^[^@]+$|@mandatory'
+            tags: '^[^@]+$|@mandatory|@kernelPicker|@kernelCore'
             os: ubuntu-latest
             ipywidgetsVersion: ''
           - jupyterConnection: remote
