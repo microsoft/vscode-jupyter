@@ -102,8 +102,11 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             if (token.isCancellationRequested) {
                 return [];
             }
-            const completions = await this.provideCompletionItemsFromKernel(document, position, token, context);
-            if (token.isCancellationRequested) {
+            const completions = await raceTimeout(
+                Settings.IntellisenseTimeout,
+                this.provideCompletionItemsFromKernel(document, position, token, context)
+            );
+            if (token.isCancellationRequested || !completions || !completions.length) {
                 return [];
             }
             // Wait no longer than the kernel takes to provide the completions,
