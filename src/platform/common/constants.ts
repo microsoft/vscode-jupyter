@@ -39,7 +39,8 @@ export namespace Settings {
     export const JupyterServerRemoteLaunchService = JVSC_EXTENSION_ID;
     export const JupyterServerUriListMax = 10;
     // If this timeout expires, ignore the completion request sent to Jupyter.
-    export const IntellisenseTimeout = 2000;
+    export const IntellisenseTimeout = 500;
+    export const IntellisenseResolveTimeout = 2000;
 }
 
 export let isCI = false;
