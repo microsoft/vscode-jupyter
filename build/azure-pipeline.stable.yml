@@ -9,18 +9,23 @@ parameters:
     displayName: 🚀 Publish Extension
     type: boolean
     default: false
+  - name: apiScan
+    displayName: 🔍 API Scan
+    type: boolean
+    default: false
 
 resources:
   repositories:
     - repository: templates
       type: github
       name: microsoft/vscode-engineering
-      ref: main
+      ref: apiscan/extensions
       endpoint: Monaco
 
 extends:
   template: azure-pipelines/extension/stable.yml@templates
   parameters:
+    apiScan: ${{ parameters.apiScan }}
     publishExtension: ${{ parameters.publishExtension }}
     l10nSourcePaths: ./src
     buildPlatforms:
