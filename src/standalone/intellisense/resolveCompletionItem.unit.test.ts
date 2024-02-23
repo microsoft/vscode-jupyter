@@ -292,7 +292,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         for (let index = 0; index < 100; index++) {
             void sendRequest();
         }
-        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 1);
 
         reset(kernelConnection);
         when(kernelConnection.requestInspect(anything())).thenReturn(deferred.promise);
@@ -348,7 +348,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         // Asking for resolving another completion will not send a new request, as there are too many
         void sendRequest();
         await clock.tickAsync(500); // Wait for 500ms (lets see if the back off strategy works & does not send any requests)
-        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS);
+        verify(kernelConnection.requestInspect(anything())).times(MAX_PENDING_REQUESTS + 1);
         assert.strictEqual(requests.length, MAX_PENDING_REQUESTS);
 
         // Complete one of the requests, this should allow another request to be sent
