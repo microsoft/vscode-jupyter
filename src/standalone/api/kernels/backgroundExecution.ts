@@ -11,7 +11,7 @@ import { getNotebookCellOutputMetadata } from '../../../kernels/execution/helper
 import { unTrackDisplayDataForExtension } from '../../../kernels/execution/extensionDisplayDataTracker';
 import { traceWarning } from '../../../platform/logging';
 
-const executionCounters = new WeakMap<IKernel, number>();
+export const executionCounters = new WeakMap<IKernel, number>();
 export async function execCodeInBackgroundThread<T>(
     kernel: IKernel,
     codeWithReturnStatement: string[],
@@ -69,7 +69,7 @@ del __jupyter_exec_background__
                     if (!result) {
                         return;
                     }
-                    return JSON.parse(new TextDecoder().decode(result.data)) as T;
+                    return resolve(JSON.parse(new TextDecoder().decode(result.data)) as T);
                 })
             );
         })

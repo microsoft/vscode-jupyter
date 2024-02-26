@@ -38,12 +38,21 @@ import { translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { DisposableBase } from '../../platform/common/utils/lifecycle';
-import { createDeferredFromPromise, raceTimeout, sleep } from '../../platform/common/utils/async';
+import { createDeferredFromPromise, raceTimeout, raceTimeoutError, sleep } from '../../platform/common/utils/async';
 import { TelemetryMeasures, TelemetryProperties, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { generateSortString } from './helpers';
 import { resolveCompletionItem } from './resolveCompletionItem';
+import type { ICompleteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
+import { escapeStringToEmbedInPythonCode } from '../../kernels/chat/generator';
+import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
+
+class RequestTimedoutError extends Error {
+    constructor() {
+        super('Request timed out');
+    }
+}
 
 class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProvider {
     constructor(
@@ -95,15 +104,18 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
                 )
             );
 
-            // Wait for 100ms, as we do not want to flood the kernel with too many messages.
-            // if after 100ms, the token isn't cancelled, then send the request.
             const stopWatch = new StopWatch();
-            await sleep(100);
-            if (token.isCancellationRequested) {
-                return [];
+            if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
+                // Wait for 50ms, as we do not want to flood the kernel with too many messages.
+                // if after 50ms, the token isn't cancelled, then send the request.
+                await sleep(50);
+                if (token.isCancellationRequested) {
+                    return [];
+                }
             }
-            const completions = await raceTimeout(
+            const completions = await raceTimeoutError(
                 Settings.IntellisenseTimeout,
+                new RequestTimedoutError(),
                 this.provideCompletionItemsFromKernel(document, position, token, context)
             );
             if (token.isCancellationRequested || !completions || !completions.length) {
@@ -112,18 +124,21 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             // Wait no longer than the kernel takes to provide the completions,
             // If kernel is faster than other language providers, then so be it.
             // Adding delays here could just slow things down in VS Code.
-            // NOTE: We have already waited for 100ms earlier.
+            // NOTE: We have already waited for 50ms earlier.
             let otherCompletions = await raceTimeout(0, completionsFromOtherSourcesPromise.promise);
             if (
                 isPythonKernelConnection(this.kernel.kernelConnectionMetadata) &&
                 !completionsFromOtherSourcesPromise.completed &&
-                stopWatch.elapsedTime < 300
+                stopWatch.elapsedTime < Settings.IntellisenseTimeout + 50
             ) {
-                // Wait another 100ms, hoping that the other language providers will return something.
+                // Wait another few ms, hoping that the other language providers will return something.
                 // Else we could end up with duplicates,
                 // So the goal is to try to avoid duplicates by waiting for other language providers to return something.
-                // But not wait for too long, in this case we wait for max of 300ms
-                otherCompletions = await raceTimeout(200, completionsFromOtherSourcesPromise.promise);
+                // But not wait for too long, in this case we wait for max of 250ms
+                otherCompletions = await raceTimeout(
+                    Settings.IntellisenseTimeout - stopWatch.elapsedTime,
+                    completionsFromOtherSourcesPromise.promise
+                );
             }
 
             const existingCompletionItems = new Set(
@@ -133,6 +148,9 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
                 (item) => !existingCompletionItems.has(typeof item.label === 'string' ? item.label : item.label.label)
             );
         } catch (ex) {
+            if (ex instanceof RequestTimedoutError) {
+                return [];
+            }
             if (!(ex instanceof CancellationError)) {
                 traceVerbose(`Completions failed`, ex);
             }
@@ -170,20 +188,14 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         // No point sending completions if we're not connected.
         // Even if we're busy restarting, then no point, by the time it starts, the user would have typed something else
         // Hence no point sending requests that would unnecessarily slow things down.
-        if (this.kernel.status !== 'idle') {
+        if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata) && this.kernel.status !== 'idle') {
             return [];
         }
         const code = document.getText();
         const cursor_pos = document.offsetAt(position);
 
         properties.requestSent = true;
-        const kernelCompletions = await raceCancellation(
-            token,
-            this.kernel.session.kernel.requestComplete({
-                code,
-                cursor_pos
-            })
-        );
+        const kernelCompletions = await raceCancellation(token, this.getKernelCompletion(code, cursor_pos, token));
         traceVerbose(`Jupyter completion time: ${stopWatch.elapsedTime}`);
         properties.cancelled = token.isCancellationRequested;
         properties.completed = !token.isCancellationRequested;
@@ -314,6 +326,34 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             document,
             position
         );
+    }
+
+    private async getKernelCompletion(code: string, cursor_pos: number, token: CancellationToken) {
+        if (!this.kernel.session?.kernel) {
+            return;
+        }
+        if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
+            return raceCancellation(
+                token,
+                this.kernel.session.kernel.requestComplete({
+                    code,
+                    cursor_pos
+                })
+            );
+        }
+        return this.getPythonKernelCompletion(code, cursor_pos, token);
+    }
+
+    private async getPythonKernelCompletion(code: string, cursor_pos: number, token: CancellationToken) {
+        const codeToExecute = `return get_ipython().kernel.do_complete("${escapeStringToEmbedInPythonCode(
+            code
+        )}", ${cursor_pos})`;
+        const content = await execCodeInBackgroundThread<ICompleteReplyMsg['content']>(
+            this.kernel,
+            [codeToExecute],
+            token
+        );
+        return { content } as ICompleteReplyMsg;
     }
 }
 

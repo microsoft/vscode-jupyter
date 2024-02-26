@@ -35,11 +35,6 @@ import {
 import { SessionDisposedError } from '../platform/errors/sessionDisposedError';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { noop } from '../platform/common/utils/misc';
-// Disable ES Lint rule for now, as this is only for telemetry (hence not a layer breaking change)
-import {
-    pendingInspectRequests
-    // eslint-disable-next-line import/no-restricted-paths
-} from '../standalone/intellisense/resolveCompletionItem';
 import { createDeferred, createDeferredFromPromise } from '../platform/common/utils/async';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
@@ -50,6 +45,8 @@ import {
     isDisplayIdTrackedForAnExtension,
     trackDisplayDataForExtension
 } from './execution/extensionDisplayDataTracker';
+import { CodeExecution } from './execution/codeExecution';
+import type { ICodeExecution } from './execution/types';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -169,9 +166,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
     }
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<void> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
-        const pendingInspectRequestsBefore = this.kernel.session?.kernel
-            ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
-            : 0;
         const stopWatch = new StopWatch();
         if (cell.kind == NotebookCellKind.Markup) {
             return;
@@ -202,13 +196,8 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                 `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
             );
             traceVerbose(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
-            const pendingInspectRequestsAfter = this.kernel.session?.kernel
-                ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
-                : 0;
             sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell, {
-                duration: stopWatch.elapsedTime,
-                pendingInspectRequestsAfter,
-                pendingInspectRequestsBefore
+                duration: stopWatch.elapsedTime
             });
         }
     }
@@ -232,7 +221,16 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         await this.kernel.restarting;
 
         const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
-        const result = executionQueue.queueCode(code, extensionId, token);
+
+        let result: ICodeExecution;
+        if (extensionId === JVSC_EXTENSION_ID) {
+            // No need to queue code execution for JVSC, as it will be executed immediately.
+            // Only 3rd party code needs to be queued (as we need to give user code preference over 3rd party ext code)
+            result = CodeExecution.fromCode(code, extensionId);
+            void sessionPromise.then((session) => result.start(session));
+        } else {
+            result = executionQueue.queueCode(code, extensionId, token);
+        }
         if (extensionId !== JVSC_EXTENSION_ID) {
             traceVerbose(
                 `Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`
