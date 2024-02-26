@@ -100,14 +100,8 @@ import { IKernelProvider } from '../../../../kernels/types';
                 await insertCodeCell('%pip install pandas', {
                     index: 0
                 });
-                const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
-
-                await runCell(cell);
-
                 const namesCsvPath = path.join(__dirname, 'names.csv').replace(/\\/g, '/').replace('out', 'src');
 
-                // Wait till execution count changes and status is success.
-                await waitForExecutionCompletedSuccessfully(cell);
                 await insertCodeCell(`import pandas as pd\ndf = pd.read_csv("${namesCsvPath}")\n`, {
                     index: 1
                 });
