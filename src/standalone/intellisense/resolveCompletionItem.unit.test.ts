@@ -384,7 +384,6 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
                 // Asking for resolving another completion will not send a new request, as there are too many
                 void sendRequest();
                 await clock.tickAsync(100); // Wait for 500ms (lets see if the back off strategy works & does not send any requests)
-                console.error(maxPendingKernelRequests)
                 verify(kernelConnection.requestInspect(anything())).times(maxPendingKernelRequests);
                 assert.strictEqual(requests.length, maxPendingKernelRequests);
             }
