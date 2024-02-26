@@ -69,7 +69,7 @@ del __jupyter_exec_background__
                     if (!result) {
                         return;
                     }
-                    return JSON.parse(new TextDecoder().decode(result.data)) as T;
+                    return resolve(JSON.parse(new TextDecoder().decode(result.data)) as T);
                 })
             );
         })

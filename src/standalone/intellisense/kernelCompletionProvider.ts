@@ -38,7 +38,7 @@ import { translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { DisposableBase } from '../../platform/common/utils/lifecycle';
-import { createDeferredFromPromise, raceTimeout, sleep } from '../../platform/common/utils/async';
+import { createDeferredFromPromise, raceTimeout, raceTimeoutError, sleep } from '../../platform/common/utils/async';
 import { TelemetryMeasures, TelemetryProperties, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
@@ -47,6 +47,12 @@ import { resolveCompletionItem } from './resolveCompletionItem';
 import type { ICompleteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { escapeStringToEmbedInPythonCode } from '../../kernels/chat/generator';
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
+
+class RequestTimedoutError extends Error {
+    constructor() {
+        super('Request timed out');
+    }
+}
 
 class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProvider {
     constructor(
@@ -105,8 +111,9 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             if (token.isCancellationRequested) {
                 return [];
             }
-            const completions = await raceTimeout(
+            const completions = await raceTimeoutError(
                 Settings.IntellisenseTimeout,
+                new RequestTimedoutError(),
                 this.provideCompletionItemsFromKernel(document, position, token, context)
             );
             if (token.isCancellationRequested || !completions || !completions.length) {
@@ -139,6 +146,9 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
                 (item) => !existingCompletionItems.has(typeof item.label === 'string' ? item.label : item.label.label)
             );
         } catch (ex) {
+            if (ex instanceof RequestTimedoutError) {
+                return [];
+            }
             if (!(ex instanceof CancellationError)) {
                 traceVerbose(`Completions failed`, ex);
             }
@@ -176,7 +186,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         // No point sending completions if we're not connected.
         // Even if we're busy restarting, then no point, by the time it starts, the user would have typed something else
         // Hence no point sending requests that would unnecessarily slow things down.
-        if (this.kernel.status !== 'idle') {
+        if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata) && this.kernel.status !== 'idle') {
             return [];
         }
         const code = document.getText();
