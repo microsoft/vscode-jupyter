@@ -229,7 +229,8 @@ function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
         outputType: output.output_type
     };
     if (output.transient) {
-        metadata.transient = output.transient;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        metadata.transient = output.transient as any;
     }
 
     switch (output.output_type as nbformat.OutputType) {
@@ -245,6 +246,13 @@ function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
     }
 
     return metadata;
+}
+
+export function getNotebookCellOutputMetadata(output: {
+    items: NotebookCellOutputItem[];
+    metadata?: { [key: string]: unknown };
+}): CellOutputMetadata | undefined {
+    return output.metadata as CellOutputMetadata | undefined;
 }
 
 /**
@@ -326,7 +334,7 @@ type CellMetadata = {
  * Metadata we store in VS Code cell output items.
  * This contains the original metadata from the Jupyuter Outputs.
  */
-type CellOutputMetadata = {
+interface CellOutputMetadata {
     /**
      * Cell output metadata.
      */
@@ -343,7 +351,7 @@ type CellOutputMetadata = {
          */
         display_id?: string;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } & any;
+    };
     /**
      * Original cell output type
      */
@@ -359,7 +367,7 @@ type CellOutputMetadata = {
      * Whether to display the open plot icon.
      */
     __displayOpenPlotIcon?: boolean;
-};
+}
 
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
     // it should have at least one output item

@@ -1101,7 +1101,8 @@ export class CellExecutionMessageHandler implements IDisposable {
         }
         const outputToBeUpdated = CellOutputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
         if (!outputToBeUpdated) {
-            traceWarning('Update display data message received, but no output found to update', msg.content);
+            // Possible this is a display Id that was created by code executed by an extension.
+            traceVerbose('Update display data message received, but no output found to update', msg.content);
             return;
         }
         if (outputToBeUpdated.cell.document.isClosed) {

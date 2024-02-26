@@ -15,8 +15,12 @@ import { ICodeExecution } from './types';
 import { executeSilentlyAndEmitOutput } from '../helpers';
 import { EventEmitter, NotebookCellOutput } from 'vscode';
 import { KernelError } from '../errors/kernelError';
+import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 
-function traceExecMessage(executionId: string, message: string) {
+function traceExecMessage(extensionId: string, executionId: string, message: string) {
+    if (extensionId === JVSC_EXTENSION_ID) {
+        return;
+    }
     traceVerbose(`Execution Id:${executionId}. ${message}.`);
 }
 
@@ -72,10 +76,10 @@ export class CodeExecution implements ICodeExecution, IDisposable {
     public async start(session: IKernelSession) {
         this.session = session;
         if (this.cancelHandled) {
-            traceExecMessage(this.executionId, 'Not starting as it was cancelled');
+            traceExecMessage(this.extensionId, this.executionId, 'Not starting as it was cancelled');
             return;
         }
-        traceExecMessage(this.executionId, 'Start Code execution');
+        traceExecMessage(this.extensionId, this.executionId, 'Start Code execution');
         traceInfoIfCI(`Code Exec contents ${this.code.substring(0, 50)}...`);
         if (!session.kernel || session.kernel.isDisposed || session.isDisposed) {
             this._done.reject(new SessionDisposedError());
@@ -83,7 +87,11 @@ export class CodeExecution implements ICodeExecution, IDisposable {
         }
 
         if (this.started) {
-            traceExecMessage(this.executionId, 'Code has already been started yet CodeExecution.Start invoked again');
+            traceExecMessage(
+                this.extensionId,
+                this.executionId,
+                'Code has already been started yet CodeExecution.Start invoked again'
+            );
             traceError(`Code has already been started yet CodeExecution.Start invoked again ${this.executionId}`);
             // TODO: Send telemetry this should never happen, if it does we have problems.
             return this.done;
@@ -107,11 +115,17 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             // At this point the cell execution can only be stopped from kernel by interrupting it.
             // stop handling execution results & the like from the kernel.
             traceExecMessage(
+                this.extensionId,
                 this.executionId,
                 'Code is already running, interrupting and waiting for it to finish or kernel to start'
             );
             const kernel = this.session?.kernel;
-            if (kernel) {
+            // When Jupyter extnsion runs code internall using this,
+            // we do not want to interrupt the kernel as we're more in control of the kernel.
+            // I.e. only when we need to cancel code thats executed by 3rd party extension code
+            // should we interrupt the kernel (for internal code we're more careful and do not want to interrupt).
+            // User is always notified when 3rd party code runs, not the same for our internal code.
+            if (kernel && this.extensionId !== JVSC_EXTENSION_ID) {
                 await kernel.interrupt().catch(noop);
             }
             // This is the only time we cancel the request.
@@ -122,7 +136,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
         if (this.cancelHandled || this._completed) {
             return;
         }
-        traceExecMessage(this.executionId, 'Execution cancelled');
+        traceExecMessage(this.extensionId, this.executionId, 'Execution cancelled');
         this.cancelHandled = true;
         this._done.resolve();
         this.dispose();
@@ -137,7 +151,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
         }
         this.disposed = true;
         if (!this._completed) {
-            traceExecMessage(this.executionId, 'Execution disposed');
+            traceExecMessage(this.extensionId, this.executionId, 'Execution disposed');
         }
         dispose(this.disposables);
     }
@@ -148,13 +162,13 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             this._done.resolve();
             throw error;
         }
-        traceExecMessage(this.executionId, 'Send code for execution');
+        traceExecMessage(this.extensionId, this.executionId, 'Send code for execution');
 
         const kernelConnection = session.kernel;
         try {
             this.started = true;
             this._onRequestSent.fire();
-            traceExecMessage(this.executionId, `Execution Request Sent to Kernel`);
+            traceExecMessage(this.extensionId, this.executionId, `Execution Request Sent to Kernel`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
             this.request = executeSilentlyAndEmitOutput(
@@ -183,10 +197,10 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             const response = await this.request!.done;
             this._completed = true;
             if (response.content.status === 'error') {
-                traceExecMessage(this.executionId, 'Executed with errors');
+                traceExecMessage(this.extensionId, this.executionId, 'Executed with errors');
                 this._done.reject(new KernelError(response.content));
             } else {
-                traceExecMessage(this.executionId, 'Executed successfully');
+                traceExecMessage(this.extensionId, this.executionId, 'Executed successfully');
                 this._done.resolve();
             }
         } catch (ex) {
@@ -198,8 +212,6 @@ export class CodeExecution implements ICodeExecution, IDisposable {
                 // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
                 // Or even when the kernel dies when running a cell with the code `os.kill(os.getpid(), 9)`
                 traceError(`Error in waiting for code ${this.executionId} to complete`, ex);
-            } else {
-                traceError(`Some other execution error for exec ${this.executionId}`, ex);
             }
             this._done.reject(ex);
         }

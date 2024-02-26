@@ -31,6 +31,11 @@ import { once } from '../../../platform/common/utils/events';
 import { traceVerbose } from '../../../platform/logging';
 import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/generator';
+import {
+    isDisplayIdTrackedForExtension,
+    trackDisplayDataForExtension
+} from '../../../kernels/execution/extensionDisplayDataTracker';
+import { getNotebookCellOutputMetadata } from '../../../kernels/execution/helpers';
 
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.
@@ -140,6 +145,13 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     public get onDidChangeStatus(): Event<KernelStatus> {
         return this._onDidChangeStatus.event;
     }
+    private readonly _onDidRecieveDisplayUpdate = this._register(new EventEmitter<NotebookCellOutput>());
+    public get onDidRecieveDisplayUpdate(): Event<NotebookCellOutput> {
+        if (![JVSC_EXTENSION_ID].includes(this.extensionId)) {
+            throw new Error(`Proposed API is not supported for extension ${this.extensionId}`);
+        }
+        return this._onDidRecieveDisplayUpdate.event;
+    }
     constructor(
         private readonly extensionId: string,
         private readonly kernel: IKernel,
@@ -153,7 +165,21 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
                 ? PYTHON_LANGUAGE
                 : kernel.kernelConnectionMetadata.kernelSpec.language || PYTHON_LANGUAGE;
-        this._register(this.kernel.onStatusChanged(() => this._onDidChangeStatus.fire(this.kernel.status), this));
+        this._register(this.kernel.onStatusChanged(() => this._onDidChangeStatus.fire(this.kernel.status)));
+        this._register(
+            execution.onDidRecieveDisplayUpdate((output) => {
+                const session = this.kernel.session;
+                const metadata = getNotebookCellOutputMetadata(output);
+                if (
+                    metadata?.outputType === 'display_data' &&
+                    metadata?.transient?.display_id &&
+                    session &&
+                    isDisplayIdTrackedForExtension(this.extensionId, session, metadata?.transient?.display_id)
+                ) {
+                    this._onDidRecieveDisplayUpdate.fire(output);
+                }
+            })
+        );
         // Plain object returned to 3rd party extensions that cannot be modified or messed with.
         const that = this;
         this._api = Object.freeze({
@@ -161,7 +187,8 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             get status() {
                 return that.kernel.status;
             },
-            onDidChangeStatus: that.onDidChangeStatus,
+            onDidChangeStatus: that.onDidChangeStatus.bind(this),
+            onDidRecieveDisplayUpdate: this.onDidRecieveDisplayUpdate.bind(this),
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
             executeChatCode: (
                 code: string,
@@ -271,7 +298,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             () => {
                 properties.requestSent = true;
                 measures.requestSentAfter = stopwatch.elapsedTime;
-                if (!token.isCancellationRequested) {
+                if (!token.isCancellationRequested && this.extensionId !== JVSC_EXTENSION_ID) {
                     const progress = (this.previousProgress = this.progress.show());
                     disposables.push(progress);
                 }
@@ -305,6 +332,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
 
         try {
             for await (const output of kernelExecution.executeCode(code, this.extensionId, events, token)) {
+                trackDisplayDataForExtension(this.extensionId, this.kernel.session, output);
                 output.items.forEach((output) => mimeTypes.add(output.mime));
                 if (handlers && hasChatOutput(output)) {
                     for await (const chatOutput of this.handleChatOutput(

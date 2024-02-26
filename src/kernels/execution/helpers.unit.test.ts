@@ -5,7 +5,7 @@ import * as sinon from 'sinon';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import { Uri } from 'vscode';
-import { updateNotebookMetadata } from './helpers';
+import { cellOutputToVSCCellOutput, getNotebookCellOutputMetadata, updateNotebookMetadata } from './helpers';
 import { IJupyterKernelSpec, PythonKernelConnectionMetadata } from '../types';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { PythonExtension } from '@vscode/python-extension';
@@ -215,3 +215,29 @@ suite(`UpdateNotebookMetadata`, () => {
 function verifyMetadata(actualMetadata: nbformat.INotebookMetadata, targetMetadata: nbformat.INotebookMetadata) {
     assert.deepEqual(actualMetadata, targetMetadata);
 }
+
+suite('Cell Metadata', () => {
+    test('Verify Cell Metadta', () => {
+        const displayDataOutput: nbformat.IOutput = {
+            data: {
+                'application/vnd.custom': { one: 1, two: 2 },
+                'text/plain': 'Hello World'
+            },
+            execution_count: 1,
+            output_type: 'display_data',
+            transient: {
+                display_id: '123'
+            },
+            metadata: {
+                foo: 'bar'
+            }
+        };
+
+        const cellOutput = cellOutputToVSCCellOutput(displayDataOutput);
+        const metadata = getNotebookCellOutputMetadata(cellOutput);
+        assert.deepEqual(metadata?.metadata, displayDataOutput.metadata);
+        assert.strictEqual(metadata?.executionCount, displayDataOutput.execution_count);
+        assert.strictEqual(metadata?.outputType, displayDataOutput.output_type);
+        assert.strictEqual(metadata?.transient, displayDataOutput.transient);
+    });
+});

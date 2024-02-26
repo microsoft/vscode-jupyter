@@ -746,8 +746,16 @@ export function executeSilentlyAndEmitOutput(
                     output_type: 'display_data',
                     data: handleTensorBoardDisplayDataOutput(msg.content.data),
                     metadata: msg.content.metadata,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    transient: msg.content.transient as any // NOSONAR
+                    transient: msg.content.transient
+                })
+            );
+        } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
+            onOutput(
+                cellOutputToVSCCellOutput({
+                    output_type: 'display_data',
+                    data: handleTensorBoardDisplayDataOutput(msg.content.data),
+                    metadata: msg.content.metadata,
+                    transient: msg.content.transient
                 })
             );
         } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
