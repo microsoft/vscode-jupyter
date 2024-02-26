@@ -37,7 +37,6 @@ import {
     IExtensionContext
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
-import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -81,11 +80,9 @@ import { LastCellExecutionTracker } from '../../kernels/execution/lastCellExecut
 import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessageHandler';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
-import { openInBrowser } from '../../platform/common/net/browser';
 import { KernelError } from '../../kernels/errors/kernelError';
 import { JupyterVariablesProvider } from '../../kernels/variables/JupyterVariablesProvider';
 import { IJupyterVariables } from '../../kernels/variables/types';
-import { getVersion } from '../../platform/interpreter/helpers';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -390,26 +387,25 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
     private async warnWhenUsingOutdatedPython() {
-        const pyVersion = await getVersion(this.kernelConnection.interpreter);
-        if (
-            !pyVersion ||
-            (pyVersion.major || 0) >= 4 ||
-            (this.kernelConnection.kind !== 'startUsingLocalKernelSpec' &&
-                this.kernelConnection.kind !== 'startUsingPythonInterpreter')
-        ) {
-            return;
-        }
-
-        if ((pyVersion.major || 0) < 3 || (pyVersion.major === 3 && (pyVersion.minor || 0) <= 5)) {
-            window
-                .showWarningMessage(DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion, Common.learnMore)
-                .then((selection) => {
-                    if (selection !== Common.learnMore) {
-                        return;
-                    }
-                    return openInBrowser('https://aka.ms/jupyterUnSupportedPythonKernelVersions');
-                }, noop);
-        }
+        // const pyVersion = await getVersion(this.kernelConnection.interpreter);
+        // if (
+        //     !pyVersion ||
+        //     (pyVersion.major || 0) >= 4 ||
+        //     (this.kernelConnection.kind !== 'startUsingLocalKernelSpec' &&
+        //         this.kernelConnection.kind !== 'startUsingPythonInterpreter')
+        // ) {
+        //     return;
+        // }
+        // if ((pyVersion.major || 0) < 3 || (pyVersion.major === 3 && (pyVersion.minor || 0) <= 5)) {
+        //     window
+        //         .showWarningMessage(DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion, Common.learnMore)
+        //         .then((selection) => {
+        //             if (selection !== Common.learnMore) {
+        //                 return;
+        //             }
+        //             return openInBrowser('https://aka.ms/jupyterUnSupportedPythonKernelVersions');
+        //         }, noop);
+        // }
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
         traceInfoIfCI(
