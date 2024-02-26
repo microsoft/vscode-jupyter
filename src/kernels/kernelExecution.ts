@@ -35,11 +35,6 @@ import {
 import { SessionDisposedError } from '../platform/errors/sessionDisposedError';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { noop } from '../platform/common/utils/misc';
-// Disable ES Lint rule for now, as this is only for telemetry (hence not a layer breaking change)
-import {
-    pendingInspectRequests
-    // eslint-disable-next-line import/no-restricted-paths
-} from '../standalone/intellisense/resolveCompletionItem';
 import { createDeferred, createDeferredFromPromise } from '../platform/common/utils/async';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
@@ -169,9 +164,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
     }
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<void> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
-        const pendingInspectRequestsBefore = this.kernel.session?.kernel
-            ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
-            : 0;
         const stopWatch = new StopWatch();
         if (cell.kind == NotebookCellKind.Markup) {
             return;
@@ -202,13 +194,8 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                 `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
             );
             traceVerbose(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
-            const pendingInspectRequestsAfter = this.kernel.session?.kernel
-                ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
-                : 0;
             sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell, {
-                duration: stopWatch.elapsedTime,
-                pendingInspectRequestsAfter,
-                pendingInspectRequestsBefore
+                duration: stopWatch.elapsedTime
             });
         }
     }

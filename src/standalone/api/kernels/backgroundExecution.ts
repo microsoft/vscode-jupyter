@@ -11,7 +11,7 @@ import { getNotebookCellOutputMetadata } from '../../../kernels/execution/helper
 import { unTrackDisplayDataForExtension } from '../../../kernels/execution/extensionDisplayDataTracker';
 import { traceWarning } from '../../../platform/logging';
 
-const executionCounters = new WeakMap<IKernel, number>();
+export const executionCounters = new WeakMap<IKernel, number>();
 export async function execCodeInBackgroundThread<T>(
     kernel: IKernel,
     codeWithReturnStatement: string[],
