@@ -396,7 +396,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // ) {
         //     return;
         // }
-
         // if ((pyVersion.major || 0) < 3 || (pyVersion.major === 3 && (pyVersion.minor || 0) <= 5)) {
         //     window
         //         .showWarningMessage(DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion, Common.learnMore)
