@@ -44,7 +44,7 @@ import type { Output } from '../../api';
 import { executionCounters } from '../api/kernels/backgroundExecution';
 import { cellOutputToVSCCellOutput } from '../../kernels/execution/helpers';
 
-suite('Jupyter Kernel Completion (requestInspect)', () => {
+suite.only('Jupyter Kernel Completion (requestInspect)', () => {
     let kernel: IKernel;
     let kernelId = '';
     let kernelConnection: Kernel.IKernelConnection;
