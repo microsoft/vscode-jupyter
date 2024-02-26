@@ -275,7 +275,6 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
             }
         }
         case 'startUsingPythonInterpreter':
-            console.error('This should not be called', kernelConnection.interpreter.id);
             const pythonVersion = (
                 getTelemetrySafeVersion(getCachedVersion(kernelConnection.interpreter)) || ''
             ).trim();
