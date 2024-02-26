@@ -105,13 +105,11 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             );
 
             const stopWatch = new StopWatch();
-            if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
-                // Wait for 50ms, as we do not want to flood the kernel with too many messages.
-                // if after 50ms, the token isn't cancelled, then send the request.
-                await sleep(50);
-                if (token.isCancellationRequested) {
-                    return [];
-                }
+            // Wait for 50ms, as we do not want to flood the kernel with too many messages.
+            // if after 50ms, the token isn't cancelled, then send the request.
+            await sleep(50);
+            if (token.isCancellationRequested) {
+                return [];
             }
             const completions = await raceTimeoutError(
                 Settings.IntellisenseTimeout,
