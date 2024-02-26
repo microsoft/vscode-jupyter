@@ -40,7 +40,7 @@ export namespace Settings {
     export const JupyterServerUriListMax = 10;
     // If this timeout expires, ignore the completion request sent to Jupyter.
     export const IntellisenseTimeout = 500;
-    export const IntellisenseResolveTimeout = 2000;
+    export const IntellisenseResolveTimeout = 2_000;
 }
 
 export let isCI = false;

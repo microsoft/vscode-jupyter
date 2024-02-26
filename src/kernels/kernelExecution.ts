@@ -45,6 +45,8 @@ import {
     isDisplayIdTrackedForAnExtension,
     trackDisplayDataForExtension
 } from './execution/extensionDisplayDataTracker';
+import { CodeExecution } from './execution/codeExecution';
+import type { ICodeExecution } from './execution/types';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -219,7 +221,16 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         await this.kernel.restarting;
 
         const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
-        const result = executionQueue.queueCode(code, extensionId, token);
+
+        let result: ICodeExecution;
+        if (extensionId === JVSC_EXTENSION_ID) {
+            // No need to queue code execution for JVSC, as it will be executed immediately.
+            // Only 3rd party code needs to be queued (as we need to give user code preference over 3rd party ext code)
+            result = CodeExecution.fromCode(code, extensionId);
+            void sessionPromise.then((session) => result.start(session));
+        } else {
+            result = executionQueue.queueCode(code, extensionId, token);
+        }
         if (extensionId !== JVSC_EXTENSION_ID) {
             traceVerbose(
                 `Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`
