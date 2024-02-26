@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IDisposable } from '@fluentui/react';
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
@@ -18,6 +17,7 @@ import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import type { IDisposable } from '../../../platform/common/types';
 
 /* eslint-disable  */
 
