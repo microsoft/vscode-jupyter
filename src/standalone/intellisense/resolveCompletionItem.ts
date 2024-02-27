@@ -170,7 +170,7 @@ function cachedResult(
     if (!kernel.session?.kernel) {
         return;
     }
-    if (content.status !== 'ok' || !content.found){
+    if (content.status !== 'ok' || !content.found) {
         return;
     }
     const cacheKey = JSON.stringify(message);
