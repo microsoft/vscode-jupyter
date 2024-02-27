@@ -52,7 +52,6 @@ export function deserializePythonEnvironment(
             ...pythonVersion,
             uri: Uri.file(pythonVersion.path || ''),
             id: pythonEnvId || (pythonVersion as any).id,
-            envPath: pythonVersion.envPath ? Uri.file(pythonVersion.envPath) : undefined,
             displayPath:
                 'displayPath' in pythonVersion && typeof pythonVersion.displayPath === 'string'
                     ? Uri.file(pythonVersion.displayPath)
@@ -61,9 +60,6 @@ export function deserializePythonEnvironment(
 
         // Cleanup stuff that shouldn't be there.
         delete result.path;
-        if (!pythonVersion.envPath) {
-            delete result.envPath;
-        }
         return result;
     }
 }
@@ -90,7 +86,6 @@ export function resolvedPythonEnvToJupyterEnv(
 
     return {
         id,
-        envPath: env.environment?.folderUri,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
         uri,
@@ -116,7 +111,6 @@ export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | und
 
     return {
         id,
-        envPath: env.environment?.folderUri,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
         uri,
@@ -130,7 +124,6 @@ export function serializePythonEnvironment(
     if (jupyterVersion) {
         const result = Object.assign({}, jupyterVersion, {
             path: getFilePath(jupyterVersion.uri),
-            envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined,
             displayPath: jupyterVersion.displayPath ? getFilePath(jupyterVersion.displayPath) : undefined
         });
         // Cleanup stuff that shouldn't be there.
@@ -340,7 +333,6 @@ export class InterpreterService implements IInterpreterService {
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     private apiPromise: Promise<PythonExtensionApi | undefined> | undefined;
-    private api?: PythonExtensionApi;
     private _status: 'refreshing' | 'idle' = 'idle';
     public get status() {
         return this._status;

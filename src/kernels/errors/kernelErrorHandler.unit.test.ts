@@ -715,6 +715,9 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                         release: undefined,
                         sysVersion: '3.12.7'
                     },
+                    environment: {
+                        name: 'condaEnv1'
+                    },
                     tools: [EnvironmentType.Conda]
                 } as any
             ]);

@@ -9,7 +9,7 @@ import { traceWarning } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths';
 
 export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment | { id: string }) {
-    const env = getCachedInterpreterInfo(interpreter);
+    const env = getCachedEnvironment(interpreter);
     if (env) {
         const versionParts: string[] = [];
         if (typeof env.version?.major === 'number') {
@@ -59,8 +59,9 @@ export function getPythonEnvironmentName(pythonEnv: PythonEnvironment) {
     // Sometimes Python extension doesn't detect conda environments correctly (e.g. conda env create without a name).
     // In such cases the envName is empty, but it has a path.
     let envName = pythonEnv.envName;
-    if (pythonEnv.envPath && getEnvironmentType(pythonEnv) === EnvironmentType.Conda && !pythonEnv.envName) {
-        envName = basename(pythonEnv.envPath);
+    const env = getCachedEnvironment(pythonEnv);
+    if (env?.environment?.folderUri && getEnvironmentType(pythonEnv) === EnvironmentType.Conda && !pythonEnv.envName) {
+        envName = basename(env?.environment?.folderUri);
     }
     return envName;
 }
@@ -77,7 +78,7 @@ const environmentTypes = [
 ];
 
 export function getEnvironmentType(interpreter: { id: string }): EnvironmentType {
-    const env = getCachedInterpreterInfo(interpreter);
+    const env = getCachedEnvironment(interpreter);
     return env ? getEnvironmentTypeImpl(env) : EnvironmentType.Unknown;
 }
 function getEnvironmentTypeImpl(env: Environment): EnvironmentType {
@@ -133,11 +134,11 @@ export function isCondaEnvironmentWithoutPython(interpreter?: { id: string }) {
         return false;
     }
 
-    const env = getCachedInterpreterInfo(interpreter);
+    const env = getCachedEnvironment(interpreter);
     return env && getEnvironmentType(env) === EnvironmentType.Conda && !env.executable.uri;
 }
 
-function getCachedInterpreterInfo(interpreter?: { id: string }) {
+export function getCachedEnvironment(interpreter?: { id: string }) {
     if (!interpreter) {
         return;
     }
