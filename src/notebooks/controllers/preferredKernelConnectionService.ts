@@ -25,7 +25,7 @@ import { isParentPath } from '../../platform/common/platform/fileUtils';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import { getRemoteSessionOptions } from '../../kernels/jupyter/session/jupyterSession';
-import { getEnvironmentType } from '../../platform/interpreter/helpers';
+import { getCachedEnvironment, getEnvironmentType, getPythonEnvironmentName } from '../../platform/interpreter/helpers';
 
 /**
  * Attempt to clean up https://github.com/microsoft/vscode-jupyter/issues/11914
@@ -304,14 +304,18 @@ function findLocalPythonEnv(folder: Uri, kernelFinder: IContributedKernelFinder<
         .map((k) => k as PythonKernelConnectionMetadata);
 
     const localEnvs = pythonEnvs.filter((p) =>
-        // eslint-disable-next-line local-rules/dont-use-fspath
-        isParentPath(p.interpreter.envPath?.fsPath || p.interpreter.uri.fsPath, folder.fsPath)
+        isParentPath(
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            getCachedEnvironment(p.interpreter)?.environment?.folderUri?.fsPath || p.interpreter.uri.fsPath,
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            folder.fsPath
+        )
     );
 
     const venv = localEnvs.find(
         (e) =>
             getEnvironmentType(e.interpreter) === EnvironmentType.Venv &&
-            e.interpreter.envName?.toLowerCase() === '.venv'
+            getPythonEnvironmentName(e.interpreter)?.toLowerCase() === '.venv'
     );
     if (venv) {
         return venv;
@@ -319,12 +323,12 @@ function findLocalPythonEnv(folder: Uri, kernelFinder: IContributedKernelFinder<
     const conda = localEnvs.find(
         (e) =>
             getEnvironmentType(e.interpreter) === EnvironmentType.Conda &&
-            e.interpreter.envName?.toLowerCase() === '.venv'
+            getPythonEnvironmentName(e.interpreter)?.toLowerCase() === '.venv'
     );
     if (conda) {
         return conda;
     }
-    const anyVenv = localEnvs.find((e) => e.interpreter.envName?.toLowerCase() === '.venv');
+    const anyVenv = localEnvs.find((e) => getPythonEnvironmentName(e.interpreter)?.toLowerCase() === '.venv');
     if (anyVenv) {
         return anyVenv;
     }

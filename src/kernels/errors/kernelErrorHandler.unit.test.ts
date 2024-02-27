@@ -715,6 +715,9 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                         release: undefined,
                         sysVersion: '3.12.7'
                     },
+                    environment: {
+                        name: 'condaEnv1'
+                    },
                     tools: [EnvironmentType.Conda]
                 } as any
             ]);
@@ -723,8 +726,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 new KernelDiedError('Kaboom', 'hello word does not have attribute named abc', undefined, {
                     ...kernelConnection,
                     interpreter: {
-                        ...kernelConnection.interpreter!,
-                        envName: 'condaEnv1'
+                        ...kernelConnection.interpreter!
                     }
                 }),
                 'start',

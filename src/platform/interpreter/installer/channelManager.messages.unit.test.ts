@@ -21,7 +21,6 @@ import { setPythonApi } from '../helpers';
 
 const info: PythonEnvironment = {
     displayName: '',
-    envName: '',
     uri: Uri.file(''),
     id: Uri.file('').fsPath
 };

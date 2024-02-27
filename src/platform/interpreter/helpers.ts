@@ -8,20 +8,21 @@ import { Environment, KnownEnvironmentTools, KnownEnvironmentTypes, PythonExtens
 import { traceWarning } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths';
 
-export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment) {
-    if ('executable' in interpreter) {
+export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment | { id: string }) {
+    const env = getCachedEnvironment(interpreter);
+    if (env) {
         const versionParts: string[] = [];
-        if (typeof interpreter.version?.major === 'number') {
-            versionParts.push(interpreter.version.major.toString());
-            if (typeof interpreter.version.minor === 'number') {
-                versionParts.push(interpreter.version.minor.toString());
-                if (typeof interpreter.version.micro === 'number') {
-                    versionParts.push(interpreter.version.micro.toString());
+        if (typeof env.version?.major === 'number') {
+            versionParts.push(env.version.major.toString());
+            if (typeof env.version.minor === 'number') {
+                versionParts.push(env.version.minor.toString());
+                if (typeof env.version.micro === 'number') {
+                    versionParts.push(env.version.micro.toString());
                 }
             }
         }
         const version = versionParts.length ? versionParts.join('.') : '';
-        const envName = interpreter.environment ? basename(interpreter.environment?.folderUri) : '';
+        const envName = env.environment ? basename(env.environment?.folderUri) : '';
         const nameWithVersion = version ? `Python ${version}` : 'Python';
         if (isCondaEnvironmentWithoutPython(interpreter) && envName) {
             return envName;
@@ -31,11 +32,15 @@ export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environ
         }
         return nameWithVersion;
     }
+    if (Object.keys(interpreter).length === 1 && interpreter.id) {
+        return interpreter.id;
+    }
+
     const pythonVersion = getTelemetrySafeVersion(getCachedVersion(interpreter) || '').trim();
     // If this is a conda environment without Python, then don't display `Python` in it.
     const isCondaEnvWithoutPython = isCondaEnvironmentWithoutPython(interpreter);
     const nameWithVersion = pythonVersion ? `Python ${pythonVersion}` : 'Python';
-    const envName = getPythonEnvironmentName(interpreter);
+    const envName = getPythonEnvironmentName(interpreter as PythonEnvironment);
     if (isCondaEnvWithoutPython && envName) {
         return envName;
     }
@@ -53,9 +58,10 @@ export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environ
 export function getPythonEnvironmentName(pythonEnv: PythonEnvironment) {
     // Sometimes Python extension doesn't detect conda environments correctly (e.g. conda env create without a name).
     // In such cases the envName is empty, but it has a path.
-    let envName = pythonEnv.envName;
-    if (pythonEnv.envPath && getEnvironmentType(pythonEnv) === EnvironmentType.Conda && !pythonEnv.envName) {
-        envName = basename(pythonEnv.envPath);
+    const env = getCachedEnvironment(pythonEnv);
+    let envName = env?.environment?.name;
+    if (!envName && env?.environment?.folderUri && getEnvironmentType(pythonEnv) === EnvironmentType.Conda) {
+        envName = basename(env?.environment?.folderUri);
     }
     return envName;
 }
@@ -72,7 +78,7 @@ const environmentTypes = [
 ];
 
 export function getEnvironmentType(interpreter: { id: string }): EnvironmentType {
-    const env = getCachedInterpreterInfo(interpreter);
+    const env = getCachedEnvironment(interpreter);
     return env ? getEnvironmentTypeImpl(env) : EnvironmentType.Unknown;
 }
 function getEnvironmentTypeImpl(env: Environment): EnvironmentType {
@@ -128,11 +134,11 @@ export function isCondaEnvironmentWithoutPython(interpreter?: { id: string }) {
         return false;
     }
 
-    const env = getCachedInterpreterInfo(interpreter);
+    const env = getCachedEnvironment(interpreter);
     return env && getEnvironmentType(env) === EnvironmentType.Conda && !env.executable.uri;
 }
 
-function getCachedInterpreterInfo(interpreter?: { id: string }) {
+export function getCachedEnvironment(interpreter?: { id: string }) {
     if (!interpreter) {
         return;
     }

@@ -3,13 +3,11 @@
 
 import { l10n } from 'vscode';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { getDisplayPath } from '../platform/fs-paths';
 import { fromNow } from './date';
+import { getPythonEnvDisplayName } from '../../interpreter/helpers';
 
 function getInterpreterDisplayName(interpreter: PythonEnvironment) {
-    const interpreterDisplayName = interpreter.displayName || interpreter.envName || '';
-    const displayPath = getDisplayPath(interpreter.uri);
-    return interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
+    return getPythonEnvDisplayName(interpreter);
 }
 export namespace Common {
     export const bannerLabelYes = l10n.t('Yes');

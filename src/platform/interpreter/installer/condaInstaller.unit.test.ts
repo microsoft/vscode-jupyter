@@ -122,9 +122,21 @@ suite('Common - Conda Installer', () => {
     test('Include name of environment', async () => {
         const interpreter: PythonEnvironment = {
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            envName: 'baz'
+            id: Uri.file('foobar').fsPath
         };
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                executable: {
+                    uri: Uri.file('foobar')
+                },
+                environment: {
+                    name: 'baz'
+                },
+                tools: [EnvironmentType.Conda]
+            } as any
+        ]);
+
         const settings = mock(JupyterSettings);
         const condaPath = Uri.file('some Conda Path');
 
@@ -134,17 +146,28 @@ suite('Common - Conda Installer', () => {
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
         assert.deepStrictEqual(execInfo, {
-            args: ['install', '--name', interpreter.envName, 'abc', '-y'],
+            args: ['install', '--name', 'baz', 'abc', '-y'],
             exe: condaPath.fsPath
         });
     });
     test('When conda exec path is conda, then do not use /conda as the executable path', async () => {
         const interpreter: PythonEnvironment = {
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
-            envName: 'baz'
+            id: Uri.file('foobar').fsPath
         };
         const settings = mock(JupyterSettings);
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                executable: {
+                    uri: Uri.file('foobar')
+                },
+                environment: {
+                    name: 'baz'
+                },
+                tools: [EnvironmentType.Conda]
+            } as any
+        ]);
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
         when(condaService.getCondaFile()).thenResolve('conda');
@@ -152,7 +175,7 @@ suite('Common - Conda Installer', () => {
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
         assert.deepStrictEqual(execInfo, {
-            args: ['install', '--name', interpreter.envName, 'abc', '-y'],
+            args: ['install', '--name', 'baz', 'abc', '-y'],
             exe: 'conda'
         });
     });

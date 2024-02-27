@@ -19,7 +19,11 @@ import { ReportableAction } from '../../../platform/progress/types';
 import { JupyterInterpreterDependencyResponse } from '../types';
 import { IJupyterCommandFactory } from '../types.node';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
-import { getEnvironmentType } from '../../../platform/interpreter/helpers';
+import {
+    getCachedEnvironment,
+    getEnvironmentType,
+    getPythonEnvDisplayName
+} from '../../../platform/interpreter/helpers';
 
 /**
  * Sorts the given list of products (in place) in the order in which they need to be installed.
@@ -57,7 +61,10 @@ function sortProductsInOrderForInstallation(products: Product[]) {
  */
 export function getMessageForLibrariesNotInstalled(products: Product[], interpreter: PythonEnvironment): string {
     const interpreterName =
-        interpreter.displayName || interpreter.envName || interpreter.envPath?.fsPath || interpreter.uri.fsPath;
+        interpreter.displayName ||
+        getPythonEnvDisplayName(interpreter) ||
+        getCachedEnvironment(interpreter)?.environment?.folderUri?.fsPath ||
+        interpreter.uri.fsPath;
     // Even though kernelspec cannot be installed, display it so user knows what is missing.
     const names = products
         .map((product) => ProductNames.get(product))

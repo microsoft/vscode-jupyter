@@ -15,7 +15,7 @@ import { CancellationTokenSource, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IInterpreterService } from '../contracts';
 import { Environment } from '@vscode/python-extension';
-import { getEnvironmentType, isCondaEnvironmentWithoutPython } from '../helpers';
+import { getCachedEnvironment, getEnvironmentType, isCondaEnvironmentWithoutPython } from '../helpers';
 
 /**
  * A Python module installer for a conda environment.
@@ -101,7 +101,7 @@ export class CondaInstaller extends ModuleInstaller {
     ): Promise<ExecutionInstallArgs> {
         const condaService = this.serviceContainer.get<CondaService>(CondaService);
         const condaFile = await condaService.getCondaFile();
-        const name = 'executable' in interpreter ? interpreter.environment?.name : interpreter.envName;
+        const name = getCachedEnvironment(interpreter)?.environment?.name;
         const envPath = this.getEnvironmentPath(interpreter);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
@@ -141,14 +141,11 @@ export class CondaInstaller extends ModuleInstaller {
 
     private getEnvironmentPath(interpreter: PythonEnvironment | Environment) {
         let exeuctablePath: Uri;
-        if ('executable' in interpreter) {
-            if (interpreter.environment?.folderUri) {
-                return interpreter.environment.folderUri.fsPath;
-            }
-            exeuctablePath = interpreter.executable.uri || Uri.file(interpreter.path);
-        } else {
-            exeuctablePath = interpreter.uri;
+        const env = getCachedEnvironment(interpreter);
+        if (env?.environment?.folderUri) {
+            return env.environment.folderUri.fsPath;
         }
+        exeuctablePath = env?.executable.uri || Uri.file(interpreter.id);
         const dir = path.dirname(exeuctablePath.fsPath);
 
         // If interpreter is in bin or Scripts, then go up one level
