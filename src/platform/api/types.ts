@@ -5,7 +5,6 @@ import { Event, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import type { SemVer } from 'semver';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
-import { EnvironmentType } from '../pythonEnvironments/info';
 import { PythonExtension } from '@vscode/python-extension';
 
 export const IPythonApiProvider = Symbol('IPythonApi');
