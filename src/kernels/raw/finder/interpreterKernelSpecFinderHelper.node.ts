@@ -35,6 +35,7 @@ import { isKernelLaunchedViaLocalPythonIPyKernel, isLikelyAPythonExecutable } fr
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import {
+    getCachedEnvironment,
     getCachedSysPrefix,
     getCachedVersion,
     getEnvironmentType,
@@ -137,6 +138,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
     private kernelSpecPromise?: Promise<void>;
     private lastKnownInterpreterVersion?: Environment['version'];
     private lastKnownInterpreterSysPrefix?: string;
+    private lastKnownEnvFolder?: Uri;
     private _kernels = new Map<string, PythonKernelConnectionMetadata | LocalKernelConnectionMetadata>();
     private _onDidChangeKernels = this._register(
         new EventEmitter<{
@@ -155,6 +157,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
         super();
         this.lastKnownInterpreterVersion = getCachedVersion(interpreter);
         this.lastKnownInterpreterSysPrefix = getCachedSysPrefix(interpreter);
+        this.lastKnownEnvFolder = getCachedEnvironment(interpreter)?.environment?.folderUri;
         this._register({ dispose: () => this.cancelToken.cancel() });
         this._register(this.cancelToken);
         this._register(this.interpreterService.onDidChangeInterpreter(this.clearCacheWhenInterpretersChange, this));
@@ -180,7 +183,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
     }
 
     private clearCacheWhenInterpretersChange() {
-        const interpreter = this.interpreterService.resolvedEnvironments.find((i) => i.id === this.interpreter.id);
+        const interpreter = getCachedEnvironment({ id: this.interpreter.id });
         if (!interpreter) {
             return;
         }
@@ -188,7 +191,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
         const sysPrefix = getCachedSysPrefix(interpreter);
         if (
             // If the version, syspath has changed, then we need to re-discover the kernels.
-            this.interpreter.envPath !== interpreter.envPath ||
+            this.lastKnownEnvFolder?.fsPath !== interpreter.environment?.folderUri?.fsPath ||
             this.lastKnownInterpreterVersion?.sysVersion !== version?.sysVersion ||
             getEnvironmentType(this.interpreter) !== getEnvironmentType(interpreter) ||
             this.lastKnownInterpreterSysPrefix !== sysPrefix

@@ -60,8 +60,10 @@ import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platfor
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 import { fileToCommandArgument } from '../../platform/common/helpers';
 import {
+    getCachedEnvironment,
     getEnvironmentType,
     getPythonEnvDisplayName,
+    getPythonEnvironmentName,
     getSysPrefix,
     isCondaEnvironmentWithoutPython
 } from '../../platform/interpreter/helpers';
@@ -167,7 +169,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         ) {
             return DataScience.failedToStartKernelDueToMissingPythonEnv(
                 error.kernelConnectionMetadata.interpreter.displayName ||
-                    error.kernelConnectionMetadata.interpreter.envName ||
+                    getPythonEnvironmentName(error.kernelConnectionMetadata.interpreter) ||
                     getDisplayPath(error.kernelConnectionMetadata.interpreter.uri)
             );
         } else if (
@@ -452,7 +454,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 .showErrorMessage(
                     DataScience.failedToStartKernelDueToMissingPythonEnv(
                         kernelConnection.interpreter.displayName ||
-                            kernelConnection.interpreter.envName ||
+                            getPythonEnvironmentName(kernelConnection.interpreter) ||
                             getDisplayPath(kernelConnection.interpreter.uri)
                     )
                 )
@@ -617,11 +619,12 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
         getFilePath(kernelConnection.interpreter.uri)
     )} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
     if (kernelConnection.interpreter && getEnvironmentType(kernelConnection.interpreter) === EnvironmentType.Conda) {
-        if (kernelConnection.interpreter?.envName) {
-            installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName} --update-deps --force-reinstall`;
-        } else if (kernelConnection.interpreter?.envPath) {
+        const env = getCachedEnvironment(kernelConnection.interpreter);
+        if (env?.environment?.name) {
+            installerCommand = `conda install -n ${env?.environment?.name} ${ipyKernelModuleName} --update-deps --force-reinstall`;
+        } else if (env?.environment?.folderUri) {
             installerCommand = `conda install -p ${getFilePath(
-                kernelConnection.interpreter?.envPath
+                env?.environment?.folderUri
             )} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         }
     } else if (

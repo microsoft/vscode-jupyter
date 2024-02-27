@@ -60,33 +60,28 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         interpreter: { id: string },
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const env =
-            this.interpreterService.known.find((e) => e.id === interpreter.id) ||
-            (await this.interpreterService.resolveEnvironment(interpreter.id));
-        if (!env) {
-            return;
-        }
-        const title = DataScience.activatingPythonEnvironment(getPythonEnvDisplayName(env));
+        const title = DataScience.activatingPythonEnvironment(getPythonEnvDisplayName(interpreter));
         return KernelProgressReporter.wrapAndReportProgress(resource, title, async () =>
-            this.getActivatedEnvironmentVariablesImplWithCaching(
-                resource,
-                (await this.interpreterService.resolveEnvironment(env)) || env,
-                token
-            )
+            this.getActivatedEnvironmentVariablesImplWithCaching(resource, interpreter.id, token)
         );
     }
     private async getActivatedEnvironmentVariablesImplWithCaching(
         resource: Resource,
-        environment: Environment,
+        interpreterId: string,
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const key = `${resource?.toString() || ''}${environment.id}`;
+        const env = await this.interpreterService.resolveEnvironment(interpreterId);
+        if (!env) {
+            traceWarning(`Failed to resolve environment for ${interpreterId}`);
+            return;
+        }
+        const key = `${resource?.toString() || ''}${interpreterId}`;
         const info = this.activatedEnvVariablesCache.get(key);
         if (info && info.time.elapsedTime >= ENV_VAR_CACHE_TIMEOUT) {
             this.activatedEnvVariablesCache.delete(key);
         }
         if (!this.activatedEnvVariablesCache.has(key)) {
-            const promise = this.getActivatedEnvironmentVariablesImpl(resource, environment, token);
+            const promise = this.getActivatedEnvironmentVariablesImpl(resource, env, token);
             promise.catch(noop);
             this.activatedEnvVariablesCache.set(key, { promise, time: new StopWatch() });
         }

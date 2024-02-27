@@ -38,10 +38,6 @@ export interface PythonEnvironment extends InterpreterInformation  {
     displayName?: string;
     envName?: string;
     /**
-     * Directory of the Python environment.
-     */
-    envPath?: Uri;
-    /**
      * This contains the path to the environment.
      * Used for display purposes only (in kernel picker or other places).
      */
