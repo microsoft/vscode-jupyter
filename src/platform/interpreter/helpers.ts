@@ -8,20 +8,21 @@ import { Environment, KnownEnvironmentTools, KnownEnvironmentTypes, PythonExtens
 import { traceWarning } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths';
 
-export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment) {
-    if ('executable' in interpreter) {
+export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment | { id: string }) {
+    const env = getCachedInterpreterInfo(interpreter);
+    if (env) {
         const versionParts: string[] = [];
-        if (typeof interpreter.version?.major === 'number') {
-            versionParts.push(interpreter.version.major.toString());
-            if (typeof interpreter.version.minor === 'number') {
-                versionParts.push(interpreter.version.minor.toString());
-                if (typeof interpreter.version.micro === 'number') {
-                    versionParts.push(interpreter.version.micro.toString());
+        if (typeof env.version?.major === 'number') {
+            versionParts.push(env.version.major.toString());
+            if (typeof env.version.minor === 'number') {
+                versionParts.push(env.version.minor.toString());
+                if (typeof env.version.micro === 'number') {
+                    versionParts.push(env.version.micro.toString());
                 }
             }
         }
         const version = versionParts.length ? versionParts.join('.') : '';
-        const envName = interpreter.environment ? basename(interpreter.environment?.folderUri) : '';
+        const envName = env.environment ? basename(env.environment?.folderUri) : '';
         const nameWithVersion = version ? `Python ${version}` : 'Python';
         if (isCondaEnvironmentWithoutPython(interpreter) && envName) {
             return envName;
@@ -31,11 +32,15 @@ export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environ
         }
         return nameWithVersion;
     }
+    if (Object.keys(interpreter).length === 1 && interpreter.id) {
+        return interpreter.id;
+    }
+
     const pythonVersion = getTelemetrySafeVersion(getCachedVersion(interpreter) || '').trim();
     // If this is a conda environment without Python, then don't display `Python` in it.
     const isCondaEnvWithoutPython = isCondaEnvironmentWithoutPython(interpreter);
     const nameWithVersion = pythonVersion ? `Python ${pythonVersion}` : 'Python';
-    const envName = getPythonEnvironmentName(interpreter);
+    const envName = getPythonEnvironmentName(interpreter as PythonEnvironment);
     if (isCondaEnvWithoutPython && envName) {
         return envName;
     }

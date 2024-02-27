@@ -357,9 +357,6 @@ export class InterpreterService implements IInterpreterService {
     private refreshPromises = new PromiseMonitor();
     private pauseEnvDetection = false;
     private readonly onResumeEnvDetection = new EventEmitter<void>();
-    public get known() {
-        return this.api?.environments.known || [];
-    }
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
@@ -417,11 +414,6 @@ export class InterpreterService implements IInterpreterService {
     public get resolvedEnvironments(): PythonEnvironment[] {
         this.hookupOnDidChangeInterpreterEvent();
         return Array.from(this._interpreters.values()).map((item) => item.resolved);
-    }
-    public get environmentsFound(): boolean {
-        this.getApi().catch(noop);
-        this.hookupOnDidChangeInterpreterEvent();
-        return (this.api?.environments?.known.length ?? 0) > 0;
     }
     private getInterpretersCancellation?: CancellationTokenSource;
     private getInterpreters(): Promise<PythonEnvironment[]> {

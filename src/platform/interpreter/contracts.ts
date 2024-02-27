@@ -8,7 +8,6 @@ type InterpreterId = string;
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     // #region New API
-    readonly known: readonly Environment[];
     resolveEnvironment(id: string | Environment): Promise<ResolvedEnvironment | undefined>;
     // #endregion
 
@@ -20,7 +19,6 @@ export interface IInterpreterService {
      * Contains details of all the currently discovered Python Environments along with all of their resolved information.
      */
     readonly resolvedEnvironments: PythonEnvironment[];
-    readonly environmentsFound: boolean;
     /**
      * Pause detection of Python environments until the token is cancelled.
      * After the token is cancelled, detection will resume and pending events will be triggered.
