@@ -27,7 +27,7 @@ export interface ILocationWithReferenceKind {
     kind?: string;
 }
 
-type ISymbol = vscode.SymbolInformation & vscode.DocumentSymbol;
+type ISymbol = vscode.DocumentSymbol;
 
 export interface ILocationWithReferenceKindAndSymbol extends ILocationWithReferenceKind {
     associatedSymbol?: ISymbol;
@@ -461,10 +461,8 @@ export class NotebookDocumentSymbolTracker {
     }
 
     private async _getDocumentSymbols(cell: vscode.NotebookCell) {
-        return vscode.commands.executeCommand<(vscode.SymbolInformation & vscode.DocumentSymbol)[] | undefined>(
-            'vscode.executeDocumentSymbolProvider',
-            cell.document.uri
-        );
+        const tokenSource = new vscode.CancellationTokenSource();
+        return this._client.getDocumentSymbols(cell.document, tokenSource.token)
     }
 
     private async _doRequestCellSymbols(cell: vscode.NotebookCell, token: vscode.CancellationToken) {
