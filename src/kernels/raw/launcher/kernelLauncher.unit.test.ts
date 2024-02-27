@@ -113,6 +113,7 @@ suite('kernel Launcher', () => {
         assert.notDeepEqual(Array.from(UsedPorts), oldPorts, 'Ports not updated');
     });
     test('Verify Kernel ports are not forwarded', async () => {
+        const oldPorts = new Set(UsedPorts);
         const providers: PortAttributesProvider[] = [];
         when(mockedVSCodeNamespaces.workspace.registerPortAttributesProvider(anything(), anything())).thenCall(
             (_, provider) => providers.push(provider)
@@ -123,6 +124,9 @@ suite('kernel Launcher', () => {
         disposables.push(cancellation);
 
         for (const port of UsedPorts) {
+            if (oldPorts.has(port)) {
+                continue;
+            }
             const results = await Promise.all(
                 providers.map((p) => Promise.resolve(p.providePortAttributes({ port }, cancellation.token)))
             );
