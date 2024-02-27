@@ -30,7 +30,7 @@ import {
     EventEmitter,
     type MarkdownString
 } from 'vscode';
-import { maxPendingNonPythonkernelRequests, resolveCompletionItem } from './resolveCompletionItem';
+import { maxPendingKernelRequests, resolveCompletionItem } from './resolveCompletionItem';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
@@ -380,19 +380,19 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             void sendRequest();
             await clock.tickAsync(10);
 
-            for (let index = 0; index < 5; index++) {
+            for (let index = 0; index < maxPendingKernelRequests; index++) {
                 // Asking for resolving another completion will not send a new request, as there are too many
                 void sendRequest();
                 await clock.tickAsync(100); // Wait for 500ms (lets see if the back off strategy works & does not send any requests)
-                verify(kernelConnection.requestInspect(anything())).times(maxPendingNonPythonkernelRequests);
-                assert.strictEqual(requests.length, maxPendingNonPythonkernelRequests);
+                verify(kernelConnection.requestInspect(anything())).times(maxPendingKernelRequests);
+                assert.strictEqual(requests.length, maxPendingKernelRequests);
             }
 
             // Complete one of the requests, this should allow another request to be sent
             requests.pop()?.resolve({ content: { status: 'ok', data: {}, found: false, metadata: {} } } as any);
             kernelStatusChangedSignal.emit('idle');
             await clock.tickAsync(100); // Wait for backoff strategy to work.
-            verify(kernelConnection.requestInspect(anything())).times(maxPendingNonPythonkernelRequests + 1);
+            verify(kernelConnection.requestInspect(anything())).times(maxPendingKernelRequests + 1);
 
             void sendRequest();
             void sendRequest();
@@ -402,7 +402,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             // After calling everything, nothing should be sent (as all have been cancelled).
             tokenSource.cancel();
             await clock.tickAsync(500); // Wait for backoff strategy to work.
-            verify(kernelConnection.requestInspect(anything())).times(maxPendingNonPythonkernelRequests + 1);
+            verify(kernelConnection.requestInspect(anything())).times(maxPendingKernelRequests + 1);
         });
         test('Cache the responses', async () => {
             completionItem = new CompletionItem('One');

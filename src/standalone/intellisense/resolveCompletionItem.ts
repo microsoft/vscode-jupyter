@@ -26,8 +26,7 @@ import { noop } from '../../platform/common/utils/misc';
  * Hence its fair to assume that having 1 pending request is unlikely and not a scenario we want to run into.
  * I.e. 1 request waiting for a response from the kernel is bad.
  */
-export const maxPendingNonPythonkernelRequests = 1;
-export const maxPendingPythonKernelRequests = 5; // We can have around 5 for Python, as the requests are non-blocking (in bg threads).
+export const maxPendingKernelRequests = 1;
 const maxTimeWaitingForResolveCompletion = Settings.IntellisenseResolveTimeout;
 const maxNumberOfTimesAllowedToExceedTimeoutBeforeIgnoringAllRequests = 5;
 
@@ -372,11 +371,7 @@ function doesKernelHaveTooManyPendingRequests(kernel: IKernel) {
     if (!kernel.session?.kernel) {
         return false;
     }
-    const maxPendingRequests = isPythonKernelConnection(kernel.kernelConnectionMetadata)
-        ? maxPendingPythonKernelRequests
-        : maxPendingNonPythonkernelRequests;
-
-    return getPendingRequestCount(kernel) >= maxPendingRequests;
+    return getPendingRequestCount(kernel) >= maxPendingKernelRequests;
 }
 function getPendingRequestCount(kernel: IKernel) {
     if (!kernel.session?.kernel) {
