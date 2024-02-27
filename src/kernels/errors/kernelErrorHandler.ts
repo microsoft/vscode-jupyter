@@ -155,9 +155,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     ? error.product
                     : ProductNames.get(error.product) || `${error.product}`;
             const interpreterDisplayName = getPythonEnvDisplayName(error.interpreter) || error.interpreter.id || '';
-            const displayPath = getDisplayPath(
-                'executable' in error.interpreter ? error.interpreter.executable.uri : error.interpreter.uri
-            );
+            const env = getCachedEnvironment(error.interpreter);
+            const displayPath = getDisplayPath(env?.executable.uri);
             let displayName = interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
             return DataScience.packageNotInstalledWindowsLongPathNotEnabledError(packageName, displayName);
         } else if (
@@ -168,7 +167,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             !(await this.fs.exists(error.kernelConnectionMetadata.interpreter.uri))
         ) {
             return DataScience.failedToStartKernelDueToMissingPythonEnv(
-                error.kernelConnectionMetadata.interpreter.displayName ||
+                getPythonEnvDisplayName(error.kernelConnectionMetadata.interpreter) ||
                     getPythonEnvironmentName(error.kernelConnectionMetadata.interpreter) ||
                     getDisplayPath(error.kernelConnectionMetadata.interpreter.uri)
             );
@@ -453,7 +452,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             window
                 .showErrorMessage(
                     DataScience.failedToStartKernelDueToMissingPythonEnv(
-                        kernelConnection.interpreter.displayName ||
+                        getPythonEnvDisplayName(kernelConnection.interpreter) ||
                             getPythonEnvironmentName(kernelConnection.interpreter) ||
                             getDisplayPath(kernelConnection.interpreter.uri)
                     )
@@ -611,7 +610,7 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
         return;
     }
     const displayNameOfKernel =
-        kernelConnection.interpreter.displayName || getFilePath(kernelConnection.interpreter.uri);
+        getPythonEnvDisplayName(kernelConnection.interpreter) || getFilePath(kernelConnection.interpreter.uri);
     const ipyKernelName = ProductNames.get(Product.ipykernel)!;
     const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
 

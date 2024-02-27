@@ -35,7 +35,6 @@ suite('Kernel Dependency Service', () => {
     let editor: NotebookEditor;
     let disposables: Disposable[] = [];
     const interpreter = createPythonInterpreter({
-        displayName: 'name',
         uri: Uri.file('abc')
     });
     let metadata: PythonKernelConnectionMetadata;

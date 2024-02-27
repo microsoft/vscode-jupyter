@@ -19,8 +19,7 @@ import { dispose } from '../../platform/common/utils/lifecycle';
 suite(`UpdateNotebookMetadata`, () => {
     const python36Global: PythonEnvironment = {
         uri: Uri.file('/usr/bin/python36'),
-        id: Uri.file('/usr/bin/python36').fsPath,
-        displayName: 'Python 3.6'
+        id: Uri.file('/usr/bin/python36').fsPath
     };
     const pythonDefaultKernelSpec: IJupyterKernelSpec = {
         argv: ['python', '-f', '{connection_file}'],
@@ -30,8 +29,7 @@ suite(`UpdateNotebookMetadata`, () => {
     };
     const python37Global: PythonEnvironment = {
         uri: Uri.file('/usr/bin/python37'),
-        id: Uri.file('/usr/bin/python37').fsPath,
-        displayName: 'Python 3.7'
+        id: Uri.file('/usr/bin/python37').fsPath
     };
     let environments: PythonExtension['environments'];
     let disposables: { dispose: () => void }[] = [];

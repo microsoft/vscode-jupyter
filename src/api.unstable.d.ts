@@ -74,7 +74,6 @@ declare module './api' {
     };
     export type PythonEnvironment = {
         id: string;
-        displayName?: string;
         uri: Uri;
         version?: PythonVersion;
         envName?: string;

@@ -38,6 +38,7 @@ import { SemVer } from 'semver';
 import {
     getCachedVersion,
     getEnvironmentType,
+    getPythonEnvDisplayName,
     getPythonEnvironmentName,
     isCondaEnvironmentWithoutPython,
     setPythonApi
@@ -52,11 +53,7 @@ export function deserializePythonEnvironment(
         const result = {
             ...pythonVersion,
             uri: Uri.file(pythonVersion.path || ''),
-            id: pythonEnvId || (pythonVersion as any).id,
-            displayPath:
-                'displayPath' in pythonVersion && typeof pythonVersion.displayPath === 'string'
-                    ? Uri.file(pythonVersion.displayPath)
-                    : undefined
+            id: pythonEnvId || (pythonVersion as any).id
         };
 
         // Cleanup stuff that shouldn't be there.
@@ -87,9 +84,7 @@ export function resolvedPythonEnvToJupyterEnv(
 
     return {
         id,
-        displayPath: env.environment?.folderUri || Uri.file(env.path),
-        uri,
-        displayName: env.environment?.name || ''
+        uri
     };
 }
 export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | undefined {
@@ -111,9 +106,7 @@ export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | und
 
     return {
         id,
-        displayPath: env.environment?.folderUri || Uri.file(env.path),
-        uri,
-        displayName: env.environment?.name || ''
+        uri
     };
 }
 
@@ -122,8 +115,7 @@ export function serializePythonEnvironment(
 ): PythonEnvironment_PythonApi | undefined {
     if (jupyterVersion) {
         const result = Object.assign({}, jupyterVersion, {
-            path: getFilePath(jupyterVersion.uri),
-            displayPath: jupyterVersion.displayPath ? getFilePath(jupyterVersion.displayPath) : undefined
+            path: getFilePath(jupyterVersion.uri)
         });
         // Cleanup stuff that shouldn't be there.
         delete (result as any).uri;
@@ -757,7 +749,12 @@ export class InterpreterService implements IInterpreterService {
         }
         traceVerbose(
             `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters
-                .map((item) => `${item.id}:${item.displayName}:${getEnvironmentType(item)}:${getDisplayPath(item.uri)}`)
+                .map(
+                    (item) =>
+                        `${item.id}:${getPythonEnvDisplayName(item)}:${getEnvironmentType(item)}:${getDisplayPath(
+                            item.uri
+                        )}`
+                )
                 .join(', ')}`
         );
         return allInterpreters;

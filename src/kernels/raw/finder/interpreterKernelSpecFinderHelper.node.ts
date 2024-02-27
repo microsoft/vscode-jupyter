@@ -517,7 +517,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
 
         return interpreters.find((i) => {
             // 4. Check display name
-            if (kernelSpec.display_name === i.displayName) {
+            if (kernelSpec.display_name === getCachedEnvironment(i)?.environment?.name) {
                 traceVerbose(`Kernel ${kernelSpec.name} matches ${getDisplayPath(i.id)} based on display name`);
                 // This is a bad one, matching by name is never going to be accurate
                 sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {

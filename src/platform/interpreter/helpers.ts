@@ -22,7 +22,7 @@ export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environ
             }
         }
         const version = versionParts.length ? versionParts.join('.') : '';
-        const envName = env.environment ? basename(env.environment?.folderUri) : '';
+        const envName = env.environment?.name || (env.environment ? basename(env.environment?.folderUri) : '');
         const nameWithVersion = version ? `Python ${version}` : 'Python';
         if (isCondaEnvironmentWithoutPython(interpreter) && envName) {
             return envName;

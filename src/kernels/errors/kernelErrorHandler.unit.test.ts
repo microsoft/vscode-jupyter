@@ -60,7 +60,6 @@ suite('Error Handler Unit Tests', () => {
     let fs: IFileSystem;
     let interpreterService: IInterpreterService;
     const jupyterInterpreter: PythonEnvironment = {
-        displayName: 'Hello',
         uri: Uri.file('Some Path'),
         id: Uri.file('Some Path').fsPath
     };
@@ -179,8 +178,7 @@ suite('Error Handler Unit Tests', () => {
                 id: '',
                 interpreter: {
                     uri: Uri.file('Hello There'),
-                    id: Uri.file('Hello There').fsPath,
-                    displayName: 'Hello (Some Path)'
+                    id: Uri.file('Hello There').fsPath
                 },
                 kernelSpec: {
                     argv: [],
@@ -715,8 +713,12 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                         release: undefined,
                         sysVersion: '3.12.7'
                     },
+                    executable: {
+                        uri: kernelConnection.interpreter!.uri
+                    },
                     environment: {
-                        name: 'condaEnv1'
+                        name: 'condaEnv1',
+                        folderUri: Uri.file('Some Path')
                     },
                     tools: [EnvironmentType.Conda]
                 } as any
@@ -735,7 +737,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             assert.strictEqual(
                 result,
                 [
-                    "Running cells with 'Hello (Some Path)' requires the ipykernel package.",
+                    "Running cells with 'condaEnv1 (Python 3.12.7)' requires the ipykernel package.",
                     "Run the following command to install 'ipykernel' into the Python environment. ",
                     `Command: 'conda install -n condaEnv1 ipykernel --update-deps --force-reinstall'`
                 ].join('\n')
@@ -757,6 +759,13 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                         micro: 7,
                         release: undefined,
                         sysVersion: '3.12.7'
+                    },
+                    environment: {
+                        name: 'Hello',
+                        folderUri: Uri.file('Some Path')
+                    },
+                    executable: {
+                        uri: kernelConnection.interpreter!.uri
                     },
                     tools: [EnvironmentType.Venv]
                 } as any
@@ -780,7 +789,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             assert.strictEqual(
                 result,
                 [
-                    "Running cells with 'Hello (Some Path)' requires the ipykernel package.",
+                    "Running cells with 'Hello (Python 3.12.7)' requires the ipykernel package.",
                     "Run the following command to install 'ipykernel' into the Python environment. ",
                     command
                 ].join('\n')

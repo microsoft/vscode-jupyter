@@ -33,7 +33,7 @@ import { IPythonExecutionFactory } from '../../../platform/interpreter/types.nod
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { ResourceMap, ResourceSet } from '../../../platform/common/utils/map';
-import { getSysPrefix } from '../../../platform/interpreter/helpers';
+import { getPythonEnvDisplayName, getSysPrefix } from '../../../platform/interpreter/helpers';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -202,7 +202,10 @@ export class JupyterPaths {
                     traceWarning(`Got an empty Jupyter Data Dir from ${interpreter.id}, stderr = ${result.stderr}`);
                 }
             } catch (ex) {
-                traceError(`Failed to get DataDir based on ENABLE_USER_SITE for ${interpreter.displayName}`, ex);
+                traceError(
+                    `Failed to get DataDir based on ENABLE_USER_SITE for ${getPythonEnvDisplayName(interpreter)}`,
+                    ex
+                );
             }
         }
 

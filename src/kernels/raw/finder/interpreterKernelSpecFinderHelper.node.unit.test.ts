@@ -20,6 +20,7 @@ import { IJupyterKernelSpec } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 import { PythonExtension } from '@vscode/python-extension';
+import { setPythonApi } from '../../../platform/interpreter/helpers';
 
 suite('Interpreter Kernel Spec Finder Helper', () => {
     let helper: GlobalPythonKernelSpecFinder;
@@ -66,9 +67,12 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         disposables.push(helper);
         const mockedApi = mock<PythonExtension>();
         sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
         disposables.push({ dispose: () => sinon.restore() });
         environments = mock<PythonExtension['environments']>();
         when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
         when(environments.resolveEnvironment(venvInterpreter.id)).thenResolve({
             executable: { sysPrefix: 'home/venvPython' }
         } as any);
@@ -86,6 +90,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         disposables.push(cancelToken);
         const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix, baseKernelPath));
 
+        when(environments.known).thenReturn([]);
         when(kernelSpecFinder.findKernelSpecsInPaths(uriEquals(searchPath), anything())).thenResolve([]);
         const kernelSpecs: IJupyterKernelSpec[] = [];
         const eventEmitter = new EventEmitter<IJupyterKernelSpec>();

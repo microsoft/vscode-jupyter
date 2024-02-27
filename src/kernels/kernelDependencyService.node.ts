@@ -33,7 +33,7 @@ import { isModulePresentInEnvironment } from '../platform/interpreter/installer/
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import { isPythonKernelConnection } from './helpers';
 import { isCodeSpace } from '../platform/constants';
-import { getEnvironmentType } from '../platform/interpreter/helpers';
+import { getEnvironmentType, getPythonEnvDisplayName } from '../platform/interpreter/helpers';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -242,7 +242,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter;
         const products = isPipAvailableForNonConda === false ? [Product.ipykernel, Product.pip] : [Product.ipykernel];
         const message = messageFormat(
-            interpreter.displayName || interpreter.uri.fsPath,
+            getPythonEnvDisplayName(interpreter) || interpreter.uri.fsPath,
             products.map((product) => ProductNames.get(product)!).join(` ${Common.and} `)
         );
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');

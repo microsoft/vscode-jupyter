@@ -26,10 +26,4 @@ export type InterpreterId = string;
 export interface PythonEnvironment {
     id: InterpreterId;
     uri: Uri;
-    displayName?: string;
-    /**
-     * This contains the path to the environment.
-     * Used for display purposes only (in kernel picker or other places).
-     */
-    displayPath?: Uri;
 };
