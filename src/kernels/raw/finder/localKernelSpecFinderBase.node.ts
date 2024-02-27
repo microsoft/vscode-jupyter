@@ -26,6 +26,7 @@ import { getComparisonKey } from '../../../platform/vscode-path/resources';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { JupyterPaths } from './jupyterPaths.node';
+import { isCondaEnvironmentWithoutPython } from '../../../platform/interpreter/helpers';
 
 export type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: Uri };
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
@@ -386,7 +387,7 @@ export async function loadKernelSpec(
 
     // Possible user deleted the underlying interpreter.
     const interpreterPath = interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path;
-    const isEmptyCondaEnv = interpreter?.isCondaEnvWithoutPython ? true : false;
+    const isEmptyCondaEnv = isCondaEnvironmentWithoutPython(interpreter);
     if (interpreterPath && !isEmptyCondaEnv && !(await fs.exists(Uri.file(interpreterPath)))) {
         return;
     }

@@ -174,7 +174,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             api
                 .getActivatedEnvironmentVariables(
                     resource,
-                    serializePythonEnvironment(pythonEnvToJupyterEnv(environment, true))!,
+                    serializePythonEnvironment(pythonEnvToJupyterEnv(environment))!,
                     false
                 )
                 .catch((ex) => {

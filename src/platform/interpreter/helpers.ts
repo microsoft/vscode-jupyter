@@ -33,8 +33,7 @@ export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environ
     }
     const pythonVersion = getTelemetrySafeVersion(getCachedVersion(interpreter) || '').trim();
     // If this is a conda environment without Python, then don't display `Python` in it.
-    const isCondaEnvWithoutPython =
-        interpreter.envType === EnvironmentType.Conda && interpreter.isCondaEnvWithoutPython === true;
+    const isCondaEnvWithoutPython = isCondaEnvironmentWithoutPython(interpreter);
     const nameWithVersion = pythonVersion ? `Python ${pythonVersion}` : 'Python';
     const envName = getPythonEnvironmentName(interpreter);
     if (isCondaEnvWithoutPython && envName) {
@@ -100,10 +99,6 @@ export function getEnvironmentType(env: Environment): EnvironmentType {
     return EnvironmentType.Unknown;
 }
 
-export function isCondaEnvironmentWithoutPython(env: Environment) {
-    return getEnvironmentType(env) === EnvironmentType.Conda && !env.executable.uri;
-}
-
 export async function getInterpreterInfo(interpreter?: { id: string }) {
     if (!interpreter?.id) {
         return;
@@ -117,7 +112,19 @@ export function setPythonApi(api: PythonExtension) {
     pythonApi = api;
 }
 
-export function getCachedInterpreterInfo(interpreter?: { id: string }) {
+export function isCondaEnvironmentWithoutPython(interpreter?: { id: string }) {
+    if (!interpreter) {
+        return false;
+    }
+    if (!pythonApi) {
+        return false;
+    }
+
+    const env = getCachedInterpreterInfo(interpreter);
+    return env && getEnvironmentType(env) === EnvironmentType.Conda && !env.executable.uri;
+}
+
+function getCachedInterpreterInfo(interpreter?: { id: string }) {
     if (!interpreter) {
         return;
     }

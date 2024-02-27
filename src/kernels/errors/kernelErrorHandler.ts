@@ -59,7 +59,11 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platform/errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 import { fileToCommandArgument } from '../../platform/common/helpers';
-import { getPythonEnvDisplayName, getSysPrefix } from '../../platform/interpreter/helpers';
+import {
+    getPythonEnvDisplayName,
+    getSysPrefix,
+    isCondaEnvironmentWithoutPython
+} from '../../platform/interpreter/helpers';
 import { JupyterServerCollection } from '../../api';
 import { getJupyterDisplayName } from '../jupyter/connection/jupyterServerProviderRegistry';
 
@@ -419,14 +423,14 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     if (details) {
                         sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
                             envMissingReason: 'Unknown',
-                            isEmptyCondaEnv: details.isCondaEnvWithoutPython,
+                            isEmptyCondaEnv: isCondaEnvironmentWithoutPython(details),
                             pythonEnvType: details.envType,
                             fileExists
                         });
                     } else {
                         sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
                             envMissingReason: 'EmptyEnvDetailsFromPython',
-                            isEmptyCondaEnv: kernelConnection.interpreter.isCondaEnvWithoutPython,
+                            isEmptyCondaEnv: isCondaEnvironmentWithoutPython(kernelConnection.interpreter),
                             pythonEnvType: kernelConnection.interpreter.envType,
                             fileExists
                         });
@@ -436,7 +440,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     const fileExists = await this.fs.exists(kernelConnection.interpreter.uri);
                     sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
                         envMissingReason: 'FailedToGetEnvDetailsFromPython',
-                        isEmptyCondaEnv: kernelConnection.interpreter.isCondaEnvWithoutPython,
+                        isEmptyCondaEnv: isCondaEnvironmentWithoutPython(kernelConnection.interpreter),
                         pythonEnvType: kernelConnection.interpreter.envType,
                         fileExists
                     });

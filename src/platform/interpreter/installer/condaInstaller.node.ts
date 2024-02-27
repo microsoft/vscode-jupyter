@@ -81,21 +81,14 @@ export class CondaInstaller extends ModuleInstaller {
 
         // If we just installed a package into a conda env without python init, then Python may have gotten installed
         // We now need to ensure the conda env gets updated as a result of this.
-        if (
-            ('executable' in interpreter
-                ? getEnvironmentType(interpreter)
-                : interpreter.envType === EnvironmentType.Conda) &&
-            ('executable' in interpreter
-                ? isCondaEnvironmentWithoutPython(interpreter)
-                : interpreter.isCondaEnvWithoutPython)
-        ) {
+        if (isCondaEnvironmentWithoutPython(interpreter)) {
             const pythonExt = this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
             if (!pythonExt.isPythonExtensionActive) {
                 return;
             }
             const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
             const updatedCondaEnv = await interpreterService.getInterpreterDetails(interpreter.id);
-            if (updatedCondaEnv && !updatedCondaEnv.isCondaEnvWithoutPython) {
+            if (updatedCondaEnv && !isCondaEnvironmentWithoutPython(updatedCondaEnv)) {
                 Object.assign(interpreter, updatedCondaEnv);
             }
         }

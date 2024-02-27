@@ -40,7 +40,12 @@ import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivat
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
 import { getOSType, OSType } from '../common/utils/platform';
 import { SemVer } from 'semver';
-import { getCachedVersion, getEnvironmentType, setPythonApi } from '../interpreter/helpers';
+import {
+    getCachedVersion,
+    getEnvironmentType,
+    isCondaEnvironmentWithoutPython,
+    setPythonApi
+} from '../interpreter/helpers';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
 
 export function deserializePythonEnvironment(
@@ -96,12 +101,10 @@ export function resolvedPythonEnvToJupyterEnv(
             envType = EnvironmentType.VirtualEnv;
         }
     }
-    let isCondaEnvWithoutPython = false;
     let uri: Uri;
     let id = env.id;
     if (!env.executable.uri) {
         if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
-            isCondaEnvWithoutPython = true;
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -121,18 +124,15 @@ export function resolvedPythonEnvToJupyterEnv(
         envName: env.environment?.name || '',
         uri,
         displayName: env.environment?.name || '',
-        envType,
-        isCondaEnvWithoutPython
+        envType
     };
 }
-export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: boolean): PythonEnvironment | undefined {
+export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | undefined {
     const envType = getEnvironmentType(env);
-    let isCondaEnvWithoutPython = false;
     let uri: Uri;
     let id = env.id;
     if (!env.executable.uri) {
-        if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
-            isCondaEnvWithoutPython = true;
+        if (envType === EnvironmentType.Conda) {
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -152,8 +152,7 @@ export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: b
         envName: env.environment?.name || '',
         uri,
         displayName: env.environment?.name || '',
-        envType,
-        isCondaEnvWithoutPython
+        envType
     };
 }
 
@@ -873,7 +872,7 @@ export class InterpreterService implements IInterpreterService {
                             // & subsequently updated as having python then trigger changes.
                             const pythonInstalledIntoConda =
                                 e.type === 'update' &&
-                                this._interpreters.get(e.env.id)?.resolved.isCondaEnvWithoutPython &&
+                                isCondaEnvironmentWithoutPython(this._interpreters.get(e.env.id)?.resolved) &&
                                 e.env.executable.uri
                                     ? true
                                     : false;
@@ -888,7 +887,7 @@ export class InterpreterService implements IInterpreterService {
                                         e.type === 'update' &&
                                         info &&
                                         pythonInstalledIntoConda &&
-                                        !info.resolved.isCondaEnvWithoutPython
+                                        !isCondaEnvironmentWithoutPython(info.resolved)
                                     ) {
                                         this.triggerEventIfAllowed('interpreterChangeEvent', info.resolved);
                                         this.triggerEventIfAllowed('interpretersChangeEvent', info.resolved);
