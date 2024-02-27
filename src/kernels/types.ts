@@ -33,6 +33,7 @@ import {
 } from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { generateIdFromRemoteProvider } from './jupyter/jupyterUtils';
+import { getEnvironmentType } from '../platform/interpreter/helpers';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -944,7 +945,7 @@ function sendKernelTelemetry(kernel: KernelConnectionMetadata) {
                 providerExtensionId,
                 kernelConnectionType: kernel.kind,
                 kernelLanguage: language,
-                envType: interpreter?.envType,
+                envType: interpreter && getEnvironmentType(interpreter),
                 isArgv0SameAsInterpreter,
                 argv0,
                 argv

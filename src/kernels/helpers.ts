@@ -28,6 +28,7 @@ import { IPlatformService } from '../platform/common/platform/types';
 import { splitLines } from '../platform/common/helpers';
 import {
     getCachedVersion,
+    getEnvironmentType,
     getPythonEnvironmentName,
     isCondaEnvironmentWithoutPython
 } from '../platform/interpreter/helpers';
@@ -259,8 +260,8 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         case 'startUsingRemoteKernelSpec':
         case 'startUsingLocalKernelSpec': {
             if (
-                kernelConnection.interpreter?.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
+                kernelConnection.interpreter &&
+                getEnvironmentType(kernelConnection.interpreter) !== EnvironmentType.Unknown
             ) {
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
@@ -283,8 +284,8 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 getTelemetrySafeVersion(getCachedVersion(kernelConnection.interpreter)) || ''
             ).trim();
             if (
-                kernelConnection.interpreter.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
+                kernelConnection.interpreter &&
+                getEnvironmentType(kernelConnection.interpreter) !== EnvironmentType.Unknown
             ) {
                 // If user has created a custom kernelspec, then use that.
                 if (

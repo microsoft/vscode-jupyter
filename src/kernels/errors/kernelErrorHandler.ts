@@ -60,6 +60,7 @@ import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platfor
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 import { fileToCommandArgument } from '../../platform/common/helpers';
 import {
+    getEnvironmentType,
     getPythonEnvDisplayName,
     getSysPrefix,
     isCondaEnvironmentWithoutPython
@@ -424,14 +425,14 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                         sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
                             envMissingReason: 'Unknown',
                             isEmptyCondaEnv: isCondaEnvironmentWithoutPython(details),
-                            pythonEnvType: details.envType,
+                            pythonEnvType: getEnvironmentType(details),
                             fileExists
                         });
                     } else {
                         sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
                             envMissingReason: 'EmptyEnvDetailsFromPython',
                             isEmptyCondaEnv: isCondaEnvironmentWithoutPython(kernelConnection.interpreter),
-                            pythonEnvType: kernelConnection.interpreter.envType,
+                            pythonEnvType: getEnvironmentType(kernelConnection.interpreter),
                             fileExists
                         });
                     }
@@ -441,7 +442,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
                         envMissingReason: 'FailedToGetEnvDetailsFromPython',
                         isEmptyCondaEnv: isCondaEnvironmentWithoutPython(kernelConnection.interpreter),
-                        pythonEnvType: kernelConnection.interpreter.envType,
+                        pythonEnvType: getEnvironmentType(kernelConnection.interpreter),
                         fileExists
                     });
                 })
@@ -615,7 +616,7 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
     let installerCommand = `${fileToCommandArgument(
         getFilePath(kernelConnection.interpreter.uri)
     )} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
-    if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
+    if (kernelConnection.interpreter && getEnvironmentType(kernelConnection.interpreter) === EnvironmentType.Conda) {
         if (kernelConnection.interpreter?.envName) {
             installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         } else if (kernelConnection.interpreter?.envPath) {
@@ -623,7 +624,10 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
                 kernelConnection.interpreter?.envPath
             )} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         }
-    } else if (kernelConnection.interpreter?.envType === EnvironmentType.Unknown) {
+    } else if (
+        kernelConnection.interpreter &&
+        getEnvironmentType(kernelConnection.interpreter) === EnvironmentType.Unknown
+    ) {
         installerCommand = `${fileToCommandArgument(
             getFilePath(kernelConnection.interpreter.uri)
         )} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;

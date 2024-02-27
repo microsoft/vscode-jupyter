@@ -10,12 +10,14 @@ import { IKernel } from '../../../kernels/types';
 import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { splitLines } from '../../../platform/common/helpers';
+import { getEnvironmentType } from '../../../platform/interpreter/helpers';
 
 const separator = '5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d';
 export const kernelGetPandasVersion = `import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);print("${separator}"); del _VSCODE_pandas`;
 
 function kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
-    const envType = kernel.kernelConnectionMetadata.interpreter?.envType;
+    const envType =
+        kernel.kernelConnectionMetadata.interpreter && getEnvironmentType(kernel.kernelConnectionMetadata.interpreter);
     const isConda = envType === EnvironmentType.Conda;
     // From https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-pip (%conda is here as well).
     return isConda ? '%conda' : '%pip';

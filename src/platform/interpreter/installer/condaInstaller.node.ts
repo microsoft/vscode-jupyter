@@ -65,10 +65,7 @@ export class CondaInstaller extends ModuleInstaller {
             return false;
         }
         // Now we need to check if the current environment is a conda environment or not.
-        return (
-            ('executable' in interpreter ? getEnvironmentType(interpreter) : interpreter.envType) ===
-            EnvironmentType.Conda
-        );
+        return getEnvironmentType(interpreter) === EnvironmentType.Conda;
     }
 
     public override async installModule(

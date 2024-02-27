@@ -48,10 +48,7 @@ export class PoetryInstaller extends ModuleInstaller {
     }
 
     public async isSupported(interpreter: PythonEnvironment | Environment): Promise<boolean> {
-        if (
-            ('executable' in interpreter ? getEnvironmentType(interpreter) : interpreter.envType) !==
-            EnvironmentType.Poetry
-        ) {
+        if (getEnvironmentType(interpreter) !== EnvironmentType.Poetry) {
             return false;
         }
 

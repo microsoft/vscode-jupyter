@@ -76,31 +76,8 @@ export function resolvedPythonEnvToJupyterEnv(
     env: ResolvedEnvironment,
     supportsEmptyCondaEnv: boolean
 ): PythonEnvironment | undefined {
-    const envTools = env.tools as KnownEnvironmentTools[];
     // Map the Python env tool to a Jupyter environment type.
-    const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
-        ['Conda', EnvironmentType.Conda],
-        ['Pyenv', EnvironmentType.Pyenv],
-        ['Pipenv', EnvironmentType.Pipenv],
-        ['Poetry', EnvironmentType.Poetry],
-        ['VirtualEnvWrapper', EnvironmentType.VirtualEnvWrapper],
-        ['VirtualEnv', EnvironmentType.VirtualEnv],
-        ['Venv', EnvironmentType.Venv]
-    ];
-    let envType = envTools.length ? (envTools[0] as EnvironmentType) : EnvironmentType.Unknown;
-    if (env.environment?.type === 'Conda') {
-        envType = EnvironmentType.Conda;
-    } else {
-        for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
-            if (envTools.includes(pythonEnvTool)) {
-                envType = JupyterEnv;
-                break;
-            }
-        }
-        if (envType === EnvironmentType.Unknown && env.environment?.type === 'VirtualEnvironment') {
-            envType = EnvironmentType.VirtualEnv;
-        }
-    }
+    const envType = getEnvironmentType(env);
     let uri: Uri;
     let id = env.id;
     if (!env.executable.uri) {
@@ -566,7 +543,9 @@ export class InterpreterService implements IInterpreterService {
                     traceInfo(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
-                        )} (${item?.envType}, '${item?.envName}', ${version?.major}.${version?.minor}.${version?.micro})`
+                        )} (${
+                            item && getEnvironmentType(item)
+                        }, '${item?.envName}', ${version?.major}.${version?.minor}.${version?.micro})`
                     );
                 })
                 .catch(noop);
