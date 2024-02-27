@@ -28,7 +28,7 @@ import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
 import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
 import { noop } from '../../../platform/common/utils/misc';
-import { UsedPorts } from '../../common/usedPorts';
+import { UsedPorts, ignorePortForwarding } from '../../common/usedPorts';
 
 /**
  * Responsible for starting a notebook.
@@ -132,8 +132,12 @@ export class JupyterServerStarter implements IJupyterServerStarter {
             try {
                 const port = parseInt(new URL(connection.baseUrl).port || '0', 10);
                 if (port && !isNaN(port)) {
+                    const disposable = ignorePortForwarding(port);
                     if (launchResult.proc) {
-                        launchResult.proc.on('exit', () => UsedPorts.delete(port));
+                        launchResult.proc.on('exit', () => {
+                            UsedPorts.delete(port);
+                            disposable.dispose();
+                        });
                     }
                     UsedPorts.add(port);
                 }

@@ -61,6 +61,7 @@ import { IPythonExecutionFactory } from '../../../platform/interpreter/types.nod
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { ServiceContainer } from '../../../platform/ioc/container';
+import { ObservableDisposable } from '../../../platform/common/utils/lifecycle';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -68,7 +69,7 @@ const kernelOutputToNotLog =
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
-export class KernelProcess implements IKernelProcess {
+export class KernelProcess extends ObservableDisposable implements IKernelProcess {
     private _pid?: number;
     private _disposingPromise?: Promise<void>;
     public get pid() {
@@ -100,7 +101,6 @@ export class KernelProcess implements IKernelProcess {
     private _process?: ChildProcess;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private launchedOnce?: boolean;
-    private disposed?: boolean;
     private connectionFile?: Uri;
     private _launchKernelSpec?: IJupyterKernelSpec;
     private interrupter?: Interrupter;
@@ -122,6 +122,7 @@ export class KernelProcess implements IKernelProcess {
         private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon,
         private readonly platform: IPlatformService
     ) {
+        super();
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
     public async interrupt(): Promise<void> {
@@ -176,7 +177,7 @@ export class KernelProcess implements IKernelProcess {
         if (proc) {
             proc.on('exit', (exitCode) => {
                 exitCode = exitCode || providedExitCode;
-                if (this.disposed) {
+                if (this.isDisposed) {
                     traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`);
                     return;
                 }
@@ -248,7 +249,7 @@ export class KernelProcess implements IKernelProcess {
             this.sendToOutput(output.out);
         });
         exeObs.out.done.catch((error) => {
-            if (this.disposed) {
+            if (this.isDisposed) {
                 traceWarning('Kernel died', error, stderr);
                 return;
             }
@@ -337,14 +338,13 @@ export class KernelProcess implements IKernelProcess {
         }
     }
 
-    public async dispose(): Promise<void> {
+    public override async dispose(): Promise<void> {
         if (this._disposingPromise) {
             return this._disposingPromise;
         }
-        if (this.disposed) {
+        if (this.isDisposed) {
             return;
         }
-        this.disposed = true;
         const pid = this._process?.pid;
         traceInfo(`Dispose Kernel process ${pid}.`);
         this._disposingPromise = (async () => {
@@ -370,6 +370,7 @@ export class KernelProcess implements IKernelProcess {
             });
             traceVerbose(`Disposed Kernel process ${pid}.`);
         })();
+        super.dispose();
     }
 
     private async killChildProcesses(pid?: number) {
