@@ -6,7 +6,7 @@ import { instance, mock, when } from 'ts-mockito';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { CondaService } from '../../../platform/interpreter/condaService.node';
-import { IConfigurationService } from '../../../platform/common/types';
+import { IConfigurationService, type IDisposable } from '../../../platform/common/types';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -15,12 +15,19 @@ import { ExecutionInstallArgs } from '../../../platform/interpreter/installer/mo
 import { ModuleInstallFlags } from '../../../platform/interpreter/installer/types';
 import { Uri } from 'vscode';
 import { fileToCommandArgument } from '../../../platform/common/helpers';
+import { PythonExtension } from '@vscode/python-extension';
+import sinon from 'sinon';
+import { resolvableInstance } from '../../../test/datascience/helpers';
+import { dispose } from '../../common/utils/lifecycle';
+import { setPythonApi } from '../helpers';
 
 suite('Common - Conda Installer', () => {
+    let disposables: IDisposable[] = [];
     let installer: CondaInstallerTest;
     let serviceContainer: IServiceContainer;
     let condaService: CondaService;
     let configService: IConfigurationService;
+    let environments: PythonExtension['environments'];
     class CondaInstallerTest extends CondaInstaller {
         public override async getExecutionArgs(
             moduleName: string,
@@ -37,7 +44,18 @@ suite('Common - Conda Installer', () => {
         when(serviceContainer.get<CondaService>(CondaService)).thenReturn(instance(condaService));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         installer = new CondaInstallerTest(instance(serviceContainer));
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
     });
+    teardown(() => (disposables = dispose(disposables)));
+
     test('Name and priority', async () => {
         assert.strictEqual(installer.displayName, 'Conda');
         assert.strictEqual(installer.name, 'Conda');
@@ -45,7 +63,6 @@ suite('Common - Conda Installer', () => {
     });
     test('Installer is not supported when conda is available variable is set to false', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
@@ -58,7 +75,6 @@ suite('Common - Conda Installer', () => {
     });
     test('Installer is not supported when conda is not available', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
@@ -70,7 +86,6 @@ suite('Common - Conda Installer', () => {
     });
     test('Installer is not supported when current env is not a conda env', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
@@ -85,10 +100,16 @@ suite('Common - Conda Installer', () => {
     });
     test('Installer is supported when current env is a conda env', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                tools: [EnvironmentType.Conda]
+            } as any
+        ]);
+
         const settings = mock(JupyterSettings);
 
         when(condaService.isCondaAvailable()).thenResolve(true);
@@ -100,7 +121,6 @@ suite('Common - Conda Installer', () => {
     });
     test('Include name of environment', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath,
             envName: 'baz'
@@ -120,7 +140,6 @@ suite('Common - Conda Installer', () => {
     });
     test('When conda exec path is conda, then do not use /conda as the executable path', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath,
             envName: 'baz'
@@ -140,7 +159,6 @@ suite('Common - Conda Installer', () => {
     test('Include path of environment', async () => {
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Conda,
             uri: Uri.file('baz/foobar/python.exe'),
             id: Uri.file('baz/foobar/python.exe').fsPath
         };
@@ -159,7 +177,6 @@ suite('Common - Conda Installer', () => {
     test('Include path of environment but skip bin', async () => {
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Conda,
             uri: Uri.file('baz/foobar/bin/python.exe'),
             id: Uri.file('baz/foobar/bin/python.exe').fsPath
         };

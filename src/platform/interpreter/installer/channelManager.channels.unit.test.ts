@@ -6,7 +6,7 @@
 import assert from 'assert';
 import { ServiceContainer } from '../../ioc/container';
 import { IServiceContainer } from '../../ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { InstallationChannelManager } from './channelManager.node';
 import { Product, IModuleInstaller } from './types';
 import { Uri } from 'vscode';
@@ -16,7 +16,6 @@ suite('Installation - installation channels', () => {
     let serviceContainer: IServiceContainer;
     let cm: InstallationChannelManager;
     const interpreter: PythonEnvironment = {
-        envType: EnvironmentType.Conda,
         uri: Uri.file('foobar'),
         id: Uri.file('foobar').fsPath
     };

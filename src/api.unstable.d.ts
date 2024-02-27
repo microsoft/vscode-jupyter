@@ -77,7 +77,6 @@ declare module './api' {
         displayName?: string;
         uri: Uri;
         version?: PythonVersion;
-        envType?: EnvironmentType;
         envName?: string;
         envPath?: Uri;
     };

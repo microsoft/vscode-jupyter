@@ -21,6 +21,9 @@ import { ModuleInstallFlags } from '../../../platform/interpreter/installer/type
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
 import { Disposable } from 'vscode';
 import { dispose } from '../../common/utils/lifecycle';
+import { PythonExtension } from '@vscode/python-extension';
+import { resolvableInstance } from '../../../test/datascience/helpers';
+import { setPythonApi } from '../helpers';
 
 suite('Module Installer - Poetry', () => {
     class TestInstaller extends PoetryInstaller {
@@ -39,6 +42,7 @@ suite('Module Installer - Poetry', () => {
     let serviceContainer: ServiceContainer;
     let shellExecute: sinon.SinonStub;
     let disposables: IDisposable[] = [];
+    let environments: PythonExtension['environments'];
     setup(() => {
         resetVSCodeMocks();
         disposables.push(new Disposable(() => resetVSCodeMocks()));
@@ -64,6 +68,15 @@ suite('Module Installer - Poetry', () => {
         });
 
         poetryInstaller = new TestInstaller(instance(serviceContainer), instance(configurationService));
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
     });
 
     teardown(() => {
@@ -85,10 +98,15 @@ suite('Module Installer - Poetry', () => {
 
     test('Is not supported when there is no workspace', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                tools: [EnvironmentType.Poetry]
+            } as any
+        ]);
 
         when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(anything())).thenReturn();
 
@@ -98,10 +116,16 @@ suite('Module Installer - Poetry', () => {
     });
     test('Get Executable info', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                tools: [EnvironmentType.Poetry]
+            } as any
+        ]);
+
         const settings = mock(JupyterSettings);
 
         when(configurationService.getSettings(undefined)).thenReturn(instance(settings));
@@ -115,10 +139,15 @@ suite('Module Installer - Poetry', () => {
         const uri = Uri.file(project1);
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Poetry,
             uri: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')),
             id: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')).fsPath
         };
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                tools: [EnvironmentType.Poetry]
+            } as any
+        ]);
 
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.poetryPath).thenReturn('poetry');
@@ -133,10 +162,15 @@ suite('Module Installer - Poetry', () => {
         const uri = Uri.file(project1);
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                tools: [EnvironmentType.Poetry]
+            } as any
+        ]);
 
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.poetryPath).thenReturn('poetry');
@@ -151,10 +185,15 @@ suite('Module Installer - Poetry', () => {
         const uri = Uri.file(project1);
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                tools: [EnvironmentType.Conda]
+            } as any
+        ]);
 
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.poetryPath).thenReturn('poetry');

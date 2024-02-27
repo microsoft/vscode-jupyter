@@ -55,12 +55,11 @@ export type InterpreterInformation_PythonApi = {
     sysVersion?: string;
 };
 
-export type PythonEnvironment_PythonApi = InterpreterInformation_PythonApi & {
+export interface PythonEnvironment_PythonApi extends InterpreterInformation_PythonApi {
     displayName?: string;
-    envType?: EnvironmentType;
     envName?: string;
     envPath?: string;
-};
+}
 
 export interface PythonApi {
     /**

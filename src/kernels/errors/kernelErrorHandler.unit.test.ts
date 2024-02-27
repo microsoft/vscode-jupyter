@@ -705,12 +705,25 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(dependencyManager.installMissingDependencies(anything())).thenResolve(
                 JupyterInterpreterDependencyResponse.cancel
             );
+            when(environments.known).thenReturn([
+                {
+                    id: kernelConnection.interpreter!.id,
+                    version: {
+                        major: 3,
+                        minor: 12,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '3.12.7'
+                    },
+                    tools: [EnvironmentType.Conda]
+                } as any
+            ]);
+
             const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
                 new KernelDiedError('Kaboom', 'hello word does not have attribute named abc', undefined, {
                     ...kernelConnection,
                     interpreter: {
                         ...kernelConnection.interpreter!,
-                        envType: EnvironmentType.Conda,
                         envName: 'condaEnv1'
                     }
                 }),
@@ -733,6 +746,20 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(dependencyManager.installMissingDependencies(anything())).thenResolve(
                 JupyterInterpreterDependencyResponse.cancel
             );
+            when(environments.known).thenReturn([
+                {
+                    id: kernelConnection.interpreter!.id,
+                    version: {
+                        major: 3,
+                        minor: 12,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '3.12.7'
+                    },
+                    tools: [EnvironmentType.Venv]
+                } as any
+            ]);
+
             const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
                 new KernelDiedError(
                     'Kaboom',

@@ -21,7 +21,7 @@ import { dispose } from '../../platform/common/utils/lifecycle';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { ControllerRegistration } from './controllerRegistration';
 import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
@@ -46,8 +46,7 @@ suite('Controller Registration', () => {
     });
     const condaPython: PythonEnvironment = {
         id: 'condaPython',
-        uri: Uri.file('condaPython'),
-        envType: EnvironmentType.Conda
+        uri: Uri.file('condaPython')
     };
     const condaPythonConnection = PythonKernelConnectionMetadata.create({
         id: 'condaKernel',

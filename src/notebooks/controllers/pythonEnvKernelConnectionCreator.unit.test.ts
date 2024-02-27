@@ -18,12 +18,14 @@ import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
-import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { sleep } from '../../test/core';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 import { PythonEnvKernelConnectionCreator } from './pythonEnvKernelConnectionCreator.node';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
+import { PythonExtension } from '@vscode/python-extension';
+import { resolvableInstance } from '../../test/datascience/helpers';
+import { setPythonApi } from '../../platform/interpreter/helpers';
 
 suite('Python Environment Kernel Connection Creator', () => {
     let pythonEnvKernelConnectionCreator: PythonEnvKernelConnectionCreator;
@@ -66,10 +68,10 @@ suite('Python Environment Kernel Connection Creator', () => {
         },
         interpreter: {
             id: 'conda',
-            uri: Uri.file('.conda/bin/python'),
-            envType: EnvironmentType.Conda
+            uri: Uri.file('.conda/bin/python')
         }
     });
+    let environments: PythonExtension['environments'];
 
     setup(() => {
         const serviceContainer = mock<ServiceContainer>();
@@ -110,6 +112,15 @@ suite('Python Environment Kernel Connection Creator', () => {
 
         pythonEnvKernelConnectionCreator = new PythonEnvKernelConnectionCreator(notebook, cancellation.token);
         disposables.push(pythonEnvKernelConnectionCreator);
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
     });
     teardown(() => (disposables = dispose(disposables)));
     test('Not does create a Python Env when Python extension fails to create it', async () => {

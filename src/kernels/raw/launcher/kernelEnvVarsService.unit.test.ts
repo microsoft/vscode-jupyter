@@ -31,7 +31,6 @@ suite('Kernel Environment Variables Service', () => {
     let settings: IWatchableJupyterSettings;
     const pathFile = Uri.joinPath(Uri.file('foobar'), 'bar');
     const interpreter: PythonEnvironment = {
-        envType: EnvironmentType.Conda,
         uri: pathFile,
         id: pathFile.fsPath
     };
@@ -170,7 +169,6 @@ suite('Kernel Environment Variables Service', () => {
 
     test('KernelSpec interpreterPath used if interpreter is undefined', async () => {
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
-            envType: EnvironmentType.Conda,
             uri: Uri.joinPath(Uri.file('env'), 'foopath'),
             id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath
         });
@@ -189,7 +187,6 @@ suite('Kernel Environment Variables Service', () => {
 
     test('No substitution of env variables in kernelSpec', async () => {
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
-            envType: EnvironmentType.Conda,
             uri: Uri.joinPath(Uri.file('env'), 'foopath'),
             id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath
         });
@@ -210,7 +207,6 @@ suite('Kernel Environment Variables Service', () => {
     });
     test('substitute env variables in kernelSpec', async () => {
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
-            envType: EnvironmentType.Conda,
             uri: Uri.joinPath(Uri.file('env'), 'foopath'),
             id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath
         });
@@ -234,9 +230,8 @@ suite('Kernel Environment Variables Service', () => {
         assert.strictEqual(vars!['PATH'], `some_path;pathInInterpreterEnv;1`);
     });
 
-    async function testPYTHONNOUSERSITE(envType: EnvironmentType, shouldBeSet: boolean) {
+    async function testPYTHONNOUSERSITE(_envType: EnvironmentType, shouldBeSet: boolean) {
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
-            envType,
             uri: Uri.file('foopath'),
             id: Uri.file('foopath').fsPath
         });

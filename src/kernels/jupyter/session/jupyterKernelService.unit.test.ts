@@ -13,7 +13,6 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../types';
-import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import * as path from '../../../platform/vscode-path/path';
 import { CancellationTokenSource, Uri } from 'vscode';
@@ -90,8 +89,7 @@ suite('JupyterKernelService', () => {
             interpreter: {
                 id: '/usr/bin/conda/python3',
                 displayName: 'Conda Environment',
-                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/conda/python3.exe' : '/usr/bin/conda/python3'),
-                envType: EnvironmentType.Conda
+                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/conda/python3.exe' : '/usr/bin/conda/python3')
             },
             id: '1'
         }),
@@ -298,8 +296,7 @@ suite('JupyterKernelService', () => {
                 metadata: {
                     interpreter: {
                         displayName: 'Conda base environment',
-                        path: '/usr/conda/envs/base/python',
-                        envType: EnvironmentType.Conda
+                        path: '/usr/conda/envs/base/python'
                     }
                 },
                 env: {},
@@ -311,8 +308,7 @@ suite('JupyterKernelService', () => {
                 displayName: 'Conda base environment',
                 uri: Uri.file(
                     os.platform() === 'win32' ? '/usr/conda/envs/base/python.exe' : '/usr/conda/envs/base/python'
-                ),
-                envType: EnvironmentType.Conda
+                )
             },
             id: '11'
         }),

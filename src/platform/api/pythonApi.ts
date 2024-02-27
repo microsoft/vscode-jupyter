@@ -29,12 +29,7 @@ import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironmen
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import {
-    Environment,
-    KnownEnvironmentTools,
-    PythonExtension as PythonExtensionApi,
-    ResolvedEnvironment
-} from '@vscode/python-extension';
+import { Environment, PythonExtension as PythonExtensionApi, ResolvedEnvironment } from '@vscode/python-extension';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
@@ -77,11 +72,10 @@ export function resolvedPythonEnvToJupyterEnv(
     supportsEmptyCondaEnv: boolean
 ): PythonEnvironment | undefined {
     // Map the Python env tool to a Jupyter environment type.
-    const envType = getEnvironmentType(env);
     let uri: Uri;
     let id = env.id;
     if (!env.executable.uri) {
-        if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
+        if (getEnvironmentType(env) === EnvironmentType.Conda && supportsEmptyCondaEnv) {
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -100,16 +94,14 @@ export function resolvedPythonEnvToJupyterEnv(
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
         uri,
-        displayName: env.environment?.name || '',
-        envType
+        displayName: env.environment?.name || ''
     };
 }
 export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | undefined {
-    const envType = getEnvironmentType(env);
     let uri: Uri;
     let id = env.id;
     if (!env.executable.uri) {
-        if (envType === EnvironmentType.Conda) {
+        if (getEnvironmentType(env) === EnvironmentType.Conda) {
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -128,8 +120,7 @@ export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | und
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
         uri,
-        displayName: env.environment?.name || '',
-        envType
+        displayName: env.environment?.name || ''
     };
 }
 
@@ -784,7 +775,7 @@ export class InterpreterService implements IInterpreterService {
         }
         traceVerbose(
             `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters
-                .map((item) => `${item.id}:${item.displayName}:${item.envType}:${getDisplayPath(item.uri)}`)
+                .map((item) => `${item.id}:${item.displayName}:${getEnvironmentType(item)}:${getDisplayPath(item.uri)}`)
                 .join(', ')}`
         );
         return allInterpreters;
