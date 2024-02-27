@@ -11,6 +11,7 @@ import { IJupyterServerHelper, IJupyterServerProvider } from '../types';
 import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { Cancellation, isCancellationError } from '../../../platform/common/cancellation';
+import { getPythonEnvDisplayName } from '../../../platform/interpreter/helpers';
 
 @injectable()
 export class JupyterServerProvider implements IJupyterServerProvider {
@@ -82,9 +83,7 @@ export class JupyterServerProvider implements IJupyterServerProvider {
             const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
             // Can't find a usable interpreter, show the error.
             if (activeInterpreter) {
-                const displayName = activeInterpreter.displayName
-                    ? activeInterpreter.displayName
-                    : getFilePath(activeInterpreter.uri);
+                const displayName = getPythonEnvDisplayName(activeInterpreter) || getFilePath(activeInterpreter.uri);
                 throw new Error(DataScience.jupyterNotSupportedBecauseOfEnvironment(displayName, e.toString()));
             } else {
                 throw new JupyterInstallError(

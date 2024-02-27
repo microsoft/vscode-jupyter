@@ -27,8 +27,10 @@ import { sendTelemetryEvent } from '../telemetry';
 import { IPlatformService } from '../platform/common/platform/types';
 import { splitLines } from '../platform/common/helpers';
 import {
+    getCachedEnvironment,
     getCachedVersion,
     getEnvironmentType,
+    getPythonEnvDisplayName,
     getPythonEnvironmentName,
     isCondaEnvironmentWithoutPython
 } from '../platform/interpreter/helpers';
@@ -80,7 +82,7 @@ export function createInterpreterKernelSpecWithName(
     const defaultSpec: KernelSpec.ISpecModel = {
         name,
         language: 'python',
-        display_name: interpreter?.displayName || 'Python 3',
+        display_name: (interpreter ? getCachedEnvironment(interpreter)?.environment?.name : '') || 'Python 3',
         metadata: {
             interpreter: interpreterMetadata
         },
@@ -321,7 +323,9 @@ function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: Kerne
             : kernelConnection.kernelSpec?.name;
 
     const interpreterName =
-        kernelConnection.kind === 'startUsingPythonInterpreter' ? kernelConnection.interpreter.displayName : undefined;
+        kernelConnection.kind === 'startUsingPythonInterpreter'
+            ? getPythonEnvDisplayName(kernelConnection.interpreter)
+            : undefined;
 
     return [displayName, name, interpreterName, ''].find((item) => typeof item === 'string' && item.length > 0) || '';
 }
@@ -355,7 +359,8 @@ export function getKernelDisplayPathFromKernelConnection(kernelConnection?: Kern
         const pathValue =
             kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.executable;
         if (pathValue === '/python' || pathValue === 'python') {
-            return kernelConnection.interpreter?.displayPath;
+            const env = getCachedEnvironment(kernelConnection.interpreter);
+            return env?.environment?.folderUri || (env ? Uri.file(env.path) : undefined);
         }
         return pathValue ? Uri.file(pathValue) : undefined;
     } else {

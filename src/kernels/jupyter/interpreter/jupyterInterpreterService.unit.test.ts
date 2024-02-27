@@ -29,7 +29,7 @@ suite('Jupyter Interpreter Service', () => {
     let selectedInterpreterEventArgs: PythonEnvironment | undefined;
     let memento: Memento;
     let interpreterSelectionState: JupyterInterpreterStateStore;
-    const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
+    const selectedJupyterInterpreter = createPythonInterpreter();
     const pythonInterpreter: PythonEnvironment = {
         uri: Uri.file('some path'),
         id: Uri.file('some path').fsPath

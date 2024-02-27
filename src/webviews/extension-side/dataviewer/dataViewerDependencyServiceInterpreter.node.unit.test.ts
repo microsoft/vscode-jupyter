@@ -28,7 +28,6 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
     setup(async () => {
         resetVSCodeMocks();
         interpreter = {
-            displayName: '',
             id: Uri.file(path.join('users', 'python', 'bin', 'python.exe')).fsPath,
             uri: Uri.file(path.join('users', 'python', 'bin', 'python.exe'))
         };

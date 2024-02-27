@@ -38,6 +38,7 @@ import { SemVer } from 'semver';
 import {
     getCachedVersion,
     getEnvironmentType,
+    getPythonEnvDisplayName,
     getPythonEnvironmentName,
     isCondaEnvironmentWithoutPython,
     setPythonApi
@@ -52,11 +53,7 @@ export function deserializePythonEnvironment(
         const result = {
             ...pythonVersion,
             uri: Uri.file(pythonVersion.path || ''),
-            id: pythonEnvId || (pythonVersion as any).id,
-            displayPath:
-                'displayPath' in pythonVersion && typeof pythonVersion.displayPath === 'string'
-                    ? Uri.file(pythonVersion.displayPath)
-                    : undefined
+            id: pythonEnvId || (pythonVersion as any).id
         };
 
         // Cleanup stuff that shouldn't be there.
@@ -64,15 +61,12 @@ export function deserializePythonEnvironment(
         return result;
     }
 }
-export function resolvedPythonEnvToJupyterEnv(
-    env: ResolvedEnvironment,
-    supportsEmptyCondaEnv: boolean
-): PythonEnvironment | undefined {
+export function resolvedPythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironment | undefined {
     // Map the Python env tool to a Jupyter environment type.
     let uri: Uri;
     let id = env.id;
     if (!env.executable.uri) {
-        if (getEnvironmentType(env) === EnvironmentType.Conda && supportsEmptyCondaEnv) {
+        if (getEnvironmentType(env) === EnvironmentType.Conda) {
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -87,9 +81,7 @@ export function resolvedPythonEnvToJupyterEnv(
 
     return {
         id,
-        displayPath: env.environment?.folderUri || Uri.file(env.path),
-        uri,
-        displayName: env.environment?.name || ''
+        uri
     };
 }
 export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | undefined {
@@ -111,9 +103,7 @@ export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | und
 
     return {
         id,
-        displayPath: env.environment?.folderUri || Uri.file(env.path),
-        uri,
-        displayName: env.environment?.name || ''
+        uri
     };
 }
 
@@ -122,8 +112,7 @@ export function serializePythonEnvironment(
 ): PythonEnvironment_PythonApi | undefined {
     if (jupyterVersion) {
         const result = Object.assign({}, jupyterVersion, {
-            path: getFilePath(jupyterVersion.uri),
-            displayPath: jupyterVersion.displayPath ? getFilePath(jupyterVersion.displayPath) : undefined
+            path: getFilePath(jupyterVersion.uri)
         });
         // Cleanup stuff that shouldn't be there.
         delete (result as any).uri;
@@ -601,10 +590,7 @@ export class InterpreterService implements IInterpreterService {
     }
     private trackResolvedEnvironment(env: ResolvedEnvironment | undefined) {
         if (env) {
-            const displayEmptyCondaEnv =
-                this.apiProvider.pythonExtensionVersion &&
-                this.apiProvider.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
-            const resolved = resolvedPythonEnvToJupyterEnv(env, displayEmptyCondaEnv ? true : false);
+            const resolved = resolvedPythonEnvToJupyterEnv(env);
             if (!resolved) {
                 return;
             }
@@ -757,7 +743,12 @@ export class InterpreterService implements IInterpreterService {
         }
         traceVerbose(
             `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters
-                .map((item) => `${item.id}:${item.displayName}:${getEnvironmentType(item)}:${getDisplayPath(item.uri)}`)
+                .map(
+                    (item) =>
+                        `${item.id}:${getPythonEnvDisplayName(item)}:${getEnvironmentType(item)}:${getDisplayPath(
+                            item.uri
+                        )}`
+                )
                 .join(', ')}`
         );
         return allInterpreters;

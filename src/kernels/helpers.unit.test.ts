@@ -132,8 +132,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -151,8 +150,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -186,8 +184,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -221,8 +218,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -259,8 +255,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -279,8 +274,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -299,8 +293,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -319,8 +312,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -339,8 +331,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -375,8 +366,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -411,8 +401,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -433,8 +422,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -453,8 +441,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -486,8 +473,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -506,8 +492,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -526,8 +511,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -538,7 +522,6 @@ suite('Kernel Connection Helpers', () => {
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
-            when(interpreter.displayName).thenReturn('Something 64-bit');
             when(environments.known).thenReturn([
                 {
                     id: instance(interpreter).id,
@@ -567,7 +550,6 @@ suite('Kernel Connection Helpers', () => {
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
-            when(interpreter.displayName).thenReturn('Something');
             when(environments.known).thenReturn([
                 {
                     id: instance(interpreter).id,
@@ -579,7 +561,8 @@ suite('Kernel Connection Helpers', () => {
                         sysVersion: '9.8.7.6-pre'
                     },
                     environment: {
-                        name: '.env'
+                        name: '.env',
+                        folderUri: Uri.file('some')
                     },
                     tools: [EnvironmentType.Venv]
                 } as any
@@ -599,7 +582,6 @@ suite('Kernel Connection Helpers', () => {
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
-            when(interpreter.displayName).thenReturn('Something 64-bit');
             when(environments.known).thenReturn([
                 {
                     id: instance(interpreter).id,
@@ -611,7 +593,8 @@ suite('Kernel Connection Helpers', () => {
                         sysVersion: '9.8.7.6-pre'
                     },
                     environment: {
-                        name: '.env'
+                        name: '.env',
+                        folderUri: Uri.file('some')
                     },
                     tools: [EnvironmentType.Venv]
                 } as any

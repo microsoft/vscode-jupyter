@@ -20,7 +20,6 @@ import { dispose } from '../../common/utils/lifecycle';
 import { setPythonApi } from '../helpers';
 
 const info: PythonEnvironment = {
-    displayName: '',
     uri: Uri.file(''),
     id: Uri.file('').fsPath
 };

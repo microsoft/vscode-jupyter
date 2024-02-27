@@ -31,7 +31,7 @@ import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 import { ResourceMap } from '../../../platform/common/utils/map';
 import { PythonExtension } from '@vscode/python-extension';
-import { setPythonApi } from '../../../platform/interpreter/helpers';
+import { getCachedEnvironment, setPythonApi } from '../../../platform/interpreter/helpers';
 
 suite(`Local Python and related kernels`, async () => {
     let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
@@ -237,9 +237,9 @@ suite(`Local Python and related kernels`, async () => {
                 loadKernelSpecReturnValue.get(file) || {
                     specFile: file.fsPath,
                     argv: ['bin/python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
-                    display_name: interpreter?.displayName || interpreter?.id || '',
+                    display_name: getCachedEnvironment(interpreter)?.environment?.name || interpreter?.id || '',
                     executable: interpreter?.uri?.fsPath || interpreter?.id || '',
-                    name: interpreter?.displayName || interpreter?.id || '',
+                    name: getCachedEnvironment(interpreter)?.environment?.name || interpreter?.id || '',
                     language: PYTHON_LANGUAGE
                     // interpreterPath: 'some Path' + (interpreter?.uri?.fsPath || interpreter?.id || '')
                 }
@@ -510,18 +510,14 @@ suite(`Local Python and related kernels`, async () => {
 
         // Force some internal state change ('formatted' property will get updated)
         venvPythonKernel.interpreter.uri.toString();
-        venvPythonKernel.interpreter.displayPath = venvPythonKernel.interpreter.displayPath || undefined;
         // Force some internal state change ('formatted' property will get updated)
         condaKernel.interpreter.uri.toString();
-        condaKernel.interpreter.displayPath = condaKernel.interpreter.displayPath || undefined;
         // The cached kernel should be listed as Python extension has not yet completed refreshing of interpreters.
         assert.deepEqual(
             finder.kernels.map((k) => {
                 if (k.interpreter) {
                     // Force some internal state change ('formatted' property will get updated)
                     k.interpreter.uri.toString();
-                    // k.interpreter.displayPath
-                    (k as any).interpreter.displayPath = k.interpreter?.displayPath || undefined;
                 }
                 return Object.assign({}, k, {
                     kernelSpec: { ...k.kernelSpec, interrupt_mode: k.kernelSpec.interrupt_mode || undefined }

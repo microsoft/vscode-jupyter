@@ -22,7 +22,7 @@ export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environ
             }
         }
         const version = versionParts.length ? versionParts.join('.') : '';
-        const envName = env.environment ? basename(env.environment?.folderUri) : '';
+        const envName = env.environment?.name || (env.environment ? basename(env.environment?.folderUri) : '');
         const nameWithVersion = version ? `Python ${version}` : 'Python';
         if (isCondaEnvironmentWithoutPython(interpreter) && envName) {
             return envName;
@@ -205,4 +205,11 @@ export function getCachedVersion(interpreter?: { id?: string }) {
     }
     const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
     return cachedInfo?.version;
+}
+
+export function getCachedEnvironments() {
+    if (!pythonApi) {
+        return [];
+    }
+    return pythonApi.environments.known;
 }
