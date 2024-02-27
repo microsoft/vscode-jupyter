@@ -342,7 +342,8 @@ suite('Kernel Connection Helpers', () => {
                         micro: 7,
                         release: undefined,
                         sysVersion: '9.8.7.6-pre'
-                    }
+                    },
+                    tools: []
                 } as any
             ]);
             const name = getDisplayNameOrNameOfKernelConnection(
@@ -376,7 +377,8 @@ suite('Kernel Connection Helpers', () => {
                         micro: 7,
                         release: undefined,
                         sysVersion: '9.8.7'
-                    }
+                    },
+                    tools: []
                 } as any
             ]);
             const name = getDisplayNameOrNameOfKernelConnection(
@@ -455,7 +457,8 @@ suite('Kernel Connection Helpers', () => {
                         micro: 3,
                         release: undefined,
                         sysVersion: '1.2.3'
-                    }
+                    },
+                    tools: []
                 } as any
             ]);
             const name = getDisplayNameOrNameOfKernelConnection(
@@ -540,7 +543,8 @@ suite('Kernel Connection Helpers', () => {
                         micro: 7,
                         release: undefined,
                         sysVersion: '9.8.7.6-pre'
-                    }
+                    },
+                    tools: []
                 } as any
             ]);
 
@@ -570,7 +574,8 @@ suite('Kernel Connection Helpers', () => {
                         micro: 7,
                         release: undefined,
                         sysVersion: '9.8.7.6-pre'
-                    }
+                    },
+                    tools: []
                 } as any
             ]);
 
@@ -600,7 +605,8 @@ suite('Kernel Connection Helpers', () => {
                         micro: 7,
                         release: undefined,
                         sysVersion: '9.8.7.6-pre'
-                    }
+                    },
+                    tools: []
                 } as any
             ]);
 
