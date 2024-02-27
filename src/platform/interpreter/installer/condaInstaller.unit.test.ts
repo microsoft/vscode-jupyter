@@ -153,7 +153,7 @@ suite('Common - Conda Installer', () => {
     test('When conda exec path is conda, then do not use /conda as the executable path', async () => {
         const interpreter: PythonEnvironment = {
             uri: Uri.file('foobar'),
-            id: Uri.file('foobar').fsPath,
+            id: Uri.file('foobar').fsPath
         };
         const settings = mock(JupyterSettings);
         when(environments.known).thenReturn([
