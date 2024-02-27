@@ -133,7 +133,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '',
                         displayName: 'Something'
                     }
                 })
@@ -153,7 +152,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -171,6 +169,9 @@ suite('Kernel Connection Helpers', () => {
                         release: undefined,
                         sysVersion: '9.8.7'
                     },
+                    environment: {
+                        name: '.env'
+                    },
                     tools: [EnvironmentType.Conda]
                 } as any
             ]);
@@ -186,7 +187,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '.env',
                         displayName: 'Something'
                     }
                 })
@@ -204,6 +204,9 @@ suite('Kernel Connection Helpers', () => {
                         release: undefined,
                         sysVersion: '9.8.7'
                     },
+                    environment: {
+                        name: '.env'
+                    },
                     tools: [EnvironmentType.Conda]
                 } as any
             ]);
@@ -219,7 +222,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '.env',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -258,7 +260,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '.env',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -279,7 +280,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '.env',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -300,7 +300,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '',
                         displayName: 'Something'
                     }
                 })
@@ -321,7 +320,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -342,7 +340,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -360,6 +357,9 @@ suite('Kernel Connection Helpers', () => {
                         release: undefined,
                         sysVersion: '9.8.7.6-pre'
                     },
+                    environment: {
+                        name: '.env'
+                    },
                     tools: [EnvironmentType.Conda]
                 } as any
             ]);
@@ -376,7 +376,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '.env',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -394,6 +393,9 @@ suite('Kernel Connection Helpers', () => {
                         release: undefined,
                         sysVersion: '9.8.7'
                     },
+                    environment: {
+                        name: '.env'
+                    },
                     tools: [EnvironmentType.Conda]
                 } as any
             ]);
@@ -410,7 +412,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '.env',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -433,7 +434,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -454,7 +454,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -488,7 +487,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -509,7 +507,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '',
                         displayName: 'Something'
                     }
                 })
@@ -530,7 +527,6 @@ suite('Kernel Connection Helpers', () => {
                     interpreter: {
                         uri: Uri.file('pyPath'),
                         id: Uri.file('pyPath').fsPath,
-                        envName: '',
                         displayName: 'Something 64-bit'
                     }
                 })
@@ -542,7 +538,6 @@ suite('Kernel Connection Helpers', () => {
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
-            when(interpreter.envName).thenReturn('');
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(environments.known).thenReturn([
                 {
@@ -572,7 +567,6 @@ suite('Kernel Connection Helpers', () => {
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
-            when(interpreter.envName).thenReturn('.env');
             when(interpreter.displayName).thenReturn('Something');
             when(environments.known).thenReturn([
                 {
@@ -583,6 +577,9 @@ suite('Kernel Connection Helpers', () => {
                         micro: 7,
                         release: undefined,
                         sysVersion: '9.8.7.6-pre'
+                    },
+                    environment: {
+                        name: '.env'
                     },
                     tools: [EnvironmentType.Venv]
                 } as any
@@ -602,7 +599,6 @@ suite('Kernel Connection Helpers', () => {
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
-            when(interpreter.envName).thenReturn('.env');
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(environments.known).thenReturn([
                 {
@@ -613,6 +609,9 @@ suite('Kernel Connection Helpers', () => {
                         micro: 7,
                         release: undefined,
                         sysVersion: '9.8.7.6-pre'
+                    },
+                    environment: {
+                        name: '.env'
                     },
                     tools: [EnvironmentType.Venv]
                 } as any

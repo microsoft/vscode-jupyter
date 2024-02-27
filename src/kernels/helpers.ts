@@ -268,9 +268,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                     const pythonVersion = `Python ${
                         getTelemetrySafeVersion(getCachedVersion(kernelConnection.interpreter)) || ''
                     }`.trim();
-                    return kernelConnection.interpreter.envName
-                        ? `${oldDisplayName} (${pythonVersion})`
-                        : oldDisplayName;
+                    return envName ? `${oldDisplayName} (${pythonVersion})` : oldDisplayName;
                 } else {
                     // Non-Python kernelspec that launches via python interpreter
                     return envName ? `${oldDisplayName} (${envName})` : oldDisplayName;

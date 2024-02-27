@@ -56,7 +56,6 @@ export type InterpreterInformation_PythonApi = {
 
 export interface PythonEnvironment_PythonApi extends InterpreterInformation_PythonApi {
     displayName?: string;
-    envName?: string;
 }
 
 export interface PythonApi {

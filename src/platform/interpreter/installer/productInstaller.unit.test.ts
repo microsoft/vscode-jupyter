@@ -59,7 +59,6 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will ignore with no installer modules', async () => {
         const testEnvironment: PythonEnvironment = {
-            envName: 'test',
             id: interpreterPath.fsPath,
             uri: interpreterPath
         };
@@ -72,7 +71,6 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will cancel when signaled', async () => {
         const testEnvironment: PythonEnvironment = {
-            envName: 'test',
             id: interpreterPath.fsPath,
             uri: interpreterPath
         };
@@ -100,7 +98,6 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will invoke conda for conda environments', async () => {
         const testEnvironment: PythonEnvironment = {
-            envName: 'test',
             id: interpreterPath.fsPath,
             uri: interpreterPath
         };
@@ -128,7 +125,6 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will invoke pip by default', async () => {
         const testEnvironment: PythonEnvironment = {
-            envName: 'test',
             uri: interpreterPath,
             id: interpreterPath.fsPath
         };
@@ -157,7 +153,6 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will invoke poetry', async () => {
         const testEnvironment: PythonEnvironment = {
-            envName: 'test',
             id: interpreterPath.fsPath,
             uri: interpreterPath
         };
@@ -186,7 +181,6 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will invoke pipenv', async () => {
         const testEnvironment: PythonEnvironment = {
-            envName: 'test',
             id: interpreterPath.fsPath,
             uri: interpreterPath
         };

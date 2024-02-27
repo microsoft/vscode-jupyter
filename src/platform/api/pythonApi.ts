@@ -38,6 +38,7 @@ import { SemVer } from 'semver';
 import {
     getCachedVersion,
     getEnvironmentType,
+    getPythonEnvironmentName,
     isCondaEnvironmentWithoutPython,
     setPythonApi
 } from '../interpreter/helpers';
@@ -87,7 +88,6 @@ export function resolvedPythonEnvToJupyterEnv(
     return {
         id,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
-        envName: env.environment?.name || '',
         uri,
         displayName: env.environment?.name || ''
     };
@@ -112,7 +112,6 @@ export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | und
     return {
         id,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
-        envName: env.environment?.name || '',
         uri,
         displayName: env.environment?.name || ''
     };
@@ -518,9 +517,9 @@ export class InterpreterService implements IInterpreterService {
                     traceInfo(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
-                        )} (${
-                            item && getEnvironmentType(item)
-                        }, '${item?.envName}', ${version?.major}.${version?.minor}.${version?.micro})`
+                        )} (${item && getEnvironmentType(item)}, '${
+                            item ? getPythonEnvironmentName(item) : ''
+                        }', ${version?.major}.${version?.minor}.${version?.micro})`
                     );
                 })
                 .catch(noop);

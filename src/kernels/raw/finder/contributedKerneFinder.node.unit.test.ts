@@ -334,8 +334,7 @@ import { setPythonApi } from '../../../platform/interpreter/helpers';
             id: Uri.file(isWindows ? 'C:/pyenv/envs/temp/scripts/python.exe' : '/users/username/pyenv/envs/temp/python')
                 .fsPath,
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp' : '/users/username/pyenv/envs/temp',
-            displayName: 'Temporary Python 3.9',
-            envName: 'temp'
+            displayName: 'Temporary Python 3.9'
         };
         const python38VenvEnv: PythonEnvironment & { sysPrefix: string } = {
             uri: Uri.file(
@@ -344,14 +343,12 @@ import { setPythonApi } from '../../../platform/interpreter/helpers';
             id: Uri.file(isWindows ? 'C:/temp/venv/.venv/scripts/python.exe' : '/users/username/temp/.venv/bin/python')
                 .fsPath,
             sysPrefix: isWindows ? 'C:/temp/venv/.venv' : '/users/username/temp/.venv',
-            displayName: 'Virtual Env Python 3.8',
-            envName: '.venv'
+            displayName: 'Virtual Env Python 3.8'
         };
         const condaEnv1: PythonEnvironment & { sysPrefix: string } = {
             uri: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python'),
             id: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python').fsPath,
             sysPrefix: isWindows ? 'C:/conda/envs/env1' : '/conda/envs/env1',
-            envName: 'env1',
             displayName: 'Conda Env1 3.6'
         };
         const javaKernelSpec: KernelSpec.ISpecModel = {
@@ -411,7 +408,6 @@ import { setPythonApi } from '../../../platform/interpreter/helpers';
             metadata: {
                 interpreter: {
                     displayName: python38VenvEnv.displayName,
-                    envName: python38VenvEnv.envName,
                     path: python38VenvEnv.uri.fsPath,
                     envPath: undefined
                 }

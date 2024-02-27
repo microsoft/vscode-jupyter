@@ -22,7 +22,11 @@ import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging'
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import * as path from '../../../platform/vscode-path/path';
-import { getCachedVersion } from '../../../platform/interpreter/helpers';
+import {
+    getCachedEnvironment,
+    getCachedVersion,
+    getPythonEnvironmentName
+} from '../../../platform/interpreter/helpers';
 
 /**
  * Given an interpreter, find the kernel connection that matches this interpreter.
@@ -43,7 +47,8 @@ export async function findKernelSpecMatchingInterpreter(
                 kernel.kind === 'startUsingPythonInterpreter' &&
                 getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
                 kernel.interpreter.id === interpreter.id &&
-                kernel.interpreter.envName === interpreter.envName
+                getCachedEnvironment(kernel.interpreter)?.environment?.name ===
+                    getCachedEnvironment(interpreter)?.environment?.name
             ) {
                 result.push(kernel);
                 return;
@@ -52,7 +57,8 @@ export async function findKernelSpecMatchingInterpreter(
                 kernel.kind === 'startUsingPythonInterpreter' &&
                 getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
                 (await getInterpreterHash(kernel.interpreter)) === (await getInterpreterHash(interpreter)) &&
-                kernel.interpreter.envName === interpreter.envName
+                getCachedEnvironment(kernel.interpreter)?.environment?.name ===
+                    getCachedEnvironment(interpreter)?.environment?.name
             ) {
                 result.push(kernel);
             }
@@ -250,7 +256,9 @@ function isKernelSpecExactMatch(
     const connectionKernelSpecName = connectionOriginalSpecFile
         ? path.basename(path.dirname(connectionOriginalSpecFile))
         : kernelConnectionKernelSpec?.name || '';
-    const connectionInterpreterEnvName = kernelConnection.interpreter?.envName;
+    const connectionInterpreterEnvName = kernelConnection.interpreter
+        ? getPythonEnvironmentName(kernelConnection.interpreter)
+        : '';
     const metadataNameIsDefaultName = isDefaultKernelSpec({
         argv: [],
         display_name: notebookMetadataKernelSpec.display_name,
@@ -504,8 +512,8 @@ export function compareKernels(
         result = compareKernelSpecOrEnvNames(
             aInfo,
             bInfo,
-            a.interpreter?.envName || '',
-            b.interpreter?.envName || '',
+            a.interpreter ? getPythonEnvironmentName(a.interpreter) || '' : '',
+            b.interpreter ? getPythonEnvironmentName(b.interpreter) || '' : '',
             notebookMetadata,
             activeInterpreterConnection
         );
