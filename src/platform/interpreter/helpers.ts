@@ -206,3 +206,10 @@ export function getCachedVersion(interpreter?: { id?: string }) {
     const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
     return cachedInfo?.version;
 }
+
+export function getCachedEnvironments() {
+    if (!pythonApi) {
+        return [];
+    }
+    return pythonApi.environments.known;
+}

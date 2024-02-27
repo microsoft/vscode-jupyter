@@ -61,15 +61,12 @@ export function deserializePythonEnvironment(
         return result;
     }
 }
-export function resolvedPythonEnvToJupyterEnv(
-    env: ResolvedEnvironment,
-    supportsEmptyCondaEnv: boolean
-): PythonEnvironment | undefined {
+export function resolvedPythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironment | undefined {
     // Map the Python env tool to a Jupyter environment type.
     let uri: Uri;
     let id = env.id;
     if (!env.executable.uri) {
-        if (getEnvironmentType(env) === EnvironmentType.Conda && supportsEmptyCondaEnv) {
+        if (getEnvironmentType(env) === EnvironmentType.Conda) {
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -593,10 +590,7 @@ export class InterpreterService implements IInterpreterService {
     }
     private trackResolvedEnvironment(env: ResolvedEnvironment | undefined) {
         if (env) {
-            const displayEmptyCondaEnv =
-                this.apiProvider.pythonExtensionVersion &&
-                this.apiProvider.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
-            const resolved = resolvedPythonEnvToJupyterEnv(env, displayEmptyCondaEnv ? true : false);
+            const resolved = resolvedPythonEnvToJupyterEnv(env);
             if (!resolved) {
                 return;
             }
