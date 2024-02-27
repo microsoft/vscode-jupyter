@@ -21,6 +21,7 @@ import {
 } from './connectionDisplayData';
 import { DataScience } from '../../platform/common/utils/localize';
 import { getJupyterDisplayName } from '../../kernels/jupyter/connection/jupyterServerProviderRegistry';
+import { isCondaEnvironmentWithoutPython } from '../../platform/interpreter/helpers';
 
 @injectable()
 export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProvider {
@@ -57,7 +58,10 @@ export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProv
             this.details.set(connection.id, newDetails);
 
             // If the interpreter information changes, then update the display data.
-            if (connection.kind === 'startUsingPythonInterpreter' && connection.interpreter.isCondaEnvWithoutPython) {
+            if (
+                connection.kind === 'startUsingPythonInterpreter' &&
+                isCondaEnvironmentWithoutPython(connection.interpreter)
+            ) {
                 const updateInterpreterInfo = (e: PythonEnvironment[]) => {
                     const changedEnv = e.find((env) => env.id === connection.interpreter?.id);
                     const interpreter = this.interpreters.resolvedEnvironments.find((env) => env.id === changedEnv?.id);

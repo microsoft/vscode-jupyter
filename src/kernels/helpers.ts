@@ -26,7 +26,11 @@ import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { sendTelemetryEvent } from '../telemetry';
 import { IPlatformService } from '../platform/common/platform/types';
 import { splitLines } from '../platform/common/helpers';
-import { getCachedVersion, getPythonEnvironmentName } from '../platform/interpreter/helpers';
+import {
+    getCachedVersion,
+    getPythonEnvironmentName,
+    isCondaEnvironmentWithoutPython
+} from '../platform/interpreter/helpers';
 import { cellOutputToVSCCellOutput } from './execution/helpers';
 import { handleTensorBoardDisplayDataOutput } from './execution/executionHelpers';
 import { once } from '../platform/common/utils/functional';
@@ -291,9 +295,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                     return kernelConnection.kernelSpec.display_name;
                 }
                 // If this is a conda environment without Python, then don't display `Python` in it.
-                const isCondaEnvWithoutPython =
-                    kernelConnection.interpreter.envType === EnvironmentType.Conda &&
-                    kernelConnection.interpreter.isCondaEnvWithoutPython === true;
+                const isCondaEnvWithoutPython = isCondaEnvironmentWithoutPython(kernelConnection.interpreter);
                 const pythonDisplayName = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (isCondaEnvWithoutPython && envName) {

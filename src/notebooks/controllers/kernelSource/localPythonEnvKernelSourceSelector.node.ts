@@ -209,10 +209,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         );
     }
     private async buildDummyEnvironment(e: Environment) {
-        const displayEmptyCondaEnv =
-            this.pythonApi.pythonExtensionVersion &&
-            this.pythonApi.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
-        const interpreter = pythonEnvToJupyterEnv(e, displayEmptyCondaEnv === true);
+        const interpreter = pythonEnvToJupyterEnv(e);
         if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
             return;
         }

@@ -35,7 +35,7 @@ export type InterpreterInformation = {
  * Details about a Python environment.
  * @prop envType - the kind of Python environment
  */
-export type PythonEnvironment = InterpreterInformation & {
+export interface PythonEnvironment extends InterpreterInformation  {
     displayName?: string;
     envType?: EnvironmentType;
     envName?: string;
@@ -48,5 +48,4 @@ export type PythonEnvironment = InterpreterInformation & {
      * Used for display purposes only (in kernel picker or other places).
      */
     displayPath?: Uri;
-    isCondaEnvWithoutPython?: boolean;
 };

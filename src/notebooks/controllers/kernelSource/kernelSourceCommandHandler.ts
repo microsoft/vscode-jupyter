@@ -48,6 +48,7 @@ import {
     IVSCodeNotebookController
 } from '../types';
 import { JupyterServerCollection } from '../../../api';
+import { isCondaEnvironmentWithoutPython } from '../../../platform/interpreter/helpers';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
@@ -294,7 +295,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         if (
             isLocalConnection(controller.connection) &&
             isPythonKernelConnection(controller.connection) &&
-            controller.connection.interpreter?.isCondaEnvWithoutPython &&
+            isCondaEnvironmentWithoutPython(controller.connection.interpreter) &&
             !isWebExtension()
         ) {
             const disposables: IDisposable[] = [];
