@@ -19,22 +19,13 @@ export enum EnvironmentType {
 }
 
 export type InterpreterId = string;
-/**
- * Details about a Python runtime.
- *
- * @prop path - the location of the executable file
- * @prop version - the runtime version
- * @prop sysPrefix - the environment's install root (`sys.prefix`)
- */
-export type InterpreterInformation = {
-    id: InterpreterId;
-    uri: Uri;
-};
 
 /**
  * Details about a Python environment.
  */
-export interface PythonEnvironment extends InterpreterInformation  {
+export interface PythonEnvironment {
+    id: InterpreterId;
+    uri: Uri;
     displayName?: string;
     /**
      * This contains the path to the environment.
