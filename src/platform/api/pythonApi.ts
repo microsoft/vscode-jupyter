@@ -669,7 +669,6 @@ export class InterpreterService implements IInterpreterService {
         }
         if (!this.apiPromise) {
             this.apiPromise = this.apiProvider.getNewApi();
-            this.apiPromise.then((api) => (api ? (this.api = api) : undefined)).catch(noop);
         }
         return this.apiPromise;
     }
