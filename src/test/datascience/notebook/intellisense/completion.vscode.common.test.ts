@@ -7,17 +7,15 @@ import * as sinon from 'sinon';
 import { commands, CompletionList, Position, window } from 'vscode';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
-import { captureScreenShot } from '../../../common.node';
-import { initialize } from '../../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
     insertCodeCell,
-    startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
     createEmptyPythonNotebook
-} from '../helper.node';
+} from '../helper';
+import { captureScreenShot, initialize, startJupyterServer } from '../../../common';
 import { getTextOutputValue } from '../../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

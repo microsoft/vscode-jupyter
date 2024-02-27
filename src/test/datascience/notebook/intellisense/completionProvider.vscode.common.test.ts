@@ -5,23 +5,21 @@
 import { assert } from 'chai';
 import * as path from '../../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { ConfigurationTarget, Position, Uri, window, workspace, WorkspaceConfiguration, WorkspaceEdit } from 'vscode';
+import { ConfigurationTarget, Position, window, workspace, WorkspaceConfiguration, WorkspaceEdit } from 'vscode';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
-import { IExtensionTestApi } from '../../../common.node';
-import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../../initialize.node';
+import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
     insertCodeCell,
-    startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
     createEmptyPythonNotebook,
     getCellOutputs,
     waitForCompletions
-} from '../helper.node';
+} from '../helper';
+import { IExtensionTestApi, initialize, startJupyterServer } from '../../../common';
 import { KernelCompletionProvider } from '../../../../standalone/intellisense/kernelCompletionProvider';
 import { IKernelProvider } from '../../../../kernels/types';
 
@@ -65,7 +63,7 @@ import { IKernelProvider } from '../../../../kernels/types';
                 traceInfo(`Start Test ${this.currentTest?.title}`);
                 sinon.restore();
                 await startJupyterServer();
-                await createEmptyPythonNotebook(disposables, Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp'))); // TODO, can't do this on web tests
+                await createEmptyPythonNotebook(disposables, undefined, true);
                 traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
             });
             teardown(async function () {
@@ -97,30 +95,28 @@ import { IKernelProvider } from '../../../../kernels/types';
                 textToFilterCompletions?: string,
                 itemToExistInCompletionAfterFilter?: string
             ) {
-                await insertCodeCell('%pip install pandas', {
-                    index: 0
-                });
-                const namesCsvPath = path.join(__dirname, 'names.csv').replace(/\\/g, '/').replace('out', 'src');
+                await insertCodeCell(
+                    `import pandas as pd\ndf = pd.DataFrame({'Name': ['Foo', 'Bar', 'Baz'],'Sex': ['Male', 'Female', 'Male'],'Age': [1,2,3]})`,
+                    {
+                        index: 1
+                    }
+                );
+                const cell = window.activeNotebookEditor?.notebook.cellAt(1)!;
 
-                await insertCodeCell(`import pandas as pd\ndf = pd.read_csv("${namesCsvPath}")\n`, {
-                    index: 1
-                });
-                const cell2 = window.activeNotebookEditor?.notebook.cellAt(1)!;
+                await runCell(cell);
 
+                // Wait till execution count changes and status is success.
+                await waitForExecutionCompletedSuccessfully(cell);
+                const cell2 = await insertCodeCell('import os\nprint(os.getcwd())\n');
                 await runCell(cell2);
 
                 // Wait till execution count changes and status is success.
                 await waitForExecutionCompletedSuccessfully(cell2);
-                const cell3 = await insertCodeCell('import os\nprint(os.getcwd())\n');
-                await runCell(cell3);
-
-                // Wait till execution count changes and status is success.
-                await waitForExecutionCompletedSuccessfully(cell3);
-                traceInfo(`last cell output: ${getCellOutputs(cell3)}`);
+                traceInfo(`last cell output: ${getCellOutputs(cell2)}`);
 
                 // Now add the cell to check intellisense.
                 await insertCodeCell(cellCode);
-                const cell4 = window.activeNotebookEditor!.notebook.cellAt(3);
+                const cell3 = window.activeNotebookEditor!.notebook.cellAt(3);
                 // If we're testing string completions, ensure the cursor position is inside the string quotes.
                 let position = new Position(
                     0,
@@ -131,7 +127,7 @@ import { IKernelProvider } from '../../../../kernels/types';
                     .get<IKernelProvider>(IKernelProvider)
                     .get(window.activeNotebookEditor!.notebook)!;
                 const completionProvider = kernelCompletionProviderRegistry.kernelCompletionProviders.get(kernel)!;
-                let completions = await waitForCompletions(completionProvider, cell4, position, triggerCharacter);
+                let completions = await waitForCompletions(completionProvider, cell3, position, triggerCharacter);
                 let items = completions.map((item) => item.label);
                 assert.isOk(items.length);
                 if (itemToExistInCompletion) {
@@ -165,10 +161,10 @@ import { IKernelProvider } from '../../../../kernels/types';
                 }
                 // Add some text after the . and make sure we still get completions
                 const edit = new WorkspaceEdit();
-                edit.insert(cell4.document.uri, new Position(cellCode.length, 0), textToFilterCompletions);
+                edit.insert(cell3.document.uri, new Position(cellCode.length, 0), textToFilterCompletions);
                 await workspace.applyEdit(edit);
                 position = new Position(0, cellCode.length + textToFilterCompletions.length);
-                completions = await waitForCompletions(completionProvider, cell4, position, triggerCharacter);
+                completions = await waitForCompletions(completionProvider, cell3, position, triggerCharacter);
                 items = completions.map((item) => item.label);
                 assert.isOk(items.length);
                 assert.isUndefined(
