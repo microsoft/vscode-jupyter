@@ -29,12 +29,7 @@ import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironmen
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import {
-    Environment,
-    KnownEnvironmentTools,
-    PythonExtension as PythonExtensionApi,
-    ResolvedEnvironment
-} from '@vscode/python-extension';
+import { Environment, PythonExtension as PythonExtensionApi, ResolvedEnvironment } from '@vscode/python-extension';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
@@ -76,35 +71,11 @@ export function resolvedPythonEnvToJupyterEnv(
     env: ResolvedEnvironment,
     supportsEmptyCondaEnv: boolean
 ): PythonEnvironment | undefined {
-    const envTools = env.tools as KnownEnvironmentTools[];
     // Map the Python env tool to a Jupyter environment type.
-    const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
-        ['Conda', EnvironmentType.Conda],
-        ['Pyenv', EnvironmentType.Pyenv],
-        ['Pipenv', EnvironmentType.Pipenv],
-        ['Poetry', EnvironmentType.Poetry],
-        ['VirtualEnvWrapper', EnvironmentType.VirtualEnvWrapper],
-        ['VirtualEnv', EnvironmentType.VirtualEnv],
-        ['Venv', EnvironmentType.Venv]
-    ];
-    let envType = envTools.length ? (envTools[0] as EnvironmentType) : EnvironmentType.Unknown;
-    if (env.environment?.type === 'Conda') {
-        envType = EnvironmentType.Conda;
-    } else {
-        for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
-            if (envTools.includes(pythonEnvTool)) {
-                envType = JupyterEnv;
-                break;
-            }
-        }
-        if (envType === EnvironmentType.Unknown && env.environment?.type === 'VirtualEnvironment') {
-            envType = EnvironmentType.VirtualEnv;
-        }
-    }
     let uri: Uri;
     let id = env.id;
     if (!env.executable.uri) {
-        if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
+        if (getEnvironmentType(env) === EnvironmentType.Conda && supportsEmptyCondaEnv) {
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -123,16 +94,14 @@ export function resolvedPythonEnvToJupyterEnv(
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
         uri,
-        displayName: env.environment?.name || '',
-        envType
+        displayName: env.environment?.name || ''
     };
 }
 export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | undefined {
-    const envType = getEnvironmentType(env);
     let uri: Uri;
     let id = env.id;
     if (!env.executable.uri) {
-        if (envType === EnvironmentType.Conda) {
+        if (getEnvironmentType(env) === EnvironmentType.Conda) {
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -151,8 +120,7 @@ export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | und
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
         uri,
-        displayName: env.environment?.name || '',
-        envType
+        displayName: env.environment?.name || ''
     };
 }
 
@@ -566,7 +534,9 @@ export class InterpreterService implements IInterpreterService {
                     traceInfo(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
-                        )} (${item?.envType}, '${item?.envName}', ${version?.major}.${version?.minor}.${version?.micro})`
+                        )} (${
+                            item && getEnvironmentType(item)
+                        }, '${item?.envName}', ${version?.major}.${version?.minor}.${version?.micro})`
                     );
                 })
                 .catch(noop);
@@ -805,7 +775,7 @@ export class InterpreterService implements IInterpreterService {
         }
         traceVerbose(
             `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters
-                .map((item) => `${item.id}:${item.displayName}:${item.envType}:${getDisplayPath(item.uri)}`)
+                .map((item) => `${item.id}:${item.displayName}:${getEnvironmentType(item)}:${getDisplayPath(item.uri)}`)
                 .join(', ')}`
         );
         return allInterpreters;

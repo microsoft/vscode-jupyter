@@ -18,6 +18,10 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platf
 import { noop } from '../../../test/core';
 import { createObservable } from '../../common/process/proc.node';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import { PythonExtension } from '@vscode/python-extension';
+import sinon from 'sinon';
+import { resolvableInstance } from '../../../test/datascience/helpers';
+import { setPythonApi } from '../helpers';
 
 suite('Pip installer', async () => {
     let serviceContainer: IServiceContainer;
@@ -27,6 +31,7 @@ suite('Pip installer', async () => {
     let proc: ChildProcess;
     let disposables: IDisposable[] = [];
     let subject: ReturnType<typeof createObservable<Output<string>>>;
+    let environments: PythonExtension['environments'];
     setup(() => {
         serviceContainer = mock<IServiceContainer>();
         pythonExecutionFactory = mock<IPythonExecutionFactory>();
@@ -60,7 +65,17 @@ suite('Pip installer', async () => {
         });
 
         pipInstaller = new PipInstaller(instance(serviceContainer));
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
     });
+
     teardown(() => (disposables = dispose(disposables)));
     test('Installer name is Pip', () => {
         expect(pipInstaller.name).to.equal('Pip');
@@ -72,8 +87,15 @@ suite('Pip installer', async () => {
 
     test('If InterpreterUri is Python interpreter, Python execution factory is called with the correct arguments', async () => {
         const interpreter = {
+            id: '1',
             path: 'pythonPath'
         } as unknown as PythonEnvironment;
+        when(environments.known).thenReturn([
+            {
+                id: '1',
+                tools: []
+            } as any
+        ]);
 
         await pipInstaller.isSupported(interpreter as any);
 
@@ -82,10 +104,16 @@ suite('Pip installer', async () => {
 
     test('Method isSupported() returns true if pip module is installed', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                tools: [EnvironmentType.Unknown]
+            } as any
+        ]);
+
         when(pythonExecutionService.isModuleInstalled('pip')).thenResolve(true);
 
         const expected = await pipInstaller.isSupported(interpreter);
@@ -95,10 +123,15 @@ suite('Pip installer', async () => {
 
     test('Method isSupported() returns false if pip module is not installed', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                tools: [EnvironmentType.Unknown]
+            } as any
+        ]);
 
         when(pythonExecutionService.isModuleInstalled('pip')).thenResolve(false);
 
@@ -109,10 +142,16 @@ suite('Pip installer', async () => {
 
     test('Method isSupported() returns false if checking if pip module is installed fails with error', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
             id: Uri.file('foobar').fsPath
         };
+        when(environments.known).thenReturn([
+            {
+                id: interpreter.id,
+                tools: [EnvironmentType.Unknown]
+            } as any
+        ]);
+
         when(pythonExecutionService.isModuleInstalled('pip')).thenReject(
             new Error('Unable to check if module is installed')
         );
@@ -126,10 +165,16 @@ suite('Pip installer', async () => {
         .forEach((envType) => {
             test(`Test install args for ${envType}`, async () => {
                 const interpreter: PythonEnvironment = {
-                    envType,
                     uri: Uri.file('foobar'),
                     id: Uri.file('foobar').fsPath
                 };
+                when(environments.known).thenReturn([
+                    {
+                        id: interpreter.id,
+                        tools: [envType]
+                    } as any
+                ]);
+
                 when(pythonExecutionService.isModuleInstalled('pip')).thenReject(
                     new Error('Unable to check if module is installed')
                 );

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -14,6 +15,9 @@ import { IJupyterCommand, IJupyterCommandFactory } from '../types.node';
 import { Disposable, Uri } from 'vscode';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
 import { dispose } from '../../../platform/common/utils/lifecycle';
+import { PythonExtension } from '@vscode/python-extension';
+import { resolvableInstance } from '../../../test/datascience/helpers';
+import { setPythonApi } from '../../../platform/interpreter/helpers';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 
@@ -27,6 +31,8 @@ suite('Jupyter Interpreter Configuration', () => {
         id: Uri.file('').fsPath
     };
     let disposables: Disposable[] = [];
+    let environments: PythonExtension['environments'];
+
     setup(() => {
         resetVSCodeMocks();
         disposables.push(new Disposable(() => resetVSCodeMocks()));
@@ -42,6 +48,15 @@ suite('Jupyter Interpreter Configuration', () => {
         when(command.exec(anything(), anything())).thenResolve({ stdout: '' });
 
         configuration = new JupyterInterpreterDependencyService(instance(installer), instance(commandFactory));
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
     });
     teardown(() => (disposables = dispose(disposables)));
     test('Return ok if all dependencies are installed', async () => {

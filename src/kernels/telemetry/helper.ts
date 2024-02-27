@@ -11,7 +11,7 @@ import { getComparisonKey } from '../../platform/vscode-path/resources';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { trackedInfo, pythonEnvironmentsByHash, updatePythonPackages } from '../../platform/telemetry/telemetry';
 import { KernelActionSource, KernelConnectionMetadata } from '../types';
-import { getVersion } from '../../platform/interpreter/helpers';
+import { getEnvironmentType, getVersion } from '../../platform/interpreter/helpers';
 
 /**
  * This information is sent with each telemetry event.
@@ -132,7 +132,7 @@ export async function trackKernelResourceInformation(
                 resource,
                 interpreter
             );
-            currentData.pythonEnvironmentType = interpreter.envType;
+            currentData.pythonEnvironmentType = getEnvironmentType(interpreter);
             const [pythonEnvironmentPath, version] = await Promise.all([
                 getTelemetrySafeHashedString(getFilePath(getNormalizedInterpreterPath(interpreter.uri))),
                 getVersion(interpreter)

@@ -20,6 +20,7 @@ import { traceVerbose, traceWarning } from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IControllerRegistration } from './types';
+import { getEnvironmentType } from '../../platform/interpreter/helpers';
 
 type CreateEnvironmentResult = {
     path: string | undefined;
@@ -123,7 +124,7 @@ export class PythonEnvKernelConnectionCreator {
 
         sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, {
             dependenciesInstalled,
-            envType: envResult.interpreter.envType
+            envType: getEnvironmentType(envResult.interpreter)
         });
         return { kernelConnection };
     }

@@ -34,7 +34,12 @@ import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helper
 import { isKernelLaunchedViaLocalPythonIPyKernel, isLikelyAPythonExecutable } from '../../helpers.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
-import { getCachedSysPrefix, getCachedVersion, getSysPrefix } from '../../../platform/interpreter/helpers';
+import {
+    getCachedSysPrefix,
+    getCachedVersion,
+    getEnvironmentType,
+    getSysPrefix
+} from '../../../platform/interpreter/helpers';
 import { Environment } from '@vscode/python-extension';
 
 export function localPythonKernelsCacheKey() {
@@ -185,7 +190,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
             // If the version, syspath has changed, then we need to re-discover the kernels.
             this.interpreter.envPath !== interpreter.envPath ||
             this.lastKnownInterpreterVersion?.sysVersion !== version?.sysVersion ||
-            this.interpreter.envType !== interpreter.envType ||
+            getEnvironmentType(this.interpreter) !== getEnvironmentType(interpreter) ||
             this.lastKnownInterpreterSysPrefix !== sysPrefix
         ) {
             this.lastKnownInterpreterVersion = version;

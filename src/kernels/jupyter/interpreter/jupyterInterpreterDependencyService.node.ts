@@ -19,6 +19,7 @@ import { ReportableAction } from '../../../platform/progress/types';
 import { JupyterInterpreterDependencyResponse } from '../types';
 import { IJupyterCommandFactory } from '../types.node';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
+import { getEnvironmentType } from '../../../platform/interpreter/helpers';
 
 /**
  * Sorts the given list of products (in place) in the order in which they need to be installed.
@@ -127,7 +128,7 @@ export class JupyterInterpreterDependencyService {
             // If we're dealing with a non-conda environment & pip isn't installed, we can't install anything.
             // Hence prompt to install pip as well.
             const pipInstalledInNonCondaEnvPromise =
-                interpreter.envType === EnvironmentType.Conda
+                getEnvironmentType(interpreter) === EnvironmentType.Conda
                     ? Promise.resolve(undefined)
                     : this.installer.isInstalled(Product.pip, interpreter);
 
@@ -146,7 +147,7 @@ export class JupyterInterpreterDependencyService {
             sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                 action: 'displayed',
                 moduleName: ProductNames.get(Product.jupyter)!,
-                pythonEnvType: interpreter.envType
+                pythonEnvType: getEnvironmentType(interpreter)
             });
             const selection = await window.showErrorMessage(
                 message,

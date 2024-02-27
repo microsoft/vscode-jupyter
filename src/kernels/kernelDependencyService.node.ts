@@ -33,6 +33,7 @@ import { isModulePresentInEnvironment } from '../platform/interpreter/installer/
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import { isPythonKernelConnection } from './helpers';
 import { isCodeSpace } from '../platform/constants';
+import { getEnvironmentType } from '../platform/interpreter/helpers';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -226,9 +227,10 @@ export class KernelDependencyService implements IKernelDependencyService {
         if (ui.disableUI) {
             return KernelInterpreterDependencyResponse.uiHidden;
         }
+        const interpreterType = getEnvironmentType(interpreter);
         const [isModulePresent, isPipAvailableForNonConda] = await Promise.all([
             isModulePresentInEnvironment(this.memento, Product.ipykernel, interpreter),
-            interpreter.envType === EnvironmentType.Conda
+            interpreterType === EnvironmentType.Conda
                 ? undefined
                 : await this.installer.isInstalled(Product.pip, interpreter)
         ]);
@@ -251,7 +253,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             moduleName: productNameForTelemetry,
             resourceType,
             resourceHash,
-            pythonEnvType: interpreter.envType
+            pythonEnvType: interpreterType
         });
 
         // Build our set of prompt actions
@@ -273,7 +275,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     moduleName: productNameForTelemetry,
                     resourceType,
                     resourceHash,
-                    pythonEnvType: interpreter.envType
+                    pythonEnvType: interpreterType
                 });
             }
             let selection;
@@ -292,7 +294,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                         moduleName: productNameForTelemetry,
                         resourceType,
                         resourceHash,
-                        pythonEnvType: interpreter.envType
+                        pythonEnvType: interpreterType
                     });
 
                     // Link to our wiki page on jupyter kernels + ipykernel
@@ -307,7 +309,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     moduleName: productNameForTelemetry,
                     resourceType,
                     resourceHash,
-                    pythonEnvType: interpreter.envType
+                    pythonEnvType: interpreterType
                 });
                 return KernelInterpreterDependencyResponse.cancel;
             }
@@ -317,7 +319,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     moduleName: productNameForTelemetry,
                     resourceType,
                     resourceHash,
-                    pythonEnvType: interpreter.envType
+                    pythonEnvType: interpreterType
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
             } else if (selection === installOption) {
@@ -326,7 +328,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     moduleName: productNameForTelemetry,
                     resourceType,
                     resourceHash,
-                    pythonEnvType: interpreter.envType
+                    pythonEnvType: interpreterType
                 });
                 // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
                 const response = await raceCancellation(
@@ -346,7 +348,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                         moduleName: productNameForTelemetry,
                         resourceType,
                         resourceHash,
-                        pythonEnvType: interpreter.envType
+                        pythonEnvType: interpreterType
                     });
                     return KernelInterpreterDependencyResponse.ok;
                 } else if (response === InstallerResponse.Ignore) {
@@ -355,7 +357,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                         moduleName: productNameForTelemetry,
                         resourceType,
                         resourceHash,
-                        pythonEnvType: interpreter.envType
+                        pythonEnvType: interpreterType
                     });
                     return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
                 }
@@ -365,7 +367,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 moduleName: productNameForTelemetry,
                 resourceType,
                 resourceHash,
-                pythonEnvType: interpreter.envType
+                pythonEnvType: interpreterType
             });
             return KernelInterpreterDependencyResponse.cancel;
         } catch (ex) {
@@ -375,7 +377,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 moduleName: productNameForTelemetry,
                 resourceType,
                 resourceHash,
-                pythonEnvType: interpreter.envType
+                pythonEnvType: interpreterType
             });
             throw ex;
         }

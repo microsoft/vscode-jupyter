@@ -12,21 +12,27 @@ import { IModuleInstaller, Product } from '../../../platform/interpreter/install
 import { Uri } from 'vscode';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import type { IDisposable } from '@c4312/evt';
+import { PythonExtension } from '@vscode/python-extension';
+import sinon from 'sinon';
+import { resolvableInstance } from '../../../test/datascience/helpers';
+import { dispose } from '../../common/utils/lifecycle';
+import { setPythonApi } from '../helpers';
 
 const info: PythonEnvironment = {
     displayName: '',
     envName: '',
     uri: Uri.file(''),
-    id: Uri.file('').fsPath,
-    envType: EnvironmentType.Unknown
+    id: Uri.file('').fsPath
 };
 
 suite('Installation - channel messages', () => {
+    let disposables: IDisposable[] = [];
     let serviceContainer: IServiceContainer;
     let platform: IPlatformService;
     let interpreters: IInterpreterService;
     let moduleInstaller: IModuleInstaller;
-
+    let environments: PythonExtension['environments'];
     setup(() => {
         serviceContainer = mock<ServiceContainer>();
 
@@ -36,7 +42,16 @@ suite('Installation - channel messages', () => {
         when(serviceContainer.get<IPlatformService>(IPlatformService)).thenReturn(instance(platform));
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreters));
         when(serviceContainer.getAll<IModuleInstaller>(IModuleInstaller)).thenReturn([instance(moduleInstaller)]);
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
     });
+    teardown(() => (disposables = dispose(disposables)));
 
     test('No installers message: Unknown/Windows', async () => {
         when(platform.isWindows).thenReturn(true);
@@ -127,9 +142,21 @@ suite('Installation - channel messages', () => {
     ): Promise<void> {
         const activeInterpreter: PythonEnvironment = {
             ...info,
-            envType: interpreterType,
             uri: Uri.file('')
         };
+        when(environments.known).thenReturn([
+            {
+                id: info.id,
+                version: {
+                    major: 3,
+                    minor: 12,
+                    micro: 7,
+                    release: undefined,
+                    sysVersion: '3.12.7'
+                },
+                tools: [interpreterType]
+            } as any
+        ]);
         when(interpreters.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
         const channels = new InstallationChannelManager(instance(serviceContainer));
 

@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import { Uri } from 'vscode';
 import { cellOutputToVSCCellOutput, getNotebookCellOutputMetadata, updateNotebookMetadata } from './helpers';
 import { IJupyterKernelSpec, PythonKernelConnectionMetadata } from '../types';
-import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { PythonExtension } from '@vscode/python-extension';
 import { instance, mock, when } from 'ts-mockito';
 import { resolvableInstance } from '../../test/datascience/helpers';
@@ -20,8 +20,7 @@ suite(`UpdateNotebookMetadata`, () => {
     const python36Global: PythonEnvironment = {
         uri: Uri.file('/usr/bin/python36'),
         id: Uri.file('/usr/bin/python36').fsPath,
-        displayName: 'Python 3.6',
-        envType: EnvironmentType.Unknown
+        displayName: 'Python 3.6'
     };
     const pythonDefaultKernelSpec: IJupyterKernelSpec = {
         argv: ['python', '-f', '{connection_file}'],
@@ -32,8 +31,7 @@ suite(`UpdateNotebookMetadata`, () => {
     const python37Global: PythonEnvironment = {
         uri: Uri.file('/usr/bin/python37'),
         id: Uri.file('/usr/bin/python37').fsPath,
-        displayName: 'Python 3.7',
-        envType: EnvironmentType.Unknown
+        displayName: 'Python 3.7'
     };
     let environments: PythonExtension['environments'];
     let disposables: { dispose: () => void }[] = [];

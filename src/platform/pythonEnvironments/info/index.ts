@@ -33,11 +33,9 @@ export type InterpreterInformation = {
 
 /**
  * Details about a Python environment.
- * @prop envType - the kind of Python environment
  */
 export interface PythonEnvironment extends InterpreterInformation  {
     displayName?: string;
-    envType?: EnvironmentType;
     envName?: string;
     /**
      * Directory of the Python environment.

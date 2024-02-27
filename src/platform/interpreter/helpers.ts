@@ -43,8 +43,9 @@ export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environ
     if (envName) {
         details.push(envName);
     }
-    if (interpreter.envType && interpreter.envType !== EnvironmentType.Unknown) {
-        details.push(interpreter.envType);
+    const envType = getEnvironmentType(interpreter);
+    if (envType && envType !== EnvironmentType.Unknown) {
+        details.push(envType);
     }
     return [nameWithVersion, details.length ? `(${details.join(': ')})` : ''].join(' ').trim();
 }
@@ -53,7 +54,7 @@ export function getPythonEnvironmentName(pythonEnv: PythonEnvironment) {
     // Sometimes Python extension doesn't detect conda environments correctly (e.g. conda env create without a name).
     // In such cases the envName is empty, but it has a path.
     let envName = pythonEnv.envName;
-    if (pythonEnv.envPath && pythonEnv.envType === EnvironmentType.Conda && !pythonEnv.envName) {
+    if (pythonEnv.envPath && getEnvironmentType(pythonEnv) === EnvironmentType.Conda && !pythonEnv.envName) {
         envName = basename(pythonEnv.envPath);
     }
     return envName;
@@ -70,7 +71,11 @@ const environmentTypes = [
     EnvironmentType.VirtualEnvWrapper
 ];
 
-export function getEnvironmentType(env: Environment): EnvironmentType {
+export function getEnvironmentType(interpreter: { id: string }): EnvironmentType {
+    const env = getCachedInterpreterInfo(interpreter);
+    return env ? getEnvironmentTypeImpl(env) : EnvironmentType.Unknown;
+}
+function getEnvironmentTypeImpl(env: Environment): EnvironmentType {
     if ((env.environment?.type as KnownEnvironmentTypes) === 'Conda') {
         return EnvironmentType.Conda;
     }
@@ -89,6 +94,9 @@ export function getEnvironmentType(env: Environment): EnvironmentType {
         if (env.tools.includes(pythonEnvTool)) {
             return JupyterEnv;
         }
+    }
+    if (env.environment?.type === 'VirtualEnvironment') {
+        return EnvironmentType.VirtualEnv;
     }
 
     for (const type of environmentTypes) {

@@ -10,7 +10,6 @@ import { createInterpreterKernelSpec } from './helpers';
 import { KernelDependencyService } from './kernelDependencyService.node';
 import { IKernelProvider, KernelInterpreterDependencyResponse, PythonKernelConnectionMetadata } from './types';
 import { IServiceContainer } from '../platform/ioc/types';
-import { EnvironmentType } from '../platform/pythonEnvironments/info';
 import { IInstaller, Product, InstallerResponse } from '../platform/interpreter/installer/types';
 import { createPythonInterpreter } from '../test/utils/interpreters';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../interactive-window/types';
@@ -37,7 +36,6 @@ suite('Kernel Dependency Service', () => {
     let disposables: Disposable[] = [];
     const interpreter = createPythonInterpreter({
         displayName: 'name',
-        envType: EnvironmentType.Conda,
         uri: Uri.file('abc')
     });
     let metadata: PythonKernelConnectionMetadata;

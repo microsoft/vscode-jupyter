@@ -22,7 +22,7 @@ import { PlatformService } from '../../../platform/common/platform/platformServi
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import type { KernelSpec } from '@jupyterlab/services';
-import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
@@ -313,22 +313,19 @@ import { setPythonApi } from '../../../platform/interpreter/helpers';
             uri: Uri.file(isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27'),
             id: Uri.file(isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27').fsPath,
             sysPrefix: isWindows ? 'C:/Python/Python2' : '/usr',
-            displayName: 'Python 2.7',
-            envType: EnvironmentType.Unknown
+            displayName: 'Python 2.7'
         };
         const python36Global: PythonEnvironment & { sysPrefix: string } = {
             uri: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36'),
             id: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36').fsPath,
             sysPrefix: isWindows ? 'C:/Python/Python3.6' : '/usr',
-            displayName: 'Python 3.6',
-            envType: EnvironmentType.Unknown
+            displayName: 'Python 3.6'
         };
         const python37Global: PythonEnvironment & { sysPrefix: string } = {
             uri: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37'),
             id: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37').fsPath,
             sysPrefix: isWindows ? 'C:/Python/Python3.7' : '/usr',
-            displayName: 'Python 3.7',
-            envType: EnvironmentType.Unknown
+            displayName: 'Python 3.7'
         };
         const python39PyEnv_HelloWorld: PythonEnvironment & { sysPrefix: string } = {
             uri: Uri.file(
@@ -338,8 +335,7 @@ import { setPythonApi } from '../../../platform/interpreter/helpers';
                 .fsPath,
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp' : '/users/username/pyenv/envs/temp',
             displayName: 'Temporary Python 3.9',
-            envName: 'temp',
-            envType: EnvironmentType.Pyenv
+            envName: 'temp'
         };
         const python38VenvEnv: PythonEnvironment & { sysPrefix: string } = {
             uri: Uri.file(
@@ -349,16 +345,14 @@ import { setPythonApi } from '../../../platform/interpreter/helpers';
                 .fsPath,
             sysPrefix: isWindows ? 'C:/temp/venv/.venv' : '/users/username/temp/.venv',
             displayName: 'Virtual Env Python 3.8',
-            envName: '.venv',
-            envType: EnvironmentType.VirtualEnv
+            envName: '.venv'
         };
         const condaEnv1: PythonEnvironment & { sysPrefix: string } = {
             uri: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python'),
             id: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python').fsPath,
             sysPrefix: isWindows ? 'C:/conda/envs/env1' : '/conda/envs/env1',
             envName: 'env1',
-            displayName: 'Conda Env1 3.6',
-            envType: EnvironmentType.Conda
+            displayName: 'Conda Env1 3.6'
         };
         const javaKernelSpec: KernelSpec.ISpecModel = {
             argv: ['java', 'xyz.jar', '{connection_file}', 'moreargs'],

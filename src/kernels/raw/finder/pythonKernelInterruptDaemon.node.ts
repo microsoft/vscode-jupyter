@@ -13,7 +13,7 @@ import { EOL } from 'os';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
-import { getCachedVersion } from '../../../platform/interpreter/helpers';
+import { getCachedVersion, getEnvironmentType } from '../../../platform/interpreter/helpers';
 function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
     // Give preference to globally installed python environments.
     // The assumption is that users are more likely to uninstall/delete local python environments
@@ -23,11 +23,12 @@ function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironm
     // from that and then they subsequently delete that environment (on linux things should be fine, but on windows, users might not be able
     // to delete that environment folder as the files are in use).
     // At least this way user will  not have to exit vscode completely to delete such files/folders.
+    const interpreterType = getEnvironmentType(interpreter);
     if (
         isSupportedPythonVersion(interpreter) &&
-        (interpreter?.envType === EnvironmentType.Unknown ||
-            interpreter?.envType === EnvironmentType.Pyenv ||
-            interpreter?.envType === EnvironmentType.Conda)
+        (interpreterType === EnvironmentType.Unknown ||
+            interpreterType === EnvironmentType.Pyenv ||
+            interpreterType === EnvironmentType.Conda)
     ) {
         return true;
     }
