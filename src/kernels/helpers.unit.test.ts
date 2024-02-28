@@ -20,7 +20,7 @@ import { setPythonApi } from '../platform/interpreter/helpers';
 import type { IDisposable } from '@c4312/evt';
 import type { DeepPartial } from '../platform/common/utils/misc';
 
-export function crateMockedPythonApi(disposables: IDisposable[]) {
+export function crateMockedPythonApi(disposables: IDisposable[] | DisposableStore) {
     const disposableStore = new DisposableStore();
     const mockedApi = mock<PythonExtension>();
     sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
@@ -30,7 +30,11 @@ export function crateMockedPythonApi(disposables: IDisposable[]) {
     when(environments.known).thenReturn([]);
     setPythonApi(instance(mockedApi));
     disposableStore.add({ dispose: () => setPythonApi(undefined as any) });
-    disposables.push(disposableStore);
+    if (Array.isArray(disposables)) {
+        disposables.push(disposableStore);
+    } else {
+        disposables.add(disposableStore);
+    }
     return { dispose: () => disposableStore.dispose(), environments };
 }
 export function whenKnownEnvironments(environments: PythonExtension['environments']) {
