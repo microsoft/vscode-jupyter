@@ -181,7 +181,7 @@ suite('Controller Registration', () => {
             instance(contributedPythonKernelFinder)
         ]);
         when(kernelFinder.kernels).thenReturn([]);
-        when(interpreters.resolvedEnvironments).thenReturn([activePythonEnv]);
+        // when(interpreters.resolvedEnvironments).thenReturn([activePythonEnv]);
         when(kernelFilter.isPythonEnvironmentExcluded(anything())).thenReturn(false);
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);

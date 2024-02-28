@@ -21,7 +21,11 @@ import {
 } from './connectionDisplayData';
 import { DataScience } from '../../platform/common/utils/localize';
 import { getJupyterDisplayName } from '../../kernels/jupyter/connection/jupyterServerProviderRegistry';
-import { isCondaEnvironmentWithoutPython } from '../../platform/interpreter/helpers';
+import {
+    getCachedEnvironments,
+    isCondaEnvironmentWithoutPython,
+    resolvedPythonEnvToJupyterEnv
+} from '../../platform/interpreter/helpers';
 
 @injectable()
 export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProvider {
@@ -64,7 +68,9 @@ export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProv
             ) {
                 const updateInterpreterInfo = (e: PythonEnvironment[]) => {
                     const changedEnv = e.find((env) => env.id === connection.interpreter?.id);
-                    const interpreter = this.interpreters.resolvedEnvironments.find((env) => env.id === changedEnv?.id);
+                    const interpreter = resolvedPythonEnvToJupyterEnv(
+                        getCachedEnvironments().find((env) => env.id === changedEnv?.id)
+                    );
                     if (connection.kind === 'startUsingPythonInterpreter' && interpreter) {
                         connection.updateInterpreter(interpreter);
                         const newLabel = getDisplayNameOrNameOfKernelConnection(connection);

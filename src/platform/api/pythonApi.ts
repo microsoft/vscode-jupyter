@@ -41,6 +41,7 @@ import {
     getPythonEnvDisplayName,
     getPythonEnvironmentName,
     isCondaEnvironmentWithoutPython,
+    resolvedPythonEnvToJupyterEnv,
     setPythonApi
 } from '../interpreter/helpers';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
@@ -60,29 +61,6 @@ export function deserializePythonEnvironment(
         delete result.path;
         return result;
     }
-}
-export function resolvedPythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironment | undefined {
-    // Map the Python env tool to a Jupyter environment type.
-    let uri: Uri;
-    let id = env.id;
-    if (!env.executable.uri) {
-        if (getEnvironmentType(env) === EnvironmentType.Conda) {
-            uri =
-                getOSType() === OSType.Windows
-                    ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
-                    : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
-        } else {
-            traceWarning(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
-            return;
-        }
-    } else {
-        uri = env.executable.uri;
-    }
-
-    return {
-        id,
-        uri
-    };
 }
 export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | undefined {
     let uri: Uri;

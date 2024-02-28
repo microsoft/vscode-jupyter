@@ -7,10 +7,9 @@ import { CancellationToken, CompletionItem, CompletionItemProvider, Position, Te
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { IDisposableRegistry } from '../../common/types';
 import * as path from '../../../platform/vscode-path/path';
-import { IInterpreterService } from '../contracts';
 import { IPythonExtensionChecker } from '../../api/types';
 import { getDisplayPath } from '../../common/platform/fs-paths';
-import { getPythonEnvDisplayName } from '../helpers';
+import { getCachedEnvironments, getPythonEnvDisplayName } from '../helpers';
 import { isPythonEnvInListOfHiddenEnvs } from './filterService';
 import { traceWarning } from '../../logging';
 
@@ -20,7 +19,6 @@ export class PythonEnvFilterCompletionProvider implements CompletionItemProvider
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly pythonExtChecker: IPythonExtensionChecker
     ) {}
 
@@ -37,7 +35,7 @@ export class PythonEnvFilterCompletionProvider implements CompletionItemProvider
         if (
             !this.pythonExtChecker.isPythonExtensionInstalled ||
             !this.pythonExtChecker.isPythonExtensionActive ||
-            this.interpreters.resolvedEnvironments.length === 0 ||
+            getCachedEnvironments().length === 0 ||
             !PythonEnvFilterCompletionProvider.canProvideCompletions(document, position)
         ) {
             return [];
@@ -47,13 +45,13 @@ export class PythonEnvFilterCompletionProvider implements CompletionItemProvider
         // Then no point displaying that env again in the list of completions.
         const currentItems = this.getCurrentItemsInList(document, position);
 
-        return this.interpreters.resolvedEnvironments
+        return getCachedEnvironments()
             .filter((env) => {
                 return !isPythonEnvInListOfHiddenEnvs(env, currentItems);
             })
             .map((env) => {
                 const label = getPythonEnvDisplayName(env);
-                const envPath = getDisplayPath(env.uri);
+                const envPath = getDisplayPath(env.executable.uri);
                 return {
                     label,
                     detail: envPath,

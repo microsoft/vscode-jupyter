@@ -5,7 +5,6 @@ import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../
 import { ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IAsyncDisposable, IDisposableRegistry, IExtensionContext, Resource } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Disposable, Uri } from 'vscode';
@@ -13,8 +12,13 @@ import { EOL } from 'os';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
-import { getCachedVersion, getEnvironmentType } from '../../../platform/interpreter/helpers';
-function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
+import {
+    getCachedEnvironments,
+    getCachedVersion,
+    getEnvironmentType,
+    resolvedPythonEnvToJupyterEnv
+} from '../../../platform/interpreter/helpers';
+function isBestPythonInterpreterForAnInterruptDaemon(interpreter: { id: string }) {
     // Give preference to globally installed python environments.
     // The assumption is that users are more likely to uninstall/delete local python environments
     // than global ones.
@@ -34,7 +38,7 @@ function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironm
     }
     return false;
 }
-function isSupportedPythonVersion(interpreter: PythonEnvironment) {
+function isSupportedPythonVersion(interpreter: { id: string }) {
     let major = getCachedVersion(interpreter)?.major ?? 3;
     let minor = getCachedVersion(interpreter)?.minor ?? 6;
     if (
@@ -70,7 +74,6 @@ export class PythonKernelInterruptDaemon {
     constructor(
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
     public async createInterrupter(pythonEnvironment: PythonEnvironment, resource: Resource): Promise<Interrupter> {
@@ -115,13 +118,13 @@ export class PythonKernelInterruptDaemon {
             return interpreter;
         }
 
-        const interpreters = this.interpreters.resolvedEnvironments;
+        const interpreters = getCachedEnvironments();
         if (interpreters.length === 0) {
             return interpreter;
         }
         return (
-            interpreters.find(isBestPythonInterpreterForAnInterruptDaemon) ||
-            interpreters.find(isSupportedPythonVersion) ||
+            resolvedPythonEnvToJupyterEnv(interpreters.find(isBestPythonInterpreterForAnInterruptDaemon)) ||
+            resolvedPythonEnvToJupyterEnv(interpreters.find(isSupportedPythonVersion)) ||
             interpreter
         );
     }

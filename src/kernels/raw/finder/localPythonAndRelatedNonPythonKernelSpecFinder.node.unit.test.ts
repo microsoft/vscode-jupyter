@@ -24,14 +24,15 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc';
 import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
-import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
+import { uriEquals } from '../../../test/datascience/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 import { ResourceMap } from '../../../platform/common/utils/map';
 import { PythonExtension } from '@vscode/python-extension';
-import { getCachedEnvironment, setPythonApi } from '../../../platform/interpreter/helpers';
+import { getCachedEnvironment } from '../../../platform/interpreter/helpers';
+import { crateMockedPythonApi, whenKnownEnvironments, whenResolveEnvironment } from '../../helpers.unit.test';
 
 suite(`Local Python and related kernels`, async () => {
     let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
@@ -52,19 +53,6 @@ suite(`Local Python and related kernels`, async () => {
     let findKernelSpecsInPathsReturnValue = new ResourceMap<Uri[]>();
     let loadKernelSpecReturnValue = new ResourceMap<IJupyterKernelSpec>();
     const globalKernelRootPath = Uri.file('root');
-    const pythonKernelSpec = PythonKernelConnectionMetadata.create({
-        id: 'python',
-        interpreter: {
-            id: 'python',
-            uri: Uri.file('python')
-        },
-        kernelSpec: {
-            argv: ['python'],
-            display_name: 'python',
-            executable: 'python',
-            name: 'python'
-        }
-    });
     const condaInterpreter: PythonEnvironment = {
         id: 'conda',
         uri: Uri.file('conda')
@@ -74,66 +62,20 @@ suite(`Local Python and related kernels`, async () => {
         uri: Uri.joinPath(Uri.file('globalSys'), 'bin', 'python')
     };
     let condaKernel: PythonKernelConnectionMetadata;
-
-    const globalPythonKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'pythonGlobal',
-        // This kernelspec belongs to the conda env.
-        kernelSpec: {
-            argv: [globalInterpreter.uri.fsPath, '-m', 'powershell_custom'],
-            display_name: 'Custom Global Python kernel Spec',
-            executable: globalInterpreter.uri.fsPath,
-            name: 'python',
-            language: 'python',
-            specFile: Uri.joinPath(globalKernelRootPath, 'python', 'kernel.json').fsPath
-        }
-    });
-    const globalPythonKernelSpecUnknownExecutable = LocalKernelSpecConnectionMetadata.create({
-        id: 'pythonGlobalUnknown',
-        // This kernelspec belongs to the conda env.
-        kernelSpec: {
-            argv: [Uri.joinPath(Uri.file('unknown'), 'bin', 'python').fsPath, '-m', 'powershell_custom'],
-            display_name: 'Custom Global Python kernel Spec Unknown Executable',
-            executable: Uri.joinPath(Uri.file('unknown'), 'bin', 'python').fsPath,
-            name: 'python',
-            language: 'python',
-            specFile: Uri.joinPath(globalKernelRootPath, 'unknown', 'kernel.json').fsPath
-        }
-    });
-    const globalJuliaKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'juliaGlobal',
-        // This kernelspec belongs to the conda env.
-        kernelSpec: {
-            argv: ['julia'],
-            display_name: 'Julia',
-            executable: 'julia',
-            name: 'julia',
-            language: 'julia',
-            specFile: Uri.joinPath(globalKernelRootPath, 'julia', 'kernel.json').fsPath
-        }
-    });
-    const javaKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'java',
-        // This kernelspec belongs to the conda env.
-        interpreter: condaInterpreter,
-        kernelSpec: {
-            argv: ['java'],
-            display_name: 'java',
-            executable: 'java',
-            name: 'java',
-            language: 'java',
-            specFile: Uri.joinPath(Uri.file('java'), 'kernel.json').fsPath
-        }
-    });
+    let pythonKernelSpec: PythonKernelConnectionMetadata;
+    let globalPythonKernelSpec: LocalKernelSpecConnectionMetadata;
+    let globalPythonKernelSpecUnknownExecutable: LocalKernelSpecConnectionMetadata;
+    let globalJuliaKernelSpec: LocalKernelSpecConnectionMetadata;
+    let javaKernelSpec: LocalKernelSpecConnectionMetadata;
     const venvInterpreter: PythonEnvironment = {
         id: 'venvPython',
         uri: Uri.file('home/venvPython/bin/python')
     };
-    const cachedVenvInterpreterWithOlderVersionOfPython = {
-        ...deserializePythonEnvironment(serializePythonEnvironment(venvInterpreter), venvInterpreter.id)!
-    };
+    let cachedVenvInterpreterWithOlderVersionOfPython: { id: string; uri: Uri };
 
     let venvPythonKernel: PythonKernelConnectionMetadata;
     let cachedVenvPythonKernel: PythonKernelConnectionMetadata;
+    let environments: PythonExtension['environments'];
 
     setup(async function () {
         traceInfo(`Start Test (started) ${this.currentTest?.title}`);
@@ -151,6 +93,7 @@ suite(`Local Python and related kernels`, async () => {
         disposables.push(onDidChangeKernelsFromKnownLocations);
         disposables.push(onDidChangeInterpreters);
         disposables.push(onDidRemoveInterpreter);
+        environments = crateMockedPythonApi(disposables).environments;
 
         findKernelSpecsInPathsReturnValue.clear();
         loadKernelSpecReturnValue.clear();
@@ -171,26 +114,89 @@ suite(`Local Python and related kernels`, async () => {
         when(jupyterPaths.getKernelSpecRootPath()).thenResolve(globalKernelRootPath);
         when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
 
-        const mockedApi = mock<PythonExtension>();
-        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
-        disposables.push({ dispose: () => sinon.restore() });
-        const environments = mock<PythonExtension['environments']>();
-        when(mockedApi.environments).thenReturn(instance(environments));
-        when(environments.known).thenReturn([]);
-        setPythonApi(instance(mockedApi));
-        disposables.push({ dispose: () => setPythonApi(undefined as any) });
-        when(environments.resolveEnvironment(pythonKernelSpec.id)).thenResolve({
+        whenKnownEnvironments(environments).thenReturn([]);
+        whenResolveEnvironment(environments, 'python').thenResolve({
+            id: 'python',
             executable: { sysPrefix: 'home/python' }
-        } as any);
-        when(environments.resolveEnvironment(condaInterpreter.id)).thenResolve({
+        });
+        whenResolveEnvironment(environments, condaInterpreter.id).thenResolve({
+            id: condaInterpreter.id,
             executable: { sysPrefix: 'home/conda' }
-        } as any);
-        when(environments.resolveEnvironment(globalInterpreter.id)).thenResolve({
+        });
+        whenResolveEnvironment(environments, globalInterpreter.id).thenResolve({
+            id: globalInterpreter.id,
             executable: { sysPrefix: 'home/global' }
-        } as any);
-        when(environments.resolveEnvironment(venvInterpreter.id)).thenResolve({
+        });
+        whenResolveEnvironment(environments, venvInterpreter.id).thenResolve({
+            id: venvInterpreter.id,
             executable: { sysPrefix: 'home/venvPython' }
-        } as any);
+        });
+        cachedVenvInterpreterWithOlderVersionOfPython = {
+            ...deserializePythonEnvironment(serializePythonEnvironment(venvInterpreter), venvInterpreter.id)!
+        };
+
+        pythonKernelSpec = PythonKernelConnectionMetadata.create({
+            id: 'python',
+            interpreter: {
+                id: 'python',
+                uri: Uri.file('python')
+            },
+            kernelSpec: {
+                argv: ['python'],
+                display_name: 'python',
+                executable: 'python',
+                name: 'python'
+            }
+        });
+        globalPythonKernelSpec = LocalKernelSpecConnectionMetadata.create({
+            id: 'pythonGlobal',
+            // This kernelspec belongs to the conda env.
+            kernelSpec: {
+                argv: [globalInterpreter.uri.fsPath, '-m', 'powershell_custom'],
+                display_name: 'Custom Global Python kernel Spec',
+                executable: globalInterpreter.uri.fsPath,
+                name: 'python',
+                language: 'python',
+                specFile: Uri.joinPath(globalKernelRootPath, 'python', 'kernel.json').fsPath
+            }
+        });
+        globalPythonKernelSpecUnknownExecutable = LocalKernelSpecConnectionMetadata.create({
+            id: 'pythonGlobalUnknown',
+            // This kernelspec belongs to the conda env.
+            kernelSpec: {
+                argv: [Uri.joinPath(Uri.file('unknown'), 'bin', 'python').fsPath, '-m', 'powershell_custom'],
+                display_name: 'Custom Global Python kernel Spec Unknown Executable',
+                executable: Uri.joinPath(Uri.file('unknown'), 'bin', 'python').fsPath,
+                name: 'python',
+                language: 'python',
+                specFile: Uri.joinPath(globalKernelRootPath, 'unknown', 'kernel.json').fsPath
+            }
+        });
+        globalJuliaKernelSpec = LocalKernelSpecConnectionMetadata.create({
+            id: 'juliaGlobal',
+            // This kernelspec belongs to the conda env.
+            kernelSpec: {
+                argv: ['julia'],
+                display_name: 'Julia',
+                executable: 'julia',
+                name: 'julia',
+                language: 'julia',
+                specFile: Uri.joinPath(globalKernelRootPath, 'julia', 'kernel.json').fsPath
+            }
+        });
+        javaKernelSpec = LocalKernelSpecConnectionMetadata.create({
+            id: 'java',
+            // This kernelspec belongs to the conda env.
+            interpreter: condaInterpreter,
+            kernelSpec: {
+                argv: ['java'],
+                display_name: 'java',
+                executable: 'java',
+                name: 'java',
+                language: 'java',
+                specFile: Uri.joinPath(Uri.file('java'), 'kernel.json').fsPath
+            }
+        });
 
         // Initialize the kernel specs (test data).
         let kernelSpec = await createInterpreterKernelSpec(venvInterpreter, tempDirForKernelSpecs);
@@ -287,7 +293,17 @@ suite(`Local Python and related kernels`, async () => {
         assert.deepEqual(finder.kernels.map((k) => k.id).sort(), kernelsInCache.kernels.map((k) => k.id).sort());
     });
     test('Discovers kernels as interpreters', async () => {
-        when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: venvInterpreter.id,
+                executable: { sysPrefix: 'home/venvPython', uri: Uri.file('home/venvPython/bin/python') }
+            },
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
+
         const statues: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statues.push(finder.status), this, disposables);
         when(globalState.get(localPythonKernelsCacheKey(), anything())).thenCall((_, defaultValue) => defaultValue);
@@ -304,11 +320,21 @@ suite(`Local Python and related kernels`, async () => {
             globalJuliaKernelSpec
         ]);
 
-        when(interpreterService.resolvedEnvironments).thenReturn([
-            globalInterpreter,
-            pythonKernelSpec.interpreter,
-            condaKernel.interpreter
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: 'python',
+                executable: { sysPrefix: 'python', uri: Uri.file('python') }
+            },
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            },
+            {
+                id: globalInterpreter.id,
+                executable: { sysPrefix: 'home/global', uri: Uri.joinPath(Uri.file('globalSys'), 'bin', 'python') }
+            }
         ]);
+
         when(trustedKernels.isTrusted(anything())).thenReturn(false);
         when(interpreterService.getInterpreterDetails(anything())).thenResolve(undefined);
 
@@ -328,11 +354,6 @@ suite(`Local Python and related kernels`, async () => {
             globalJuliaKernelSpec
         ]);
 
-        when(interpreterService.resolvedEnvironments).thenReturn([
-            globalInterpreter,
-            pythonKernelSpec.interpreter,
-            condaKernel.interpreter
-        ]);
         when(trustedKernels.isTrusted(anything())).thenReturn(true);
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve(undefined);
 
@@ -348,7 +369,16 @@ suite(`Local Python and related kernels`, async () => {
         verify(interpreterService.getInterpreterDetails(uriEquals(uriOfUnknownExecutable), anything())).atLeast(1);
     });
     test('Get Python Envs as a Kernel', async () => {
-        when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: venvInterpreter.id,
+                executable: { sysPrefix: 'home/venvPython', uri: Uri.file('home/venvPython/bin/python') }
+            },
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
         when(trustedKernels.isTrusted(anything())).thenReturn(true);
         when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
         const onDidChange = createEventHandler(finder, 'onDidChangeKernels', disposables);
@@ -362,7 +392,16 @@ suite(`Local Python and related kernels`, async () => {
     });
     test('Find a matching interpreter for global kernel specs (when path to executable is in argv of kernelspec.json)', async function () {
         when(kernelSpecsFromKnownLocations.kernels).thenReturn([globalPythonKernelSpec, globalJuliaKernelSpec]);
-        when(interpreterService.resolvedEnvironments).thenReturn([globalInterpreter, condaKernel.interpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: globalInterpreter.id,
+                executable: { sysPrefix: 'home/global', uri: Uri.joinPath(Uri.file('globalSys'), 'bin', 'python') }
+            },
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
 
         const spec = await createInterpreterKernelSpec(globalInterpreter, tempDirForKernelSpecs);
         const expectedGlobalKernelSpec = LocalKernelSpecConnectionMetadata.create({
@@ -393,7 +432,17 @@ suite(`Local Python and related kernels`, async () => {
             globalPythonKernelSpecUnknownExecutable,
             globalJuliaKernelSpec
         ]);
-        when(interpreterService.resolvedEnvironments).thenReturn([globalInterpreter, condaKernel.interpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            },
+            {
+                id: globalInterpreter.id,
+                executable: { sysPrefix: 'home/global', uri: Uri.joinPath(Uri.file('globalSys'), 'bin', 'python') }
+            }
+        ]);
+
         const spec = await createInterpreterKernelSpec(globalInterpreter, tempDirForKernelSpecs);
         const expectedGlobalKernelSpec = LocalKernelSpecConnectionMetadata.create({
             id: getKernelId(globalPythonKernelSpec.kernelSpec, globalInterpreter),
@@ -435,7 +484,8 @@ suite(`Local Python and related kernels`, async () => {
                 extensionVersion: '1'
             })
         );
-        when(interpreterService.resolvedEnvironments).thenReturn([]);
+        whenKnownEnvironments(environments).thenReturn([]);
+
         when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
 
         const onDidChange = createEventHandler(finder, 'onDidChangeKernels', disposables);
@@ -455,7 +505,17 @@ suite(`Local Python and related kernels`, async () => {
         );
 
         // Now lets discover Python environments, and ensure we have 2 kernels, and one of the kernel has the updated Version of Python
-        when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: venvInterpreter.id,
+                executable: { sysPrefix: 'home/venvPython', uri: Uri.file('home/venvPython/bin/python') }
+            },
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
+
         onDidChangeInterpreters.fire([]);
         await clock.runAllAsync();
         await onDidChange.assertFiredAtLeast(1);
@@ -463,7 +523,17 @@ suite(`Local Python and related kernels`, async () => {
         assert.deepEqual(finder.kernels, [venvPythonKernel, condaKernel]);
     });
     test('Ensure cache does not override Python Envs retrieved from Python Extension (as the former is older information and latter is more recent)', async function () {
-        when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: venvInterpreter.id,
+                executable: { sysPrefix: 'home/venvPython', uri: Uri.file('home/venvPython/bin/python') }
+            },
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
+
         // Cache will have a virtual env of Python for 3.8.0
         // & later the user updates that same virtual env to 3.10.0 (either by deleting that folder and re-installing a new venv in the same folder or other means)
         // After we load, we need to ensure we display the new version of 3.10.0
@@ -487,7 +557,13 @@ suite(`Local Python and related kernels`, async () => {
     });
     test('Ensure old (non-existent) kernel from cache is no longer listed after its not in the list of Python envs returned by Python extension', async function () {
         // Python will never return the old Python environment.
-        when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
+
         // Cache will have a virtual env of Python
         // & later the Python extension no longer returns this Python env in the list of environments
         // At this point we should not list this kernel as its not a valid environment (not valid because Python doesn't list it anymore).
@@ -537,7 +613,17 @@ suite(`Local Python and related kernels`, async () => {
     });
     test('Ensure kernels are removed from the list after Python extension triggers a removal of an interpreter', async function () {
         // Python will first give us 2 interpreters.
-        when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: venvInterpreter.id,
+                executable: { sysPrefix: 'home/venvPython', uri: Uri.file('home/venvPython/bin/python') }
+            },
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
+
         when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
         when(interpreterService.status).thenReturn('idle');
 
@@ -548,12 +634,21 @@ suite(`Local Python and related kernels`, async () => {
         await onDidChange.assertFiredAtLeast(2);
         const numberOfTimesChangeEventTriggered = onDidChange.count;
 
+        // Get around issue with uri comparisons...
+        finder.kernels.forEach((k) => k.interpreter?.uri.toString());
+        [venvPythonKernel, condaKernel].forEach((k) => k.interpreter?.uri.toString());
         // We should have two kernels for both python envs.
         assert.deepEqual(finder.kernels, [venvPythonKernel, condaKernel]);
 
         // Now Python will only give us 1 environment.
         // Ie. the virtual env has been deleted.
-        when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
+
         onDidChangeInterpreters.fire([]);
         await clock.runAllAsync();
         await onDidChange.assertFiredAtLeast(numberOfTimesChangeEventTriggered + 1);
@@ -563,7 +658,17 @@ suite(`Local Python and related kernels`, async () => {
     });
     test('Ensure kernels are removed from the list after Python extension triggers a removal of an interpreter (via removed event)', async function () {
         // Python will first give us 2 interpreters.
-        when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: venvInterpreter.id,
+                executable: { sysPrefix: 'home/venvPython', uri: Uri.file('home/venvPython/bin/python') }
+            },
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
+
         when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
         when(interpreterService.status).thenReturn('idle');
 
@@ -574,12 +679,22 @@ suite(`Local Python and related kernels`, async () => {
         await onDidChange.assertFiredAtLeast(2);
         const numberOfTimesChangeEventTriggered = onDidChange.count;
 
+        // Get around issue with uri comparisons...
+        finder.kernels.forEach((k) => k.interpreter?.uri.toString());
+        [venvPythonKernel, condaKernel].forEach((k) => k.interpreter?.uri.toString());
+
         // We should have two kernels for both python envs.
         assert.deepEqual(finder.kernels, [venvPythonKernel, condaKernel]);
 
         // Now Python will only give us 1 environment.
         // Ie. the virtual env has been deleted.
-        when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
+
         onDidRemoveInterpreter.fire({ id: venvInterpreter.id });
         await clock.runAllAsync();
         assert.strictEqual(onDidChange.count, numberOfTimesChangeEventTriggered + 1, 'Event not fired');
@@ -589,7 +704,13 @@ suite(`Local Python and related kernels`, async () => {
     });
     test('Get kernel specs from Python Environments', async () => {
         when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
-        when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter]);
+        whenKnownEnvironments(environments).thenReturn([
+            {
+                id: condaInterpreter.id,
+                executable: { sysPrefix: 'home/conda', uri: Uri.file('conda') }
+            }
+        ]);
+
         // Conda kernel should have a java kernelspec.
         findKernelSpecsInPathsReturnValue.set(Uri.joinPath(Uri.file('home/conda'), baseKernelPath), [
             Uri.file(javaKernelSpec.kernelSpec.specFile!)
@@ -610,6 +731,10 @@ suite(`Local Python and related kernels`, async () => {
         finder.activate();
         await clock.runAllAsync();
         await onDidChange.assertFiredAtLeast(1);
+
+        // Get around issue with uri comparisons...
+        finder.kernels.forEach((k) => k.interpreter?.uri.toString());
+        [expectedJavaKernelSpec, condaKernel].forEach((k) => k.interpreter?.uri.toString());
 
         // Verify we have found the java kernel spec inside the conda environment.
         assert.deepEqual(finder.kernels, [expectedJavaKernelSpec, condaKernel]);
