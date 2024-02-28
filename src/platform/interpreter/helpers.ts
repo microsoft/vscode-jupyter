@@ -123,7 +123,7 @@ export async function getInterpreterInfo(interpreter?: { id: string }) {
     return api.environments.resolveEnvironment(interpreter.id);
 }
 
-let cachedKnown: typeof pythonApi.environments.known | undefined;
+// let cachedKnown: typeof pythonApi.environments.known | undefined;
 let cachedKnownDict = new Map<string, Environment>();
 let pythonApi: PythonExtension;
 export function setPythonApi(api: PythonExtension) {
@@ -133,7 +133,7 @@ export function setPythonApi(api: PythonExtension) {
     pythonApi = api;
     api.environments.known.forEach((e) => cachedKnownDict.set(e.id, e));
     api.environments.onDidChangeEnvironments((e) => {
-        cachedKnown = undefined;
+        // cachedKnown = undefined;
         if (e.type === 'remove') {
             cachedKnownDict.delete(e.env.id);
         } else {
