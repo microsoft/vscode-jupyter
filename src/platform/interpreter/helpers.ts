@@ -154,14 +154,14 @@ export function isCondaEnvironmentWithoutPython(interpreter?: { id: string }) {
     return env && getEnvironmentType(env) === EnvironmentType.Conda && !env.executable.uri;
 }
 
-function getCachedEnvs() {
-    if (!cachedKnown) {
-        cachedKnown = pythonApi.environments.known;
-        // cachedKnownDict.clear();
-        // cachedKnown.forEach((i) => cachedKnownDict.set(i.id, i));
-    }
-    return { known: cachedKnown, map: cachedKnownDict };
-}
+// function getCachedEnvs() {
+//     if (!cachedKnown) {
+//         cachedKnown = pythonApi.environments.known;
+//         // cachedKnownDict.clear();
+//         // cachedKnown.forEach((i) => cachedKnownDict.set(i.id, i));
+//     }
+//     return { known: cachedKnown, map: cachedKnownDict };
+// }
 export function getCachedEnvironment(interpreter?: { id: string }) {
     if (!interpreter) {
         return;
