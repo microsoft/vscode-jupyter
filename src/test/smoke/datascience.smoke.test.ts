@@ -8,23 +8,22 @@ import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { traceInfo, traceVerbose } from '../../platform/logging';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { IExtensionTestApi, PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
+import { PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
 import { captureScreenShot } from '../common';
+import { getCachedEnvironments } from '../../platform/interpreter/helpers';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', function () {
-    let api: IExtensionTestApi;
     this.timeout(timeoutForCellToRun);
     suiteSetup(async function () {
         this.timeout(timeoutForCellToRun);
         if (!IS_SMOKE_TEST()) {
             return this.skip();
         }
-        api = await initialize();
+        await initialize();
         await setAutoSaveDelayInWorkspaceRoot(1);
     });
     setup(async function () {
@@ -133,17 +132,13 @@ suite('Smoke Tests', function () {
         // assert.ok(interpreterForCurrentWindow !== undefined, 'Unable to get matching interpreter for current window');
 
         // Now change active interpreter
-        const interpreterService = api.serviceManager.get<IInterpreterService>(IInterpreterService);
         await waitForCondition(
-            async () => interpreterService.resolvedEnvironments.length > 0,
+            async () => getCachedEnvironments().length > 0,
             15_000,
             'Waiting for interpreters to be discovered'
         );
 
-        assert.ok(
-            interpreterService.resolvedEnvironments.length > 1,
-            'Not enough interpreters to run interactive window smoke test'
-        );
+        assert.ok(getCachedEnvironments().length > 1, 'Not enough interpreters to run interactive window smoke test');
         // const differentInterpreter = allInterpreters.find((interpreter) => interpreter !== interpreterForCurrentWindow);
         // await vscode.commands.executeCommand<void>('python.setInterpreter', differentInterpreter); // Requires change to Python extension
 

@@ -13,8 +13,14 @@ import { EOL } from 'os';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
-import { getCachedVersion, getEnvironmentType } from '../../../platform/interpreter/helpers';
-function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
+import {
+    getCachedEnvironment,
+    getCachedEnvironments,
+    getCachedVersion,
+    getEnvironmentType,
+    resolvedPythonEnvToJupyterEnv
+} from '../../../platform/interpreter/helpers';
+function isBestPythonInterpreterForAnInterruptDaemon(interpreter: { id: string }) {
     // Give preference to globally installed python environments.
     // The assumption is that users are more likely to uninstall/delete local python environments
     // than global ones.
@@ -34,7 +40,7 @@ function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironm
     }
     return false;
 }
-function isSupportedPythonVersion(interpreter: PythonEnvironment) {
+function isSupportedPythonVersion(interpreter: { id: string }) {
     let major = getCachedVersion(interpreter)?.major ?? 3;
     let minor = getCachedVersion(interpreter)?.minor ?? 6;
     if (
@@ -115,13 +121,13 @@ export class PythonKernelInterruptDaemon {
             return interpreter;
         }
 
-        const interpreters = this.interpreters.resolvedEnvironments;
+        const interpreters = getCachedEnvironments();
         if (interpreters.length === 0) {
             return interpreter;
         }
         return (
-            interpreters.find(isBestPythonInterpreterForAnInterruptDaemon) ||
-            interpreters.find(isSupportedPythonVersion) ||
+            resolvedPythonEnvToJupyterEnv(interpreters.find(isBestPythonInterpreterForAnInterruptDaemon)) ||
+            resolvedPythonEnvToJupyterEnv(interpreters.find(isSupportedPythonVersion)) ||
             interpreter
         );
     }

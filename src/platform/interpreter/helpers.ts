@@ -7,6 +7,8 @@ import { basename } from '../../platform/vscode-path/resources';
 import { Environment, KnownEnvironmentTools, KnownEnvironmentTypes, PythonExtension } from '@vscode/python-extension';
 import { traceWarning } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths';
+import { Uri } from 'vscode';
+import { getOSType, OSType } from '../common/utils/platform';
 
 export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment | { id: string }) {
     const env = getCachedEnvironment(interpreter);
@@ -212,4 +214,30 @@ export function getCachedEnvironments() {
         return [];
     }
     return pythonApi.environments.known;
+}
+export function resolvedPythonEnvToJupyterEnv(env?: Environment): PythonEnvironment | undefined {
+    if (!env) {
+        return;
+    }
+    // Map the Python env tool to a Jupyter environment type.
+    let uri: Uri;
+    let id = env.id;
+    if (!env.executable.uri) {
+        if (getEnvironmentType(env) === EnvironmentType.Conda) {
+            uri =
+                getOSType() === OSType.Windows
+                    ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
+                    : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
+        } else {
+            traceWarning(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
+            return;
+        }
+    } else {
+        uri = env.executable.uri;
+    }
+
+    return {
+        id,
+        uri
+    };
 }

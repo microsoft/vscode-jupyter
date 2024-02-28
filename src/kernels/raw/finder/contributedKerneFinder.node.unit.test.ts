@@ -122,7 +122,6 @@ import { setPythonApi } from '../../../platform/interpreter/helpers';
             when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
             when(interpreterService.onDidRemoveInterpreter).thenReturn(onDidDeleteInterpreter.event);
             when(interpreterService.onDidChangeStatus).thenReturn(onDidChangeInterpreterStatus.event);
-            when(interpreterService.resolvedEnvironments).thenReturn(Array.from(distinctInterpreters));
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve();
             when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve();
