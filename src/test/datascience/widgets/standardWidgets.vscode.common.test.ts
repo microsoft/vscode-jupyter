@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable no-only-tests/no-only-tests */
 import { assert } from 'chai';
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as urlPath from '../../../platform/vscode-path/resources';
@@ -193,7 +194,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // Verify the slider has changed.
             await assertOutputContainsHtml(cell2, comms, ['60'], '.widget-readout');
         });
-        test('Checkbox Widget', async () => {
+        test.only('Checkbox Widget', async () => {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -221,23 +222,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
             await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
         });
-        test('Button Widget (click button in output of another cell)', async () => {
-            await initializeNotebookForWidgetTest(disposables, { templateFile: 'button_widgets.ipynb' }, editor);
-            const [cell0, cell1, cell2] = window.activeNotebookEditor!.notebook.getCells();
-
-            await executeCellAndWaitForOutput(cell0, comms);
-            await executeCellAndWaitForOutput(cell1, comms);
-            await executeCellAndWaitForOutput(cell2, comms);
-            await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
-            await assertOutputContainsHtml(cell1, comms, ['Click Me!', '<button']);
-
-            // Click the button and verify we have output in other cells
-            await clickWidget(comms, cell1, 'button');
-            await assertOutputContainsHtml(cell0, comms, ['Button clicked']);
-            await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
-            await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
-        });
-        test.skip('Button Widget with custom comm message', async () => {
+        test.only('Button Widget with custom comm message', async () => {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -254,6 +239,22 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // Click the button and verify we have output in the same cell.
             await clickWidget(comms, cell0, 'button');
             await waitForTextOutput(cell0, 'Button clicked.', 1, false);
+        });
+        test.only('Button Widget (click button in output of another cell)', async () => {
+            await initializeNotebookForWidgetTest(disposables, { templateFile: 'button_widgets.ipynb' }, editor);
+            const [cell0, cell1, cell2] = window.activeNotebookEditor!.notebook.getCells();
+
+            await executeCellAndWaitForOutput(cell0, comms);
+            await executeCellAndWaitForOutput(cell1, comms);
+            await executeCellAndWaitForOutput(cell2, comms);
+            await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
+            await assertOutputContainsHtml(cell1, comms, ['Click Me!', '<button']);
+
+            // Click the button and verify we have output in other cells
+            await clickWidget(comms, cell1, 'button');
+            await assertOutputContainsHtml(cell0, comms, ['Button clicked']);
+            await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
+            await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
         });
         test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
             // // https://github.com/microsoft/vscode-jupyter/issues/8748
