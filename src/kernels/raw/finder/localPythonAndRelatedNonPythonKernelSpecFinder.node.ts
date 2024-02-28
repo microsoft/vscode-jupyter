@@ -26,7 +26,6 @@ import {
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { raceCancellation } from '../../../platform/common/cancellation';
 import { getCachedEnvironments, resolvedPythonEnvToJupyterEnv } from '../../../platform/interpreter/helpers';
-import { resolvableInstance } from '../../../test/datascience/helpers';
 
 type InterpreterId = string;
 
