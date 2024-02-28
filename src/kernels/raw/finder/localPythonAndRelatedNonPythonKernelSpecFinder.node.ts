@@ -25,7 +25,12 @@ import {
 } from './interpreterKernelSpecFinderHelper.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { raceCancellation } from '../../../platform/common/cancellation';
-import { getCachedEnvironments, resolvedPythonEnvToJupyterEnv } from '../../../platform/interpreter/helpers';
+import {
+    getCachedEnvironment,
+    getCachedEnvironments,
+    resolvedPythonEnvToJupyterEnv
+} from '../../../platform/interpreter/helpers';
+import { sleep } from '../../../platform/common/utils/async';
 
 type InterpreterId = string;
 
@@ -88,7 +93,15 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             this.disposables
         );
         interpreterService.onDidRemoveInterpreter(
-            (e) => {
+            async (e) => {
+                // This is a farily destructive operation, hence lets wait a few seconds.
+                // In the past Python extension triggered this even incorrectly
+                // Lets wait a few seconds and see if the env still exists
+                await sleep(1_000);
+                if (getCachedEnvironment(e)) {
+                    return;
+                }
+
                 traceVerbose(`Interpreter removed ${e.id}`);
                 const deletedKernels: LocalKernelConnectionMetadata[] = [];
                 this._kernels.forEach((k) => {
