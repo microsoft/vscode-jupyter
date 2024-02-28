@@ -15,15 +15,6 @@ export interface IInterpreterService {
     readonly status: 'refreshing' | 'idle';
     readonly onDidChangeStatus: Event<void>;
     readonly onDidEnvironmentVariablesChange: Event<void>;
-    /**
-     * Contains details of all the currently discovered Python Environments along with all of their resolved information.
-     */
-    readonly resolvedEnvironments: PythonEnvironment[];
-    /**
-     * Pause detection of Python environments until the token is cancelled.
-     * After the token is cancelled, detection will resume and pending events will be triggered.
-     */
-    pauseInterpreterDetection(cancelToken: CancellationToken): void;
     onDidChangeInterpreter: Event<PythonEnvironment | undefined>;
     onDidChangeInterpreters: Event<PythonEnvironment[]>;
     onDidRemoveInterpreter: Event<{ id: string }>;
