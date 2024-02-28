@@ -3,7 +3,7 @@
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { when, instance, mock } from 'ts-mockito';
+import { when, instance, mock, anything } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import {
@@ -13,23 +13,55 @@ import {
     PythonKernelConnectionMetadata
 } from './types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { PythonExtension } from '@vscode/python-extension';
+import { PythonExtension, type Environment } from '@vscode/python-extension';
 import { resolvableInstance } from '../test/datascience/helpers';
-import { dispose } from '../platform/common/utils/lifecycle';
+import { DisposableStore, dispose } from '../platform/common/utils/lifecycle';
 import { setPythonApi } from '../platform/interpreter/helpers';
+import type { IDisposable } from '@c4312/evt';
+import type { DeepPartial } from '../platform/common/utils/misc';
+
+export function crateMockedPythonApi(disposables: IDisposable[]) {
+    const disposableStore = new DisposableStore();
+    const mockedApi = mock<PythonExtension>();
+    sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+    disposableStore.add({ dispose: () => sinon.restore() });
+    const environments = mock<PythonExtension['environments']>();
+    when(mockedApi.environments).thenReturn(instance(environments));
+    when(environments.known).thenReturn([]);
+    setPythonApi(instance(mockedApi));
+    disposableStore.add({ dispose: () => setPythonApi(undefined as any) });
+    disposables.push(disposableStore);
+    return { dispose: () => disposableStore.dispose(), environments };
+}
+export function whenKnownEnvironments(environments: PythonExtension['environments']) {
+    return {
+        thenReturn: (items: DeepPartial<Environment>[]) => {
+            items.forEach((item) => {
+                if (!Array.isArray(item.tools)) {
+                    item.tools = [];
+                }
+            });
+            when(environments.known).thenReturn(items as any);
+        }
+    };
+}
+export function whenResolveEnvironment(
+    environments: PythonExtension['environments'],
+    environment: Parameters<PythonExtension['environments']['resolveEnvironment']>[0] = anything()
+) {
+    return {
+        thenResolve: (items: DeepPartial<Environment>) => {
+            when(environments.resolveEnvironment(environment)).thenResolve(items as any);
+        }
+    };
+}
 
 suite('Kernel Connection Helpers', () => {
     let environments: PythonExtension['environments'];
     let disposables: { dispose: () => void }[] = [];
     setup(() => {
-        const mockedApi = mock<PythonExtension>();
-        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
-        disposables.push({ dispose: () => sinon.restore() });
-        environments = mock<PythonExtension['environments']>();
-        when(mockedApi.environments).thenReturn(instance(environments));
-        when(environments.known).thenReturn([]);
-        setPythonApi(instance(mockedApi));
-        disposables.push({ dispose: () => setPythonApi(undefined as any) });
+        environments = crateMockedPythonApi(disposables).environments;
+        whenKnownEnvironments(environments).thenReturn([]);
     });
     teardown(() => {
         disposables = dispose(disposables);
@@ -157,7 +189,7 @@ suite('Kernel Connection Helpers', () => {
             assert.strictEqual(name, 'kspecname');
         });
         test('Prefixed with `<env name>` kernel is inside a non-global Python environment', () => {
-            when(environments.known).thenReturn([
+            whenKnownEnvironments(environments).thenReturn([
                 {
                     id: Uri.file('pyPath').fsPath,
                     version: {
@@ -171,7 +203,7 @@ suite('Kernel Connection Helpers', () => {
                         name: '.env'
                     },
                     tools: [EnvironmentType.Conda]
-                } as any
+                }
             ]);
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
@@ -191,7 +223,7 @@ suite('Kernel Connection Helpers', () => {
             assert.strictEqual(name, 'kspecname (.env)');
         });
         test('Prefixed with `<env name>` kernel is inside a non-global 64-bit Python environment', () => {
-            when(environments.known).thenReturn([
+            whenKnownEnvironments(environments).thenReturn([
                 {
                     id: Uri.file('pyPath').fsPath,
                     version: {
@@ -205,7 +237,7 @@ suite('Kernel Connection Helpers', () => {
                         name: '.env'
                     },
                     tools: [EnvironmentType.Conda]
-                } as any
+                }
             ]);
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
@@ -338,7 +370,7 @@ suite('Kernel Connection Helpers', () => {
             assert.strictEqual(name, 'kspecname');
         });
         test('Prefixed with `<env name>` kernel is associated with a non-global Python environment', () => {
-            when(environments.known).thenReturn([
+            whenKnownEnvironments(environments).thenReturn([
                 {
                     id: Uri.file('pyPath').fsPath,
                     version: {
@@ -352,7 +384,7 @@ suite('Kernel Connection Helpers', () => {
                         name: '.env'
                     },
                     tools: [EnvironmentType.Conda]
-                } as any
+                }
             ]);
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
@@ -373,7 +405,7 @@ suite('Kernel Connection Helpers', () => {
             assert.strictEqual(name, 'kspecname (Python 9.8.7)');
         });
         test('Prefixed with `<env name>` kernel is associated with a non-global 64-bit Python environment', () => {
-            when(environments.known).thenReturn([
+            whenKnownEnvironments(environments).thenReturn([
                 {
                     id: Uri.file('pyPath').fsPath,
                     version: {
@@ -387,7 +419,7 @@ suite('Kernel Connection Helpers', () => {
                         name: '.env'
                     },
                     tools: [EnvironmentType.Conda]
-                } as any
+                }
             ]);
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
@@ -448,7 +480,7 @@ suite('Kernel Connection Helpers', () => {
             assert.strictEqual(name, 'Python');
         });
         test('Return Python Version for global python environment with a version', () => {
-            when(environments.known).thenReturn([
+            whenKnownEnvironments(environments).thenReturn([
                 {
                     id: Uri.file('pyPath').fsPath,
                     version: {
@@ -459,7 +491,7 @@ suite('Kernel Connection Helpers', () => {
                         sysVersion: '1.2.3'
                     },
                     tools: [EnvironmentType.Unknown]
-                } as any
+                }
             ]);
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
@@ -522,7 +554,7 @@ suite('Kernel Connection Helpers', () => {
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
-            when(environments.known).thenReturn([
+            whenKnownEnvironments(environments).thenReturn([
                 {
                     id: instance(interpreter).id,
                     version: {
@@ -533,7 +565,7 @@ suite('Kernel Connection Helpers', () => {
                         sysVersion: '9.8.7.6-pre'
                     },
                     tools: []
-                } as any
+                }
             ]);
 
             const name = getDisplayNameOrNameOfKernelConnection(
@@ -550,7 +582,7 @@ suite('Kernel Connection Helpers', () => {
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
-            when(environments.known).thenReturn([
+            whenKnownEnvironments(environments).thenReturn([
                 {
                     id: instance(interpreter).id,
                     version: {
@@ -565,7 +597,7 @@ suite('Kernel Connection Helpers', () => {
                         folderUri: Uri.file('some')
                     },
                     tools: [EnvironmentType.Venv]
-                } as any
+                }
             ]);
 
             const name = getDisplayNameOrNameOfKernelConnection(
@@ -582,7 +614,7 @@ suite('Kernel Connection Helpers', () => {
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.id).thenReturn('xyz');
-            when(environments.known).thenReturn([
+            whenKnownEnvironments(environments).thenReturn([
                 {
                     id: instance(interpreter).id,
                     version: {
@@ -597,7 +629,7 @@ suite('Kernel Connection Helpers', () => {
                         folderUri: Uri.file('some')
                     },
                     tools: [EnvironmentType.Venv]
-                } as any
+                }
             ]);
 
             const name = getDisplayNameOrNameOfKernelConnection(

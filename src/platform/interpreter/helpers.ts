@@ -177,11 +177,11 @@ export function getCachedSysPrefix(interpreter?: { id: string }) {
     const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
     return cachedInfo?.executable?.sysPrefix;
 }
-export async function getVersion(interpreter?: { id?: string }) {
+export async function getVersion(interpreter?: { id?: string }, ignoreCache = false) {
     if (!interpreter?.id) {
         return;
     }
-    if (pythonApi) {
+    if (pythonApi && !ignoreCache) {
         const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
         if (cachedInfo?.version) {
             return cachedInfo.version;
