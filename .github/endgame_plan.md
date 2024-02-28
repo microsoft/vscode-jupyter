@@ -11,7 +11,6 @@
         Instructions on updating `npm` dependencies in `package.json` & `package-lock.json` can be found [here](https://github.com/microsoft/vscode-jupyter/wiki/Resolving-Component-Governance-and-Dependabot-issues-(updating-package-lock.json)).
 - [ ] Create new release branch with format `release/release-YYYY.MM`.
   * Note: The release branch should not be changed after this step (not including hotfixes)
-- [ ] Disable [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283). (`...` menu > Settings > Processing of new requests: Disabled)
 - [ ] Create a PR to `main` with the following changes... (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
   - [ ] At this point, the vscode engine version should also be the same as in the release branch- will be bumped when the next release happens
   - [ ] Bump the version number in `main` to the next monthly ("YYYY.M.0") version number (e.g. if the latest is `2022.2.0`, bump it to `2022.3.0`).
@@ -87,7 +86,6 @@
 
 ## Wednesday/Thursday (Day of VS Code releasing the next insider version)
 - [ ] Bump the engines.vscode version on the `main` branch to point to the next version. For example, from `1.58.0` to `1.59.0`
-- [ ] Reenable [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283) (`...` menu > Settings > Processing of new requests: Enabled)
 
 ## As needed
 - [ ] Determine if a hotfix is needed
