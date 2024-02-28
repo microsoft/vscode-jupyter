@@ -313,7 +313,6 @@ export class InterpreterService implements IInterpreterService {
     private readonly _onDidChangeStatus = new EventEmitter<void>();
     public readonly onDidChangeStatus = this._onDidChangeStatus.event;
     private refreshPromises = new PromiseMonitor();
-    private pauseEnvDetection = false;
     private readonly onResumeEnvDetection = new EventEmitter<void>();
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
@@ -369,10 +368,6 @@ export class InterpreterService implements IInterpreterService {
         return this.didChangeInterpreters.event;
     }
     private readonly _interpreters = new Map<string, { resolved: PythonEnvironment }>();
-    public get resolvedEnvironments(): PythonEnvironment[] {
-        this.hookupOnDidChangeInterpreterEvent();
-        return Array.from(this._interpreters.values()).map((item) => item.resolved);
-    }
     private getInterpretersCancellation?: CancellationTokenSource;
     private getInterpreters(): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
@@ -386,20 +381,6 @@ export class InterpreterService implements IInterpreterService {
             this.refreshPromises.push(this.interpreterListCachePromise);
         }
         return this.interpreterListCachePromise;
-    }
-    pauseInterpreterDetection(cancelToken: CancellationToken): void {
-        if (cancelToken.isCancellationRequested) {
-            return;
-        }
-        this.pauseEnvDetection = true;
-        cancelToken.onCancellationRequested(
-            () => {
-                this.pauseEnvDetection = false;
-                this.triggerPendingEvents();
-            },
-            this,
-            this.disposables
-        );
     }
     public async refreshInterpreters(forceRefresh: boolean = false) {
         const promise = (async () => {
@@ -604,10 +585,7 @@ export class InterpreterService implements IInterpreterService {
         } else {
             this.pendingInterpretersChangeEventTriggers.set(interpreter?.id || '', interpreter);
         }
-        if (!this.pauseEnvDetection) {
-            this.triggerPendingEvents();
-            return;
-        }
+        this.triggerPendingEvents();
     }
     private triggerPendingEvents() {
         this.pendingInterpreterChangeEventTriggers.forEach((interpreter) =>
