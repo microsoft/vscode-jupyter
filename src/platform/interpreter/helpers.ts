@@ -123,9 +123,23 @@ export async function getInterpreterInfo(interpreter?: { id: string }) {
     return api.environments.resolveEnvironment(interpreter.id);
 }
 
+let cachedKnown: typeof pythonApi.environments.known | undefined;
+let cachedKnownDict = new Map<string, Environment>();
 let pythonApi: PythonExtension;
 export function setPythonApi(api: PythonExtension) {
+    if (pythonApi === api) {
+        return;
+    }
     pythonApi = api;
+    api.environments.known.forEach((e) => cachedKnownDict.set(e.id, e));
+    api.environments.onDidChangeEnvironments((e) => {
+        cachedKnown = undefined;
+        if (e.type === 'remove') {
+            cachedKnownDict.delete(e.env.id);
+        } else {
+            cachedKnownDict.set(e.env.id, e.env);
+        }
+    });
 }
 
 export function isCondaEnvironmentWithoutPython(interpreter?: { id: string }) {
@@ -140,6 +154,14 @@ export function isCondaEnvironmentWithoutPython(interpreter?: { id: string }) {
     return env && getEnvironmentType(env) === EnvironmentType.Conda && !env.executable.uri;
 }
 
+function getCachedEnvs() {
+    if (!cachedKnown) {
+        cachedKnown = pythonApi.environments.known;
+        // cachedKnownDict.clear();
+        // cachedKnown.forEach((i) => cachedKnownDict.set(i.id, i));
+    }
+    return { known: cachedKnown, map: cachedKnownDict };
+}
 export function getCachedEnvironment(interpreter?: { id: string }) {
     if (!interpreter) {
         return;
@@ -147,7 +169,7 @@ export function getCachedEnvironment(interpreter?: { id: string }) {
     if (!pythonApi) {
         throw new Error('Python API not initialized');
     }
-    return pythonApi.environments.known.find((i) => i.id === interpreter.id);
+    return cachedKnownDict.get(interpreter.id);
 }
 
 export async function getSysPrefix(interpreter?: { id: string }) {
@@ -155,7 +177,7 @@ export async function getSysPrefix(interpreter?: { id: string }) {
         return;
     }
     if (pythonApi) {
-        const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
+        const cachedInfo = cachedKnownDict.get(interpreter.id);
         if (cachedInfo?.executable?.sysPrefix) {
             return cachedInfo.executable.sysPrefix;
         }
@@ -176,7 +198,7 @@ export function getCachedSysPrefix(interpreter?: { id: string }) {
     if (!pythonApi) {
         throw new Error('Python API not initialized');
     }
-    const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
+    const cachedInfo = cachedKnownDict.get(interpreter.id);
     return cachedInfo?.executable?.sysPrefix;
 }
 export async function getVersion(interpreter?: { id?: string }, ignoreCache = false) {
@@ -184,7 +206,7 @@ export async function getVersion(interpreter?: { id?: string }, ignoreCache = fa
         return;
     }
     if (pythonApi && !ignoreCache) {
-        const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
+        const cachedInfo = cachedKnownDict.get(interpreter.id);
         if (cachedInfo?.version) {
             return cachedInfo.version;
         }
@@ -205,7 +227,7 @@ export function getCachedVersion(interpreter?: { id?: string }) {
     if (!pythonApi) {
         throw new Error('Python API not initialized');
     }
-    const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
+    const cachedInfo = cachedKnownDict.get(interpreter.id);
     return cachedInfo?.version;
 }
 
@@ -213,7 +235,8 @@ export function getCachedEnvironments() {
     if (!pythonApi) {
         return [];
     }
-    return pythonApi.environments.known;
+    return Array.from(cachedKnownDict.values());
+    // return getCachedEnvs().known;
 }
 export function resolvedPythonEnvToJupyterEnv(env?: Environment): PythonEnvironment | undefined {
     if (!env) {
