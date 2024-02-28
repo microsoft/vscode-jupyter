@@ -42,7 +42,7 @@ import { ConnectionDisplayDataProvider } from './connectionDisplayData.node';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { Environment, PythonExtension } from '@vscode/python-extension';
-import { whenResolveEnvironment } from '../../kernels/helpers.unit.test';
+import { crateMockedPythonApi, whenResolveEnvironment } from '../../kernels/helpers.unit.test';
 
 suite(`Notebook Controller`, function () {
     let controller: NotebookController;
