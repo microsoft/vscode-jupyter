@@ -743,7 +743,7 @@ async function updateNotebookDocumentMetadata(
 }
 
 export async function warnWhenUsingOutdatedPython(kernelConnection: KernelConnectionMetadata) {
-    const pyVersion = await getVersion(kernelConnection.interpreter);
+    const pyVersion = await getVersion(kernelConnection.interpreter, true);
     const major = pyVersion?.major || 0;
     const minor = pyVersion?.minor || 0;
     if (

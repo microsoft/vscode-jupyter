@@ -42,7 +42,7 @@ import { ConnectionDisplayDataProvider } from './connectionDisplayData.node';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { Environment, PythonExtension } from '@vscode/python-extension';
-import { setPythonApi } from '../../platform/interpreter/helpers';
+import { crateMockedPythonApi, whenResolveEnvironment } from '../../kernels/helpers.unit.test';
 
 suite(`Notebook Controller`, function () {
     let controller: NotebookController;
@@ -283,17 +283,14 @@ suite(`Notebook Controller`, function () {
         verify(mockedVSCodeNamespaces.workspace.applyEdit(anything())).once();
     });
     suite('Unsupported Python Versions', () => {
-        let pythonApi: PythonExtension;
+        let disposables: IDisposable[] = [];
         let environments: PythonExtension['environments'];
         setup(() => {
-            pythonApi = mock<PythonExtension>();
-            environments = mock<PythonExtension['environments']>();
-            when(pythonApi.environments).thenReturn(instance(environments));
-            setPythonApi(instance(pythonApi));
+            environments = crateMockedPythonApi(disposables).environments;
             when(mockedVSCodeNamespaces.window.showWarningMessage(anything(), anything())).thenResolve(undefined);
         });
         teardown(() => {
-            setPythonApi(undefined as any);
+            disposables = dispose(disposables);
             resetVSCodeMocks();
         });
         test('No warnings when Python is not used', async () => {
@@ -542,25 +539,10 @@ suite(`Notebook Controller`, function () {
                         uri: Uri.file('')
                     }
                 });
-                when(environments.known).thenReturn([
-                    {
-                        environment: {
-                            folderUri: Uri.file(''),
-                            name: '',
-                            type: '',
-                            workspaceFolder: undefined
-                        },
-                        executable: {
-                            bitness: undefined,
-                            sysPrefix: undefined,
-                            uri: undefined
-                        },
-                        id: 'version',
-                        path: '',
-                        tools: [],
-                        version
-                    }
-                ]);
+                whenResolveEnvironment(environments).thenResolve({
+                    id: 'version',
+                    version
+                });
                 await warnWhenUsingOutdatedPython(kernel);
                 verify(mockedVSCodeNamespaces.window.showWarningMessage(anything(), anything())).once();
             });

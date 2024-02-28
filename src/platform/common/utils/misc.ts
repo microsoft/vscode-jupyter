@@ -38,6 +38,14 @@ type DeepReadonlyObject<T> = {
 };
 type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type DeepPartial<T> = T extends any[] ? IDeepPartialArray<T[number]> : DeepPartialNonArray<T>;
+type DeepPartialNonArray<T> = T extends object ? DeepPartialObject<T> : T;
+interface IDeepPartialArray<T> extends ReadonlyArray<DeepPartial<T>> {}
+type DeepPartialObject<T> = {
+    [P in NonFunctionPropertyNames<T>]?: DeepPartial<T[P]>;
+};
+
 /**
  * Converts a union type to intersection
  * Courtesy of https://stackoverflow.com/questions/50374908/transform-union-type-to-intersection-type
