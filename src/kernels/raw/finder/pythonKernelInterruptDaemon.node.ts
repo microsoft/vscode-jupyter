@@ -5,7 +5,6 @@ import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../
 import { ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IAsyncDisposable, IDisposableRegistry, IExtensionContext, Resource } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Disposable, Uri } from 'vscode';
@@ -14,7 +13,6 @@ import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import {
-    getCachedEnvironment,
     getCachedEnvironments,
     getCachedVersion,
     getEnvironmentType,
@@ -76,7 +74,6 @@ export class PythonKernelInterruptDaemon {
     constructor(
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
     public async createInterrupter(pythonEnvironment: PythonEnvironment, resource: Resource): Promise<Interrupter> {
