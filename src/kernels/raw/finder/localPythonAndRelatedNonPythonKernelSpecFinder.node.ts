@@ -286,7 +286,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         this._onDidChangeKernels.fire();
         const kernels = Array.from(this._kernels.values());
         this.updateCachePromise = this.updateCachePromise.finally(() =>
-            this.writeToMementoCache(kernels, localPythonKernelsCacheKey()).catch(noop)
+            this.writeToMementoCache(kernels, localPythonKernelsCacheKey())
         );
         return this.updateCachePromise;
     }
