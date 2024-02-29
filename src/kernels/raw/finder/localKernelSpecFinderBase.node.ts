@@ -280,15 +280,20 @@ export abstract class LocalKernelSpecFinderBase<
         this.promiseMonitor.push(promise);
         return promise;
     }
-
+    private timeouts = new Map<string, IDisposable>();
     protected async writeToMementoCache(values: T[], cacheKey: string) {
-        await this.memento.update(
-            cacheKey,
-            JSON.stringify({
-                kernels: values.map((item) => item.toJSON()),
-                extensionVersion: this.env.extensionVersion
-            })
-        );
+        this.timeouts.get(cacheKey)?.dispose();
+        // This can get called very quickly and very often.
+        const timer = setTimeout(() => {
+            void this.memento.update(
+                cacheKey,
+                JSON.stringify({
+                    kernels: values.map((item) => item.toJSON()),
+                    extensionVersion: this.env.extensionVersion
+                })
+            );
+        }, 500);
+        this.timeouts.set(cacheKey, { dispose: () => clearTimeout(timer) });
     }
     protected async isValidCachedKernel(kernel: LocalKernelConnectionMetadata): Promise<boolean> {
         switch (kernel.kind) {
