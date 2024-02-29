@@ -215,10 +215,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         `Kernels ${kernelConnectionsFoundOnlyInCache
                             .map((item) => `${item.kind}:'${item.id}'`)
                             .join(', ')} found in cache but not discovered in current session ${Array.from(
-                                this._kernelsExcludingCachedItems.values()
-                            )
-                                .map((item) => `${item.kind}:'${item.id}'`)
-                                .join(', ')}`
+                            this._kernelsExcludingCachedItems.values()
+                        )
+                            .map((item) => `${item.kind}:'${item.id}'`)
+                            .join(', ')}`
                     );
                     kernelConnectionsFoundOnlyInCache.forEach((item) => {
                         this._kernels.delete(item.id);

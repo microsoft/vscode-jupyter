@@ -30,7 +30,8 @@ function localKernelSpecsCacheKey() {
 @injectable()
 export class LocalKnownPathKernelSpecFinder
     extends LocalKernelSpecFinderBase<LocalKernelSpecConnectionMetadata>
-    implements IExtensionSyncActivationService {
+    implements IExtensionSyncActivationService
+{
     private readonly _kernels = new Map<string, LocalKernelSpecConnectionMetadata>();
     constructor(
         @inject(IFileSystemNode) fs: IFileSystemNode,

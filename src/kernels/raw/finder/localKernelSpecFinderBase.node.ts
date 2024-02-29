@@ -196,9 +196,10 @@ export interface ILocalKernelFinder<T extends LocalKernelSpecConnectionMetadata 
  * Base class for searching for local kernels that are based on a kernel spec file.
  */
 export abstract class LocalKernelSpecFinderBase<
-    T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
->
-    implements IDisposable, ILocalKernelFinder<T> {
+        T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    >
+    implements IDisposable, ILocalKernelFinder<T>
+{
     protected readonly disposables: IDisposable[] = [];
 
     private _status: 'discovering' | 'idle' = 'idle';
@@ -233,9 +234,7 @@ export abstract class LocalKernelSpecFinderBase<
         });
         this.kernelSpecFinder = new LocalKernelSpecFinder(fs, memento, jupyterPaths);
         this.disposables.push(this.kernelSpecFinder);
-        this.disposables.push(new Disposable(() =>
-            dispose(Array.from(this.timeouts.values()))
-        ));
+        this.disposables.push(new Disposable(() => dispose(Array.from(this.timeouts.values()))));
     }
     public clearCache() {
         this.kernelSpecFinder.clearCache();
@@ -332,7 +331,8 @@ export async function loadKernelSpec(
     let kernelJson: ReadWrite<IJupyterKernelSpec>;
     try {
         traceVerbose(
-            `Loading kernelspec from ${getDisplayPath(specPath)} ${interpreter?.uri ? `for ${getDisplayPath(interpreter.uri)}` : ''
+            `Loading kernelspec from ${getDisplayPath(specPath)} ${
+                interpreter?.uri ? `for ${getDisplayPath(interpreter.uri)}` : ''
             }`
         );
         kernelJson = JSON.parse(await fs.readFile(specPath));
