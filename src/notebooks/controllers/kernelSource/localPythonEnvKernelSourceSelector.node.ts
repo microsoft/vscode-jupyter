@@ -181,7 +181,10 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             .catch(noop);
     }
     private getKernelSpecsDir() {
-        return this.tempDirForKernelSpecs || this.jupyterPaths.getKernelSpecTempRegistrationFolder();
+        if (!this.tempDirForKernelSpecs) {
+            this.tempDirForKernelSpecs = this.jupyterPaths.getKernelSpecTempRegistrationFolder();
+        }
+        return this.tempDirForKernelSpecs;
     }
     private apiHooked = false;
     private async hookupPythonApi() {

@@ -30,8 +30,7 @@ function localKernelSpecsCacheKey() {
 @injectable()
 export class LocalKnownPathKernelSpecFinder
     extends LocalKernelSpecFinderBase<LocalKernelSpecConnectionMetadata>
-    implements IExtensionSyncActivationService
-{
+    implements IExtensionSyncActivationService {
     private readonly _kernels = new Map<string, LocalKernelSpecConnectionMetadata>();
     constructor(
         @inject(IFileSystemNode) fs: IFileSystemNode,
@@ -75,7 +74,7 @@ export class LocalKnownPathKernelSpecFinder
     }
     @debounce(100)
     private writeKernelsToMemento() {
-        this.writeToMementoCache(Array.from(this._kernels.values()), localKernelSpecsCacheKey()).catch(noop);
+        this.writeToMementoCache(Array.from(this._kernels.values()), localKernelSpecsCacheKey());
     }
     private async listKernelSpecs(cancelToken: CancellationToken): Promise<LocalKernelSpecConnectionMetadata[]> {
         const fn = async () => {
