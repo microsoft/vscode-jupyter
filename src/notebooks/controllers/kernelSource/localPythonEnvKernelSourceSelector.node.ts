@@ -181,7 +181,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             .catch(noop);
     }
     private getKernelSpecsDir() {
-        if (!this.tempDirForKernelSpecs){
+        if (!this.tempDirForKernelSpecs) {
             this.tempDirForKernelSpecs = this.jupyterPaths.getKernelSpecTempRegistrationFolder();
         }
         return this.tempDirForKernelSpecs;
