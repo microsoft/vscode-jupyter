@@ -75,7 +75,7 @@ export class LocalKnownPathKernelSpecFinder
     }
     @debounce(100)
     private writeKernelsToMemento() {
-        this.writeToMementoCache(Array.from(this._kernels.values()), localKernelSpecsCacheKey()).catch(noop);
+        this.writeToMementoCache(Array.from(this._kernels.values()), localKernelSpecsCacheKey());
     }
     private async listKernelSpecs(cancelToken: CancellationToken): Promise<LocalKernelSpecConnectionMetadata[]> {
         const fn = async () => {

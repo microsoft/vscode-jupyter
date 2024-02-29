@@ -3,7 +3,7 @@
 
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
-import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -27,6 +27,7 @@ import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { JupyterPaths } from './jupyterPaths.node';
 import { isCondaEnvironmentWithoutPython } from '../../../platform/interpreter/helpers';
+import { once } from '../../../platform/common/utils/functional';
 
 export type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: Uri };
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
@@ -233,6 +234,7 @@ export abstract class LocalKernelSpecFinderBase<
         });
         this.kernelSpecFinder = new LocalKernelSpecFinder(fs, memento, jupyterPaths);
         this.disposables.push(this.kernelSpecFinder);
+        this.disposables.push(new Disposable(() => dispose(Array.from(this.timeouts.values()))));
     }
     public clearCache() {
         this.kernelSpecFinder.clearCache();
@@ -280,15 +282,20 @@ export abstract class LocalKernelSpecFinderBase<
         this.promiseMonitor.push(promise);
         return promise;
     }
-
-    protected async writeToMementoCache(values: T[], cacheKey: string) {
-        await this.memento.update(
-            cacheKey,
-            JSON.stringify({
-                kernels: values.map((item) => item.toJSON()),
-                extensionVersion: this.env.extensionVersion
-            })
-        );
+    private timeouts = new Map<string, IDisposable>();
+    protected writeToMementoCache(values: T[], cacheKey: string) {
+        this.timeouts.get(cacheKey)?.dispose();
+        // This can get called very quickly and very often.
+        const timer = setTimeout(() => {
+            void this.memento.update(
+                cacheKey,
+                JSON.stringify({
+                    kernels: values.map((item) => item.toJSON()),
+                    extensionVersion: this.env.extensionVersion
+                })
+            );
+        }, 500);
+        this.timeouts.set(cacheKey, { dispose: () => once(clearTimeout)(timer) });
     }
     protected async isValidCachedKernel(kernel: LocalKernelConnectionMetadata): Promise<boolean> {
         switch (kernel.kind) {
