@@ -281,7 +281,7 @@ export abstract class LocalKernelSpecFinderBase<
         return promise;
     }
     private timeouts = new Map<string, IDisposable>();
-    protected async writeToMementoCache(values: T[], cacheKey: string) {
+    protected writeToMementoCache(values: T[], cacheKey: string) {
         this.timeouts.get(cacheKey)?.dispose();
         // This can get called very quickly and very often.
         const timer = setTimeout(() => {
