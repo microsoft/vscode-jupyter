@@ -43,6 +43,7 @@ import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { createDeferred } from '../../platform/common/utils/async';
+import { CellFailureDiagnostics } from './cellFailureDiagnostics';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -102,6 +103,7 @@ export class CellExecutionMessageHandler implements IDisposable {
      */
     private clearOutputOnNextUpdateToOutput?: boolean;
 
+    private failureDiagostics = new CellFailureDiagnostics();
     private execution?: NotebookCellExecution;
     private readonly _onErrorHandlingIOPubMessage = new EventEmitter<{
         error: Error;
@@ -1071,6 +1073,8 @@ export class CellExecutionMessageHandler implements IDisposable {
             evalue: msg.content.evalue,
             traceback
         };
+
+        this.failureDiagostics.addFailureDiagnostic(traceback, msg, this.cell);
 
         this.addToCellData(output, msg);
         this.cellHasErrorsInOutput = true;
