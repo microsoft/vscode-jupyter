@@ -36,6 +36,7 @@ import { getOSType, OSType } from '../common/utils/platform';
 import { SemVer } from 'semver';
 import {
     getCachedEnvironment,
+    getCachedEnvironments,
     getCachedVersion,
     getEnvironmentType,
     getPythonEnvironmentName,
@@ -337,6 +338,9 @@ export class InterpreterService implements IInterpreterService {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
     }
+    public initialize() {
+        this.hookupOnDidChangeInterpreterEvent();
+    }
     public async resolveEnvironment(id: string | Environment): Promise<ResolvedEnvironment | undefined> {
         return this.getApi().then((api) => {
             if (!api) {
@@ -612,13 +616,19 @@ export class InterpreterService implements IInterpreterService {
                                 return;
                             }
                             const info = resolvedPythonEnvToJupyterEnv(getCachedEnvironment(e.env));
-                            if (e.type === 'update' && info) {
+                            if (info) {
                                 this.triggerEventIfAllowed('interpreterChangeEvent', info);
                                 this.triggerEventIfAllowed('interpretersChangeEvent', info);
                             }
                         },
                         this,
                         this.disposables
+                    );
+                    this.didChangeInterpreters.fire(
+                        getCachedEnvironments()
+                            .map(resolvedPythonEnvToJupyterEnv)
+                            .filter((e) => !!e)
+                            .map((e) => e as PythonEnvironment)
                     );
                 }
             })
