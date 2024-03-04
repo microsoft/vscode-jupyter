@@ -21,10 +21,7 @@ import {
     NotebookEdit,
     NotebookCellOutputItem,
     Disposable,
-    window,
-    languages,
-    DiagnosticSeverity,
-    Position
+    window
 } from 'vscode';
 
 import type { Kernel } from '@jupyterlab/services';
@@ -46,6 +43,7 @@ import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { createDeferred } from '../../platform/common/utils/async';
+import { CellFailureDiagnostics } from './cellFailureDiagnostics';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -105,6 +103,7 @@ export class CellExecutionMessageHandler implements IDisposable {
      */
     private clearOutputOnNextUpdateToOutput?: boolean;
 
+    private failureDiagostics = new CellFailureDiagnostics();
     private execution?: NotebookCellExecution;
     private readonly _onErrorHandlingIOPubMessage = new EventEmitter<{
         error: Error;
@@ -1075,62 +1074,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             traceback
         };
 
-        const cellRegex =
-            /(?<prefix>Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*)(?<lineLabel>line (?<lineNumber>\d+)).*/;
-        // older versions of IPython ~8.3.0
-        const inputRegex =
-            /(?<prefix>Input\s+?(?:\u001b\[.+?m)(?<cellLabel>In\s*\[(?<executionCount>\d+)\]))(?<postfix>.*)/;
-        let lineNumber: number | undefined = undefined;
-        let executionCount: number | undefined = undefined;
-        for (const line of traceback) {
-            const lineMatch = cellRegex.exec(line) ?? inputRegex.exec(line);
-            if (lineMatch && lineMatch.groups) {
-                lineNumber = parseInt(lineMatch.groups['lineNumber']);
-                executionCount = parseInt(lineMatch.groups['executionCount']);
-                break;
-            }
-        }
-
-        if (lineNumber && msg.content.ename !== 'KeyboardInterrupt') {
-            const diagnostics = languages.createDiagnosticCollection('cellFailure');
-            diagnostics.set(this.cell.document.uri, [
-                {
-                    code: '',
-                    message: `${msg.content.ename}: ${msg.content.evalue}`,
-                    range: new Range(new Position(lineNumber - 1, 0), new Position(lineNumber - 1, 5)),
-                    severity: DiagnosticSeverity.Error,
-                    source: 'Cell Execution Failure',
-                    relatedInformation: []
-                }
-            ]);
-
-            let listeners: IDisposable[] = [];
-            listeners.push(
-                workspace.onDidChangeNotebookDocument((e) => {
-                    if (e.notebook.uri.toString() === this.cell.notebook.uri.toString()) {
-                        for (const cellChange of e.cellChanges) {
-                            if (
-                                cellChange.cell.document.uri.toString() === this.cell.document.uri.toString() &&
-                                cellChange.executionSummary?.executionOrder &&
-                                cellChange.executionSummary.executionOrder !== executionCount
-                            ) {
-                                diagnostics.clear();
-                                listeners.forEach((l) => l.dispose());
-                            }
-                        }
-                    }
-                })
-            );
-
-            listeners.push(
-                workspace.onDidChangeTextDocument((e) => {
-                    if (e.document.uri.toString() === this.cell.document.uri.toString()) {
-                        diagnostics.clear();
-                        listeners.forEach((l) => l.dispose());
-                    }
-                })
-            );
-        }
+        this.failureDiagostics.addFailureDiagnostic(traceback, msg, this.cell);
 
         this.addToCellData(output, msg);
         this.cellHasErrorsInOutput = true;
