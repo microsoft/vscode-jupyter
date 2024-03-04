@@ -132,7 +132,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
 
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
-    setSharedProperty('isInsiderExtension', isPreReleaseVersion());
+    setSharedProperty('isInsiderExtension', isPreReleaseVersion() ? 'true' : 'false');
 
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(
