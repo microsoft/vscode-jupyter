@@ -28,6 +28,7 @@ import {
     ProductType
 } from './installer/types';
 import { InterpreterPackages } from './interpreterPackages.node';
+import { PythonApiInitialization } from './pythonApiInitialization';
 import { PythonEnvironmentQuickPickItemProvider } from './pythonEnvironmentQuickPickProvider.node';
 import { PythonExecutionFactory } from './pythonExecutionFactory.node';
 import { ReservedNamedProvider } from './reservedNamedProvider.node';
@@ -48,6 +49,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         WorkspaceInterpreterTracker
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PythonApiInitialization
     );
     serviceManager.addSingleton<IWorkspaceInterpreterTracker>(
         IWorkspaceInterpreterTracker,

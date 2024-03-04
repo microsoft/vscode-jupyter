@@ -205,6 +205,10 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
     }
     private async listKernelSpecsImpl() {
         const cancelToken = this.cancelToken.token;
+        const sysPrefix = getCachedSysPrefix(this.interpreter);
+        if (!sysPrefix) {
+            return;
+        }
 
         traceVerbose(`Search for KernelSpecs in Interpreter ${getDisplayPath(this.interpreter.uri)}`);
 

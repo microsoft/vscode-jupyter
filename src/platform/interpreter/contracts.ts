@@ -19,6 +19,13 @@ export interface IInterpreterService {
     onDidChangeInterpreters: Event<PythonEnvironment[]>;
     onDidRemoveInterpreter: Event<{ id: string }>;
     refreshInterpreters(forceRefresh?: boolean): Promise<void>;
+    /**
+     * Hook up the Python API to the interpreter service.
+     * This is used to ensure that we listen to the Python API
+     * events and the like.
+     * Without this, we will never know about Python envs
+     */
+    initialize(): void;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     /**
      * Gets the details of a Python Environment
