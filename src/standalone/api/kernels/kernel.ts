@@ -147,9 +147,6 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     }
     private readonly _onDidRecieveDisplayUpdate = this._register(new EventEmitter<NotebookCellOutput>());
     public get onDidRecieveDisplayUpdate(): Event<NotebookCellOutput> {
-        if (![JVSC_EXTENSION_ID].includes(this.extensionId)) {
-            throw new Error(`Proposed API is not supported for extension ${this.extensionId}`);
-        }
         return this._onDidRecieveDisplayUpdate.event;
     }
     constructor(
@@ -188,7 +185,13 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 return that.kernel.status;
             },
             onDidChangeStatus: that.onDidChangeStatus.bind(this),
-            onDidRecieveDisplayUpdate: this.onDidRecieveDisplayUpdate.bind(this),
+            get onDidRecieveDisplayUpdate() {
+                if (![JVSC_EXTENSION_ID].includes(extensionId)) {
+                    throw new Error(`Proposed API is not supported for extension ${extensionId}`);
+                }
+
+                return that.onDidRecieveDisplayUpdate.bind(this);
+            },
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
             executeChatCode: (
                 code: string,
