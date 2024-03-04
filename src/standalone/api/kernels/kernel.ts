@@ -29,7 +29,7 @@ import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { once } from '../../../platform/common/utils/events';
 import { traceVerbose } from '../../../platform/logging';
-import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { JUPYTER_POWERTOYS_EXTENSION_ID, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/generator';
 import {
     isDisplayIdTrackedForExtension,
@@ -147,7 +147,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     }
     private readonly _onDidRecieveDisplayUpdate = this._register(new EventEmitter<NotebookCellOutput>());
     public get onDidRecieveDisplayUpdate(): Event<NotebookCellOutput> {
-        if (![JVSC_EXTENSION_ID].includes(this.extensionId)) {
+        if (![JVSC_EXTENSION_ID, JUPYTER_POWERTOYS_EXTENSION_ID].includes(this.extensionId)) {
             throw new Error(`Proposed API is not supported for extension ${this.extensionId}`);
         }
         return this._onDidRecieveDisplayUpdate.event;
