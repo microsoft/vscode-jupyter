@@ -57,14 +57,6 @@ export class Extensions implements IExtensions {
                 const extensionFolderName =
                     indexOfJupyterExtFolder === -1 ? undefined : folderParts[indexOfJupyterExtFolder - 1];
 
-                // We're just after the extensions folder.
-                let extensionPathFromFrames = frames.find((frame) => frame.includes(JVSC_EXTENSION_ID));
-                if (extensionPathFromFrames) {
-                    extensionPathFromFrames = extensionPathFromFrames.substring(
-                        0,
-                        extensionPathFromFrames.indexOf(JVSC_EXTENSION_ID) - 1
-                    );
-                }
                 parseStack(new Error('Ex')).forEach((item) => {
                     const fileName = item.getFileName();
                     if (fileName && !fileName.toLowerCase().startsWith(jupyterExtRoot)) {
@@ -82,14 +74,23 @@ export class Extensions implements IExtensions {
                         return { extensionId: matchingExt.id, displayName: matchingExt.packageJSON.displayName };
                     }
                 }
+                // We're just after the extensions folder.
+                let extensionPathFromFrames = frames.find((frame) => frame.includes(JVSC_EXTENSION_ID));
+                if (extensionPathFromFrames) {
+                    extensionPathFromFrames = extensionPathFromFrames.substring(
+                        0,
+                        extensionPathFromFrames.indexOf(JVSC_EXTENSION_ID) - 1
+                    );
+                }
+
                 if (!extensionFolderName || !extensionPathFromFrames) {
                     return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
                 }
                 // Possible Jupyter extension root is ~/.vscode-server-insiders/extensions/ms-toolsai.jupyter-2024.3.0
                 // But call stack has paths such as ~/.vscode-insiders/extensions/ms-toolsai.vscode-jupyter-powertoys-0.1.0/out/main.js
-                for (const frame of frames.filter(
-                    (f) => f.startsWith(extensionPathFromFrames) && !f.includes(JVSC_EXTENSION_ID)
-                )) {
+                for (const frame of frames.filter((f) => {
+                    return f.startsWith(extensionPathFromFrames!) && !f.includes(JVSC_EXTENSION_ID);
+                })) {
                     let extensionIdInFrame = frame
                         .substring(extensionPathFromFrames.length)
                         .substring(1)
