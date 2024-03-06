@@ -22,7 +22,7 @@ import { DisplayOptions } from '../kernels/displayOptions';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
-import { traceInfo, traceVerbose } from '../platform/logging';
+import { traceError, traceInfo, traceVerbose } from '../platform/logging';
 import { INotebookEditorProvider } from './types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
@@ -76,10 +76,15 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             commands.registerCommand(
                 Commands.RestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
-                    if (context && 'notebookEditor' in context) {
-                        return this.restartKernel(context?.notebookEditor?.notebookUri).catch(noop);
-                    } else {
-                        return this.restartKernel(context).catch(noop);
+                    try {
+                        if (context && 'notebookEditor' in context) {
+                            return this.restartKernel(context?.notebookEditor?.notebookUri).catch(noop);
+                        } else {
+                            return this.restartKernel(context).catch(noop);
+                        }
+                    } catch (ex) {
+                        traceError(`Failed to restart kernel`, context, ex);
+                        throw ex;
                     }
                 }
             )
