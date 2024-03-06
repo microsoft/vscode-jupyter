@@ -25,12 +25,10 @@ export class Extensions implements IExtensions {
     public determineExtensionFromCallStack(stack?: string): { extensionId: string; displayName: string } {
         stack = stack || new Error().stack;
         try {
+            const jupyterExtRoot = extensions.getExtension(JVSC_EXTENSION_ID)!.extensionUri.toString().toLowerCase();
+            let frames: string[] = [];
             if (stack) {
-                const jupyterExtRoot = extensions
-                    .getExtension(JVSC_EXTENSION_ID)!
-                    .extensionUri.toString()
-                    .toLowerCase();
-                const frames = stack
+                frames = stack
                     .split('\n')
                     .map((f) => {
                         const result = /\((.*)\)/.exec(f);
@@ -104,7 +102,9 @@ export class Extensions implements IExtensions {
                     }
                 }
             }
-            traceError(`Unable to determine the caller of the extension API for trace stack.`, stack);
+            traceError(`Unable to determine the caller of the extension API for trace stack`, stack);
+            traceError(`Jupyter Root`, jupyterExtRoot);
+            traceError(`Frames`, frames);
             return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
         } catch (ex) {
             traceError(`Unable to determine the caller of the extension API for trace stack.`, stack);
