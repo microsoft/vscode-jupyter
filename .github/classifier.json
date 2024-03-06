@@ -32,5 +32,6 @@
         "user-setup": {"assign": ["DonJayamanne"]},
         "variable-explorer": {"assign": ["amunger"]},
         "zmq": {"assign": ["DonJayamanne"]}
-    }
+    },
+	"randomAssignment": true
 }
