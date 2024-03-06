@@ -26,7 +26,8 @@ import { ObservableDisposable } from '../../../platform/common/utils/lifecycle';
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
-export class ContributedLocalKernelSpecFinder extends ObservableDisposable
+export class ContributedLocalKernelSpecFinder
+    extends ObservableDisposable
     implements IContributedKernelFinder<LocalKernelConnectionMetadata>, IExtensionSyncActivationService
 {
     private _status: 'discovering' | 'idle' = 'idle';
