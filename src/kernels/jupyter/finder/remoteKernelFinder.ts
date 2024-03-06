@@ -22,7 +22,7 @@ import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
-import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
+import { ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
@@ -42,7 +42,7 @@ export type CacheDataFormat = {
 };
 
 // This class watches a single jupyter server URI and returns kernels from it
-export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelFinder {
+export class RemoteKernelFinder extends ObservableDisposable implements IRemoteKernelFinder {
     private _status: 'discovering' | 'idle' = 'idle';
     public get status() {
         return this._status;
