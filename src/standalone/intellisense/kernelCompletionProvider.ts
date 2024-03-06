@@ -418,8 +418,6 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
                 ) {
                     return;
                 }
-                this.completionProvider?.dispose();
-                this.completionProvider = undefined;
                 this.registerCompletionProvider();
             })
         );
@@ -441,6 +439,8 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
             )} for language ${this.monacoLanguage}`
         );
         this.allowStringFilterForPython = triggerCharacters.includes("'") || triggerCharacters.includes('"');
+        this.completionProvider?.dispose();
+        this.completionProvider = undefined;
         this.completionProvider = languages.registerCompletionItemProvider(
             this.monacoLanguage,
             this,
