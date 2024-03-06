@@ -20,12 +20,13 @@ import { getKernelRegistrationInfo, isUserRegisteredKernelSpecConnection } from 
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { ObservableDisposable } from '../../../platform/common/utils/lifecycle';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
-export class ContributedLocalKernelSpecFinder
+export class ContributedLocalKernelSpecFinder extends ObservableDisposable
     implements IContributedKernelFinder<LocalKernelConnectionMetadata>, IExtensionSyncActivationService
 {
     private _status: 'discovering' | 'idle' = 'idle';
@@ -64,6 +65,8 @@ export class ContributedLocalKernelSpecFinder
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService
     ) {
+        super();
+        this.disposables.push(this);
         kernelFinder.registerKernelFinder(this);
         this.disposables.push(this._onDidChangeStatus);
         this.disposables.push(this._onDidChangeKernels);

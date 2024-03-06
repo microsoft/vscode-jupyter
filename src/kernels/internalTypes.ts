@@ -3,6 +3,7 @@
 
 import { Event } from 'vscode';
 import { KernelConnectionMetadata } from './types';
+import type { ObservableDisposable } from '../platform/common/utils/lifecycle';
 
 export enum ContributedKernelFinderKind {
     Remote = 'remote',
@@ -10,7 +11,7 @@ export enum ContributedKernelFinderKind {
     LocalPythonEnvironment = 'localPythonEnvironment'
 }
 
-export interface IContributedKernelFinder<T extends KernelConnectionMetadata = KernelConnectionMetadata> {
+export interface IContributedKernelFinder<T extends KernelConnectionMetadata = KernelConnectionMetadata> extends ObservableDisposable {
     readonly status: 'discovering' | 'idle';
     onDidChangeStatus: Event<void>;
     /**
