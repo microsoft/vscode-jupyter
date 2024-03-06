@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/microsoft/vscode-github-triage-actions/stable/classifier/apply/apply-labels/classifier-config.schema.json",
-    "labels": {
+	"labels": {
         "accessibility": {"assign": ["amunger"]},
         "api-proposal": {"assign": ["DonJayamanne"]},
         "data-viewer": {"assign": ["amunger"]},
@@ -33,5 +33,5 @@
         "variable-explorer": {"assign": ["amunger"]},
         "zmq": {"assign": ["DonJayamanne"]}
     },
-    "randomAssignment": true
+	"randomAssignment": true
 }
