@@ -23,7 +23,6 @@ import { IDisposable } from '../../platform/common/types';
 import { NotebookMetadata } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
-import { uriEquals } from '../../test/datascience/helpers';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { PreferredKernelConnectionService } from './preferredKernelConnectionService';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
@@ -185,7 +184,7 @@ suite('Preferred Kernel Connection', () => {
     teardown(() => (disposables = dispose(disposables)));
     suite('Live Remote Kernels (preferred match)', () => {
         test('Find preferred kernel spec if there is no exact match for the live kernel connection (match kernel spec name)', async () => {
-            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
+            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(notebook)).thenResolve(
                 remoteLiveKernelConnection2.id
             );
             when(remoteKernelFinder.status).thenReturn('idle');
@@ -201,7 +200,7 @@ suite('Preferred Kernel Connection', () => {
             assert.strictEqual(preferredKernel, remoteJavaKernelSpec);
         });
         test('Find preferred kernel spec if there is no exact match for the live kernel connection (match kernel spec language)', async () => {
-            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
+            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(notebook)).thenResolve(
                 remoteLiveKernelConnection2.id
             );
             when(remoteKernelFinder.status).thenReturn('idle');

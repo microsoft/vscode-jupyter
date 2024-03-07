@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookDocument, workspace } from 'vscode';
+import { NotebookDocument } from 'vscode';
 import { isPythonNotebook } from '../../../kernels/helpers';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import {
@@ -10,11 +10,10 @@ import {
     PYTHON_LANGUAGE,
     isWebExtension
 } from '../../../platform/common/constants';
-import { IDisposableRegistry, Resource } from '../../../platform/common/types';
+import { IDisposableRegistry } from '../../../platform/common/types';
 import { getNotebookMetadata } from '../../../platform/common/utils';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceInfoIfCI, traceDecoratorVerbose, traceError } from '../../../platform/logging';
-import { isEqual } from '../../../platform/vscode-path/resources';
 import { createActiveInterpreterController } from './helpers';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
@@ -43,18 +42,14 @@ export class ControllerDefaultService {
         return ControllerDefaultService._instance;
     }
     public async computeDefaultController(
-        resource: Resource,
+        notebook: NotebookDocument | undefined,
         viewType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): Promise<IVSCodeNotebookController | undefined> {
         if (!IS_REMOTE_NATIVE_TEST() && this.interpreters) {
             traceInfoIfCI('CreateActiveInterpreterController');
-            return createActiveInterpreterController(viewType, resource, this.interpreters, this.registration);
+            return createActiveInterpreterController(viewType, notebook?.uri, this.interpreters, this.registration);
         } else {
             traceInfoIfCI('CreateDefaultRemoteController');
-            const notebook =
-                viewType === JupyterNotebookView
-                    ? workspace.notebookDocuments.find((item) => isEqual(item.uri, resource, true))
-                    : undefined;
             const controller = await this.createDefaultRemoteController(viewType, notebook);
             // If we're running on web, there is no active interpreter to fall back to
             if (controller || isWebExtension()) {
@@ -78,7 +73,7 @@ export class ControllerDefaultService {
         const kernelName = metadata ? metadata.kernelspec?.name : undefined;
         const preferredRemoteKernelId =
             notebook && this.preferredRemoteFinder
-                ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(notebook.uri)
+                ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(notebook)
                 : undefined;
 
         if (preferredRemoteKernelId) {
