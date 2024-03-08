@@ -1074,7 +1074,10 @@ export class CellExecutionMessageHandler implements IDisposable {
             traceback
         };
 
-        this.failureDiagostics.addFailureDiagnostic(traceback, msg, this.cell);
+        const cellExecution = CellExecutionCreator.get(this.cell);
+        if (cellExecution) {
+            cellExecution.errorLocation = this.failureDiagostics.parseStackTrace(traceback, this.cell).range;
+        }
 
         this.addToCellData(output, msg);
         this.cellHasErrorsInOutput = true;

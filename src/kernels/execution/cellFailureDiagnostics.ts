@@ -65,7 +65,7 @@ export class CellFailureDiagnostics {
         );
     }
 
-    private parseStackTrace(traceback: string[], cell: NotebookCell) {
+    public parseStackTrace(traceback: string[], cell: NotebookCell) {
         const cellRegex =
             /(?<prefix>Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*)(?<lineLabel>line (?<lineNumber>\d+)).*/;
         // older versions of IPython ~8.3.0
