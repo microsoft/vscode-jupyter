@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import { JupyterVariablesProvider } from './JupyterVariablesProvider';
-import { NotebookDocument, CancellationTokenSource, VariablesResult, Variable } from 'vscode';
+import { NotebookDocument, CancellationTokenSource, VariablesResult, Variable, Uri } from 'vscode';
 import { mock, instance, when, anything, verify, objectContaining } from 'ts-mockito';
 import { IKernelProvider, IKernel } from '../types';
 import { IJupyterVariables, IVariableDescription } from './types';
@@ -15,7 +15,7 @@ suite('JupyterVariablesProvider', () => {
     const notebook = mock<NotebookDocument>();
     const cancellationToken = new CancellationTokenSource().token;
     const kernel = mock<IKernel>();
-    let kernelChangeHandler: (nb: NotebookDocument) => void;
+    let kernelChangeHandler: ({ kernel }: { kernel: IKernel }) => void;
 
     const objectVariable: IVariableDescription = {
         name: 'myObject',
@@ -268,6 +268,8 @@ suite('JupyterVariablesProvider', () => {
             variablesChangedForNotebooks.push(e.uri.toString());
         });
 
-        kernelChangeHandler({ uri: { toString: () => 'uri1' } } as NotebookDocument);
+        kernelChangeHandler({
+            kernel: { status: 'restarting', notebook: { uri: Uri.file('test.ipynb') } as NotebookDocument } as IKernel
+        });
     });
 });
