@@ -36,9 +36,6 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
         } else if (kernel.status !== 'busy' && this.wasIdle) {
             this.wasIdle = false;
             this._onDidChangeVariables.fire(kernel.notebook);
-        } else {
-            // kernel is busy or unchanged, so don't fire the event
-            this.wasIdle = false;
         }
     }
 

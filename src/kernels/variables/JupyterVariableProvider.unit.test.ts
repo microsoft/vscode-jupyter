@@ -15,6 +15,7 @@ suite('JupyterVariablesProvider', () => {
     const notebook = mock<NotebookDocument>();
     const cancellationToken = new CancellationTokenSource().token;
     const kernel = mock<IKernel>();
+    let kernelChangeHandler: (nb: NotebookDocument) => void;
 
     const objectVariable: IVariableDescription = {
         name: 'myObject',
@@ -69,7 +70,10 @@ suite('JupyterVariablesProvider', () => {
     setup(() => {
         variables = mock<IJupyterVariables>();
         kernelProvider = mock<IKernelProvider>();
-        provider = new JupyterVariablesProvider(instance(variables), instance(kernelProvider));
+        when(kernelProvider.onKernelStatusChanged).thenCall((handler) => {
+            kernelChangeHandler = handler;
+        });
+        provider = new JupyterVariablesProvider(instance(variables), instance(kernelProvider), []);
         when(kernelProvider.get(anything())).thenReturn(instance(kernel));
     });
 
@@ -256,5 +260,14 @@ suite('JupyterVariablesProvider', () => {
 
         // no extra calls for getting the children again
         verify(variables.getAllVariableDiscriptions(anything(), anything(), anything(), anything())).thrice();
+    });
+
+    test('Kernel restart should trigger variable changes', async () => {
+        let variablesChangedForNotebooks: string[] = [];
+        provider.onDidChangeVariables((e) => {
+            variablesChangedForNotebooks.push(e.uri.toString());
+        });
+
+        kernelChangeHandler({ uri: { toString: () => 'uri1' } } as NotebookDocument);
     });
 });
