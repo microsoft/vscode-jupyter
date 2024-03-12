@@ -13,17 +13,37 @@ import {
 import { IJupyterVariables, IVariableDescription } from './types';
 import { IKernel, IKernelProvider } from '../types';
 import { VariableResultCache } from './variableResultCache';
+import { IDisposable } from '../../platform/common/types';
 
 export class JupyterVariablesProvider implements NotebookVariableProvider {
     private variableResultCache = new VariableResultCache();
+    private runningKernels = new Set<string>();
 
     _onDidChangeVariables = new EventEmitter<NotebookDocument>();
     onDidChangeVariables = this._onDidChangeVariables.event;
 
     constructor(
         private readonly variables: IJupyterVariables,
-        private readonly kernelProvider: IKernelProvider
-    ) {}
+        private readonly kernelProvider: IKernelProvider,
+        private readonly controllerId: string,
+        disposables: IDisposable[]
+    ) {
+        disposables.push(this.kernelProvider.onKernelStatusChanged(this.onKernelStatusChanged, this));
+    }
+
+    private onKernelStatusChanged({ kernel }: { kernel: IKernel }) {
+        if (kernel.controller.id !== this.controllerId) {
+            return;
+        }
+
+        const kernelWasRunning = this.runningKernels.has(kernel.notebook.uri.toString());
+        if (kernel.status === 'idle' && !kernelWasRunning) {
+            this.runningKernels.add(kernel.notebook.uri.toString());
+        } else if (kernel.status !== 'busy' && kernel.status !== 'idle' && kernelWasRunning) {
+            this.runningKernels.delete(kernel.notebook.uri.toString());
+            this._onDidChangeVariables.fire(kernel.notebook);
+        }
+    }
 
     async *provideVariables(
         notebook: NotebookDocument,
@@ -36,7 +56,7 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
             return;
         }
         const kernel = this.kernelProvider.get(notebook);
-        if (!kernel) {
+        if (!kernel || kernel.status === 'dead' || kernel.status === 'terminating') {
             return;
         }
 
