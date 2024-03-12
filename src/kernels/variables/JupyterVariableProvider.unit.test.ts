@@ -8,7 +8,7 @@ import { mock, instance, when, anything, verify, objectContaining } from 'ts-moc
 import { IKernelProvider, IKernel } from '../types';
 import { IJupyterVariables, IVariableDescription } from './types';
 
-suite.only('JupyterVariablesProvider', () => {
+suite('JupyterVariablesProvider', () => {
     let variables: IJupyterVariables;
     let kernelProvider: IKernelProvider;
     let kernelEventEmitter = new EventEmitter<{ status: any; kernel: IKernel }>();
