@@ -1074,7 +1074,15 @@ export class CellExecutionMessageHandler implements IDisposable {
             traceback
         };
 
-        this.failureDiagostics.addFailureDiagnostic(traceback, msg, this.cell);
+        const cellExecution = CellExecutionCreator.get(this.cell);
+        if (cellExecution && msg.content.ename !== 'KeyboardInterrupt') {
+            cellExecution.errorInfo = {
+                message: `${msg.content.ename}: ${msg.content.evalue}`,
+                location: this.failureDiagostics.parseStackTrace(traceback, this.cell).range,
+                uri: this.cell.document.uri,
+                stack: msg.content.traceback.join('\n')
+            };
+        }
 
         this.addToCellData(output, msg);
         this.cellHasErrorsInOutput = true;

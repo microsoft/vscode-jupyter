@@ -3,6 +3,7 @@
 
 import {
     CancellationToken,
+    CellExecutionError,
     NotebookCell,
     NotebookCellExecution,
     NotebookCellOutput,
@@ -21,6 +22,7 @@ import { noop } from '../../platform/common/utils/misc';
 export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     public started: boolean = false;
     private _startTime?: number;
+    public errorInfo: CellExecutionError;
     /**
      * @param {boolean} [clearOutputOnStartWithTime=false] If true, clear the output when start is called with a time.
      */
@@ -68,7 +70,7 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     end(success: boolean | undefined, endTime?: number): void {
         if (this._endCallback) {
             try {
-                this._impl.end(success, endTime);
+                this._impl.end(success, endTime, this.errorInfo);
                 traceInfo(
                     `End cell ${this.cell.index} execution after ${
                         ((endTime || 0) - (this._startTime || 0)) / 1000
