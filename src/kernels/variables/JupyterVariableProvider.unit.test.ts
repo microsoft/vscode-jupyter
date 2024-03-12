@@ -3,19 +3,19 @@
 
 import { assert } from 'chai';
 import { JupyterVariablesProvider } from './JupyterVariablesProvider';
-import { NotebookDocument, CancellationTokenSource, VariablesResult, Variable, Uri } from 'vscode';
+import { NotebookDocument, CancellationTokenSource, EventEmitter, VariablesResult, Variable, Uri } from 'vscode';
 import { mock, instance, when, anything, verify, objectContaining } from 'ts-mockito';
 import { IKernelProvider, IKernel } from '../types';
 import { IJupyterVariables, IVariableDescription } from './types';
 
-suite('JupyterVariablesProvider', () => {
+suite.only('JupyterVariablesProvider', () => {
     let variables: IJupyterVariables;
     let kernelProvider: IKernelProvider;
+    let kernelEventEmitter = new EventEmitter<{ status: any; kernel: IKernel }>();
     let provider: JupyterVariablesProvider;
     const notebook = mock<NotebookDocument>();
     const cancellationToken = new CancellationTokenSource().token;
     const kernel = mock<IKernel>();
-    let kernelChangeHandler: ({ kernel }: { kernel: IKernel }) => void;
 
     const objectVariable: IVariableDescription = {
         name: 'myObject',
@@ -70,11 +70,9 @@ suite('JupyterVariablesProvider', () => {
     setup(() => {
         variables = mock<IJupyterVariables>();
         kernelProvider = mock<IKernelProvider>();
-        when(kernelProvider.onKernelStatusChanged).thenCall((handler) => {
-            kernelChangeHandler = handler;
-        });
-        provider = new JupyterVariablesProvider(instance(variables), instance(kernelProvider), []);
+        when(kernelProvider.onKernelStatusChanged).thenReturn(kernelEventEmitter.event);
         when(kernelProvider.get(anything())).thenReturn(instance(kernel));
+        provider = new JupyterVariablesProvider(instance(variables), instance(kernelProvider), []);
     });
 
     test('provideVariables without parent should yield variables', async () => {
@@ -262,14 +260,58 @@ suite('JupyterVariablesProvider', () => {
         verify(variables.getAllVariableDiscriptions(anything(), anything(), anything(), anything())).thrice();
     });
 
+    function fireKernelStatusChange(notebook: string, status: string) {
+        kernelEventEmitter.fire({
+            status: status,
+            kernel: {
+                id: notebook,
+                status: status,
+                notebook: { uri: Uri.file(notebook) } as NotebookDocument
+            } as IKernel
+        });
+    }
+
     test('Kernel restart should trigger variable changes', async () => {
         let variablesChangedForNotebooks: string[] = [];
         provider.onDidChangeVariables((e) => {
-            variablesChangedForNotebooks.push(e.uri.toString());
+            variablesChangedForNotebooks.push(e.uri.path);
         });
 
-        kernelChangeHandler({
-            kernel: { status: 'restarting', notebook: { uri: Uri.file('test.ipynb') } as NotebookDocument } as IKernel
+        fireKernelStatusChange('/1.ipynb', 'idle');
+        fireKernelStatusChange('/1.ipynb', 'busy');
+        fireKernelStatusChange('/1.ipynb', 'idle');
+        fireKernelStatusChange('/1.ipynb', 'restarting');
+        fireKernelStatusChange('/1.ipynb', 'idle');
+
+        assert.equal(variablesChangedForNotebooks.length, 1, 'variable change event should have fired once');
+        assert.equal(variablesChangedForNotebooks[0], '/1.ipynb');
+    });
+
+    test('Kernel restart should trigger variable changes for each notebook', async () => {
+        let variablesChangedForNotebooks: string[] = [];
+        provider.onDidChangeVariables((e) => {
+            variablesChangedForNotebooks.push(e.uri.path);
         });
+
+        fireKernelStatusChange('/1.ipynb', 'idle');
+        fireKernelStatusChange('/2.ipynb', 'idle');
+
+        fireKernelStatusChange('/1.ipynb', 'autorestarting');
+        fireKernelStatusChange('/1.ipynb', 'unknown'); // extra status updates that should not trigger additional change events
+        fireKernelStatusChange('/1.ipynb', 'dead');
+        fireKernelStatusChange('/1.ipynb', 'restarting');
+
+        fireKernelStatusChange('/2.ipynb', 'restarting');
+
+        fireKernelStatusChange('/1.ipynb', 'idle');
+        fireKernelStatusChange('/2.ipynb', 'idle');
+
+        assert.equal(
+            variablesChangedForNotebooks.length,
+            2,
+            'variable change event should have fired for each restart from a healthy state'
+        );
+        assert.include(variablesChangedForNotebooks, '/1.ipynb');
+        assert.include(variablesChangedForNotebooks, '/2.ipynb');
     });
 });

@@ -17,7 +17,7 @@ import { IDisposable } from '../../platform/common/types';
 
 export class JupyterVariablesProvider implements NotebookVariableProvider {
     private variableResultCache = new VariableResultCache();
-    private wasIdle = false;
+    private runningKernels = new Set<string>();
 
     _onDidChangeVariables = new EventEmitter<NotebookDocument>();
     onDidChangeVariables = this._onDidChangeVariables.event;
@@ -31,10 +31,11 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
     }
 
     private onKernelStatusChanged({ kernel }: { kernel: IKernel }) {
-        if (kernel.status === 'idle' && !this.wasIdle) {
-            this.wasIdle = true;
-        } else if (kernel.status !== 'busy' && this.wasIdle) {
-            this.wasIdle = false;
+        const kernelWasRunning = this.runningKernels.has(kernel.id);
+        if (kernel.status === 'idle' && !kernelWasRunning) {
+            this.runningKernels.add(kernel.id);
+        } else if (kernel.status !== 'busy' && kernel.status !== 'idle' && kernelWasRunning) {
+            this.runningKernels.delete(kernel.id);
             this._onDidChangeVariables.fire(kernel.notebook);
         }
     }
