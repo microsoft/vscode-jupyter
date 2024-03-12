@@ -49,7 +49,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             original_display = set_pandas_display_options()
 
         try:
-            return truncateString(_VSCODE_builtins.str(variable))
+            return truncateString(_VSCODE_builtins.repr(variable))
         finally:
             if original_display:
                 set_pandas_display_options(original_display)
