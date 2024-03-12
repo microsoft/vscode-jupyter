@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import { JupyterVariablesProvider } from './JupyterVariablesProvider';
-import { NotebookDocument, CancellationTokenSource, EventEmitter, VariablesResult, Variable } from 'vscode';
+import { NotebookDocument, CancellationTokenSource, EventEmitter, VariablesResult, Variable, Disposable } from 'vscode';
 import { mock, instance, when, anything, verify, objectContaining } from 'ts-mockito';
 import { IKernelProvider, IKernel } from '../types';
 import { IJupyterVariables, IVariableDescription } from './types';
@@ -16,6 +16,8 @@ suite('JupyterVariablesProvider', () => {
     const notebook = mock<NotebookDocument>();
     const cancellationToken = new CancellationTokenSource().token;
     const kernel = mock<IKernel>();
+    const controllerId = '123';
+    let disposables: Disposable[] = [];
 
     const objectVariable: IVariableDescription = {
         name: 'myObject',
@@ -67,12 +69,24 @@ suite('JupyterVariablesProvider', () => {
         return results;
     }
 
+    teardown(() => {
+        for (let d of disposables) {
+            d.dispose();
+        }
+        disposables = [];
+    });
+
     setup(() => {
         variables = mock<IJupyterVariables>();
         kernelProvider = mock<IKernelProvider>();
         when(kernelProvider.onKernelStatusChanged).thenReturn(kernelEventEmitter.event);
         when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        provider = new JupyterVariablesProvider(instance(variables), instance(kernelProvider), '123', []);
+        provider = new JupyterVariablesProvider(
+            instance(variables),
+            instance(kernelProvider),
+            controllerId,
+            disposables
+        );
     });
 
     test('provideVariables without parent should yield variables', async () => {
@@ -264,7 +278,7 @@ suite('JupyterVariablesProvider', () => {
         kernelEventEmitter.fire({
             status: status,
             kernel: {
-                id: notebook,
+                controller: { id: controllerId },
                 status: status,
                 notebook: { uri: { toString: () => notebook } } as NotebookDocument
             } as IKernel
@@ -274,7 +288,7 @@ suite('JupyterVariablesProvider', () => {
     test('Kernel restart should trigger variable changes', async () => {
         let variablesChangedForNotebooks: string[] = [];
         provider.onDidChangeVariables((e) => {
-            variablesChangedForNotebooks.push(e.uri.path);
+            variablesChangedForNotebooks.push(e.uri.toString());
         });
 
         fireKernelStatusChange('/1.ipynb', 'idle');
@@ -290,7 +304,7 @@ suite('JupyterVariablesProvider', () => {
     test('Kernel restart should trigger variable changes for each notebook', async () => {
         let variablesChangedForNotebooks: string[] = [];
         provider.onDidChangeVariables((e) => {
-            variablesChangedForNotebooks.push(e.uri.path);
+            variablesChangedForNotebooks.push(e.uri.toString());
         });
 
         fireKernelStatusChange('/1.ipynb', 'idle');
@@ -313,5 +327,20 @@ suite('JupyterVariablesProvider', () => {
         );
         assert.include(variablesChangedForNotebooks, '/1.ipynb');
         assert.include(variablesChangedForNotebooks, '/2.ipynb');
+    });
+
+    test('Kernel restart are handled by only one variable provider', async () => {
+        new JupyterVariablesProvider(instance(variables), instance(kernelProvider), 'different', disposables);
+
+        let variablesChangedForNotebooks: string[] = [];
+        provider.onDidChangeVariables((e) => {
+            variablesChangedForNotebooks.push(e.uri.path);
+        });
+
+        fireKernelStatusChange('/1.ipynb', 'idle');
+        fireKernelStatusChange('/1.ipynb', 'restarting');
+        fireKernelStatusChange('/1.ipynb', 'idle');
+
+        assert.equal(variablesChangedForNotebooks.length, 1, 'variable change event should have fired once');
     });
 });
