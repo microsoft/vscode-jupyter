@@ -217,6 +217,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this.controller.variableProvider = new JupyterVariablesProvider(
                 jupyterVariables,
                 this.kernelProvider,
+                this.controller.id,
                 this.disposables
             );
         }

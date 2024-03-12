@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import { JupyterVariablesProvider } from './JupyterVariablesProvider';
-import { NotebookDocument, CancellationTokenSource, EventEmitter, VariablesResult, Variable, Uri } from 'vscode';
+import { NotebookDocument, CancellationTokenSource, EventEmitter, VariablesResult, Variable } from 'vscode';
 import { mock, instance, when, anything, verify, objectContaining } from 'ts-mockito';
 import { IKernelProvider, IKernel } from '../types';
 import { IJupyterVariables, IVariableDescription } from './types';
@@ -72,7 +72,7 @@ suite('JupyterVariablesProvider', () => {
         kernelProvider = mock<IKernelProvider>();
         when(kernelProvider.onKernelStatusChanged).thenReturn(kernelEventEmitter.event);
         when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        provider = new JupyterVariablesProvider(instance(variables), instance(kernelProvider), []);
+        provider = new JupyterVariablesProvider(instance(variables), instance(kernelProvider), '123', []);
     });
 
     test('provideVariables without parent should yield variables', async () => {
@@ -266,7 +266,7 @@ suite('JupyterVariablesProvider', () => {
             kernel: {
                 id: notebook,
                 status: status,
-                notebook: { uri: Uri.file(notebook) } as NotebookDocument
+                notebook: { uri: { toString: () => notebook } } as NotebookDocument
             } as IKernel
         });
     }
