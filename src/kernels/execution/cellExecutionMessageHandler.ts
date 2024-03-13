@@ -488,7 +488,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             //     //
             // }
             this.execution?.start(this.startTime);
-            traceInfo(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
+            traceVerbose(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
         }
 
         // eslint-disable-next-line @typescript-eslint/no-require-imports
