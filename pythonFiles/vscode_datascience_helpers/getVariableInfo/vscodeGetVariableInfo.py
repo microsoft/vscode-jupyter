@@ -61,9 +61,8 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                 props.append(prop)
         return props
 
-    def getType(variable):
+    def getFullType(varType):
         module = ""
-        varType = _VSCODE_builtins.type(variable)
         if (
             _VSCODE_builtins.hasattr(varType, "__module__")
             and varType.__module__ != "builtins"
@@ -71,12 +70,15 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             module = varType.__module__ + "."
         if _VSCODE_builtins.hasattr(varType, "__name__"):
             return module + varType.__name__
-        return ""
 
     def getVariableDescription(variable):
         result = {}
 
-        result["type"] = getType(variable)
+        varType = _VSCODE_builtins.type(variable)
+        result["type"] = getFullType(varType)
+        if hasattr(varType, "__mro__"):
+            result["satisfiesContracts"] = [getFullType(t) for t in varType.__mro__]
+
         if (
             _VSCODE_builtins.hasattr(variable, "__len__")
             and result["type"] in collectionTypes
