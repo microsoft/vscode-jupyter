@@ -23,7 +23,7 @@ suite('JupyterVariablesProvider', () => {
         name: 'myObject',
         value: '...',
         root: 'myObject',
-        properties: ['myList'],
+        hasNamedChildren: true,
         propertyChain: []
     };
 
