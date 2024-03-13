@@ -61,10 +61,22 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                 props.append(prop)
         return props
 
+    def getType(variable):
+        module = ""
+        varType = _VSCODE_builtins.type(variable)
+        if (
+            _VSCODE_builtins.hasattr(varType, "__module__")
+            and varType.__module__ != "builtins"
+        ):
+            module = varType.__module__ + "."
+        if _VSCODE_builtins.hasattr(varType, "__name__"):
+            return module + varType.__name__
+        return ""
+
     def getVariableDescription(variable):
         result = {}
 
-        result["type"] = _VSCODE_builtins.type(variable).__name__
+        result["type"] = getType(variable)
         if (
             _VSCODE_builtins.hasattr(variable, "__len__")
             and result["type"] in collectionTypes
