@@ -20,7 +20,7 @@ import {
     workspace
 } from 'vscode';
 import { raceCancellation } from '../../platform/common/cancellation';
-import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import {
     Experiments,
     IDisposable,
