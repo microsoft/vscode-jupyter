@@ -70,10 +70,11 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             and result["type"] in collectionTypes
         ):
             result["count"] = _VSCODE_builtins.len(variable)
-        if _VSCODE_builtins.hasattr(variable, "__dict__"):
-            result["properties"] = getPropertyNames(variable)
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict:
-            result["properties"] = _VSCODE_builtins.list(variable.keys())
+
+        result["hasNamedChildren"] = (
+            _VSCODE_builtins.hasattr(variable, "__dict__")
+            or _VSCODE_builtins.type(variable) == dict
+        )
 
         result["value"] = getValue(variable)
         return result
@@ -146,7 +147,13 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                     }
                     for i in range
                 ]
-        elif "properties" in parentInfo:
+        elif parentInfo["hasNamedChildren"]:
+            childrenNames = []
+            if _VSCODE_builtins.hasattr(parent, "__dict__"):
+                childrenNames = getPropertyNames(parent)
+            elif _VSCODE_builtins.type(parent) == _VSCODE_builtins.dict:
+                childrenNames = _VSCODE_builtins.list(parent.keys())
+
             children = [
                 {
                     **getVariableDescription(getChildProperty(parent, [prop])),
@@ -154,7 +161,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                     "root": rootVarName,
                     "propertyChain": propertyChain + [prop],
                 }
-                for prop in parentInfo["properties"]
+                for prop in childrenNames
             ]
 
         if is_debugging:

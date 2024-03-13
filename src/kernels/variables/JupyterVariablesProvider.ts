@@ -111,8 +111,8 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
     }
 
     private createVariableResult(result: IVariableDescription, kernel: IKernel): VariablesResult {
-        const hasNamedChildren = !!result.properties;
         const indexedChildrenCount = result.count ?? 0;
+        const hasNamedChildren = !!result.hasNamedChildren;
         const variable = {
             getChildren: (start: number, token: CancellationToken) => this.getChildren(variable, start, kernel, token),
             expression: createExpression(result.root, result.propertyChain),

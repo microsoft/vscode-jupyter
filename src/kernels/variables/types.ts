@@ -94,7 +94,7 @@ export interface IVariableDescription extends Variable {
     /** The number of children for collection types */
     count?: number;
     /** Names of children */
-    properties?: string[];
+    hasNamedChildren?: boolean;
     /** A method to get the children of this variable */
     getChildren?: (start: number, token: CancellationToken) => Promise<IVariableDescription[]>;
 }
