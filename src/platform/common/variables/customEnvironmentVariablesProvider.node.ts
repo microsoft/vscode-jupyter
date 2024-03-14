@@ -44,7 +44,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         dispose(this.disposables);
     }
 
-    @traceDecoratorVerbose('Get Custom Env Variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Get Custom Env Variables', TraceOptions.Arguments)
     public async getEnvironmentVariables(
         resource: Resource,
         purpose: 'RunPythonCode' | 'RunNonPythonCode',

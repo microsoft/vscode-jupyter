@@ -72,9 +72,9 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
             try {
                 this._impl.end(success, endTime, this.errorInfo);
                 traceInfo(
-                    `End cell ${this.cell.index} execution after ${
+                    `Cell ${this.cell.index} completed in ${
                         ((endTime || 0) - (this._startTime || 0)) / 1000
-                    }s, completed @ ${endTime}, started @ ${this._startTime}`
+                    }s (start: ${this._startTime}, end: ${endTime})`
                 );
             } finally {
                 this._endCallback();

@@ -176,11 +176,24 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
         this.cancelToken.dispose();
         this.cancelToken = this._register(new CancellationTokenSource());
         this.kernelSpecPromise = this.listKernelSpecsImpl();
-        void this.kernelSpecPromise.then(() =>
-            traceVerbose(
-                `Kernels for interpreter ${this.interpreter.id} are ${Array.from(this._kernels.keys()).join(', ')}`
-            )
-        );
+        void this.kernelSpecPromise.then(() => {
+            switch (this._kernels.size) {
+                case 0:
+                    traceVerbose(`No Kernels found in interpreter ${this.interpreter.id}`);
+                    break;
+                case 1:
+                    // Thats the default kernel we create for this interpreter.
+                    // It will be the startUsingPythonInterpreter kernel.
+                    // No need to log this, just noise. It will be an obvious entry
+                    break;
+                default:
+                    traceVerbose(
+                        `Kernels for interpreter ${this.interpreter.id} are ${Array.from(this._kernels.keys()).join(
+                            ', '
+                        )}`
+                    );
+            }
+        });
         return this.kernelSpecPromise;
     }
 
@@ -232,13 +245,13 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
                 (!jupyterKernelSpec.env || Object.keys(jupyterKernelSpec.env).length === 0) &&
                 isDefaultKernelSpec(jupyterKernelSpec)
             ) {
-                traceVerbose(
-                    `Hiding default kernel spec '${jupyterKernelSpec.display_name}', '${
-                        jupyterKernelSpec.name
-                    }', ${getDisplayPath(jupyterKernelSpec.argv[0])} for interpreter ${getDisplayPath(
-                        jupyterKernelSpec.interpreterPath
-                    )} and spec ${getDisplayPath(jupyterKernelSpec.specFile)}`
-                );
+                // traceVerbose(
+                //     `Hiding default KernelSpec '${jupyterKernelSpec.name}', ${getDisplayPath(
+                //         jupyterKernelSpec.argv[0]
+                //     )} for interpreter ${getDisplayPath(
+                //         jupyterKernelSpec.interpreterPath
+                //     )} (KernelSpec file ${getDisplayPath(jupyterKernelSpec.specFile)})`
+                // );
                 return;
             }
             const kernelSpec = isKernelLaunchedViaLocalPythonIPyKernel(jupyterKernelSpec)
@@ -567,7 +580,6 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         );
     }
     private async listKernelSpecsImpl() {
-        traceVerbose(`Finding Global Python KernelSpecs`);
         const cancelToken = this.cancelToken.token;
         const globalPythonKernelSpecs = this.listGlobalPythonKernelSpecs().filter(
             // Its impossible to have kernels registered by us that are in global.
