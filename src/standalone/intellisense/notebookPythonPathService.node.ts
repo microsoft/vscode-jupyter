@@ -15,21 +15,8 @@ import { IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { noop } from '../../platform/common/utils/misc';
 import { raceTimeout } from '../../platform/common/utils/async';
 import * as fs from 'fs-extra';
-import { getNotebookUriFromInputBoxUri } from './notebookPythonPathService';
+import { getNotebookUriFromInputBoxUri, isUsingPylance } from './notebookPythonPathService';
 
-export function isUsingPylance() {
-    const pythonConfig = workspace.getConfiguration('python');
-    const languageServer = pythonConfig?.get<string>('languageServer');
-
-    // Only enable the experiment if we're in the treatment group and the installed
-    // versions of Python and Pylance support the experiment.
-
-    if (languageServer !== 'Pylance' && languageServer !== 'Default') {
-        return false;
-    } else {
-        return true;
-    }
-}
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
  * enables us to provide the python.exe path for a notebook as required for Pylance's

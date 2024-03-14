@@ -100,7 +100,7 @@ import {
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { sendTelemetryEvent } from './telemetry';
 import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
-import { isUsingPylance } from './standalone/intellisense/notebookPythonPathService.node';
+import { isUsingPylance } from './standalone/intellisense/notebookPythonPathService';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
