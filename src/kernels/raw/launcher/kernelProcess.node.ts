@@ -221,7 +221,15 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 // Capture stderr, incase kernel doesn't start.
                 stderr += output.out;
 
-                if (output.out.trim().length) {
+                if (
+                    output.out.trim().length &&
+                    // Exclude these warning messages, as users get confused about these when sharing logs.
+                    // I.e. they assume that issues in Jupyter ext are due to these warnings messages from ipykernel.
+                    !output.out.includes('It seems that frozen modules are being used, which may') &&
+                    !output.out.includes('make the debugger miss breakpoints. Please pass -Xfrozen_modules=off') &&
+                    !output.out.includes('to python to disable frozen modules') &&
+                    !output.out.includes('Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION')
+                ) {
                     traceWarning(`StdErr from Kernel Process ${output.out.trim()}`);
                 }
             } else {
