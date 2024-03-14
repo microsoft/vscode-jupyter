@@ -58,5 +58,6 @@
     "mochaExplorer.files": "./out/test/**/*.unit.test.js",
     "mochaExplorer.configFile": "./build/.mocha.unittests.js.json",
     "mochaExplorer.ui": "tdd",
-    "mochaExplorer.nodeArgv": ["--enable-source-maps"]
+    "mochaExplorer.nodeArgv": ["--enable-source-maps"],
+    "testExplorer.useNativeTesting": true
 }
