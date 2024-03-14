@@ -12,9 +12,6 @@ export interface ILanguageServerFolder {
 
 export interface INotebookLanguageClient {
     registerJupyterPythonPathFunction(func: (uri: vscode.Uri) => Promise<string | undefined>): void;
-    registerGetNotebookUriForTextDocumentUriFunction(
-        func: (textDocumentUri: vscode.Uri) => vscode.Uri | undefined
-    ): void;
     getCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
