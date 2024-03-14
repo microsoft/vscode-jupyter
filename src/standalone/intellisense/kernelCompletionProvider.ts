@@ -20,7 +20,7 @@ import {
     workspace
 } from 'vscode';
 import { raceCancellation } from '../../platform/common/cancellation';
-import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import {
     Experiments,
     IDisposable,
@@ -433,7 +433,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
             return;
         }
 
-        traceInfo(
+        traceVerbose(
             `Registering Kernel Completion Provider from kernel ${getDisplayNameOrNameOfKernelConnection(
                 this.kernel.kernelConnectionMetadata
             )} for language ${this.monacoLanguage}`

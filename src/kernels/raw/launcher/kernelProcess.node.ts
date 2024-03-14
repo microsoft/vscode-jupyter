@@ -165,7 +165,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         if (cancelToken.isCancellationRequested) {
             throw new CancellationError();
         }
-        traceInfo(`Kernel process ${proc?.pid}.`);
+        traceVerbose(`Kernel process ${proc?.pid}.`);
         let stdout = '';
         let stderr = '';
         let stderrProc = '';
@@ -346,7 +346,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             return;
         }
         const pid = this._process?.pid;
-        traceInfo(`Dispose Kernel process ${pid}.`);
+        traceVerbose(`Dispose Kernel process ${pid}.`);
         this._disposingPromise = (async () => {
             await raceTimeout(
                 1_000, // Wait for a max of 1s, we don't want to delay killing the kernel process.
