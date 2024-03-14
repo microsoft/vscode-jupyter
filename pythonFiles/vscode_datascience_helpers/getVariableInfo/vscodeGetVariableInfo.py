@@ -57,7 +57,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     def getPropertyNames(variable):
         props = []
         for prop in _VSCODE_builtins.dir(variable):
-            if not prop.startswith("__"):
+            if not prop.startswith("_"):
                 props.append(prop)
         return props
 
@@ -70,33 +70,38 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             and result["type"] in collectionTypes
         ):
             result["count"] = _VSCODE_builtins.len(variable)
-        if _VSCODE_builtins.hasattr(variable, "__dict__"):
-            result["properties"] = getPropertyNames(variable)
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict:
-            result["properties"] = _VSCODE_builtins.list(variable.keys())
+
+        result["hasNamedChildren"] = (
+            _VSCODE_builtins.hasattr(variable, "__dict__")
+            or _VSCODE_builtins.type(variable) == dict
+        )
 
         result["value"] = getValue(variable)
         return result
 
     def getChildProperty(root, propertyChain):
-        variable = root
-        for property in propertyChain:
-            if _VSCODE_builtins.type(property) == _VSCODE_builtins.int:
-                if _VSCODE_builtins.hasattr(variable, "__getitem__"):
+        try:
+            variable = root
+            for property in propertyChain:
+                if _VSCODE_builtins.type(property) == _VSCODE_builtins.int:
+                    if _VSCODE_builtins.hasattr(variable, "__getitem__"):
+                        variable = variable[property]
+                    elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.set:
+                        variable = _VSCODE_builtins.list(variable)[property]
+                    else:
+                        return None
+                elif _VSCODE_builtins.hasattr(variable, property):
+                    variable = getattr(variable, property)
+                elif (
+                    _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict
+                    and property in variable
+                ):
                     variable = variable[property]
-                elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.set:
-                    variable = _VSCODE_builtins.list(variable)[property]
                 else:
                     return None
-            elif _VSCODE_builtins.hasattr(variable, property):
-                variable = getattr(variable, property)
-            elif (
-                _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict
-                and property in variable
-            ):
-                variable = variable[property]
-            else:
-                return None
+        except Exception:
+            return None
+
         return variable
 
     ### Get info on variables at the root level
@@ -146,16 +151,27 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                     }
                     for i in range
                 ]
-        elif "properties" in parentInfo:
-            children = [
-                {
-                    **getVariableDescription(getChildProperty(parent, [prop])),
-                    "name": prop,
-                    "root": rootVarName,
-                    "propertyChain": propertyChain + [prop],
-                }
-                for prop in parentInfo["properties"]
-            ]
+        elif parentInfo["hasNamedChildren"]:
+            childrenNames = []
+            if _VSCODE_builtins.hasattr(parent, "__dict__"):
+                childrenNames = getPropertyNames(parent)
+            elif _VSCODE_builtins.type(parent) == _VSCODE_builtins.dict:
+                childrenNames = _VSCODE_builtins.list(parent.keys())
+
+            children = []
+            for prop in childrenNames:
+                child_property = getChildProperty(parent, [prop])
+                if (
+                    child_property is not None
+                    and _VSCODE_builtins.type(child_property).__name__ != "method"
+                ):
+                    child = {
+                        **getVariableDescription(child_property),
+                        "name": prop,
+                        "root": rootVarName,
+                        "propertyChain": propertyChain + [prop],
+                    }
+                    children.append(child)
 
         if is_debugging:
             return _VSCODE_json.dumps(children)
