@@ -68,7 +68,9 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             and varType.__module__ != "builtins"
         ):
             module = varType.__module__ + "."
-        if _VSCODE_builtins.hasattr(varType, "__name__"):
+        if _VSCODE_builtins.hasattr(varType, "__qualname__"):
+            return module + varType.__qualname__
+        elif _VSCODE_builtins.hasattr(varType, "__name__"):
             return module + varType.__name__
 
     def getVariableDescription(variable):
