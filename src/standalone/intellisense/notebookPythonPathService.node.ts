@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, extensions, Uri, workspace, window } from 'vscode';
+import { Disposable, extensions, Uri, window } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
