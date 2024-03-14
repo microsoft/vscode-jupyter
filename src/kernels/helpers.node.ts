@@ -54,7 +54,6 @@ export async function sendTelemetryForPythonKernelExecutable(
     } catch (ex) {
         traceError(`Failed to compare interpreters after ${stopWatch.elapsedTime}ms`, ex);
     }
-    traceVerbose(`End sendTelemetryForPythonKernelExecutable after ${stopWatch.elapsedTime}ms`);
 }
 
 /**

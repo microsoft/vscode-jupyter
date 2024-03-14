@@ -104,6 +104,7 @@ import { initializeGlobals as initializeTelemetryGlobals } from './platform/tele
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { sendTelemetryEvent } from './telemetry';
 import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
+import { isUsingPylance } from './standalone/intellisense/notebookPythonPathService.node';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -272,7 +273,11 @@ function addOutputChannel(context: IExtensionContext, serviceManager: IServiceMa
     }
     const pylanceExtension = extensions.getExtension(PylanceExtension);
     if (pylanceExtension) {
-        standardOutputChannel.appendLine(`Pylance Extension Version: ${pylanceExtension.packageJSON['version']}.`);
+        standardOutputChannel.appendLine(
+            `Pylance Extension Version${isUsingPylance() ? '' : ' (Not Used) '}: ${
+                pylanceExtension.packageJSON['version']
+            }.`
+        );
     } else {
         standardOutputChannel.appendLine('Pylance Extension not installed.');
     }
