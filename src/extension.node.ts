@@ -97,10 +97,7 @@ import {
     activate as activateExecutionAnalysis,
     deactivate as deactivateExecutionAnalysis
 } from './standalone/executionAnalysis/extension';
-import {
-    activate as activateChat,
-    deactivate as deactivateChat
-} from './standalone/chat/extesnion';
+import { activate as activateChat, deactivate as deactivateChat } from './standalone/chat/extesnion';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { sendTelemetryEvent } from './telemetry';
 import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
