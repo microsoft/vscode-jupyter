@@ -97,6 +97,10 @@ import {
     activate as activateExecutionAnalysis,
     deactivate as deactivateExecutionAnalysis
 } from './standalone/executionAnalysis/extension';
+import {
+    activate as activateChat,
+    deactivate as deactivateChat
+} from './standalone/chat/extesnion';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { sendTelemetryEvent } from './telemetry';
 import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
@@ -161,6 +165,7 @@ export function deactivate(): Thenable<void> {
     }
 
     deactivateExecutionAnalysis();
+    deactivateChat();
 
     return Promise.resolve();
 }
@@ -201,6 +206,7 @@ async function activateUnsafe(
         //===============================================
         // dynamically load standalone plugins
         activateExecutionAnalysis(context).then(noop, noop);
+        activateChat(context).then(noop, noop);
 
         const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
         return [api, activationPromise, serviceContainer];

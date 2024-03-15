@@ -812,6 +812,18 @@
                 "icon": "$(debug-alt-small)",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.listPipPackages",
+                "title": "List Pip Packages",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.listVariables",
+                "title": "List Variables",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
+                "category": "Jupyter"
             }
         ],
         "submenus": [
@@ -1447,6 +1459,14 @@
                 {
                     "command": "jupyter.debugCellSymbols",
                     "when": "config.jupyter.executionAnalysis.enabled"
+                },
+                {
+                    "command": "jupyter.listPipPackages",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.listVariables",
+                    "when": "false"
                 }
             ],
             "debug/variables/context": [
