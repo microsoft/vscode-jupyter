@@ -462,7 +462,7 @@ export class NotebookDocumentSymbolTracker {
 
     private async _getDocumentSymbols(cell: vscode.NotebookCell) {
         const tokenSource = new vscode.CancellationTokenSource();
-        return this._client.getDocumentSymbols(cell.document, tokenSource.token)
+        return this._client.getDocumentSymbols(cell.document, tokenSource.token);
     }
 
     private async _doRequestCellSymbols(cell: vscode.NotebookCell, token: vscode.CancellationToken) {
