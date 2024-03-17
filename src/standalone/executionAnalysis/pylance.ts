@@ -29,6 +29,10 @@ export interface INotebookLanguageClient {
         },
         token: vscode.CancellationToken
     ): Promise<LocationWithReferenceKind[] | null | undefined>;
+    getDocumentSymbols?(
+        document: vscode.TextDocument,
+        token: vscode.CancellationToken
+    ): Promise<vscode.DocumentSymbol[] | undefined>;
 }
 
 export interface LSExtensionApi {
