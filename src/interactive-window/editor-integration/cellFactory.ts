@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookCellData, NotebookCellKind, NotebookDocument, Range, TextDocument } from 'vscode';
+import { NotebookCellData, NotebookCellKind, NotebookDocument, Range, TextDocument, type NotebookCell } from 'vscode';
 import { CellMatcher } from './cellMatcher';
 import { ICellRange, IJupyterSettings } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -9,7 +9,6 @@ import { createJupyterCellFromVSCNotebookCell } from '../../kernels/execution/he
 import { appendLineFeed, parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
 import { splitLines } from '../../platform/common/helpers';
 import { isSysInfoCell } from '../systemInfoCell';
-import { getCellMetadata } from '../../platform/common/utils/jupyter';
 
 export function uncommentMagicCommands(line: string): string {
     // Uncomment lines that are shell assignments (starting with #!),
@@ -153,8 +152,8 @@ export function generateCellsFromNotebookDocument(
             );
             if (cell.kind === NotebookCellKind.Code) {
                 cellData.outputs = [...cell.outputs];
-                cellData.metadata = { custom: getCellMetadata(cell) };
             }
+            cellData.metadata = { custom: getCellMetadata(cell) };
             return cellData;
         });
 }
