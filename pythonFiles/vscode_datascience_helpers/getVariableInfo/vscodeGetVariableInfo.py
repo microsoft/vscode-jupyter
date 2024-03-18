@@ -9,9 +9,15 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     collectionTypes = ["list", "tuple", "set"]
     arrayPageSize = 50
 
-    def truncateString(string):
+    def truncateString(variable):
+        string = _VSCODE_builtins.repr(variable)
         if _VSCODE_builtins.len(string) > maxStringLength:
-            return string[: maxStringLength - 1] + "..."
+            sizeInfo = (
+                "\n\nLength: " + str(_VSCODE_builtins.len(variable))
+                if _VSCODE_builtins.type(variable) == _VSCODE_builtins.str
+                else ""
+            )
+            return string[: maxStringLength - 1] + "..." + sizeInfo
         else:
             return string
 
@@ -49,7 +55,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             original_display = set_pandas_display_options()
 
         try:
-            return truncateString(_VSCODE_builtins.repr(variable))
+            return truncateString(variable=variable)
         finally:
             if original_display:
                 set_pandas_display_options(original_display)
