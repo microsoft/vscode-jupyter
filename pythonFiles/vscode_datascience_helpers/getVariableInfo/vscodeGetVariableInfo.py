@@ -14,14 +14,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         if _VSCODE_builtins.len(string) > maxStringLength:
             sizeInfo = (
                 "\n\nLength: " + str(_VSCODE_builtins.len(variable))
-                if _VSCODE_builtins.type(variable)
-                in [
-                    _VSCODE_builtins.str,
-                    _VSCODE_builtins.list,
-                    _VSCODE_builtins.tuple,
-                    _VSCODE_builtins.set,
-                    _VSCODE_builtins.dict,
-                ]
+                if _VSCODE_builtins.type(variable) == _VSCODE_builtins.str
                 else ""
             )
             return string[: maxStringLength - 1] + "..." + sizeInfo
