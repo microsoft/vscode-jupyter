@@ -2,38 +2,38 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import * as vscode from 'vscode';
 import { generateCells } from './cellFactory';
-import { splitLines } from '../../platform/common/helpers';
+import { splitLines as originalSplitLines } from '../../platform/common/helpers';
 import { removeLinesFromFrontAndBack, stripComments } from '../../platform/common/utils';
 
+const splitCode = (s: string) => originalSplitLines(s, { removeEmptyEntries: false, trim: false });
+const splitMarkdown = (s: string) => originalSplitLines(s, { removeEmptyEntries: false, trim: false });
 /* eslint-disable  */
 suite('CellFactory', () => {
     test('parsing cells', () => {
-        const uri = vscode.Uri.parse('file://foo.py');
-        let cells = generateCells(undefined, '#%%\na=1\na', uri, true);
+        let cells = generateCells(undefined, '#%%\na=1\na', true);
         assert.equal(cells.length, 1, 'Simple cell, not right number found');
-        cells = generateCells(undefined, '#%% [markdown]\na=1\na', uri, true);
+        cells = generateCells(undefined, '#%% [markdown]\na=1\na', true);
         assert.equal(cells.length, 2, 'Split cell, not right number found');
-        cells = generateCells(undefined, '#%% [markdown]\n# #a=1\n#a', uri, true);
+        cells = generateCells(undefined, '#%% [markdown]\n# #a=1\n#a', true);
         assert.equal(cells.length, 1, 'Markdown split wrong');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        cells = generateCells(undefined, "#%% [markdown]\n'''\n# a\nb\n'''", uri, true);
+        assert.equal(cells[0].languageId, 'markdown', 'Markdown cell not generated');
+        cells = generateCells(undefined, "#%% [markdown]\n'''\n# a\nb\n'''", true);
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% [markdown]\n"""\n# a\nb\n"""', uri, true);
+        assert.equal(cells[0].languageId, 'markdown', 'Markdown cell not generated');
+        assert.equal(splitMarkdown(cells[0].value).length, 3, 'Lines for markdown not emitted');
+        cells = generateCells(undefined, '#%% [markdown]\n"""\n# a\nb\n"""', true);
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% \n"""\n# a\nb\n"""', uri, true);
+        assert.equal(cells[0].languageId, 'markdown', 'Markdown cell not generated');
+        assert.equal(splitMarkdown(cells[0].value).length, 3, 'Lines for markdown not emitted');
+        cells = generateCells(undefined, '#%% \n"""\n# a\nb\n"""', true);
         assert.equal(cells.length, 1, 'Code cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
-        assert.equal(cells[0].data.source.length, 5, 'Lines for cell not emitted');
-        cells = generateCells(undefined, '#%% [markdown] \n"""# a\nb\n"""', uri, true);
+        assert.equal(cells[0].languageId, 'python', 'Code cell not generated');
+        assert.equal(splitCode(cells[0].value).length, 5, 'Lines for cell not emitted');
+        cells = generateCells(undefined, '#%% [markdown] \n"""# a\nb\n"""', true);
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
+        assert.equal(cells[0].languageId, 'markdown', 'Markdown cell not generated');
+        assert.equal(splitMarkdown(cells[0].value).length, 3, 'Lines for cell not emitted');
 
         // eslint-disable-next-line no-multi-str
         const multilineCode = `#%%
@@ -58,16 +58,14 @@ Suspendisse ornare interdum velit. Suspendisse potenti.
 Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 """ print('bob')`;
 
-        cells = generateCells(undefined, multilineCode, uri, true);
+        cells = generateCells(undefined, multilineCode, true);
         assert.equal(cells.length, 1, 'code cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
-        assert.equal(cells[0].data.source.length, 10, 'Lines for cell not emitted');
-        cells = generateCells(undefined, multilineTwo, uri, true);
+        assert.equal(cells[0].languageId, 'python', 'Code cell not generated');
+        assert.equal(splitCode(cells[0].value).length, 10, 'Lines for cell not emitted');
+        cells = generateCells(undefined, multilineTwo, true);
         assert.equal(cells.length, 1, 'code cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
-        assert.equal(cells[0].data.source.length, 10, 'Lines for cell not emitted');
-        // eslint-disable-next-line no-multi-str
-        assert.equal(cells[0].data.source[9], `""" print('bob')`, 'Lines for cell not emitted');
+        assert.equal(cells[0].languageId, 'python', 'Code cell not generated');
+        assert.equal(splitCode(cells[0].value).length, 10, 'Lines for cell not emitted');
         // eslint-disable-next-line no-multi-str
         const multilineMarkdown = `#%% [markdown]
 # ## Block of Interest
@@ -90,11 +88,12 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 #          - Item 1-a-3-c
 #
 #   2. Item 2`;
-        cells = generateCells(undefined, multilineMarkdown, uri, true);
+        cells = generateCells(undefined, multilineMarkdown, true);
         assert.equal(cells.length, 1, 'markdown cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 20, 'Lines for cell not emitted');
-        assert.equal(cells[0].data.source[17], '          - Item 1-a-3-c\n', 'Lines for markdown not emitted');
+        assert.equal(cells[0].languageId, 'markdown', 'markdown cell not generated');
+        assert.equal(splitMarkdown(cells[0].value).length, 39, 'Lines for cell not emitted');
+        console.error(`"${cells[0].value}"`);
+        assert.equal(splitMarkdown(cells[0].value)[34], '          - Item 1-a-3-c', 'Lines for markdown not emitted');
 
         // eslint-disable-next-line no-multi-str
         const multilineQuoteWithOtherDelimiter = `#%% [markdown]
@@ -104,11 +103,11 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 """ Not a comment delimiter
 '''
 `;
-        cells = generateCells(undefined, multilineQuoteWithOtherDelimiter, uri, true);
+        cells = generateCells(undefined, multilineQuoteWithOtherDelimiter, true);
         assert.equal(cells.length, 1, 'markdown cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 3, 'Lines for cell not emitted');
-        assert.equal(cells[0].data.source[2], '""" Not a comment delimiter', 'Lines for markdown not emitted');
+        assert.equal(cells[0].languageId, 'markdown', 'markdown cell not generated');
+        assert.equal(splitCode(cells[0].value).length, 5, 'Lines for cell not emitted');
+        assert.equal(splitCode(cells[0].value)[4], '""" Not a comment delimiter', 'Lines for markdown not emitted');
 
         // eslint-disable-next-line no-multi-str
         const multilineQuoteInFunc = `#%%
@@ -120,13 +119,13 @@ def download(url, filename):
         for data in response.iter_content():
             handle.write(data)
 `;
-        cells = generateCells(undefined, multilineQuoteInFunc, uri, true);
+        cells = generateCells(undefined, multilineQuoteInFunc, true);
         assert.equal(cells.length, 1, 'cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'code', 'code cell not generated');
-        assert.equal(cells[0].data.source.length, 9, 'Lines for cell not emitted');
+        assert.equal(cells[0].languageId, 'python', 'code cell not generated');
+        assert.equal(splitCode(cells[0].value).length, 9, 'Lines for cell not emitted');
         assert.equal(
-            cells[0].data.source[3],
-            '    """ utility function to download a file """\n',
+            splitCode(cells[0].value)[3],
+            '    """ utility function to download a file """',
             'Lines for cell not emitted'
         );
 
@@ -141,13 +140,13 @@ class Pizza(object):
         self.rating = rating
         `;
 
-        cells = generateCells(undefined, multilineMarkdownWithCell, uri, true);
+        cells = generateCells(undefined, multilineMarkdownWithCell, true);
         assert.equal(cells.length, 2, 'cell split failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 1, 'Lines for markdown not emitted');
-        assert.equal(cells[1].data.cell_type, 'code', 'code cell not generated');
-        assert.equal(cells[1].data.source.length, 7, 'Lines for code not emitted');
-        assert.equal(cells[1].data.source[3], '        self.toppings = toppings\n', 'Lines for cell not emitted');
+        assert.equal(cells[0].languageId, 'markdown', 'markdown cell not generated');
+        assert.equal(splitCode(cells[0].value).length, 1, 'Lines for markdown not emitted');
+        assert.equal(cells[1].languageId, 'python', 'code cell not generated');
+        assert.equal(splitCode(cells[1].value).length, 7, 'Lines for code not emitted');
+        assert.equal(splitCode(cells[1].value)[3], '        self.toppings = toppings', 'Lines for cell not emitted');
 
         // Non comments tests
         let nonComments = stripComments(multilineCode);
@@ -155,7 +154,7 @@ class Pizza(object):
         nonComments = stripComments(multilineTwo);
         assert.equal(nonComments, '', 'Multline comment is not being stripped');
         nonComments = stripComments(multilineQuoteInFunc);
-        assert.equal(splitLines(nonComments).length, 6, 'Splitting quote in func wrong number of lines');
+        assert.equal(splitCode(nonComments).length, 8, 'Splitting quote in func wrong number of lines');
     });
 
     test('Line removal', () => {

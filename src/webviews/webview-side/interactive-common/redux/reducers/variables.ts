@@ -7,12 +7,7 @@ import {
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
 } from '../../../../../kernels/variables/types';
-import {
-    InteractiveWindowMessages,
-    IFinishCell,
-    IInteractiveWindowMapping,
-    SharedMessages
-} from '../../../../../messageTypes';
+import { InteractiveWindowMessages, IInteractiveWindowMapping, SharedMessages } from '../../../../../messageTypes';
 import { IJupyterExtraSettings } from '../../../../../platform/webviews/types';
 import { BaseReduxActionPayload } from '../../../../types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
@@ -293,34 +288,6 @@ function updateExecutionCount(arg: VariableReducerArg<{ executionCount: number }
     });
 }
 
-function handleFinishCell(arg: VariableReducerArg<IFinishCell>): IVariableState {
-    const executionCount = arg.payload.data.cell.data.execution_count
-        ? parseInt(arg.payload.data.cell.data.execution_count.toString(), 10)
-        : undefined;
-
-    // If the variables are visible, refresh them
-    if (arg.prevState.visible && executionCount) {
-        return handleRequest({
-            ...arg,
-            payload: {
-                ...arg.payload,
-                data: {
-                    executionCount,
-                    sortColumn: arg.prevState.sortColumn,
-                    sortAscending: arg.prevState.sortAscending,
-                    startIndex: 0,
-                    pageSize: arg.prevState.pageSize,
-                    refreshCount: arg.prevState.refreshCount
-                }
-            }
-        });
-    }
-    return {
-        ...arg.prevState,
-        currentExecutionCount: executionCount ? executionCount : arg.prevState.currentExecutionCount
-    };
-}
-
 function handleRefresh(arg: VariableReducerArg): IVariableState {
     // If the variables are visible, refresh them
     if (arg.prevState.visible) {
@@ -368,7 +335,6 @@ type VariableActionMapping = VariableReducerFunctions<IInteractiveWindowMapping>
 // Create the map between message type and the actual function to call to update state
 const reducerMap: Partial<VariableActionMapping> = {
     [InteractiveWindowMessages.RestartKernel]: handleRestarted,
-    [InteractiveWindowMessages.FinishCell]: handleFinishCell,
     [InteractiveWindowMessages.ForceVariableRefresh]: handleRefresh,
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: toggleVariableExplorer,
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: setVariableExplorerHeight,

@@ -8,7 +8,6 @@ import {
 } from './webviews/webview-side/interactive-common/redux/reducers/types';
 // eslint-disable-next-line
 import { KernelSocketOptions } from './kernels/types';
-import { ICell } from './platform/common/types';
 import { IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from './kernels/variables/types';
 import { WidgetScriptSource } from './notebooks/controllers/ipywidgets/types';
 
@@ -34,7 +33,6 @@ export type LoadIPyWidgetClassLoadAction = {
 };
 
 export enum InteractiveWindowMessages {
-    FinishCell = 'finish_cell',
     RestartKernel = 'restart_kernel',
     SettingsUpdated = 'settings_updated',
     Started = 'started',
@@ -102,10 +100,6 @@ export enum IPyWidgetMessages {
 export enum SysInfoReason {
     Start,
     Restart
-}
-
-export interface IFinishCell {
-    cell: ICell;
 }
 
 export interface IShowDataViewer {
@@ -203,7 +197,6 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_mirror_execute]: { id: string; msg: KernelMessage.IExecuteRequestMsg };
     public [InteractiveWindowMessages.ForceVariableRefresh]: never | undefined;
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
-    public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.SettingsUpdated]: string;
     public [InteractiveWindowMessages.Started]: never | undefined;

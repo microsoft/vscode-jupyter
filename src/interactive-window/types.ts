@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 import { IDebuggingManager } from '../notebooks/debugger/debuggingTypes';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
-import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
+import { Resource, InteractiveWindowMode } from '../platform/common/types';
 import { IFileGeneratedCodes } from './editor-integration/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 
@@ -102,8 +102,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
     expandAllCells(): Promise<void>;
     collapseAllCells(): Promise<void>;
     scrollToCell(id: string): void;
-    exportAs(cells?: ICell[]): void;
-    export(cells?: ICell[]): void;
+    exportAs(): void;
+    export(): void;
 }
 
 export interface IInteractiveWindowCache {

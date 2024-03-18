@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type * as nbformat from '@jupyterlab/nbformat';
 import { ConfigurationTarget, Disposable, Event, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandIds } from '../../commands';
@@ -270,11 +269,6 @@ export interface IDisplayOptions {
 }
 
 // Basic structure for a cell from a notebook
-export interface ICell {
-    uri?: Uri;
-    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
-}
-
 // CellRange is used as the basis for creating new ICells.
 // Was only intended to aggregate together ranges to create an ICell
 // However the "range" aspect is useful when working with plain text document

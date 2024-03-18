@@ -3,7 +3,7 @@
 
 import { Event } from 'vscode';
 import { IVariableExplorerHeight } from '../../../webviews/webview-side/interactive-common/redux/reducers/types';
-import { InteractiveWindowMessages, IShowDataViewer, IFinishCell, SharedMessages } from '../../../messageTypes';
+import { InteractiveWindowMessages, IShowDataViewer, SharedMessages } from '../../../messageTypes';
 import { IKernel } from '../../../kernels/types';
 import { IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../kernels/variables/types';
 import { IVSCWebviewViewProvider } from '../../../platform/webviews/types';
@@ -23,7 +23,6 @@ export class IVariableViewPanelMapping {
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [SharedMessages.UpdateSettings]: string;
     public [SharedMessages.LocInit]: string;
-    public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
     public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
     public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
