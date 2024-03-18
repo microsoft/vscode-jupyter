@@ -8,7 +8,6 @@ import { IConfigurationService } from '../../platform/common/types';
 import { appendLineFeed } from '../../platform/common/utils';
 import { IExport } from './types';
 import { ServiceContainer } from '../../platform/ioc/container';
-import { getCellMetadata } from '../../platform/common/utils/jupyter';
 
 // Handles exporting a NotebookDocument to python without using nbconvert
 export class ExportToPythonPlain implements IExport {
@@ -43,7 +42,7 @@ export class ExportToPythonPlain implements IExport {
     private exportDocument(document: NotebookDocument): string {
         return document
             .getCells()
-            .filter((cell) => !getCellMetadata(cell).isInteractiveWindowMessageCell) // We don't want interactive window sys info cells
+            .filter((cell) => !cell.metadata?.isInteractiveWindowMessageCell) // We don't want interactive window sys info cells
             .reduce((previousValue, currentValue) => previousValue + this.exportCell(currentValue), '');
     }
 

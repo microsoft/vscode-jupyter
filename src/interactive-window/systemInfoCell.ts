@@ -16,7 +16,6 @@ import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { SysInfoReason } from '../messageTypes';
 import { DataScience } from '../platform/common/utils/localize';
 import { KernelConnectionMetadata } from '../kernels/types';
-import { getCellMetadata } from '../platform/common/utils/jupyter';
 
 export function getStartConnectMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
     const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
@@ -39,7 +38,7 @@ export function getFinishConnectMessage(kernelMetadata: KernelConnectionMetadata
 }
 
 export function isSysInfoCell(cell: NotebookCell) {
-    return cell.kind === NotebookCellKind.Markup && getCellMetadata(cell).isInteractiveWindowMessageCell === true;
+    return cell.kind === NotebookCellKind.Markup && cell.metadata?.isInteractiveWindowMessageCell === true;
 }
 
 export class SystemInfoCell {
