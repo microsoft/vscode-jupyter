@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type * as nbformat from '@jupyterlab/nbformat';
 import * as path from '../platform/vscode-path/path';
 import {
     Event,
@@ -54,7 +53,6 @@ import {
 } from './editor-integration/types';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { CellExecutionCreator } from '../kernels/execution/cellExecutionCreator';
-import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
 import { KernelController } from '../kernels/kernelController';
@@ -605,12 +603,6 @@ export class InteractiveWindow implements IInteractiveWindow {
             throw new Error('An active kernel is required to export the notebook.');
         }
         const kernel = this.controller.kernel?.value;
-
-        // Pull out the metadata from our active notebook
-        const metadata: nbformat.INotebookMetadata = {};
-        if (kernel) {
-            await updateNotebookMetadata(metadata, kernel.kernelConnectionMetadata);
-        }
 
         let defaultFileName;
         if (this.submitters && this.submitters.length) {

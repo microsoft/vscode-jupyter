@@ -38,6 +38,7 @@ import { isKernelSessionDead } from '../kernel';
 import { ICellExecution } from './types';
 import { KernelError } from '../errors/kernelError';
 import { getCachedSysPrefix } from '../../platform/interpreter/helpers';
+import { getCellMetadata } from '../../platform/common/utils/jupyter';
 
 /**
  * Factory for CellExecution objects.
@@ -416,7 +417,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const metadata: any = {
             ...{ cellId: this.cell.document.uri.toString() },
-            ...(this.cell.metadata?.custom?.metadata || {}) // Send the Cell Metadata
+            ...getCellMetadata(this.cell).metadata // Send the Cell Metadata
         };
 
         const kernelConnection = session.kernel;

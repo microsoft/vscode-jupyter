@@ -655,7 +655,7 @@ export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
 }
 
 // eslint-disable-next-line complexity
-export async function updateNotebookMetadata(
+export async function updateNotebookMetadataWithSelectedKernel(
     metadata?: nbformat.INotebookMetadata,
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
