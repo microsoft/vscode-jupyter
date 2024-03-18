@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type * as nbformat from '@jupyterlab/nbformat';
 import {
     CancellationError,
     CancellationTokenSource,
@@ -15,14 +14,12 @@ import {
     NotebookCellKind,
     NotebookController,
     NotebookDocument,
-    NotebookEdit,
     NotebookEditor,
     NotebookRendererScript,
     notebooks,
     Uri,
     window,
-    workspace,
-    WorkspaceEdit
+    workspace
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
