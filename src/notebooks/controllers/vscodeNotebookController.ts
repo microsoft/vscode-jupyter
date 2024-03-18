@@ -59,7 +59,7 @@ import {
 } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
-import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
+import { getNotebookMetadata, isJupyterNotebook, updateNotebookMetadata } from '../../platform/common/utils';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { KernelConnector } from './kernelConnector';
 import { IConnectionDisplayData, IConnectionDisplayDataProvider, IVSCodeNotebookController } from './types';
@@ -68,7 +68,7 @@ import { CellExecutionCreator } from '../../kernels/execution/cellExecutionCreat
 import {
     traceCellMessage,
     endCellAndDisplayErrorsInCell,
-    updateNotebookMetadata
+    updateNotebookMetadataWithSelectedKernel
 } from '../../kernels/execution/helpers';
 import type { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
@@ -722,28 +722,10 @@ async function updateNotebookDocumentMetadata(
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
-    let metadata = getNotebookMetadata(document) || {};
-    const { changed } = await updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
+    const metadata = getNotebookMetadata(document) || {};
+    const { changed } = await updateNotebookMetadataWithSelectedKernel(metadata, kernelConnection, kernelInfo);
     if (changed) {
-        const edit = new WorkspaceEdit();
-        // Create a clone.
-        const docMetadata = JSON.parse(
-            JSON.stringify(
-                (document.metadata as {
-                    custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
-                }) || { custom: {} }
-            )
-        );
-
-        docMetadata.custom = docMetadata.custom || {};
-        docMetadata.custom.metadata = metadata;
-        edit.set(document.uri, [
-            NotebookEdit.updateNotebookMetadata({
-                ...(document.metadata || {}),
-                custom: docMetadata.custom
-            })
-        ]);
-        await workspace.applyEdit(edit);
+        await updateNotebookMetadata(document, metadata);
     }
 }
 

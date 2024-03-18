@@ -4,7 +4,7 @@
 import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
-import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
+import { NotebookData, NotebookDocument, NotebookEdit, TextDocument, Uri, WorkspaceEdit, workspace } from 'vscode';
 import {
     InteractiveWindowView,
     jupyterLanguageToMonacoLanguageMapping,
@@ -175,6 +175,28 @@ export function getNotebookFormat(document: NotebookDocument): {
         nbformat: notebookContent?.nbformat,
         nbformat_minor: notebookContent?.nbformat_minor
     };
+}
+
+export async function updateNotebookMetadata(document: NotebookDocument, metadata: NotebookMetadata) {
+    const edit = new WorkspaceEdit();
+    // Create a clone.
+    const docMetadata = JSON.parse(
+        JSON.stringify(
+            (document.metadata as {
+                custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
+            }) || { custom: {} }
+        )
+    );
+
+    docMetadata.custom = docMetadata.custom || {};
+    docMetadata.custom.metadata = metadata;
+    edit.set(document.uri, [
+        NotebookEdit.updateNotebookMetadata({
+            ...(document.metadata || {}),
+            custom: docMetadata.custom
+        })
+    ]);
+    await workspace.applyEdit(edit);
 }
 
 export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {

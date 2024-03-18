@@ -32,7 +32,7 @@ export abstract class ExportUtilBase implements IExportUtil {
             return data;
         });
         const notebookData = new NotebookData(cellData);
-        notebookData.metadata = document.metadata;
+        notebookData.metadata = JSON.parse(JSON.stringify(document.metadata));
         return serializerApi.exports.exportNotebook(notebookData);
     }
 
