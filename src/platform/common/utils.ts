@@ -11,9 +11,6 @@ import {
     JupyterNotebookView,
     WIDGET_STATE_MIMETYPE
 } from './constants';
-import { traceError, traceInfo } from '../logging';
-
-import { ICell } from './types';
 import { splitLines } from './helpers';
 
 // Can't figure out a better way to do this. Enumerate
@@ -99,28 +96,6 @@ export function pruneCell(cell: nbformat.ICell): nbformat.ICell {
     }
 
     return result;
-}
-
-export function traceCellResults(prefix: string, results: ICell[]) {
-    if (results.length > 0 && results[0].data.cell_type === 'code') {
-        const cell = results[0].data as nbformat.ICodeCell;
-        const error = cell.outputs && cell.outputs[0] ? 'evalue' in cell.outputs[0] : undefined;
-        if (error) {
-            traceError(`${prefix} Error : ${error}`);
-        } else if (cell.outputs && cell.outputs[0]) {
-            if (cell.outputs[0].output_type.includes('image')) {
-                traceInfo(`${prefix} Output: image`);
-            } else {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const data = (cell.outputs[0] as any).data;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const text = (cell.outputs[0] as any).text;
-                traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
-            }
-        }
-    } else {
-        traceInfo(`${prefix} no output.`);
-    }
 }
 
 export function translateKernelLanguageToMonaco(language: string): string {

@@ -180,6 +180,7 @@ mockedVSCode.NotebookRendererScript = vscodeMocks.vscMockExtHostedTypes.Notebook
 mockedVSCode.NotebookEdit = vscodeMocks.vscMockExtHostedTypes.NotebookEdit;
 mockedVSCode.NotebookRange = vscodeMocks.vscMockExtHostedTypes.NotebookRange;
 mockedVSCode.QuickPickItemKind = vscodeMocks.vscMockExtHostedTypes.QuickPickItemKind;
+(mockedVSCode.NotebookCellData as any) = vscodeMocks.vscMockExtHostedTypes.NotebookCellData;
 (mockedVSCode as any).NotebookCellKind = vscodeMocks.vscMockExtHostedTypes.NotebookCellKind;
 (mockedVSCode as any).NotebookCellRunState = vscodeMocks.vscMockExtHostedTypes.NotebookCellRunState;
 (mockedVSCode as any).NotebookControllerAffinity = vscodeMocks.vscMockExtHostedTypes.NotebookControllerAffinity;
