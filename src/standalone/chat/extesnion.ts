@@ -71,7 +71,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
             const resolvedVariables = [];
             for await (const variable of variables) {
-                resolvedVariables.push(variable.variable);
+                resolvedVariables.push(variable);
             }
             return resolvedVariables;
         })
