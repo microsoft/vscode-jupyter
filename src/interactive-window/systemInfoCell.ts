@@ -16,6 +16,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { SysInfoReason } from '../messageTypes';
 import { DataScience } from '../platform/common/utils/localize';
 import { KernelConnectionMetadata } from '../kernels/types';
+import { getCellMetadata } from '../platform/common/utils/jupyter';
 
 export function getStartConnectMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
     const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
@@ -38,11 +39,7 @@ export function getFinishConnectMessage(kernelMetadata: KernelConnectionMetadata
 }
 
 export function isSysInfoCell(cell: NotebookCell) {
-    return (
-        cell.kind === NotebookCellKind.Markup &&
-        cell.metadata.custom?.metadata &&
-        cell.metadata.custom.metadata['isInteractiveWindowMessageCell']
-    );
+    return cell.kind === NotebookCellKind.Markup && getCellMetadata(cell).isInteractiveWindowMessageCell === true;
 }
 
 export class SystemInfoCell {
@@ -70,7 +67,7 @@ export class SystemInfoCell {
         let addedCellIndex: number | undefined;
         await chainWithPendingUpdates(this.notebookDocument, (edit) => {
             const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
-            markdownCell.metadata = { custom: { metadata: { isInteractiveWindowMessageCell: true } } };
+            markdownCell.metadata = { isInteractiveWindowMessageCell: true };
             addedCellIndex = this.notebookDocument.cellCount;
             const nbEdit = NotebookEdit.insertCells(addedCellIndex, [markdownCell]);
             edit.set(this.notebookDocument.uri, [nbEdit]);
@@ -87,9 +84,7 @@ export class SystemInfoCell {
                     edit.replace(cell.document.uri, new Range(0, 0, cell.document.lineCount, 0), newMessage);
 
                     edit.set(this.notebookDocument!.uri, [
-                        NotebookEdit.updateCellMetadata(cell.index, {
-                            custom: { metadata: { isInteractiveWindowMessageCell: true } }
-                        })
+                        NotebookEdit.updateCellMetadata(cell.index, { isInteractiveWindowMessageCell: true })
                     ]);
                     return;
                 }
