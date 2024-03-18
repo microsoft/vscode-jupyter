@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookCellData, NotebookCellKind, NotebookDocument, Range, TextDocument, type NotebookCell } from 'vscode';
+import { NotebookCellData, NotebookCellKind, NotebookDocument, Range, TextDocument } from 'vscode';
 import { CellMatcher } from './cellMatcher';
 import { ICellRange, IJupyterSettings } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
