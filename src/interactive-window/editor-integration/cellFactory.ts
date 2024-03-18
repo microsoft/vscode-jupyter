@@ -9,6 +9,7 @@ import { createJupyterCellFromVSCNotebookCell } from '../../kernels/execution/he
 import { appendLineFeed, parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
 import { splitLines } from '../../platform/common/helpers';
 import { isSysInfoCell } from '../systemInfoCell';
+import { getCellMetadata } from '../../platform/common/utils/jupyter';
 
 export function uncommentMagicCommands(line: string): string {
     // Uncomment lines that are shell assignments (starting with #!),
