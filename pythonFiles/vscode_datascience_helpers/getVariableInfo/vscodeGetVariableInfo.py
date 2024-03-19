@@ -85,7 +85,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         varType = _VSCODE_builtins.type(variable)
         result["type"] = getFullType(varType)
         if hasattr(varType, "__mro__"):
-            result["satisfiesContracts"] = [getFullType(t) for t in varType.__mro__]
+            result["interfaces"] = [getFullType(t) for t in varType.__mro__]
 
         if (
             _VSCODE_builtins.hasattr(variable, "__len__")
