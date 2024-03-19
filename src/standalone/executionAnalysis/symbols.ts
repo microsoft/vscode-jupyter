@@ -288,32 +288,36 @@ export class NotebookDocumentSymbolTracker {
     }
 
     async selectPrecedentCells(cell: vscode.NotebookCell) {
-        await this.requestCellSymbolsSync();
-        const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
-        try {
-            const precedentCells = analysis.getPredecessorCells(cell);
-            this._notebookEditor.selections = cellIndexesToRanges(precedentCells.map((cell) => cell.index));
-            return;
-        } catch {}
-
-        try {
-            const precedentCells = analysis.getPredecessorCells(cell, true);
-            this._notebookEditor.selections = cellIndexesToRanges(precedentCells.map((cell) => cell.index));
-            return;
-        } catch {
-            // noop
-        }
+        const cellRanges = await this.getPrecedentCells(cell);
+        this._notebookEditor.selections = cellRanges;
     }
 
     async selectSuccessorCells(cell: vscode.NotebookCell) {
-        await this.requestCellSymbolsSync();
-        const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
-        const successorCells = analysis.getSuccessorCells(cell) as vscode.NotebookCell[];
-        const cellRanges = cellIndexesToRanges(successorCells.map((cell) => cell.index));
+        const cellRanges = await this.getSuccessorCells(cell);
         this._notebookEditor.selections = cellRanges;
     }
 
     async runPrecedentCells(cell: vscode.NotebookCell) {
+        const cellRanges = await this.getPrecedentCells(cell);
+        await vscode.commands
+            .executeCommand('notebook.cell.execute', {
+                ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
+                document: this._notebookEditor.notebook.uri
+            })
+            .then(noop, noop);
+    }
+
+    async runSuccessorCells(cell: vscode.NotebookCell) {
+        const cellRanges = await this.getSuccessorCells(cell);
+        await vscode.commands
+            .executeCommand('notebook.cell.execute', {
+                ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
+                document: this._notebookEditor.notebook.uri
+            })
+            .then(noop, noop);
+    }
+
+    async getPrecedentCells(cell: vscode.NotebookCell) {
         await this.requestCellSymbolsSync();
         const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
         let precedentCells: vscode.NotebookCell[] = [];
@@ -339,25 +343,17 @@ export class NotebookDocumentSymbolTracker {
         const cellRanges = cellIndexesToRanges(
             (staleCellIndex === -1 ? precedentCells : precedentCells.slice(staleCellIndex)).map((cell) => cell.index)
         );
-        await vscode.commands
-            .executeCommand('notebook.cell.execute', {
-                ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
-                document: this._notebookEditor.notebook.uri
-            })
-            .then(noop, noop);
+
+        return cellRanges;
     }
 
-    async runSuccessorCells(cell: vscode.NotebookCell) {
+    async getSuccessorCells(cell: vscode.NotebookCell) {
         await this.requestCellSymbolsSync();
         const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
         const successorCells = analysis.getSuccessorCells(cell) as vscode.NotebookCell[];
         const cellRanges = cellIndexesToRanges(successorCells.map((cell) => cell.index));
-        await vscode.commands
-            .executeCommand('notebook.cell.execute', {
-                ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
-                document: this._notebookEditor.notebook.uri
-            })
-            .then(noop, noop);
+
+        return cellRanges;
     }
 
     async debugSymbols() {
@@ -488,10 +484,12 @@ export class NotebookDocumentSymbolTracker {
             );
             if (symbolReferences) {
                 references.push(
-                    ...symbolReferences.map((ref) => ({
-                        ...ref,
-                        associatedSymbol: symbol
-                    }))
+                    ...symbolReferences
+                        .filter((ref) => ref.uri.scheme === 'vscode-notebook-cell')
+                        .map((ref) => ({
+                            ...ref,
+                            associatedSymbol: symbol
+                        }))
                 );
             }
         }
@@ -502,7 +500,7 @@ export class NotebookDocumentSymbolTracker {
                 cell.document.uri.fragment,
                 references.map((ref) => ({
                     range: ref.range,
-                    uri: vscode.Uri.parse(ref.uri),
+                    uri: ref.uri,
                     kind: areRangesEqual(ref.range, ref.associatedSymbol.selectionRange) ? 'write' : ref.kind,
                     associatedSymbol: ref.associatedSymbol
                 }))
