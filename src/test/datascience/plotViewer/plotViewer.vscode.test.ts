@@ -14,7 +14,6 @@ import {
     runAllCellsInActiveNotebook,
     waitForExecutionCompletedSuccessfully
 } from '../notebook/helper.node';
-import { createJupyterCellFromVSCNotebookCell } from '../../../kernels/execution/helpers';
 import { window } from 'vscode';
 import { captureScreenShot } from '../../common';
 
@@ -69,8 +68,7 @@ plt.show()`,
         await waitForCondition(async () => plotCell?.outputs.length >= 1, 10000, 'Plot output not generated');
         // Sometimes on CI we end up with >1 output, and the test fails, but we're expecting just one.
         if (plotCell.outputs.length === 0) {
-            const jupyterCell = createJupyterCellFromVSCNotebookCell(plotCell);
-            traceInfo(`Plot cell has ${plotCell.outputs.length} outputs, Cell JSON = ${JSON.stringify(jupyterCell)}`);
+            traceInfo(`Plot cell has ${plotCell.outputs.length} outputs`);
         }
         assert.isAtLeast(plotCell.outputs.length, 1, 'Plot cell output incorrect count');
 

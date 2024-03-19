@@ -5,11 +5,10 @@ import { NotebookCellData, NotebookCellKind, NotebookDocument, Range, TextDocume
 import { CellMatcher } from './cellMatcher';
 import { ICellRange, IJupyterSettings } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { createJupyterCellFromVSCNotebookCell } from '../../kernels/execution/helpers';
-import { appendLineFeed, parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
+import { parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
 import { splitLines } from '../../platform/common/helpers';
 import { isSysInfoCell } from '../systemInfoCell';
-import { getCellMetadata } from '../../platform/common/utils/jupyter';
+import { getCellMetadata } from '../../platform/common/utils';
 
 export function uncommentMagicCommands(line: string): string {
     // Uncomment lines that are shell assignments (starting with #!),
@@ -128,10 +127,7 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IJu
     );
 }
 
-export function generateCellsFromNotebookDocument(
-    notebookDocument: NotebookDocument,
-    magicCommandsAsComments: boolean
-): NotebookCellData[] {
+export function generateCellsFromNotebookDocument(notebookDocument: NotebookDocument): NotebookCellData[] {
     return notebookDocument
         .getCells()
         .filter((cell) => !isSysInfoCell(cell))
@@ -141,11 +137,6 @@ export function generateCellsFromNotebookDocument(
             if (cell.metadata.interactiveWindowCellMarker !== undefined) {
                 code.unshift(cell.metadata.interactiveWindowCellMarker + '\n');
             }
-            const data = createJupyterCellFromVSCNotebookCell(cell);
-            data.source =
-                cell.kind === NotebookCellKind.Code
-                    ? appendLineFeed(code, '\n', magicCommandsAsComments ? uncommentMagicCommands : undefined)
-                    : appendLineFeed(code);
             const cellData = new NotebookCellData(
                 cell.kind,
                 code.join('\n'),

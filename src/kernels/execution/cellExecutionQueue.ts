@@ -4,13 +4,14 @@
 import { CancellationToken, Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
-import { createJupyterCellFromVSCNotebookCell, traceCellMessage } from './helpers';
+import { traceCellMessage } from './helpers';
 import { CellExecutionFactory } from './cellExecution';
 import { IKernelSession, KernelConnectionMetadata, ResumeCellExecutionInformation } from '../../kernels/types';
 import { Resource } from '../../platform/common/types';
 import { ICellExecution, ICodeExecution } from './types';
 import { CodeExecution } from './codeExecution';
 import { once } from '../../platform/common/utils/events';
+import { getCellMetadata } from '../../platform/common/utils';
 
 /**
  * A queue responsible for execution of cells.
@@ -253,7 +254,7 @@ export class CellExecutionQueue implements Disposable {
             // I.e. if the cell has the tag `raises-exception`, then ignore exceptions
             if (
                 itemToExecute.type === 'cell' &&
-                createJupyterCellFromVSCNotebookCell(itemToExecute.cell).metadata?.tags?.includes('raises-exception')
+                getCellMetadata(itemToExecute.cell).metadata?.tags?.includes('raises-exception')
             ) {
                 cellErrorsAllowed = true;
             }

@@ -2,14 +2,7 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import {
-    NotebookCellOutput,
-    NotebookCellOutputItem,
-    NotebookCell,
-    NotebookCellData,
-    NotebookCellKind,
-    NotebookCellExecutionState
-} from 'vscode';
+import { NotebookCellOutput, NotebookCellOutputItem, NotebookCell, NotebookCellExecutionState } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import type { KernelMessage } from '@jupyterlab/services';
 import fastDeepEqual from 'fast-deep-equal';
@@ -39,61 +32,6 @@ export enum CellOutputMimeTypes {
     stdout = 'application/vnd.code.notebook.stdout'
 }
 
-export function createJupyterCellFromVSCNotebookCell(
-    vscCell: NotebookCell | NotebookCellData
-): nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell {
-    let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
-    if (vscCell.kind === NotebookCellKind.Markup) {
-        cell = createMarkdownCellFromNotebookCell(vscCell);
-    } else if (
-        ('document' in vscCell && vscCell.document.languageId === 'raw') ||
-        ('languageId' in vscCell && vscCell.languageId === 'raw')
-    ) {
-        cell = createRawCellFromNotebookCell(vscCell);
-    } else {
-        cell = createCodeCellFromNotebookCell(vscCell);
-    }
-    return cell;
-}
-
-function createRawCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.IRawCell {
-    const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
-    const rawCell: nbformat.IRawCell = {
-        cell_type: 'raw',
-        source: splitMultilineString('document' in cell ? cell.document.getText() : cell.value),
-        metadata: cellMetadata?.metadata || {} // This cannot be empty.
-    };
-    if (cellMetadata?.attachments) {
-        rawCell.attachments = cellMetadata.attachments;
-    }
-    return rawCell;
-}
-
-function createCodeCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.ICodeCell {
-    const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
-    const code = 'document' in cell ? cell.document.getText() : cell.value;
-    const codeCell: nbformat.ICodeCell = {
-        cell_type: 'code',
-        execution_count: cell.executionSummary?.executionOrder ?? null,
-        source: splitMultilineString(code),
-        outputs: (cell.outputs || []).map(translateCellDisplayOutput),
-        metadata: cellMetadata?.metadata || {} // This cannot be empty.
-    };
-    return codeCell;
-}
-
-function createMarkdownCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.IMarkdownCell {
-    const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
-    const markdownCell: nbformat.IMarkdownCell = {
-        cell_type: 'markdown',
-        source: splitMultilineString('document' in cell ? cell.document.getText() : cell.value),
-        metadata: cellMetadata?.metadata || {} // This cannot be empty.
-    };
-    if (cellMetadata?.attachments) {
-        markdownCell.attachments = cellMetadata.attachments;
-    }
-    return markdownCell;
-}
 const orderOfMimeTypes = [
     'application/vnd.*',
     'application/vdom.*',
@@ -316,20 +254,6 @@ type JupyterOutput =
     | nbformat.IStream
     | nbformat.IError;
 
-/**
- * Metadata we store in VS Code cells.
- * This contains the original metadata from the Jupyuter cells.
- */
-type CellMetadata = {
-    /**
-     * Stores attachments for cells.
-     */
-    attachments?: nbformat.IAttachments;
-    /**
-     * Stores cell metadata.
-     */
-    metadata?: Partial<nbformat.ICellMetadata>;
-};
 /**
  * Metadata we store in VS Code cell output items.
  * This contains the original metadata from the Jupyuter Outputs.
