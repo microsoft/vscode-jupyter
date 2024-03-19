@@ -454,17 +454,22 @@ export function getCellMetadata(cell: NotebookCell | NotebookCellData): JupyterC
 export function sortObjectPropertiesRecursively<T>(obj: T): T {
     return doSortObjectPropertiesRecursively(obj) as T;
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function doSortObjectPropertiesRecursively(obj: any): any {
     if (Array.isArray(obj)) {
         return obj.map(sortObjectPropertiesRecursively);
     }
     if (obj !== undefined && obj !== null && typeof obj === 'object' && Object.keys(obj).length > 0) {
-        return Object.keys(obj)
-            .sort()
-            .reduce<Record<string, any>>((sortedObj, prop) => {
-                sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
-                return sortedObj;
-            }, {}) as any;
+        return (
+            Object.keys(obj)
+                .sort()
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .reduce<Record<string, any>>((sortedObj, prop) => {
+                    sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
+                    return sortedObj;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                }, {}) as any
+        );
     }
     return obj;
 }
