@@ -84,12 +84,12 @@ export class CellFailureDiagnostics {
 
         let range: Range | undefined = undefined;
         if (lineNumber) {
-            const line = cell.document.lineAt(lineNumber - 1);
+            const line = cell.document.lineAt(lineNumber);
             const end = line.text.split('#')[0].trimEnd().length;
 
             range = new Range(
-                new Position(line.lineNumber, line.firstNonWhitespaceCharacterIndex),
-                new Position(line.lineNumber, end)
+                new Position(line.lineNumber, line.firstNonWhitespaceCharacterIndex + 1),
+                new Position(line.lineNumber, end + 1)
             );
         }
 
