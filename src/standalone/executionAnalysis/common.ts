@@ -30,12 +30,7 @@ export interface Position {
     character: number;
 }
 
-export interface Location {
-    uri: string;
-    range: Range;
-}
-
-export interface LocationWithReferenceKind extends Location {
+export interface LocationWithReferenceKind extends vscode.Location {
     kind?: string;
 }
 
