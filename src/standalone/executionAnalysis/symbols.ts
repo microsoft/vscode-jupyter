@@ -463,9 +463,11 @@ export class NotebookDocumentSymbolTracker {
 
     private async _getDocumentSymbols(cell: vscode.NotebookCell) {
         if (this._client.getDocumentSymbols) {
+            console.error('Step.Pylance.5.4 with Pylance', cell.index);
             const tokenSource = new vscode.CancellationTokenSource();
             return this._client.getDocumentSymbols(cell.document, tokenSource.token);
         } else {
+            console.error('Step.Pylance.5.4 without Pylance', cell.index);
             return vscode.commands.executeCommand<(vscode.SymbolInformation & vscode.DocumentSymbol)[] | undefined>(
                 'vscode.executeDocumentSymbolProvider',
                 cell.document.uri
