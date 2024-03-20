@@ -7,6 +7,7 @@ import { IKernel, IKernelProvider } from '../../kernels/types';
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { JupyterVariablesProvider } from '../../kernels/variables/JupyterVariablesProvider';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     context.subscriptions.push(
@@ -54,14 +55,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 return [];
             }
 
-            const variablesProvider = controller.controller.variableProvider;
-
+            const variablesProvider = controller.controller.variableProvider as JupyterVariablesProvider;
             if (!variablesProvider) {
                 return [];
             }
 
             const token = new vscode.CancellationTokenSource().token;
-            const variables = variablesProvider.provideVariables(
+            const variables = variablesProvider.provideVariablesWithSummarization(
                 document,
                 undefined,
                 vscode.NotebookVariablesRequestKind.Named,

@@ -129,6 +129,25 @@ export class KernelVariables implements IJupyterVariables {
         }
     }
 
+    public async getVariableValueSummary(
+        targetVariable: IJupyterVariable,
+        kernel?: IKernel,
+        cancelToken?: CancellationToken
+    ): Promise<string | undefined> {
+        if (!kernel) {
+            return;
+        }
+
+        const languageId = getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE;
+        const variableRequester = this.variableRequesters.get(languageId);
+
+        if (variableRequester) {
+            return variableRequester.getVariableValueSummary(targetVariable, kernel, cancelToken);
+        }
+
+        return;
+    }
+
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
         kernel?: IKernel,

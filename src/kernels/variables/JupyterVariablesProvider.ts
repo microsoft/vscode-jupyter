@@ -10,13 +10,14 @@ import {
     VariablesResult,
     EventEmitter
 } from 'vscode';
-import { IJupyterVariables, IVariableDescription } from './types';
+import { IJupyterVariables, IRichVariableResult, IVariableDescription } from './types';
 import { IKernel, IKernelProvider } from '../types';
-import { VariableResultCache } from './variableResultCache';
+import { VariableResultCache, VariableSummaryCache } from './variableResultCache';
 import { IDisposable } from '../../platform/common/types';
 
 export class JupyterVariablesProvider implements NotebookVariableProvider {
     private variableResultCache = new VariableResultCache();
+    private variableSummaryCache = new VariableSummaryCache();
     private runningKernels = new Set<string>();
 
     _onDidChangeVariables = new EventEmitter<NotebookDocument>();
@@ -45,6 +46,15 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
         }
     }
 
+    private _getVariableResultCacheKey(notebookUri: string, parent: Variable | undefined, start: number) {
+        let parentKey = '';
+        const parentDescription = parent as IVariableDescription;
+        if (parentDescription) {
+            parentKey = `${parentDescription.name}.${parentDescription.propertyChain.join('.')}[[${start}`;
+        }
+        return `${notebookUri}:${parentKey}`;
+    }
+
     async *provideVariables(
         notebook: NotebookDocument,
         parent: Variable | undefined,
@@ -62,7 +72,7 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
 
         const executionCount = this.kernelProvider.getKernelExecution(kernel).executionCount;
 
-        const cacheKey = this.variableResultCache.getCacheKey(notebook.uri.toString(), parent, start);
+        const cacheKey = this._getVariableResultCacheKey(notebook.uri.toString(), parent, start);
         let results = this.variableResultCache.getResults(executionCount, cacheKey);
 
         if (parent) {
@@ -106,6 +116,60 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
 
             for (const result of results) {
                 yield result;
+            }
+        }
+    }
+
+    private _getVariableSummaryCacheKey(notebookUri: string, variable: Variable) {
+        return `${notebookUri}:${variable.name}`;
+    }
+
+    async *provideVariablesWithSummarization(
+        notebook: NotebookDocument,
+        parent: Variable | undefined,
+        kind: NotebookVariablesRequestKind,
+        start: number,
+        token: CancellationToken
+    ): AsyncIterable<IRichVariableResult> {
+        const kernel = this.kernelProvider.get(notebook);
+        const results = this.provideVariables(notebook, parent, kind, start, token);
+        for await (const result of results) {
+            if (kernel && kernel.status !== 'dead' && kernel.status !== 'terminating') {
+                const cacheKey = this._getVariableSummaryCacheKey(notebook.uri.toString(), result.variable);
+                const executionCount = this.kernelProvider.getKernelExecution(kernel).executionCount;
+                let summary = this.variableSummaryCache.getResults(executionCount, cacheKey);
+
+                if (summary == undefined) {
+                    summary = await this.variables.getVariableValueSummary(
+                        {
+                            name: result.variable.name,
+                            value: result.variable.value,
+                            supportsDataExplorer: false,
+                            type: result.variable.type ?? '',
+                            size: 0,
+                            count: 0,
+                            shape: '',
+                            truncated: true
+                        },
+                        kernel,
+                        token
+                    );
+
+                    this.variableSummaryCache.setResults(executionCount, cacheKey, summary ?? null);
+                }
+
+                yield {
+                    hasNamedChildren: result.hasNamedChildren,
+                    indexedChildrenCount: result.indexedChildrenCount,
+                    variable: {
+                        name: result.variable.name,
+                        value: result.variable.value,
+                        expression: result.variable.expression,
+                        type: result.variable.type,
+                        language: result.variable.language,
+                        summary: summary
+                    }
+                };
             }
         }
     }
