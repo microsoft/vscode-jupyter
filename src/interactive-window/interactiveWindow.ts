@@ -584,16 +584,12 @@ export class InteractiveWindow implements IInteractiveWindow {
         if (!this.notebookDocument) {
             throw new Error('no notebook to export.');
         }
-        const { magicCommandsAsComments } = this.configuration.getSettings(this.owningResource);
-        const cells = generateCellsFromNotebookDocument(this.notebookDocument, magicCommandsAsComments);
+        const cells = generateCellsFromNotebookDocument(this.notebookDocument);
 
-        // Should be an array of cells
-        if (cells) {
-            // Bring up the export file dialog box
-            const uri = await new ExportDialog().showDialog(ExportFormat.ipynb, this.owningResource);
-            if (uri) {
-                await this.jupyterExporter?.exportToFile(cells, getFilePath(uri));
-            }
+        // Bring up the export file dialog box
+        const uri = await new ExportDialog().showDialog(ExportFormat.ipynb, this.owningResource);
+        if (uri) {
+            await this.jupyterExporter?.exportToFile(cells, getFilePath(uri));
         }
     }
 

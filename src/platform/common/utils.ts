@@ -4,7 +4,17 @@
 import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
-import { NotebookData, NotebookDocument, NotebookEdit, TextDocument, Uri, WorkspaceEdit, workspace } from 'vscode';
+import {
+    NotebookData,
+    NotebookDocument,
+    NotebookEdit,
+    TextDocument,
+    Uri,
+    WorkspaceEdit,
+    workspace,
+    type NotebookCell,
+    type NotebookCellData
+} from 'vscode';
 import {
     InteractiveWindowView,
     jupyterLanguageToMonacoLanguageMapping,
@@ -190,11 +200,14 @@ export async function updateNotebookMetadata(document: NotebookDocument, metadat
 
     docMetadata.custom = docMetadata.custom || {};
     docMetadata.custom.metadata = metadata;
+
     edit.set(document.uri, [
-        NotebookEdit.updateNotebookMetadata({
-            ...(document.metadata || {}),
-            custom: docMetadata.custom
-        })
+        NotebookEdit.updateNotebookMetadata(
+            sortObjectPropertiesRecursively({
+                ...(document.metadata || {}),
+                custom: docMetadata.custom
+            })
+        )
     ]);
     await workspace.applyEdit(edit);
 }
@@ -409,4 +422,54 @@ export function parseSemVer(versionString: string): SemVer | undefined {
         const build = parseInt(versionMatch[3], 10);
         return parse(`${major}.${minor}.${build}`, true) ?? undefined;
     }
+}
+
+type JupyterCellMetadata = Pick<nbformat.IRawCell, 'id' | 'metadata' | 'attachments'> &
+    Pick<nbformat.IMarkdownCell, 'id' | 'attachments'> &
+    Pick<nbformat.ICodeCell, 'id' | 'metadata' | 'attachments'> &
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Record<string, any>;
+
+export function getCellMetadata(cell: NotebookCell | NotebookCellData): JupyterCellMetadata {
+    const metadata: JupyterCellMetadata = cell.metadata?.custom || {};
+    const cellMetadata = metadata as nbformat.IRawCell;
+    // metadata property is never optional.
+    cellMetadata.metadata = cellMetadata.metadata || {};
+
+    return metadata;
+}
+
+// function useCustomMetadata() {
+//     if (extensions.getExtension('vscode.ipynb')?.exports.dropCustomMetadata) {
+//         return false;
+//     }
+//     return true;
+// }
+
+/**
+ * Sort the JSON to minimize unnecessary SCM changes.
+ * Jupyter notbeooks/labs sorts the JSON keys in alphabetical order.
+ * https://github.com/microsoft/vscode/issues/208137
+ */
+export function sortObjectPropertiesRecursively<T>(obj: T): T {
+    return doSortObjectPropertiesRecursively(obj) as T;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function doSortObjectPropertiesRecursively(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(sortObjectPropertiesRecursively);
+    }
+    if (obj !== undefined && obj !== null && typeof obj === 'object' && Object.keys(obj).length > 0) {
+        return (
+            Object.keys(obj)
+                .sort()
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .reduce<Record<string, any>>((sortedObj, prop) => {
+                    sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
+                    return sortedObj;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                }, {}) as any
+        );
+    }
+    return obj;
 }

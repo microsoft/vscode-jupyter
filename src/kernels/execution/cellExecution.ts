@@ -38,7 +38,7 @@ import { isKernelSessionDead } from '../kernel';
 import { ICellExecution } from './types';
 import { KernelError } from '../errors/kernelError';
 import { getCachedSysPrefix } from '../../platform/interpreter/helpers';
-import { getCellMetadata } from '../../platform/common/utils/jupyter';
+import { getCellMetadata } from '../../platform/common/utils';
 
 /**
  * Factory for CellExecution objects.
