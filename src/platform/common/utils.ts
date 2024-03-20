@@ -22,6 +22,7 @@ import {
     WIDGET_STATE_MIMETYPE
 } from './constants';
 import { splitLines } from './helpers';
+import { noop } from './utils/misc';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -478,7 +479,7 @@ export function useCustomMetadata() {
 export async function activateIPynbExtension() {
     const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
     if (ext && !ext.isActive) {
-        await ext.activate();
+        await ext.activate().then(noop, noop);
     }
 }
 
