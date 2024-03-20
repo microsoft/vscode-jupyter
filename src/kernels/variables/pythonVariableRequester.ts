@@ -165,7 +165,12 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             }
         );
 
-        return this.extractJupyterResultText(results);
+        try {
+            const text = this.extractJupyterResultText(results);
+            return text;
+        } catch (_ex) {
+            return undefined;
+        }
     }
 
     public async getAllVariableDiscriptions(
