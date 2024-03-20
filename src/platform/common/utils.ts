@@ -473,7 +473,10 @@ export function getCellMetadata(cell: NotebookCell): JupyterCellMetadata {
 
 export function useCustomMetadata() {
     const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
-    return ext?.exports.dropCustomMetadata ? false : true;
+    if (ext && typeof ext.exports.dropCustomMetadata === 'boolean') {
+        return ext.exports.dropCustomMetadata ? false : true;
+    }
+    return !workspace.getConfiguration('jupyter', undefined).get<boolean>('experimental.dropCustomMetadata', false);
 }
 
 export async function activateIPynbExtension() {
