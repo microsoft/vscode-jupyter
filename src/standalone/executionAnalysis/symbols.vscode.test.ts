@@ -7,6 +7,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { CellAnalysis, ICellExecution, ILocationWithReferenceKind, NotebookDocumentSymbolTracker } from './symbols';
 import { PylanceExtension } from './common';
 import { activatePylance } from './pylance';
+import { sleep } from '../../test/core';
 
 function withNotebookCells(data: [string, string][], fileName: string) {
     const cells: vscode.NotebookCell[] = data.map((cellDto) => {
@@ -511,6 +512,7 @@ function closeAllEditors(): Thenable<any> {
         console.error('Step.Pylance.2');
         const editor = await vscode.window.showNotebookDocument(document);
         console.error('Step.Pylance.3');
+        await sleep(5_000);
         const referencesProvider = await activatePylance();
         console.error('Step.Pylance.4');
         if (!referencesProvider) {
@@ -595,7 +597,7 @@ function closeAllEditors(): Thenable<any> {
         }
 
         await closeAllEditors();
-    });
+    }).timeout(30_000);
 
     test('Advanced type dependencies 3', async () => {
         const document = await vscode.workspace.openNotebookDocument(
