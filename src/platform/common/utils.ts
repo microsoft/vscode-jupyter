@@ -471,10 +471,15 @@ export function getCellMetadata(cell: NotebookCell): JupyterCellMetadata {
 }
 
 export function useCustomMetadata() {
-    if (extensions.getExtension('vscode.ipynb')?.exports.dropCustomMetadata) {
-        return false;
+    const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
+    return ext?.exports.dropCustomMetadata ? false : true;
+}
+
+export async function activateIPynbExtension() {
+    const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
+    if (ext && !ext.isActive) {
+        await ext.activate();
     }
-    return true;
 }
 
 /**
