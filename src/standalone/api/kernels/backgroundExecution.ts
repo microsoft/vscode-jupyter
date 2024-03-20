@@ -57,7 +57,7 @@ del __jupyter_exec_background__
         token,
         new Promise<T | undefined>((resolve) => {
             disposables.add(
-                api.onDidRecieveDisplayUpdate(async (output) => {
+                api.onDidReceiveDisplayUpdate(async (output) => {
                     if (token.isCancellationRequested) {
                         return resolve(undefined);
                     }

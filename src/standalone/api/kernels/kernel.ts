@@ -145,9 +145,9 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     public get onDidChangeStatus(): Event<KernelStatus> {
         return this._onDidChangeStatus.event;
     }
-    private readonly _onDidRecieveDisplayUpdate = this._register(new EventEmitter<NotebookCellOutput>());
-    public get onDidRecieveDisplayUpdate(): Event<NotebookCellOutput> {
-        return this._onDidRecieveDisplayUpdate.event;
+    private readonly _onDidReceiveDisplayUpdate = this._register(new EventEmitter<NotebookCellOutput>());
+    public get onDidReceiveDisplayUpdate(): Event<NotebookCellOutput> {
+        return this._onDidReceiveDisplayUpdate.event;
     }
     constructor(
         private readonly extensionId: string,
@@ -164,7 +164,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 : kernel.kernelConnectionMetadata.kernelSpec.language || PYTHON_LANGUAGE;
         this._register(this.kernel.onStatusChanged(() => this._onDidChangeStatus.fire(this.kernel.status)));
         this._register(
-            execution.onDidRecieveDisplayUpdate((output) => {
+            execution.onDidReceiveDisplayUpdate((output) => {
                 const session = this.kernel.session;
                 const metadata = getNotebookCellOutputMetadata(output);
                 if (
@@ -173,7 +173,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                     session &&
                     isDisplayIdTrackedForExtension(this.extensionId, session, metadata?.transient?.display_id)
                 ) {
-                    this._onDidRecieveDisplayUpdate.fire(output);
+                    this._onDidReceiveDisplayUpdate.fire(output);
                 }
             })
         );
@@ -185,12 +185,12 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 return that.kernel.status;
             },
             onDidChangeStatus: that.onDidChangeStatus.bind(this),
-            get onDidRecieveDisplayUpdate() {
+            get onDidReceiveDisplayUpdate() {
                 if (![JVSC_EXTENSION_ID].includes(extensionId)) {
                     throw new Error(`Proposed API is not supported for extension ${extensionId}`);
                 }
 
-                return that.onDidRecieveDisplayUpdate.bind(this);
+                return that.onDidReceiveDisplayUpdate.bind(this);
             },
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
             executeChatCode: (

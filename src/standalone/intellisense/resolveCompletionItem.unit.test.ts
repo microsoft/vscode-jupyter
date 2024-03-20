@@ -467,7 +467,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
         });
     });
     suite('Python', () => {
-        let onDidRecieveDisplayUpdate: EventEmitter<NotebookCellOutput>;
+        let onDidReceiveDisplayUpdate: EventEmitter<NotebookCellOutput>;
         let resolveOutputs: Deferred<NotebookCellOutput[]>;
         let kernelExecution: NotebookKernelExecution;
         setup(() => {
@@ -482,12 +482,12 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             }
 
             resolveOutputs = createDeferred<NotebookCellOutput[]>();
-            onDidRecieveDisplayUpdate = new EventEmitter<NotebookCellOutput>();
-            disposables.push(onDidRecieveDisplayUpdate);
+            onDidReceiveDisplayUpdate = new EventEmitter<NotebookCellOutput>();
+            disposables.push(onDidReceiveDisplayUpdate);
             const container = mock<ServiceContainer>();
             const kernelProvider = mock<IKernelProvider>();
             kernelExecution = mock<NotebookKernelExecution>();
-            when(kernelExecution.onDidRecieveDisplayUpdate).thenReturn(onDidRecieveDisplayUpdate.event);
+            when(kernelExecution.onDidReceiveDisplayUpdate).thenReturn(onDidReceiveDisplayUpdate.event);
             when(kernelExecution.executeCode(anything(), anything(), anything(), anything())).thenCall(() =>
                 mockOutput()
             );

@@ -63,8 +63,8 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
     public readonly onPostExecute = this._onPostExecute.event;
     private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionQueue>();
     private readonly executionFactory: CellExecutionFactory;
-    private readonly _onDidRecieveDisplayUpdate = new EventEmitter<NotebookCellOutput>();
-    public readonly onDidRecieveDisplayUpdate = this._onDidRecieveDisplayUpdate.event;
+    private readonly _onDidReceiveDisplayUpdate = new EventEmitter<NotebookCellOutput>();
+    public readonly onDidReceiveDisplayUpdate = this._onDidReceiveDisplayUpdate.event;
     private readonly hookedSesions = new WeakSet<IKernelSession>();
 
     constructor(
@@ -123,7 +123,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                 metadata: iopubMsg.content.metadata,
                 transient: iopubMsg.content.transient
             } as nbformat.IDisplayData);
-            this._onDidRecieveDisplayUpdate.fire(newOutput);
+            this._onDidReceiveDisplayUpdate.fire(newOutput);
         };
         session.iopubMessage.connect(handler);
         this.disposables.push({

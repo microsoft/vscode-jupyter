@@ -15,6 +15,6 @@ declare module './api' {
          * even after the code execution has completed.
          * E.g. via background threads.
          */
-        onDidRecieveDisplayUpdate: Event<NotebookCellOutput>;
+        onDidReceiveDisplayUpdate: Event<NotebookCellOutput>;
     }
 }
