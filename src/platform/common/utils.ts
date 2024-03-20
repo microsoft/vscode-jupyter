@@ -11,9 +11,9 @@ import {
     TextDocument,
     Uri,
     WorkspaceEdit,
+    extensions,
     workspace,
-    type NotebookCell,
-    type NotebookCellData
+    type NotebookCell
 } from 'vscode';
 import {
     InteractiveWindowView,
@@ -22,6 +22,7 @@ import {
     WIDGET_STATE_MIMETYPE
 } from './constants';
 import { splitLines } from './helpers';
+import { noop } from './utils/misc';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -168,47 +169,71 @@ export type NotebookMetadata = nbformat.INotebookMetadata & {
 };
 
 export function getNotebookMetadata(document: NotebookDocument | NotebookData): NotebookMetadata | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
-    // Create a clone.
-    return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
+    if (useCustomMetadata()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+        // Create a clone.
+        return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
+    } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata as any;
+        // Create a clone.
+        return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
+    }
 }
 
 export function getNotebookFormat(document: NotebookDocument): {
     nbformat: number | undefined;
     nbformat_minor: number | undefined;
 } {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
-    // Create a clone.
-    return {
-        nbformat: notebookContent?.nbformat,
-        nbformat_minor: notebookContent?.nbformat_minor
-    };
+    if (useCustomMetadata()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+        // Create a clone.
+        return {
+            nbformat: notebookContent?.nbformat,
+            nbformat_minor: notebookContent?.nbformat_minor
+        };
+    } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata as any;
+        // Create a clone.
+        return {
+            nbformat: notebookContent?.nbformat,
+            nbformat_minor: notebookContent?.nbformat_minor
+        };
+    }
 }
 
 export async function updateNotebookMetadata(document: NotebookDocument, metadata: NotebookMetadata) {
     const edit = new WorkspaceEdit();
-    // Create a clone.
-    const docMetadata = JSON.parse(
-        JSON.stringify(
-            (document.metadata as {
-                custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
-            }) || { custom: {} }
-        )
-    );
+    if (useCustomMetadata()) {
+        // Create a clone.
+        const docMetadata: {
+            custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
+        } = JSON.parse(JSON.stringify(document.metadata || { custom: {} }));
 
-    docMetadata.custom = docMetadata.custom || {};
-    docMetadata.custom.metadata = metadata;
+        docMetadata.custom = docMetadata.custom || {};
+        docMetadata.custom.metadata = metadata;
 
-    edit.set(document.uri, [
-        NotebookEdit.updateNotebookMetadata(
-            sortObjectPropertiesRecursively({
-                ...(document.metadata || {}),
-                custom: docMetadata.custom
-            })
-        )
-    ]);
+        edit.set(document.uri, [
+            NotebookEdit.updateNotebookMetadata(
+                sortObjectPropertiesRecursively({
+                    ...(document.metadata || {}),
+                    custom: docMetadata.custom
+                })
+            )
+        ]);
+    } else {
+        edit.set(document.uri, [
+            NotebookEdit.updateNotebookMetadata(
+                sortObjectPropertiesRecursively({
+                    ...(document.metadata || {}),
+                    metadata
+                })
+            )
+        ]);
+    }
     await workspace.applyEdit(edit);
 }
 
@@ -430,21 +455,43 @@ type JupyterCellMetadata = Pick<nbformat.IRawCell, 'id' | 'metadata' | 'attachme
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Record<string, any>;
 
-export function getCellMetadata(cell: NotebookCell | NotebookCellData): JupyterCellMetadata {
-    const metadata: JupyterCellMetadata = cell.metadata?.custom || {};
-    const cellMetadata = metadata as nbformat.IRawCell;
-    // metadata property is never optional.
-    cellMetadata.metadata = cellMetadata.metadata || {};
+export function getCellMetadata(cell: NotebookCell): JupyterCellMetadata {
+    if (useCustomMetadata()) {
+        const metadata: JupyterCellMetadata = cell.metadata.custom || {};
+        const cellMetadata = metadata as nbformat.IRawCell;
+        // metadata property is never optional.
+        cellMetadata.metadata = cellMetadata.metadata || {};
 
-    return metadata;
+        return metadata;
+    } else {
+        const metadata: JupyterCellMetadata = cell.metadata.metadata || {};
+        // metadata property is never optional.
+        metadata.metadata = metadata.metadata || {};
+        return metadata;
+    }
 }
 
-// function useCustomMetadata() {
-//     if (extensions.getExtension('vscode.ipynb')?.exports.dropCustomMetadata) {
-//         return false;
-//     }
-//     return true;
-// }
+export function useCustomMetadata() {
+    const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
+    if (ext && typeof ext.exports.dropCustomMetadata === 'boolean') {
+        return ext.exports.dropCustomMetadata ? false : true;
+    }
+    try {
+        // Means ipynb extension has not yet been activated.
+        // Does not matter, we can just check the setting.
+        return !workspace.getConfiguration('jupyter', undefined).get<boolean>('experimental.dropCustomMetadata', false);
+    } catch {
+        // This happens in unit tests, in this case just return `true`.
+        return true;
+    }
+}
+
+export async function activateIPynbExtension() {
+    const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
+    if (ext && ext.isActive === false) {
+        await ext.activate().then(noop, noop);
+    }
+}
 
 /**
  * Sort the JSON to minimize unnecessary SCM changes.

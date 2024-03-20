@@ -7,6 +7,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { CellAnalysis, ICellExecution, ILocationWithReferenceKind, NotebookDocumentSymbolTracker } from './symbols';
 import { PylanceExtension } from './common';
 import { activatePylance } from './pylance';
+import { useCustomMetadata } from '../../platform/common/utils';
 
 function withNotebookCells(data: [string, string][], fileName: string) {
     const cells: vscode.NotebookCell[] = data.map((cellDto) => {
@@ -494,18 +495,27 @@ function closeAllEditors(): Thenable<any> {
 
 (vscode.extensions.getExtension(PylanceExtension) ? suite : suite.skip)('Cell Analysis - Pylance', () => {
     test('Advanced type dependencies', async () => {
-        const document = await vscode.workspace.openNotebookDocument(
-            'jupyter-notebook',
-            new vscode.NotebookData([
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import pandas as pd', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'df = pd.DataFrame()', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'mylist = [1, 2, 3, 4]', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'mylist2 = [2, 3, 4, 5]', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(mylist)', 'python')
-            ])
-        );
+        const nb = new vscode.NotebookData([
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import pandas as pd', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'df = pd.DataFrame()', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'mylist = [1, 2, 3, 4]', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'mylist2 = [2, 3, 4, 5]', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(mylist)', 'python')
+        ]);
 
-        const editor = await vscode.window.showNotebookDocument(document);
+        // Temporary, until Pylance is fixed
+        if (!useCustomMetadata()) {
+            nb.metadata = {
+                custom: {
+                    metadata: {
+                        cellLanguage: 'python'
+                    }
+                }
+            };
+        }
+        const document = await vscode.workspace.openNotebookDocument('jupyter-notebook', nb);
+
+        const editor = await await vscode.window.showNotebookDocument(document);
         const referencesProvider = await activatePylance();
         if (!referencesProvider) {
             assert.fail('Pylance not found');
@@ -540,15 +550,23 @@ function closeAllEditors(): Thenable<any> {
     });
 
     test('Advanced type dependencies 2', async () => {
-        const document = await vscode.workspace.openNotebookDocument(
-            'jupyter-notebook',
-            new vscode.NotebookData([
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import numpy as np', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'arr = np.array([1, 2, 3, 4])', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'arr2 = np.array([2, 3, 4, 5])', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(arr)', 'python')
-            ])
-        );
+        const nb = new vscode.NotebookData([
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import numpy as np', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'arr = np.array([1, 2, 3, 4])', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'arr2 = np.array([2, 3, 4, 5])', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(arr)', 'python')
+        ]);
+        // Temporary, until Pylance is fixed
+        if (!useCustomMetadata()) {
+            nb.metadata = {
+                custom: {
+                    metadata: {
+                        cellLanguage: 'python'
+                    }
+                }
+            };
+        }
+        const document = await vscode.workspace.openNotebookDocument('jupyter-notebook', nb);
         const editor = await vscode.window.showNotebookDocument(document);
         const referencesProvider = await activatePylance();
         if (!referencesProvider) {
@@ -584,15 +602,23 @@ function closeAllEditors(): Thenable<any> {
     });
 
     test('Advanced type dependencies 3', async () => {
-        const document = await vscode.workspace.openNotebookDocument(
-            'jupyter-notebook',
-            new vscode.NotebookData([
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import matplotlib.pyplot as plt', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'x = [1, 2, 3, 4]', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'y = [2, 3, 4, 5]', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'plt.plot(x, y)', 'python')
-            ])
-        );
+        const nb = new vscode.NotebookData([
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import matplotlib.pyplot as plt', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'x = [1, 2, 3, 4]', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'y = [2, 3, 4, 5]', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'plt.plot(x, y)', 'python')
+        ]);
+        // Temporary, until Pylance is fixed
+        if (!useCustomMetadata()) {
+            nb.metadata = {
+                custom: {
+                    metadata: {
+                        cellLanguage: 'python'
+                    }
+                }
+            };
+        }
+        const document = await vscode.workspace.openNotebookDocument('jupyter-notebook', nb);
         const editor = await vscode.window.showNotebookDocument(document);
         const referencesProvider = await activatePylance();
         if (!referencesProvider) {

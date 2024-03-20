@@ -24,6 +24,11 @@ export async function initialize(): Promise<IExtensionTestApi> {
 }
 
 export async function activateExtension() {
+    // Temporarily until we drop the `custom` property from metadata.
+    const ext = vscode.extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
+    if (ext && ext.isActive === false) {
+        await ext.activate().then(noop, noop);
+    }
     const extension = vscode.extensions.getExtension<IExtensionApi>(JVSC_EXTENSION_ID_FOR_TESTS)!;
     const api = await extension.activate();
     // Wait until its ready to use.
