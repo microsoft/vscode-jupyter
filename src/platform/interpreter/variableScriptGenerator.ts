@@ -120,6 +120,14 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
             };
         }
     }
+    async generateCodeToGetVariableValueSummary(options: { variableName: string }) {
+        const initializeCode = await this.getContentsOfScript();
+        const isDebugging = 'False';
+        const code = `${VariableFunc}("summary", ${isDebugging}, ${options.variableName})`;
+        return {
+            code: `${initializeCode}\n\n${code}\n\n${cleanupCode}`
+        };
+    }
     /**
      * Script content is static, hence read the contents once.
      */

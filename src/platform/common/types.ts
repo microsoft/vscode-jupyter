@@ -309,6 +309,7 @@ export interface IVariableScriptGenerator {
         parent: { root: string; propertyChain: (string | number)[] } | undefined;
         startIndex: number;
     }): Promise<ScriptCode>;
+    generateCodeToGetVariableValueSummary(options: { variableName: string }): Promise<ScriptCode>;
 }
 export const IDataFrameScriptGenerator = Symbol('IDataFrameScriptGenerator');
 export interface IDataFrameScriptGenerator {

@@ -41,6 +41,11 @@ export interface IJupyterVariables {
         kernel?: IKernel,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable>;
+    getVariableValueSummary(
+        variable: IJupyterVariable,
+        kernel?: IKernel,
+        cancelToken?: CancellationToken
+    ): Promise<string | undefined>;
     getDataFrameInfo(
         targetVariable: IJupyterVariable,
         kernel?: IKernel,
@@ -99,6 +104,12 @@ export interface IVariableDescription extends Variable {
     getChildren?: (start: number, token: CancellationToken) => Promise<IVariableDescription[]>;
 }
 
+export interface IRichVariableResult {
+    variable: Variable & { summary?: string };
+    hasNamedChildren: boolean;
+    indexedChildrenCount: number;
+}
+
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
 
 export interface IKernelVariableRequester {
@@ -125,5 +136,10 @@ export interface IKernelVariableRequester {
         cancelToken: CancellationToken | undefined,
         matchingVariable: IJupyterVariable | undefined
     ): Promise<{ [attributeName: string]: string }>;
+    getVariableValueSummary(
+        targetVariable: IJupyterVariable,
+        kernel: IKernel,
+        token?: CancellationToken
+    ): Promise<string | undefined>;
     getDataFrameInfo(targetVariable: IJupyterVariable, kernel: IKernel, expression: string): Promise<IJupyterVariable>;
 }

@@ -75,6 +75,14 @@ export class JupyterVariables implements IJupyterVariables {
         return this.variableHandler.getDataFrameInfo(targetVariable, kernel, sliceExpression, isRefresh);
     }
 
+    public async getVariableValueSummary(
+        targetVariable: IJupyterVariable,
+        kernel?: IKernel,
+        cancelToken?: CancellationToken
+    ) {
+        return this.variableHandler.getVariableValueSummary(targetVariable, kernel, cancelToken);
+    }
+
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
         start: number,

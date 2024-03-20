@@ -148,6 +148,26 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         return result;
     }
 
+    public async getVariableValueSummary(
+        targetVariable: IJupyterVariable,
+        kernel: IKernel,
+        _cancelToken?: CancellationToken
+    ) {
+        const { code, cleanupCode, initializeCode } =
+            await this.varScriptGenerator.generateCodeToGetVariableValueSummary({ variableName: targetVariable.name });
+        const results = await safeExecuteSilently(
+            kernel,
+            { code, cleanupCode, initializeCode },
+            {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            }
+        );
+
+        return this.extractJupyterResultText(results);
+    }
+
     public async getAllVariableDiscriptions(
         kernel: IKernel,
         parent: IVariableDescription | undefined,

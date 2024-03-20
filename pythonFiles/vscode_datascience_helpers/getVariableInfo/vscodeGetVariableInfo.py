@@ -277,6 +277,18 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         else:
             return _VSCODE_builtins.print(_VSCODE_json.dumps(result))
 
+    def _VSCODE_getVariableSummary(variable):
+        if variable is None:
+            return None
+        # check if the variable is a dataframe
+        if (
+            _VSCODE_builtins.type(variable).__name__ == "DataFrame"
+            and _VSCODE_importlib_util.find_spec("pandas") is not None
+        ):
+            return _VSCODE_builtins.print(variable.info())
+
+        return None
+
     try:
         if what_to_get == "properties":
             return _VSCODE_getVariableProperties(*args)
@@ -286,6 +298,8 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             return _VSCODE_getVariableDescriptions(*args)
         elif what_to_get == "AllChildrenDescriptions":
             return _VSCODE_getAllChildrenDescriptions(*args)
+        elif what_to_get == "summary":
+            return _VSCODE_getVariableSummary(*args)
         else:
             return _VSCODE_getVariableTypes(*args)
     finally:
