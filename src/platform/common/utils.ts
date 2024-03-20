@@ -5,7 +5,6 @@ import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
 import {
-    NotebookData,
     NotebookDocument,
     NotebookEdit,
     TextDocument,
