@@ -7,7 +7,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { CellAnalysis, ICellExecution, ILocationWithReferenceKind, NotebookDocumentSymbolTracker } from './symbols';
 import { PylanceExtension } from './common';
 import { activatePylance } from './pylance';
-import { sleep } from '../../test/core';
 
 function withNotebookCells(data: [string, string][], fileName: string) {
     const cells: vscode.NotebookCell[] = data.map((cellDto) => {
@@ -496,24 +495,36 @@ function closeAllEditors(): Thenable<any> {
 (vscode.extensions.getExtension(PylanceExtension) ? suite : suite.skip)('Cell Analysis - Pylance', () => {
     test('Advanced type dependencies', async () => {
         console.error('Step.Pylance.1');
-        await sleep(10_000);
-        const document = await vscode.workspace.openNotebookDocument(
-            'jupyter-notebook',
-            new vscode.NotebookData([
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import pandas as pd', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'df = pd.DataFrame()', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'mylist = [1, 2, 3, 4]', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'mylist2 = [2, 3, 4, 5]', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(mylist)', 'python')
-            ])
-        );
+        const nb = new vscode.NotebookData([
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import pandas as pd', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'df = pd.DataFrame()', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'mylist = [1, 2, 3, 4]', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'mylist2 = [2, 3, 4, 5]', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(mylist)', 'python')
+        ]);
+        nb.metadata = {
+            custom: {
+                metadata: {
+                    orig_nbformat: 4,
+                    kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+                    language_info: { name: 'python', version: '3.6.0' }
+                },
+                orig_nbformat: 4,
+                kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+                language_info: { name: 'python', version: '3.6.0' }
+            },
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+            language_info: { name: 'python', version: '3.6.0' }
+        };
+
+        const document = await vscode.workspace.openNotebookDocument('jupyter-notebook', nb);
 
         console.error('Step.Pylance.2', JSON.stringify(document.metadata));
         console.error('Step.Pylance.2', JSON.stringify(document.getCells().map((c) => c.metadata)));
         console.error('Step.Pylance.2');
         const editor = await vscode.window.showNotebookDocument(document);
         console.error('Step.Pylance.3');
-        await sleep(10_000);
         const referencesProvider = await activatePylance();
         console.error('Step.Pylance.4');
         if (!referencesProvider) {
@@ -557,15 +568,29 @@ function closeAllEditors(): Thenable<any> {
     }).timeout(60_000);
 
     test('Advanced type dependencies 2', async () => {
-        const document = await vscode.workspace.openNotebookDocument(
-            'jupyter-notebook',
-            new vscode.NotebookData([
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import numpy as np', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'arr = np.array([1, 2, 3, 4])', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'arr2 = np.array([2, 3, 4, 5])', 'python'),
-                new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(arr)', 'python')
-            ])
-        );
+        const nb = new vscode.NotebookData([
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import numpy as np', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'arr = np.array([1, 2, 3, 4])', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'arr2 = np.array([2, 3, 4, 5])', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(arr)', 'python')
+        ]);
+        nb.metadata = {
+            custom: {
+                metadata: {
+                    orig_nbformat: 4,
+                    kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+                    language_info: { name: 'python', version: '3.6.0' }
+                },
+                orig_nbformat: 4,
+                kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+                language_info: { name: 'python', version: '3.6.0' }
+            },
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+            language_info: { name: 'python', version: '3.6.0' }
+        };
+
+        const document = await vscode.workspace.openNotebookDocument('jupyter-notebook', nb);
         const editor = await vscode.window.showNotebookDocument(document);
         const referencesProvider = await activatePylance();
         if (!referencesProvider) {
@@ -610,11 +635,17 @@ function closeAllEditors(): Thenable<any> {
         nb.metadata = {
             custom: {
                 metadata: {
-                    language_info: {
-                        name: 'python'
-                    }
-                }
-            }
+                    orig_nbformat: 4,
+                    kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+                    language_info: { name: 'python', version: '3.6.0' }
+                },
+                orig_nbformat: 4,
+                kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+                language_info: { name: 'python', version: '3.6.0' }
+            },
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+            language_info: { name: 'python', version: '3.6.0' }
         };
         const document = await vscode.workspace.openNotebookDocument(
             'jupyter-notebook',
