@@ -5,7 +5,7 @@ import { NotebookCellData, NotebookCellKind, NotebookDocument, Range, TextDocume
 import { CellMatcher } from './cellMatcher';
 import { ICellRange, IJupyterSettings } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
+import { parseForComments, generateMarkdownFromCodeLines, useCustomMetadata } from '../../platform/common/utils';
 import { splitLines } from '../../platform/common/helpers';
 import { isSysInfoCell } from '../systemInfoCell';
 import { getCellMetadata } from '../../platform/common/utils';
@@ -145,7 +145,7 @@ export function generateCellsFromNotebookDocument(notebookDocument: NotebookDocu
             if (cell.kind === NotebookCellKind.Code) {
                 cellData.outputs = [...cell.outputs];
             }
-            cellData.metadata = { custom: getCellMetadata(cell) };
+            cellData.metadata = useCustomMetadata() ? { custom: getCellMetadata(cell) } : getCellMetadata(cell);
             return cellData;
         });
 }
