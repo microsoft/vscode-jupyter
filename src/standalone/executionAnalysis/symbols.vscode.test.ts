@@ -506,6 +506,8 @@ function closeAllEditors(): Thenable<any> {
             ])
         );
 
+        console.error('Step.Pylance.2', JSON.stringify(document.metadata));
+        console.error('Step.Pylance.2', JSON.stringify(document.getCells().map((c) => c.metadata)));
         console.error('Step.Pylance.2');
         const editor = await vscode.window.showNotebookDocument(document);
         console.error('Step.Pylance.3');
