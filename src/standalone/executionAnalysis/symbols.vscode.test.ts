@@ -505,7 +505,7 @@ function closeAllEditors(): Thenable<any> {
             ])
         );
 
-        const editor = await await vscode.window.showNotebookDocument(document);
+        const editor = await vscode.window.showNotebookDocument(document);
         const referencesProvider = await activatePylance();
         if (!referencesProvider) {
             assert.fail('Pylance not found');
