@@ -488,7 +488,7 @@ export function useCustomMetadata() {
 
 export async function activateIPynbExtension() {
     const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
-    if (ext && !ext.isActive) {
+    if (ext && ext.isActive === false) {
         await ext.activate().then(noop, noop);
     }
 }
