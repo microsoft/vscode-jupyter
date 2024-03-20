@@ -601,6 +601,21 @@ function closeAllEditors(): Thenable<any> {
     }).timeout(30_000);
 
     test('Advanced type dependencies 3', async () => {
+        const nb = new vscode.NotebookData([
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import matplotlib.pyplot as plt', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'x = [1, 2, 3, 4]', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'y = [2, 3, 4, 5]', 'python'),
+            new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'plt.plot(x, y)', 'python')
+        ]);
+        nb.metadata = {
+            custom: {
+                metadata: {
+                    language_info: {
+                        name: 'python'
+                    }
+                }
+            }
+        };
         const document = await vscode.workspace.openNotebookDocument(
             'jupyter-notebook',
             new vscode.NotebookData([
