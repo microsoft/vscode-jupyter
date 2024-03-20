@@ -101,7 +101,7 @@ import { ControllerPreferredService } from './controllerPreferredService';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { JupyterLabHelper } from '../../../kernels/jupyter/session/jupyterLabHelper';
 import { getRootFolder } from '../../../platform/common/application/workspace.base';
-import { useCustomMetadata } from '../../../platform/common/utils';
+import { activateIPynbExtension, useCustomMetadata } from '../../../platform/common/utils';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -835,6 +835,7 @@ export async function prewarmNotebooks() {
     if (prewarmNotebooksDone.done) {
         return;
     }
+    await activateIPynbExtension();
     const { serviceContainer } = await getServices();
     await closeActiveWindows();
 
