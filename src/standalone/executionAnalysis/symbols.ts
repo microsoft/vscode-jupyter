@@ -282,6 +282,7 @@ export class NotebookDocumentSymbolTracker {
         for (const key of _pendingRequestsKeys) {
             const cell = this._notebookEditor.notebook.getCells().find((cell) => cell.document.uri.fragment === key);
             if (cell) {
+                console.error('Step.Pylance.5.2', cell.index);
                 await this._requestCellSymbols(cell, true);
             }
         }
@@ -318,7 +319,9 @@ export class NotebookDocumentSymbolTracker {
     }
 
     async getPrecedentCells(cell: vscode.NotebookCell) {
+        console.error('Step.Pylance.5.1');
         await this.requestCellSymbolsSync();
+        console.error('Step.Pylance.6.0');
         const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
         let precedentCells: vscode.NotebookCell[] = [];
 
@@ -433,7 +436,9 @@ export class NotebookDocumentSymbolTracker {
 
         if (synchronous) {
             const cancellationTokenSource = new vscode.CancellationTokenSource();
+            console.error('Step.Pylance.5.3', cell.index);
             await this._doRequestCellSymbols(cell, cancellationTokenSource.token);
+            console.error('Step.Pylance.5.3.End', cell.index);
             cancellationTokenSource.dispose();
             return;
         }
@@ -458,9 +463,11 @@ export class NotebookDocumentSymbolTracker {
 
     private async _getDocumentSymbols(cell: vscode.NotebookCell) {
         if (this._client.getDocumentSymbols) {
+            console.error('Step.Pylance.5.4 with Pylance', cell.index);
             const tokenSource = new vscode.CancellationTokenSource();
             return this._client.getDocumentSymbols(cell.document, tokenSource.token);
         } else {
+            console.error('Step.Pylance.5.4 without Pylance', cell.index);
             return vscode.commands.executeCommand<(vscode.SymbolInformation & vscode.DocumentSymbol)[] | undefined>(
                 'vscode.executeDocumentSymbolProvider',
                 cell.document.uri
@@ -469,19 +476,27 @@ export class NotebookDocumentSymbolTracker {
     }
 
     private async _doRequestCellSymbols(cell: vscode.NotebookCell, token: vscode.CancellationToken) {
+        console.error('Step.Pylance.5.4', cell.index);
         const symbols = await this._getDocumentSymbols(cell);
+        console.error('Step.Pylance.5.5', cell.index);
         if (!symbols) {
             return;
         }
 
         const references: (LocationWithReferenceKind & { associatedSymbol: ISymbol })[] = [];
         for (const symbol of symbols) {
+            console.error(
+                'Step.Pylance.5.6',
+                cell.index,
+                `${symbol.name}:${symbol.range.start.line}.${symbol.range.start.character}`
+            );
             const symbolReferences = await this._client.getReferences(
                 cell.document,
                 symbol.selectionRange.start,
                 { includeDeclaration: true },
                 token
             );
+            console.error('Step.Pylance.5.7');
             if (symbolReferences) {
                 references.push(
                     ...symbolReferences
