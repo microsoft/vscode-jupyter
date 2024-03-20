@@ -21,6 +21,7 @@ import { IKernelController } from '../../../kernels/types';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { ReadWrite } from '../../../platform/common/types';
 import { MockNotebookDocuments } from './helper';
+import { useCustomMetadata } from '../../../platform/common/utils';
 
 export function createKernelController(controllerId = '1'): IKernelController {
     return {
@@ -104,7 +105,7 @@ export class TestNotebookDocument implements NotebookDocument {
     constructor(
         public readonly uri: Uri = Uri.file(`untitled${Date.now()}.ipynb`),
         public readonly notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView = JupyterNotebookView,
-        public metadata = { custom: {} },
+        public metadata: {} = useCustomMetadata() ? { custom: {} } : {},
         public isUntitled = true,
         public version: number = 0,
         public isDirty = false,

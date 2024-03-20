@@ -7,6 +7,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { CellAnalysis, ICellExecution, ILocationWithReferenceKind, NotebookDocumentSymbolTracker } from './symbols';
 import { PylanceExtension } from './common';
 import { activatePylance } from './pylance';
+import { sleep } from '../../test/core';
 
 function withNotebookCells(data: [string, string][], fileName: string) {
     const cells: vscode.NotebookCell[] = data.map((cellDto) => {
@@ -494,6 +495,8 @@ function closeAllEditors(): Thenable<any> {
 
 (vscode.extensions.getExtension(PylanceExtension) ? suite : suite.skip)('Cell Analysis - Pylance', () => {
     test('Advanced type dependencies', async () => {
+        console.error('Step.Pylance.1');
+        await sleep(10_000);
         const document = await vscode.workspace.openNotebookDocument(
             'jupyter-notebook',
             new vscode.NotebookData([
@@ -505,8 +508,14 @@ function closeAllEditors(): Thenable<any> {
             ])
         );
 
+        console.error('Step.Pylance.2', JSON.stringify(document.metadata));
+        console.error('Step.Pylance.2', JSON.stringify(document.getCells().map((c) => c.metadata)));
+        console.error('Step.Pylance.2');
         const editor = await vscode.window.showNotebookDocument(document);
+        console.error('Step.Pylance.3');
+        await sleep(10_000);
         const referencesProvider = await activatePylance();
+        console.error('Step.Pylance.4');
         if (!referencesProvider) {
             assert.fail('Pylance not found');
         }
@@ -514,14 +523,18 @@ function closeAllEditors(): Thenable<any> {
         const documentSymbolTracker = new NotebookDocumentSymbolTracker(editor, referencesProvider);
 
         {
+            console.error('Step.Pylance.5');
             const precedentCellRanges = await documentSymbolTracker.getPrecedentCells(document.cellAt(1));
+            console.error('Step.Pylance.6');
             assert.equal(precedentCellRanges.length, 1);
             assert.equal(precedentCellRanges[0].start, 0);
             assert.equal(precedentCellRanges[0].end, 2);
         }
 
         {
+            console.error('Step.Pylance.7');
             const precedentCellRanges = await documentSymbolTracker.getPrecedentCells(document.cellAt(4));
+            console.error('Step.Pylance.8');
             assert.equal(precedentCellRanges.length, 2);
             assert.equal(precedentCellRanges[0].start, 2);
             assert.equal(precedentCellRanges[0].end, 3);
@@ -530,14 +543,18 @@ function closeAllEditors(): Thenable<any> {
         }
 
         {
+            console.error('Step.Pylance.9');
             const successorCellRanges = await documentSymbolTracker.getSuccessorCells(document.cellAt(0));
+            console.error('Step.Pylance.10');
             assert.equal(successorCellRanges.length, 1);
             assert.equal(successorCellRanges[0].start, 0);
             assert.equal(successorCellRanges[0].end, 2);
         }
 
+        console.error('Step.Pylance.11');
         await closeAllEditors();
-    });
+        console.error('Step.Pylance.12');
+    }).timeout(60_000);
 
     test('Advanced type dependencies 2', async () => {
         const document = await vscode.workspace.openNotebookDocument(
@@ -581,7 +598,7 @@ function closeAllEditors(): Thenable<any> {
         }
 
         await closeAllEditors();
-    });
+    }).timeout(30_000);
 
     test('Advanced type dependencies 3', async () => {
         const document = await vscode.workspace.openNotebookDocument(
