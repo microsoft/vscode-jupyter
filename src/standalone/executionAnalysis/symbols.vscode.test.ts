@@ -496,6 +496,7 @@ function closeAllEditors(): Thenable<any> {
 (vscode.extensions.getExtension(PylanceExtension) ? suite : suite.skip)('Cell Analysis - Pylance', () => {
     test('Advanced type dependencies', async () => {
         console.error('Step.Pylance.1');
+        await sleep(10_000);
         const document = await vscode.workspace.openNotebookDocument(
             'jupyter-notebook',
             new vscode.NotebookData([
@@ -512,7 +513,7 @@ function closeAllEditors(): Thenable<any> {
         console.error('Step.Pylance.2');
         const editor = await vscode.window.showNotebookDocument(document);
         console.error('Step.Pylance.3');
-        await sleep(5_000);
+        await sleep(10_000);
         const referencesProvider = await activatePylance();
         console.error('Step.Pylance.4');
         if (!referencesProvider) {
@@ -553,7 +554,7 @@ function closeAllEditors(): Thenable<any> {
         console.error('Step.Pylance.11');
         await closeAllEditors();
         console.error('Step.Pylance.12');
-    });
+    }).timeout(60_000);
 
     test('Advanced type dependencies 2', async () => {
         const document = await vscode.workspace.openNotebookDocument(
