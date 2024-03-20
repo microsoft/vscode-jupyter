@@ -47,7 +47,7 @@ export type IWebSocketLike = {
  */
 
 /**
- * Adds send/recieve hooks to a WebSocketLike object. These are necessary for things like IPyWidgets support.
+ * Adds send/receive hooks to a WebSocketLike object. These are necessary for things like IPyWidgets support.
  * @param SuperClass The class to mix into
  * @returns
  */

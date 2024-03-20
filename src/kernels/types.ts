@@ -434,7 +434,7 @@ export interface INotebookKernelExecution {
     readonly executionCount: number;
     readonly onPreExecute: Event<NotebookCell>;
     readonly onPostExecute: Event<NotebookCell>;
-    readonly onDidRecieveDisplayUpdate: Event<NotebookCellOutput>;
+    readonly onDidReceiveDisplayUpdate: Event<NotebookCellOutput>;
     /**
      * Cells that are still being executed (or pending).
      */
