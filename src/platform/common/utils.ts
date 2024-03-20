@@ -476,6 +476,8 @@ export function useCustomMetadata() {
     if (ext && typeof ext.exports.dropCustomMetadata === 'boolean') {
         return ext.exports.dropCustomMetadata ? false : true;
     }
+    // Means ipynb extension has not yet been activated.
+    // Does not matter, we can just check the setting.
     return !workspace.getConfiguration('jupyter', undefined).get<boolean>('experimental.dropCustomMetadata', false);
 }
 
