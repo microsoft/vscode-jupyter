@@ -130,8 +130,8 @@ async function createSettings(): Promise<string> {
         'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com'],
         // New Kernel Picker.
         'notebook.kernelPicker.type': 'mru',
-        'jupyter.experimental.dropCustomMetadata': false,
-        'jupyter.drop.custom.property': false
+        'jupyter.experimental.dropCustomMetadata': true,
+        'jupyter.drop.custom.property': true
     };
     if (IS_SMOKE_TEST()) {
         defaultSettings['python.languageServer'] = 'None';

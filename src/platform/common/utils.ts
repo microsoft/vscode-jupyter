@@ -168,7 +168,7 @@ export type NotebookMetadata = nbformat.INotebookMetadata & {
     };
 };
 
-export function getNotebookMetadata(document: NotebookDocument | NotebookData): NotebookMetadata | undefined {
+export function getNotebookMetadata(document: NotebookDocument): NotebookMetadata | undefined {
     if (useCustomMetadata()) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
