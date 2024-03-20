@@ -72,23 +72,20 @@ export async function activatePylance(): Promise<INotebookLanguageClient | undef
 
     return new Promise((resolve, reject) => {
         runPylance(pylanceExtension)
-            .then(
-                async (client) => {
-                    if (!client) {
-                        console.error('Could not start Pylance');
-                        reject();
-                        return;
-                    }
+            .then(async (client) => {
+                if (!client) {
+                    console.error('Could not start Pylance');
+                    reject();
+                    return;
+                }
 
-                    if (client.client) {
-                        await client.client.start();
-                    }
+                if (client.client) {
+                    await client.client.start();
+                }
 
-                    _client = client.notebook;
-                    resolve(client.notebook);
-                },
-                (ex) => console.error(`Failed to start Pylance`, ex)
-            )
+                _client = client.notebook;
+                resolve(client.notebook);
+            })
             .then(noop, noop);
     });
 }

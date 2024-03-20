@@ -503,6 +503,7 @@ function closeAllEditors(): Thenable<any> {
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(mylist)', 'python')
         ]);
 
+        // Temporary, until Pylance is fixed
         if (!useCustomMetadata()) {
             nb.metadata = {
                 custom: {
@@ -555,6 +556,7 @@ function closeAllEditors(): Thenable<any> {
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'arr2 = np.array([2, 3, 4, 5])', 'python'),
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(arr)', 'python')
         ]);
+        // Temporary, until Pylance is fixed
         if (!useCustomMetadata()) {
             nb.metadata = {
                 custom: {
@@ -606,6 +608,7 @@ function closeAllEditors(): Thenable<any> {
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'y = [2, 3, 4, 5]', 'python'),
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'plt.plot(x, y)', 'python')
         ]);
+        // Temporary, until Pylance is fixed
         if (!useCustomMetadata()) {
             nb.metadata = {
                 custom: {
