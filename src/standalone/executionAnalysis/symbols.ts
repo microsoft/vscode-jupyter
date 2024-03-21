@@ -684,7 +684,7 @@ export class ExecutionFixCodeActionsProvider implements vscode.CodeActionProvide
         // get cells from ranges
         const matchingRefs = await Promise.all(
             cellRangesToIndexes(precedentCellsRanges).map(async (index) => {
-                const cell = notebookDocument.cellAt(index);
+                const cell = notebookDocument?.cellAt(index);
                 if (!cell) {
                     return false;
                 }
@@ -695,7 +695,7 @@ export class ExecutionFixCodeActionsProvider implements vscode.CodeActionProvide
 
                 const symbolRef = symbols
                     .filter((s) => s.associatedSymbol?.name === name)
-                    .find((s) => s.uri.toString() === targetCell.document.uri.toString());
+                    .find((s) => s.uri.toString() === targetCell?.document.uri.toString());
 
                 if (!symbolRef) {
                     return false;
