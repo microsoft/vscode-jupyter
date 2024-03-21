@@ -3,7 +3,14 @@
 
 import * as vscode from 'vscode';
 import { INotebookLanguageClient } from './pylance';
-import { cellIndexesToRanges, areRangesEqual, LocationWithReferenceKind, noop, Range } from './common';
+import {
+    cellIndexesToRanges,
+    areRangesEqual,
+    LocationWithReferenceKind,
+    noop,
+    Range,
+    cellRangesToIndexes
+} from './common';
 
 const writeDecorationType = vscode.window.createTextEditorDecorationType({
     after: {
@@ -109,7 +116,7 @@ export class CellAnalysis {
         }
 
         const cellFragment = cell.document.uri.fragment;
-        this._resolveDependencies(reversedCellRefs, cellBitmap, cellFragment, slicedCellExecution);
+        this._resolveDependencies(reversedCellRefs, cellBitmap, cellFragment, slicedCellExecution, forceReadNotebook);
 
         const cellData: vscode.NotebookCell[] = [];
         for (let i = 0; i < cellBitmap.length; i++) {
@@ -183,18 +190,29 @@ export class CellAnalysis {
         reversedCellRefs: Map<string, string[]>,
         cellBitmap: boolean[],
         cellFragment: string,
-        cellExecution: vscode.NotebookCell[]
+        cellExecution: vscode.NotebookCell[],
+        ignoreUnboundDependencies: boolean = false
     ) {
         if (reversedCellRefs.has(cellFragment)) {
             for (const dependency of reversedCellRefs.get(cellFragment)!) {
                 const index = cellExecution.findIndex((cell) => cell.document.uri.fragment === dependency);
 
                 if (index === -1) {
-                    throw new Error(`Dependency ${dependency} is not in the execution list.`);
+                    if (!ignoreUnboundDependencies) {
+                        throw new Error(`Dependency ${dependency} is not in the execution list.`);
+                    } else {
+                        continue;
+                    }
                 }
                 if (!cellBitmap[index]) {
                     cellBitmap[index] = true;
-                    this._resolveDependencies(reversedCellRefs, cellBitmap, dependency, cellExecution);
+                    this._resolveDependencies(
+                        reversedCellRefs,
+                        cellBitmap,
+                        dependency,
+                        cellExecution,
+                        ignoreUnboundDependencies
+                    );
                 }
             }
         }
@@ -287,14 +305,13 @@ export class NotebookDocumentSymbolTracker {
         }
     }
 
-    async getSymbolsInRange(cell: vscode.NotebookCell, range: vscode.Range) {
-        await this._requestCellSymbols(cell, false);
+    async getCellSymbolRefs(cell: vscode.NotebookCell) {
         const refs = this._cellRefs.get(cell.document.uri.fragment);
         if (!refs) {
             return;
         }
 
-        return refs.filter((ref) => Range.intersects(ref.range, range));
+        return refs;
     }
 
     async selectPrecedentCells(cell: vscode.NotebookCell) {
@@ -624,17 +641,17 @@ export class ExecutionFixCodeActionsProvider implements vscode.CodeActionProvide
         const notebookDocuments = vscode.workspace.notebookDocuments.filter(
             (notebookDocument) => notebookDocument.uri.path === document.uri.path
         );
-        let cell: vscode.NotebookCell | undefined;
+        let targetCell: vscode.NotebookCell | undefined;
         let notebookDocument: vscode.NotebookDocument | undefined;
         for (const doc of notebookDocuments) {
-            cell = doc.getCells().find((cell) => cell.document.uri.toString() === document.uri.toString());
-            if (cell) {
+            targetCell = doc.getCells().find((cell) => cell.document.uri.toString() === document.uri.toString());
+            if (targetCell) {
                 notebookDocument = doc;
                 break;
             }
         }
 
-        if (!cell || !notebookDocument) {
+        if (!targetCell || !notebookDocument) {
             return [];
         }
 
@@ -662,29 +679,49 @@ export class ExecutionFixCodeActionsProvider implements vscode.CodeActionProvide
         }
         const name = match[1];
 
-        const symbols = await tracker.getSymbolsInRange(cell, range);
-        if (!symbols) {
-            return [];
-        }
+        const precedentCellsRanges = await tracker.getPrecedentCells(targetCell);
+
+        // get cells from ranges
+        const matchingRefs = await Promise.all(
+            cellRangesToIndexes(precedentCellsRanges).map(async (index) => {
+                const cell = notebookDocument.cellAt(index);
+                if (!cell) {
+                    return false;
+                }
+                const symbols = await tracker.getCellSymbolRefs(cell);
+                if (!symbols || symbols.length <= 0) {
+                    return false;
+                }
+
+                const symbolRef = symbols
+                    .filter((s) => s.associatedSymbol?.name === name)
+                    .find((s) => s.uri.toString() === targetCell.document.uri.toString());
+
+                if (!symbolRef) {
+                    return false;
+                }
+
+                if (Range.intersects(symbolRef.range, range)) {
+                    return true;
+                }
+            })
+        );
 
         if (token.isCancellationRequested) {
             return [];
         }
 
-        // find the symbol
-        const symbol = symbols.find((symbol) => symbol.associatedSymbol?.name === name);
+        if (matchingRefs.some((r) => r)) {
+            const action = new vscode.CodeAction('Run Precedent Cells', vscode.CodeActionKind.QuickFix);
+            action.command = {
+                command: 'jupyter.runPrecedentCells',
+                title: 'Run Precedent Cells',
+                arguments: [targetCell]
+            };
 
-        if (!symbol) {
-            return [];
+            return [action];
         }
 
-        const action = new vscode.CodeAction('Run Precedent Cells', vscode.CodeActionKind.QuickFix);
-        action.command = {
-            command: 'jupyter.runPrecedentCells',
-            title: 'Run Precedent Cells',
-            arguments: [cell]
-        };
-
-        return [action];
+        return [];
     }
 }

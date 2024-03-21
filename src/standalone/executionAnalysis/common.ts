@@ -99,6 +99,18 @@ export function cellIndexesToRanges(indexes: number[]): vscode.NotebookRange[] {
         .map((val) => new vscode.NotebookRange(val[0], val[1]));
 }
 
+export function cellRangesToIndexes(ranges: vscode.NotebookRange[]): number[] {
+    const indexes = ranges.reduce((a, b) => {
+        for (let i = b.start; i < b.end; i++) {
+            a.push(i);
+        }
+
+        return a;
+    }, [] as number[]);
+
+    return indexes;
+}
+
 function findNotebook(document: vscode.TextDocument): vscode.NotebookDocument | undefined {
     return vscode.workspace.notebookDocuments.find(
         (doc) => doc.uri.authority === document.uri.authority && doc.uri.path === document.uri.path
