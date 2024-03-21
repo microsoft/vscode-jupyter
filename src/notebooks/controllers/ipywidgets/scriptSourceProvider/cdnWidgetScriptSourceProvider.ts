@@ -192,6 +192,14 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     }
 
     private async getValidUri(moduleName: string, moduleVersion: string, cdn: WidgetCDNs): Promise<string | undefined> {
+        const promise = this.doGetValidUri(moduleName, moduleVersion, cdn);
+        if (moduleVersion.startsWith('~')) {
+            return promise.then( value => value || this.doGetValidUri(moduleName, moduleVersion.substring(1), cdn));
+        } else {
+            return promise;
+        }
+    }
+    private async doGetValidUri(moduleName: string, moduleVersion: string, cdn: WidgetCDNs): Promise<string | undefined> {
         // Make sure CDN has the item before returning it.
         try {
             const downloadUrl = await this.generateDownloadUri(moduleName, moduleVersion, cdn);
