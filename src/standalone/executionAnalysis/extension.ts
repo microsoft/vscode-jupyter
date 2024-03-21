@@ -86,7 +86,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         vscode.languages.registerCodeActionsProvider(
             { language: 'python', notebookType: 'jupyter-notebook' },
-            new ExecutionFixCodeActionsProvider(null!),
+            new ExecutionFixCodeActionsProvider(symbolsManager),
             {
                 providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
             }

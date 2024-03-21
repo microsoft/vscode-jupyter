@@ -469,8 +469,13 @@ export class NotebookDocumentSymbolTracker {
     private async _getDocumentSymbols(cell: vscode.NotebookCell) {
         if (this._client.getDocumentSymbols) {
             const tokenSource = new vscode.CancellationTokenSource();
-            return this._client.getDocumentSymbols(cell.document, tokenSource.token);
-        } else {
+            const symbols = await this._client.getDocumentSymbols(cell.document, tokenSource.token);
+            if (symbols && symbols.length > 0) {
+                tokenSource.dispose();
+                return symbols;
+            }
+        }
+        if (cell.document.lineCount > 1 || cell.document.lineAt(0).text.length > 0) {
             return vscode.commands.executeCommand<(vscode.SymbolInformation & vscode.DocumentSymbol)[] | undefined>(
                 'vscode.executeDocumentSymbolProvider',
                 cell.document.uri

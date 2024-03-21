@@ -20,16 +20,34 @@ export namespace Range {
     }
 
     export function intersects(range: Range, otherRange: Range): boolean {
-        if (otherRange.start.line < range.start.line || otherRange.end.line < range.start.line) {
+        let resultStartLineNumber = range.start.line;
+        let resultStartColumn = range.start.character;
+        let resultEndLineNumber = range.end.line;
+        let resultEndColumn = range.end.character;
+        const otherStartLineNumber = otherRange.start.line;
+        const otherStartColumn = otherRange.start.character;
+        const otherEndLineNumber = otherRange.end.line;
+        const otherEndColumn = otherRange.end.character;
+
+        if (resultStartLineNumber < otherStartLineNumber) {
+            resultStartLineNumber = otherStartLineNumber;
+            resultStartColumn = otherStartColumn;
+        } else if (resultStartLineNumber === otherStartLineNumber) {
+            resultStartColumn = Math.max(resultStartColumn, otherStartColumn);
+        }
+
+        if (resultEndLineNumber > otherEndLineNumber) {
+            resultEndLineNumber = otherEndLineNumber;
+            resultEndColumn = otherEndColumn;
+        } else if (resultEndLineNumber === otherEndLineNumber) {
+            resultEndColumn = Math.min(resultEndColumn, otherEndColumn);
+        }
+
+        // Check if selection is now empty
+        if (resultStartLineNumber > resultEndLineNumber) {
             return false;
         }
-        if (otherRange.start.line > range.end.line || otherRange.end.line > range.end.line) {
-            return false;
-        }
-        if (otherRange.start.line === range.start.line && otherRange.start.character < range.start.character) {
-            return false;
-        }
-        if (otherRange.end.line === range.end.line && otherRange.end.character > range.end.character) {
+        if (resultStartLineNumber === resultEndLineNumber && resultStartColumn > resultEndColumn) {
             return false;
         }
 
