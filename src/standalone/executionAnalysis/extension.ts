@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import { activatePylance } from './pylance';
 import { findNotebookAndCell, noop } from './common';
-import { SymbolsTracker } from './symbols';
+import { ExecutionFixCodeActionsProvider, SymbolsTracker } from './symbols';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const optInto = vscode.workspace.getConfiguration('jupyter').get<boolean>('executionAnalysis.enabled');
@@ -81,6 +81,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 await symbolsManager.debugSymbols(notebookEditor.notebook);
             }
         })
+    );
+
+    context.subscriptions.push(
+        vscode.languages.registerCodeActionsProvider(
+            { language: 'python', notebookType: 'jupyter-notebook' },
+            new ExecutionFixCodeActionsProvider(null!),
+            {
+                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
+            }
+        )
     );
 }
 

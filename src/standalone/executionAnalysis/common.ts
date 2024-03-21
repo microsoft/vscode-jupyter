@@ -14,6 +14,29 @@ export interface Range {
     end: Position;
 }
 
+export namespace Range {
+    export function isEmpty(range: Range): boolean {
+        return range.start.line === range.end.line && range.start.character === range.end.character;
+    }
+
+    export function intersects(range: Range, otherRange: Range): boolean {
+        if (otherRange.start.line < range.start.line || otherRange.end.line < range.start.line) {
+            return false;
+        }
+        if (otherRange.start.line > range.end.line || otherRange.end.line > range.end.line) {
+            return false;
+        }
+        if (otherRange.start.line === range.start.line && otherRange.start.character < range.start.character) {
+            return false;
+        }
+        if (otherRange.end.line === range.end.line && otherRange.end.character > range.end.character) {
+            return false;
+        }
+
+        return true;
+    }
+}
+
 export interface Position {
     /**
      * Line position in a document (zero-based).
