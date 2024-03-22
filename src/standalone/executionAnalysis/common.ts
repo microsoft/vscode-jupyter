@@ -14,6 +14,47 @@ export interface Range {
     end: Position;
 }
 
+export namespace Range {
+    export function isEmpty(range: Range): boolean {
+        return range.start.line === range.end.line && range.start.character === range.end.character;
+    }
+
+    export function intersects(range: Range, otherRange: Range): boolean {
+        let resultStartLineNumber = range.start.line;
+        let resultStartColumn = range.start.character;
+        let resultEndLineNumber = range.end.line;
+        let resultEndColumn = range.end.character;
+        const otherStartLineNumber = otherRange.start.line;
+        const otherStartColumn = otherRange.start.character;
+        const otherEndLineNumber = otherRange.end.line;
+        const otherEndColumn = otherRange.end.character;
+
+        if (resultStartLineNumber < otherStartLineNumber) {
+            resultStartLineNumber = otherStartLineNumber;
+            resultStartColumn = otherStartColumn;
+        } else if (resultStartLineNumber === otherStartLineNumber) {
+            resultStartColumn = Math.max(resultStartColumn, otherStartColumn);
+        }
+
+        if (resultEndLineNumber > otherEndLineNumber) {
+            resultEndLineNumber = otherEndLineNumber;
+            resultEndColumn = otherEndColumn;
+        } else if (resultEndLineNumber === otherEndLineNumber) {
+            resultEndColumn = Math.min(resultEndColumn, otherEndColumn);
+        }
+
+        // Check if selection is now empty
+        if (resultStartLineNumber > resultEndLineNumber) {
+            return false;
+        }
+        if (resultStartLineNumber === resultEndLineNumber && resultStartColumn > resultEndColumn) {
+            return false;
+        }
+
+        return true;
+    }
+}
+
 export interface Position {
     /**
      * Line position in a document (zero-based).
@@ -56,6 +97,18 @@ export function cellIndexesToRanges(indexes: number[]): vscode.NotebookRange[] {
         )
         .reverse()
         .map((val) => new vscode.NotebookRange(val[0], val[1]));
+}
+
+export function cellRangesToIndexes(ranges: vscode.NotebookRange[]): number[] {
+    const indexes = ranges.reduce((a, b) => {
+        for (let i = b.start; i < b.end; i++) {
+            a.push(i);
+        }
+
+        return a;
+    }, [] as number[]);
+
+    return indexes;
 }
 
 function findNotebook(document: vscode.TextDocument): vscode.NotebookDocument | undefined {
