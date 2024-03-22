@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named, optional } from 'inversify';
-import { DebugConfiguration, Uri, commands, window, workspace } from 'vscode';
+import { DebugConfiguration, Memento, Uri, commands, window, workspace } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
@@ -11,7 +11,14 @@ import { ICommandNameArgumentTypeMapping } from '../../../commands';
 import { IDebugService } from '../../../platform/common/application/types';
 import { Commands, Identifiers, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
+import {
+    Experiments,
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService,
+    IMemento
+} from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { untildify } from '../../../platform/common/utils/platform';
@@ -26,6 +33,8 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IKernelProvider } from '../../../kernels/types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
+
+export const PromptAboutDeprecation = 'ds_prompt_about_deprecation';
 
 @injectable()
 export class DataViewerCommandRegistry implements IExtensionSyncActivationService {
@@ -49,7 +58,9 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {
         this.dataViewerChecker = new DataViewerChecker(configService);
         if (!workspace.isTrusted) {
@@ -76,6 +87,26 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
     private async onVariablePanelShowDataViewerRequest(request: IJupyterVariable | IShowDataViewerFromVariablePanel) {
         const requestVariable = 'variable' in request ? request.variable : request;
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
+
+        // DataViewerDeprecation
+        const deprecateDataViewer = this.experimentService.inExperiment(Experiments.DataViewerDeprecation);
+        if (!this.globalMemento.get(PromptAboutDeprecation) && deprecateDataViewer) {
+            this.globalMemento.update(PromptAboutDeprecation, true).then(noop, noop);
+
+            window
+                .showInformationMessage(
+                    DataScience.dataViewerDeprecationMessage,
+                    DataScience.dataViewerDeprecationRecommendationActionMessage
+                )
+                .then((action) => {
+                    if (action === DataScience.dataViewerDeprecationRecommendationActionMessage) {
+                        commands
+                            .executeCommand('workbench.extensions.search', '@tag:jupyterVariableViewers')
+                            .then(noop, noop);
+                    }
+                }, noop);
+        }
+
         if (
             this.debugService?.activeDebugSession &&
             this.variableProvider &&
