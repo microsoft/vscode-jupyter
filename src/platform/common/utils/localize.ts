@@ -744,6 +744,10 @@ export namespace DataScience {
     export const failedToFetchKernelSpecsRemoteErrorMessageForQuickPickDetail = l10n.t(
         'Ensure the server is running and reachable.'
     );
+    export const dataViewerDeprecationMessage = l10n.t(
+        'The Data Viewer will be deprecated in coming months. Please install other data viewing extensions.'
+    );
+    export const dataViewerDeprecationRecommendationActionMessage = l10n.t('See Recommended Extensions.');
 }
 export namespace WebViews {
     export const collapseSingle = l10n.t('Collapse');
