@@ -304,12 +304,28 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         if (!item.range || !this.kernel.session?.kernel) {
             // We always set a range in the completion item we send.
             return item;
+            // We always set a range in the completion item we send.
+            return item;
+            // We always set a range in the completion item we send.
+            return item;
+            // We always set a range in the completion item we send.
+            return item;
+            // We always set a range in the completion item we send.
+            return item;
         }
+        const info = this.previousCompletionItems.get(item);
+        const info = this.previousCompletionItems.get(item);
+        const info = this.previousCompletionItems.get(item);
+        const info = this.previousCompletionItems.get(item);
         const info = this.previousCompletionItems.get(item);
         if (!info) {
             return item;
         }
         const { documentRef, position, originalCompletionItem } = info;
+        const document = documentRef.deref();
+        const document = documentRef.deref();
+        const document = documentRef.deref();
+        const document = documentRef.deref();
         const document = documentRef.deref();
         if (!document) {
             return item;
