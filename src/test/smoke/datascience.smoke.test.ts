@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { traceInfo, traceVerbose } from '../../platform/logging';
-import { PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
+import { PYTHON_PATH, openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
@@ -41,32 +41,32 @@ suite('Smoke Tests', function () {
         traceInfo(`End Test Complete ${this.currentTest?.title}`);
     });
 
-    // test('Run Cell in interactive window', async () => {
-    //     const file = path.join(
-    //         EXTENSION_ROOT_DIR_FOR_TESTS,
-    //         'src',
-    //         'test',
-    //         'pythonFiles',
-    //         'datascience',
-    //         'simple_note_book.py'
-    //     );
-    //     const outputFile = path.join(path.dirname(file), 'ds.log');
-    //     if (await fs.pathExists(outputFile)) {
-    //         await fs.unlink(outputFile);
-    //     }
-    //     const textDocument = await openFile(file);
+    test('Run Cell in interactive window', async () => {
+        const file = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'pythonFiles',
+            'datascience',
+            'simple_note_book.py'
+        );
+        const outputFile = path.join(path.dirname(file), 'ds.log');
+        if (await fs.pathExists(outputFile)) {
+            await fs.unlink(outputFile);
+        }
+        const textDocument = await openFile(file);
 
-    //     // Wait for code lenses to get detected.
-    //     console.log('Step0');
-    //     await sleep(1_000);
-    //     console.log('Step1');
-    //     await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
-    //     console.log('Step2');
-    //     const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-    //     console.log('Step3');
-    //     await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
-    //     console.log('Step4');
-    // }).timeout(timeoutForCellToRun);
+        // Wait for code lenses to get detected.
+        console.log('Step0');
+        await sleep(1_000);
+        console.log('Step1');
+        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
+        console.log('Step2');
+        const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
+        console.log('Step3');
+        await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
+        console.log('Step4');
+    }).timeout(timeoutForCellToRun);
 
     test('Run Cell in Notebook', async function () {
         const file = path.join(
