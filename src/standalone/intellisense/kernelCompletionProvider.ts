@@ -306,7 +306,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             return item;
         }
         const info = this.previousCompletionItems.get(item);
-        // Deleted the lines
+        // Deleted the lines, added more comments after review
         if (!info) {
             return item;
         }
