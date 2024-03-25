@@ -41,7 +41,7 @@ suite('Smoke Tests', function () {
         traceInfo(`End Test Complete ${this.currentTest?.title}`);
     });
 
-    test('Run Cell in interactive window', async () => {
+    test('Run all Cells in interactive window', async () => {
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
