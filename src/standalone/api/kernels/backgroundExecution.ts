@@ -55,7 +55,7 @@ del __jupyter_exec_background__
     disposables.add(token.onCancellationRequested(() => disposables.dispose()));
     const promise = raceCancellation(
         token,
-        new Promise<T | undefined>((resolve) => {
+        new Promise<T | undefined>((resolve, reject) => {
             disposables.add(
                 api.onDidReceiveDisplayUpdate(async (output) => {
                     if (token.isCancellationRequested) {
@@ -69,7 +69,12 @@ del __jupyter_exec_background__
                     if (!result) {
                         return;
                     }
-                    return resolve(JSON.parse(new TextDecoder().decode(result.data)) as T);
+
+                    try {
+                        return resolve(JSON.parse(new TextDecoder().decode(result.data)) as T);
+                    } catch (ex) {
+                        return reject(new Error('Failed to parse the result', ex));
+                    }
                 })
             );
         })

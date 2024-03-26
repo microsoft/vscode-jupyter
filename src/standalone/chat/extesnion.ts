@@ -8,6 +8,7 @@ import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { JupyterVariablesProvider } from '../../kernels/variables/JupyterVariablesProvider';
+import { traceWarning } from '../../platform/logging';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     context.subscriptions.push(
@@ -23,8 +24,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                         if (Array.isArray(result.content)) {
                             return result.content;
                         }
-                    } catch (_) {
+                    } catch (ex) {
                         // ignore
+                        traceWarning('Failed to get pip packages', ex);
                     }
                 }
             }
@@ -85,12 +87,16 @@ stdout, stderr = proc.communicate()
 return stdout
 `.split('\n');
 
-    const content = await execCodeInBackgroundThread<KernelMessage.IInspectReplyMsg['content']>(
-        kernel,
-        codeToExecute,
-        token
-    );
-    return { content } as KernelMessage.IInspectReplyMsg;
+    try {
+        const content = await execCodeInBackgroundThread<KernelMessage.IInspectReplyMsg['content']>(
+            kernel,
+            codeToExecute,
+            token
+        );
+        return { content } as KernelMessage.IInspectReplyMsg;
+    } catch (ex) {
+        throw ex;
+    }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
