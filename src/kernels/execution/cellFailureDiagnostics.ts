@@ -83,7 +83,7 @@ export class CellFailureDiagnostics {
         }
 
         let range: Range | undefined = undefined;
-        if (lineNumber) {
+        if (lineNumber && lineNumber > 0 && lineNumber <= cell.document.lineCount) {
             const line = cell.document.lineAt(lineNumber - 1);
             const end = line.text.split('#')[0].trimEnd().length;
 
