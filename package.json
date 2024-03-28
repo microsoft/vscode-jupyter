@@ -1855,6 +1855,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.formatStackTraces.description%",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.formatStackTraces.deprecationMessage%",
                     "scope": "application"
                 },
                 "jupyter.completionTriggerCharacters": {
