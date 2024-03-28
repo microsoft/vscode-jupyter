@@ -784,8 +784,7 @@ export async function endCellAndDisplayErrorsInCell(
 }
 
 export function parseStackTrace(traceback: string[], cell: NotebookCell) {
-    const cellRegex =
-        /Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
+    const cellRegex = /Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
     // older versions of IPython ~8.3.0
     const inputRegex =
         /Input\s+?(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\][^<]*<cell line:\s?(?<lineNumber>\d+)>.*/;
