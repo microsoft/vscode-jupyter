@@ -2,7 +2,14 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { NotebookCellOutput, NotebookCellOutputItem, NotebookCell, NotebookCellExecutionState, Position, Range } from 'vscode';
+import {
+    NotebookCellOutput,
+    NotebookCellOutputItem,
+    NotebookCell,
+    NotebookCellExecutionState,
+    Position,
+    Range
+} from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import type { KernelMessage } from '@jupyterlab/services';
 import fastDeepEqual from 'fast-deep-equal';
@@ -778,10 +785,10 @@ export async function endCellAndDisplayErrorsInCell(
 
 export function parseStackTrace(traceback: string[], cell: NotebookCell) {
     const cellRegex =
-        /(?<prefix>Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*)(?<lineLabel>line (?<lineNumber>\d+)).*/;
+        /Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
     // older versions of IPython ~8.3.0
     const inputRegex =
-        /(?<prefix>Input\s+?(?:\u001b\[.+?m)(?<cellLabel>In\s*\[(?<executionCount>\d+)\]))(?<postfix>.*)/;
+        /Input\s+?(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\][^<]*<cell line:\s?(?<lineNumber>\d+)>.*/;
     let lineNumber: number | undefined = undefined;
     for (const line of traceback) {
         const lineMatch = cellRegex.exec(line) ?? inputRegex.exec(line);
