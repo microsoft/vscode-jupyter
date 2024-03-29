@@ -2,7 +2,14 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { NotebookCellOutput, NotebookCellOutputItem, NotebookCell, NotebookCellExecutionState } from 'vscode';
+import {
+    NotebookCellOutput,
+    NotebookCellOutputItem,
+    NotebookCell,
+    NotebookCellExecutionState,
+    Position,
+    Range
+} from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import type { KernelMessage } from '@jupyterlab/services';
 import fastDeepEqual from 'fast-deep-equal';
@@ -774,4 +781,32 @@ export async function endCellAndDisplayErrorsInCell(
     }
     await execution.appendOutput(output);
     execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
+}
+
+export function findErrorLocation(traceback: string[], cell: NotebookCell) {
+    const cellRegex = /Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
+    // older versions of IPython ~8.3.0
+    const inputRegex =
+        /Input\s+?(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\][^<]*<cell line:\s?(?<lineNumber>\d+)>.*/;
+    let lineNumber: number | undefined = undefined;
+    for (const line of traceback) {
+        const lineMatch = cellRegex.exec(line) ?? inputRegex.exec(line);
+        if (lineMatch && lineMatch.groups) {
+            lineNumber = parseInt(lineMatch.groups['lineNumber']);
+            break;
+        }
+    }
+
+    let range: Range | undefined = undefined;
+    if (lineNumber && lineNumber > 0 && lineNumber <= cell.document.lineCount) {
+        const line = cell.document.lineAt(lineNumber - 1);
+        const end = line.text.split('#')[0].trimEnd().length;
+
+        range = new Range(
+            new Position(line.lineNumber, line.firstNonWhitespaceCharacterIndex),
+            new Position(line.lineNumber, end)
+        );
+    }
+
+    return range;
 }
