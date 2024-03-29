@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { parseStackTrace } from '../../../kernels/execution/helpers';
+import { findErrorLocation } from '../../../kernels/execution/helpers';
 import { closeNotebooksAndCleanUpAfterTests, createEmptyPythonNotebook, insertCodeCell } from './helper';
 import { traceInfo } from '../../../platform/logging';
 import { window } from 'vscode';
@@ -31,7 +31,7 @@ suite('StackTraceParsing', () => {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
 
-    test('Correct range is identified for full stack strace', async () => {
+    test('Correct range is identified for raw stack strace', async () => {
         const cell = await insertCodeCell(`import myLib
 myLib.throwEx()`);
 
@@ -48,7 +48,7 @@ myLib.throwEx()`);
             '\u001b[1;31mException\u001b[0m:'
         ];
 
-        const range = parseStackTrace(stack, cell);
+        const range = findErrorLocation(stack, cell);
 
         assert(range, 'should have found a range');
         assert.equal(range.start.line, 1, 'wrong start line');
@@ -69,7 +69,7 @@ myLib.throwEx()`);
             'ZeroDivisionError: division by zero'
         ];
 
-        const range = parseStackTrace(stack, cell);
+        const range = findErrorLocation(stack, cell);
 
         assert(range, 'should have found a range');
         assert.equal(range.start.line, 0, 'wrong start line');
@@ -92,7 +92,7 @@ myLib.throwEx()`);
             'ZeroDivisionError: division by zero'
         ];
 
-        const range = parseStackTrace(stack, cell);
+        const range = findErrorLocation(stack, cell);
 
         assert(range, 'should have found a range');
         assert.equal(range.start.line, 1, 'wrong start line');
@@ -113,7 +113,7 @@ myLib.throwEx()`);
             'ZeroDivisionError: division by zero'
         ];
 
-        const range = parseStackTrace(stack, cell);
+        const range = findErrorLocation(stack, cell);
 
         assert(range, 'should have found a range');
         assert.equal(range.start.line, 0, 'wrong start line');
@@ -134,7 +134,7 @@ myLib.throwEx()`);
             'ZeroDivisionError: division by zero'
         ];
 
-        const range = parseStackTrace(stack, cell);
+        const range = findErrorLocation(stack, cell);
 
         assert.equal(range, undefined, 'should not have found a range');
     });
@@ -145,7 +145,7 @@ myLib.throwEx()`);
 
         const stack = ['  Input In [3]', '    if True', '           ^', "SyntaxError: expected ':'"];
 
-        const range = parseStackTrace(stack, cell);
+        const range = findErrorLocation(stack, cell);
 
         assert.equal(range, undefined, 'should not have found a range');
     });

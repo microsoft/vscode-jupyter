@@ -35,7 +35,7 @@ import {
     cellOutputToVSCCellOutput,
     translateCellDisplayOutput,
     CellOutputMimeTypes,
-    parseStackTrace as findErrorLocation
+    findErrorLocation
 } from './helpers';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';

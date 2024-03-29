@@ -783,7 +783,7 @@ export async function endCellAndDisplayErrorsInCell(
     execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
 }
 
-export function parseStackTrace(traceback: string[], cell: NotebookCell) {
+export function findErrorLocation(traceback: string[], cell: NotebookCell) {
     const cellRegex = /Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
     // older versions of IPython ~8.3.0
     const inputRegex =
