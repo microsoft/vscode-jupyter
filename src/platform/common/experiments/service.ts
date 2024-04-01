@@ -115,13 +115,6 @@ export class ExperimentService implements IExperimentService {
             return true;
         }
 
-        // Enable the kernel completions experiment for all insider users
-        if (
-            experiment === ExperimentGroups.KernelCompletions &&
-            (getVSCodeChannel() === 'insiders' || isPreReleaseVersion())
-        ) {
-            return true;
-        }
         if (
             experiment === ExperimentGroups.DoNotWaitForZmqPortsToBeUsed &&
             (getVSCodeChannel() === 'insiders' || isPreReleaseVersion())
@@ -211,13 +204,6 @@ export class ExperimentService implements IExperimentService {
                 traceInfo(Experiments.inGroup(exp));
             });
 
-        if (
-            experimentsDisabled &&
-            !enabledExperiments.has(ExperimentGroups.KernelCompletions) &&
-            (getVSCodeChannel() === 'insiders' || isPreReleaseVersion())
-        ) {
-            traceInfo(Experiments.inGroup(ExperimentGroups.KernelCompletions));
-        }
         if (
             experimentsDisabled &&
             !enabledExperiments.has(ExperimentGroups.DoNotWaitForZmqPortsToBeUsed) &&

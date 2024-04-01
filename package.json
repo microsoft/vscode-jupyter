@@ -1518,7 +1518,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "KernelCompletions",
                             "DoNotWaitForZmqPortsToBeUsed"
                         ]
                     },
@@ -1530,7 +1529,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "KernelCompletions",
                             "DoNotWaitForZmqPortsToBeUsed"
                         ]
                     },
