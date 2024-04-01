@@ -75,6 +75,12 @@ suite('ipywidget - CDN', () => {
             config: {
                 'js-logger': 'https://unpkg.com/js-logger/src/logger.min'
             }
+        },
+        {
+            file: '@finos/perspective-jupyterlab',
+            config: {
+                '@finos/perspective-jupyterlab': 'nbextensions/@finos/perspective-jupyterlab/index'
+            }
         }
     ].forEach((item) => {
         test(`Extract require.js configuration mapping for ${item.file}`, async () => {
