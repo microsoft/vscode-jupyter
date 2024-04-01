@@ -242,7 +242,6 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
 
 export enum Experiments {
     DataViewerContribution = 'DataViewerContribution',
-    KernelCompletions = 'KernelCompletions',
     DoNotWaitForZmqPortsToBeUsed = 'DoNotWaitForZmqPortsToBeUsed',
     DataViewerDeprecation = 'DataViewerDeprecation'
 }
