@@ -9,7 +9,7 @@ import * as path from '../../../../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../../test/constants.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('ipywidget - CDN', () => {
+suite.only('ipywidget - CDN', () => {
     [
         {
             file: 'beakerx',
@@ -74,6 +74,12 @@ suite('ipywidget - CDN', () => {
             file: 'jupyter-require',
             config: {
                 'js-logger': 'https://unpkg.com/js-logger/src/logger.min'
+            }
+        },
+        {
+            file: '@finos/perspective-jupyterlab',
+            config: {
+                '@finos/perspective-jupyterlab': 'nbextensions/@finos/perspective-jupyterlab/index'
             }
         }
     ].forEach((item) => {

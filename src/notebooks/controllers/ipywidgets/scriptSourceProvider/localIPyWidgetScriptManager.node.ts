@@ -114,7 +114,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
 
         // Get all of the widget entry points, which would be of the form `nbextensions/<widget folder>/extension.js`
         const nbExtensionsFolder = Uri.joinPath(nbExtensionsParentPath, 'nbextensions');
-        const extensions = await this.fs.searchLocal('*/extension.js', nbExtensionsFolder.fsPath, true);
+        const extensions = await this.fs.searchLocal('**/extension.js', nbExtensionsFolder.fsPath, true);
         return extensions.map((entry) => ({
             uri: Uri.joinPath(nbExtensionsFolder, entry),
             widgetFolderName: path.dirname(entry)
