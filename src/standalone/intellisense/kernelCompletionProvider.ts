@@ -506,15 +506,8 @@ export class KernelCompletionProvider extends DisposableBase implements IExtensi
                     void e.session.kernel.requestComplete({ code: '__file__.', cursor_pos: 9 });
                 }
 
-                const experiment = ServiceContainer.instance.get<IExperimentService>(IExperimentService);
                 const language = getKernelLanguageAsMonacoLanguage(e);
                 if (!language) {
-                    return;
-                }
-                if (
-                    !experiment.inExperiment(Experiments.KernelCompletions) &&
-                    language.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()
-                ) {
                     return;
                 }
                 if (this.kernelCompletionProviders.has(e)) {
