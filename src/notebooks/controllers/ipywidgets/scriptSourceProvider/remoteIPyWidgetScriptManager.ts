@@ -132,7 +132,15 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
     protected async getWidgetScriptSource(script: Uri): Promise<string> {
         const httpClientResponse = this.getWidgetScriptSourceUsingHttpClient(script);
         const fetchResponse = this.getWidgetScriptSourceUsingFetch(script);
-        return httpClientResponse.catch(() => fetchResponse);
+        const promise = httpClientResponse.catch(() => fetchResponse);
+        // If we fail to download using both mechanisms, then log an error.
+        promise.catch((ex) => {
+            httpClientResponse.catch((ex) =>
+                traceError(`Failed to download widget script source from ${script.toString(true)}`, ex)
+            );
+            traceError(`Failed to download widget script source from ${script.toString(true)}`, ex);
+        });
+        return promise;
     }
     private async getWidgetScriptSourceUsingHttpClient(script: Uri): Promise<string> {
         const uri = script.toString(true);
@@ -141,7 +149,6 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         if (response.status === 200) {
             return response.text();
         } else {
-            traceError(`Error downloading from ${uri}: ${response.statusText}`);
             throw new Error(`Error downloading from ${uri}: ${response.statusText}`);
         }
     }
@@ -154,7 +161,6 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         if (response.status === 200) {
             return response.text();
         } else {
-            traceError(`Error downloading from ${uri} using custom fetch: ${response.statusText}`);
             throw new Error(`Error downloading from ${uri} using custom fetch: ${response.statusText}`);
         }
     }
