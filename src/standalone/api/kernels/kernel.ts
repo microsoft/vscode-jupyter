@@ -36,6 +36,7 @@ import {
     trackDisplayDataForExtension
 } from '../../../kernels/execution/extensionDisplayDataTracker';
 import { getNotebookCellOutputMetadata } from '../../../kernels/execution/helpers';
+import { requestApiAccess } from './apiAccess';
 
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.
@@ -149,11 +150,11 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     public get onDidReceiveDisplayUpdate(): Event<NotebookCellOutput> {
         return this._onDidReceiveDisplayUpdate.event;
     }
+    private accessAllowed?: Promise<boolean>;
     constructor(
         private readonly extensionId: string,
         private readonly kernel: IKernel,
-        private readonly execution: INotebookKernelExecution,
-        private readonly kernelAccess: { accessAllowed: boolean }
+        private readonly execution: INotebookKernelExecution
     ) {
         super();
         this.progress = this._register(new KernelExecutionProgressIndicator(extensionId, kernel));
@@ -200,18 +201,39 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             ) => this.executeChatCode(code, handlers, token)
         });
     }
-    static createApiKernel(
-        extensionId: string,
-        kernel: IKernel,
-        execution: INotebookKernelExecution,
-        kernelAccess: { accessAllowed: boolean }
-    ) {
-        const wrapper = new WrappedKernelPerExtension(extensionId, kernel, execution, kernelAccess);
+    static createApiKernel(extensionId: string, kernel: IKernel, execution: INotebookKernelExecution) {
+        const wrapper = new WrappedKernelPerExtension(extensionId, kernel, execution);
         ServiceContainer.instance.get<IDisposableRegistry>(IDisposableRegistry).push(wrapper);
         return wrapper._api;
     }
 
+    private async checkAccess() {
+        if (this.extensionId === JVSC_EXTENSION_ID) {
+            return;
+        }
+        if (!this.accessAllowed) {
+            this.accessAllowed = this.doCheckAccess();
+        }
+        const accessAllowed = await this.accessAllowed;
+        if (!accessAllowed) {
+            throw new Error(l10n.t('Access to Jupyter Kernel has been revoked'));
+        }
+    }
+
+    private async doCheckAccess() {
+        // Check and prompt for access only if we know we have a kernel.
+        const access = await requestApiAccess(this.extensionId);
+        const accessAllowed = access.accessAllowed;
+        sendTelemetryEvent(Telemetry.NewJupyterKernelsApiUsage, undefined, {
+            extensionId: this.extensionId,
+            pemUsed: 'getKernel',
+            accessAllowed
+        });
+        return accessAllowed;
+    }
+
     async *executeCode(code: string, token: CancellationToken): AsyncGenerator<Output, void, unknown> {
+        await this.checkAccess();
         for await (const output of this.executeCodeInternal(code, undefined, token)) {
             yield output;
         }
@@ -221,6 +243,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         handlers: Record<string, (data?: string) => Promise<string | undefined>>,
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
+        await this.checkAccess();
         const allowedList = ['ms-vscode.dscopilot-agent', JVSC_EXTENSION_ID];
         if (!allowedList.includes(this.extensionId.toLowerCase())) {
             throw new Error(`Proposed API is not supported for extension ${this.extensionId}`);
@@ -238,9 +261,6 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         handlers: Record<string, (...data: any[]) => Promise<any>> = {},
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
-        if (!this.kernelAccess.accessAllowed) {
-            throw new Error(l10n.t('Access to Jupyter Kernel has been revoked'));
-        }
         this.previousProgress?.dispose();
         let completed = false;
         const measures = {
@@ -441,16 +461,7 @@ async function sendApiExecTelemetry(
     sendTelemetryEvent(Telemetry.NewJupyterKernelApiExecution, measures, properties);
 }
 
-export function createKernelApiForExtension(
-    extensionId: string,
-    kernel: IKernel,
-    kernelAccess: { accessAllowed: boolean }
-) {
+export function createKernelApiForExtension(extensionId: string, kernel: IKernel) {
     const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
-    return WrappedKernelPerExtension.createApiKernel(
-        extensionId,
-        kernel,
-        kernelProvider.getKernelExecution(kernel),
-        kernelAccess
-    );
+    return WrappedKernelPerExtension.createApiKernel(extensionId, kernel, kernelProvider.getKernelExecution(kernel));
 }
