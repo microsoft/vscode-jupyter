@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ExtensionMode, Uri, env, extensions, l10n, window, workspace } from 'vscode';
+import { EventEmitter, ExtensionMode, Uri, env, extensions, l10n, window, workspace } from 'vscode';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError } from '../../../platform/logging';
@@ -9,9 +9,16 @@ import { IDisposableRegistry, IExtensionContext } from '../../../platform/common
 import { once } from '../../../platform/common/utils/functional';
 import { Common } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
+import { trackDisposable } from '../../../platform/common/utils/lifecycle';
 
 const extensionApiAccess = new Map<string, ReturnType<typeof requestKernelAccessImpl>>();
 const extensionsTriedAccessingApi = new Set<string>();
+const onDidChange = new EventEmitter<void>();
+trackDisposable(onDidChange);
+
+export function registerChangeHandler(handler: () => void) {
+    return onDidChange.event(handler);
+}
 export function clearApiAccess() {
     extensionApiAccess.clear();
     extensionsTriedAccessingApi.clear();
@@ -160,6 +167,7 @@ export async function updateListOfExtensionsAllowedToAccessApi(extensionIds: str
         }
         try {
             await context.secrets.store(apiAccessSecretKey, JSON.stringify(Object.fromEntries(cachedAccessInfo)));
+            onDidChange.fire();
         } catch (ex) {
             traceError(
                 `Failed to update API access information ${JSON.stringify(Object.fromEntries(cachedAccessInfo))}`,
@@ -182,6 +190,7 @@ async function updateIndividualExtensionAccessInStore(extensionId: string, acces
         apiAccess.set(extensionId, accessAllowed);
         try {
             await context.secrets.store(apiAccessSecretKey, JSON.stringify(Object.fromEntries(apiAccess)));
+            onDidChange.fire();
         } catch (ex) {
             traceError(`Failed to store API access information ${JSON.stringify(Object.fromEntries(apiAccess))}`, ex);
         }

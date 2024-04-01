@@ -36,7 +36,7 @@ import {
     trackDisplayDataForExtension
 } from '../../../kernels/execution/extensionDisplayDataTracker';
 import { getNotebookCellOutputMetadata } from '../../../kernels/execution/helpers';
-import { requestApiAccess } from './apiAccess';
+import { registerChangeHandler, requestApiAccess } from './apiAccess';
 
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.
@@ -213,6 +213,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         }
         if (!this.accessAllowed) {
             this.accessAllowed = this.doCheckAccess();
+            this._register(registerChangeHandler(() => (this.accessAllowed = undefined)));
         }
         const accessAllowed = await this.accessAllowed;
         if (!accessAllowed) {
