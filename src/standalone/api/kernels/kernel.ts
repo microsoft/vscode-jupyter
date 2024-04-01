@@ -29,7 +29,7 @@ import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { once } from '../../../platform/common/utils/events';
 import { traceVerbose } from '../../../platform/logging';
-import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/generator';
 import {
     isDisplayIdTrackedForExtension,
@@ -186,7 +186,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             },
             onDidChangeStatus: that.onDidChangeStatus.bind(this),
             get onDidReceiveDisplayUpdate() {
-                if (![JVSC_EXTENSION_ID].includes(extensionId)) {
+                if (![JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID].includes(extensionId)) {
                     throw new Error(`Proposed API is not supported for extension ${extensionId}`);
                 }
 
