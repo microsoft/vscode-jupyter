@@ -715,7 +715,9 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
         const gdpr = '__GDPR__';
         const header = [
             `// (${index + 1}). ${item.constantName} (${item.name})`,
-            ...item.description.split(/\r?\n/).map((c) => `// ${c}`),
+            ...(item.description.trim().length
+                ? item.description.split(/\r?\n/).map((c) => (c.length ? `// ${c}` : '//'))
+                : []),
             `/* ${gdpr}`,
             `   "${item.name}" : {`
         ];
