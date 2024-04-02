@@ -745,9 +745,9 @@ export namespace DataScience {
         'Ensure the server is running and reachable.'
     );
     export const dataViewerDeprecationMessage = l10n.t(
-        'The Data Viewer will be deprecated in coming months. Please install other data viewing extensions.'
+        'The built-in data viewer will be deprecated soon. Please install other data viewing extensions to keep the ability to inspect data.'
     );
-    export const dataViewerDeprecationRecommendationActionMessage = l10n.t('See Recommended Extensions.');
+    export const dataViewerDeprecationRecommendationActionMessage = l10n.t('See Recommended Extensions');
 }
 export namespace WebViews {
     export const collapseSingle = l10n.t('Collapse');
