@@ -55,6 +55,9 @@
 - [ ] Jupyter Cell Tags (@rebornix)
     - No need to pin VS Code engine
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=388))
+- [ ] Jupyter Slideshow (@rebornix)
+    - No need to pin VS Code engine
+    - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=387))
 - [ ] Jupyter KeyMap (@rebornix)
     - No need to pin VS Code engine
     - Release directly from main branch ([pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=260))
