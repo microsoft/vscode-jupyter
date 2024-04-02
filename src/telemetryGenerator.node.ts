@@ -584,8 +584,9 @@ function generateDocumentation(fileNames: string[]): void {
     const values = Array.from(entries.values()).sort((a, b) =>
         a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })
     );
+
     // Uncomment if we need the CSV file for searching telemetry events.
-    if (false) {
+    if (1 + 1 === 0) {
         generateTelemetryCSV(values);
     }
     generateTelemetryGdpr(values);
@@ -709,10 +710,17 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
     fs.appendFileSync(file, ` */\n`);
     fs.appendFileSync(file, '\n');
 
-    output.forEach((item) => {
+    output.forEach((item, index) => {
         // Do not include `__GDPR__` in the string with JSON comments, else telemetry tool treats this as a valid GDPR annotation.
         const gdpr = '__GDPR__';
-        const header = [`//${item.constantName}`, `/* ${gdpr}`, `   "${item.name}" : {`];
+        const header = [
+            `// (${index + 1}). ${item.constantName} (${item.name})`,
+            ...(item.description.trim().length
+                ? item.description.split(/\r?\n/).map((c) => (c.length ? `// ${c}` : '//'))
+                : []),
+            `/* ${gdpr}`,
+            `   "${item.name}" : {`
+        ];
         const footer = ['   }', ' */', '', ''];
         const properties: Record<string, IPropertyDataNonMeasurement> =
             'properties' in item.gdpr ? (item.gdpr['properties'] as Record<string, IPropertyDataNonMeasurement>) : {};
