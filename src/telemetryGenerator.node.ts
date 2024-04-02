@@ -584,6 +584,11 @@ function generateDocumentation(fileNames: string[]): void {
     const values = Array.from(entries.values()).sort((a, b) =>
         a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })
     );
+
+    // Uncomment if we need the CSV file for searching telemetry events.
+    if (1 + 1 === 0) {
+        generateTelemetryCSV(values);
+    }
     generateTelemetryGdpr(values);
 
     if (Object.keys(errorsByOwners).length) {
