@@ -13,7 +13,7 @@ import { argsToLogString, returnValueToLogString } from './util';
 import { LoggingLevelSettingType } from '../common/types';
 import { splitLines } from '../common/helpers';
 import { getDisplayPath } from '../common/platform/fs-paths';
-let homeAsLowerCase = '';
+// let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
 let loggers: ILogger[] = [];
@@ -41,8 +41,8 @@ export function setLoggingLevel(level?: LoggingLevelSettingType | number): void 
     globalLoggingLevel = typeof level === 'number' ? level : logLevelMap.get(level) ?? LogLevel.Error;
 }
 
-export function setHomeDirectory(homeDir: string) {
-    homeAsLowerCase = homeDir.toLowerCase();
+export function setHomeDirectory(_homeDir: string) {
+    // homeAsLowerCase = homeDir.toLowerCase();
 }
 
 export function traceLog(message: string, ...args: Arguments): void {
@@ -273,9 +273,10 @@ function isUri(resource?: Uri | any): resource is Uri {
 }
 
 function removeUserPaths(value: string) {
-    // Where possible strip user names from paths, then users will be more likely to provide the logs.
-    const indexOfStart = homeAsLowerCase ? value.toLowerCase().indexOf(homeAsLowerCase) : -1;
-    return indexOfStart === -1 ? value : `~${value.substring(indexOfStart + homeAsLowerCase.length)}`;
+    return value;
+    // // Where possible strip user names from paths, then users will be more likely to provide the logs.
+    // const indexOfStart = homeAsLowerCase ? value.toLowerCase().indexOf(homeAsLowerCase) : -1;
+    // return indexOfStart === -1 ? value : `~${value.substring(indexOfStart + homeAsLowerCase.length)}`;
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatArgument(target: Object, method: MethodName, arg: any, parameterIndex: number) {

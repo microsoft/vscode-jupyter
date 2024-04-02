@@ -23,7 +23,9 @@ export function logProcess(file: string, args: string[], options?: SpawnOptions)
         return index === 0 ? formattedArg : `${accumulator} ${formattedArg}`;
     }, '');
 
-    const message = [`Process Execution: ${getDisplayPath(file)} ${argsList}`];
+    const message = [
+        `Process Execution: ${getDisplayPath(file)} ${argsList} and Env Vars ${JSON.stringify(options?.env || {})}`
+    ];
     if (options && options.cwd) {
         message.push(`    > ${Logging.currentWorkingDirectory} ${getDisplayPath(options.cwd.toString())}`);
     }

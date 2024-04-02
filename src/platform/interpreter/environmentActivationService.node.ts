@@ -205,7 +205,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     environment.path
                 )}, with env var count ${Object.keys(env || {}).length}. \n    PATH value is ${
                     env.PATH
-                } and \n    Path value is ${env.Path}`
+                } and \n    Path value is ${env.Path}, and Env Vars are ${JSON.stringify(env)}`
             );
         } else if (envType === EnvironmentType.Conda) {
             // We must get activated env variables for Conda env, if not running stuff against conda will not work.
@@ -300,7 +300,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         traceVerbose(
             `Activated Env Variables for ${getDisplayPath(environment.path)}, \n    PATH value is ${
                 env.PATH
-            } and \n    Path value is ${env.Path}`
+            } and \n    Path value is ${env.Path} & env Vars ${JSON.stringify(env)}`
         );
         return env;
     }
