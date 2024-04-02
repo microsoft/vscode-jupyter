@@ -1258,7 +1258,7 @@
    }
  */
 // (100). Telemetry.CreateInteractiveWindow (DS_INTERNAL.CREATED_INTERACTIVE_WINDOW)
-// 
+//
 /* __GDPR__
    "DS_INTERNAL.CREATED_INTERACTIVE_WINDOW" : {
      "hasKernel": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the kernel was known at the time of creation","owner":"amunger"},
@@ -2054,11 +2054,11 @@
 // (155). Telemetry.AmbiguousGlobalKernelSpec (GLOBAL_PYTHON_KERNELSPEC)
 // We have a Python Kernel spec without fully qualified path of Python env.
 // We have no idea how to start these kernels if the user has more than one Python env.
-// 
+//
 // We could also have a non-python kernelspec such as Powershell, but the runtime is Python.
 // E.g. argv in kernelspec.json could be ['python', '-m', 'powershell_kernel']
 // E.g. argv in kernelspec.json could be ['python', '-m', 'sparkmagic.kernels.pysparkkernel.pysparkkernel']
-// 
+//
 // Note: Have a look at the property `pythonPathDefined` to determine if the python path is ambiguous or not.
 /* __GDPR__
    "GLOBAL_PYTHON_KERNELSPEC" : {
