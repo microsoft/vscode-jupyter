@@ -117,7 +117,7 @@ const config = {
         },
         fallback: {
             os: require.resolve('os-browserify'),
-            buffer: require('buffer/').Buffer
+            buffer: require.resolve('buffer/')
         }
     },
     output: {
