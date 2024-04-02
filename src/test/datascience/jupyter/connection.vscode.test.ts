@@ -112,6 +112,12 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
                 standalone: true
             }),
             startJupyterServer({
+                jupyterLab: true,
+                password: '',
+                token: '',
+                standalone: true
+            }),
+            startJupyterServer({
                 jupyterLab: false,
                 password: 'Hello',
                 token: '',
