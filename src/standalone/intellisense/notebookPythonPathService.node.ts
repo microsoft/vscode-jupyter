@@ -8,7 +8,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { PylanceExtension } from '../../platform/common/constants';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceInfo } from '../../platform/logging';
+import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -133,6 +133,12 @@ del _VSCODE_os, _VSCODE_sys, _VSCODE_builtins
             if (!executable || !(await fs.pathExists(executable))) {
                 return;
             }
+            traceVerbose(
+                `Remote Interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}" is ${getDisplayPath(
+                    executable
+                )}`
+            );
+
             return executable;
         }
 
@@ -143,6 +149,11 @@ del _VSCODE_os, _VSCODE_sys, _VSCODE_builtins
             traceInfo(`No interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}"`);
             return '';
         }
+        traceVerbose(
+            `Interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}" is ${getDisplayPath(
+                interpreter.uri
+            )}`
+        );
         return getFilePath(interpreter.uri);
     }
 }
