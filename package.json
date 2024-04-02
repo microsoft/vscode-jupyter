@@ -2292,6 +2292,7 @@
         "@vscode/zeromq": "^0.2.1",
         "acorn": "^8.9.0",
         "babel-polyfill": "^6.26.0",
+        "buffer": "^6.0.3",
         "bufferutil": "^4.0.6",
         "chai": "^4.3.10",
         "chai-arrays": "^2.2.0",
