@@ -118,7 +118,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await clickWidget(comms, cell0, 'button');
             await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
-        test.skip('Render AnyWidget (test js<-->kernel comms with binary data)', async function () {
+        test('Render AnyWidget (test js<-->kernel comms with binary data)', async function () {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
