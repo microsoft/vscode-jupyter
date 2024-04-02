@@ -529,7 +529,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
 
             const cwd = await computeLocalWorkingDirectory(Uri.file('test.py'), instance(configService), instance(fs));
 
-            assert.strictEqual(cwd, __dirname);
+            assert.strictEqual(Uri.file(cwd!).fsPath, Uri.file(__dirname).fsPath);
         });
         test('No working folder if setting `notebookFileRoot` is invalid', async () => {
             when(settings.notebookFileRoot).thenReturn('bogus value');
