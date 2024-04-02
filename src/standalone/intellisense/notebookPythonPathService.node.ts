@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, extensions, Uri, window } from 'vscode';
+import { Disposable, extensions, Uri } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
@@ -10,12 +10,11 @@ import { PylanceExtension } from '../../platform/common/constants';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { traceInfo } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { isInteractiveInputTab } from '../../interactive-window/helpers';
 import { IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { noop } from '../../platform/common/utils/misc';
 import { raceTimeout } from '../../platform/common/utils/async';
 import * as fs from 'fs-extra';
-import { getNotebookUriFromInputBoxUri, isUsingPylance } from './notebookPythonPathService';
+import { isUsingPylance } from './notebookPythonPathService';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -50,11 +49,6 @@ export class NotebookPythonPathService implements IExtensionSyncActivationServic
             .then((api) => {
                 if (api.registerJupyterPythonPathFunction !== undefined) {
                     api.registerJupyterPythonPathFunction((uri) => this._jupyterPythonPathFunction(uri));
-                }
-                if (api.registerGetNotebookUriForTextDocumentUriFunction !== undefined) {
-                    api.registerGetNotebookUriForTextDocumentUriFunction((uri) =>
-                        this._getNotebookUriForTextDocumentUri(uri)
-                    );
                 }
             })
             .catch(noop);
@@ -150,26 +144,5 @@ del _VSCODE_os, _VSCODE_sys, _VSCODE_builtins
             return '';
         }
         return getFilePath(interpreter.uri);
-    }
-
-    private _getNotebookUriForTextDocumentUri(textDocumentUri: Uri): Uri | undefined {
-        const notebookUri = getNotebookUriFromInputBoxUri(textDocumentUri);
-        if (!notebookUri) {
-            return undefined;
-        }
-
-        let result: string | undefined = undefined;
-        window.tabGroups.all.find((group) => {
-            group.tabs.find((tab) => {
-                if (isInteractiveInputTab(tab)) {
-                    const tabUri = tab.input.uri.toString();
-                    // the interactive resource URI was altered to start with `/`, this will account for both URI formats
-                    if (tab.input.uri.toString().endsWith(notebookUri.path)) {
-                        result = tabUri;
-                    }
-                }
-            });
-        });
-        return result;
     }
 }

@@ -91,12 +91,4 @@ export interface PythonApi {
      * @param func : The function that Python should call when requesting the Python path.
      */
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
-
-    /**
-     * Call to provide a function that the Python extension can call to request the notebook
-     * document URI related to a particular text document URI, or undefined if there is no
-     * associated notebook.
-     * @param func : The function that Python should call when requesting the notebook URI.
-     */
-    registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
 }
