@@ -7,7 +7,6 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../../../kernels/types';
 import { createKernelApiForExtension as createKernelApiForExtension } from './kernel';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
-import { requestApiAccess } from './apiAccess';
 
 const kernelCache = new WeakMap<IKernel, Kernel>();
 
@@ -40,19 +39,7 @@ export function getKernelsApi(extensionId: string): Kernels {
                 });
                 return;
             }
-            // Check and prompt for access only if we know we have a kernel.
-            const access = await requestApiAccess(extensionId);
-            accessAllowed = access.accessAllowed;
-            sendTelemetryEvent(Telemetry.NewJupyterKernelsApiUsage, undefined, {
-                extensionId,
-                pemUsed: 'getKernel',
-                accessAllowed
-            });
-            if (!accessAllowed) {
-                return;
-            }
-
-            let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel, access);
+            let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
             kernelCache.set(kernel, wrappedKernel);
             return wrappedKernel;
         }
