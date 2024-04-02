@@ -331,13 +331,13 @@ export function parseForComments(
         const isMultilineComment = trim.startsWith(SingleQuoteMultiline)
             ? SingleQuoteMultiline
             : trim.startsWith(DoubleQuoteMultiline)
-              ? DoubleQuoteMultiline
-              : undefined;
+            ? DoubleQuoteMultiline
+            : undefined;
         const isMultilineQuote = trim.includes(SingleQuoteMultiline)
             ? SingleQuoteMultiline
             : trim.includes(DoubleQuoteMultiline)
-              ? DoubleQuoteMultiline
-              : undefined;
+            ? DoubleQuoteMultiline
+            : undefined;
 
         // Check for ending quotes of multiline string
         if (insideMultilineQuote) {
