@@ -116,7 +116,8 @@ const config = {
             sinon: path.join(constants.ExtensionRootDir, 'node_modules', 'sinon', 'lib', 'sinon.js')
         },
         fallback: {
-            os: require.resolve('os-browserify')
+            os: require.resolve('os-browserify'),
+            buffer: require.resolve('buffer/')
         }
     },
     output: {

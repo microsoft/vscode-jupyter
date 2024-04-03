@@ -36,7 +36,6 @@ import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldin
 import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveControllerHelper } from './InteractiveControllerHelper';
-import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -64,10 +63,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         GeneratedCodeStorageManager
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        KernelStartupCodeProvider
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
