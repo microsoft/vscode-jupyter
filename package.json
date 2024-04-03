@@ -637,18 +637,6 @@
                 "enablement": "!jupyter.webExtension"
             },
             {
-                "command": "jupyter.notebookeditor.expandallcells",
-                "title": "%jupyter.command.jupyter.notebookeditor.expandallcells.title%",
-                "category": "Notebook",
-                "enablement": "!jupyter.webExtension"
-            },
-            {
-                "command": "jupyter.notebookeditor.collapseallcells",
-                "title": "%jupyter.command.jupyter.notebookeditor.collapseallcells.title%",
-                "category": "Notebook",
-                "enablement": "!jupyter.webExtension"
-            },
-            {
                 "command": "jupyter.expandallcells",
                 "title": "%jupyter.command.jupyter.expandallcells.title%",
                 "shortTitle": "%jupyter.command.jupyter.expandallcells.shorttitle%",
@@ -1292,18 +1280,6 @@
                     "title": "%jupyter.command.jupyter.notebookeditor.addcellbelow.title%",
                     "category": "Notebook",
                     "when": "jupyter.isnativeactive && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.expandallcells",
-                    "title": "%jupyter.command.jupyter.expandallcells.title%",
-                    "category": "Notebook",
-                    "when": "notebookEditorFocused && notebookType == 'jupyter-notebook'"
-                },
-                {
-                    "command": "jupyter.notebookeditor.collapseallcells",
-                    "title": "%jupyter.command.jupyter.collapseallcells.title%",
-                    "category": "Notebook",
-                    "when": "notebookEditorFocused && notebookType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.expandallcells",
