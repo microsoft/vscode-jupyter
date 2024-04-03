@@ -472,9 +472,14 @@ export function getCellMetadata(cell: NotebookCell): JupyterCellMetadata {
 }
 
 export function useCustomMetadata() {
-    const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
-    if (ext && typeof ext.exports.dropCustomMetadata === 'boolean') {
-        return ext.exports.dropCustomMetadata ? false : true;
+    try {
+        const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
+        if (ext && typeof ext.exports.dropCustomMetadata === 'boolean') {
+            return ext.exports.dropCustomMetadata ? false : true;
+        }
+    } catch {
+        // This happens in integration tests, in this case just return `true`.
+        return true;
     }
     try {
         // Means ipynb extension has not yet been activated.

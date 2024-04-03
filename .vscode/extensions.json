@@ -6,6 +6,7 @@
         "editorconfig.editorconfig",
         "esbenp.prettier-vscode",
         "hbenl.vscode-mocha-test-adapter",
-        "ms-python.black"
+        "ms-python.black",
+        "ms-vscode.extension-test-runner"
     ]
 }
