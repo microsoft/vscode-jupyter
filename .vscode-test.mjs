@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 async function generateConfig() {
-    const venvFolder = `${__dirname}/src/test/datascience/.venv`;
+    const venvFolder = `${__dirname}/.venv`;
     const pythonPath = fs.existsSync(venvFolder)
         ? process.platform === 'win32'
             ? `${venvFolder}/Scripts/python.exe`
