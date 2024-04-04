@@ -296,6 +296,11 @@ type ScriptCode = {
      */
     cleanupCode?: string;
 };
+export type ParentOptions = {
+    root: string;
+    propertyChain: (string | number)[];
+    startIndex: number;
+};
 export interface IVariableScriptGenerator {
     generateCodeToGetVariableInfo(options: { isDebugging: boolean; variableName: string }): Promise<ScriptCode>;
     generateCodeToGetVariableProperties(options: {
@@ -304,11 +309,7 @@ export interface IVariableScriptGenerator {
         stringifiedAttributeNameList: string;
     }): Promise<ScriptCode>;
     generateCodeToGetVariableTypes(options: { isDebugging: boolean }): Promise<ScriptCode>;
-    generateCodeToGetAllVariableDescriptions(options: {
-        isDebugging: boolean;
-        parent: { root: string; propertyChain: (string | number)[] } | undefined;
-        startIndex: number;
-    }): Promise<ScriptCode>;
+    generateCodeToGetAllVariableDescriptions(parentOptions: ParentOptions | undefined): Promise<string>;
     generateCodeToGetVariableValueSummary(options: { variableName: string }): Promise<ScriptCode>;
 }
 export const IDataFrameScriptGenerator = Symbol('IDataFrameScriptGenerator');

@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../common/platform/types';
-import { IExtensionContext, IVariableScriptGenerator } from '../common/types';
+import { IExtensionContext, IVariableScriptGenerator, ParentOptions } from '../common/types';
 import { joinPath } from '../vscode-path/resources';
 import dedent from 'dedent';
 
@@ -21,6 +21,7 @@ const cleanupCode = dedent`
 @injectable()
 export class VariableScriptGenerator implements IVariableScriptGenerator {
     static contentsOfScript: string | undefined;
+    static contentsOfBgScript: string | undefined;
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
@@ -64,38 +65,19 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
             };
         }
     }
-    async generateCodeToGetAllVariableDescriptions(options: {
-        isDebugging: boolean;
-        parent: { root: string; propertyChain: (string | number)[] } | undefined;
-        startIndex: number;
-    }) {
-        const scriptCode = await this.getContentsOfScript();
-        const isDebugging = options.isDebugging ? 'True' : 'False';
-        const initializeCode = options.parent ? scriptCode : `${scriptCode}\n\n_VSCODE_rwho_ls = %who_ls\n`;
-        const cleanupWhoLsCode = dedent`
-        try:
-            del _VSCODE_rwho_ls
-        except:
-            pass
-        `;
 
-        const code = options.parent
-            ? `${VariableFunc}("AllChildrenDescriptions", ${isDebugging}, "${options.parent.root}", ${JSON.stringify(
-                  options.parent.propertyChain
-              )}, ${options.startIndex})`
-            : `${VariableFunc}("AllVariableDescriptions", ${isDebugging}, _VSCODE_rwho_ls)`;
-        if (options.isDebugging) {
-            return {
-                initializeCode,
-                code,
-                cleanupCode: options.parent ? cleanupCode : `${cleanupCode}\n${cleanupWhoLsCode}`
-            };
+    async generateCodeToGetAllVariableDescriptions(parentOptions: ParentOptions | undefined) {
+        let scriptCode = await this.getContentsOfBgScript();
+        if (parentOptions) {
+            scriptCode =
+                scriptCode +
+                `\n\nreturn _VSCODE_getAllChildrenDescriptions(${parentOptions.root}, ${parentOptions.propertyChain}, ${parentOptions.startIndex})`;
         } else {
-            return {
-                code: `${initializeCode}\n\n${code}\n\n${cleanupCode}`
-            };
+            scriptCode = scriptCode + '\n\nvariables= %who_ls\nreturn _VSCODE_getVariableDescriptions(variables)';
         }
+        return scriptCode;
     }
+
     async generateCodeToGetVariableTypes(options: { isDebugging: boolean }) {
         const scriptCode = await this.getContentsOfScript();
         const initializeCode = `${scriptCode}\n\n_VSCODE_rwho_ls = %who_ls\n`;
@@ -141,6 +123,22 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
             'vscode_datascience_helpers',
             'getVariableInfo',
             'vscodeGetVariableInfo.py'
+        );
+        const contents = await this.fs.readFile(scriptPath);
+        VariableScriptGenerator.contentsOfScript = contents;
+        return contents;
+    }
+
+    private async getContentsOfBgScript() {
+        if (VariableScriptGenerator.contentsOfBgScript) {
+            return VariableScriptGenerator.contentsOfBgScript;
+        }
+        const scriptPath = joinPath(
+            this.context.extensionUri,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'getVariableInfo',
+            'vscodeGetVariablesBackground.py'
         );
         const contents = await this.fs.readFile(scriptPath);
         VariableScriptGenerator.contentsOfScript = contents;
