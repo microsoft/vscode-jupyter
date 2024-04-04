@@ -64,8 +64,18 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { ObservableDisposable } from '../../../platform/common/utils/lifecycle';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
-const kernelOutputToNotLog =
-    'NOTE: When using the `ipython kernel` entry point, Ctrl-C will not work.\n\nTo exit, you will have to explicitly quit this process, by either sending\n"quit" from a client, or using Ctrl-\\ in UNIX-like environments.\n\nTo read more about this, see https://github.com/ipython/ipython/issues/2049\n\n\n';
+// Exclude these warning messages, as users get confused about these when sharing logs.
+// I.e. they assume that issues in Jupyter ext are due to these warnings messages from ipykernel.
+export const kernelOutputToNotLog = [
+    'NOTE: When using the `ipython kernel` entry point, Ctrl-C will not work.',
+    'To exit, you will have to explicitly quit this process, by either sending',
+    '"quit" from a client, or using Ctrl-\\ in UNIX-like environments.',
+    'To read more about this, see https://github.com/ipython/ipython/issues/2049',
+    'It seems that frozen modules are being used, which may',
+    'make the debugger miss breakpoints. Please pass -Xfrozen_modules=off',
+    'to python to disable frozen modules',
+    'Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION'
+];
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -166,26 +176,25 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             throw new CancellationError();
         }
         traceVerbose(`Kernel process ${proc?.pid}.`);
-        let stdout = '';
         let stderr = '';
-        let stderrProc = '';
         let exitEventFired = false;
         let providedExitCode: number | null;
         const deferred = createDeferred();
         deferred.promise.catch(noop);
 
         if (proc) {
+            const pid = proc.pid;
             proc.on('exit', (exitCode) => {
                 exitCode = exitCode || providedExitCode;
                 if (this.isDisposed) {
-                    traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`);
+                    traceVerbose(`KernelProcess Exited ${pid}, Exit Code - ${exitCode}`);
                     return;
                 }
-                traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`, stderrProc);
+                traceVerbose(`KernelProcess Exited ${pid}, Exit Code - ${exitCode}`, stderr);
                 if (!exitEventFired) {
                     this.exitEvent.fire({
                         exitCode: exitCode || undefined,
-                        reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc) || stderrProc
+                        reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderr) || stderr
                     });
                     exitEventFired = true;
                 }
@@ -197,65 +206,44 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 }
             });
             proc.stdout?.on('data', (data: Buffer | string) => {
-                traceVerbose(`Kernel output: ${(data || '').toString()}`);
-                this.sendToOutput((data || '').toString());
+                let output = (data || '').toString();
+                // Strip unwanted stuff from the output, else it just chews up unnecessary space.
+                if (isPythonKernelConnection(this.kernelConnectionMetadata) && !sawKernelConnectionFile) {
+                    output = stripUnwantedMessages(output);
+                    if (output.includes(kernelOutputWithConnectionFile)) {
+                        output = output.trimStart();
+                    }
+                }
+                if (output.includes(kernelOutputWithConnectionFile)) {
+                    sawKernelConnectionFile = true;
+                }
+
+                traceVerbose(`Kernel output ${pid}: ${output}`);
+                this.sendToOutput(output);
             });
 
+            let sawKernelConnectionFile = false;
             proc.stderr?.on('data', (data: Buffer | string) => {
                 // We get these from execObs.out.subscribe.
                 // Hence log only using traceLevel = verbose.
                 // But only useful if daemon doesn't start for any reason.
                 const output = stripUnwantedMessages((data || '').toString());
-                stderrProc += output;
-                if (output.trim().length) {
-                    traceVerbose(`KernelProcess error: ${output}`);
+                stderr += output;
+                if (
+                    output.trim().length &&
+                    // Exclude these warning messages, as users get confused about these when sharing logs.
+                    // I.e. they assume that issues in Jupyter ext are due to these warnings messages from ipykernel.
+                    !output.includes('It seems that frozen modules are being used, which may') &&
+                    !output.includes('make the debugger miss breakpoints. Please pass -Xfrozen_modules=off') &&
+                    !output.includes('to python to disable frozen modules') &&
+                    !output.includes('Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION')
+                ) {
+                    traceVerbose(`KernelProcess error ${pid}: ${output}`);
+                    this.sendToOutput(output);
                 }
-                this.sendToOutput(output);
             });
         }
 
-        let sawKernelConnectionFile = false;
-        exeObs.out.onDidChange((output) => {
-            if (output.source === 'stderr') {
-                output.out = stripUnwantedMessages(output.out);
-                // Capture stderr, incase kernel doesn't start.
-                stderr += output.out;
-
-                if (
-                    output.out.trim().length &&
-                    // Exclude these warning messages, as users get confused about these when sharing logs.
-                    // I.e. they assume that issues in Jupyter ext are due to these warnings messages from ipykernel.
-                    !output.out.includes('It seems that frozen modules are being used, which may') &&
-                    !output.out.includes('make the debugger miss breakpoints. Please pass -Xfrozen_modules=off') &&
-                    !output.out.includes('to python to disable frozen modules') &&
-                    !output.out.includes('Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION')
-                ) {
-                    traceWarning(`StdErr from Kernel Process ${output.out.trim()}`);
-                }
-            } else {
-                stdout += output.out;
-                // Strip unwanted stuff from the output, else it just chews up unnecessary space.
-                if (!sawKernelConnectionFile) {
-                    stdout = stdout.replace(kernelOutputToNotLog, '');
-                    stdout = stdout.replace(kernelOutputToNotLog.split(/\r?\n/).join(os.EOL), '');
-                    // Strip the leading space, as we've removed some leading text.
-                    stdout = stdout.trimStart();
-                    const lines = splitLines(stdout, { trim: true, removeEmptyEntries: true });
-                    if (
-                        lines.length === 2 &&
-                        lines[0] === kernelOutputWithConnectionFile &&
-                        lines[1].startsWith('--existing') &&
-                        lines[1].endsWith('.json')
-                    ) {
-                        stdout = `${lines.join(' ')}${os.EOL}`;
-                    }
-                }
-                if (stdout.includes(kernelOutputWithConnectionFile)) {
-                    sawKernelConnectionFile = true;
-                }
-            }
-            this.sendToOutput(output.out);
-        });
         exeObs.out.done.catch((error) => {
             if (this.isDisposed) {
                 traceWarning('Kernel died', error, stderr);
@@ -654,13 +642,14 @@ function stripUnwantedMessages(output: string) {
     //          warn(
     let lines = splitLines(output, { trim: true, removeEmptyEntries: true });
     if (
-        lines.some((line) =>
+        (lines.some((line) =>
             line.includes(`FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0.`)
         ) &&
-        lines.some((line) => line.trim() === 'warn(') &&
-        lines.some((line) =>
-            line.includes(`FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0.`)
-        )
+            lines.some((line) => line.trim() === 'warn(') &&
+            lines.some((line) =>
+                line.includes(`FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0.`)
+            )) ||
+        lines.some((line) => kernelOutputToNotLog.some((item) => line.includes(item)))
     ) {
         // No point displaying false positives.
         // The message `.../site-packages/traitlets/traitlets.py:2548: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
@@ -674,10 +663,12 @@ function stripUnwantedMessages(output: string) {
                     line.trim() !== 'warn(' &&
                     !line.includes(
                         `FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use`
-                    )
+                    ) &&
+                    kernelOutputToNotLog.every((item) => !line.includes(item))
                 );
             })
-            .join(os.EOL);
+            .join(os.EOL)
+            .trimStart();
     }
     return output;
 }
