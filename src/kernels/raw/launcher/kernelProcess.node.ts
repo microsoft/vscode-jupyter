@@ -205,6 +205,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                     );
                 }
             });
+            let sawKernelConnectionFile = false;
             proc.stdout?.on('data', (data: Buffer | string) => {
                 let output = (data || '').toString();
                 // Strip unwanted stuff from the output, else it just chews up unnecessary space.
@@ -222,7 +223,6 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 this.sendToOutput(output);
             });
 
-            let sawKernelConnectionFile = false;
             proc.stderr?.on('data', (data: Buffer | string) => {
                 // We get these from execObs.out.subscribe.
                 // Hence log only using traceLevel = verbose.
