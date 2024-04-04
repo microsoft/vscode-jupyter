@@ -286,26 +286,28 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             // a peer is not up and running the messages are queued till the peer is ready to recieve.
             // No point waiting for ports to get used, see
             // https://github.com/microsoft/vscode-jupyter/issues/14835
-            const portsUsed = doNotWaitForZmqPortsToGetUsed ? Promise.resolve() : Promise.all([
-                tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
-                tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
-            ]).catch((ex) => {
-                if (cancelToken.isCancellationRequested || deferred.rejected) {
-                    return;
-                }
-                console.error('ex');
-                console.error(ex);
-                // Do not throw an error, ignore this.
-                // In the case of VPNs the port does not seem to get used.
-                // Possible we're blocking it.
-                traceWarning(`Waited ${stopwatch.elapsedTime}ms for kernel to start`, ex);
+            const portsUsed = doNotWaitForZmqPortsToGetUsed
+                ? Promise.resolve()
+                : Promise.all([
+                      tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
+                      tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
+                  ]).catch((ex) => {
+                      if (cancelToken.isCancellationRequested || deferred.rejected) {
+                          return;
+                      }
+                      console.error('ex');
+                      console.error(ex);
+                      // Do not throw an error, ignore this.
+                      // In the case of VPNs the port does not seem to get used.
+                      // Possible we're blocking it.
+                      traceWarning(`Waited ${stopwatch.elapsedTime}ms for kernel to start`, ex);
 
-                // For the new experiment, we don't want to throw an error if the kernel doesn't start.
-                if (!doNotWaitForZmqPortsToGetUsed) {
-                    // Throw an error we recognize.
-                    return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
-                }
-            });
+                      // For the new experiment, we don't want to throw an error if the kernel doesn't start.
+                      if (!doNotWaitForZmqPortsToGetUsed) {
+                          // Throw an error we recognize.
+                          return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
+                      }
+                  });
             await raceCancellationError(cancelToken, portsUsed, deferred.promise);
         } catch (e) {
             const stdErrToLog = (stderrProc || stderr || '').trim();
