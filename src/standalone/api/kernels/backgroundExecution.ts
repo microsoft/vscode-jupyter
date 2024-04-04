@@ -22,12 +22,14 @@ export async function execCodeInBackgroundThread<T>(
     const api = createKernelApiForExtension(JVSC_EXTENSION_ID, kernel);
     const mime = `application/vnd.vscode.bg.execution.${counter}`;
     const mimeFinalResult = `application/vnd.vscode.bg.execution.${counter}.result`;
+    const mimeErrorResult = `application/vnd.vscode.bg.execution.${counter}.error`;
     let displayId = '';
 
     const codeToSend = `
 def __jupyter_exec_background__():
     from IPython.display import display
     from threading import Thread
+    from traceback import format_exc
 
     # First send a dummy response to get the display id.
     # Later we'll send the real response with the actual data.
@@ -41,8 +43,8 @@ def __jupyter_exec_background__():
     def bg_main():
         try:
             output.update({"${mimeFinalResult}": do_implementation()}, raw=True)
-        except:
-            pass
+        except Exception as e:
+            output.update({"${mimeErrorResult}": format_exc()}, raw=True)
 
 
     Thread(target=bg_main, daemon=True).start()
@@ -83,6 +85,11 @@ del __jupyter_exec_background__
 
     for await (const output of api.executeCode(codeToSend, token)) {
         if (token.isCancellationRequested) {
+            return;
+        }
+        const error = output.items.find((item) => item.mime === mimeErrorResult);
+        if (error) {
+            traceWarning('Error in background execution:\n', new TextDecoder().decode(error.data));
             return;
         }
         const metadata = getNotebookCellOutputMetadata(output);
