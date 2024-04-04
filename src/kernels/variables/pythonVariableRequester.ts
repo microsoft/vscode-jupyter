@@ -12,9 +12,9 @@ import { Telemetry } from '../../telemetry';
 import { executeSilently, SilentExecutionErrorOptions } from '../helpers';
 import { IKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable, IVariableDescription } from './types';
-import { IDataFrameScriptGenerator, IVariableScriptGenerator, ParentOptions } from '../../platform/common/types';
+import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../../platform/common/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
-import { execCodeInBackgroundThread } from '../../standalone/api/kernels/backgroundExecution';
+import { IBackgroundThreadService } from '../jupyter/types';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -76,7 +76,8 @@ async function safeExecuteSilently(
 export class PythonVariablesRequester implements IKernelVariableRequester {
     constructor(
         @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,
-        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator
+        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator,
+        @inject(IBackgroundThreadService) private readonly backgroundThreadService: IBackgroundThreadService
     ) {}
 
     public async getDataFrameInfo(
@@ -187,7 +188,11 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const options = parent ? { root: parent.root, propertyChain: parent.propertyChain, startIndex } : undefined;
         const code = await this.varScriptGenerator.generateCodeToGetAllVariableDescriptions(options);
 
-        const content = await execCodeInBackgroundThread<IVariableDescription[]>(kernel, code.split(/\r?\n/), token);
+        const content = await this.backgroundThreadService.execCodeInBackgroundThread<IVariableDescription[]>(
+            kernel,
+            code.split(/\r?\n/),
+            token
+        );
 
         if (kernel.disposed || kernel.disposing || token?.isCancellationRequested || !content) {
             return [];

@@ -10,6 +10,19 @@ import { raceCancellation } from '../../../platform/common/cancellation';
 import { getNotebookCellOutputMetadata } from '../../../kernels/execution/helpers';
 import { unTrackDisplayDataForExtension } from '../../../kernels/execution/extensionDisplayDataTracker';
 import { traceWarning } from '../../../platform/logging';
+import { IBackgroundThreadService } from '../../../kernels/jupyter/types';
+import { injectable } from 'inversify';
+
+@injectable()
+export class BackgroundThreadService implements IBackgroundThreadService {
+    execCodeInBackgroundThread<T>(
+        kernel: IKernel,
+        codeWithReturnStatement: string[],
+        token: CancellationToken
+    ): Promise<T | undefined> {
+        return execCodeInBackgroundThread(kernel, codeWithReturnStatement, token);
+    }
+}
 
 export const executionCounters = new WeakMap<IKernel, number>();
 export async function execCodeInBackgroundThread<T>(
