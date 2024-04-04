@@ -299,7 +299,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             });
             await raceCancellationError(cancelToken, portsUsed, deferred.promise);
         } catch (e) {
-            const stdErrToLog = (stderrProc || stderr || '').trim();
+            const stdErrToLog = (stderr || '').trim();
             if (!cancelToken?.isCancellationRequested && !isCancellationError(e)) {
                 traceError('Disposing kernel process due to an error', e);
                 if (e && e instanceof Error && stdErrToLog.length && e.message.includes(stdErrToLog)) {
@@ -320,12 +320,12 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 }
                 // If we have the python error message in std outputs, display that.
                 const errorMessage = getErrorMessageFromPythonTraceback(stdErrToLog) || stdErrToLog.substring(0, 100);
-                traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderrProc + '\n' + stderr + '\n');
+                traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderr + '\n' + stderr + '\n');
                 console.error(`KernelDiedError raised`, e);
                 throw new KernelDiedError(
                     DataScience.kernelDied(errorMessage),
                     // Include what ever we have as the stderr.
-                    stderrProc + '\n' + stderr + '\n',
+                    stderr + '\n' + stderr + '\n',
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     e as any,
                     this.kernelConnectionMetadata
