@@ -270,26 +270,23 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             if (deferred.rejected) {
                 await deferred.promise;
             }
-            const doNotWaitForZmqPortsToGetused = ServiceContainer.instance
+            const doNotWaitForZmqPortsToGetUsed = ServiceContainer.instance
                 .get<IExperimentService>(IExperimentService)
                 .inExperiment(Experiments.DoNotWaitForZmqPortsToBeUsed);
 
             const tcpPortUsed = (await import('tcp-port-used')).default;
-            const stopwtach = new StopWatch();
+            const stopwatch = new StopWatch();
 
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
             // Kernel must be connected to bo Shell & IoPub channels for kernel communication to work.
 
-            // Default timeout is generally 60s.
-            // For the experiment, lets wait for 10s for the kernel to start.
-            // Wait for 10s, by then kernel process woudl have either crashed (failure to start properly or ports getting used)
-            if (doNotWaitForZmqPortsToGetused && timeout > 10_000) {
-                timeout = 10_000;
-            }
+            // Do not wait for ports to get used in the experiment
+            // Zmq does not use a client server architecture, even if
+            // a peer is not up and running the messages are queued till the peer is ready to recieve.
             // No point waiting for ports to get used, see
             // https://github.com/microsoft/vscode-jupyter/issues/14835
-            const portsUsed = Promise.all([
+            const portsUsed = doNotWaitForZmqPortsToGetUsed ? Promise.resolve() : Promise.all([
                 tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
                 tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
             ]).catch((ex) => {
@@ -301,10 +298,10 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 // Do not throw an error, ignore this.
                 // In the case of VPNs the port does not seem to get used.
                 // Possible we're blocking it.
-                traceWarning(`Waited ${stopwtach.elapsedTime}ms for kernel to start`, ex);
+                traceWarning(`Waited ${stopwatch.elapsedTime}ms for kernel to start`, ex);
 
                 // For the new experiment, we don't want to throw an error if the kernel doesn't start.
-                if (!doNotWaitForZmqPortsToGetused) {
+                if (!doNotWaitForZmqPortsToGetUsed) {
                     // Throw an error we recognize.
                     return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
                 }
