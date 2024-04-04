@@ -146,7 +146,7 @@ def _VSCODE_getAllChildrenDescriptions(rootVarName, propertyChain, startIndex):
     if "count" in parentInfo:
         if parentInfo["count"] > 0:
             lastItem = min(parentInfo["count"], startIndex + arrayPageSize)
-            range = range(startIndex, lastItem)
+            indexRange = range(startIndex, lastItem)
             children = [
                 {
                     **getVariableDescription(getChildProperty(parent, [i])),
@@ -155,7 +155,7 @@ def _VSCODE_getAllChildrenDescriptions(rootVarName, propertyChain, startIndex):
                     "propertyChain": propertyChain + [i],
                     "language": "python",
                 }
-                for i in range
+                for i in indexRange
             ]
     elif parentInfo["hasNamedChildren"]:
         childrenNames = []
