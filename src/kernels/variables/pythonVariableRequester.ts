@@ -153,16 +153,18 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     public async getVariableValueSummary(targetVariable: IJupyterVariable, kernel: IKernel, token: CancellationToken) {
         const code = await this.varScriptGenerator.generateCodeToGetVariableValueSummary(targetVariable.name);
 
-        const content = await this.backgroundThreadService.execCodeInBackgroundThread<{ summary: string }>(
-            kernel,
-            code.split(/\r?\n/),
-            token
-        );
-
         try {
+            const content = await this.backgroundThreadService.execCodeInBackgroundThread<{ summary: string }>(
+                kernel,
+                code.split(/\r?\n/),
+                token
+            );
+
             return content?.summary;
-        } catch (_ex) {
-            traceWarning(`Exception when getting variable summary for variable ${targetVariable.name}`);
+        } catch (ex) {
+            traceWarning(
+                `Exception when getting variable summary for variable "${targetVariable.name}": ${ex.message}`
+            );
             return undefined;
         }
     }

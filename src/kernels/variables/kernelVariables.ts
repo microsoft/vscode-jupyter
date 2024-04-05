@@ -131,8 +131,8 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getVariableValueSummary(
         targetVariable: IJupyterVariable,
-        kernel?: IKernel,
-        cancelToken?: CancellationToken
+        kernel: IKernel,
+        cancelToken: CancellationToken
     ): Promise<string | undefined> {
         if (!kernel) {
             return;
