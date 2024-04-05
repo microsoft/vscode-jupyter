@@ -70,11 +70,11 @@ del __jupyter_exec_background__
     disposables.add(token.onCancellationRequested(() => disposables.dispose()));
     const promise = raceCancellation(
         token,
-        new Promise<T | undefined>((resolve, reject) => {
+        new Promise<void>((resolve) => {
             disposables.add(
                 api.onDidReceiveDisplayUpdate(async (output) => {
                     if (token.isCancellationRequested) {
-                        return resolve(undefined);
+                        return resolve();
                     }
 
                     const metadata = getNotebookCellOutputMetadata(output);
@@ -87,20 +87,24 @@ del __jupyter_exec_background__
                         (item) => item.mime === mimeFinalResult || item.mime === mimeErrorResult
                     );
 
-                    if (result?.mime === mimeFinalResult) {
-                        try {
-                            if (result.data.byteLength === 0) {
-                                return resolve(undefined);
-                            }
-
-                            return resolve(JSON.parse(new TextDecoder().decode(result.data)) as T);
-                        } catch (ex) {
-                            return reject(new Error('Failed to parse the result', ex));
-                        }
-                    } else if (result?.mime === mimeErrorResult) {
-                        traceWarning('Error in background execution:\n', new TextDecoder().decode(result.data));
-                        return resolve(undefined);
+                    if (result) {
+                        resolve();
                     }
+
+                    // if (result?.mime === mimeFinalResult) {
+                    //     try {
+                    //         if (result.data.byteLength === 0) {
+                    //             return resolve(undefined);
+                    //         }
+
+                    //         return resolve(JSON.parse(new TextDecoder().decode(result.data)) as T);
+                    //     } catch (ex) {
+                    //         return reject(new Error('Failed to parse the result', ex));
+                    //     }
+                    // } else if (result?.mime === mimeErrorResult) {
+                    //     traceWarning('Error in background execution:\n', new TextDecoder().decode(result.data));
+                    //     return resolve(undefined);
+                    // }
                 })
             );
         })
@@ -127,12 +131,14 @@ del __jupyter_exec_background__
         if (displayId && displayId === metadata.transient.display_id) {
             const result = output.items.find((item) => item.mime === mimeFinalResult);
             if (result?.mime === mimeFinalResult) {
-                try {
-                    return JSON.parse(new TextDecoder().decode(result.data)) as T;
-                } catch (e) {
-                    // logged in the listener
-                    return;
+                if (result.data.byteLength === 0) {
+                    return undefined;
                 }
+
+                return JSON.parse(new TextDecoder().decode(result.data)) as T;
+            } else if (result?.mime === mimeErrorResult) {
+                traceWarning('Error in background execution:\n', new TextDecoder().decode(result.data));
+                return undefined;
             }
         }
     }
@@ -145,5 +151,5 @@ del __jupyter_exec_background__
         return;
     }
 
-    return promise;
+    await promise;
 }
