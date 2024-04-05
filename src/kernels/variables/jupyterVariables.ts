@@ -77,7 +77,7 @@ export class JupyterVariables implements IJupyterVariables {
 
     public async getVariableValueSummary(
         targetVariable: IJupyterVariable,
-        kernel?: IKernel,
+        kernel: IKernel,
         cancelToken?: CancellationToken
     ) {
         return this.variableHandler.getVariableValueSummary(targetVariable, kernel, cancelToken);
