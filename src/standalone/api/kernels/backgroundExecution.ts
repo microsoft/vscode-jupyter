@@ -79,39 +79,21 @@ del __jupyter_exec_background__
 
                     const metadata = getNotebookCellOutputMetadata(output);
                     if (!displayId || metadata?.transient?.display_id !== displayId) {
-                        // this message is not for this listener isntance.
+                        // this message is not for this listener instance.
                         return;
                     }
 
-                    const result = output.items.find(
-                        (item) => item.mime === mimeFinalResult || item.mime === mimeErrorResult
-                    );
-
-                    if (result) {
+                    // A final result or error means we can stop listening for more messages, so resolve the promise.
+                    // We do the actual parsing and return the result message in the executeCode loop.
+                    if (!!output.items.find((item) => item.mime === mimeFinalResult || item.mime === mimeErrorResult)) {
                         resolve();
                     }
-
-                    // if (result?.mime === mimeFinalResult) {
-                    //     try {
-                    //         if (result.data.byteLength === 0) {
-                    //             return resolve(undefined);
-                    //         }
-
-                    //         return resolve(JSON.parse(new TextDecoder().decode(result.data)) as T);
-                    //     } catch (ex) {
-                    //         return reject(new Error('Failed to parse the result', ex));
-                    //     }
-                    // } else if (result?.mime === mimeErrorResult) {
-                    //     traceWarning('Error in background execution:\n', new TextDecoder().decode(result.data));
-                    //     return resolve(undefined);
-                    // }
                 })
             );
         })
         // We no longer need to track any more outputs from the kernel that are related to this output.
     ).finally(() => kernel.session && unTrackDisplayDataForExtension(kernel.session, displayId));
 
-    // get the display id so we know which messages apply to the listener
     for await (const output of api.executeCode(codeToSend, token)) {
         if (token.isCancellationRequested) {
             return;
@@ -124,6 +106,7 @@ del __jupyter_exec_background__
 
         const dummyOutputMessage = output.items.find((item) => item.mime === mime);
         if (dummyOutputMessage) {
+            // get the display id so we know which messages apply to the listener
             displayId = metadata.transient.display_id;
             continue;
         }
