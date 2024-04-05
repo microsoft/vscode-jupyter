@@ -133,5 +133,5 @@ del __jupyter_exec_background__
         return;
     }
 
-    await promise;
+    return promise;
 }
