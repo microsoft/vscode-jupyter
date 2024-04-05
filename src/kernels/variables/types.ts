@@ -43,7 +43,7 @@ export interface IJupyterVariables {
     ): Promise<IJupyterVariable>;
     getVariableValueSummary(
         variable: IJupyterVariable,
-        kernel?: IKernel,
+        kernel: IKernel,
         cancelToken?: CancellationToken
     ): Promise<string | undefined>;
     getDataFrameInfo(
@@ -117,7 +117,7 @@ export interface IKernelVariableRequester {
         kernel: IKernel,
         parent: IVariableDescription | undefined,
         startIndex: number,
-        token?: CancellationToken
+        token: CancellationToken
     ): Promise<IVariableDescription[]>;
     getVariableNamesAndTypesFromKernel(kernel: IKernel, token?: CancellationToken): Promise<IJupyterVariable[]>;
     getFullVariable(
@@ -139,7 +139,7 @@ export interface IKernelVariableRequester {
     getVariableValueSummary(
         targetVariable: IJupyterVariable,
         kernel: IKernel,
-        token?: CancellationToken
+        token: CancellationToken
     ): Promise<string | undefined>;
     getDataFrameInfo(targetVariable: IJupyterVariable, kernel: IKernel, expression: string): Promise<IJupyterVariable>;
 }
