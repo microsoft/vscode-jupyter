@@ -70,7 +70,7 @@ del __jupyter_exec_background__
     disposables.add(token.onCancellationRequested(() => disposables.dispose()));
     const promise = raceCancellation(
         token,
-        new Promise<T | undefined>((resolve, reject) => {
+        new Promise<void>((resolve) => {
             disposables.add(
                 api.onDidReceiveDisplayUpdate(async (output) => {
                     if (token.isCancellationRequested) {
@@ -80,16 +80,15 @@ del __jupyter_exec_background__
                     if (!displayId || metadata?.transient?.display_id !== displayId) {
                         return;
                     }
-                    const result = output.items.find((item) => item.mime === mimeFinalResult);
+                    const result = output.items.find(
+                        (item) => item.mime === mimeFinalResult || item.mime === mimeErrorResult
+                    );
                     if (!result) {
                         return;
                     }
 
-                    try {
-                        return resolve(JSON.parse(new TextDecoder().decode(result.data)) as T);
-                    } catch (ex) {
-                        return reject(new Error('Failed to parse the result', ex));
-                    }
+                    // actually reading the output is done in the execute code loop
+                    resolve();
                 })
             );
         })
@@ -129,5 +128,5 @@ del __jupyter_exec_background__
         return;
     }
 
-    return promise;
+    await promise;
 }
