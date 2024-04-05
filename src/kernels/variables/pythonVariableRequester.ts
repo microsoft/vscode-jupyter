@@ -4,7 +4,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { traceError } from '../../platform/logging';
+import { traceError, traceWarning } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
@@ -150,27 +150,19 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         return result;
     }
 
-    public async getVariableValueSummary(
-        targetVariable: IJupyterVariable,
-        kernel: IKernel,
-        _cancelToken?: CancellationToken
-    ) {
-        const { code, cleanupCode, initializeCode } =
-            await this.varScriptGenerator.generateCodeToGetVariableValueSummary({ variableName: targetVariable.name });
-        const results = await safeExecuteSilently(
+    public async getVariableValueSummary(targetVariable: IJupyterVariable, kernel: IKernel, token: CancellationToken) {
+        const code = await this.varScriptGenerator.generateCodeToGetVariableValueSummary(targetVariable.name);
+
+        const content = await this.backgroundThreadService.execCodeInBackgroundThread<{ summary: string }>(
             kernel,
-            { code, cleanupCode, initializeCode },
-            {
-                traceErrors: true,
-                traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
-                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-            }
+            code.split(/\r?\n/),
+            token
         );
 
         try {
-            const text = this.extractJupyterResultText(results);
-            return text;
+            return content?.summary;
         } catch (_ex) {
+            traceWarning(`Exception when getting variable summary for variable ${targetVariable.name}`);
             return undefined;
         }
     }

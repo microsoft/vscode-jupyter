@@ -177,3 +177,17 @@ def _VSCODE_getAllChildrenDescriptions(rootVarName, propertyChain, startIndex):
                 children.append(child)
 
     return json.dumps(children)
+
+
+def _VSCODE_getVariableSummary(variable):
+    if variable is None:
+        return None
+    # check if the variable is a dataframe
+    if type(variable).__name__ == "DataFrame" and find_spec("pandas") is not None:
+        import io
+
+        buffer = io.StringIO()
+        variable.info(buf=buffer)
+        return json.dumps({"summary": buffer.getvalue()})
+
+    return None
