@@ -71,7 +71,9 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
         if (parentOptions) {
             scriptCode =
                 scriptCode +
-                `\n\nreturn _VSCODE_getAllChildrenDescriptions(\'${parentOptions.root}\', ${JSON.stringify(parentOptions.propertyChain)}, ${parentOptions.startIndex})`;
+                `\n\nreturn _VSCODE_getAllChildrenDescriptions(\'${parentOptions.root}\', ${JSON.stringify(
+                    parentOptions.propertyChain
+                )}, ${parentOptions.startIndex})`;
         } else {
             scriptCode = scriptCode + '\n\nvariables= %who_ls\nreturn _VSCODE_getVariableDescriptions(variables)';
         }
