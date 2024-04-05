@@ -79,6 +79,7 @@ del __jupyter_exec_background__
 
                     const metadata = getNotebookCellOutputMetadata(output);
                     if (!displayId || metadata?.transient?.display_id !== displayId) {
+                        // this message is not for this listener isntance.
                         return;
                     }
 
@@ -116,13 +117,24 @@ del __jupyter_exec_background__
         if (!metadata?.transient?.display_id) {
             continue;
         }
+
         const dummyOutputMessage = output.items.find((item) => item.mime === mime);
-        if (!dummyOutputMessage) {
+        if (dummyOutputMessage) {
+            displayId = metadata.transient.display_id;
             continue;
         }
 
-        displayId = metadata.transient.display_id;
-        break;
+        if (displayId && displayId === metadata.transient.display_id) {
+            const result = output.items.find((item) => item.mime === mimeFinalResult);
+            if (result?.mime === mimeFinalResult) {
+                try {
+                    return JSON.parse(new TextDecoder().decode(result.data)) as T;
+                } catch (e) {
+                    // logged in the listener
+                    return;
+                }
+            }
+        }
     }
 
     if (token.isCancellationRequested) {
