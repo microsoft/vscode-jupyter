@@ -21,7 +21,7 @@ const cleanupCode = dedent`
 @injectable()
 export class VariableScriptGenerator implements IVariableScriptGenerator {
     static contentsOfScript: string | undefined;
-    static contentsOfBgScript: string | undefined;
+    static contentsOfVariablesScript: string | undefined;
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
@@ -67,7 +67,7 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
     }
 
     async generateCodeToGetAllVariableDescriptions(parentOptions: ParentOptions | undefined) {
-        let scriptCode = await this.getContentsOfBgScript();
+        let scriptCode = await this.getContentsOfVariablesScript();
         if (parentOptions) {
             scriptCode =
                 scriptCode +
@@ -105,7 +105,7 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
         }
     }
     async generateCodeToGetVariableValueSummary(variableName: string) {
-        let scriptCode = await this.getContentsOfBgScript();
+        let scriptCode = await this.getContentsOfVariablesScript();
         scriptCode = scriptCode + `\n\nvariables= %who_ls\nreturn _VSCODE_getVariableSummary(${variableName})`;
         return scriptCode;
     }
@@ -128,16 +128,16 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
         return contents;
     }
 
-    private async getContentsOfBgScript() {
-        if (VariableScriptGenerator.contentsOfBgScript) {
-            return VariableScriptGenerator.contentsOfBgScript;
+    private async getContentsOfVariablesScript() {
+        if (VariableScriptGenerator.contentsOfVariablesScript) {
+            return VariableScriptGenerator.contentsOfVariablesScript;
         }
         const scriptPath = joinPath(
             this.context.extensionUri,
             'pythonFiles',
             'vscode_datascience_helpers',
             'getVariableInfo',
-            'vscodeGetVariablesBackground.py'
+            'vscodeGetVariablesForProvider.py'
         );
         const contents = await this.fs.readFile(scriptPath);
         VariableScriptGenerator.contentsOfScript = contents;
