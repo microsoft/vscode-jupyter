@@ -139,7 +139,7 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
                 const executionCount = this.kernelProvider.getKernelExecution(kernel).executionCount;
                 let summary = this.variableSummaryCache.getResults(executionCount, cacheKey);
 
-                if (summary == undefined) {
+                if (summary == undefined && result.variable.type === 'pandas.core.frame.DataFrame') {
                     summary = await this.variables.getVariableValueSummary(
                         {
                             name: result.variable.name,
@@ -167,7 +167,7 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
                         expression: result.variable.expression,
                         type: result.variable.type,
                         language: result.variable.language,
-                        summary: summary
+                        summary: summary ?? ''
                     }
                 };
             }
