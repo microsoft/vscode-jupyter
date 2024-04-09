@@ -35,6 +35,7 @@ import {
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { KernelSocketMap } from '../../kernelSocket';
+import { getNotebookTelemetryTracker } from '../../../platform/telemetry/notebookTelemetry';
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -167,14 +168,16 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             await KernelProgressReporter.wrapAndReportProgress(
                 this.resource,
                 DataScience.waitingForJupyterSessionToBeIdle,
-                () =>
-                    postStartKernel(
+                () => {
+                    const tracker = getNotebookTelemetryTracker(this.resource)?.kernelReady();
+                    return postStartKernel(
                         postStartToken.token,
                         this.launchTimeout,
                         this.resource,
                         this.kernelConnectionMetadata,
                         result.realKernel
-                    )
+                    ).finally(() => tracker?.stop());
+                }
             );
             if (token.isCancellationRequested) {
                 throw new CancellationError();

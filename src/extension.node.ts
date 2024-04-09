@@ -80,6 +80,7 @@ import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { sendTelemetryEvent } from './telemetry';
 import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
 import { addOutputChannel, displayProgress, handleError, initializeGlobals } from './extension.common';
+import { activateNotebookTelemetry } from './platform/telemetry/notebookTelemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -94,6 +95,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     durations.startActivateTime = stopWatch.elapsedTime;
+    activateNotebookTelemetry(stopWatch);
     setDisposableTracker(context.subscriptions);
     setIsCodeSpace(env.uiKind == UIKind.Web);
     setIsWebExtension(false);

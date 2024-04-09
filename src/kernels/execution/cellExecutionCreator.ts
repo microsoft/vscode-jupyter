@@ -13,6 +13,7 @@ import {
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IKernelController } from '../types';
 import { noop } from '../../platform/common/utils/misc';
+import { getNotebookTelemetryTracker } from '../../platform/telemetry/notebookTelemetry';
 
 /**
  * Wrapper class around NotebookCellExecution that allows us to
@@ -42,6 +43,9 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
         return this._impl.executionOrder;
     }
     public set executionOrder(value: number | undefined) {
+        if (value) {
+            getNotebookTelemetryTracker(this._impl.cell.notebook)?.executeCellAcknowledged();
+        }
         this._impl.executionOrder = value;
     }
     private startIfNecessary() {
