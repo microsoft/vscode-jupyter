@@ -18,7 +18,6 @@ import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 import { Telemetry } from '../common/constants';
 import { ignoreLogging, logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../logging';
 import { TraceOptions } from '../logging/types';
-import { pythonEnvToJupyterEnv, serializePythonEnvironment } from '../api/pythonApi';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { noop } from '../common/utils/misc';
 import { CancellationToken, workspace } from 'vscode';
@@ -166,22 +165,16 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         let failureEx: Error | undefined;
 
         let env = await this.apiProvider.getApi().then((api) =>
-            api
-                .getActivatedEnvironmentVariables(
-                    resource,
-                    serializePythonEnvironment(pythonEnvToJupyterEnv(environment))!,
-                    false
-                )
-                .catch((ex) => {
-                    traceError(
-                        `Failed to get activated env variables from Python Extension for ${getDisplayPath(
-                            environment.path
-                        )}`,
-                        ex
-                    );
-                    reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
-                    return undefined;
-                })
+            api.getActivatedEnvironmentVariables(resource, environment, false).catch((ex) => {
+                traceError(
+                    `Failed to get activated env variables from Python Extension for ${getDisplayPath(
+                        environment.path
+                    )}`,
+                    ex
+                );
+                reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
+                return undefined;
+            })
         );
         if (token?.isCancellationRequested) {
             return;
