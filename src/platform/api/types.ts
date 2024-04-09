@@ -5,7 +5,7 @@ import { Event, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import type { SemVer } from 'semver';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
-import { PythonExtension } from '@vscode/python-extension';
+import { PythonExtension, type Environment } from '@vscode/python-extension';
 
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
@@ -64,7 +64,7 @@ export interface PythonApi {
      */
     getActivatedEnvironmentVariables(
         resource: Resource,
-        interpreter: PythonEnvironment_PythonApi,
+        interpreter: Environment,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined>;
     /**
