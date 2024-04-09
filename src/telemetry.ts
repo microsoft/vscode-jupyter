@@ -2811,6 +2811,281 @@ export class IEventNamePropertyMapping {
     };
 
     /**
+     * This event is sent to measure the times involved in various parts of extension when running a cell.
+     * The reference time is `openedAfter` (time when the notebook was opened).
+     * All other times are relative to this time, except in the case where a notebook was already opened before the extension was activated.
+     * In this case, the reference time is the time we detected the notebook after the extension started.
+     * I.e. in such a case the `openedAfter` would be approx the time the extension took to activate.
+     * In other cases this is 0
+     */
+    [Telemetry.NotebookFirstStartBreakDown]: TelemetryEventInfo<
+        {
+            /**
+             * Whether the user manually selected a kernel.
+             */
+            manuallySelectedKernel?: boolean;
+            /**
+             * Whether the notebook was already open when the extension was activated.
+             */
+            wasAlreadyOpen: boolean;
+            /**
+             * % Time taken to compute the cwd.
+             */
+            computeCwd: number;
+            /**
+             * Total duration (from run cell to getting the execution count of the first cell).
+             */
+            duration: number;
+            /**
+             * % Time to get env vars
+             */
+            envVars: number;
+            /**
+             * % Time to run the first cell & get the execution count.
+             */
+            executeCell: number;
+            /**
+             * % Time to get the kernel connection.
+             */
+            getConnection: number;
+            /**
+             * % Time to start the interrupt handle (win32 only)
+             */
+            interruptHandle: number;
+            /**
+             * % Time waiting for kernel to be idle
+             */
+            kernelIdle: number;
+            /**
+             * % Time waiting for kernel info
+             */
+            kernelInfo: number;
+            /**
+             * % Time waiting for kernel to be ready
+             */
+            kernelReady: number;
+            /**
+             * % Time waiting for kernel ports to be used.
+             */
+            portUsage: number;
+            /**
+             * % Time spent in post kernel start.
+             */
+            postKernelStart: number;
+            /**
+             * % Time spent in generating the pre-execute telemetry.
+             */
+            preExecuteCellTelemetry: number;
+            /**
+             * % Time spent in getting env vars for python.
+             */
+            pythonEnvVars: number;
+            /**
+             * % Time spent in getting session telemetry.
+             */
+            sessionTelemetry: number;
+            /**
+             * % Time spent in spawning kernel proc.
+             */
+            spawn: number;
+            /**
+             * % Time spent in starting the kernel.
+             */
+            startKernel: number;
+            /**
+             * % Time spent in executing startup code.
+             */
+            startupCode: number;
+            /**
+             * % Time spent in updating the kernel connection.
+             */
+            updateConnection: number;
+        } & ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook'],
+        source: 'N/A',
+        properties: {
+            ...commonClassificationForResourceType(),
+            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
+            manuallySelectedKernel: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            wasAlreadyOpen: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        },
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            computeCwd: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            duration: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            envVars: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            executeCell: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            getConnection: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            interruptHandle: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            kernelIdle: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            kernelInfo: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            kernelReady: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            portUsage: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            postKernelStart: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            preExecuteCellTelemetry: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            pythonEnvVars: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            sessionTelemetry: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            spawn: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            startKernel: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            startupCode: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            updateConnection: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            }
+        }
+    };
+
+    /**
+     * This event is sent to measure the times involved in automatically selecting the first kernel of a notebook.
+     */
+    [Telemetry.NotebookFirstKernelAutoSelectionBreakDown]: TelemetryEventInfo<
+        {
+            /**
+             * Whether the notebook was already opened when the extension activated.
+             */
+            wasAlreadyOpen: boolean;
+            /**
+             * Percentage of time spent between activation of Jupyter Ext and calling Python Ext Api.
+             */
+            callPythonApi: number;
+            /**
+             * Percentage of time spent in activating Python Ext.
+             */
+            activatePython: number;
+            /**
+             * Percentage of time spent in discovering Env.
+             */
+            discoverEnv: number;
+            /**
+             * Percentage of time spent in creating the controller.
+             */
+            createController: number;
+            /**
+             * Percentage of time spent in receiving the selected event.
+             */
+            selectController: number;
+        } & ResourceSpecificTelemetryProperties &
+            DurationMeasurement
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook'],
+        source: 'N/A',
+        properties: {
+            ...commonClassificationForResourceType(),
+            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
+            wasAlreadyOpen: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        },
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            callPythonApi: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            activatePython: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            discoverEnv: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            createController: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            selectController: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            }
+        }
+    };
+
+    /**
      * This event is sent when a RawJupyterSession's `shutdownSession` method is called.
      * Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.
      */

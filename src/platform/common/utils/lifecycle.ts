@@ -7,6 +7,11 @@ import { once } from './functional';
 import { Iterable } from './iterable';
 
 let disposableTracker: IDisposable[] | undefined = undefined;
+export const EmptyDisposable = Object.freeze({
+    dispose: () => {
+        /** */
+    }
+});
 
 export function setDisposableTracker(tracker: IDisposable[] | undefined): void {
     disposableTracker = tracker;

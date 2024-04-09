@@ -49,6 +49,7 @@ import {
 } from '../types';
 import { JupyterServerCollection } from '../../../api';
 import { isCondaEnvironmentWithoutPython } from '../../../platform/interpreter/helpers';
+import { onDidManuallySelectKernel } from '../../../kernels/telemetry/notebookTelemetry';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
@@ -292,6 +293,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         return controller.controller.id;
     }
     private async onControllerSelected(notebook: NotebookDocument, controller: IVSCodeNotebookController) {
+        onDidManuallySelectKernel(notebook);
         if (
             isLocalConnection(controller.connection) &&
             isPythonKernelConnection(controller.connection) &&

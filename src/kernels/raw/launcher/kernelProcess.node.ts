@@ -62,6 +62,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { ObservableDisposable } from '../../../platform/common/utils/lifecycle';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 // Exclude these warning messages, as users get confused about these when sharing logs.
@@ -166,11 +167,15 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             throw new Error('Kernel has already been launched.');
         }
         this.launchedOnce = true;
-
+        const tracker = getNotebookTelemetryTracker(this.resource);
+        const connectionTracker = tracker?.updateConnection();
         // Update our connection arguments in the kernel spec
         await this.updateConnectionArgs();
+        connectionTracker?.stop();
         Cancellation.throwIfCanceled(cancelToken);
+        const spawnTracker = tracker?.spawn();
         const exeObs = await this.launchAsObservable(workingDirectory, cancelToken);
+        spawnTracker?.stop();
         const proc = exeObs.proc;
         if (cancelToken.isCancellationRequested) {
             throw new CancellationError();
@@ -254,6 +259,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         });
 
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
+        const portUsageTracker = getNotebookTelemetryTracker(this.resource)?.portUsage();
         try {
             if (deferred.rejected) {
                 await deferred.promise;
@@ -330,6 +336,8 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                     this.kernelConnectionMetadata
                 );
             }
+        } finally {
+            portUsageTracker?.stop();
         }
     }
 
@@ -538,29 +546,41 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             this.extensionChecker.isPythonExtensionInstalled &&
             this._kernelConnectionMetadata.interpreter
         ) {
+            const tracker = getNotebookTelemetryTracker(this.resource);
+            const [pythonEnvVars, envVars, win32InterruptHandle] = [
+                tracker?.pythonEnvVars(),
+                tracker?.envVars(),
+                os.platform() === 'win32' ? tracker?.interruptHandle() : undefined
+            ];
             const executionServicePromise = this.pythonExecFactory.createActivatedEnvironment({
                 resource: this.resource,
                 interpreter: this._kernelConnectionMetadata.interpreter
             });
+            const handlePromise =
+                os.platform() === 'win32'
+                    ? this.getWin32InterruptHandle().finally(() => win32InterruptHandle?.stop())
+                    : win32InterruptHandle?.stop();
 
             let [executionService, wdExists, env] = await Promise.all([
-                executionServicePromise,
+                executionServicePromise.finally(() => pythonEnvVars?.stop()),
                 fs.pathExists(workingDirectory),
-                this.kernelEnvVarsService.getEnvironmentVariables(
-                    this.resource,
-                    this._kernelConnectionMetadata.interpreter,
-                    this._kernelConnectionMetadata.kernelSpec,
-                    cancelToken
-                )
+                this.kernelEnvVarsService
+                    .getEnvironmentVariables(
+                        this.resource,
+                        this._kernelConnectionMetadata.interpreter,
+                        this._kernelConnectionMetadata.kernelSpec,
+                        cancelToken
+                    )
+                    .finally(() => envVars?.stop())
             ]);
 
             Cancellation.throwIfCanceled(cancelToken);
 
             // On windows, in order to support interrupt, we have to set an environment variable pointing to a WIN32 event handle
-            if (os.platform() === 'win32') {
+            if (os.platform() === 'win32' && handlePromise) {
                 env = env || process.env;
                 try {
-                    const handle = await this.getWin32InterruptHandle();
+                    const handle = await handlePromise;
 
                     // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
                     env.JPY_INTERRUPT_EVENT = `${handle}`;

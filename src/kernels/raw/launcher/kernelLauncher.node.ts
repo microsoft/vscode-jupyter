@@ -41,6 +41,7 @@ import { IPythonExecutionFactory } from '../../../platform/interpreter/types.nod
 import { UsedPorts, ignorePortForwarding } from '../../common/usedPorts';
 import { isPythonKernelConnection } from '../../helpers';
 import { once } from '../../../platform/common/utils/events';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -198,7 +199,9 @@ export class KernelLauncher implements IKernelLauncher {
         timeout: number,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
+        const tracker = getNotebookTelemetryTracker(resource)?.getConnection();
         const connection = await raceCancellationError(cancelToken, this.getKernelConnection(kernelConnectionMetadata));
+        tracker?.stop();
         // Create a new output channel for this kernel
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);

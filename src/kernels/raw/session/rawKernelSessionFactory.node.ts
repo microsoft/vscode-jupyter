@@ -23,6 +23,7 @@ import { RawSessionConnection } from './rawSessionConnection.node';
 import { computeWorkingDirectory } from '../../../platform/common/application/workspace.node';
 import { expandWorkingDir } from '../../jupyter/jupyterUtils';
 import { IFileSystem } from '../../../platform/common/platform/types';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 
 @injectable()
 export class RawKernelSessionFactory implements IRawKernelSessionFactory {
@@ -35,7 +36,7 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
     public async create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession> {
         traceVerbose(`Creating raw notebook for resource '${getDisplayPath(options.resource)}'`);
         let session: RawSessionConnection | undefined;
-
+        const cwdTracker = getNotebookTelemetryTracker(options.resource)?.computeCwd();
         const [workingDirectory, localWorkingDirectory] = await Promise.all([
             raceCancellationError(
                 options.token,
@@ -54,6 +55,7 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
                 trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection })
             )
         ]);
+        cwdTracker?.stop();
         const launchTimeout = this.configService.getSettings(options.resource).jupyterLaunchTimeout;
         session = new RawSessionConnection(
             options.resource,

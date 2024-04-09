@@ -44,6 +44,7 @@ import {
     setPythonApi
 } from '../interpreter/helpers';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
+import { trackInterpreterDiscovery, trackPythonExtensionActivation } from '../../kernels/telemetry/notebookTelemetry';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -150,6 +151,9 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         }
         if (extension?.exports) {
             setPythonApi(extension.exports);
+            extension.exports.environments.known.forEach((e) => {
+                trackInterpreterDiscovery(e);
+            });
         }
         return extension?.exports;
     }
@@ -185,8 +189,14 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         }
         let activated = false;
         if (!pythonExtension.isActive) {
+            const tracker = trackPythonExtensionActivation();
             try {
-                await pythonExtension.activate();
+                const promise = pythonExtension.activate();
+                promise.then(
+                    () => tracker.stop(),
+                    () => tracker.stop()
+                );
+                await promise;
                 activated = true;
             } catch (ex) {
                 traceError(`Failed activating the python extension: `, ex);

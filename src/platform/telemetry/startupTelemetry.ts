@@ -7,6 +7,14 @@ import { sendTelemetryEvent } from '.';
 import { EventName } from './constants';
 import { workspace } from 'vscode';
 
+export const startupDurations: {
+    workspaceFolderCount: number;
+    totalActivateTime: number;
+    codeLoadingTime: number;
+    startActivateTime: number;
+    endActivateTime: number;
+} = { codeLoadingTime: 0, endActivateTime: 0, startActivateTime: 0, totalActivateTime: 0, workspaceFolderCount: 0 };
+
 export function sendStartupTelemetry(
     durations: {
         workspaceFolderCount: number;
@@ -26,6 +34,7 @@ export function sendStartupTelemetry(
     try {
         durations.endActivateTime = stopWatch.elapsedTime;
         durations.totalActivateTime = stopWatch.elapsedTime;
+        Object.assign(startupDurations, durations);
         updateActivationTelemetryProps(durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations);
     } catch (ex) {
@@ -50,6 +59,7 @@ export function sendErrorTelemetry(
         let props: any = {};
         durations.endActivateTime = stopWatch.elapsedTime;
         durations.totalActivateTime = stopWatch.elapsedTime;
+        Object.assign(startupDurations, durations);
         updateActivationTelemetryProps(durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations, props, ex);
     } catch (exc2) {
