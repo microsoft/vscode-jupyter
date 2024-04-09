@@ -102,7 +102,7 @@ const interpreterDiscoveryTimes = new Map<string, number>();
 const controllerInterpreterMapping = new Map<string, string>();
 
 export const trackPythonExtensionActivation = once(() => {
-    pythonExtensionActivation.starAfter = mainStopWatch.elapsedTime;
+    pythonExtensionActivation.starAfter = mainStopWatch?.elapsedTime;
     return {
         stop: once(() => {
             pythonExtensionActivation.completedAfter = mainStopWatch.elapsedTime;
@@ -111,14 +111,14 @@ export const trackPythonExtensionActivation = once(() => {
 });
 
 export function trackControllerCreation(kernelConnectionId: string, pythonInterpreterId?: string) {
-    controllerCreationTimes.set(kernelConnectionId, mainStopWatch.elapsedTime);
+    controllerCreationTimes.set(kernelConnectionId, mainStopWatch?.elapsedTime);
     controllerInterpreterMapping.set(kernelConnectionId, pythonInterpreterId || '');
 }
 export function trackInterpreterDiscovery(pythonEnv: Environment) {
     if (!pythonEnv.executable.uri) {
         return;
     }
-    interpreterDiscoveryTimes.set(pythonEnv.id, mainStopWatch.elapsedTime);
+    interpreterDiscoveryTimes.set(pythonEnv.id, mainStopWatch?.elapsedTime);
 }
 function createNotebookTracker(
     notebook: NotebookDocument,
