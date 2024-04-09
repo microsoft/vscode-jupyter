@@ -23,7 +23,7 @@ import { RawSessionConnection } from './rawSessionConnection.node';
 import { computeWorkingDirectory } from '../../../platform/common/application/workspace.node';
 import { expandWorkingDir } from '../../jupyter/jupyterUtils';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import { getNotebookTelemetryTracker } from '../../../platform/telemetry/notebookTelemetry';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 
 @injectable()
 export class RawKernelSessionFactory implements IRawKernelSessionFactory {

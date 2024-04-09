@@ -41,7 +41,7 @@ import { IPythonExecutionFactory } from '../../../platform/interpreter/types.nod
 import { UsedPorts, ignorePortForwarding } from '../../common/usedPorts';
 import { isPythonKernelConnection } from '../../helpers';
 import { once } from '../../../platform/common/utils/events';
-import { getNotebookTelemetryTracker } from '../../../platform/telemetry/notebookTelemetry';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.

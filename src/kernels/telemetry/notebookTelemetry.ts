@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { workspace, type NotebookDocument, type Uri } from 'vscode';
-import { DisposableStore } from '../common/utils/lifecycle';
-import { isUri } from '../common/utils/misc';
-import { once } from '../common/utils/functional';
-import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
-import { Telemetry } from '../common/constants';
+import { DisposableStore } from '../../platform/common/utils/lifecycle';
+import { isUri } from '../../platform/common/utils/misc';
+import { once } from '../../platform/common/utils/functional';
+import { sendKernelTelemetryEvent } from './sendKernelTelemetryEvent';
+import { Telemetry } from '../../platform/common/constants';
 import type { Environment } from '@vscode/python-extension';
 
 let wasAnyCellExecutedInSession = false;

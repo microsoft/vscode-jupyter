@@ -83,7 +83,7 @@ import { KernelError } from '../../kernels/errors/kernelError';
 import { JupyterVariablesProvider } from '../../kernels/variables/JupyterVariablesProvider';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { getVersion } from '../../platform/interpreter/helpers';
-import { getNotebookTelemetryTracker, trackControllerCreation } from '../../platform/telemetry/notebookTelemetry';
+import { getNotebookTelemetryTracker, trackControllerCreation } from '../../kernels/telemetry/notebookTelemetry';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed

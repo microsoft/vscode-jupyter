@@ -49,7 +49,7 @@ import {
 } from '../types';
 import { JupyterServerCollection } from '../../../api';
 import { isCondaEnvironmentWithoutPython } from '../../../platform/interpreter/helpers';
-import { onDidManuallySelectKernel } from '../../../platform/telemetry/notebookTelemetry';
+import { onDidManuallySelectKernel } from '../../../kernels/telemetry/notebookTelemetry';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {

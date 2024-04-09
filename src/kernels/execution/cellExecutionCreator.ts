@@ -13,7 +13,7 @@ import {
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IKernelController } from '../types';
 import { noop } from '../../platform/common/utils/misc';
-import { getNotebookTelemetryTracker } from '../../platform/telemetry/notebookTelemetry';
+import { getNotebookTelemetryTracker } from '../telemetry/notebookTelemetry';
 
 /**
  * Wrapper class around NotebookCellExecution that allows us to

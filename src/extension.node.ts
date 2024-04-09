@@ -80,7 +80,7 @@ import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { sendTelemetryEvent } from './telemetry';
 import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
 import { addOutputChannel, displayProgress, handleError, initializeGlobals } from './extension.common';
-import { activateNotebookTelemetry } from './platform/telemetry/notebookTelemetry';
+import { activateNotebookTelemetry } from './kernels/telemetry/notebookTelemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 

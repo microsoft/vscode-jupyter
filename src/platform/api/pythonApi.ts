@@ -44,7 +44,7 @@ import {
     setPythonApi
 } from '../interpreter/helpers';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
-import { trackInterpreterDiscovery, trackPythonExtensionActivation } from '../telemetry/notebookTelemetry';
+import { trackInterpreterDiscovery, trackPythonExtensionActivation } from '../../kernels/telemetry/notebookTelemetry';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,

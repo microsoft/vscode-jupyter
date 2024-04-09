@@ -62,7 +62,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { ObservableDisposable } from '../../../platform/common/utils/lifecycle';
-import { getNotebookTelemetryTracker } from '../../../platform/telemetry/notebookTelemetry';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 // Exclude these warning messages, as users get confused about these when sharing logs.

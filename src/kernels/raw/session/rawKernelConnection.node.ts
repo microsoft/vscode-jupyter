@@ -35,7 +35,7 @@ import {
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { KernelSocketMap } from '../../kernelSocket';
-import { getNotebookTelemetryTracker } from '../../../platform/telemetry/notebookTelemetry';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
