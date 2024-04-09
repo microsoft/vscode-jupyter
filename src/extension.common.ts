@@ -136,7 +136,7 @@ export function handleError(
     sendErrorTelemetry(ex, startupDurations, stopWatch);
 }
 
-export function notifyUser(msg: string) {
+function notifyUser(msg: string) {
     try {
         window.showErrorMessage(msg).then(noop, noop);
     } catch (ex) {
