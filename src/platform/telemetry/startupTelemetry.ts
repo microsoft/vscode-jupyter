@@ -11,9 +11,7 @@ interface IStopWatch {
     elapsedTime: number;
 }
 
-export async function sendStartupTelemetry(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    activatedPromise: Promise<any>,
+export function sendStartupTelemetry(
     durations: {
         workspaceFolderCount: number;
         totalActivateTime: number;
@@ -28,16 +26,15 @@ export async function sendStartupTelemetry(
     }
 
     try {
-        await activatedPromise;
         durations.totalActivateTime = stopWatch.elapsedTime;
-        await updateActivationTelemetryProps(durations);
+        updateActivationTelemetryProps(durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations);
     } catch (ex) {
         traceError('sendStartupTelemetry() failed.', ex);
     }
 }
 
-export async function sendErrorTelemetry(
+export function sendErrorTelemetry(
     ex: Error,
     durations: {
         workspaceFolderCount: number;
@@ -48,18 +45,14 @@ export async function sendErrorTelemetry(
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let props: any = {};
-        try {
-            await updateActivationTelemetryProps(durations);
-        } catch (ex) {
-            traceError('getActivationTelemetryProps() failed.', ex);
-        }
+        updateActivationTelemetryProps(durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations, props, ex);
     } catch (exc2) {
         traceError('sendErrorTelemetry() failed.', exc2);
     }
 }
 
-async function updateActivationTelemetryProps(durations: { workspaceFolderCount: number }) {
+function updateActivationTelemetryProps(durations: { workspaceFolderCount: number }) {
     // eslint-disable-next-line
     // TODO: Not all of this data is showing up in the database...
     // eslint-disable-next-line
