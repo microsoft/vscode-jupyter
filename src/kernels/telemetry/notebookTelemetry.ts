@@ -9,6 +9,8 @@ import { sendKernelTelemetryEvent } from './sendKernelTelemetryEvent';
 import { Telemetry } from '../../platform/common/constants';
 import type { Environment } from '@vscode/python-extension';
 
+/* eslint-disable @typescript-eslint/no-use-before-define */
+
 let wasAnyCellExecutedInSession = false;
 const notebooksOpenedTime = new WeakMap<NotebookDocument, ReturnType<typeof createNotebookTracker>>();
 const uriToNotebookMap = new Map<string, WeakRef<NotebookDocument>>();
