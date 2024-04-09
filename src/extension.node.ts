@@ -110,7 +110,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // We want to completely handle the error
         // before notifying VS Code.
         durations.endActivateTime = stopWatch.elapsedTime;
-        handleError(ex, durations);
+        handleError(ex, durations, stopWatch);
         traceError('Failed to active the Jupyter Extension', ex);
         // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
         // Return a dummy object, to ensure other extension do not fall over.

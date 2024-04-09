@@ -7,10 +7,6 @@ import { sendTelemetryEvent } from '.';
 import { EventName } from './constants';
 import { workspace } from 'vscode';
 
-interface IStopWatch {
-    elapsedTime: number;
-}
-
 export function sendStartupTelemetry(
     durations: {
         workspaceFolderCount: number;
@@ -19,13 +15,16 @@ export function sendStartupTelemetry(
         startActivateTime: number;
         endActivateTime: number;
     },
-    stopWatch: IStopWatch
+    stopWatch: {
+        elapsedTime: number;
+    }
 ) {
     if (isTestExecution()) {
         return;
     }
 
     try {
+        durations.endActivateTime = stopWatch.elapsedTime;
         durations.totalActivateTime = stopWatch.elapsedTime;
         updateActivationTelemetryProps(durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations);
@@ -39,12 +38,18 @@ export function sendErrorTelemetry(
     durations: {
         workspaceFolderCount: number;
         totalActivateTime: number;
+        endActivateTime: number;
         codeLoadingTime: number;
+    },
+    stopWatch: {
+        elapsedTime: number;
     }
 ) {
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let props: any = {};
+        durations.endActivateTime = stopWatch.elapsedTime;
+        durations.totalActivateTime = stopWatch.elapsedTime;
         updateActivationTelemetryProps(durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations, props, ex);
     } catch (exc2) {

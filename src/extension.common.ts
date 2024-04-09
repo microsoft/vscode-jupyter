@@ -124,13 +124,16 @@ export function handleError(
         startActivateTime: number;
         endActivateTime: number;
         workspaceFolderCount: number;
+    },
+    stopWatch: {
+        elapsedTime: number;
     }
 ) {
     notifyUser(Common.handleExtensionActivationError);
     // Possible logger hasn't initialized either.
     console.error('extension activation failed', ex);
     traceError('extension activation failed', ex);
-    sendErrorTelemetry(ex, startupDurations);
+    sendErrorTelemetry(ex, startupDurations, stopWatch);
 }
 
 export function notifyUser(msg: string) {
