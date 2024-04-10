@@ -23,6 +23,7 @@ import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { isTelemetryDisabled } from '../../telemetry';
 import { ResourceMap } from '../../platform/common/utils/map';
+import { Delayer } from '../../platform/common/utils/async';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
@@ -65,7 +66,7 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
     private disposables: IDisposable[] = [];
     private sentMatches = new Set<string>();
     private isTelemetryDisabled: boolean;
-    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
+    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry, delay = 1_000) {
         disposables.push(this);
         this.isTelemetryDisabled = isTelemetryDisabled();
         workspace.onDidOpenNotebookDocument(
@@ -80,11 +81,14 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
             (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
             this.disposables
         );
+        const delayer = new Delayer<void>(delay);
         notebooks.onDidChangeNotebookCellExecutionState(
             (e) => {
-                if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
-                    this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
-                }
+                void delayer.trigger(() => {
+                    if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
+                        this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
+                    }
+                });
             },
             this,
             disposables
