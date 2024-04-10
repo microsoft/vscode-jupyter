@@ -253,7 +253,7 @@ export class Throttler implements IDisposable {
                 };
 
                 this.queuedPromise = new Promise((resolve) => {
-                    this.activePromise!.then(onComplete, onComplete).then(resolve);
+                    void this.activePromise!.then(onComplete, onComplete).then(resolve);
                 });
             }
 

@@ -66,7 +66,7 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
     private disposables: IDisposable[] = [];
     private sentMatches = new Set<string>();
     private isTelemetryDisabled: boolean;
-    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
+    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry, delay = 1_000) {
         disposables.push(this);
         this.isTelemetryDisabled = isTelemetryDisabled();
         workspace.onDidOpenNotebookDocument(
@@ -81,7 +81,7 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
             (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
             this.disposables
         );
-        const delayer = new Delayer<void>(1_000);
+        const delayer = new Delayer<void>(delay);
         notebooks.onDidChangeNotebookCellExecutionState(
             (e) => {
                 void delayer.trigger(() => {
