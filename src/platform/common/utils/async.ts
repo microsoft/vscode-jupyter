@@ -3,7 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { CancellationError } from 'vscode';
 import type { IDisposable } from '../types';
 import { MicrotaskDelay } from './symbols';
 
@@ -188,9 +187,8 @@ export class PromiseChain {
     }
 }
 
-
 export interface ITask<T> {
-	(): T;
+    (): T;
 }
 
 /**
@@ -220,69 +218,70 @@ export interface ITask<T> {
  * 		}
  */
 export class Throttler implements IDisposable {
+    private activePromise: Promise<any> | null;
+    private queuedPromise: Promise<any> | null;
+    private queuedPromiseFactory: ITask<Promise<any>> | null;
 
-	private activePromise: Promise<any> | null;
-	private queuedPromise: Promise<any> | null;
-	private queuedPromiseFactory: ITask<Promise<any>> | null;
+    private isDisposed = false;
 
-	private isDisposed = false;
+    constructor() {
+        this.activePromise = null;
+        this.queuedPromise = null;
+        this.queuedPromiseFactory = null;
+    }
 
-	constructor() {
-		this.activePromise = null;
-		this.queuedPromise = null;
-		this.queuedPromiseFactory = null;
-	}
+    queue<T>(promiseFactory: ITask<Promise<T>>): Promise<T> {
+        if (this.isDisposed) {
+            return Promise.reject(new Error('Throttler is disposed'));
+        }
 
-	queue<T>(promiseFactory: ITask<Promise<T>>): Promise<T> {
-		if (this.isDisposed) {
-			return Promise.reject(new Error('Throttler is disposed'));
-		}
+        if (this.activePromise) {
+            this.queuedPromiseFactory = promiseFactory;
 
-		if (this.activePromise) {
-			this.queuedPromiseFactory = promiseFactory;
+            if (!this.queuedPromise) {
+                const onComplete = () => {
+                    this.queuedPromise = null;
 
-			if (!this.queuedPromise) {
-				const onComplete = () => {
-					this.queuedPromise = null;
+                    if (this.isDisposed) {
+                        return;
+                    }
 
-					if (this.isDisposed) {
-						return;
-					}
+                    const result = this.queue(this.queuedPromiseFactory!);
+                    this.queuedPromiseFactory = null;
 
-					const result = this.queue(this.queuedPromiseFactory!);
-					this.queuedPromiseFactory = null;
+                    return result;
+                };
 
-					return result;
-				};
+                this.queuedPromise = new Promise((resolve) => {
+                    this.activePromise!.then(onComplete, onComplete).then(resolve);
+                });
+            }
 
-				this.queuedPromise = new Promise(resolve => {
-					this.activePromise!.then(onComplete, onComplete).then(resolve);
-				});
-			}
+            return new Promise((resolve, reject) => {
+                this.queuedPromise!.then(resolve, reject);
+            });
+        }
 
-			return new Promise((resolve, reject) => {
-				this.queuedPromise!.then(resolve, reject);
-			});
-		}
+        this.activePromise = promiseFactory();
 
-		this.activePromise = promiseFactory();
+        return new Promise((resolve, reject) => {
+            this.activePromise!.then(
+                (result: T) => {
+                    this.activePromise = null;
+                    resolve(result);
+                },
+                (err: unknown) => {
+                    this.activePromise = null;
+                    reject(err);
+                }
+            );
+        });
+    }
 
-		return new Promise((resolve, reject) => {
-			this.activePromise!.then((result: T) => {
-				this.activePromise = null;
-				resolve(result);
-			}, (err: unknown) => {
-				this.activePromise = null;
-				reject(err);
-			});
-		});
-	}
-
-	dispose(): void {
-		this.isDisposed = true;
-	}
+    dispose(): void {
+        this.isDisposed = true;
+    }
 }
-
 
 interface IScheduledLater extends IDisposable {
     isTriggered(): boolean;
@@ -396,7 +395,7 @@ export class Delayer<T> implements IDisposable {
         this.cancelTimeout();
 
         if (this.completionPromise) {
-            this.doReject?.(new CancellationError());
+            this.doReject?.(new Error('Canceled'));
             this.completionPromise = null;
         }
     }
