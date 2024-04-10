@@ -160,6 +160,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             this.disabledInCurrentSession ||
             !DataScienceSurveyBanner.surveyDelay
         ) {
+            this.onDidChangeNotebookCellExecutionStateHandler?.dispose();
             return false;
         }
 
