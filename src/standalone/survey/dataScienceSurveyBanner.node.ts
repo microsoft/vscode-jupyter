@@ -131,13 +131,12 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
 
     public async showBanner(type: BannerType): Promise<void> {
         const show = this.shouldShowBanner(type);
+        this.onDidChangeNotebookCellExecutionStateHandler?.dispose();
         if (!show) {
-            this.onDidChangeNotebookCellExecutionStateHandler?.dispose();
             return;
         }
         // Disable for the current session.
         this.disabledInCurrentSession = true;
-        this.onDidChangeNotebookCellExecutionStateHandler?.dispose();
         const response = await window.showInformationMessage(this.getBannerMessage(type), ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
