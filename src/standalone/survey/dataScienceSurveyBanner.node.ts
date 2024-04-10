@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import {
+    Disposable,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
     UIKind,
@@ -25,6 +26,7 @@ import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { openInBrowser } from '../../platform/common/net/browser';
 import { getVSCodeChannel } from '../../platform/common/application/applicationEnvironment';
+import type { IDisposable } from '@c4312/evt';
 
 export const ISurveyBanner = Symbol('ISurveyBanner');
 export interface ISurveyBanner extends IExtensionSyncActivationService, IJupyterExtensionBanner {}
@@ -101,7 +103,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
     private static surveyDelay = false;
     private readonly NotebookExecutionThreshold = 250; // Cell executions before showing survey
-
+    private onDidChangeNotebookCellExecutionStateHandler?: IDisposable;
     constructor(
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
@@ -110,16 +112,17 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         this.setPersistentState(BannerType.ExperimentNotebookSurvey, ExperimentNotebookSurveyStateKeys.ShowBanner);
 
         // Change the surveyDelay flag after 10 minutes
-        setTimeout(
+        const timer = setTimeout(
             () => {
                 DataScienceSurveyBanner.surveyDelay = true;
             },
             10 * 60 * 1000
         );
+        this.disposables.push(new Disposable(() => clearTimeout(timer)));
     }
 
     public activate() {
-        notebooks.onDidChangeNotebookCellExecutionState(
+        this.onDidChangeNotebookCellExecutionStateHandler = notebooks.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables
@@ -133,7 +136,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         }
         // Disable for the current session.
         this.disabledInCurrentSession = true;
-
+        this.onDidChangeNotebookCellExecutionStateHandler?.dispose();
         const response = await window.showInformationMessage(this.getBannerMessage(type), ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
@@ -226,6 +229,9 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     private async updateStateAndShowBanner(val: string, banner: BannerType) {
+        if (!this.shouldShowBanner(banner)) {
+            return;
+        }
         const state = this.persistentState.createGlobalPersistentState<number>(val, 0);
         await state.updateValue(state.value + 1);
         this.showBanner(banner).catch(noop);
