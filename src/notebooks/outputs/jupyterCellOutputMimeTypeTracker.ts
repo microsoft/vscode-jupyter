@@ -15,7 +15,12 @@ import { JupyterNotebookView } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
-import { ResourceTypeTelemetryProperty, sendTelemetryEvent, Telemetry } from '../../telemetry';
+import {
+    onDidChangeTelemetryEnablement,
+    ResourceTypeTelemetryProperty,
+    sendTelemetryEvent,
+    Telemetry
+} from '../../telemetry';
 import { isTelemetryDisabled } from '../../telemetry';
 
 /**
@@ -25,14 +30,13 @@ import { isTelemetryDisabled } from '../../telemetry';
 export class CellOutputMimeTypeTracker implements IExtensionSyncActivationService, IDisposable {
     private sentMimeTypes: Set<string> = new Set<string>();
     private readonly disposables: IDisposable[] = [];
-    private get isTelemetryDisabled() {
-        return isTelemetryDisabled();
-    }
+    private isTelemetryDisabled: boolean;
 
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         disposables.push(this);
     }
     public activate() {
+        this.isTelemetryDisabled = isTelemetryDisabled();
         workspace.onDidOpenNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
         workspace.onDidCloseNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
         workspace.onDidSaveNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
@@ -40,6 +44,12 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
             this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables
+        );
+        this.disposables.push(
+            onDidChangeTelemetryEnablement((enabled) => {
+                this.isTelemetryDisabled = enabled;
+            }),
+            this
         );
     }
 

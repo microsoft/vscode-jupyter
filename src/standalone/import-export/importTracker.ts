@@ -12,7 +12,7 @@ import {
     notebooks,
     workspace
 } from 'vscode';
-import { ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
+import { ResourceTypeTelemetryProperty, onDidChangeTelemetryEnablement, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
@@ -23,6 +23,7 @@ import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { isTelemetryDisabled } from '../../telemetry';
 import { ResourceMap } from '../../platform/common/utils/map';
+import { Delayer } from '../../platform/common/utils/async';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
@@ -64,11 +65,10 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
     private pendingChecks = new ResourceMap<NodeJS.Timer | number>();
     private disposables: IDisposable[] = [];
     private sentMatches = new Set<string>();
-    private get isTelemetryDisabled() {
-        return isTelemetryDisabled();
-    }
+    private isTelemetryDisabled: boolean;
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         disposables.push(this);
+        this.isTelemetryDisabled = isTelemetryDisabled();
         workspace.onDidOpenNotebookDocument(
             (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
             this.disposables
@@ -81,14 +81,23 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
             (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
             this.disposables
         );
+        const delayer = new Delayer<void>(1_000);
         notebooks.onDidChangeNotebookCellExecutionState(
             (e) => {
-                if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
-                    this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
-                }
+                void delayer.trigger(() => {
+                    if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
+                        this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
+                    }
+                });
             },
             this,
             disposables
+        );
+        this.disposables.push(
+            onDidChangeTelemetryEnablement((enabled) => {
+                this.isTelemetryDisabled = enabled;
+            }),
+            this
         );
     }
 
