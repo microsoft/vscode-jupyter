@@ -10,6 +10,7 @@ import { IDisposable, IDisposableRegistry } from '../../../platform/common/types
 import { isJupyterNotebook } from '../../../platform/common/utils';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
+import { Delayer } from '../../../platform/common/utils/async';
 
 @injectable()
 export class RendererVersionChecker implements IExtensionSyncActivationService {
@@ -22,7 +23,15 @@ export class RendererVersionChecker implements IExtensionSyncActivationService {
         dispose(this.disposables);
     }
     activate(): void {
-        workspace.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this, this.disposables);
+        const delayer = new Delayer<void>(1_000);
+        this.disposables.push(delayer);
+        workspace.onDidChangeNotebookDocument(
+            (e) => {
+                void delayer.trigger(() => this.onDidChangeNotebookDocument(e));
+            },
+            this,
+            this.disposables
+        );
     }
     private onDidChangeNotebookDocument(e: NotebookDocumentChangeEvent) {
         if (!isJupyterNotebook(e.notebook)) {
