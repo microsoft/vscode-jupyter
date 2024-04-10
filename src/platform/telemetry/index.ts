@@ -8,7 +8,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { ExcludeType, noop, PickType, UnionToIntersection } from '../common/utils/misc';
 import { populateTelemetryWithErrorInfo } from '../errors';
 import { TelemetryEventInfo, IEventNamePropertyMapping } from '../../telemetry';
-import { workspace } from 'vscode';
+import { workspace, type Disposable } from 'vscode';
 
 /**
  * TODO@rebornix
@@ -43,6 +43,17 @@ function isTelemetrySupported(): boolean {
 export function isTelemetryDisabled(): boolean {
     const settings = workspace.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
     return settings.globalValue === false ? true : false;
+}
+
+export function onDidChangeTelemetryEnablement(handler: (enabled: boolean) => void): Disposable {
+    return workspace.onDidChangeConfiguration((e) => {
+        if (!e.affectsConfiguration('telemetry')) {
+            return;
+        }
+        const settings = workspace.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
+        const enabled = settings.globalValue === false ? true : false;
+        handler(enabled);
+    });
 }
 
 const sharedProperties: Partial<SharedPropertyMapping> = {};
