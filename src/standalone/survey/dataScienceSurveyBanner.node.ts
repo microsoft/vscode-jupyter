@@ -232,6 +232,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
 
     private async updateStateAndShowBanner(val: string, banner: BannerType) {
         if (!this.shouldShowBanner(banner)) {
+            this.onDidChangeNotebookCellExecutionStateHandler?.dispose();
             return;
         }
         const state = this.persistentState.createGlobalPersistentState<number>(val, 0);
