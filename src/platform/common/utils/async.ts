@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { CancellationError } from 'vscode';
 import type { IDisposable } from '../types';
 import { MicrotaskDelay } from './symbols';
