@@ -45,4 +45,5 @@ export function toPromise<T>(event: Event<T>, thisArgs: any = null, disposables?
     return new Promise((resolve) => once(event)(resolve, thisArgs, disposables));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const EmptyEvent: Event<any> = () => EmptyDisposable;
