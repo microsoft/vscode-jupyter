@@ -30,6 +30,7 @@ import { ResourceTypeTelemetryProperty, getTelemetryReporter } from '../../telem
 import { waitForCondition } from '../../test/common';
 import { createMockedNotebookDocument } from '../../test/datascience/editor-integration/helpers';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { EmptyEvent } from '../../platform/common/utils/events';
 
 [true, false].forEach((useCustomMetadata) => {
     suite(`Import Tracker (${useCustomMetadata ? 'with custom metadata' : 'without custom metadata'})`, async () => {
@@ -140,6 +141,7 @@ import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
                 onDidChangeNotebookCellExecutionState.event
             );
             when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
+            when(mockedVSCodeNamespaces.workspace.onDidChangeConfiguration).thenReturn(EmptyEvent);
             when(mockedVSCodeNamespaces.workspace.getConfiguration('telemetry')).thenReturn({
                 inspect: () => {
                     return {
@@ -148,7 +150,7 @@ import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
                     };
                 }
             } as any);
-            importTracker = new ImportTracker(disposables);
+            importTracker = new ImportTracker([]);
         });
         teardown(() => {
             sinon.restore();
