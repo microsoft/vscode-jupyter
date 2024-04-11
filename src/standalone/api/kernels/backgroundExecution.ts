@@ -94,31 +94,33 @@ del __jupyter_exec_background__
             );
         })
         // We no longer need to track any more outputs from the kernel that are related to this output.
-    ).finally(() => kernel.session && unTrackDisplayDataForExtension(kernel.session, displayId));
+    ).finally(() => {
+        kernel.session && unTrackDisplayDataForExtension(kernel.session, displayId);
+        disposables.dispose();
+    });
 
     for await (const output of api.executeCode(codeToSend, token)) {
         if (token.isCancellationRequested) {
-            return;
-        }
-        const error = output.items.find((item) => item.mime === mimeErrorResult);
-        if (error) {
-            traceWarning('Error in background execution:\n', new TextDecoder().decode(error.data));
             return;
         }
         const metadata = getNotebookCellOutputMetadata(output);
         if (!metadata?.transient?.display_id) {
             continue;
         }
-        const result = output.items.find((item) => item.mime === mime || item.mime === mimeFinalResult);
-        if (!result) {
-            continue;
-        }
-        if (result.mime === mime) {
+        const dummyMessage = output.items.find((item) => item.mime === mime);
+        if (dummyMessage) {
             displayId = metadata.transient.display_id;
             continue;
         }
-        if (result.mime === mimeFinalResult && displayId === metadata.transient.display_id) {
-            return JSON.parse(new TextDecoder().decode(result.data)) as T;
+
+        if (displayId === metadata.transient.display_id) {
+            const result = output.items.find((item) => item.mime === mimeFinalResult || item.mime === mimeErrorResult);
+            if (result?.mime === mimeFinalResult) {
+                return JSON.parse(new TextDecoder().decode(result.data)) as T;
+            } else if (result?.mime === mimeErrorResult) {
+                traceWarning('Error in background execution:\n', new TextDecoder().decode(result.data));
+                return;
+            }
         }
     }
     if (token.isCancellationRequested) {
