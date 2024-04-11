@@ -422,16 +422,7 @@ abstract class BaseKernel implements IBaseKernel {
             }
         });
         const notebook = workspace.notebookDocuments.find((item) => item.uri.toString() === this.uri.toString());
-        const telemetryTracker = notebook
-            ? getNotebookTelemetryTracker(notebook)?.jupyterSessionTelemetry()
-            : undefined;
-        if (!this.startupUI.disableUI) {
-            // This means the user is actually running something against the kernel (deliberately).
-            await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
-                this.resourceUri,
-                this.kernelConnectionMetadata
-            );
-        } else {
+        if (this.startupUI.disableUI) {
             this.startupUI.onDidChangeDisableUI(
                 () => {
                     if (this.disposing || this.disposed || this.startupUI.disableUI) {
@@ -454,16 +445,26 @@ abstract class BaseKernel implements IBaseKernel {
 
         if (!this._jupyterSessionPromise) {
             const stopWatch = new StopWatch();
-            await trackKernelResourceInformation(this.resourceUri, {
-                kernelConnection: this.kernelConnectionMetadata,
-                actionSource: this.creator
-            });
-            if (this.disposing) {
-                throw new CancellationError();
-            }
-            telemetryTracker?.stop();
-            Cancellation.throwIfCanceled(this.startCancellation.token);
-            this._jupyterSessionPromise = this.createJupyterSession()
+
+            const initializeTelemetry = async () => {
+                const telemetryTracker = notebook
+                    ? getNotebookTelemetryTracker(notebook)?.jupyterSessionTelemetry()
+                    : undefined;
+                await trackKernelResourceInformation(this.resourceUri, {
+                    kernelConnection: this.kernelConnectionMetadata,
+                    actionSource: this.creator,
+                    // This means the user is actually running something against the kernel (deliberately).
+                    userExecutedCell: !this.startupUI.disableUI
+                });
+                if (this.disposing) {
+                    throw new CancellationError();
+                }
+                telemetryTracker?.stop();
+                Cancellation.throwIfCanceled(this.startCancellation.token);
+            };
+
+            this._jupyterSessionPromise = initializeTelemetry()
+                .then(() => this.createJupyterSession())
                 .then((session) => {
                     sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, {
                         duration: stopWatch.elapsedTime
