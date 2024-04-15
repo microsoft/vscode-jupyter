@@ -1456,7 +1456,8 @@
                 {
                     "command": "jupyter.runFileInteractive",
                     "group": "jupyter",
-                    "when": "resourceLangId == python && !isInDiffEditor && !notebookEditorFocused && isWorkspaceTrusted"
+                    "title": "%jupyter.command.jupyter.runFileInteractive.title%",
+                    "when": "resourceLangId == python && !isInDiffEditor && isWorkspaceTrusted"
                 }
             ]
         },
