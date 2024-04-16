@@ -58,10 +58,13 @@ def getValue(variable):
 
 def getPropertyNames(variable):
     props = []
+    privateProps = []
     for prop in dir(variable):
         if not prop.startswith("_"):
             props.append(prop)
-    return props
+        elif not prop.startswith("__"):
+            privateProps.append(prop)
+    return props + privateProps
 
 
 def getFullType(varType):
@@ -72,6 +75,9 @@ def getFullType(varType):
         return module + varType.__qualname__
     elif hasattr(varType, "__name__"):
         return module + varType.__name__
+
+
+typesToExclude = ["module", "function", "method", "class", "type"]
 
 
 def getVariableDescription(variable):
@@ -126,6 +132,7 @@ def _VSCODE_getVariableDescriptions(varNames):
         }
         for varName in varNames
         if varName in globals()
+        and type(globals()[varName]).__name__ not in typesToExclude
     ]
 
     return json.dumps(variables)
@@ -167,7 +174,10 @@ def _VSCODE_getAllChildrenDescriptions(rootVarName, propertyChain, startIndex):
         children = []
         for prop in childrenNames:
             child_property = getChildProperty(parent, [prop])
-            if child_property is not None and type(child_property).__name__ != "method":
+            if (
+                child_property is not None
+                and type(child_property).__name__ not in typesToExclude
+            ):
                 child = {
                     **getVariableDescription(child_property),
                     "name": prop,
