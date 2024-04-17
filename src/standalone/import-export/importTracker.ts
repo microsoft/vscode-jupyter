@@ -15,7 +15,7 @@ import {
 import { ResourceTypeTelemetryProperty, onDidChangeTelemetryEnablement, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { dispose } from '../../platform/common/utils/lifecycle';
+import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { EventName } from '../../platform/telemetry/constants';
@@ -63,23 +63,20 @@ export interface IImportTracker {}
 @injectable()
 export class ImportTracker implements IExtensionSyncActivationService, IDisposable {
     private pendingChecks = new ResourceMap<NodeJS.Timer | number>();
-    private disposables: IDisposable[] = [];
+    private disposables = new DisposableStore();
     private sentMatches = new Set<string>();
     private isTelemetryDisabled: boolean;
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry, delay = 1_000) {
-        disposables.push(this);
+        disposables.push(this.disposables);
         this.isTelemetryDisabled = isTelemetryDisabled();
-        workspace.onDidOpenNotebookDocument(
-            (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
-            this.disposables
+        this.disposables.add(
+            workspace.onDidOpenNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'))
         );
-        workspace.onDidCloseNotebookDocument(
-            (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
-            this.disposables
+        this.disposables.add(
+            workspace.onDidCloseNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'))
         );
-        workspace.onDidSaveNotebookDocument(
-            (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
-            this.disposables
+        this.disposables.add(
+            workspace.onDidSaveNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'))
         );
         const delayer = new Delayer<void>(delay);
         notebooks.onDidChangeNotebookCellExecutionState(
@@ -93,11 +90,10 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
             this,
             disposables
         );
-        this.disposables.push(
+        this.disposables.add(
             onDidChangeTelemetryEnablement((enabled) => {
                 this.isTelemetryDisabled = enabled;
-            }),
-            this
+            })
         );
     }
 
