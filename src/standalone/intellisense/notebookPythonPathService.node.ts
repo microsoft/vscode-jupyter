@@ -8,7 +8,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { PylanceExtension } from '../../platform/common/constants';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceInfo, traceVerbose } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { noop } from '../../platform/common/utils/misc';
