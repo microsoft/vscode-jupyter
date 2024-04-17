@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { workspace, type NotebookDocument, type Uri } from 'vscode';
+import { NotebookCellKind, workspace, type NotebookDocument, type Uri } from 'vscode';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
 import { isUri } from '../../platform/common/utils/misc';
 import { once } from '../../platform/common/utils/functional';
 import { sendKernelTelemetryEvent } from './sendKernelTelemetryEvent';
 import { Telemetry } from '../../platform/common/constants';
 import type { Environment } from '@vscode/python-extension';
+import { getCellMetadata } from '../../platform/common/utils';
+import { traceWarning } from '../../platform/logging';
 
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
@@ -245,7 +247,40 @@ type SpawnSummary = {
     envVars: number;
     interruptHandle: number;
 };
-
+type NotebookSummary = {
+    /**
+     * Number of code cells in the notebook.
+     */
+    codeCellCount: number;
+    /**
+     * Number of md cells in the notebook.
+     */
+    mdCellCount: number;
+    /**
+     * Total char length of all text in all code cells.
+     */
+    codeCellCharLength: number;
+    /**
+     * Total char length of all text in all md cells.
+     */
+    mdCellCharLength: number;
+    /**
+     * Total number of outputs in all cells.
+     */
+    outputCount: number;
+    /**
+     * Total bytes of all outputs in all cells.
+     */
+    outputsByteSize: number;
+    /**
+     * Total number of attachments
+     */
+    attachmentCount: number;
+    /**
+     * Total number of chars in the attachment (generally these are base64 encoded strings).
+     */
+    attachmentCharLength: number;
+};
 const sendTelemetry = once(function (
     notebook: NotebookDocument,
     info: {
@@ -436,15 +471,66 @@ const sendTelemetry = once(function (
         const duration = measures.spawnCompletedAfter - measures.spawnStartedAfter;
         computeSummary(spawnSummary, spawnSummaryParts, duration, measures.openedAfter);
     }
+    const notebookSummary = computeNotebookSummary(notebook);
     const allMeasures: BriefSummary & StartupSummary & PostKernelStartupSummary & SpawnSummary = {
         ...briefSummary,
         ...startupSummary,
         ...postKernelStartSummary,
-        ...spawnSummary
+        ...spawnSummary,
+        ...notebookSummary
     };
     sendKernelTelemetryEvent(notebook.uri, Telemetry.NotebookFirstStartBreakDown, allMeasures, info);
 });
 
+function computeNotebookSummary(notebook: NotebookDocument) {
+    const notebookSummary: NotebookSummary = {
+        attachmentCharLength: 0,
+        attachmentCount: 0,
+        codeCellCharLength: 0,
+        codeCellCount: 0,
+        mdCellCharLength: 0,
+        mdCellCount: 0,
+        outputCount: 0,
+        outputsByteSize: 0
+    };
+
+    notebook.getCells().forEach((cell) => {
+        const lastChar = cell.document.lineAt(cell.document.lineCount - 1).range.end;
+        const length = cell.document.offsetAt(lastChar);
+        if (cell.kind === NotebookCellKind.Markup) {
+            notebookSummary.mdCellCount += 1;
+            notebookSummary.mdCellCharLength += length;
+            try {
+                const metadata = getCellMetadata(cell);
+                const attachments = (metadata.attachments || {}) as unknown as Record<string, string>;
+                Object.keys(attachments).forEach((key) => {
+                    notebookSummary.attachmentCount += 1;
+                    const attachment = attachments[key] as unknown as Record<string, string>;
+                    if (typeof attachment === 'object') {
+                        Object.keys(attachment).forEach((mime) => {
+                            const value = attachment[mime];
+                            if (value && typeof value === 'string') {
+                                notebookSummary.attachmentCharLength += value.length;
+                            }
+                        });
+                    }
+                });
+            } catch (error) {
+                traceWarning(`Error parsing attachments in cell metadata`, error);
+            }
+        } else {
+            notebookSummary.codeCellCount += 1;
+            notebookSummary.codeCellCharLength += length;
+            notebookSummary.outputCount += cell.outputs.length;
+            notebookSummary.outputsByteSize += cell.outputs.reduce(
+                (acc, output) => acc + output.items.reduce((itemTotal, item) => itemTotal + item.data.byteLength, 0),
+                0
+            );
+        }
+    });
+
+    return notebookSummary;
+}
 const sendTelemetryForFirstAutoSelectedKernel = once(function (
     notebook: NotebookDocument,
     info: {

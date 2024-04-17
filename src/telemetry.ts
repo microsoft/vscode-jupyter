@@ -2900,6 +2900,38 @@ export class IEventNamePropertyMapping {
              * % Time spent in updating the kernel connection.
              */
             updateConnection: number;
+            /**
+             * Number of code cells in the notebook.
+             */
+            codeCellCount: number;
+            /**
+             * Number of md cells in the notebook.
+             */
+            mdCellCount: number;
+            /**
+             * Total char length of all text in all code cells.
+             */
+            codeCellCharLength: number;
+            /**
+             * Total char length of all text in all md cells.
+             */
+            mdCellCharLength: number;
+            /**
+             * Total number of outputs in all cells.
+             */
+            outputCount: number;
+            /**
+             * Total bytes of all outputs in all cells.
+             */
+            outputsByteSize: number;
+            /**
+             * Total number of attachments
+             */
+            attachmentCount: number;
+            /**
+             * Total number of chars in the attachment (generally these are base64 encoded strings).
+             */
+            attachmentCharLength: number;
         } & ResourceSpecificTelemetryProperties
     > = {
         owner: 'donjayamanne',
@@ -3005,6 +3037,46 @@ export class IEventNamePropertyMapping {
                 isMeasurement: true
             },
             updateConnection: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            mdCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            codeCellCharLength: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            mdCellCharLength: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            outputCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            outputsByteSize: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            attachmentCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            attachmentCharLength: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight',
                 isMeasurement: true
