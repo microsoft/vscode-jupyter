@@ -642,6 +642,13 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
                     ) {
                         return true;
                     }
+                    traceVerbose(
+                        `Kernel Spec for '${item.kernelSpec.display_name}' (${getDisplayPath(
+                            item.kernelSpec.specFile
+                        )}) is hidden. (isDefaultKernelSpec = ${isDefaultKernelSpec(item.kernelSpec)}, language = ${
+                            item.kernelSpec.language
+                        }, registrationInfo = ${registrationInfo})`
+                    );
                     return false;
                 })
                 .map(async (item) => {
