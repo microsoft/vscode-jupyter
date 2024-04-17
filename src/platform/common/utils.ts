@@ -457,14 +457,14 @@ type JupyterCellMetadata = Pick<nbformat.IRawCell, 'id' | 'metadata' | 'attachme
 
 export function getCellMetadata(cell: NotebookCell): JupyterCellMetadata {
     if (useCustomMetadata()) {
-        const metadata: JupyterCellMetadata = cell.metadata.custom || {};
+        const metadata: JupyterCellMetadata = JSON.parse(JSON.stringify(cell.metadata.custom || {})) || {};
         const cellMetadata = metadata as nbformat.IRawCell;
         // metadata property is never optional.
         cellMetadata.metadata = cellMetadata.metadata || {};
 
         return metadata;
     } else {
-        const metadata: JupyterCellMetadata = cell.metadata.metadata || {};
+        const metadata: JupyterCellMetadata = JSON.parse(JSON.stringify(cell.metadata || {})) || { metadata: {} };
         // metadata property is never optional.
         metadata.metadata = metadata.metadata || {};
         return metadata;

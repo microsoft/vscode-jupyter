@@ -778,6 +778,14 @@
      "startKernel": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"% Time spent in starting the kernel.","owner":"donjayamanne","isMeasurement":true},
      "startupCode": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"% Time spent in executing startup code.","owner":"donjayamanne","isMeasurement":true},
      "updateConnection": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"% Time spent in updating the kernel connection.","owner":"donjayamanne","isMeasurement":true},
+     "codeCellCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of code cells in the notebook.","owner":"donjayamanne","isMeasurement":true},
+     "mdCellCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of md cells in the notebook.","owner":"donjayamanne","isMeasurement":true},
+     "codeCellCharLength": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total char length of all text in all code cells.","owner":"donjayamanne","isMeasurement":true},
+     "mdCellCharLength": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total char length of all text in all md cells.","owner":"donjayamanne","isMeasurement":true},
+     "outputCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of outputs in all cells.","owner":"donjayamanne","isMeasurement":true},
+     "outputsByteSize": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total bytes of all outputs in all cells.","owner":"donjayamanne","isMeasurement":true},
+     "attachmentCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of attachments","owner":"donjayamanne","isMeasurement":true},
+     "attachmentCharLength": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of chars in the attachment (generally these are base64 encoded strings).","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 
