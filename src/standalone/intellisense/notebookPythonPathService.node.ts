@@ -146,7 +146,7 @@ del _VSCODE_os, _VSCODE_sys, _VSCODE_builtins
 
         if (!interpreter) {
             // Empty string is special, means do not use any interpreter at all.
-            traceInfo(`No interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}"`);
+            traceVerbose(`No interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}"`);
             return '';
         }
         traceVerbose(
