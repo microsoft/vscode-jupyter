@@ -245,13 +245,13 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
                 (!jupyterKernelSpec.env || Object.keys(jupyterKernelSpec.env).length === 0) &&
                 isDefaultKernelSpec(jupyterKernelSpec)
             ) {
-                // traceVerbose(
-                //     `Hiding default KernelSpec '${jupyterKernelSpec.name}', ${getDisplayPath(
-                //         jupyterKernelSpec.argv[0]
-                //     )} for interpreter ${getDisplayPath(
-                //         jupyterKernelSpec.interpreterPath
-                //     )} (KernelSpec file ${getDisplayPath(jupyterKernelSpec.specFile)})`
-                // );
+                traceVerbose(
+                    `Hiding default KernelSpec '${jupyterKernelSpec.name}', ${getDisplayPath(
+                        jupyterKernelSpec.argv[0]
+                    )} for interpreter ${getDisplayPath(
+                        jupyterKernelSpec.interpreterPath
+                    )} (KernelSpec file ${getDisplayPath(jupyterKernelSpec.specFile)})`
+                );
                 return;
             }
             const kernelSpec = isKernelLaunchedViaLocalPythonIPyKernel(jupyterKernelSpec)
