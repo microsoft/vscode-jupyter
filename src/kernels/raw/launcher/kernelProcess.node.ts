@@ -86,7 +86,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
     public get pid() {
         return this._pid;
     }
-    public get exited(): Event<{ exitCode?: number; reason?: string }> {
+    public get exited(): Event<{ exitCode?: number; reason?: string; stderr: string }> {
         return this.exitEvent.event;
     }
     public get kernelConnectionMetadata(): Readonly<
@@ -110,11 +110,12 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         return true;
     }
     private _process?: ChildProcess;
-    private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
+    private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string; stderr: string }>();
     private launchedOnce?: boolean;
     private connectionFile?: Uri;
     private _launchKernelSpec?: IJupyterKernelSpec;
     private interrupter?: Interrupter;
+    private exitEventFired = false;
     private readonly _kernelConnectionMetadata: Readonly<
         LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
     >;
@@ -182,7 +183,6 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         }
         traceVerbose(`Kernel process ${proc?.pid}.`);
         let stderr = '';
-        let exitEventFired = false;
         let providedExitCode: number | null;
         const deferred = createDeferred();
         deferred.promise.catch(noop);
@@ -196,12 +196,13 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                     return;
                 }
                 traceVerbose(`KernelProcess Exited ${pid}, Exit Code - ${exitCode}`, stderr);
-                if (!exitEventFired) {
+                if (!this.exitEventFired) {
                     this.exitEvent.fire({
                         exitCode: exitCode || undefined,
-                        reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderr) || stderr
+                        reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderr) || stderr,
+                        stderr
                     });
-                    exitEventFired = true;
+                    this.exitEventFired = true;
                 }
                 if (!cancelToken.isCancellationRequested) {
                     traceInfoIfCI(`KernelProcessExitedError raised`, stderr);
@@ -289,8 +290,6 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                       if (cancelToken.isCancellationRequested || deferred.rejected) {
                           return;
                       }
-                      console.error('ex');
-                      console.error(ex);
                       // Do not throw an error, ignore this.
                       // In the case of VPNs the port does not seem to get used.
                       // Possible we're blocking it.
@@ -326,7 +325,6 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 // If we have the python error message in std outputs, display that.
                 const errorMessage = getErrorMessageFromPythonTraceback(stdErrToLog) || stdErrToLog.substring(0, 100);
                 traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderr + '\n' + stderr + '\n');
-                console.error(`KernelDiedError raised`, e);
                 throw new KernelDiedError(
                     DataScience.kernelDied(errorMessage),
                     // Include what ever we have as the stderr.
@@ -358,7 +356,9 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             try {
                 this.interrupter?.dispose().catch(noop);
                 this._process?.kill(); // NOSONAR
-                this.exitEvent.fire({});
+                if (!this.exitEventFired) {
+                    this.exitEvent.fire({ stderr: '' });
+                }
             } catch (ex) {
                 traceError(`Error disposing kernel process ${pid}`, ex);
             }

@@ -281,11 +281,11 @@ export namespace DataScience {
             'Do not translate the text "command:jupyter.viewOutput", that is a command Id that will be used by VS Code to open the output panel'
         ]
     });
-    export const kernelDied = (kernelName: string) =>
+    export const kernelDied = (message: string) =>
         l10n.t({
             message:
                 'The kernel died. Error: {0}... View Jupyter [log](command:jupyter.viewOutput) for further details.',
-            args: [kernelName],
+            args: [message],
             comment: [
                 'Do not translate the text "command:jupyter.viewOutput", that is a command Id that will be used by VS Code to open the output panel'
             ]

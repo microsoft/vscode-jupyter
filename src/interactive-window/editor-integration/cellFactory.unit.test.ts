@@ -92,7 +92,6 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(cells.length, 1, 'markdown cell multline failed');
         assert.equal(cells[0].languageId, 'markdown', 'markdown cell not generated');
         assert.equal(splitMarkdown(cells[0].value).length, 39, 'Lines for cell not emitted');
-        console.error(`"${cells[0].value}"`);
         assert.equal(splitMarkdown(cells[0].value)[34], '          - Item 1-a-3-c', 'Lines for markdown not emitted');
 
         // eslint-disable-next-line no-multi-str
