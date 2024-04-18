@@ -45,6 +45,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
     let exitedEvent: EventEmitter<{
         exitCode?: number | undefined;
         reason?: string | undefined;
+        stderr: string;
     }>;
     const launchTimeout = 1_000;
     let disposables: IDisposable[] = [];
@@ -178,6 +179,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         exitedEvent = new EventEmitter<{
             exitCode?: number | undefined;
             reason?: string | undefined;
+            stderr: string;
         }>();
         nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
         const workspaceConfig = mock<WorkspaceConfiguration>();
@@ -275,7 +277,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             session.kernel!.statusChanged.connect((_, s) => statuses.push(s));
             session.kernel!.disposed.connect(() => (disposed = true));
 
-            exitedEvent.fire({ exitCode: 1, reason: 'Killed' });
+            exitedEvent.fire({ exitCode: 1, reason: 'Killed', stderr: '' });
 
             await waitForCondition(
                 () => !disposed && statuses.join(',') === 'dead',
