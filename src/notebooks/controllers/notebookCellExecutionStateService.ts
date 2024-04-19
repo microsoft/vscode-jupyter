@@ -3,7 +3,6 @@
 
 import { EventEmitter, type Event, type NotebookCell } from 'vscode';
 import { DisposableBase, DisposableStore } from '../../platform/common/utils/lifecycle';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { inject, injectable } from 'inversify';
 import { IKernelProvider, type IKernel, type INotebookKernelExecution } from '../../kernels/types';
 import {
@@ -15,11 +14,6 @@ import { IDisposableRegistry } from '../../platform/common/types';
 
 @injectable()
 export class NotebookCellExecutionStateService extends DisposableBase implements INotebookCellExecutionStateService {
-    private static cellStates = new WeakMap<
-        NotebookCell,
-        { stateTransition: string[]; state: NotebookCellExecutionState; start: StopWatch }
-    >();
-
     /**
      * An {@link Event} which fires when the execution state of a cell has changed.
      */
@@ -29,12 +23,6 @@ export class NotebookCellExecutionStateService extends DisposableBase implements
         new EventEmitter<NotebookCellExecutionStateChangeEvent>()
     );
 
-    public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
-        return NotebookCellExecutionStateService.cellStates.get(cell)?.state;
-    }
-    public static getCellStatus(cell: NotebookCell): string {
-        return (NotebookCellExecutionStateService.cellStates.get(cell)?.stateTransition || []).join(', ') || '';
-    }
     public get onDidChangeNotebookCellExecutionState() {
         return this._onDidChangeNotebookCellExecutionState.event;
     }
@@ -52,7 +40,7 @@ export class NotebookCellExecutionStateService extends DisposableBase implements
         this._register(kernelProvider.onDidDisposeKernel((k) => this.kernelDisposables.get(k)?.dispose(), this));
     }
     setPendingState(cell: NotebookCell): void {
-        this.setCellState(cell, NotebookCellExecutionState.Pending);
+        this.triggerStateChange(cell, NotebookCellExecutionState.Pending);
     }
 
     private monitorKernelExecutionEvents(kernel: IKernel) {
@@ -66,25 +54,14 @@ export class NotebookCellExecutionStateService extends DisposableBase implements
 
         this.kernelExecutionMaps.set(kernel, execution);
         disposableStore.add(
-            execution.onPreExecute((cell) => this.setCellState(cell, NotebookCellExecutionState.Executing), this)
+            execution.onPreExecute((cell) => this.triggerStateChange(cell, NotebookCellExecutionState.Executing), this)
         );
         disposableStore.add(
-            execution.onPostExecute((cell) => this.setCellState(cell, NotebookCellExecutionState.Idle), this)
+            execution.onPostExecute((cell) => this.triggerStateChange(cell, NotebookCellExecutionState.Idle), this)
         );
     }
 
-    private setCellState(cell: NotebookCell, state: NotebookCellExecutionState) {
-        NotebookCellExecutionStateService.setCellState(cell, state);
+    private triggerStateChange(cell: NotebookCell, state: NotebookCellExecutionState) {
         this._onDidChangeNotebookCellExecutionState.fire({ cell, state: state });
-    }
-    private static setCellState(cell: NotebookCell, state: NotebookCellExecutionState) {
-        const stopWatch = NotebookCellExecutionStateService.cellStates.get(cell)?.start || new StopWatch();
-        const previousState = NotebookCellExecutionStateService.cellStates.get(cell)?.stateTransition || [];
-        previousState.push(`${state} ${previousState.length === 0 ? '@ start' : `After ${stopWatch.elapsedTime}ms`}`);
-        NotebookCellExecutionStateService.cellStates.set(cell, {
-            stateTransition: previousState,
-            state,
-            start: stopWatch
-        });
     }
 }
