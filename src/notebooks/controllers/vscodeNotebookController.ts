@@ -59,7 +59,12 @@ import { DisplayOptions } from '../../kernels/displayOptions';
 import { getNotebookMetadata, isJupyterNotebook, updateNotebookMetadata } from '../../platform/common/utils';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { KernelConnector } from './kernelConnector';
-import { IConnectionDisplayData, IConnectionDisplayDataProvider, IVSCodeNotebookController } from './types';
+import {
+    IConnectionDisplayData,
+    IConnectionDisplayDataProvider,
+    IVSCodeNotebookController,
+    type INotebookCellExecutionStateService
+} from './types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { CellExecutionCreator } from '../../kernels/execution/cellExecutionCreator';
 import {
@@ -159,7 +164,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         extensionChecker: IPythonExtensionChecker,
         serviceContainer: IServiceContainer,
         displayDataProvider: IConnectionDisplayDataProvider,
-        jupyterVariables: IJupyterVariables
+        jupyterVariables: IJupyterVariables,
+        notebookCellExecutionStateService: INotebookCellExecutionStateService
     ): IVSCodeNotebookController {
         return new VSCodeNotebookController(
             kernelConnection,
@@ -173,7 +179,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             extensionChecker,
             serviceContainer,
             displayDataProvider,
-            jupyterVariables
+            jupyterVariables,
+            notebookCellExecutionStateService
         );
     }
     constructor(
@@ -188,7 +195,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
         private readonly displayDataProvider: IConnectionDisplayDataProvider,
-        jupyterVariables: IJupyterVariables
+        jupyterVariables: IJupyterVariables,
+        private readonly notebookCellExecutionStateService: INotebookCellExecutionStateService
     ) {
         trackControllerCreation(kernelConnection.id, kernelConnection.interpreter?.id);
         disposableRegistry.push(this);
@@ -392,6 +400,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             return;
         }
         traceInfo(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
+        cells.forEach((cell) => this.notebookCellExecutionStateService.setPendingState(cell));
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         telemetryTracker?.stop();
         // Notebook is trusted. Continue to execute cells

@@ -25,6 +25,7 @@ import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filte
 import {
     IConnectionDisplayDataProvider,
     IControllerRegistration,
+    INotebookCellExecutionStateService,
     InteractiveControllerIdSuffix,
     IVSCodeNotebookController,
     IVSCodeNotebookControllerUpdateEvent
@@ -360,7 +361,10 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.extensionChecker,
                         this.serviceContainer,
                         this.serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider),
-                        this.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.KERNEL_VARIABLES)
+                        this.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.KERNEL_VARIABLES),
+                        this.serviceContainer.get<INotebookCellExecutionStateService>(
+                            INotebookCellExecutionStateService
+                        )
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     const controllerDisposables: IDisposable[] = [];

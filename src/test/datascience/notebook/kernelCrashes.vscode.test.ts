@@ -36,6 +36,7 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ConnectionDisplayDataProvider } from '../../../notebooks/controllers/connectionDisplayData.node';
 import { IJupyterVariables } from '../../../kernels/variables/types';
+import { INotebookCellExecutionStateService } from '../../../notebooks/controllers/types';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -125,7 +126,8 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 extensionChecker,
                 api.serviceContainer,
                 displayDataProvider,
-                jupyterVariables
+                jupyterVariables,
+                api.serviceContainer.get<INotebookCellExecutionStateService>(INotebookCellExecutionStateService)
             );
             disposables.push(interpreterController);
 

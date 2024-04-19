@@ -43,6 +43,7 @@ import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { Environment, PythonExtension } from '@vscode/python-extension';
 import { crateMockedPythonApi, whenResolveEnvironment } from '../../kernels/helpers.unit.test';
+import { NotebookCellExecutionStateService } from './notebookCellExecutionStateService';
 
 suite(`Notebook Controller`, function () {
     let controller: NotebookController;
@@ -144,6 +145,10 @@ suite(`Notebook Controller`, function () {
     });
     teardown(() => (disposables = dispose(disposables)));
     function createController(viewType: 'jupyter-notebook' | 'interactive') {
+        const notebookCellExecutionStateService = new NotebookCellExecutionStateService(
+            instance(kernelProvider),
+            disposables
+        );
         new VSCodeNotebookController(
             instance(kernelConnection),
             '1',
@@ -156,7 +161,8 @@ suite(`Notebook Controller`, function () {
             instance(extensionChecker),
             instance(serviceContainer),
             displayDataProvider,
-            jupyterVariables
+            jupyterVariables,
+            notebookCellExecutionStateService
         );
         notebook = new TestNotebookDocument(undefined, viewType);
     }

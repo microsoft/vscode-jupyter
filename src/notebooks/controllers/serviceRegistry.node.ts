@@ -10,11 +10,13 @@ import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHa
 import { LocalNotebookKernelSourceSelector } from './kernelSource/localNotebookKernelSourceSelector.node';
 import { LocalPythonEnvNotebookKernelSourceSelector } from './kernelSource/localPythonEnvKernelSourceSelector.node';
 import { RemoteNotebookKernelSourceSelector } from './kernelSource/remoteNotebookKernelSourceSelector';
+import { NotebookCellExecutionStateService } from './notebookCellExecutionStateService';
 import {
     IConnectionDisplayDataProvider,
     IControllerRegistration,
     ILocalNotebookKernelSourceSelector,
     ILocalPythonNotebookKernelSourceSelector,
+    INotebookCellExecutionStateService,
     IRemoteNotebookKernelSourceSelector
 } from './types';
 
@@ -36,6 +38,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<ILocalPythonNotebookKernelSourceSelector>(
         ILocalPythonNotebookKernelSourceSelector,
         LocalPythonEnvNotebookKernelSourceSelector
+    );
+    serviceManager.addSingleton<INotebookCellExecutionStateService>(
+        INotebookCellExecutionStateService,
+        NotebookCellExecutionStateService
     );
     serviceManager.addBinding(ILocalPythonNotebookKernelSourceSelector, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
