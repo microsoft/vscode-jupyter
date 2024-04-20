@@ -150,7 +150,7 @@ import { EmptyEvent } from '../../platform/common/utils/events';
                     };
                 }
             } as any);
-            importTracker = new ImportTracker([], 0);
+            importTracker = new ImportTracker(disposables, 0);
         });
         teardown(() => {
             sinon.restore();
