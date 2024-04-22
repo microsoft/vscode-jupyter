@@ -45,12 +45,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
             this,
             this.disposables
         );
-        this.disposables.push(
-            onDidChangeTelemetryEnablement((enabled) => {
-                this.isTelemetryDisabled = enabled;
-            }),
-            this
-        );
+        this.disposables.push(onDidChangeTelemetryEnablement((enabled) => (this.isTelemetryDisabled = enabled)));
     }
 
     public dispose() {
