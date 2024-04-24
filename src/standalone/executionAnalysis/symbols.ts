@@ -259,8 +259,10 @@ export class NotebookDocumentSymbolTracker {
                     });
 
                     e.cellChanges.forEach((change) => {
-                        this._requestCellSymbols(change.cell, false).then(noop, noop);
-                        this._updateCellStatus(change.cell, CellExecutionStatus.Stale);
+                        if (change.document) {
+                            this._requestCellSymbols(change.cell, false).then(noop, noop);
+                            this._updateCellStatus(change.cell, CellExecutionStatus.Stale);
+                        }
                     });
                 }
             })
