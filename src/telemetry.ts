@@ -4325,4 +4325,161 @@ export class IEventNamePropertyMapping {
         feature: ['DataFrameViewer'],
         source: 'N/A'
     };
+    /**
+     * Telemetry sent during test on CI to measure performance of execution of large notebooks.
+     */
+    [Telemetry.NativeNotebookExecutionPerformance]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * The kind of outputs generated in the notebook
+             */
+            outputType: 'text' | 'html' | 'image';
+            /**
+             * Code cell count
+             */
+            codeCellCount: number;
+            /**
+             * Code cell count
+             */
+            markdownCellCount: number;
+            /**
+             * Total time spent in VS Code before extension starts execution.
+             */
+            preExecuteDuration: number;
+            /**
+             * Total time spent executing cells
+             */
+            executeDuration: number;
+            /**
+             * Total time spent in VS Code after executing cells
+             */
+            postExecuteDuration: number;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of code cells.',
+                isMeasurement: true
+            },
+            markdownCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of markdown cells.',
+                isMeasurement: true
+            },
+            preExecuteDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total time spent in VS Code before starting execution.',
+                isMeasurement: true
+            },
+            executeDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total time spent executing cells.',
+                isMeasurement: true
+            },
+            postExecuteDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total time spent in VS Code after executing cells.',
+                isMeasurement: true
+            }
+        },
+        properties: {
+            outputType: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight',
+                comment: 'The kind of outputs generated in the notebook, text, html or images.'
+            }
+        }
+    };
+    /**
+     * Telemetry sent during test on CI to measure performance of execution of large notebooks.
+     */
+    [Telemetry.JupyterNotebookExecutionPerformance]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * The kind of outputs generated in the notebook
+             */
+            outputType: 'text' | 'html' | 'image';
+            /**
+             * Code cell count
+             */
+            codeCellCount: number;
+            /**
+             * Code cell count
+             */
+            markdownCellCount: number;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of code cells.',
+                isMeasurement: true
+            },
+            markdownCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of markdown cells.',
+                isMeasurement: true
+            }
+        },
+        properties: {
+            outputType: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight',
+                comment: 'The kind of outputs generated in the notebook, text, html or images.'
+            }
+        }
+    };
+    /**
+     * Telemetry sent during test on CI to measure performance of execution of large notebooks.
+     */
+    [Telemetry.NativeNotebookEditPerformance]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * Code cell count
+             */
+            codeCellCount: number;
+            /**
+             * Code cell count
+             */
+            markdownCellCount: number;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of code cells.',
+                isMeasurement: true
+            },
+            markdownCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of markdown cells.',
+                isMeasurement: true
+            }
+        }
+    };
 }

@@ -475,7 +475,10 @@ export enum Telemetry {
     DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL',
     DataViewerWebviewLoaded = 'DATAVIEWER.WEBVIEW_LOADED',
     PlotViewerWebviewLoaded = 'PLOTVIEWER.WEBVIEW_LOADED',
-    EnterRemoteJupyterUrl = 'DATASCIENCE.ENTER_REMOTE_JUPYTER_URL'
+    EnterRemoteJupyterUrl = 'DATASCIENCE.ENTER_REMOTE_JUPYTER_URL',
+    NativeNotebookExecutionPerformance = 'DATASCIENCE.JUPYTER_NOTEBOOK_EXEC_PERFORMANCE',
+    JupyterNotebookExecutionPerformance = 'DATASCIENCE.JUPYTER_JUPYTER_NOTEBOOK_EXEC_PERFORMANCE',
+    NativeNotebookEditPerformance = 'DATASCIENCE.JUPYTER_NOTEBOOK_EDIT_PERFORMANCE'
 }
 
 export enum JupyterCommands {

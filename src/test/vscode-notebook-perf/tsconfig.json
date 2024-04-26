@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "module": "Node16",
+        "target": "ES2022",
+        "lib": [
+            "ES2022"
+        ],
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "rootDir": "src",
+        "outDir": "out",
+        "forceConsistentCasingInFileNames": true,
+        "strict": true, /* enable all strict type-checking options */
+        "paths": {
+            "vscode": [
+                "../../../vscode.d.ts"
+            ]
+        },
+        "typeRoots": [
+            "../../../node_modules/@types",
+        ]
+    },
+    "include": [
+        "./src/**/*",
+    ]
+    /* Additional Checks */
+    // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
+    // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
+    // "noUnusedParameters": true,  /* Report errors on unused parameters. */
+}

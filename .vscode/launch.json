@@ -303,6 +303,63 @@
             }
         },
         {
+            "name": "Tests Notebook Performance without Jupyter & Python",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/test/datascience",
+                "--enable-proposed-api",
+                "--disable-extensions",
+                "--extensionDevelopmentPath=${workspaceFolder}/src/test/vscode-notebook-perf",
+                "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
+            ],
+            "env": {
+                "VSC_JUPYTER_PERF_TEST": "1",
+                "VSC_JUPYTER_CI_TEST_GREP": "@notebookPerformance",
+                "VSC_JUPYTER_CI_TEST_VSC_CHANNEL": "insiders",
+                "TEST_FILES_SUFFIX": "*.vscode.common.test",
+                "VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT": "true"
+            },
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "${workspaceFolder}/src/test/vscode-notebook-perf/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
+            "skipFiles": ["<node_internals>/**"],
+            "presentation": {
+                "group": "2_tests",
+                "order": 6
+            }
+        },
+        {
+            "name": "Tests Execution Performance with Jupyter & Python",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/test/datascience",
+                "--enable-proposed-api",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
+            ],
+            "env": {
+                "VSC_JUPYTER_PERF_TEST": "1",
+                "VSC_JUPYTER_CI_TEST_GREP": "@executionPerformance",
+                "VSC_JUPYTER_CI_TEST_VSC_CHANNEL": "insiders",
+                "CI_PYTHON_PATH": "/Users/donjayamanne/Development/vsc/vscode-jupyter/.venv/bin/python",
+                "TEST_FILES_SUFFIX": "*.vscode.test"
+            },
+            "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "skipFiles": ["<node_internals>/**"],
+            "presentation": {
+                "group": "2_tests",
+                "order": 6
+            }
+        },
+        {
             "type": "node",
             "request": "launch",
             "name": "Gulp tasks (helpful for debugging gulpfile.js)",
