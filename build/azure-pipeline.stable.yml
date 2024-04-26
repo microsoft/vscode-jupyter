@@ -88,3 +88,4 @@ extends:
       enabled: true
 
     apiScanSoftwareVersion: '2024'
+    apiScanExcludes: 'extension/dist/node_modules/zeromq/prebuilds/win32-arm64/*.*'
