@@ -15,6 +15,7 @@ import {
     isCI
 } from '../platform/common/constants';
 import { DownloadPlatform } from '@vscode/test-electron/out/download';
+import { arch } from 'os';
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_JUPYTER_CI_TEST = '1';
@@ -41,7 +42,7 @@ const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase(
 function computePlatform() {
     switch (process.platform) {
         case 'darwin':
-            return 'darwin';
+            return arch() === 'arm64' ? 'darwin-arm64' : 'darwin';
         case 'win32':
             return process.arch === 'ia32' ? 'win32-archive' : 'win32-x64-archive';
         default:
