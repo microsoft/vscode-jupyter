@@ -74,8 +74,11 @@ export class CellExecution implements ICellExecution, IDisposable {
     public get result(): Promise<void> {
         return this._result.promise;
     }
-    public get preExecute(): Event<NotebookCell> {
-        return this._preExecuteEmitter.event;
+    public get onWillExecute(): Event<void> {
+        return this._onWillExecute.event;
+    }
+    public get onDidExecute(): Event<void> {
+        return this._onDidExecute.event;
     }
     private readonly _result = createDeferred<void>();
 
@@ -94,7 +97,8 @@ export class CellExecution implements ICellExecution, IDisposable {
     private disposed?: boolean;
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private readonly disposables: IDisposable[] = [];
-    private _preExecuteEmitter = new EventEmitter<NotebookCell>();
+    private _onWillExecute = new EventEmitter<void>();
+    private _onDidExecute = new EventEmitter<void>();
     private cellExecutionHandler?: CellExecutionMessageHandler;
     private session?: IKernelSession;
     private cancelRequested?: boolean;
@@ -159,6 +163,7 @@ export class CellExecution implements ICellExecution, IDisposable {
     }
     public async start(session: IKernelSession) {
         this.session = session;
+        void this._result.promise.finally(() => this._onDidExecute.fire());
         if (this.resumeExecution?.msg_id) {
             return this.resume(session, this.resumeExecution);
         }
@@ -423,7 +428,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         const kernelConnection = session.kernel;
         try {
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
-            this._preExecuteEmitter.fire(this.cell);
+            this._onWillExecute.fire();
             traceVerbose(`Cell Index:${this.cell.index} sent to kernel`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute

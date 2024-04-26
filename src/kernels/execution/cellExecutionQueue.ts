@@ -101,7 +101,8 @@ export class CellExecutionQueue implements Disposable {
             const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
             executionItem = cellExecution;
             this.disposables.push(cellExecution);
-            cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
+            cellExecution.onWillExecute(() => this._onPreExecute.fire(cellExecution.cell), this, this.disposables);
+            cellExecution.onDidExecute(() => this._onPostExecute.fire(cellExecution.cell), this, this.disposables);
             this.queueOfItemsToExecute.push(cellExecution);
 
             traceCellMessage(cell, 'User queued cell for execution');
@@ -242,10 +243,6 @@ export class CellExecutionQueue implements Disposable {
                 const index = this.queueOfItemsToExecute.indexOf(itemToExecute);
                 if (index >= 0) {
                     this.queueOfItemsToExecute.splice(index, 1);
-                }
-
-                if (itemToExecute.type === 'cell') {
-                    this._onPostExecute.fire(itemToExecute.cell);
                 }
             }
 

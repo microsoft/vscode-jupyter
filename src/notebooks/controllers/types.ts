@@ -141,3 +141,42 @@ export const IConnectionDisplayDataProvider = Symbol('IConnectionDisplayData');
 export interface IConnectionDisplayDataProvider {
     getDisplayData(connection: KernelConnectionMetadata): IConnectionDisplayData;
 }
+
+/**
+ * The execution state of a notebook cell.
+ */
+export enum NotebookCellExecutionState {
+    /**
+     * The cell is idle.
+     */
+    Idle = 1,
+    /**
+     * Execution for the cell is pending.
+     */
+    Pending = 2,
+    /**
+     * The cell is currently executing.
+     */
+    Executing = 3
+}
+
+/**
+ * An event describing a cell execution state change.
+ */
+export interface NotebookCellExecutionStateChangeEvent {
+    /**
+     * The {@link NotebookCell cell} for which the execution state has changed.
+     */
+    readonly cell: vscode.NotebookCell;
+
+    /**
+     * The new execution state of the cell.
+     */
+    readonly state: NotebookCellExecutionState;
+}
+
+export const INotebookCellExecutionStateService = Symbol('INotebookCellExecutionStateService');
+export interface INotebookCellExecutionStateService {
+    onDidChangeNotebookCellExecutionState: vscode.Event<NotebookCellExecutionStateChangeEvent>;
+    setPendingState(cell: vscode.NotebookCell): void;
+}
