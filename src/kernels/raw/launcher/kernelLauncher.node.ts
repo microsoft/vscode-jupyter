@@ -113,22 +113,16 @@ export class KernelLauncher implements IKernelLauncher {
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
         const stopWatch = new StopWatch();
-        const promise = (async () => {
-            this.logIPyKernelPath(resource, kernelConnectionMetadata, cancelToken).catch(noop);
-
-            // Should be available now, wait with a timeout
-            return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
-        })();
-        promise
-            .then(() =>
-                /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
-                sendTelemetryEvent(
-                    Telemetry.KernelLauncherPerf,
-                    { duration: stopWatch.elapsedTime },
-                    { resourceType: getResourceType(resource) }
-                )
+        this.logIPyKernelPath(resource, kernelConnectionMetadata, cancelToken).catch(noop);
+        const promise = this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
+        void promise.then(() =>
+            /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
+            sendTelemetryEvent(
+                Telemetry.KernelLauncherPerf,
+                { duration: stopWatch.elapsedTime },
+                { resourceType: getResourceType(resource) }
             )
-            .catch(noop);
+        );
         return promise;
     }
 
