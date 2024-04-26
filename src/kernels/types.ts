@@ -432,8 +432,6 @@ export interface INotebookKernelExecution {
      * Total execution count on this kernel
      */
     readonly executionCount: number;
-    readonly onPreExecute: Event<NotebookCell>;
-    readonly onPostExecute: Event<NotebookCell>;
     readonly onDidReceiveDisplayUpdate: Event<NotebookCellOutput>;
     /**
      * Cells that are still being executed (or pending).

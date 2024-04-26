@@ -2,15 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    Disposable,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    UIKind,
-    env,
-    notebooks,
-    window
-} from 'vscode';
+import { Disposable, UIKind, env, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { traceError } from '../../platform/logging';
 import {
@@ -27,6 +19,11 @@ import { noop } from '../../platform/common/utils/misc';
 import { openInBrowser } from '../../platform/common/net/browser';
 import { getVSCodeChannel } from '../../platform/common/application/applicationEnvironment';
 import type { IDisposable } from '@c4312/evt';
+import {
+    NotebookCellExecutionState,
+    notebookCellExecutions,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../platform/notebooks/cellExecutionStateService';
 
 export const ISurveyBanner = Symbol('ISurveyBanner');
 export interface ISurveyBanner extends IExtensionSyncActivationService, IJupyterExtensionBanner {}
@@ -122,11 +119,12 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     public activate() {
-        this.onDidChangeNotebookCellExecutionStateHandler = notebooks.onDidChangeNotebookCellExecutionState(
-            this.onDidChangeNotebookCellExecutionState,
-            this,
-            this.disposables
-        );
+        this.onDidChangeNotebookCellExecutionStateHandler =
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState(
+                this.onDidChangeNotebookCellExecutionState,
+                this,
+                this.disposables
+            );
     }
 
     public async showBanner(type: BannerType): Promise<void> {

@@ -16,6 +16,10 @@ import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { IInteractiveWindowProvider } from '../types';
 import { getInteractiveCellMetadata } from '../helpers';
+import {
+    notebookCellExecutions,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../platform/notebooks/cellExecutionStateService';
 
 /**
  * Provides hover support in python files based on the state of a jupyter kernel. Files that are
@@ -35,10 +39,11 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {}
     public activate() {
-        this.onDidChangeNotebookCellExecutionStateHandler = vscode.notebooks.onDidChangeNotebookCellExecutionState(
-            (e) => this.delayer.trigger(() => this.onDidChangeNotebookCellExecutionState(e)),
-            this
-        );
+        this.onDidChangeNotebookCellExecutionStateHandler =
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState(
+                (e) => this.delayer.trigger(() => this.onDidChangeNotebookCellExecutionState(e)),
+                this
+            );
         this.kernelProvider.onDidRestartKernel(() => this.runFiles.clear(), this, this.disposables);
     }
     public dispose() {
@@ -48,9 +53,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
             this.hoverProviderRegistration.dispose();
         }
     }
-    private async onDidChangeNotebookCellExecutionState(
-        e: vscode.NotebookCellExecutionStateChangeEvent
-    ): Promise<void> {
+    private async onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): Promise<void> {
         try {
             if (e.cell.notebook.notebookType !== InteractiveWindowView) {
                 return;

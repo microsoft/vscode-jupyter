@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { EventEmitter, NotebookCellExecutionStateChangeEvent, NotebookDocument, Position, Range, Uri } from 'vscode';
+import { NotebookDocument, Position, Range, Uri } from 'vscode';
 
 import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../platform/common/types';
 import { CodeGenerator } from './codeGenerator';
@@ -10,7 +10,6 @@ import { MockDocumentManager } from '../../test/datascience/mockDocumentManager'
 import { anything, instance, mock, when } from 'ts-mockito';
 import { IGeneratedCodeStore, InteractiveCellMetadata } from './types';
 import { GeneratedCodeStorage } from './generatedCodeStorage';
-import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 import { dispose } from '../../platform/common/utils/lifecycle';
 
 // eslint-disable-next-line
@@ -21,7 +20,6 @@ suite.skip('Code Generator Unit Tests', () => {
     let pythonSettings: IWatchableJupyterSettings;
     let storage: IGeneratedCodeStore;
     let notebook: NotebookDocument;
-    let onDidChangeNotebookCellExecutionState: EventEmitter<NotebookCellExecutionStateChangeEvent>;
     let disposables: IDisposable[] = [];
     setup(() => {
         configurationService = mock<IConfigurationService>();
@@ -30,11 +28,6 @@ suite.skip('Code Generator Unit Tests', () => {
         when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
         documentManager = new MockDocumentManager();
         notebook = mock<NotebookDocument>();
-        onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
-        disposables.push(onDidChangeNotebookCellExecutionState);
-        when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
-            onDidChangeNotebookCellExecutionState.event
-        );
         when(notebook.uri).thenReturn();
         codeGenerator = new CodeGenerator(instance(configurationService), storage, instance(notebook), []);
         disposables.push(codeGenerator);

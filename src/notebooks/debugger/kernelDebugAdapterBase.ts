@@ -11,11 +11,8 @@ import {
     Event,
     EventEmitter,
     NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
     NotebookCellKind,
     NotebookDocument,
-    notebooks,
     Uri,
     workspace
 } from 'vscode';
@@ -40,6 +37,11 @@ import {
     shortNameMatchesLongName
 } from './helper';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
+import {
+    notebookCellExecutions,
+    NotebookCellExecutionState,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../platform/notebooks/cellExecutionStateService';
 
 /**
  * For info on the custom requests implemented by jupyter see:
@@ -97,7 +99,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         }
 
         this.disposables.push(
-            notebooks.onDidChangeNotebookCellExecutionState(
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState(
                 (cellStateChange: NotebookCellExecutionStateChangeEvent) => {
                     // If a cell has moved to idle, stop the debug session
                     if (

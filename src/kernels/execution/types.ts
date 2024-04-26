@@ -10,6 +10,15 @@ export interface ICellExecution {
     type: 'cell';
     cell: NotebookCell;
     result: Promise<void>;
+    /**
+     * Execution count for the cell after it completed execution.
+     * Its possible that cell.executionSummary.executionOrder is undefined when this is set.
+     * Thats because the data has not yet made its way to VS Code and back into the extension host model API.
+     *
+     * This gives us access to the execution count as soon as its available.
+     * Without having to wait for the roundtrip to complete.
+     */
+    executionOrder?: number;
     start(session: IKernelSession): Promise<void>;
     cancel(forced?: boolean): Promise<void>;
     dispose(): void;

@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { NotebookCellExecutionState, window } from 'vscode';
+import { window } from 'vscode';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -25,6 +25,7 @@ import {
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../kernels/execution/helpers';
 import { TestNotebookDocument, createKernelController } from './executionHelper';
 import { captureScreenShot } from '../../common';
+import { NotebookCellExecutionState } from '../../../platform/notebooks/cellExecutionStateService';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*

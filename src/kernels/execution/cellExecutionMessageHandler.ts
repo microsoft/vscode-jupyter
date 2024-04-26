@@ -449,8 +449,8 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.previousResultsToRestore = { ...(this.cell.executionSummary || {}) };
         this.temporaryExecution = CellExecutionCreator.getOrCreate(this.cell, this.controller);
         this.temporaryExecution?.start();
-        if (this.previousResultsToRestore?.executionOrder && this.execution) {
-            this.execution.executionOrder = this.previousResultsToRestore.executionOrder;
+        if (this.previousResultsToRestore?.executionOrder && this.temporaryExecution) {
+            this.temporaryExecution.executionOrder = this.previousResultsToRestore.executionOrder;
         }
         return this.temporaryExecution;
     }

@@ -2,14 +2,7 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import {
-    NotebookCellOutput,
-    NotebookCellOutputItem,
-    NotebookCell,
-    NotebookCellExecutionState,
-    Position,
-    Range
-} from 'vscode';
+import { NotebookCellOutput, NotebookCellOutputItem, NotebookCell, Position, Range } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import type { KernelMessage } from '@jupyterlab/services';
 import fastDeepEqual from 'fast-deep-equal';
@@ -29,9 +22,10 @@ import {
     getKernelRegistrationInfo
 } from '../helpers';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { getExtensionSpecifcStack } from '../../platform/errors/errors';
+import { getExtensionSpecificStack } from '../../platform/errors/errors';
 import { getCachedEnvironment, getVersion } from '../../platform/interpreter/helpers';
 import { base64ToUint8Array, uint8ArrayToBase64 } from '../../platform/common/utils/string';
+import type { NotebookCellExecutionState } from '../../platform/notebooks/cellExecutionStateService';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -117,7 +111,7 @@ export function traceCellMessage(cell: NotebookCell, message: string | (() => st
             `Cell Index:${cell.index}, of document ${uriPath.basename(
                 cell.notebook.uri
             )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${cell.executionSummary
-                ?.executionOrder}. ${messageToLog()}. called from ${getExtensionSpecifcStack()}`
+                ?.executionOrder}. ${messageToLog()}. called from ${getExtensionSpecificStack()}`
     );
 }
 
@@ -775,9 +769,10 @@ export async function endCellAndDisplayErrorsInCell(
 
     // Start execution if not already (Cell execution wrapper will ensure it won't start twice)
     const execution = CellExecutionCreator.getOrCreate(cell, controller);
+    const originalExecutionOrder = execution.executionOrder;
     if (!execution.started) {
-        execution.start(cell.executionSummary?.timing?.endTime);
-        execution.executionOrder = cell.executionSummary?.executionOrder;
+        execution.start(cell.executionSummary?.timing?.startTime);
+        execution.executionOrder = cell.executionSummary?.executionOrder || originalExecutionOrder;
     }
     await execution.appendOutput(output);
     execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);

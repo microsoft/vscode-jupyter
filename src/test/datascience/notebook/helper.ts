@@ -23,7 +23,6 @@ import {
     Memento,
     NotebookCell,
     NotebookCellData,
-    NotebookCellExecutionState,
     NotebookCellKind,
     NotebookCellOutputItem,
     NotebookData,
@@ -43,7 +42,6 @@ import {
     debug,
     env,
     languages,
-    notebooks,
     window,
     workspace
 } from 'vscode';
@@ -102,6 +100,10 @@ import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterCo
 import { JupyterLabHelper } from '../../../kernels/jupyter/session/jupyterLabHelper';
 import { getRootFolder } from '../../../platform/common/application/workspace.base';
 import { activateIPynbExtension, useCustomMetadata } from '../../../platform/common/utils';
+import {
+    NotebookCellExecutionState,
+    notebookCellExecutions
+} from '../../../platform/notebooks/cellExecutionStateService';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -919,6 +921,7 @@ export async function waitForCellExecutionToComplete(cell: NotebookCell) {
         defaultNotebookTestTimeout,
         'Execution did not complete'
     );
+
     await sleep(100);
 }
 export async function waitForCellExecutionState(
@@ -928,7 +931,7 @@ export async function waitForCellExecutionState(
     timeout: number = defaultNotebookTestTimeout
 ) {
     const deferred = createDeferred<boolean>();
-    const disposable = notebooks.onDidChangeNotebookCellExecutionState((e) => {
+    const disposable = notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
         if (e.cell !== cell) {
             return;
         }
@@ -969,10 +972,14 @@ export async function waitForExecutionCompletedSuccessfully(
             () =>
                 `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
                     cell
-                )}`
+                )}, & state = ${NotebookCellStateTracker.getCellState(cell)}`
         ),
         waitForCellExecutionToComplete(cell)
     ]);
+    // Some of the tests run the exact same checks,
+    // hence we can have a race condition
+    // Wait for an additional 100ms to ensure all code has been executed.
+    await sleep(100);
 }
 
 export async function waitForCompletions(

@@ -2,14 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    NotebookCell,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookCellKind,
-    NotebookDocument,
-    notebooks,
-    workspace
-} from 'vscode';
+import { NotebookCell, NotebookCellKind, NotebookDocument, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
@@ -22,6 +15,11 @@ import {
     Telemetry
 } from '../../telemetry';
 import { isTelemetryDisabled } from '../../telemetry';
+import {
+    NotebookCellExecutionState,
+    notebookCellExecutions,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../platform/notebooks/cellExecutionStateService';
 
 /**
  * Sends telemetry about cell output mime types
@@ -40,7 +38,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
         workspace.onDidOpenNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
         workspace.onDidCloseNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
         workspace.onDidSaveNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
-        notebooks.onDidChangeNotebookCellExecutionState(
+        notebookCellExecutions.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables
@@ -52,7 +50,11 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
         dispose(this.disposables);
     }
     public async onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): Promise<void> {
-        if (!isJupyterNotebook(e.cell.notebook) || this.isTelemetryDisabled) {
+        if (
+            !isJupyterNotebook(e.cell.notebook) ||
+            this.isTelemetryDisabled ||
+            e.state !== NotebookCellExecutionState.Idle
+        ) {
             return;
         }
         this.checkCell(e.cell, 'onExecution');

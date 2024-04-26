@@ -5,17 +5,7 @@
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import {
-    CancellationTokenSource,
-    CodeLens,
-    Disposable,
-    EventEmitter,
-    NotebookCellExecutionStateChangeEvent,
-    Range,
-    Selection,
-    TextEditor,
-    Uri
-} from 'vscode';
+import { CancellationTokenSource, CodeLens, Disposable, EventEmitter, Range, Selection, TextEditor, Uri } from 'vscode';
 
 import { anything, instance, mock, when } from 'ts-mockito';
 import { IDebugService } from '../../platform/common/application/types';
@@ -121,16 +111,11 @@ suite('Code Watcher Unit Tests', () => {
         when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
         const trustedEvent = new EventEmitter<void>();
         when(mockedVSCodeNamespaces.workspace.onDidGrantWorkspaceTrust).thenReturn(trustedEvent.event);
-        const execStateChangeEvent = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
-        when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
-            execStateChangeEvent.event
-        );
         const storageFactory = mock<IGeneratedCodeStorageFactory>();
         const kernelProvider = mock<IKernelProvider>();
         const kernelDisposedEvent = new EventEmitter<IKernel>();
         when(kernelProvider.onDidDisposeKernel).thenReturn(kernelDisposedEvent.event);
         disposables.push(trustedEvent);
-        disposables.push(execStateChangeEvent);
         disposables.push(kernelDisposedEvent);
         const codeLensFactory = new CodeLensFactory(
             configService.object,
