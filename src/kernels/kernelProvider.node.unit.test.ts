@@ -5,14 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import {
-    EventEmitter,
-    Memento,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookController,
-    NotebookDocument,
-    Uri
-} from 'vscode';
+import { EventEmitter, Memento, NotebookController, NotebookDocument, Uri } from 'vscode';
 import {
     IConfigurationService,
     IDisposable,
@@ -197,16 +190,8 @@ suite('Jupyter Session', () => {
             jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
             context = mock<IExtensionContext>();
             const configSettings = mock<IWatchableJupyterSettings>();
-            const onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
-            disposables.push(onDidChangeNotebookCellExecutionState);
-            when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
-                onDidChangeNotebookCellExecutionState.event
-            );
             when(mockedVSCodeNamespaces.workspace.onDidCloseNotebookDocument).thenReturn(
                 onDidCloseNotebookDocument.event
-            );
-            when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
-                onDidChangeNotebookCellExecutionState.event
             );
             when(configService.getSettings(anything())).thenReturn(instance(configSettings));
             when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([

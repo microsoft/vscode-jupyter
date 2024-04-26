@@ -2,17 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    Disposable,
-    NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellKind,
-    NotebookDocument,
-    TextDocument,
-    Uri,
-    notebooks,
-    workspace
-} from 'vscode';
+import { Disposable, NotebookCell, NotebookCellKind, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
 import { ResourceTypeTelemetryProperty, onDidChangeTelemetryEnablement, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -25,6 +15,7 @@ import { isJupyterNotebook } from '../../platform/common/utils';
 import { isTelemetryDisabled } from '../../telemetry';
 import { ResourceMap } from '../../platform/common/utils/map';
 import { Delayer } from '../../platform/common/utils/async';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../../platform/notebooks/cellExecutionStateService';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
@@ -63,6 +54,7 @@ export class ImportTracker implements IExtensionSyncActivationService {
     private pendingChecks = new ResourceMap<IDisposable>();
     private disposables = new DisposableStore();
     private sentMatches = new Set<string>();
+    private readonly processedNotebookCells = new WeakMap<NotebookCell, number>();
     private isTelemetryDisabled: boolean;
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry, delay = 1_000) {
         disposables.push(this.disposables);
@@ -77,9 +69,9 @@ export class ImportTracker implements IExtensionSyncActivationService {
         this.disposables.add(
             workspace.onDidSaveNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'))
         );
-        const delayer = new Delayer<void>(delay);
+        const delayer = this.disposables.add(new Delayer<void>(delay));
         this.disposables.add(
-            notebooks.onDidChangeNotebookCellExecutionState((e) => {
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
                 void delayer.trigger(() => {
                     if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
                         this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
@@ -143,11 +135,13 @@ export class ImportTracker implements IExtensionSyncActivationService {
         if (
             !isJupyterNotebook(cell.notebook) ||
             cell.kind !== NotebookCellKind.Code ||
-            cell.document.languageId !== PYTHON_LANGUAGE
+            cell.document.languageId !== PYTHON_LANGUAGE ||
+            this.processedNotebookCells.get(cell) === cell.document.version
         ) {
             return;
         }
         try {
+            this.processedNotebookCells.set(cell, cell.document.version);
             const resourceType = cell.notebook.notebookType === JupyterNotebookView ? 'notebook' : 'interactive';
             await this.sendTelemetryForImports(this.getDocumentLines(cell.document), resourceType, when);
         } catch (ex) {

@@ -2,15 +2,7 @@
 // Licensed under the MIT License.
 
 import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
-import {
-    NotebookCell,
-    NotebookCellExecution,
-    workspace,
-    NotebookCellOutput,
-    NotebookCellExecutionState,
-    Event,
-    EventEmitter
-} from 'vscode';
+import { NotebookCell, NotebookCellExecution, workspace, NotebookCellOutput } from 'vscode';
 
 import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
@@ -39,6 +31,7 @@ import { ICellExecution } from './types';
 import { KernelError } from '../errors/kernelError';
 import { getCachedSysPrefix } from '../../platform/interpreter/helpers';
 import { getCellMetadata } from '../../platform/common/utils';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../../platform/notebooks/cellExecutionStateService';
 
 /**
  * Factory for CellExecution objects.
@@ -74,9 +67,6 @@ export class CellExecution implements ICellExecution, IDisposable {
     public get result(): Promise<void> {
         return this._result.promise;
     }
-    public get preExecute(): Event<NotebookCell> {
-        return this._preExecuteEmitter.event;
-    }
     private readonly _result = createDeferred<void>();
 
     private started?: boolean;
@@ -94,10 +84,13 @@ export class CellExecution implements ICellExecution, IDisposable {
     private disposed?: boolean;
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private readonly disposables: IDisposable[] = [];
-    private _preExecuteEmitter = new EventEmitter<NotebookCell>();
     private cellExecutionHandler?: CellExecutionMessageHandler;
     private session?: IKernelSession;
     private cancelRequested?: boolean;
+    private _executionOrder?: number;
+    public get executionOrder() {
+        return this._executionOrder;
+    }
     private constructor(
         public readonly cell: NotebookCell,
         private readonly codeOverride: string | undefined,
@@ -129,7 +122,6 @@ export class CellExecution implements ICellExecution, IDisposable {
             this,
             this.disposables
         );
-        NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Idle);
         if (this.canExecuteCell()) {
             this.execution = CellExecutionCreator.getOrCreate(
                 cell,
@@ -378,6 +370,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         if (activeNotebookCellExecution.get(this.cell.notebook) === this.execution) {
             activeNotebookCellExecution.set(this.cell.notebook, undefined);
         }
+        this._executionOrder = this.execution?.executionOrder;
         NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Idle);
         this.execution = undefined;
     }
@@ -423,7 +416,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         const kernelConnection = session.kernel;
         try {
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
-            this._preExecuteEmitter.fire(this.cell);
+            notebookCellExecutions.changeCellState(this.cell, NotebookCellExecutionState.Executing);
             traceVerbose(`Cell Index:${this.cell.index} sent to kernel`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute

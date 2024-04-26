@@ -3,15 +3,7 @@
 
 import type { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import {
-    CancellationTokenSource,
-    Disposable,
-    NotebookCell,
-    NotebookCellExecutionState,
-    notebooks,
-    ProgressLocation,
-    window
-} from 'vscode';
+import { CancellationTokenSource, Disposable, NotebookCell, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { createDeferred } from '../platform/common/utils/async';
@@ -30,6 +22,8 @@ import {
     RemoteKernelConnectionMetadata
 } from './types';
 import { IJupyterServerProviderRegistry, IJupyterServerUriStorage } from './jupyter/types';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../platform/notebooks/cellExecutionStateService';
+import { DisposableStore } from '../platform/common/utils/lifecycle';
 
 /**
  * In the case of Jupyter kernels, when a kernel dies Jupyter will automatically restart that kernel.
@@ -38,6 +32,7 @@ import { IJupyterServerProviderRegistry, IJupyterServerUriStorage } from './jupy
 @injectable()
 export class KernelAutoReconnectMonitor implements IExtensionSyncActivationService {
     private kernelsStartedSuccessfully = new WeakSet<IKernel>();
+    private kernelDisposables = new WeakMap<IKernel, DisposableStore>();
     private kernelConnectionToKernelMapping = new WeakMap<Kernel.IKernelConnection, IKernel>();
     private kernelsRestarting = new WeakSet<IKernel>();
     private kernelReconnectProgress = new WeakMap<IKernel, IDisposable>();
@@ -54,6 +49,8 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         this.kernelProvider.onDidStartKernel(this.onDidStartKernel, this, this.disposableRegistry);
         this.disposableRegistry.push(
             this.kernelProvider.onDidDisposeKernel((kernel) => {
+                this.kernelDisposables.get(kernel)?.dispose();
+                this.kernelDisposables.delete(kernel);
                 this.kernelReconnectProgress.get(kernel)?.dispose();
                 this.kernelReconnectProgress.delete(kernel);
             }, this)
@@ -65,7 +62,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             }, this)
         );
         this.disposableRegistry.push(
-            notebooks.onDidChangeNotebookCellExecutionState((e) => {
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
                 if (!isJupyterNotebook(e.cell.notebook)) {
                     return;
                 }
@@ -81,30 +78,33 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             })
         );
     }
+    private getKernelSpecificDisposables(kernel: IKernel) {
+        const kernelDisposables = this.kernelDisposables.get(kernel) || new DisposableStore();
+        this.disposableRegistry.push(kernelDisposables);
+        this.kernelDisposables.set(kernel, kernelDisposables);
+        return kernelDisposables;
+    }
     private onDidStartKernel(kernel: IKernel) {
-        if (!this.kernelsStartedSuccessfully.has(kernel)) {
-            this.kernelProvider
-                .getKernelExecution(kernel)
-                .onPreExecute(
-                    (cell) => this.lastExecutedCellPerKernel.set(kernel, cell),
-                    this,
-                    this.disposableRegistry
-                );
+        if (this.kernelsStartedSuccessfully.has(kernel) || !kernel.session?.kernel) {
+            return;
+        }
 
-            if (!kernel.session?.kernel) {
-                return;
-            }
-            this.kernelsStartedSuccessfully.add(kernel);
-            this.kernelConnectionToKernelMapping.set(kernel.session.kernel, kernel);
-            kernel.session?.kernel?.connectionStatusChanged.connect(this.onKernelStatusChanged, this);
-            kernel.onDisposed(
-                () => {
-                    this.kernelReconnectProgress.get(kernel)?.dispose();
-                    this.kernelReconnectProgress.delete(kernel);
-                },
-                this,
-                this.disposableRegistry
-            );
+        const kernelDisposables = this.getKernelSpecificDisposables(kernel);
+        kernelDisposables.add(
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+                if (
+                    e.cell.notebook === kernel.notebook &&
+                    this.kernelProvider.get(e.cell.notebook) === kernel &&
+                    e.state === NotebookCellExecutionState.Executing
+                ) {
+                    this.lastExecutedCellPerKernel.set(kernel, e.cell);
+                }
+            }, this)
+        );
+        this.kernelsStartedSuccessfully.add(kernel);
+        this.kernelConnectionToKernelMapping.set(kernel.session.kernel, kernel);
+        kernel.session?.kernel?.connectionStatusChanged.connect(this.onKernelStatusChanged, this);
+        kernelDisposables.add(
             kernel.addHook(
                 'willRestart',
                 async () => {
@@ -112,11 +112,10 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
                     this.kernelReconnectProgress.delete(kernel);
                     this.kernelsRestarting.add(kernel);
                 },
-                this,
-                this.disposableRegistry
-            );
-            kernel.onRestarted(() => this.kernelsRestarting.delete(kernel), this, this.disposableRegistry);
-        }
+                this
+            )
+        );
+        kernelDisposables.add(kernel.onRestarted(() => this.kernelsRestarting.delete(kernel), this));
     }
     private onKernelStatusChanged(connection: Kernel.IKernelConnection, connectionStatus: Kernel.ConnectionStatus) {
         const kernel = this.kernelConnectionToKernelMapping.get(connection);
@@ -150,13 +149,13 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         }
     }
     private async onKernelConnecting(kernel: IKernel) {
+        const kernelDisposables = this.getKernelSpecificDisposables(kernel);
         const deferred = createDeferred<void>();
         const disposable = new Disposable(() => deferred.resolve());
         this.kernelReconnectProgress.set(kernel, disposable);
 
         if (isRemoteConnection(kernel.kernelConnectionMetadata)) {
             const handled = await this.handleRemoteServerShutdown(kernel, kernel.kernelConnectionMetadata);
-
             if (handled) {
                 return;
             }
@@ -169,7 +168,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             .withProgress({ location: ProgressLocation.Notification, title: message }, async () => deferred.promise)
             .then(noop, noop);
 
-        this.disposableRegistry.push(disposable);
+        kernelDisposables.add(disposable);
     }
 
     private async onKernelDisconnected(kernel: IKernel) {
