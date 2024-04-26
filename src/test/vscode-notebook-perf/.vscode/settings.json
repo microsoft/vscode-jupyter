@@ -1,0 +1,54 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "files.exclude": {
+        "out": false,
+        "dist": false,
+        "**/*.pyc": true,
+        ".nyc_output": true,
+        "obj": true,
+        "bin": true,
+        "**/__pycache__": true,
+        "**/node_modules": false,
+        ".vscode-test": true,
+        ".vscode test": true,
+        ".venv": true,
+        "**/.pytest_cache/**": true,
+        "languageServer.*/**": true,
+        "**/.mypy_cache/**": true,
+        "**/.ropeproject/**": true
+    },
+    "search.exclude": {
+        "out": true,
+        "dist": true,
+        "**/node_modules": true,
+        "coverage": true,
+        "**/.venv/**": true,
+        "languageServer*/**": true,
+        ".vscode-test": true,
+        ".vscode test": true
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.fixAll.tslint": "explicit"
+    },
+    "[python]": {
+        "editor.formatOnSave": true
+    },
+    "[typescript]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "git.branchProtection": ["main", "release*"],
+    "git.branchProtectionPrompt": "alwaysCommitToNewBranch",
+    "javascript.preferences.quoteStyle": "single",
+    "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
+    "typescript.preferences.quoteStyle": "single",
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "prettier.printWidth": 120,
+    "prettier.singleQuote": true,
+    "testExplorer.useNativeTesting": true
+}

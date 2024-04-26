@@ -275,13 +275,14 @@ jobs:
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
         packageVersion: ['']
-        tags:
-          [
+        tags: [
             '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter',
             '@widgets',
             '@iw',
             '@webview|@export|@lsp|@variableViewer',
-            '@debugger'
+            '@debugger',
+            # '@notebookPerformance', # Disabled for now, separate PR this will be enabled via cron (want to make PR smaller)
+            '@executionPerformance'
           ]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
@@ -506,7 +507,7 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8' && matrix.tags != '@notebookPerformance'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
@@ -521,7 +522,7 @@ jobs:
           python -m pip install jupyterlab notebook
 
       - name: Install Python Libs (IPyWidget 8)
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8' && matrix.tags != '@notebookPerformance'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
@@ -542,7 +543,7 @@ jobs:
 
       - name: Install matplotlib widgets into user and system paths
         if:
-          matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory'
+          matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@notebookPerformance'
           # This test will ensure widgets work when installed in 3 places
           # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
           # 2. In user's home folder (ipympl will be installed in there)
@@ -585,23 +586,30 @@ jobs:
           VSC_JUPYTER_CI_SKIP_WEB_BUNDLE: 1
           VSC_JUPYTER_CI_FAST_COMPILATION: 1
 
+      - name: Compile Performance Test Extension
+        if: matrix.tags == '@notebookPerformance'
+        run: npm run compile
+        working-directory: src/test/vscode-notebook-perf
+
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Deno
         uses: denoland/setup-deno@v1
+        if: matrix.tags != '@notebookPerformance'
         with:
           deno-version: ${{ env.DENO_VERSION}}
 
       - name: Install Deno Kernel
+        if: matrix.tags != '@notebookPerformance'
         run: npx tsx ./build/installDenoKernel.ts
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@notebookPerformance'
 
       - name: Create Virtual Env for Tests (ipywidgets 8)
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@notebookPerformance'
         with:
           IPyWidgetVersion: '8'
 
@@ -646,7 +654,45 @@ jobs:
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_ubuntu
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web' && matrix.tags != '@notebookPerformance'
+
+      - name: Run Notebook Perf Test Without Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: ${{ env.xvfbCommand }} npm run testPerfInVSCode
+        env:
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_PERF_TEST: ${{ matrix.matrix == '@notebookPerformance' }}
+          VSC_JUPYTER_NOTEBOOK_PERF_TEST: ${{ matrix.matrix == '@notebookPerformance' }}
+          VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT: ${{ matrix.matrix == '@notebookPerformance' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
+        id: test_notebook_perf_vscode_ubuntu
+        if: matrix.tags == '@notebookPerformance'
+
+      - name: Run Execution Perf Test With Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: ${{ env.xvfbCommand }} npm run testExecPerfInVSCode
+        env:
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_PERF_TEST: ${{ matrix.matrix == '@executionPerformance' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
+        id: test_exec_perf_vscode_ubuntu
+        if: matrix.tags == '@executionPerformance'
 
       - name: Build web bundle for testing
         run: npm run compile-web-test

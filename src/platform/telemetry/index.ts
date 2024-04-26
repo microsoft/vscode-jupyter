@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type TelemetryReporter from '@vscode/extension-telemetry';
-import { AppinsightsKey, isTestExecution, isUnitTestExecution } from '../common/constants';
+import { AppinsightsKey, Telemetry, isTestExecution, isUnitTestExecution } from '../common/constants';
 import { traceError } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { ExcludeType, noop, PickType, UnionToIntersection } from '../common/utils/misc';
@@ -130,7 +130,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         : undefined | undefined,
     ex?: Error
 ) {
-    if (isTestExecution() || !isTelemetrySupported()) {
+    if (!isPerfMeasurementOnCI(eventName.toString()) && (isTestExecution() || !isTelemetrySupported())) {
         return;
     }
     sendTelemetryEventInternal(
@@ -139,6 +139,18 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         measures as unknown as Record<string, number> | undefined,
         properties,
         ex
+    );
+}
+
+/**
+ * Some telemetry is sent on CI as part of our tests,
+ * Ensure we always send them.
+ */
+function isPerfMeasurementOnCI(eventName: string) {
+    return (
+        eventName === Telemetry.NativeNotebookEditPerformance ||
+        eventName === Telemetry.JupyterNotebookExecutionPerformance ||
+        eventName === Telemetry.NativeNotebookExecutionPerformance
     );
 }
 
@@ -186,8 +198,11 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
 
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(customProperties, sharedProperties);
-
-        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
+        if (isPerfMeasurementOnCI(eventNameSent)) {
+            reporter.sendDangerousTelemetryEvent(eventNameSent, customProperties, measures);
+        } else {
+            reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
+        }
     }
 }
 

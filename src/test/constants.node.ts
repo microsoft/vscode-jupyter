@@ -36,5 +36,5 @@ setTestSettings({
     isCondaTest: (process.env.VSC_JUPYTER_CI_IS_CONDA || '').toLowerCase() === 'true',
     isNonRawNativeTest: (process.env.VSC_JUPYTER_NON_RAW_NATIVE_TEST || '').toLowerCase() === 'true',
     isRemoteNativeTest: (process.env.VSC_JUPYTER_REMOTE_NATIVE_TEST || '').toLowerCase() === 'true',
-    isPerfTest: process.env.VSC_JUPYTER_PERF_TEST === '1'
+    isPerfTest: process.env.VSC_JUPYTER_PERF_TEST === '1' || process.env.VSC_JUPYTER_PERF_TEST === 'true'
 });
