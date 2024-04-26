@@ -61,20 +61,32 @@ import { IPythonExecutionFactory } from '../../../platform/interpreter/types.nod
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { ServiceContainer } from '../../../platform/ioc/container';
+import { ObservableDisposable } from '../../../platform/common/utils/lifecycle';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
-const kernelOutputToNotLog =
-    'NOTE: When using the `ipython kernel` entry point, Ctrl-C will not work.\n\nTo exit, you will have to explicitly quit this process, by either sending\n"quit" from a client, or using Ctrl-\\ in UNIX-like environments.\n\nTo read more about this, see https://github.com/ipython/ipython/issues/2049\n\n\n';
+// Exclude these warning messages, as users get confused about these when sharing logs.
+// I.e. they assume that issues in Jupyter ext are due to these warnings messages from ipykernel.
+export const kernelOutputToNotLog = [
+    'NOTE: When using the `ipython kernel` entry point, Ctrl-C will not work.',
+    'To exit, you will have to explicitly quit this process, by either sending',
+    '"quit" from a client, or using Ctrl-\\ in UNIX-like environments.',
+    'To read more about this, see https://github.com/ipython/ipython/issues/2049',
+    'It seems that frozen modules are being used, which may',
+    'make the debugger miss breakpoints. Please pass -Xfrozen_modules=off',
+    'to python to disable frozen modules',
+    'Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION'
+];
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
-export class KernelProcess implements IKernelProcess {
+export class KernelProcess extends ObservableDisposable implements IKernelProcess {
     private _pid?: number;
     private _disposingPromise?: Promise<void>;
     public get pid() {
         return this._pid;
     }
-    public get exited(): Event<{ exitCode?: number; reason?: string }> {
+    public get exited(): Event<{ exitCode?: number; reason?: string; stderr: string }> {
         return this.exitEvent.event;
     }
     public get kernelConnectionMetadata(): Readonly<
@@ -98,12 +110,12 @@ export class KernelProcess implements IKernelProcess {
         return true;
     }
     private _process?: ChildProcess;
-    private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
+    private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string; stderr: string }>();
     private launchedOnce?: boolean;
-    private disposed?: boolean;
     private connectionFile?: Uri;
     private _launchKernelSpec?: IJupyterKernelSpec;
     private interrupter?: Interrupter;
+    private exitEventFired = false;
     private readonly _kernelConnectionMetadata: Readonly<
         LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
     >;
@@ -122,6 +134,7 @@ export class KernelProcess implements IKernelProcess {
         private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon,
         private readonly platform: IPlatformService
     ) {
+        super();
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
     public async interrupt(): Promise<void> {
@@ -155,38 +168,41 @@ export class KernelProcess implements IKernelProcess {
             throw new Error('Kernel has already been launched.');
         }
         this.launchedOnce = true;
-
+        const tracker = getNotebookTelemetryTracker(this.resource);
+        const connectionTracker = tracker?.updateConnection();
         // Update our connection arguments in the kernel spec
         await this.updateConnectionArgs();
+        connectionTracker?.stop();
         Cancellation.throwIfCanceled(cancelToken);
+        const spawnTracker = tracker?.spawn();
         const exeObs = await this.launchAsObservable(workingDirectory, cancelToken);
+        spawnTracker?.stop();
         const proc = exeObs.proc;
         if (cancelToken.isCancellationRequested) {
             throw new CancellationError();
         }
-        traceInfo(`Kernel process ${proc?.pid}.`);
-        let stdout = '';
+        traceVerbose(`Kernel process ${proc?.pid}.`);
         let stderr = '';
-        let stderrProc = '';
-        let exitEventFired = false;
         let providedExitCode: number | null;
         const deferred = createDeferred();
         deferred.promise.catch(noop);
 
         if (proc) {
+            const pid = proc.pid;
             proc.on('exit', (exitCode) => {
                 exitCode = exitCode || providedExitCode;
-                if (this.disposed) {
-                    traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`);
+                if (this.isDisposed) {
+                    traceVerbose(`KernelProcess Exited ${pid}, Exit Code - ${exitCode}`);
                     return;
                 }
-                traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`, stderrProc);
-                if (!exitEventFired) {
+                traceVerbose(`KernelProcess Exited ${pid}, Exit Code - ${exitCode}`, stderr);
+                if (!this.exitEventFired) {
                     this.exitEvent.fire({
                         exitCode: exitCode || undefined,
-                        reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc) || stderrProc
+                        reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderr) || stderr,
+                        stderr
                     });
-                    exitEventFired = true;
+                    this.exitEventFired = true;
                 }
                 if (!cancelToken.isCancellationRequested) {
                     traceInfoIfCI(`KernelProcessExitedError raised`, stderr);
@@ -195,9 +211,22 @@ export class KernelProcess implements IKernelProcess {
                     );
                 }
             });
+            let sawKernelConnectionFile = false;
             proc.stdout?.on('data', (data: Buffer | string) => {
-                traceVerbose(`Kernel output: ${(data || '').toString()}`);
-                this.sendToOutput((data || '').toString());
+                let output = (data || '').toString();
+                // Strip unwanted stuff from the output, else it just chews up unnecessary space.
+                if (isPythonKernelConnection(this.kernelConnectionMetadata) && !sawKernelConnectionFile) {
+                    output = stripUnwantedMessages(output);
+                    if (output.includes(kernelOutputWithConnectionFile)) {
+                        output = output.trimStart();
+                    }
+                }
+                if (output.includes(kernelOutputWithConnectionFile)) {
+                    sawKernelConnectionFile = true;
+                }
+
+                traceVerbose(`Kernel output ${pid}: ${output}`);
+                this.sendToOutput(output);
             });
 
             proc.stderr?.on('data', (data: Buffer | string) => {
@@ -205,50 +234,24 @@ export class KernelProcess implements IKernelProcess {
                 // Hence log only using traceLevel = verbose.
                 // But only useful if daemon doesn't start for any reason.
                 const output = stripUnwantedMessages((data || '').toString());
-                stderrProc += output;
-                if (output.trim().length) {
-                    traceVerbose(`KernelProcess error: ${output}`);
+                stderr += output;
+                if (
+                    output.trim().length &&
+                    // Exclude these warning messages, as users get confused about these when sharing logs.
+                    // I.e. they assume that issues in Jupyter ext are due to these warnings messages from ipykernel.
+                    !output.includes('It seems that frozen modules are being used, which may') &&
+                    !output.includes('make the debugger miss breakpoints. Please pass -Xfrozen_modules=off') &&
+                    !output.includes('to python to disable frozen modules') &&
+                    !output.includes('Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION')
+                ) {
+                    traceVerbose(`KernelProcess error ${pid}: ${output}`);
+                    this.sendToOutput(output);
                 }
-                this.sendToOutput(output);
             });
         }
 
-        let sawKernelConnectionFile = false;
-        exeObs.out.onDidChange((output) => {
-            if (output.source === 'stderr') {
-                output.out = stripUnwantedMessages(output.out);
-                // Capture stderr, incase kernel doesn't start.
-                stderr += output.out;
-
-                if (output.out.trim().length) {
-                    traceWarning(`StdErr from Kernel Process ${output.out.trim()}`);
-                }
-            } else {
-                stdout += output.out;
-                // Strip unwanted stuff from the output, else it just chews up unnecessary space.
-                if (!sawKernelConnectionFile) {
-                    stdout = stdout.replace(kernelOutputToNotLog, '');
-                    stdout = stdout.replace(kernelOutputToNotLog.split(/\r?\n/).join(os.EOL), '');
-                    // Strip the leading space, as we've removed some leading text.
-                    stdout = stdout.trimStart();
-                    const lines = splitLines(stdout, { trim: true, removeEmptyEntries: true });
-                    if (
-                        lines.length === 2 &&
-                        lines[0] === kernelOutputWithConnectionFile &&
-                        lines[1].startsWith('--existing') &&
-                        lines[1].endsWith('.json')
-                    ) {
-                        stdout = `${lines.join(' ')}${os.EOL}`;
-                    }
-                }
-                if (stdout.includes(kernelOutputWithConnectionFile)) {
-                    sawKernelConnectionFile = true;
-                }
-            }
-            this.sendToOutput(output.out);
-        });
         exeObs.out.done.catch((error) => {
-            if (this.disposed) {
+            if (this.isDisposed) {
                 traceWarning('Kernel died', error, stderr);
                 return;
             }
@@ -257,52 +260,50 @@ export class KernelProcess implements IKernelProcess {
         });
 
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
+        const portUsageTracker = getNotebookTelemetryTracker(this.resource)?.portUsage();
         try {
             if (deferred.rejected) {
                 await deferred.promise;
             }
-            const doNotWaitForZmqPortsToGetused = ServiceContainer.instance
+            const doNotWaitForZmqPortsToGetUsed = ServiceContainer.instance
                 .get<IExperimentService>(IExperimentService)
                 .inExperiment(Experiments.DoNotWaitForZmqPortsToBeUsed);
 
             const tcpPortUsed = (await import('tcp-port-used')).default;
-            const stopwtach = new StopWatch();
+            const stopwatch = new StopWatch();
 
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
             // Kernel must be connected to bo Shell & IoPub channels for kernel communication to work.
 
-            // Default timeout is generally 60s.
-            // For the experiment, lets wait for 10s for the kernel to start.
-            // Wait for 10s, by then kernel process woudl have either crashed (failure to start properly or ports getting used)
-            if (doNotWaitForZmqPortsToGetused && timeout > 10_000) {
-                timeout = 10_000;
-            }
+            // Do not wait for ports to get used in the experiment
+            // Zmq does not use a client server architecture, even if
+            // a peer is not up and running the messages are queued till the peer is ready to recieve.
             // No point waiting for ports to get used, see
             // https://github.com/microsoft/vscode-jupyter/issues/14835
-            const portsUsed = Promise.all([
-                tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
-                tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
-            ]).catch((ex) => {
-                if (cancelToken.isCancellationRequested || deferred.rejected) {
-                    return;
-                }
-                console.error('ex');
-                console.error(ex);
-                // Do not throw an error, ignore this.
-                // In the case of VPNs the port does not seem to get used.
-                // Possible we're blocking it.
-                traceWarning(`Waited ${stopwtach.elapsedTime}ms for kernel to start`, ex);
+            const portsUsed = doNotWaitForZmqPortsToGetUsed
+                ? Promise.resolve()
+                : Promise.all([
+                      tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
+                      tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
+                  ]).catch((ex) => {
+                      if (cancelToken.isCancellationRequested || deferred.rejected) {
+                          return;
+                      }
+                      // Do not throw an error, ignore this.
+                      // In the case of VPNs the port does not seem to get used.
+                      // Possible we're blocking it.
+                      traceWarning(`Waited ${stopwatch.elapsedTime}ms for kernel to start`, ex);
 
-                // For the new experiment, we don't want to throw an error if the kernel doesn't start.
-                if (!doNotWaitForZmqPortsToGetused) {
-                    // Throw an error we recognize.
-                    return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
-                }
-            });
+                      // For the new experiment, we don't want to throw an error if the kernel doesn't start.
+                      if (!doNotWaitForZmqPortsToGetUsed) {
+                          // Throw an error we recognize.
+                          return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
+                      }
+                  });
             await raceCancellationError(cancelToken, portsUsed, deferred.promise);
         } catch (e) {
-            const stdErrToLog = (stderrProc || stderr || '').trim();
+            const stdErrToLog = (stderr || '').trim();
             if (!cancelToken?.isCancellationRequested && !isCancellationError(e)) {
                 traceError('Disposing kernel process due to an error', e);
                 if (e && e instanceof Error && stdErrToLog.length && e.message.includes(stdErrToLog)) {
@@ -323,30 +324,30 @@ export class KernelProcess implements IKernelProcess {
                 }
                 // If we have the python error message in std outputs, display that.
                 const errorMessage = getErrorMessageFromPythonTraceback(stdErrToLog) || stdErrToLog.substring(0, 100);
-                traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderrProc + '\n' + stderr + '\n');
-                console.error(`KernelDiedError raised`, e);
+                traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderr + '\n' + stderr + '\n');
                 throw new KernelDiedError(
                     DataScience.kernelDied(errorMessage),
                     // Include what ever we have as the stderr.
-                    stderrProc + '\n' + stderr + '\n',
+                    stderr + '\n' + stderr + '\n',
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     e as any,
                     this.kernelConnectionMetadata
                 );
             }
+        } finally {
+            portUsageTracker?.stop();
         }
     }
 
-    public async dispose(): Promise<void> {
+    public override async dispose(): Promise<void> {
         if (this._disposingPromise) {
             return this._disposingPromise;
         }
-        if (this.disposed) {
+        if (this.isDisposed) {
             return;
         }
-        this.disposed = true;
         const pid = this._process?.pid;
-        traceInfo(`Dispose Kernel process ${pid}.`);
+        traceVerbose(`Dispose Kernel process ${pid}.`);
         this._disposingPromise = (async () => {
             await raceTimeout(
                 1_000, // Wait for a max of 1s, we don't want to delay killing the kernel process.
@@ -355,7 +356,9 @@ export class KernelProcess implements IKernelProcess {
             try {
                 this.interrupter?.dispose().catch(noop);
                 this._process?.kill(); // NOSONAR
-                this.exitEvent.fire({});
+                if (!this.exitEventFired) {
+                    this.exitEvent.fire({ stderr: '' });
+                }
             } catch (ex) {
                 traceError(`Error disposing kernel process ${pid}`, ex);
             }
@@ -370,6 +373,7 @@ export class KernelProcess implements IKernelProcess {
             });
             traceVerbose(`Disposed Kernel process ${pid}.`);
         })();
+        super.dispose();
     }
 
     private async killChildProcesses(pid?: number) {
@@ -542,29 +546,41 @@ export class KernelProcess implements IKernelProcess {
             this.extensionChecker.isPythonExtensionInstalled &&
             this._kernelConnectionMetadata.interpreter
         ) {
+            const tracker = getNotebookTelemetryTracker(this.resource);
+            const [pythonEnvVars, envVars, win32InterruptHandle] = [
+                tracker?.pythonEnvVars(),
+                tracker?.envVars(),
+                os.platform() === 'win32' ? tracker?.interruptHandle() : undefined
+            ];
             const executionServicePromise = this.pythonExecFactory.createActivatedEnvironment({
                 resource: this.resource,
                 interpreter: this._kernelConnectionMetadata.interpreter
             });
+            const handlePromise =
+                os.platform() === 'win32'
+                    ? this.getWin32InterruptHandle().finally(() => win32InterruptHandle?.stop())
+                    : win32InterruptHandle?.stop();
 
             let [executionService, wdExists, env] = await Promise.all([
-                executionServicePromise,
+                executionServicePromise.finally(() => pythonEnvVars?.stop()),
                 fs.pathExists(workingDirectory),
-                this.kernelEnvVarsService.getEnvironmentVariables(
-                    this.resource,
-                    this._kernelConnectionMetadata.interpreter,
-                    this._kernelConnectionMetadata.kernelSpec,
-                    cancelToken
-                )
+                this.kernelEnvVarsService
+                    .getEnvironmentVariables(
+                        this.resource,
+                        this._kernelConnectionMetadata.interpreter,
+                        this._kernelConnectionMetadata.kernelSpec,
+                        cancelToken
+                    )
+                    .finally(() => envVars?.stop())
             ]);
 
             Cancellation.throwIfCanceled(cancelToken);
 
             // On windows, in order to support interrupt, we have to set an environment variable pointing to a WIN32 event handle
-            if (os.platform() === 'win32') {
+            if (os.platform() === 'win32' && handlePromise) {
                 env = env || process.env;
                 try {
-                    const handle = await this.getWin32InterruptHandle();
+                    const handle = await handlePromise;
 
                     // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
                     env.JPY_INTERRUPT_EVENT = `${handle}`;
@@ -645,13 +661,14 @@ function stripUnwantedMessages(output: string) {
     //          warn(
     let lines = splitLines(output, { trim: true, removeEmptyEntries: true });
     if (
-        lines.some((line) =>
+        (lines.some((line) =>
             line.includes(`FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0.`)
         ) &&
-        lines.some((line) => line.trim() === 'warn(') &&
-        lines.some((line) =>
-            line.includes(`FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0.`)
-        )
+            lines.some((line) => line.trim() === 'warn(') &&
+            lines.some((line) =>
+                line.includes(`FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0.`)
+            )) ||
+        lines.some((line) => kernelOutputToNotLog.some((item) => line.includes(item)))
     ) {
         // No point displaying false positives.
         // The message `.../site-packages/traitlets/traitlets.py:2548: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
@@ -665,10 +682,12 @@ function stripUnwantedMessages(output: string) {
                     line.trim() !== 'warn(' &&
                     !line.includes(
                         `FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use`
-                    )
+                    ) &&
+                    kernelOutputToNotLog.every((item) => !line.includes(item))
                 );
             })
-            .join(os.EOL);
+            .join(os.EOL)
+            .trimStart();
     }
     return output;
 }

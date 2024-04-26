@@ -43,10 +43,6 @@ const commonExternals = [
     'commonjs',
     'node:crypto',
     'vscode-jsonrpc', // Used by a few modules, might as well pull this out, instead of duplicating it in separate bundles.
-    // jsonc-parser doesn't get bundled well with esbuild without any changes.
-    // Its possible the fix is very simple.
-    // For now, its handled with webpack.
-    'jsonc-parser',
     // Ignore telemetry specific packages that are not required.
     'applicationinsights-native-metrics',
     '@opentelemetry/tracing',
@@ -171,6 +167,9 @@ function createConfig(
         moment: path.join(extensionFolder, 'build', 'webpack', 'moment.js'),
         'vscode-jupyter-release-version': path.join(__dirname, releaseVersionScriptFile)
     };
+    if (target === 'desktop') {
+        alias['jsonc-parser'] = path.join(extensionFolder, 'node_modules', 'jsonc-parser', 'lib', 'esm', 'main.js');
+    }
     return {
         entryPoints: [source],
         outfile,

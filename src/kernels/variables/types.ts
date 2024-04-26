@@ -41,6 +41,11 @@ export interface IJupyterVariables {
         kernel?: IKernel,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable>;
+    getVariableValueSummary(
+        variable: IJupyterVariable,
+        kernel: IKernel,
+        cancelToken?: CancellationToken
+    ): Promise<string | undefined>;
     getDataFrameInfo(
         targetVariable: IJupyterVariable,
         kernel?: IKernel,
@@ -94,9 +99,15 @@ export interface IVariableDescription extends Variable {
     /** The number of children for collection types */
     count?: number;
     /** Names of children */
-    properties?: string[];
+    hasNamedChildren?: boolean;
     /** A method to get the children of this variable */
     getChildren?: (start: number, token: CancellationToken) => Promise<IVariableDescription[]>;
+}
+
+export interface IRichVariableResult {
+    variable: Variable & { summary?: string };
+    hasNamedChildren: boolean;
+    indexedChildrenCount: number;
 }
 
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
@@ -106,7 +117,7 @@ export interface IKernelVariableRequester {
         kernel: IKernel,
         parent: IVariableDescription | undefined,
         startIndex: number,
-        token?: CancellationToken
+        token: CancellationToken
     ): Promise<IVariableDescription[]>;
     getVariableNamesAndTypesFromKernel(kernel: IKernel, token?: CancellationToken): Promise<IJupyterVariable[]>;
     getFullVariable(
@@ -125,5 +136,10 @@ export interface IKernelVariableRequester {
         cancelToken: CancellationToken | undefined,
         matchingVariable: IJupyterVariable | undefined
     ): Promise<{ [attributeName: string]: string }>;
+    getVariableValueSummary(
+        targetVariable: IJupyterVariable,
+        kernel: IKernel,
+        token: CancellationToken
+    ): Promise<string | undefined>;
     getDataFrameInfo(targetVariable: IJupyterVariable, kernel: IKernel, expression: string): Promise<IJupyterVariable>;
 }

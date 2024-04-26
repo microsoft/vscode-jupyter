@@ -9,7 +9,7 @@ import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/c
 import { dispose } from '../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
-import { traceInfo } from '../platform/logging';
+import { traceVerbose } from '../platform/logging';
 import { IKernelFinder } from './types';
 import { isJupyterNotebook } from '../platform/common/utils';
 import { noop } from '../platform/common/utils/misc';
@@ -57,7 +57,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
 
         const displayProgress = () => {
             const id = Date.now().toString();
-            traceInfo(`Start refreshing Kernel Picker (${id})`);
+            traceVerbose(`Start refreshing Kernel Picker (${id})`);
             const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
             const taskIW = notebooks.createNotebookControllerDetectionTask(InteractiveWindowView);
             this.disposables.push(taskNb);
@@ -66,7 +66,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             this.kernelFinder.onDidChangeStatus(
                 () => {
                     if (this.kernelFinder.status === 'idle') {
-                        traceInfo(`End refreshing Kernel Picker (${id})`);
+                        traceVerbose(`End refreshing Kernel Picker (${id})`);
                         taskNb.dispose();
                         taskIW.dispose();
                     }
@@ -104,7 +104,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             (e) => {
                 if (!refreshedInterpreters && e && isJupyterNotebook(e.notebook)) {
                     refreshedInterpreters = true;
-                    traceInfo(`Start refreshing Interpreter Kernel Picker`);
+                    traceVerbose(`Start refreshing Interpreter Kernel Picker`);
                     this.interpreterService.refreshInterpreters().catch(noop);
                 }
             },
@@ -115,7 +115,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             (e) => {
                 if (!refreshedInterpreters && isJupyterNotebook(e)) {
                     refreshedInterpreters = true;
-                    traceInfo(`Start refreshing Interpreter Kernel Picker`);
+                    traceVerbose(`Start refreshing Interpreter Kernel Picker`);
                     this.interpreterService.refreshInterpreters().catch(noop);
                 }
             },
@@ -130,7 +130,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
                 return kernelProgress;
             }
             id = Date.now().toString();
-            traceInfo(`Start refreshing Kernel Picker (${id})`);
+            traceVerbose(`Start refreshing Kernel Picker (${id})`);
             kernelProgress = new DisposableStore(
                 notebooks.createNotebookControllerDetectionTask(JupyterNotebookView),
                 notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)
@@ -140,7 +140,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         };
 
         if (this.kernelFinder.status === 'idle') {
-            traceInfo(`End refreshing Kernel Picker (${id})`);
+            traceVerbose(`End refreshing Kernel Picker (${id})`);
             kernelProgress?.dispose();
         } else {
             createProgressIndicator();
@@ -148,7 +148,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         this.kernelFinder.onDidChangeStatus(
             () => {
                 if (this.kernelFinder.status === 'idle') {
-                    traceInfo(`End refreshing Kernel Picker (${id})`);
+                    traceVerbose(`End refreshing Kernel Picker (${id})`);
                     kernelProgress?.dispose();
                 } else {
                     createProgressIndicator();

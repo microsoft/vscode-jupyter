@@ -28,6 +28,9 @@ import { noop } from '../../../test/core';
 import { createObservable } from '../../../platform/common/process/proc.node';
 import { IDisposable } from '../../../platform/common/types';
 import { dispose } from '../../../platform/common/utils/lifecycle';
+import { PythonExtension } from '@vscode/python-extension';
+import { setPythonApi } from '../../../platform/interpreter/helpers';
+import { resolvableInstance } from '../../../test/datascience/helpers';
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -38,10 +41,12 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterDependencyService: JupyterInterpreterDependencyService;
     let execService: IPythonExecutionService;
     let jupyterInterpreterExecutionService: JupyterInterpreterSubCommandExecutionService;
-    const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
-    const activePythonInterpreter = createPythonInterpreter({ displayName: 'activePythonInterpreter' });
+    const selectedJupyterInterpreter = createPythonInterpreter();
+    const activePythonInterpreter = createPythonInterpreter();
     let notebookStartResult: ObservableExecutionResult<string>;
+    let environments: PythonExtension['environments'];
     let disposables: IDisposable[] = [];
+
     setup(() => {
         interpreterService = mock<IInterpreterService>();
         jupyterInterpreter = mock(JupyterInterpreterService);
@@ -81,7 +86,17 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         );
         when(interpreterService.getActiveInterpreter()).thenResolve(activePythonInterpreter);
         when(interpreterService.getActiveInterpreter(undefined)).thenResolve(activePythonInterpreter);
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
     });
+
     teardown(() => {
         disposables = dispose(disposables);
         sinon.restore();
@@ -109,9 +124,29 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         });
         test('Jupyter cannot be started because jupyter is not installed', async () => {
             const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
-                activePythonInterpreter.displayName!,
+                'Sample (Python 9.8.7)',
                 ProductNames.get(Product.jupyter)!
             );
+            when(environments.known).thenReturn([
+                {
+                    id: activePythonInterpreter.id,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7'
+                    },
+                    environment: {
+                        name: 'Sample',
+                        folderUri: Uri.file('Some Path')
+                    },
+                    executable: {
+                        uri: activePythonInterpreter.uri
+                    },
+                    tools: []
+                } as any
+            ]);
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([
                 Product.jupyter
             ]);
@@ -122,9 +157,27 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         });
         test('Jupyter cannot be started because notebook is not installed', async () => {
             const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
-                activePythonInterpreter.displayName!,
+                'Python 9.8.7',
                 ProductNames.get(Product.notebook)!
             );
+            when(environments.known).thenReturn([
+                {
+                    id: activePythonInterpreter.id,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7'
+                    },
+                    environment: {
+                        name: '',
+                        folderUri: Uri.file('')
+                    },
+                    tools: []
+                } as any
+            ]);
+
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([
                 Product.notebook
             ]);
@@ -138,10 +191,27 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([
                 Product.notebook
             ]);
+            when(environments.known).thenReturn([
+                {
+                    id: activePythonInterpreter.id,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7'
+                    },
+                    environment: {
+                        name: '',
+                        folderUri: Uri.file('')
+                    },
+                    tools: []
+                } as any
+            ]);
 
             await expect(promise).to.eventually.be.rejectedWith(
                 DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
-                    activePythonInterpreter.displayName!,
+                    'Python 9.8.7',
                     ProductNames.get(Product.notebook)!
                 )
             );
@@ -151,10 +221,27 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([
                 Product.notebook
             ]);
+            when(environments.known).thenReturn([
+                {
+                    id: activePythonInterpreter.id,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7'
+                    },
+                    environment: {
+                        name: '',
+                        folderUri: Uri.file('')
+                    },
+                    tools: []
+                } as any
+            ]);
 
             await expect(promise).to.eventually.be.rejectedWith(
                 DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
-                    activePythonInterpreter.displayName!,
+                    'Python 9.8.7',
                     ProductNames.get(Product.notebook)!
                 )
             );
@@ -192,9 +279,27 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         });
         test('Jupyter cannot be started because jupyter is not installed', async () => {
             const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
-                selectedJupyterInterpreter.displayName!,
+                'Python 9.8.7',
                 ProductNames.get(Product.jupyter)!
             );
+            when(environments.known).thenReturn([
+                {
+                    id: activePythonInterpreter.id,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7'
+                    },
+                    environment: {
+                        name: '',
+                        folderUri: Uri.file('')
+                    },
+                    tools: []
+                } as any
+            ]);
+
             when(
                 jupyterDependencyService.getDependenciesNotInstalled(selectedJupyterInterpreter, undefined)
             ).thenResolve([Product.jupyter]);
@@ -207,9 +312,27 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         });
         test('Jupyter cannot be started because notebook is not installed', async () => {
             const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
-                selectedJupyterInterpreter.displayName!,
+                'Python 9.8.7',
                 ProductNames.get(Product.notebook)!
             );
+            when(environments.known).thenReturn([
+                {
+                    id: activePythonInterpreter.id,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7'
+                    },
+                    environment: {
+                        name: '',
+                        folderUri: Uri.file('')
+                    },
+                    tools: []
+                } as any
+            ]);
+
             when(
                 jupyterDependencyService.getDependenciesNotInstalled(selectedJupyterInterpreter, undefined)
             ).thenResolve([Product.notebook]);

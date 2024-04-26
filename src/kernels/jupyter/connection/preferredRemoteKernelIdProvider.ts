@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Memento, Uri } from 'vscode';
+import { Memento, NotebookDocument, Uri } from 'vscode';
 import { traceVerbose } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, ICryptoUtils } from '../../../platform/common/types';
@@ -26,10 +26,11 @@ export class PreferredRemoteKernelIdProvider {
         @inject(ICryptoUtils) private crypto: ICryptoUtils
     ) {}
 
-    public async getPreferredRemoteKernelId(uri: Uri): Promise<string | undefined> {
+    public async getPreferredRemoteKernelId(notebook: NotebookDocument): Promise<string | undefined> {
         // Stored as a list so we don't take up too much space
         const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
         if (list.length) {
+            const uri = notebook.uri;
             // Not using a map as we're only going to store the last 40 items.
             const fileHash = await this.crypto.createHash(uri.toString());
             const entry = list.find((l) => l.fileHash === fileHash);

@@ -13,6 +13,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { PlotViewer as PlotViewerBase } from './plotViewer';
 import { IWebviewPanelProvider } from '../../../platform/common/application/types';
 import { IConfigurationService, IExtensionContext } from '../../../platform/common/types';
+import { base64ToUint8Array } from '../../../platform/common/utils/string';
 
 @injectable()
 export class PlotViewer extends PlotViewerBase {
@@ -46,7 +47,7 @@ export class PlotViewer extends PlotViewerBase {
                         break;
 
                     case '.png':
-                        const buffer = Buffer.from(payload.png.replace('data:image/png;base64', ''), 'base64');
+                        const buffer = base64ToUint8Array(payload.png.replace('data:image/png;base64', ''));
                         await this.fs.writeFile(file, buffer);
                         break;
 

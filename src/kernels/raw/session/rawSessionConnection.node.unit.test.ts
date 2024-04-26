@@ -11,20 +11,28 @@ import {
     Disposable,
     EventEmitter,
     Uri,
-    WorkspaceConfiguration
+    WorkspaceConfiguration,
+    type WorkspaceFolder
 } from 'vscode';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../types';
 import { noop } from '../../../test/core';
 import { assert } from 'chai';
 import { IKernelLauncher, IKernelProcess } from '../types';
-import { IDisposable, ReadWrite } from '../../../platform/common/types';
+import {
+    IDisposable,
+    ReadWrite,
+    type IConfigurationService,
+    type IWatchableJupyterSettings
+} from '../../../platform/common/types';
 import { dispose } from '../../../platform/common/utils/lifecycle';
-import { resolvableInstance } from '../../../test/datascience/helpers';
+import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
 import { waitForCondition } from '../../../test/common';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import { RawSessionConnection } from './rawSessionConnection.node';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
+import type { IFileSystem } from '../../../platform/common/platform/types';
+import { computeLocalWorkingDirectory } from './rawKernelSessionFactory.node';
 const nonSerializingKernel =
     require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -37,6 +45,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
     let exitedEvent: EventEmitter<{
         exitCode?: number | undefined;
         reason?: string | undefined;
+        stderr: string;
     }>;
     const launchTimeout = 1_000;
     let disposables: IDisposable[] = [];
@@ -170,6 +179,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         exitedEvent = new EventEmitter<{
             exitCode?: number | undefined;
             reason?: string | undefined;
+            stderr: string;
         }>();
         nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
         const workspaceConfig = mock<WorkspaceConfiguration>();
@@ -267,7 +277,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             session.kernel!.statusChanged.connect((_, s) => statuses.push(s));
             session.kernel!.disposed.connect(() => (disposed = true));
 
-            exitedEvent.fire({ exitCode: 1, reason: 'Killed' });
+            exitedEvent.fire({ exitCode: 1, reason: 'Killed', stderr: '' });
 
             await waitForCondition(
                 () => !disposed && statuses.join(',') === 'dead',
@@ -494,6 +504,75 @@ suite('Raw Session & Raw Kernel Connection', () => {
             verify(kernelProcess.interrupt()).never();
             verify(kernel.sendShellMessage(anything(), anything(), anything())).once();
             assert.strictEqual(request?.header.msg_type, 'interrupt_request');
+        });
+    });
+});
+
+suite('Raw Session & Raw Kernel Connection', () => {
+    suite('KernelWorkingFolder', function () {
+        let configService: IConfigurationService;
+        let fs: IFileSystem;
+        let settings: IWatchableJupyterSettings;
+        let workspaceFolder: WorkspaceFolder;
+        setup(() => {
+            configService = mock<IConfigurationService>();
+            settings = mock<IWatchableJupyterSettings>();
+            fs = mock<IFileSystem>();
+            when(configService.getSettings(anything())).thenReturn(instance(settings));
+        });
+        teardown(() => {
+            resetVSCodeMocks();
+        });
+        workspaceFolder = { index: 0, name: 'one', uri: Uri.file(__dirname) };
+        test(`Has working folder`, async () => {
+            when(settings.notebookFileRoot).thenReturn(__dirname);
+            when(fs.exists(anything())).thenResolve(true);
+            when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([workspaceFolder]);
+
+            const cwd = await computeLocalWorkingDirectory(Uri.file('test.py'), instance(configService), instance(fs));
+
+            assert.strictEqual(Uri.file(cwd!).fsPath, Uri.file(__dirname).fsPath);
+        });
+        test('No working folder if setting `notebookFileRoot` is invalid', async () => {
+            when(settings.notebookFileRoot).thenReturn('bogus value');
+            when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([workspaceFolder]);
+            when(fs.exists(anything())).thenResolve(false);
+
+            const cwd = await computeLocalWorkingDirectory(Uri.file('test.py'), instance(configService), instance(fs));
+
+            assert.isUndefined(cwd);
+        });
+        test('Has working folder and points to first workspace folder if setting `notebookFileRoot` points to non-existent path', async () => {
+            when(settings.notebookFileRoot).thenReturn(Uri.joinPath(Uri.file(__dirname), 'xyz1234').fsPath);
+            when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([workspaceFolder]);
+            when(fs.exists(anything())).thenResolve(false);
+            when(fs.exists(uriEquals(__dirname))).thenResolve(true);
+
+            const cwd = await computeLocalWorkingDirectory(Uri.file('test.py'), instance(configService), instance(fs));
+
+            assert.strictEqual(cwd, workspaceFolder.uri.fsPath);
+        });
+        test('Has working folder and points to folder of kernel resource when there are no workspace folders', async () => {
+            when(settings.notebookFileRoot).thenReturn(Uri.joinPath(Uri.file(__dirname), 'xyz1234').fsPath);
+            when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
+            when(fs.exists(anything())).thenResolve(false);
+            when(fs.exists(uriEquals(__dirname))).thenResolve(false);
+            const kernelResourceUri = Uri.joinPath(Uri.file(__dirname), 'dev', 'kernel.ipynb');
+            when(fs.exists(uriEquals(kernelResourceUri))).thenResolve(true);
+            when(fs.exists(uriEquals(Uri.joinPath(Uri.file(__dirname), 'dev')))).thenResolve(true);
+
+            const cwd = await computeLocalWorkingDirectory(kernelResourceUri, instance(configService), instance(fs));
+
+            assert.strictEqual(cwd, Uri.joinPath(Uri.file(__dirname), 'dev').fsPath);
+        });
+        test('No working folder if no workspace folders', async () => {
+            when(settings.notebookFileRoot).thenReturn(__dirname);
+            when(mockedVSCodeNamespaces.workspace.workspaceFolders).thenReturn([]);
+            when(fs.exists(anything())).thenResolve(false);
+
+            const cwd = await computeLocalWorkingDirectory(Uri.file('test.ipy'), instance(configService), instance(fs));
+
+            assert.isUndefined(cwd);
         });
     });
 });

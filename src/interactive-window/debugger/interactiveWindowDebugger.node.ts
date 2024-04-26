@@ -291,19 +291,23 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
 
         // Pull our connection info out from the cells returned by enable_attach
         if (outputs.length > 0) {
-            let enableAttachString = getPlainTextOrStreamOutput(outputs);
-            if (enableAttachString) {
-                enableAttachString = trimQuotes(enableAttachString);
+            // Debugger can log warning messages, we need to exclude those.
+            // Simplest is to test each output.
+            for (const output of outputs) {
+                let enableAttachString = getPlainTextOrStreamOutput([output]);
+                if (enableAttachString) {
+                    enableAttachString = trimQuotes(enableAttachString);
 
-                // Important: This regex matches the format of the string returned from enable_attach. When
-                // doing enable_attach remotely, make sure to print out a string in the format ('host', port)
-                const debugInfoRegEx = /\('(.*?)', ([0-9]*)\)/;
-                const debugInfoMatch = debugInfoRegEx.exec(enableAttachString);
-                if (debugInfoMatch) {
-                    return {
-                        port: parseInt(debugInfoMatch[2], 10),
-                        host: debugInfoMatch[1]
-                    };
+                    // Important: This regex matches the format of the string returned from enable_attach. When
+                    // doing enable_attach remotely, make sure to print out a string in the format ('host', port)
+                    const debugInfoRegEx = /\('(.*?)', ([0-9]*)\)/;
+                    const debugInfoMatch = debugInfoRegEx.exec(enableAttachString);
+                    if (debugInfoMatch) {
+                        return {
+                            port: parseInt(debugInfoMatch[2], 10),
+                            host: debugInfoMatch[1]
+                        };
+                    }
                 }
             }
         }

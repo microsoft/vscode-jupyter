@@ -21,7 +21,7 @@ suite('PlotViewHandler', () => {
                 // Rest of IHDR and other
                 0x08, 0x02, 0x00, 0x00, 0x00, 0xc5, 0x6b, 0x38
             ]);
-            deepStrictEqual(getPngDimensions(Buffer.from(t)), {
+            deepStrictEqual(getPngDimensions(t), {
                 height: 1067,
                 width: 1066
             });

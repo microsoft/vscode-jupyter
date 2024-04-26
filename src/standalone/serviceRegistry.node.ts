@@ -3,17 +3,16 @@
 
 import { IExtensionActivationManager, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { INotebookExporter, INotebookImporter } from '../kernels/jupyter/types';
+import { IBackgroundThreadService, INotebookExporter, INotebookImporter } from '../kernels/jupyter/types';
 import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ExtensionRecommendationService } from './recommendation/extensionRecommendation.node';
 import { ActiveEditorContextService } from './context/activeEditorContext';
-import { IImportTracker, ImportTracker } from './import-export/importTracker';
+import { ImportTracker } from './import-export/importTracker';
 import { GlobalActivation } from './activation/globalActivation';
-import { JupyterKernelServiceFactory } from './api/kernelApi';
-import { IExportedKernelServiceFactory } from './api/api';
-import { ApiAccessService } from './api/apiAccessService';
+import { JupyterKernelServiceFactory } from './api/unstable/kernelApi';
+import { ApiAccessService } from './api/unstable/apiAccessService';
 import { WorkspaceActivation } from './activation/workspaceActivation.node';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurveyBanner.node';
@@ -24,8 +23,11 @@ import { PythonExtensionRestartNotification } from './notification/pythonExtensi
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
 import { CommandRegistry as CodespaceCommandRegistry } from './codespace/commandRegistry';
-import { EagerlyActivateJupyterUriProviders } from './api/activateJupyterProviderExtensions';
-import { ExposeUsedAzMLServerHandles } from './api/usedAzMLServerHandles';
+import { EagerlyActivateJupyterUriProviders } from './api/unstable/activateJupyterProviderExtensions';
+import { ExposeUsedAzMLServerHandles } from './api/unstable/usedAzMLServerHandles.deprecated';
+import { IExportedKernelServiceFactory } from './api/unstable/types';
+import { KernelApi } from './api/kernels/accessManagement';
+import { BackgroundThreadService } from './api/kernels/backgroundExecution';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -38,7 +40,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         ActiveEditorContextService
     );
-    serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ImportTracker);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
@@ -95,4 +96,8 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         ExposeUsedAzMLServerHandles
     );
+
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelApi);
+
+    serviceManager.addSingleton<IBackgroundThreadService>(IBackgroundThreadService, BackgroundThreadService);
 }

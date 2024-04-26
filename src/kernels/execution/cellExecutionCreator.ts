@@ -3,6 +3,7 @@
 
 import {
     CancellationToken,
+    CellExecutionError,
     NotebookCell,
     NotebookCellExecution,
     NotebookCellOutput,
@@ -12,6 +13,7 @@ import {
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IKernelController } from '../types';
 import { noop } from '../../platform/common/utils/misc';
+import { getNotebookTelemetryTracker } from '../telemetry/notebookTelemetry';
 
 /**
  * Wrapper class around NotebookCellExecution that allows us to
@@ -21,6 +23,7 @@ import { noop } from '../../platform/common/utils/misc';
 export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     public started: boolean = false;
     private _startTime?: number;
+    public errorInfo: CellExecutionError;
     /**
      * @param {boolean} [clearOutputOnStartWithTime=false] If true, clear the output when start is called with a time.
      */
@@ -40,6 +43,9 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
         return this._impl.executionOrder;
     }
     public set executionOrder(value: number | undefined) {
+        if (value) {
+            getNotebookTelemetryTracker(this._impl.cell.notebook)?.executeCellAcknowledged();
+        }
         this._impl.executionOrder = value;
     }
     private startIfNecessary() {
@@ -68,11 +74,11 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     end(success: boolean | undefined, endTime?: number): void {
         if (this._endCallback) {
             try {
-                this._impl.end(success, endTime);
+                this._impl.end(success, endTime, this.errorInfo);
                 traceInfo(
-                    `End cell ${this.cell.index} execution after ${
+                    `Cell ${this.cell.index} completed in ${
                         ((endTime || 0) - (this._startTime || 0)) / 1000
-                    }s, completed @ ${endTime}, started @ ${this._startTime}`
+                    }s (start: ${this._startTime}, end: ${endTime})`
                 );
             } finally {
                 this._endCallback();

@@ -8,7 +8,9 @@ suite('Error Utils', () => {
     suite('Markdown links to Hrefs', () => {
         function getHtmlMessage(markdown: string) {
             const output = createOutputWithErrorMessageForDisplay(markdown);
-            const { stack } = JSON.parse(Buffer.from(output!.items[0].data).toString()) as { stack: string };
+            const { stack } = JSON.parse(new TextDecoder().decode(output!.items[0].data).toString()) as {
+                stack: string;
+            };
             return stack.replace('\u001b[1;31m', '');
         }
         test('Markdown links to Hrefs', () => {

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken } from 'vscode';
+import { CancellationToken, NotebookDocument } from 'vscode';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import type * as nbformat from '@jupyterlab/nbformat';
 import {
@@ -14,14 +14,18 @@ import {
     isPythonNotebook
 } from '../../../kernels/helpers';
 import { IJupyterKernelSpec, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { isCI, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { InteractiveWindowView, isCI, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { Resource } from '../../../platform/common/types';
-import { getResourceType, NotebookMetadata } from '../../../platform/common/utils';
+import { NotebookMetadata } from '../../../platform/common/utils';
 import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import * as path from '../../../platform/vscode-path/path';
+import {
+    getCachedEnvironment,
+    getCachedVersion,
+    getPythonEnvironmentName
+} from '../../../platform/interpreter/helpers';
 
 /**
  * Given an interpreter, find the kernel connection that matches this interpreter.
@@ -42,7 +46,8 @@ export async function findKernelSpecMatchingInterpreter(
                 kernel.kind === 'startUsingPythonInterpreter' &&
                 getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
                 kernel.interpreter.id === interpreter.id &&
-                kernel.interpreter.envName === interpreter.envName
+                getCachedEnvironment(kernel.interpreter)?.environment?.name ===
+                    getCachedEnvironment(interpreter)?.environment?.name
             ) {
                 result.push(kernel);
                 return;
@@ -51,7 +56,8 @@ export async function findKernelSpecMatchingInterpreter(
                 kernel.kind === 'startUsingPythonInterpreter' &&
                 getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
                 (await getInterpreterHash(kernel.interpreter)) === (await getInterpreterHash(interpreter)) &&
-                kernel.interpreter.envName === interpreter.envName
+                getCachedEnvironment(kernel.interpreter)?.environment?.name ===
+                    getCachedEnvironment(interpreter)?.environment?.name
             ) {
                 result.push(kernel);
             }
@@ -86,14 +92,14 @@ function getVSCodeInfoInInMetadata(
 }
 export async function rankKernels(
     kernels: KernelConnectionMetadata[],
-    resource: Resource,
+    notebook: NotebookDocument,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredInterpreter: PythonEnvironment | undefined,
     preferredRemoteKernelId: string | undefined,
     cancelToken?: CancellationToken
 ): Promise<KernelConnectionMetadata[] | undefined> {
     traceInfo(
-        `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
+        `Find preferred kernel for ${getDisplayPath(notebook.uri)} with metadata ${JSON.stringify(
             notebookMetadata || {}
         )} & preferred interpreter ${
             preferredInterpreter?.uri ? getDisplayPath(preferredInterpreter?.uri) : '<undefined>'
@@ -155,7 +161,7 @@ export async function rankKernels(
 
     // Now perform our big comparison on the kernel list
     // Interactive window always defaults to Python kernels.
-    if (getResourceType(resource) === 'interactive') {
+    if (notebook.notebookType === InteractiveWindowView) {
         // TODO: Based on the resource, we should be able to find the language.
         possibleNbMetadataLanguage = PYTHON_LANGUAGE;
     } else {
@@ -179,7 +185,7 @@ export async function rankKernels(
     );
     kernels.sort((a, b) =>
         compareKernels(
-            resource,
+            notebook,
             possibleNbMetadataLanguage,
             actualNbMetadataLanguage,
             notebookMetadata,
@@ -249,7 +255,9 @@ function isKernelSpecExactMatch(
     const connectionKernelSpecName = connectionOriginalSpecFile
         ? path.basename(path.dirname(connectionOriginalSpecFile))
         : kernelConnectionKernelSpec?.name || '';
-    const connectionInterpreterEnvName = kernelConnection.interpreter?.envName;
+    const connectionInterpreterEnvName = kernelConnection.interpreter
+        ? getPythonEnvironmentName(kernelConnection.interpreter)
+        : '';
     const metadataNameIsDefaultName = isDefaultKernelSpec({
         argv: [],
         display_name: notebookMetadataKernelSpec.display_name,
@@ -274,7 +282,7 @@ function isKernelSpecExactMatch(
 }
 
 export function compareKernels(
-    _resource: Resource,
+    _resource: NotebookDocument,
     possibleNbMetadataLanguage: string | undefined,
     actualNbMetadataLanguage: string | undefined,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
@@ -347,18 +355,9 @@ export function compareKernels(
             if (!a.interpreter && b.interpreter) {
                 return -1;
             }
-            const aSysVersion = a.interpreter?.sysPrefix || '';
-            const aVersion =
-                a.interpreter?.version?.major ||
-                (aSysVersion.length && !isNaN(parseInt(aSysVersion.substring(0)))
-                    ? parseInt(aSysVersion.substring(0))
-                    : 0);
-            const bSysVersion = a.interpreter?.sysPrefix || '';
-            const bVersion =
-                a.interpreter?.version?.major ||
-                (bSysVersion.length && !isNaN(parseInt(bSysVersion.substring(0)))
-                    ? parseInt(bSysVersion.substring(0))
-                    : 0);
+            // const version =
+            const aVersion = getCachedVersion(a.interpreter)?.major || 0;
+            const bVersion = getCachedVersion(b.interpreter)?.major || 0;
             if (aVersion !== bVersion) {
                 return aVersion > bVersion ? 1 : -1;
             }
@@ -512,8 +511,8 @@ export function compareKernels(
         result = compareKernelSpecOrEnvNames(
             aInfo,
             bInfo,
-            a.interpreter?.envName || '',
-            b.interpreter?.envName || '',
+            a.interpreter ? getPythonEnvironmentName(a.interpreter) || '' : '',
+            b.interpreter ? getPythonEnvironmentName(b.interpreter) || '' : '',
             notebookMetadata,
             activeInterpreterConnection
         );
@@ -639,7 +638,7 @@ function compareKernelSpecOrEnvNames(
         const majorVersion = parseInt(notebookMetadata.kernelspec.name.toLowerCase().replace('python', ''), 10);
         if (
             majorVersion &&
-            a.interpreter?.version?.major === b.interpreter?.version?.major &&
+            getCachedVersion(a.interpreter)?.major === getCachedVersion(b.interpreter)?.major &&
             a.kind === b.kind &&
             comparisonOfDisplayNames === 0 &&
             comparisonOfInterpreter === 0
@@ -657,8 +656,8 @@ function compareKernelSpecOrEnvNames(
             }
         } else if (
             majorVersion &&
-            a.interpreter?.version?.major !== b.interpreter?.version?.major &&
-            a.interpreter?.version?.major === majorVersion &&
+            getCachedVersion(a.interpreter)?.major !== getCachedVersion(b.interpreter)?.major &&
+            getCachedVersion(a.interpreter)?.major === majorVersion &&
             a.kind !== 'startUsingRemoteKernelSpec' &&
             comparisonOfDisplayNames >= 0 &&
             comparisonOfInterpreter >= 0
@@ -666,8 +665,8 @@ function compareKernelSpecOrEnvNames(
             return 1;
         } else if (
             majorVersion &&
-            a.interpreter?.version?.major !== b.interpreter?.version?.major &&
-            b.interpreter?.version?.major === majorVersion &&
+            getCachedVersion(a.interpreter)?.major !== getCachedVersion(b.interpreter)?.major &&
+            getCachedVersion(b.interpreter)?.major === majorVersion &&
             b.kind !== 'startUsingRemoteKernelSpec' &&
             comparisonOfDisplayNames <= 0 &&
             comparisonOfInterpreter <= 0
@@ -978,23 +977,20 @@ export class KernelRankingHelper {
     constructor(private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider) {}
 
     public async rankKernels(
-        resource: Resource,
+        notebook: NotebookDocument,
         kernels: KernelConnectionMetadata[],
         notebookMetadata?: nbformat.INotebookMetadata | undefined,
         preferredInterpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata[] | undefined> {
         try {
-            const preferredRemoteKernelId =
-                resource && this.preferredRemoteFinder
-                    ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)
-                    : undefined;
+            const preferredRemoteKernelId = await this.preferredRemoteFinder.getPreferredRemoteKernelId(notebook);
             if (cancelToken?.isCancellationRequested) {
                 return;
             }
             let rankedKernels = await rankKernels(
                 kernels,
-                resource,
+                notebook,
                 notebookMetadata,
                 preferredInterpreter,
                 preferredRemoteKernelId,
@@ -1009,14 +1005,11 @@ export class KernelRankingHelper {
     }
 
     public async isExactMatch(
-        resource: Resource,
+        notebook: NotebookDocument,
         kernelConnection: KernelConnectionMetadata,
         notebookMetadata: nbformat.INotebookMetadata | undefined
     ): Promise<boolean> {
-        const preferredRemoteKernelId =
-            resource && this.preferredRemoteFinder
-                ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)
-                : undefined;
+        const preferredRemoteKernelId = await this.preferredRemoteFinder.getPreferredRemoteKernelId(notebook);
 
         return isExactMatch(kernelConnection, notebookMetadata, preferredRemoteKernelId);
     }

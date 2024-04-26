@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { IExtensionApi } from './standalone/api/api';
+import type { IExtensionApi } from './standalone/api';
 import type { IExtensionContext } from './platform/common/types';
 import { ExtensionMode } from 'vscode';
 

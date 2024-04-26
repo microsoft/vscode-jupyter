@@ -47,15 +47,13 @@ export class PipEnvInstaller extends ModuleInstaller {
                 .get<IInterpreterService>(IInterpreterService)
                 .getActiveInterpreter(resource);
             const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
-            if (!interpreter || !workspaceFolder || interpreter.envType !== EnvironmentType.Pipenv) {
+            if (!interpreter || !workspaceFolder || getEnvironmentType(interpreter) !== EnvironmentType.Pipenv) {
                 return false;
             }
             // Install using `pipenv install` only if the active environment is related to the current folder.
             return isPipenvEnvironmentRelatedToFolder(interpreter.uri, workspaceFolder.uri);
         } else {
-            return (
-                ('executable' in resource ? getEnvironmentType(resource) : resource.envType) === EnvironmentType.Pipenv
-            );
+            return getEnvironmentType(resource) === EnvironmentType.Pipenv;
         }
     }
     protected async getExecutionArgs(

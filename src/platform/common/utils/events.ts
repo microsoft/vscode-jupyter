@@ -3,6 +3,7 @@
 
 import type { Event } from 'vscode';
 import { IDisposable } from '../types';
+import { EmptyDisposable } from './lifecycle';
 
 /**
  * Given an event, returns another event which only fires once.
@@ -43,3 +44,6 @@ export function once<T>(event: Event<T>): Event<T> {
 export function toPromise<T>(event: Event<T>, thisArgs: any = null, disposables?: IDisposable[]): Promise<T> {
     return new Promise((resolve) => once(event)(resolve, thisArgs, disposables));
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const EmptyEvent: Event<any> = () => EmptyDisposable;

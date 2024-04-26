@@ -2,89 +2,139 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     # Query Jupyter server for the info about a dataframe
     import json as _VSCODE_json
     import builtins as _VSCODE_builtins
+    from collections import namedtuple as _VSCODE_namedtuple
+    import importlib.util as _VSCODE_importlib_util
 
-    maxStringLength = 50
+    maxStringLength = 1000
     collectionTypes = ["list", "tuple", "set"]
     arrayPageSize = 50
 
-    def truncateString(string):
+    def truncateString(variable):
+        string = _VSCODE_builtins.repr(variable)
         if _VSCODE_builtins.len(string) > maxStringLength:
-            return string[: maxStringLength - 1] + "..."
+            sizeInfo = (
+                "\n\nLength: " + str(_VSCODE_builtins.len(variable))
+                if _VSCODE_builtins.type(variable) == _VSCODE_builtins.str
+                else ""
+            )
+            return string[: maxStringLength - 1] + "..." + sizeInfo
         else:
             return string
 
-    def getValue(variable, nested=False):
-        if _VSCODE_builtins.type(variable) == _VSCODE_builtins.str:
-            return f"'{truncateString(variable)}'"
-        elif (
-            _VSCODE_builtins.type(variable) == _VSCODE_builtins.int
-            or _VSCODE_builtins.type(variable) == _VSCODE_builtins.float
+    DisplayOptions = _VSCODE_namedtuple("DisplayOptions", ["width", "max_columns"])
+
+    def set_pandas_display_options(display_options=None):
+        if _VSCODE_importlib_util.find_spec("pandas") is not None:
+            try:
+                import pandas as _VSCODE_PD
+
+                original_display = DisplayOptions(
+                    width=_VSCODE_PD.options.display.width,
+                    max_columns=_VSCODE_PD.options.display.max_columns,
+                )
+
+                if display_options:
+                    _VSCODE_PD.options.display.max_columns = display_options.max_columns
+                    _VSCODE_PD.options.display.width = display_options.width
+                else:
+                    _VSCODE_PD.options.display.max_columns = 100
+                    _VSCODE_PD.options.display.width = 1000
+
+                return original_display
+            except ImportError:
+                pass
+            finally:
+                del _VSCODE_PD
+
+    def getValue(variable):
+        original_display = None
+        if (
+            _VSCODE_builtins.type(variable).__name__ == "DataFrame"
+            and _VSCODE_importlib_util.find_spec("pandas") is not None
         ):
-            return _VSCODE_builtins.str(variable)
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.list:
-            return "[...]"
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.tuple:
-            return "(...)"
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.set:
-            return "{...}"
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict:
-            return "{...}"
-        else:
-            return truncateString(str(variable))
+            original_display = set_pandas_display_options()
+
+        try:
+            return truncateString(variable=variable)
+        finally:
+            if original_display:
+                set_pandas_display_options(original_display)
 
     def getPropertyNames(variable):
         props = []
         for prop in _VSCODE_builtins.dir(variable):
-            if not prop.startswith("__"):
+            if not prop.startswith("_"):
                 props.append(prop)
         return props
+
+    def getFullType(varType):
+        module = ""
+        if (
+            _VSCODE_builtins.hasattr(varType, "__module__")
+            and varType.__module__ != "builtins"
+        ):
+            module = varType.__module__ + "."
+        if _VSCODE_builtins.hasattr(varType, "__qualname__"):
+            return module + varType.__qualname__
+        elif _VSCODE_builtins.hasattr(varType, "__name__"):
+            return module + varType.__name__
 
     def getVariableDescription(variable):
         result = {}
 
-        result["type"] = _VSCODE_builtins.type(variable).__name__
+        varType = _VSCODE_builtins.type(variable)
+        result["type"] = getFullType(varType)
+        if hasattr(varType, "__mro__"):
+            result["interfaces"] = [getFullType(t) for t in varType.__mro__]
+
         if (
             _VSCODE_builtins.hasattr(variable, "__len__")
             and result["type"] in collectionTypes
         ):
             result["count"] = _VSCODE_builtins.len(variable)
-        if _VSCODE_builtins.hasattr(variable, "__dict__"):
-            result["properties"] = getPropertyNames(variable)
-        elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict:
-            result["properties"] = _VSCODE_builtins.list(variable.keys())
+
+        result["hasNamedChildren"] = (
+            _VSCODE_builtins.hasattr(variable, "__dict__")
+            or _VSCODE_builtins.type(variable) == dict
+        )
 
         result["value"] = getValue(variable)
         return result
 
     def getChildProperty(root, propertyChain):
-        variable = root
-        for property in propertyChain:
-            if _VSCODE_builtins.type(property) == _VSCODE_builtins.int:
-                if _VSCODE_builtins.hasattr(variable, "__getitem__"):
+        try:
+            variable = root
+            for property in propertyChain:
+                if _VSCODE_builtins.type(property) == _VSCODE_builtins.int:
+                    if _VSCODE_builtins.hasattr(variable, "__getitem__"):
+                        variable = variable[property]
+                    elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.set:
+                        variable = _VSCODE_builtins.list(variable)[property]
+                    else:
+                        return None
+                elif _VSCODE_builtins.hasattr(variable, property):
+                    variable = getattr(variable, property)
+                elif (
+                    _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict
+                    and property in variable
+                ):
                     variable = variable[property]
-                elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.set:
-                    variable = _VSCODE_builtins.list(variable)[property]
                 else:
                     return None
-            elif _VSCODE_builtins.hasattr(variable, property):
-                variable = getattr(variable, property)
-            elif (
-                _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict
-                and property in variable
-            ):
-                variable = variable[property]
-            else:
-                return None
+        except Exception:
+            return None
+
         return variable
 
     ### Get info on variables at the root level
-    def _VSCODE_getAllVariableDescriptions(varNames):
+    def _VSCODE_getVariableDescriptions(varNames):
         variables = [
             {
                 "name": varName,
                 **getVariableDescription(globals()[varName]),
                 "root": varName,
                 "propertyChain": [],
+                "language": "python",
             }
             for varName in varNames
             if varName in globals()
@@ -119,19 +169,31 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                         "name": str(i),
                         "root": rootVarName,
                         "propertyChain": propertyChain + [i],
+                        "language": "python",
                     }
                     for i in range
                 ]
-        elif "properties" in parentInfo:
-            children = [
-                {
-                    **getVariableDescription(getChildProperty(parent, [prop])),
-                    "name": prop,
-                    "root": rootVarName,
-                    "propertyChain": propertyChain + [prop],
-                }
-                for prop in parentInfo["properties"]
-            ]
+        elif parentInfo["hasNamedChildren"]:
+            childrenNames = []
+            if _VSCODE_builtins.hasattr(parent, "__dict__"):
+                childrenNames = getPropertyNames(parent)
+            elif _VSCODE_builtins.type(parent) == _VSCODE_builtins.dict:
+                childrenNames = _VSCODE_builtins.list(parent.keys())
+
+            children = []
+            for prop in childrenNames:
+                child_property = getChildProperty(parent, [prop])
+                if (
+                    child_property is not None
+                    and _VSCODE_builtins.type(child_property).__name__ != "method"
+                ):
+                    child = {
+                        **getVariableDescription(child_property),
+                        "name": prop,
+                        "root": rootVarName,
+                        "propertyChain": propertyChain + [prop],
+                    }
+                    children.append(child)
 
         if is_debugging:
             return _VSCODE_json.dumps(children)
@@ -215,17 +277,33 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         else:
             return _VSCODE_builtins.print(_VSCODE_json.dumps(result))
 
+    def _VSCODE_getVariableSummary(variable):
+        if variable is None:
+            return None
+        # check if the variable is a dataframe
+        if (
+            _VSCODE_builtins.type(variable).__name__ == "DataFrame"
+            and _VSCODE_importlib_util.find_spec("pandas") is not None
+        ):
+            return _VSCODE_builtins.print(variable.info())
+
+        return None
+
     try:
         if what_to_get == "properties":
             return _VSCODE_getVariableProperties(*args)
         elif what_to_get == "info":
             return _VSCODE_getVariableInfo(*args)
         elif what_to_get == "AllVariableDescriptions":
-            return _VSCODE_getAllVariableDescriptions(*args)
+            return _VSCODE_getVariableDescriptions(*args)
         elif what_to_get == "AllChildrenDescriptions":
             return _VSCODE_getAllChildrenDescriptions(*args)
+        elif what_to_get == "summary":
+            return _VSCODE_getVariableSummary(*args)
         else:
             return _VSCODE_getVariableTypes(*args)
     finally:
         del _VSCODE_json
         del _VSCODE_builtins
+        del _VSCODE_namedtuple
+        del _VSCODE_importlib_util

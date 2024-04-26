@@ -127,6 +127,17 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
+                    rootUrl,
+                    typemoq.It.isObjectWith({
+                        method: 'get',
+                        headers: { Connection: 'keep-alive' }
+                    })
+                )
+            )
+            .returns(() => Promise.resolve(mockXsrfResponse.object));
+        fetchMock
+            .setup((fm) =>
+                fm(
                     new URL('hub/api?', rootUrl).toString(),
                     typemoq.It.isObjectWith({
                         method: 'get',

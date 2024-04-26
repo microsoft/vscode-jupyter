@@ -902,10 +902,10 @@ export class SecureConnectionValidator {
                 this,
                 disposables
             );
+            return await deferred.promise;
         } finally {
             dispose(disposables);
         }
-        return deferred.promise;
     }
 }
 export function parseUri(uri: string, displayName?: string): IJupyterServerUri | undefined {

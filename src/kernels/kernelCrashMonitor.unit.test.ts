@@ -109,10 +109,10 @@ suite('Kernel Crash Monitor', () => {
         const execution = controller.createNotebookCellExecution(cell);
         execution.start();
 
-        const expectedErrorMessage = Buffer.from(
+        const expectedErrorMessage = new TextDecoder().decode(
             createOutputWithErrorMessageForDisplay(DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell)?.items[0]!
                 .data!
-        ).toString();
+        );
 
         when(kernel.status).thenReturn('dead');
         onKernelStatusChanged.fire({ status: 'dead', kernel: instance(kernel) });
@@ -127,7 +127,7 @@ suite('Kernel Crash Monitor', () => {
         assert.strictEqual(cell.outputs.length, 1);
         assert.strictEqual(cell.outputs[0].items.length, 1);
         const outputItem = cell.outputs[0].items[0];
-        assert.include(Buffer.from(outputItem.data).toString(), expectedErrorMessage);
+        assert.include(new TextDecoder().decode(outputItem.data), expectedErrorMessage);
     });
     test('Error message displayed and Cell output updated with error message (jupyter kernel)', async () => {
         when(kernelSession.kind).thenReturn('localJupyter');
@@ -139,10 +139,10 @@ suite('Kernel Crash Monitor', () => {
         const execution = controller.createNotebookCellExecution(cell);
         execution.start();
 
-        const expectedErrorMessage = Buffer.from(
+        const expectedErrorMessage = new TextDecoder().decode(
             createOutputWithErrorMessageForDisplay(DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell)?.items[0]!
                 .data!
-        ).toString();
+        );
 
         when(kernel.status).thenReturn('autorestarting');
         when(kernelSession.status).thenReturn('autorestarting');
@@ -160,6 +160,6 @@ suite('Kernel Crash Monitor', () => {
         assert.strictEqual(cell.outputs.length, 1);
         assert.strictEqual(cell.outputs[0].items.length, 1);
         const outputItem = cell.outputs[0].items[0];
-        assert.include(Buffer.from(outputItem.data).toString(), expectedErrorMessage);
+        assert.include(new TextDecoder().decode(outputItem.data), expectedErrorMessage);
     });
 });

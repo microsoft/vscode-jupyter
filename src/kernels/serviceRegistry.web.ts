@@ -36,7 +36,7 @@ import { KernelDependencyService } from './kernelDependencyService.web';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.web';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
-import { KernelApi } from './api/accessManagement';
+import { KernelChatStartupCodeProvider } from './chat/kernelStartupCodeProvider';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -48,7 +48,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IRawNotebookSupportedService,
         RawNotebookSupportedService
     );
-    setSharedProperty('isInsiderExtension', isPreReleaseVersion());
+    setSharedProperty('isInsiderExtension', isPreReleaseVersion() ? 'true' : 'false');
 
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(
@@ -97,7 +97,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<LastCellExecutionTracker>(LastCellExecutionTracker, LastCellExecutionTracker);
     serviceManager.addBinding(LastCellExecutionTracker, IExtensionSyncActivationService);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelApi);
 
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
@@ -105,5 +104,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         CellOutputDisplayIdTracker
+    );
+
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelChatStartupCodeProvider
     );
 }

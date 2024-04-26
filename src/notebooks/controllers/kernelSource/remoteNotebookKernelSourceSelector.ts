@@ -164,8 +164,11 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             : Promise.resolve([]);
         const handledServerIds = new Set<string>();
         const jupyterServers = await serversPromise;
+        const validServers = new Set(jupyterServers.map((s) => s.id));
         servers
             .filter((s) => s.serverProviderHandle.id === provider.id)
+            // Ensure we only list servers that are valid.
+            .filter((s) => validServers.has(s.serverProviderHandle.id))
             .map((server) => {
                 // remote server
                 const lastUsedTime = this.serverUriStorage.all.find(

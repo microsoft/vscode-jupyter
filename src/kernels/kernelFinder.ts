@@ -2,20 +2,23 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
+import { DisposableBase, DisposableStore } from '../platform/common/utils/lifecycle';
 
 /**
  * Generic class for finding kernels (both remote and local). Handles all of the caching of the results.
  */
 @injectable()
-export class KernelFinder implements IKernelFinder {
-    private readonly _onDidChangeRegistrations = new EventEmitter<{
-        added: IContributedKernelFinder[];
-        removed: IContributedKernelFinder[];
-    }>();
+export class KernelFinder extends DisposableBase implements IKernelFinder {
+    private readonly _onDidChangeRegistrations = this._register(
+        new EventEmitter<{
+            added: IContributedKernelFinder[];
+            removed: IContributedKernelFinder[];
+        }>()
+    );
     onDidChangeRegistrations = this._onDidChangeRegistrations.event;
     private _finders: IContributedKernelFinder<KernelConnectionMetadata>[] = [];
     private connectionFinderMapping: Map<string, IContributedKernelFinder> = new Map<
@@ -23,7 +26,7 @@ export class KernelFinder implements IKernelFinder {
         IContributedKernelFinder
     >();
 
-    private _onDidChangeKernels = new EventEmitter<void>();
+    private _onDidChangeKernels = this._register(new EventEmitter<void>());
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
     private _status: 'idle' | 'discovering' = 'idle';
     public get status() {
@@ -35,48 +38,50 @@ export class KernelFinder implements IKernelFinder {
             this._onDidChangeStatus.fire();
         }
     }
-    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    private readonly _onDidChangeStatus = this._register(new EventEmitter<void>());
     public get onDidChangeStatus(): Event<void> {
         return this._onDidChangeStatus.event;
     }
-    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {
-        disposables.push(this._onDidChangeStatus);
-        disposables.push(this._onDidChangeRegistrations);
+    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
+        super();
+        disposables.push(this);
+        this._register(this._onDidChangeStatus);
+        this._register(this._onDidChangeRegistrations);
     }
 
     public registerKernelFinder(finder: IContributedKernelFinder<KernelConnectionMetadata>): IDisposable {
         this._finders.push(finder);
-        if (finder.status === 'discovering') {
-            this.status = 'discovering';
-        }
-        const statusChange = finder.onDidChangeStatus(
-            () =>
-                // If all finders are idle, then we are idle.
-                (this.status = this._finders.every((f) => f.status === 'idle') ? 'idle' : 'discovering'),
-            this,
-            this.disposables
-        );
-        const onDidChangeDisposable = finder.onDidChangeKernels(() => this._onDidChangeKernels.fire());
-        this.disposables.push(onDidChangeDisposable);
+        const updateStatus = () => {
+            // If all finders are idle, then we are idle.
+            this.status = this._finders.every((f) => f.status === 'idle') ? 'idle' : 'discovering';
+        };
+
+        updateStatus();
+        const disposables = this._register(new DisposableStore());
+
+        const disposeKernel = () => {
+            const removeIndex = this._finders.findIndex((listFinder) => listFinder === finder);
+            if (removeIndex >= 0) {
+                this._finders.splice(removeIndex, 1);
+            }
+            disposables.dispose();
+            updateStatus();
+
+            // Notify that kernels have changed
+            this._onDidChangeKernels.fire();
+            this._onDidChangeRegistrations.fire({ added: [], removed: [finder] });
+        };
+
+        disposables.add(finder.onDidChangeStatus(updateStatus, this));
+        disposables.add(finder.onDidChangeKernels(() => this._onDidChangeKernels.fire()));
+        disposables.add(finder.onDidDispose(() => disposeKernel()));
 
         // Registering a new kernel finder should notify of possible kernel changes
         this._onDidChangeKernels.fire();
         this._onDidChangeRegistrations.fire({ added: [finder], removed: [] });
-        // Register a disposable so kernel finders can remove themselves from the list if they are disposed
-        return {
-            dispose: () => {
-                const removeIndex = this._finders.findIndex((listFinder) => {
-                    return listFinder === finder;
-                });
-                this._finders.splice(removeIndex, 1);
-                onDidChangeDisposable.dispose();
-                statusChange.dispose();
 
-                // Notify that kernels have changed
-                this._onDidChangeKernels.fire();
-                this._onDidChangeRegistrations.fire({ added: [], removed: [finder] });
-            }
-        };
+        // Register a disposable so kernel finders can remove themselves from the list if they are disposed
+        return new Disposable(() => disposeKernel());
     }
 
     public get kernels(): KernelConnectionMetadata[] {

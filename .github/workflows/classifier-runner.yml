@@ -37,8 +37,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade numpy scipy scikit-learn joblib nltk
       - name: 'Run Classifier: Generator'
-        run: python ./actions/classifier/apply/generate-labels/main.py
+        run: python ./actions/classifier/apply/generate-labels/main.py --debug
       - name: 'Run Classifier: Labeler'
         uses: ./actions/classifier/apply/apply-labels
         with:
           config-path: classifier
+          token: ${{secrets.VSCODE_ISSUE_TRIAGE_BOT_PAT}}

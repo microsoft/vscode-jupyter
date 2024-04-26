@@ -22,6 +22,7 @@ export const NOTEBOOK_SELECTOR = [
 
 export const CodespaceExtensionId = 'GitHub.codespaces';
 export const JVSC_EXTENSION_ID = 'ms-toolsai.jupyter';
+export const POWER_TOYS_EXTENSION_ID = 'ms-toolsai.vscode-jupyter-powertoys';
 export const JUPYTER_HUB_EXTENSION_ID = 'ms-toolsai.jupyter-hub';
 export const AppinsightsKey = '0c6ae279ed8443289764825290e4f9e2-1a736e7c-1324-4338-be46-fc2a58ae4d14-7255';
 
@@ -39,7 +40,8 @@ export namespace Settings {
     export const JupyterServerRemoteLaunchService = JVSC_EXTENSION_ID;
     export const JupyterServerUriListMax = 10;
     // If this timeout expires, ignore the completion request sent to Jupyter.
-    export const IntellisenseTimeout = 2000;
+    export var IntellisenseTimeout = 2_000;
+    export const IntellisenseResolveTimeout = 5_000;
 }
 
 export let isCI = false;
@@ -90,8 +92,6 @@ export namespace Identifiers {
 export namespace CodeSnippets {
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
     export const MatplotLibInit = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n`;
-    export const UpdateCWDAndPath =
-        'import os as _VSCODE_os\nimport sys as _VSCODE_sys\n%cd "{0}"\nif _VSCODE_os.getcwd() not in _VSCODE_sys.path:\n    _VSCODE_sys.path.insert(0, _VSCODE_os.getcwd())\n\ndel _VSCODE_sys\ndel _VSCODE_os';
     export const DisableJedi = '%config Completer.use_jedi = False';
 }
 
@@ -224,8 +224,6 @@ export namespace Commands {
     export const NativeNotebookExport = 'jupyter.notebookeditor.export';
     export const LatestExtension = 'jupyter.latestExtension';
     export const EnableLoadingWidgetsFrom3rdPartySource = 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource';
-    export const NotebookEditorExpandAllCells = 'jupyter.notebookeditor.expandallcells';
-    export const NotebookEditorCollapseAllCells = 'jupyter.notebookeditor.collapseallcells';
     export const EnableDebugLogging = 'jupyter.enableDebugLogging';
     export const ResetLoggingLevel = 'jupyter.resetLoggingLevel';
     export const ShowDataViewer = 'jupyter.showDataViewer';
@@ -379,7 +377,6 @@ export enum Telemetry {
     CellOutputMimeType = 'DS_INTERNAL.CELL_OUTPUT_MIME_TYPE',
     JupyterApiUsage = 'DATASCIENCE.JUPYTER_API_USAGE',
     KernelCodeCompletion = 'DATASCIENCE.JUPYTER_KERNEL_CODE_COMPLETION',
-    KernelCodeCompletionResolve = 'DATASCIENCE.JUPYTER_KERNEL_CODE_COMPLETION_RESOLVE',
     KernelCodeCompletionCannotResolve = 'DATASCIENCE.JUPYTER_KERNEL_CODE_COMPLETION_CANNOT_RESOLVE',
     JupyterKernelApiUsage = 'DATASCIENCE.JUPYTER_KERNEL_API_USAGE',
     NewJupyterKernelApiUsage = 'DATASCIENCE.JUPYTER_NEW_KERNEL_API_USAGE',
@@ -434,6 +431,8 @@ export enum Telemetry {
     NativeVariableViewLoaded = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED',
     NativeVariableViewMadeVisible = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE',
     NotebookStart = 'DATASCIENCE.NOTEBOOK_START',
+    NotebookFirstStartBreakDown = 'DATASCIENCE.NOTEBOOK_FIRST_START_BREAKDOWN',
+    NotebookFirstKernelAutoSelectionBreakDown = 'DATASCIENCE.NOTEBOOK_FIRST_KERNEL_AUTO_SELECTION_BREAKDOWN',
     KernelStartFailureDueToMissingEnv = 'DATASCIENCE.KERNEL_START_FAILURE_MISSING_ENV',
     NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
     NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',

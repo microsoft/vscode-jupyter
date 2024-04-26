@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { NotebookCell } from 'vscode';
-import { splitLines } from '../platform/common/helpers';
+import { dedentCode, splitLines } from '../platform/common/helpers';
 import { IJupyterSettings } from '../platform/common/types';
 import { appendLineFeed, removeLinesFromFrontAndBackNoConcat } from '../platform/common/utils';
 import { isUri } from '../platform/common/utils/misc';
@@ -36,7 +36,7 @@ export function generateInteractiveCode(code: string, settings: IJupyterSettings
         settings.magicCommandsAsComments ? uncommentMagicCommands : undefined
     );
 
-    return withMagicsAndLinefeeds.join('');
+    return dedentCode(withMagicsAndLinefeeds.join(''));
 }
 
 export function isInteractiveInputTab(tab: unknown): tab is InteractiveTab {

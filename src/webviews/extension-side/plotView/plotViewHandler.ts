@@ -6,6 +6,7 @@ import { NotebookCellOutputItem, NotebookDocument } from 'vscode';
 import { traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IPlotViewerProvider } from '../plotting/types';
+import { uint8ArrayToBase64 } from '../../../platform/common/utils/string';
 
 const svgMimeType = 'image/svg+xml';
 const pngMimeType = 'image/png';
@@ -56,8 +57,8 @@ function getOutputItem(
 
 // Wrap our PNG data into an SVG element so what we can display it in the current plot viewer
 function convertPngToSvg(pngOutput: NotebookCellOutputItem): string {
-    const imageBuffer = Buffer.from(pngOutput.data);
-    const imageData = imageBuffer.toString('base64');
+    const imageBuffer = pngOutput.data;
+    const imageData = uint8ArrayToBase64(imageBuffer);
     const dims = getPngDimensions(imageBuffer);
 
     // Of note here, we want the dims on the SVG element, and the image at 100% this is due to how the SVG control
@@ -71,20 +72,21 @@ function convertPngToSvg(pngOutput: NotebookCellOutputItem): string {
 </svg>`;
 }
 
-export function getPngDimensions(buffer: Buffer): { width: number; height: number } {
+export function getPngDimensions(buffer: Uint8Array): { width: number; height: number } {
     // Verify this is a PNG
     if (!isPng(buffer)) {
         throw new Error('The buffer is not a valid png');
     }
     // The dimensions of a PNG are the first 8 bytes (width then height) of the IHDR chunk. The
     // IHDR chunk starts at offset 8.
+    const view = new DataView(new Uint8Array(buffer).buffer);
     return {
-        width: buffer.readUInt32BE(16),
-        height: buffer.readUInt32BE(20)
+        width: view.getUint32(16, false),
+        height: view.getUint32(20, false)
     };
 }
 
-function isPng(buffer: Buffer): boolean {
+function isPng(buffer: Uint8Array): boolean {
     // The first eight bytes of a PNG datastream always contain the following (decimal) values:
     //   137 80 78 71 13 10 26 10
     return (

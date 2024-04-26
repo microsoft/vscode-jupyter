@@ -6,6 +6,7 @@
 // And its not possible in CLI to have an undefined define value for these.
 export var process = {
     platform: 'web',
+    cwd: () => '',
     env: {
         NODE_ENV: 'development'
     }

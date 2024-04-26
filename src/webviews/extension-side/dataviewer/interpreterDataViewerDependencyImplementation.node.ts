@@ -14,7 +14,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { splitLines } from '../../../platform/common/helpers';
 
 const separator = '5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d';
-export const kernelGetPandasVersion = `import pandas;print(pandas.__version__);print("${separator}")`;
+export const interpreterGetPandasVersion = `import pandas;print(pandas.__version__);print("${separator}")`;
 
 /**
  * Uses the Python interpreter to manage dependencies of a Data Viewer.
@@ -36,8 +36,7 @@ export class InterpreterDataViewerDependencyImplementation extends BaseDataViewe
             resource: undefined,
             interpreter
         });
-        const result = await launcher.exec(['-c', kernelGetPandasVersion], {
-            throwOnStdErr: true,
+        const result = await launcher.exec(['-c', interpreterGetPandasVersion], {
             token
         });
         const output = result.stdout;

@@ -5,10 +5,10 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import type WebSocketIsomorphic from 'isomorphic-ws';
-import { CancellationToken, Disposable, Event } from 'vscode';
+import { CancellationToken, Disposable, Event, type NotebookCellData } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri } from 'vscode';
-import { IAsyncDisposable, ICell, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
+import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
@@ -16,7 +16,8 @@ import {
     IJupyterConnection,
     GetServerOptions,
     LiveRemoteKernelConnectionMetadata,
-    RemoteKernelConnectionMetadata
+    RemoteKernelConnectionMetadata,
+    IKernel
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
@@ -69,12 +70,9 @@ export interface INotebookImporter extends Disposable {
 }
 
 export const INotebookExporter = Symbol('INotebookExporter');
-export interface INotebookExporter extends Disposable {
-    translateToNotebook(
-        cells: ICell[],
-        kernelSpec?: nbformat.IKernelspecMetadata
-    ): Promise<nbformat.INotebookContent | undefined>;
-    exportToFile(cells: ICell[], file: string, showOpenPrompt?: boolean): Promise<void>;
+export interface INotebookExporter {
+    serialize(cells: NotebookCellData[], kernelSpec?: nbformat.IKernelspecMetadata): Promise<string | undefined>;
+    exportToFile(cells: NotebookCellData[], file: string, showOpenPrompt?: boolean): Promise<void>;
 }
 
 export const IJupyterInterpreterDependencyManager = Symbol('IJupyterInterpreterDependencyManager');
@@ -259,4 +257,13 @@ export interface IJupyterServerProviderRegistry {
         label: string,
         serverProvider: JupyterServerProvider
     ): JupyterServerCollection;
+}
+
+export const IBackgroundThreadService = Symbol('IBackgroundThreadService');
+export interface IBackgroundThreadService {
+    execCodeInBackgroundThread<T>(
+        kernel: IKernel,
+        codeWithReturnStatement: string[],
+        token: CancellationToken
+    ): Promise<T | undefined>;
 }

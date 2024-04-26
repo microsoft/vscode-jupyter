@@ -117,7 +117,6 @@ export class CommonMessageCoordinator {
             const stopWatch = new StopWatch();
             if (!deferred.completed) {
                 // Determine the version of ipywidgets and send the appropriate script url to the webview.
-                traceVerbose('Attempting to determine version of IPyWidgets');
                 const disposables: IDisposable[] = [];
                 const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
                 const kernelPromise = createDeferred<IKernel>();
@@ -142,7 +141,6 @@ export class CommonMessageCoordinator {
                                 deferred.resolve(kernel.ipywidgetsVersion);
                             }
                         } else {
-                            traceVerbose('Waiting for IPyWidgets version');
                             kernel.onIPyWidgetVersionResolved(
                                 () => {
                                     if (kernel.ipywidgetsVersion) {
@@ -166,7 +164,6 @@ export class CommonMessageCoordinator {
                 if (disposables.length) {
                     this.disposables.push(...disposables);
                 }
-                traceVerbose('Waiting for IPyWidgets version promise');
             }
             // IPyWidgets scripts will not be loaded if we're unable to determine the version of IPyWidgets.
             const version = await deferred.promise;
@@ -238,7 +235,6 @@ export class CommonMessageCoordinator {
     }
 
     private initialize() {
-        traceVerbose('initialize CommonMessageCoordinator');
         // First hook up the widget script source that will listen to messages even before we start sending messages.
         this.getIPyWidgetScriptSource().initialize();
         this.getIPyWidgetMessageDispatcher().initialize();

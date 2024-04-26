@@ -15,6 +15,7 @@ import { getDisplayPath } from '../common/platform/fs-paths.node';
 import { IInterpreterPackages } from './types';
 import { IPythonExecutionFactory } from './types.node';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
+import { isCondaEnvironmentWithoutPython } from './helpers';
 
 const interestedPackages = new Set(
     [
@@ -178,7 +179,7 @@ export class InterpreterPackages implements IInterpreterPackages {
     }
 
     private async getPackageInformation({ interpreter }: { interpreter: PythonEnvironment }) {
-        if (interpreter.isCondaEnvWithoutPython) {
+        if (isCondaEnvironmentWithoutPython(interpreter)) {
             return;
         }
         const service = await this.executionFactory.createActivatedEnvironment({

@@ -5,7 +5,6 @@ import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../
 import { ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IAsyncDisposable, IDisposableRegistry, IExtensionContext, Resource } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Disposable, Uri } from 'vscode';
@@ -13,7 +12,13 @@ import { EOL } from 'os';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
-function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
+import {
+    getCachedEnvironments,
+    getCachedVersion,
+    getEnvironmentType,
+    resolvedPythonEnvToJupyterEnv
+} from '../../../platform/interpreter/helpers';
+function isBestPythonInterpreterForAnInterruptDaemon(interpreter: { id: string }) {
     // Give preference to globally installed python environments.
     // The assumption is that users are more likely to uninstall/delete local python environments
     // than global ones.
@@ -22,22 +27,25 @@ function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironm
     // from that and then they subsequently delete that environment (on linux things should be fine, but on windows, users might not be able
     // to delete that environment folder as the files are in use).
     // At least this way user will  not have to exit vscode completely to delete such files/folders.
+    const interpreterType = getEnvironmentType(interpreter);
     if (
         isSupportedPythonVersion(interpreter) &&
-        (interpreter?.envType === EnvironmentType.Unknown ||
-            interpreter?.envType === EnvironmentType.Pyenv ||
-            interpreter?.envType === EnvironmentType.Conda)
+        (interpreterType === EnvironmentType.Unknown ||
+            interpreterType === EnvironmentType.Pyenv ||
+            interpreterType === EnvironmentType.Conda)
     ) {
         return true;
     }
     return false;
 }
-function isSupportedPythonVersion(interpreter: PythonEnvironment) {
+function isSupportedPythonVersion(interpreter: { id: string }) {
+    let major = getCachedVersion(interpreter)?.major ?? 3;
+    let minor = getCachedVersion(interpreter)?.minor ?? 6;
     if (
-        (interpreter?.version?.major ?? 3) >= 3 &&
+        major >= 3 &&
         // Even thought 3.6 is no longer supported, we know this works well enough for what we want.
         // This way we don't need to update this every time the supported version changes.
-        (interpreter?.version?.minor ?? 6) >= 6
+        minor >= 6
     ) {
         return true;
     }
@@ -66,7 +74,6 @@ export class PythonKernelInterruptDaemon {
     constructor(
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
     public async createInterrupter(pythonEnvironment: PythonEnvironment, resource: Resource): Promise<Interrupter> {
@@ -111,13 +118,13 @@ export class PythonKernelInterruptDaemon {
             return interpreter;
         }
 
-        const interpreters = this.interpreters.resolvedEnvironments;
+        const interpreters = getCachedEnvironments();
         if (interpreters.length === 0) {
             return interpreter;
         }
         return (
-            interpreters.find(isBestPythonInterpreterForAnInterruptDaemon) ||
-            interpreters.find(isSupportedPythonVersion) ||
+            resolvedPythonEnvToJupyterEnv(interpreters.find(isBestPythonInterpreterForAnInterruptDaemon)) ||
+            resolvedPythonEnvToJupyterEnv(interpreters.find(isSupportedPythonVersion)) ||
             interpreter
         );
     }

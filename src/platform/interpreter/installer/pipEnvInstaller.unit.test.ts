@@ -12,17 +12,23 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { PipEnvInstaller } from '../../../platform/interpreter/installer/pipEnvInstaller.node';
 import * as pipEnvHelper from '../../../platform/interpreter/installer/pipenv.node';
-import { when } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
-import { uriEquals } from '../../../test/datascience/helpers';
+import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
+import type { IDisposable } from '../../common/types';
+import { PythonExtension } from '@vscode/python-extension';
+import { dispose } from '../../common/utils/lifecycle';
+import { setPythonApi } from '../helpers';
 
 suite('PipEnv installer', async () => {
+    let disposables: IDisposable[] = [];
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let isPipenvEnvironmentRelatedToFolder: sinon.SinonStub;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let pipEnvInstaller: PipEnvInstaller;
     const interpreterPath = Uri.file('path/to/interpreter');
     const workspaceFolder = Uri.file('path/to/folder');
+    let environments: PythonExtension['environments'];
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -36,9 +42,19 @@ suite('PipEnv installer', async () => {
                 return Promise.resolve(interpreterPath === interpreter && folder === workspaceFolder);
             });
         pipEnvInstaller = new PipEnvInstaller(serviceContainer.object);
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
     });
 
     teardown(() => {
+        disposables = dispose(disposables);
         isPipenvEnvironmentRelatedToFolder.restore();
     });
 
@@ -52,8 +68,14 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Pipenv interpreter, method isSupported() returns true', async () => {
         const interpreter = {
-            envType: EnvironmentType.Pipenv
+            id: '1'
         };
+        when(environments.known).thenReturn([
+            {
+                id: '1',
+                tools: [EnvironmentType.Pipenv]
+            } as any
+        ]);
 
         const result = await pipEnvInstaller.isSupported(interpreter as any);
         expect(result).to.equal(true, 'Should be true');
@@ -61,8 +83,14 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Python interpreter but not of type Pipenv, method isSupported() returns false', async () => {
         const interpreter = {
-            envType: EnvironmentType.Conda
+            id: '1'
         };
+        when(environments.known).thenReturn([
+            {
+                id: '1',
+                tools: [EnvironmentType.Conda]
+            } as any
+        ]);
 
         const result = await pipEnvInstaller.isSupported(interpreter as any);
         expect(result).to.equal(false, 'Should be false');
@@ -70,10 +98,16 @@ suite('PipEnv installer', async () => {
 
     test('If active environment is pipenv and is related to workspace folder, return true', async () => {
         const resource = Uri.parse('a');
+        when(environments.known).thenReturn([
+            {
+                id: '1',
+                tools: [EnvironmentType.Pipenv]
+            } as any
+        ]);
 
         interpreterService
             .setup((p) => p.getActiveInterpreter(resource))
-            .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, uri: interpreterPath } as any));
+            .returns(() => Promise.resolve({ id: '1', uri: interpreterPath } as any));
 
         when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(uriEquals(resource))).thenReturn({
             uri: workspaceFolder
@@ -86,7 +120,7 @@ suite('PipEnv installer', async () => {
         const resource = Uri.parse('a');
         interpreterService
             .setup((p) => p.getActiveInterpreter(resource))
-            .returns(() => Promise.resolve({ envType: EnvironmentType.Conda, uri: interpreterPath } as any));
+            .returns(() => Promise.resolve({ uri: interpreterPath } as any));
 
         when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(uriEquals(resource))).thenReturn({
             uri: { fsPath: workspaceFolder }
@@ -99,7 +133,7 @@ suite('PipEnv installer', async () => {
         const resource = Uri.parse('a');
         interpreterService
             .setup((p) => p.getActiveInterpreter(resource))
-            .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, uri: 'some random path' } as any));
+            .returns(() => Promise.resolve({ uri: 'some random path' } as any));
 
         when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(uriEquals(resource))).thenReturn({
             uri: { fsPath: workspaceFolder }

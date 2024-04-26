@@ -101,6 +101,7 @@ import { ControllerPreferredService } from './controllerPreferredService';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { JupyterLabHelper } from '../../../kernels/jupyter/session/jupyterLabHelper';
 import { getRootFolder } from '../../../platform/common/application/workspace.base';
+import { activateIPynbExtension, useCustomMetadata } from '../../../platform/common/utils';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -192,7 +193,7 @@ async function createTemporaryNotebookFromNotebook(
     prefix?: string
 ) {
     const uri = await generateTemporaryFilePath('.ipynb', disposables, rootFolder, prefix);
-    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(notebook)));
+    await workspace.fs.writeFile(uri, new TextEncoder().encode(JSON.stringify(notebook)));
 
     return uri;
 }
@@ -834,6 +835,7 @@ export async function prewarmNotebooks() {
     if (prewarmNotebooksDone.done) {
         return;
     }
+    await activateIPynbExtension();
     const { serviceContainer } = await getServices();
     await closeActiveWindows();
 
@@ -863,18 +865,29 @@ export async function createNewNotebook() {
     const language = PYTHON_LANGUAGE;
     const cell = new NotebookCellData(NotebookCellKind.Code, '', language);
     const data = new NotebookData([cell]);
-    data.metadata = {
-        custom: {
-            cells: [],
-            metadata: <nbformat.INotebookMetadata>{
-                language_info: {
-                    name: language
-                }
-            },
-            nbformat: defaultNotebookFormat.major,
-            nbformat_minor: defaultNotebookFormat.minor
-        }
-    };
+    data.metadata = useCustomMetadata()
+        ? {
+              custom: {
+                  cells: [],
+                  metadata: <nbformat.INotebookMetadata>{
+                      language_info: {
+                          name: language
+                      }
+                  },
+                  nbformat: defaultNotebookFormat.major,
+                  nbformat_minor: defaultNotebookFormat.minor
+              }
+          }
+        : {
+              cells: [],
+              metadata: <nbformat.INotebookMetadata>{
+                  language_info: {
+                      name: language
+                  }
+              },
+              nbformat: defaultNotebookFormat.major,
+              nbformat_minor: defaultNotebookFormat.minor
+          };
     const doc = await workspace.openNotebookDocument(JupyterNotebookView, data);
     return window.showNotebookDocument(doc);
 }
@@ -1145,7 +1158,7 @@ function getOutputText(output: NotebookCellOutputItem) {
     ) {
         return '';
     }
-    return Buffer.from(output.data).toString('utf8');
+    return new TextDecoder().decode(output.data);
 }
 function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExactMatch = true) {
     if (
@@ -1158,7 +1171,7 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
         return false;
     }
     try {
-        const haystack = Buffer.from(output.data).toString('utf8');
+        const haystack = new TextDecoder().decode(output.data);
         return isExactMatch
             ? haystack === value || haystack.trim() === value
             : haystack.toLowerCase().includes(value.toLowerCase());

@@ -72,16 +72,10 @@ declare module './api' {
         minor: number;
         patch: number;
     };
-    export type PythonEnvironment = {
+    export interface PythonEnvironment {
         id: string;
-        displayName?: string;
         uri: Uri;
-        version?: PythonVersion;
-        sysPrefix: string;
-        envType?: EnvironmentType;
-        envName?: string;
-        envPath?: Uri;
-    };
+    }
     //#endregion
 
     //#region Kernel Information (Kernel Specs, connections)

@@ -40,7 +40,7 @@ export class PipInstaller extends ModuleInstaller {
         return 0;
     }
     public async isSupported(interpreter: PythonEnvironment | Environment): Promise<boolean> {
-        const envType = 'executable' in interpreter ? getEnvironmentType(interpreter) : interpreter.envType;
+        const envType = getEnvironmentType(interpreter);
         // Skip this on conda, poetry, and pipenv environments
         switch (envType) {
             case EnvironmentType.Conda:
@@ -82,10 +82,7 @@ export class PipInstaller extends ModuleInstaller {
         if (flags & ModuleInstallFlags.reInstall) {
             args.push('--force-reinstall');
         }
-        if (
-            ('executable' in interpreter ? getEnvironmentType(interpreter) : interpreter.envType) ===
-            EnvironmentType.Unknown
-        ) {
+        if (getEnvironmentType(interpreter) === EnvironmentType.Unknown) {
             args.push('--user');
         }
         return {

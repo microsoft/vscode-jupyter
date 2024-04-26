@@ -122,6 +122,9 @@ suite('kernel Process', () => {
                     when(
                         kernelEnvVarsService.getEnvironmentVariables(anything(), anything(), anything())
                     ).thenResolve();
+                    when(
+                        kernelEnvVarsService.getEnvironmentVariables(anything(), anything(), anything(), anything())
+                    ).thenResolve();
                     when(processService.execObservable(anything(), anything(), anything())).thenReturn({
                         dispose: noop,
                         out: observableOutput,

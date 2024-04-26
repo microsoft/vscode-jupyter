@@ -112,7 +112,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         },
         interpreter: {
             id: '1234',
-            sysPrefix: '',
             displayName: ''
         } as any
     });

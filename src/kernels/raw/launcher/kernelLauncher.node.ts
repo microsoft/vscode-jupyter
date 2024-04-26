@@ -38,8 +38,10 @@ import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { getResourceType } from '../../../platform/common/utils';
 import { format, splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
-import { UsedPorts } from '../../common/usedPorts';
+import { UsedPorts, ignorePortForwarding } from '../../common/usedPorts';
 import { isPythonKernelConnection } from '../../helpers';
+import { once } from '../../../platform/common/utils/events';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -197,7 +199,9 @@ export class KernelLauncher implements IKernelLauncher {
         timeout: number,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
+        const tracker = getNotebookTelemetryTracker(resource)?.getConnection();
         const connection = await raceCancellationError(cancelToken, this.getKernelConnection(kernelConnectionMetadata));
+        tracker?.stop();
         // Create a new output channel for this kernel
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);
@@ -206,7 +210,13 @@ export class KernelLauncher implements IKernelLauncher {
                 ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel(baseName), 'log')
                 : undefined;
         outputChannel?.clear();
-
+        const portAttributeProvider = ignorePortForwarding(
+            connection.control_port,
+            connection.hb_port,
+            connection.iopub_port,
+            connection.shell_port,
+            connection.stdin_port
+        );
         // Create the process
         const kernelProcess = new KernelProcess(
             this.processExecutionFactory,
@@ -223,8 +233,8 @@ export class KernelLauncher implements IKernelLauncher {
             this.pythonKernelInterruptDaemon,
             this.platformService
         );
-
-        kernelProcess.exited(() => outputChannel?.dispose(), this, this.disposables);
+        once(kernelProcess.onDidDispose)(() => portAttributeProvider.dispose(), this, this.disposables);
+        once(kernelProcess.exited)(() => outputChannel?.dispose(), this, this.disposables);
         try {
             await raceCancellationError(cancelToken, kernelProcess.launch(workingDirectory, timeout, cancelToken));
         } catch (ex) {
@@ -233,7 +243,7 @@ export class KernelLauncher implements IKernelLauncher {
             throw ex;
         }
 
-        const disposable = kernelProcess.exited(
+        const disposable = once(kernelProcess.exited)(
             ({ exitCode, reason }) => {
                 sendKernelTelemetryEvent(
                     resource,

@@ -36,7 +36,7 @@ export function registerCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelCo
     }
 }
 
-export function remoteCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelConnection, targetName: string) {
+export function removeCommTargetFor3rdPartyExtensions(kernel: Kernel.IKernelConnection, targetName: string) {
     kernelCommTargets.get(kernel)?.targets?.delete?.(targetName);
 }
 
@@ -192,7 +192,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.subscribeToKernelSocket(kernel);
             this.registerCommTargets(kernel);
         }
-        traceVerbose('IPyWidgetMessageDispatcher.initialize');
     }
     protected raisePostMessage<M extends IInteractiveWindowMapping, T extends keyof IInteractiveWindowMapping>(
         message: IPyWidgetMessages,

@@ -32,6 +32,7 @@ import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
+import { Delayer } from '../../platform/common/utils/async';
 
 type CellUri = string;
 type CellVersion = number;
@@ -93,16 +94,20 @@ export class NotebookCellBangInstallDiagnosticsProvider
         );
 
         workspace.onDidOpenNotebookDocument((e) => this.analyzeNotebook(e), this, this.disposables);
+        const delayer = new Delayer<void>(300);
+        this.disposables.push(delayer);
         workspace.onDidChangeNotebookDocument(
             (e) => {
-                const cells = this.notebooksProcessed.get(e.notebook);
-                e.contentChanges.forEach((change) => {
-                    change.removedCells.forEach((cell) => {
-                        cells?.delete(cell.document.uri.toString());
+                void delayer.trigger(() => {
+                    const cells = this.notebooksProcessed.get(e.notebook);
+                    e.contentChanges.forEach((change) => {
+                        change.removedCells.forEach((cell) => {
+                            cells?.delete(cell.document.uri.toString());
+                        });
+                        change.addedCells.forEach((cell) => this.queueCellForProcessing(cell));
                     });
-                    change.addedCells.forEach((cell) => this.queueCellForProcessing(cell));
+                    e.cellChanges.forEach((change) => this.queueCellForProcessing(change.cell));
                 });
-                e.cellChanges.forEach((change) => this.queueCellForProcessing(change.cell));
             },
             this,
             this.disposables

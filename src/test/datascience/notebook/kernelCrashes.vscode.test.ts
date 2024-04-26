@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import * as path from '../../../platform/vscode-path/path';
-import * as fs from 'fs-extra';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -13,37 +11,21 @@ import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../co
 import { initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
-    insertCodeCell,
     startJupyterServer,
     hijackPrompt,
     waitForExecutionCompletedSuccessfully,
-    runAllCellsInActiveNotebook,
-    waitForKernelToGetAutoSelected,
     defaultNotebookTestTimeout,
     getCellOutputs,
     getDefaultKernelConnection
 } from './helper.node';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import dedent from 'dedent';
 import { IKernelProvider, KernelConnectionMetadata } from '../../../kernels/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { noop, sleep } from '../../core';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
-import {
-    EventEmitter,
-    NotebookCell,
-    NotebookController,
-    NotebookDocument,
-    NotebookEditor,
-    Uri,
-    notebooks,
-    window,
-    workspace
-} from 'vscode';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { translateCellErrorOutput } from '../../../kernels/execution/helpers';
-import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
-import { JupyterNotebookView, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { EventEmitter, NotebookCell, NotebookController, NotebookDocument, NotebookEditor, notebooks } from 'vscode';
+import { JupyterNotebookView } from '../../../platform/common/constants';
 import { TestNotebookDocument, createKernelController } from './executionHelper';
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 import { NotebookCellLanguageService } from '../../../notebooks/languages/cellLanguageService';
@@ -313,58 +295,5 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
 
             assert.strictEqual(restartPrompt.getDisplayCount(), 1, 'Should only have one restart prompt');
         });
-        async function createAndOpenTemporaryNotebookForKernelCrash(nbFileName: string) {
-            await initialize();
-            const nbFile = path.join(
-                EXTENSION_ROOT_DIR_FOR_TESTS,
-                `src/test/datascience/notebook/kernelFailures/overrideBuiltinModule/${nbFileName}`
-            );
-            fs.ensureDirSync(path.dirname(nbFile));
-            fs.writeFileSync(nbFile, '');
-            disposables.push({ dispose: () => fs.unlinkSync(nbFile) });
-            // Open a python notebook and use this for all tests in this test suite.
-            await openAndShowNotebook(Uri.file(nbFile));
-            assert.isOk(window.activeNotebookEditor, 'No active notebook');
-            await waitForKernelToGetAutoSelected(window.activeNotebookEditor!, PYTHON_LANGUAGE);
-        }
-        async function displayErrorAboutOverriddenBuiltInModules() {
-            await closeNotebooksAndCleanUpAfterTests(disposables);
-            const randomFile = path.join(
-                EXTENSION_ROOT_DIR_FOR_TESTS,
-                'src/test/datascience/notebook/kernelFailures/overrideBuiltinModule/random.py'
-            );
-            const expectedErrorMessage = `${DataScience.fileSeemsToBeInterferingWithKernelStartup(
-                getDisplayPath(Uri.file(randomFile), workspace.workspaceFolders || [])
-            )} \n${DataScience.viewJupyterLogForFurtherInfo}`;
-
-            const prompt = await hijackPrompt(
-                'showErrorMessage',
-                {
-                    exactMatch: expectedErrorMessage
-                },
-                { dismissPrompt: true },
-                disposables
-            );
-
-            await createAndOpenTemporaryNotebookForKernelCrash(`nb.ipynb`);
-            await insertCodeCell('print("123412341234")');
-            await runAllCellsInActiveNotebook();
-            // Wait for a max of 10s for error message to be dispalyed.
-            await Promise.race([prompt.displayed, sleep(10_000).then(() => Promise.reject('Prompt not displayed'))]);
-            prompt.dispose();
-
-            // Verify we have an output in the cell that contains the same information (about overirding built in modules).
-            const cell = window.activeNotebookEditor!.notebook.cellAt(0);
-            await waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'No output');
-            const err = translateCellErrorOutput(cell.outputs[0]);
-            assert.include(err.traceback.join(''), 'random.py');
-            assert.include(
-                err.traceback.join(''),
-                'seems to be overriding built in modules and interfering with the startup of the kernel'
-            );
-            assert.include(err.traceback.join(''), 'Consider renaming the file and starting the kernel again');
-        }
-        test('Display error about overriding builtin modules (without Python daemon', () =>
-            displayErrorAboutOverriddenBuiltInModules());
     });
 });

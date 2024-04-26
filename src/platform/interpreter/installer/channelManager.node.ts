@@ -9,6 +9,7 @@ import { Installer } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IInstallationChannelManager, IModuleInstaller, Product } from './types';
 import { Uri, env, window } from 'vscode';
+import { getEnvironmentType } from '../helpers';
 
 /**
  * Finds IModuleInstaller instances for a particular environment (like pip, poetry, conda).
@@ -59,8 +60,9 @@ export class InstallationChannelManager implements IInstallationChannelManager {
     }
 
     public async showNoInstallersMessage(interpreter: PythonEnvironment): Promise<void> {
+        const envType = getEnvironmentType(interpreter);
         const result = await window.showErrorMessage(
-            interpreter.envType === EnvironmentType.Conda ? Installer.noCondaOrPipInstaller : Installer.noPipInstaller,
+            envType === EnvironmentType.Conda ? Installer.noCondaOrPipInstaller : Installer.noPipInstaller,
             { modal: true },
             Installer.searchForHelp
         );
@@ -70,7 +72,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
             void env.openExternal(
                 Uri.parse(
                     `https://www.bing.com/search?q=Install Pip ${osName} ${
-                        interpreter.envType === EnvironmentType.Conda ? 'Conda' : ''
+                        envType === EnvironmentType.Conda ? 'Conda' : ''
                     }`
                 )
             );

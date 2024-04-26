@@ -31,10 +31,8 @@ suite('Kernel Environment Variables Service', () => {
     let settings: IWatchableJupyterSettings;
     const pathFile = Uri.joinPath(Uri.file('foobar'), 'bar');
     const interpreter: PythonEnvironment = {
-        envType: EnvironmentType.Conda,
         uri: pathFile,
-        id: pathFile.fsPath,
-        sysPrefix: '0'
+        id: pathFile.fsPath
     };
     let kernelSpec: IJupyterKernelSpec;
     let processEnv: NodeJS.ProcessEnv;
@@ -171,10 +169,8 @@ suite('Kernel Environment Variables Service', () => {
 
     test('KernelSpec interpreterPath used if interpreter is undefined', async () => {
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
-            envType: EnvironmentType.Conda,
             uri: Uri.joinPath(Uri.file('env'), 'foopath'),
-            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath,
-            sysPrefix: 'foosysprefix'
+            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath
         });
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'pathInInterpreterEnv'
@@ -189,12 +185,55 @@ suite('Kernel Environment Variables Service', () => {
         assert.strictEqual(vars![processPath!], `pathInInterpreterEnv`);
     });
 
-    async function testPYTHONNOUSERSITE(envType: EnvironmentType, shouldBeSet: boolean) {
+    test('No substitution of env variables in kernelSpec', async () => {
         when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
-            envType,
+            uri: Uri.joinPath(Uri.file('env'), 'foopath'),
+            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath
+        });
+        when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+            PATH: 'pathInInterpreterEnv'
+        });
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+            PATH: 'foobaz'
+        });
+        kernelSpec.env = {
+            ONE: '1',
+            TWO: '2'
+        };
+        // undefined for interpreter here, interpreterPath from the spec should be used
+        const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
+        assert.strictEqual(vars!['ONE'], `1`);
+        assert.strictEqual(vars!['TWO'], `2`);
+    });
+    test('substitute env variables in kernelSpec', async () => {
+        when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
+            uri: Uri.joinPath(Uri.file('env'), 'foopath'),
+            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath
+        });
+        when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+            PATH: 'pathInInterpreterEnv'
+        });
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+            PATH: 'foobaz'
+        });
+        kernelSpec.env = {
+            ONE: '1',
+            TWO: '2',
+            THREE: 'HELLO_${ONE}',
+            PATH: 'some_path;${PATH};${ONE}'
+        };
+        // undefined for interpreter here, interpreterPath from the spec should be used
+        const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
+        assert.strictEqual(vars!['ONE'], `1`);
+        assert.strictEqual(vars!['TWO'], `2`);
+        assert.strictEqual(vars!['THREE'], `HELLO_1`);
+        assert.strictEqual(vars!['PATH'], `some_path;pathInInterpreterEnv;1`);
+    });
+
+    async function testPYTHONNOUSERSITE(_envType: EnvironmentType, shouldBeSet: boolean) {
+        when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
             uri: Uri.file('foopath'),
-            id: Uri.file('foopath').fsPath,
-            sysPrefix: 'foosysprefix'
+            id: Uri.file('foopath').fsPath
         });
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'

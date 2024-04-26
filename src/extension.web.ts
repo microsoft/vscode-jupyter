@@ -1,6 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+class StopWatch {
+    private started = Date.now();
+    public get elapsedTime() {
+        return Date.now() - this.started;
+    }
+    public reset() {
+        this.started = Date.now();
+    }
+}
+// Do not move this line of code (used to measure extension load times).
+const stopWatch = new StopWatch();
+
+//===============================================
+// We start tracking the extension's startup time at this point.  The
+// locations at which we record various Intervals are marked below in
+// the same way as this.
+
+const durations = {
+    totalActivateTime: 0,
+    codeLoadingTime: 0,
+    startActivateTime: 0,
+    endActivateTime: 0,
+    workspaceFolderCount: 0
+};
+
 // reflect-metadata is needed by inversify, this must come before any inversify references
 import './platform/ioc/reflectMetadata';
 
@@ -19,59 +44,21 @@ if (typeof requestAnimationFrame === 'undefined' && typeof setImmediate === 'und
 import './platform/logging';
 
 //===============================================
-// We start tracking the extension's startup time at this point.  The
-// locations at which we record various Intervals are marked below in
-// the same way as this.
-
-const durations = {
-    totalActivateTime: 0,
-    codeLoadingTime: 0,
-    startActivateTime: 0,
-    endActivateTime: 0,
-    workspaceFolderCount: 0
-};
-
-import { StopWatch } from './platform/common/utils/stopWatch';
-// Do not move this line of code (used to measure extension load times).
-const stopWatch = new StopWatch();
-
-//===============================================
 // loading starts here
 
-import {
-    commands,
-    Disposable,
-    env,
-    ExtensionMode,
-    extensions,
-    Memento,
-    OutputChannel,
-    ProgressLocation,
-    ProgressOptions,
-    UIKind,
-    version,
-    window,
-    workspace
-} from 'vscode';
-import { buildApi, IExtensionApi } from './standalone/api/api';
+import { commands, env, ExtensionMode, UIKind, workspace } from 'vscode';
+import { buildApi, IExtensionApi } from './standalone/api';
 import { traceError } from './platform/logging';
 import {
-    GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IConfigurationService,
-    IDisposableRegistry,
     IExperimentService,
     IExtensionContext,
     IFeaturesManager,
-    IMemento,
-    IOutputChannel,
-    IsDevMode,
-    WORKSPACE_MEMENTO
+    IsDevMode
 } from './platform/common/types';
-import { createDeferred } from './platform/common/utils/async';
-import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
+import { sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.web';
@@ -85,25 +72,18 @@ import {
     Exiting,
     isCI,
     isTestExecution,
-    JUPYTER_OUTPUT_CHANNEL,
-    PylanceExtension,
-    PythonExtension,
     setIsCodeSpace,
     setIsWebExtension,
-    STANDARD_OUTPUT_CHANNEL,
     Telemetry
 } from './platform/common/constants';
-import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
-import { Container } from 'inversify/lib/container/container';
-import { ServiceContainer } from './platform/ioc/container';
-import { ServiceManager } from './platform/ioc/serviceManager';
-import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { sendTelemetryEvent } from './telemetry';
 import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
+import { addOutputChannel, displayProgress, handleError, initializeGlobals } from './extension.common';
+import { activateNotebookTelemetry } from './kernels/telemetry/notebookTelemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -117,25 +97,24 @@ let activatedServiceContainer: IServiceContainer | undefined;
 // public functions
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
+    durations.startActivateTime = stopWatch.elapsedTime;
+    activateNotebookTelemetry(stopWatch);
     setDisposableTracker(context.subscriptions);
     setIsCodeSpace(env.uiKind == UIKind.Web);
     setIsWebExtension(true);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
-        let api: IExtensionApi;
-        let ready: Promise<void>;
-        [api, ready] = await activateUnsafe(context, stopWatch, durations);
+        const [api, ready] = activateUnsafe(context);
+        await ready;
         // Send the "success" telemetry only if activation did not fail.
         // Otherwise Telemetry is send via the error handler.
-        sendStartupTelemetry(ready, durations, stopWatch)
-            // Run in the background.
-            .catch(noop);
-        await ready;
+        sendStartupTelemetry(durations, stopWatch);
         return api;
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
-        await handleError(ex, durations);
+        durations.endActivateTime = stopWatch.elapsedTime;
+        handleError(ex, durations, stopWatch);
         traceError('Failed to active the Jupyter Extension', ex);
         // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
         // Return a dummy object, to ensure other extension do not fall over.
@@ -171,16 +150,9 @@ export function deactivate(): Thenable<void> {
 // activation helpers
 
 // eslint-disable-next-line
-async function activateUnsafe(
-    context: IExtensionContext,
-    startupStopWatch: StopWatch,
-    startupDurations: Record<string, number>
-): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
-    const activationDeferred = createDeferred<void>();
+function activateUnsafe(context: IExtensionContext): [IExtensionApi, Promise<void>, IServiceContainer] {
+    const progress = displayProgress();
     try {
-        displayProgress(activationDeferred.promise);
-        startupDurations.startActivateTime = startupStopWatch.elapsedTime;
-
         //===============================================
         // activation starts here
 
@@ -192,43 +164,15 @@ async function activateUnsafe(
         //===============================================
         // activation ends here
 
-        startupDurations.endActivateTime = startupStopWatch.elapsedTime;
-        activationDeferred.resolve();
-
         const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
         return [api, activationPromise, serviceContainer];
     } finally {
-        // Make sure that we clear our status message
-        if (!activationDeferred.completed) {
-            activationDeferred.reject();
-        }
+        progress.dispose();
     }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function displayProgress(promise: Promise<any>) {
-    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension };
-    window.withProgress(progressOptions, () => promise).then(noop, noop);
 }
 
 /////////////////////////////
 // error handling
-
-async function handleError(ex: Error, startupDurations: typeof durations) {
-    notifyUser(Common.handleExtensionActivationError);
-    // Possible logger hasn't initialized either.
-    console.error('extension activation failed', ex);
-    traceError('extension activation failed', ex);
-    await sendErrorTelemetry(ex, startupDurations);
-}
-
-function notifyUser(msg: string) {
-    try {
-        window.showErrorMessage(msg).then(noop, noop);
-    } catch (ex) {
-        traceError('failed to notify user', ex);
-    }
-}
 
 async function activateComponents(
     context: IExtensionContext,
@@ -248,38 +192,6 @@ function addConsoleLogger() {
         }
 
         registerLogger(new ConsoleLogger(label));
-    }
-}
-
-function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager) {
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
-    registerLogger(new OutputChannelLogger(standardOutputChannel));
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(
-        IOutputChannel,
-        getJupyterOutputChannel(context.subscriptions),
-        JUPYTER_OUTPUT_CHANNEL
-    );
-
-    // Log env info.
-    standardOutputChannel.appendLine(`${env.appName} (${version}, ${env.remoteName}, ${env.appHost})`);
-    standardOutputChannel.appendLine(`Jupyter Extension Version: ${context.extension.packageJSON['version']}.`);
-    const pythonExtension = extensions.getExtension(PythonExtension);
-    if (pythonExtension) {
-        standardOutputChannel.appendLine(`Python Extension Version: ${pythonExtension.packageJSON['version']}.`);
-    } else {
-        standardOutputChannel.appendLine('Python Extension not installed.');
-    }
-    const pylanceExtension = extensions.getExtension(PylanceExtension);
-    if (pylanceExtension) {
-        standardOutputChannel.appendLine(`Pylance Extension Version: ${pylanceExtension.packageJSON['version']}.`);
-    } else {
-        standardOutputChannel.appendLine('Pylance Extension not installed.');
-    }
-    if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
-        standardOutputChannel.appendLine(`No workspace folder opened.`);
-    } else {
-        standardOutputChannel.appendLine(`Opened workspace folder.`);
     }
 }
 
@@ -350,20 +262,4 @@ async function activateLegacy(
     const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
     featureManager.initialize();
     context.subscriptions.push(featureManager);
-}
-
-function initializeGlobals(context: IExtensionContext): [IServiceManager, IServiceContainer] {
-    const cont = new Container({ skipBaseClassChecks: true });
-    const serviceManager = new ServiceManager(cont);
-    const serviceContainer = new ServiceContainer(cont);
-
-    serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
-    serviceManager.addSingletonInstance<IServiceManager>(IServiceManager, serviceManager);
-
-    serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, context.subscriptions);
-    serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
-    serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
-    serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
-
-    return [serviceManager, serviceContainer];
 }

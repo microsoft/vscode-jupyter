@@ -4,17 +4,25 @@
 import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
-import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
+import {
+    NotebookData,
+    NotebookDocument,
+    NotebookEdit,
+    TextDocument,
+    Uri,
+    WorkspaceEdit,
+    extensions,
+    workspace,
+    type NotebookCell
+} from 'vscode';
 import {
     InteractiveWindowView,
     jupyterLanguageToMonacoLanguageMapping,
     JupyterNotebookView,
     WIDGET_STATE_MIMETYPE
 } from './constants';
-import { traceError, traceInfo } from '../logging';
-
-import { ICell } from './types';
 import { splitLines } from './helpers';
+import { noop } from './utils/misc';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -101,28 +109,6 @@ export function pruneCell(cell: nbformat.ICell): nbformat.ICell {
     return result;
 }
 
-export function traceCellResults(prefix: string, results: ICell[]) {
-    if (results.length > 0 && results[0].data.cell_type === 'code') {
-        const cell = results[0].data as nbformat.ICodeCell;
-        const error = cell.outputs && cell.outputs[0] ? 'evalue' in cell.outputs[0] : undefined;
-        if (error) {
-            traceError(`${prefix} Error : ${error}`);
-        } else if (cell.outputs && cell.outputs[0]) {
-            if (cell.outputs[0].output_type.includes('image')) {
-                traceInfo(`${prefix} Output: image`);
-            } else {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const data = (cell.outputs[0] as any).data;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const text = (cell.outputs[0] as any).text;
-                traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
-            }
-        }
-    } else {
-        traceInfo(`${prefix} no output.`);
-    }
-}
-
 export function translateKernelLanguageToMonaco(language: string): string {
     language = language.toLowerCase();
     if (language.length === 2 && language.endsWith('#')) {
@@ -183,23 +169,72 @@ export type NotebookMetadata = nbformat.INotebookMetadata & {
 };
 
 export function getNotebookMetadata(document: NotebookDocument | NotebookData): NotebookMetadata | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
-    // Create a clone.
-    return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
+    if (useCustomMetadata()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+        // Create a clone.
+        return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
+    } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata as any;
+        // Create a clone.
+        return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
+    }
 }
 
 export function getNotebookFormat(document: NotebookDocument): {
     nbformat: number | undefined;
     nbformat_minor: number | undefined;
 } {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
-    // Create a clone.
-    return {
-        nbformat: notebookContent?.nbformat,
-        nbformat_minor: notebookContent?.nbformat_minor
-    };
+    if (useCustomMetadata()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+        // Create a clone.
+        return {
+            nbformat: notebookContent?.nbformat,
+            nbformat_minor: notebookContent?.nbformat_minor
+        };
+    } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata as any;
+        // Create a clone.
+        return {
+            nbformat: notebookContent?.nbformat,
+            nbformat_minor: notebookContent?.nbformat_minor
+        };
+    }
+}
+
+export async function updateNotebookMetadata(document: NotebookDocument, metadata: NotebookMetadata) {
+    const edit = new WorkspaceEdit();
+    if (useCustomMetadata()) {
+        // Create a clone.
+        const docMetadata: {
+            custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
+        } = JSON.parse(JSON.stringify(document.metadata || { custom: {} }));
+
+        docMetadata.custom = docMetadata.custom || {};
+        docMetadata.custom.metadata = metadata;
+
+        edit.set(document.uri, [
+            NotebookEdit.updateNotebookMetadata(
+                sortObjectPropertiesRecursively({
+                    ...(document.metadata || {}),
+                    custom: docMetadata.custom
+                })
+            )
+        ]);
+    } else {
+        edit.set(document.uri, [
+            NotebookEdit.updateNotebookMetadata(
+                sortObjectPropertiesRecursively({
+                    ...(document.metadata || {}),
+                    metadata
+                })
+            )
+        ]);
+    }
+    await workspace.applyEdit(edit);
 }
 
 export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {
@@ -412,4 +447,81 @@ export function parseSemVer(versionString: string): SemVer | undefined {
         const build = parseInt(versionMatch[3], 10);
         return parse(`${major}.${minor}.${build}`, true) ?? undefined;
     }
+}
+
+type JupyterCellMetadata = Pick<nbformat.IRawCell, 'id' | 'metadata' | 'attachments'> &
+    Pick<nbformat.IMarkdownCell, 'id' | 'attachments'> &
+    Pick<nbformat.ICodeCell, 'id' | 'metadata' | 'attachments'> &
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Record<string, any>;
+
+export function getCellMetadata(cell: NotebookCell): JupyterCellMetadata {
+    if (useCustomMetadata()) {
+        const metadata: JupyterCellMetadata = JSON.parse(JSON.stringify(cell.metadata.custom || {})) || {};
+        const cellMetadata = metadata as nbformat.IRawCell;
+        // metadata property is never optional.
+        cellMetadata.metadata = cellMetadata.metadata || {};
+
+        return metadata;
+    } else {
+        const metadata: JupyterCellMetadata = JSON.parse(JSON.stringify(cell.metadata || {})) || { metadata: {} };
+        // metadata property is never optional.
+        metadata.metadata = metadata.metadata || {};
+        return metadata;
+    }
+}
+
+export function useCustomMetadata() {
+    try {
+        const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
+        if (ext && typeof ext.exports.dropCustomMetadata === 'boolean') {
+            return ext.exports.dropCustomMetadata ? false : true;
+        }
+    } catch {
+        // This happens in integration tests, in this case just return `true`.
+        return true;
+    }
+    try {
+        // Means ipynb extension has not yet been activated.
+        // Does not matter, we can just check the setting.
+        return !workspace.getConfiguration('jupyter', undefined).get<boolean>('experimental.dropCustomMetadata', false);
+    } catch {
+        // This happens in unit tests, in this case just return `true`.
+        return true;
+    }
+}
+
+export async function activateIPynbExtension() {
+    const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
+    if (ext && ext.isActive === false) {
+        await ext.activate().then(noop, noop);
+    }
+}
+
+/**
+ * Sort the JSON to minimize unnecessary SCM changes.
+ * Jupyter notbeooks/labs sorts the JSON keys in alphabetical order.
+ * https://github.com/microsoft/vscode/issues/208137
+ */
+export function sortObjectPropertiesRecursively<T>(obj: T): T {
+    return doSortObjectPropertiesRecursively(obj) as T;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function doSortObjectPropertiesRecursively(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(sortObjectPropertiesRecursively);
+    }
+    if (obj !== undefined && obj !== null && typeof obj === 'object' && Object.keys(obj).length > 0) {
+        return (
+            Object.keys(obj)
+                .sort()
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .reduce<Record<string, any>>((sortedObj, prop) => {
+                    sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
+                    return sortedObj;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                }, {}) as any
+        );
+    }
+    return obj;
 }

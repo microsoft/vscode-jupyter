@@ -42,7 +42,7 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
         if (!isJupyterNotebook(notebook)) {
             return;
         }
-        const preferredRemote = await this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(notebook.uri);
+        const preferredRemote = await this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(notebook);
         if (!preferredRemote) {
             return;
         }

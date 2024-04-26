@@ -143,7 +143,7 @@ suite('Kernel Execution @kernelCore', function () {
         await kernelExecution.executeCell(cell);
 
         assert.isAtLeast(cell.executionSummary?.executionOrder || 0, 1);
-        assert.strictEqual(Buffer.from(cell.outputs[0].items[0].data).toString().trim(), '123412341234');
+        assert.strictEqual(new TextDecoder().decode(cell.outputs[0].items[0].data).toString().trim(), '123412341234');
         assert.isTrue(cell.executionSummary?.success);
     });
     test('Test __vsc_ipynb_file__ defined in cell using VSCode Kernel', async () => {

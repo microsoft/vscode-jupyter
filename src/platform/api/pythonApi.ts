@@ -8,7 +8,6 @@ import {
     Event,
     Uri,
     ExtensionMode,
-    CancellationTokenSource,
     CancellationToken,
     workspace,
     extensions,
@@ -27,21 +26,25 @@ import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironments/info/interpreter';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
+import { isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import {
-    Environment,
-    KnownEnvironmentTools,
-    PythonExtension as PythonExtensionApi,
-    ResolvedEnvironment
-} from '@vscode/python-extension';
+import { Environment, PythonExtension as PythonExtensionApi, ResolvedEnvironment } from '@vscode/python-extension';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
 import { getOSType, OSType } from '../common/utils/platform';
 import { SemVer } from 'semver';
-import { getEnvironmentType } from '../interpreter/helpers';
+import {
+    getCachedEnvironment,
+    getCachedEnvironments,
+    getCachedVersion,
+    getEnvironmentType,
+    getPythonEnvironmentName,
+    resolvedPythonEnvToJupyterEnv,
+    setPythonApi
+} from '../interpreter/helpers';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
+import { trackInterpreterDiscovery, trackPythonExtensionActivation } from '../../kernels/telemetry/notebookTelemetry';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -50,63 +53,20 @@ export function deserializePythonEnvironment(
     if (pythonVersion) {
         const result = {
             ...pythonVersion,
-            sysPrefix: pythonVersion.sysPrefix || '',
             uri: Uri.file(pythonVersion.path || ''),
-            id: pythonEnvId || (pythonVersion as any).id,
-            envPath: pythonVersion.envPath ? Uri.file(pythonVersion.envPath) : undefined,
-            displayPath:
-                'displayPath' in pythonVersion && typeof pythonVersion.displayPath === 'string'
-                    ? Uri.file(pythonVersion.displayPath)
-                    : undefined
+            id: pythonEnvId || (pythonVersion as any).id
         };
 
         // Cleanup stuff that shouldn't be there.
         delete result.path;
-        if (!pythonVersion.envPath) {
-            delete result.envPath;
-        }
         return result;
     }
 }
-export function resolvedPythonEnvToJupyterEnv(
-    env: ResolvedEnvironment,
-    supportsEmptyCondaEnv: boolean
-): PythonEnvironment | undefined {
-    const envTools = env.tools as KnownEnvironmentTools[];
-    // Map the Python env tool to a Jupyter environment type.
-    const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
-        ['Conda', EnvironmentType.Conda],
-        ['Pyenv', EnvironmentType.Pyenv],
-        ['Pipenv', EnvironmentType.Pipenv],
-        ['Poetry', EnvironmentType.Poetry],
-        ['VirtualEnvWrapper', EnvironmentType.VirtualEnvWrapper],
-        ['VirtualEnv', EnvironmentType.VirtualEnv],
-        ['Venv', EnvironmentType.Venv]
-    ];
-    let envType = envTools.length ? (envTools[0] as EnvironmentType) : EnvironmentType.Unknown;
-    if (env.environment?.type === 'Conda') {
-        envType = EnvironmentType.Conda;
-    } else {
-        for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
-            if (envTools.includes(pythonEnvTool)) {
-                envType = JupyterEnv;
-                break;
-            }
-        }
-        if (envType === EnvironmentType.Unknown && env.environment?.type === 'VirtualEnvironment') {
-            envType = EnvironmentType.VirtualEnv;
-        }
-    }
-    let isCondaEnvWithoutPython = false;
+export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | undefined {
     let uri: Uri;
     let id = env.id;
-    let sysPrefix = env.executable.sysPrefix;
     if (!env.executable.uri) {
-        if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
-            isCondaEnvWithoutPython = true;
-            // sysprefix is the same as the env path.
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            sysPrefix = sysPrefix || env.environment?.folderUri?.fsPath || '';
+        if (getEnvironmentType(env) === EnvironmentType.Conda) {
             uri =
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
@@ -121,66 +81,7 @@ export function resolvedPythonEnvToJupyterEnv(
 
     return {
         id,
-        sysPrefix: sysPrefix || '',
-        envPath: env.environment?.folderUri,
-        displayPath: env.environment?.folderUri || Uri.file(env.path),
-        envName: env.environment?.name || '',
-        uri,
-        displayName: env.environment?.name || '',
-        envType,
-        isCondaEnvWithoutPython,
-        version: env.version
-            ? {
-                  major: env.version.major,
-                  minor: env.version.minor,
-                  patch: env.version.micro,
-                  raw: env.version.sysVersion
-              }
-            : undefined
-    };
-}
-export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: boolean): PythonEnvironment | undefined {
-    const envType = getEnvironmentType(env);
-    let isCondaEnvWithoutPython = false;
-    let uri: Uri;
-    let id = env.id;
-    let sysPrefix = env.executable.sysPrefix;
-    if (!env.executable.uri) {
-        if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
-            isCondaEnvWithoutPython = true;
-            // sysprefix is the same as the env path.
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            sysPrefix = sysPrefix || env.environment?.folderUri?.fsPath || '';
-            uri =
-                getOSType() === OSType.Windows
-                    ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
-                    : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
-        } else {
-            traceWarning(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
-            return;
-        }
-    } else {
-        uri = env.executable.uri;
-    }
-
-    return {
-        id,
-        sysPrefix: sysPrefix || '',
-        envPath: env.environment?.folderUri,
-        displayPath: env.environment?.folderUri || Uri.file(env.path),
-        envName: env.environment?.name || '',
-        uri,
-        displayName: env.environment?.name || '',
-        envType,
-        isCondaEnvWithoutPython,
-        version: env.version
-            ? {
-                  major: env.version.major || 0,
-                  minor: env.version.minor || 0,
-                  patch: env.version.micro || 0,
-                  raw: env.version.sysVersion || ''
-              }
-            : undefined
+        uri
     };
 }
 
@@ -189,9 +90,7 @@ export function serializePythonEnvironment(
 ): PythonEnvironment_PythonApi | undefined {
     if (jupyterVersion) {
         const result = Object.assign({}, jupyterVersion, {
-            path: getFilePath(jupyterVersion.uri),
-            envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined,
-            displayPath: jupyterVersion.displayPath ? getFilePath(jupyterVersion.displayPath) : undefined
+            path: getFilePath(jupyterVersion.uri)
         });
         // Cleanup stuff that shouldn't be there.
         delete (result as any).uri;
@@ -250,6 +149,12 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         if (extension?.packageJSON?.version) {
             this._pythonExtensionVersion = new SemVer(extension?.packageJSON?.version);
         }
+        if (extension?.exports) {
+            setPythonApi(extension.exports);
+            extension.exports.environments.known.forEach((e) => {
+                trackInterpreterDiscovery(e);
+            });
+        }
         return extension?.exports;
     }
 
@@ -284,8 +189,14 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         }
         let activated = false;
         if (!pythonExtension.isActive) {
+            const tracker = trackPythonExtensionActivation();
             try {
-                await pythonExtension.activate();
+                const promise = pythonExtension.activate();
+                promise.then(
+                    () => tracker.stop(),
+                    () => tracker.stop()
+                );
+                await promise;
                 activated = true;
             } catch (ex) {
                 traceError(`Failed activating the python extension: `, ex);
@@ -395,9 +306,8 @@ export class InterpreterService implements IInterpreterService {
     public onDidRemoveInterpreter = this._onDidRemoveInterpreter.event;
     public onDidEnvironmentVariablesChange = this._onDidEnvironmentVariablesChange.event;
     private eventHandlerAdded?: boolean;
-    private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
+    // private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     private apiPromise: Promise<PythonExtensionApi | undefined> | undefined;
-    private api?: PythonExtensionApi;
     private _status: 'refreshing' | 'idle' = 'idle';
     public get status() {
         return this._status;
@@ -412,33 +322,24 @@ export class InterpreterService implements IInterpreterService {
     private readonly _onDidChangeStatus = new EventEmitter<void>();
     public readonly onDidChangeStatus = this._onDidChangeStatus.event;
     private refreshPromises = new PromiseMonitor();
-    private pauseEnvDetection = false;
     private readonly onResumeEnvDetection = new EventEmitter<void>();
-    public get known() {
-        return this.api?.environments.known || [];
-    }
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
-        if (this.extensionChecker.isPythonExtensionInstalled) {
-            if (!this.extensionChecker.isPythonExtensionActive) {
-                // This event may not fire. It only fires if we're the reason for python extension
-                // activation. VS code does not fire such an event itself if something else activates
-                this.apiProvider.onDidActivatePythonExtension(
-                    () => {
-                        this.builtListOfInterpretersAtLeastOnce = false;
-                        this.hookupOnDidChangeInterpreterEvent();
-                        this.buildListOfInterpretersForFirstTime();
-                    },
-                    this,
-                    this.disposables
-                );
-            }
+        if (this.extensionChecker.isPythonExtensionInstalled && !this.extensionChecker.isPythonExtensionActive) {
+            // This event may not fire. It only fires if we're the reason for python extension
+            // activation. VS code does not fire such an event itself if something else activates
+            this.apiProvider.onDidActivatePythonExtension(
+                () => {
+                    this.hookupOnDidChangeInterpreterEvent();
+                },
+                this,
+                this.disposables
+            );
         }
-        workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders, this, disposables);
         workspace.onDidGrantWorkspaceTrust(() => this.refreshInterpreters(true), this, this.disposables);
         this.disposables.push(this._onDidChangeStatus);
         this.disposables.push(this.refreshPromises);
@@ -446,11 +347,9 @@ export class InterpreterService implements IInterpreterService {
         this.refreshPromises.onStateChange(() => {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
-        workspace.onDidGrantWorkspaceTrust(
-            () => this.populateCachedListOfInterpreters(true).catch(noop),
-            this,
-            this.disposables
-        );
+    }
+    public initialize() {
+        this.hookupOnDidChangeInterpreterEvent();
     }
     public async resolveEnvironment(id: string | Environment): Promise<ResolvedEnvironment | undefined> {
         return this.getApi().then((api) => {
@@ -470,44 +369,6 @@ export class InterpreterService implements IInterpreterService {
         this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreters.event;
     }
-    private readonly _interpreters = new Map<string, { resolved: PythonEnvironment }>();
-    public get resolvedEnvironments(): PythonEnvironment[] {
-        this.hookupOnDidChangeInterpreterEvent();
-        return Array.from(this._interpreters.values()).map((item) => item.resolved);
-    }
-    public get environmentsFound(): boolean {
-        this.getApi().catch(noop);
-        this.hookupOnDidChangeInterpreterEvent();
-        return (this.api?.environments?.known.length ?? 0) > 0;
-    }
-    private getInterpretersCancellation?: CancellationTokenSource;
-    private getInterpreters(): Promise<PythonEnvironment[]> {
-        this.hookupOnDidChangeInterpreterEvent();
-        // Cache result as it only changes when the interpreter list changes or we add more workspace folders
-        if (!this.interpreterListCachePromise) {
-            this.getInterpretersCancellation?.cancel();
-            this.getInterpretersCancellation?.dispose();
-            const cancellation = (this.getInterpretersCancellation = new CancellationTokenSource());
-            this.interpreterListCachePromise = this.getInterpretersImpl(cancellation.token);
-            this.interpreterListCachePromise.finally(() => cancellation.dispose()).catch(noop);
-            this.refreshPromises.push(this.interpreterListCachePromise);
-        }
-        return this.interpreterListCachePromise;
-    }
-    pauseInterpreterDetection(cancelToken: CancellationToken): void {
-        if (cancelToken.isCancellationRequested) {
-            return;
-        }
-        this.pauseEnvDetection = true;
-        cancelToken.onCancellationRequested(
-            () => {
-                this.pauseEnvDetection = false;
-                this.triggerPendingEvents();
-            },
-            this,
-            this.disposables
-        );
-    }
     public async refreshInterpreters(forceRefresh: boolean = false) {
         const promise = (async () => {
             const api = await this.getApi();
@@ -516,8 +377,7 @@ export class InterpreterService implements IInterpreterService {
             }
             try {
                 await api.environments.refreshEnvironments({ forceRefresh });
-                this.interpreterListCachePromise = undefined;
-                await this.getInterpreters();
+                this.hookupOnDidChangeInterpreterEvent();
                 traceVerbose(`Refreshed Environments`);
             } catch (ex) {
                 traceError(`Failed to refresh the list of interpreters`);
@@ -587,11 +447,13 @@ export class InterpreterService implements IInterpreterService {
                         return;
                     }
                     this.lastLoggedResourceAndInterpreterId = key;
+                    const version = getCachedVersion(item);
                     traceInfo(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
-                        )} (${item?.envType}, '${item?.envName}', ${item?.version?.major}.${item?.version?.minor}.${item
-                            ?.version?.patch})`
+                        )} (${item && getEnvironmentType(item)}, '${
+                            item ? getPythonEnvironmentName(item) : ''
+                        }', ${version?.major}.${version?.minor}.${version?.micro})`
                     );
                 })
                 .catch(noop);
@@ -673,10 +535,7 @@ export class InterpreterService implements IInterpreterService {
     }
     private trackResolvedEnvironment(env: ResolvedEnvironment | undefined) {
         if (env) {
-            const displayEmptyCondaEnv =
-                this.apiProvider.pythonExtensionVersion &&
-                this.apiProvider.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
-            const resolved = resolvedPythonEnvToJupyterEnv(env, displayEmptyCondaEnv ? true : false);
+            const resolved = resolvedPythonEnvToJupyterEnv(env);
             if (!resolved) {
                 return;
             }
@@ -686,18 +545,7 @@ export class InterpreterService implements IInterpreterService {
                 })
                 .catch(noop);
 
-            if (
-                !this._interpreters.get(env.id) ||
-                !areObjectsWithUrisTheSame(resolved, this._interpreters.get(env.id)?.resolved)
-            ) {
-                // Also update the interpreter details in place, so that old references get the latest details
-                const info = this._interpreters.get(env.id);
-                if (info?.resolved) {
-                    Object.assign(info.resolved, resolved);
-                }
-                this._interpreters.set(env.id, { resolved });
-                this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
-            }
+            this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
             return resolved;
         }
     }
@@ -712,10 +560,7 @@ export class InterpreterService implements IInterpreterService {
         } else {
             this.pendingInterpretersChangeEventTriggers.set(interpreter?.id || '', interpreter);
         }
-        if (!this.pauseEnvDetection) {
-            this.triggerPendingEvents();
-            return;
-        }
+        this.triggerPendingEvents();
     }
     private triggerPendingEvents() {
         this.pendingInterpreterChangeEventTriggers.forEach((interpreter) =>
@@ -740,130 +585,15 @@ export class InterpreterService implements IInterpreterService {
         }
         if (!this.apiPromise) {
             this.apiPromise = this.apiProvider.getNewApi();
-            this.apiPromise.then((api) => (api ? (this.api = api) : undefined)).catch(noop);
         }
         return this.apiPromise;
     }
 
-    private onDidChangeWorkspaceFolders() {
-        this.interpreterListCachePromise = undefined;
-    }
-    private populateCachedListOfInterpreters(clearCache?: boolean) {
-        if (clearCache) {
-            this.interpreterListCachePromise = undefined;
-        }
-        const promise = this.getInterpreters().catch(noop);
-        this.refreshPromises.push(promise);
-        // Python extension might completely this promise, however this doesn't mean all of the
-        // events have been triggered,
-        // I.e. even after we call refresh the python extension could trigger events indicating that there are more changes to the interpreters.
-        // Hence wait for at least 2 seconds for these events to complete getting triggered.
-        // Why 2s and not 5 or why not 1s, there's no real reason, just a guess.
-        // This promise only improves the discovery of kernels, even without this things work,
-        // but with this things work better as the kernel discovery knows that Python refresh has finished.
-        this.refreshPromises.push(promise.then(() => sleep(1_000)));
-        return promise;
-    }
-    private async getInterpretersImpl(
-        cancelToken: CancellationToken,
-        recursiveCounter = 0
-    ): Promise<PythonEnvironment[]> {
-        if (!workspace.isTrusted) {
-            return [];
-        }
-
-        if (this.extensionChecker.isPythonExtensionInstalled) {
-            this.builtListOfInterpretersAtLeastOnce = true;
-        }
-
-        const allInterpreters: PythonEnvironment[] = [];
-        let buildListOfInterpretersAgain = false;
-        await this.getApi().then(async (api) => {
-            if (!api || cancelToken.isCancellationRequested) {
-                return [];
-            }
-            let previousListOfInterpreters = api.environments.known.length;
-            try {
-                await Promise.all(
-                    api.environments.known.map(async (item) => {
-                        try {
-                            const env = await api.environments.resolveEnvironment(item);
-                            const resolved = this.trackResolvedEnvironment(env);
-                            if (resolved) {
-                                allInterpreters.push(resolved);
-                            } else if (item.executable.uri && item.environment?.type !== EnvironmentType.Conda) {
-                                // Ignore cases where we do not have Uri and its a conda env, as those as conda envs without Python.
-                                traceError(
-                                    `Failed to get env details from Python API for ${getDisplayPath(
-                                        item.id
-                                    )} without an error`
-                                );
-                            }
-                        } catch (ex) {
-                            traceError(`Failed to get env details from Python API for ${getDisplayPath(item.id)}`, ex);
-                        }
-                    })
-                );
-                // We have updated the list of environments, trigger a change
-                // Possible one of the environments was resolve even before this method started.
-                // E.g. we got active interpreter details, and then we came here.
-                // At this point the env is already resolved, but we did not trigger a change event.
-                this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
-            } catch (ex) {
-                traceError(`Failed to refresh list of interpreters and get their details`, ex);
-            }
-
-            if (previousListOfInterpreters < api.environments.known.length) {
-                // this means we haven't completed the first refresh of the list of interpreters.
-                // We've received yet another set of interpreters.
-                buildListOfInterpretersAgain = true;
-            }
-        });
-        if (cancelToken.isCancellationRequested) {
-            return [];
-        }
-        if (buildListOfInterpretersAgain && recursiveCounter < 10) {
-            traceVerbose(
-                `List of interpreters changed after a while, will need to rebuild it again, counter = ${recursiveCounter}`
-            );
-            return this.getInterpretersImpl(cancelToken, recursiveCounter++);
-        }
-        traceVerbose(
-            `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters
-                .map((item) => `${item.id}:${item.displayName}:${item.envType}:${getDisplayPath(item.uri)}`)
-                .join(', ')}`
-        );
-        return allInterpreters;
-    }
-    private builtListOfInterpretersAtLeastOnce?: boolean;
-    private buildListOfInterpretersForFirstTime() {
-        if (this.builtListOfInterpretersAtLeastOnce) {
-            return;
-        }
-        // Get latest interpreter list in the background.
-        if (this.extensionChecker.isPythonExtensionActive) {
-            this.builtListOfInterpretersAtLeastOnce = true;
-            this.populateCachedListOfInterpreters().catch(noop);
-        }
-        this.extensionChecker.onPythonExtensionInstallationStatusChanged(
-            (e) => {
-                if (e !== 'installed') {
-                    return;
-                }
-                if (this.extensionChecker.isPythonExtensionActive) {
-                    this.populateCachedListOfInterpreters().catch(noop);
-                }
-            },
-            this,
-            this.disposables
-        );
-    }
     private hookupOnDidChangeInterpreterEvent() {
         // Only do this once.
         if (this.eventHandlerAdded) {
             return;
         }
-        this.buildListOfInterpretersForFirstTime();
         this.getApi()
             .then((api) => {
                 if (!this.eventHandlerAdded && api) {
@@ -879,7 +609,6 @@ export class InterpreterService implements IInterpreterService {
                     api.environments.onDidChangeActiveEnvironmentPath(
                         () => {
                             traceVerbose(`Detected change in Active Python environment via Python API`);
-                            this.interpreterListCachePromise = undefined;
                             this.workspaceCachedActiveInterpreter.clear();
                             this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
                         },
@@ -891,37 +620,25 @@ export class InterpreterService implements IInterpreterService {
                             traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}'`);
                             // Remove items that are no longer valid.
                             if (e.type === 'remove') {
-                                this._interpreters.delete(e.env.id);
+                                this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
+                                this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
+                                this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                return;
                             }
-                            // If this is a conda env that was previously resolved,
-                            // & subsequently updated as having python then trigger changes.
-                            const pythonInstalledIntoConda =
-                                e.type === 'update' &&
-                                this._interpreters.get(e.env.id)?.resolved.isCondaEnvWithoutPython &&
-                                e.env.executable.uri
-                                    ? true
-                                    : false;
-                            this.populateCachedListOfInterpreters(true)
-                                .finally(() => {
-                                    const info = this._interpreters.get(e.env.id);
-                                    if (e.type === 'remove' && !info) {
-                                        this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
-                                        this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
-                                        this._onDidRemoveInterpreter.fire({ id: e.env.id });
-                                    } else if (
-                                        e.type === 'update' &&
-                                        info &&
-                                        pythonInstalledIntoConda &&
-                                        !info.resolved.isCondaEnvWithoutPython
-                                    ) {
-                                        this.triggerEventIfAllowed('interpreterChangeEvent', info.resolved);
-                                        this.triggerEventIfAllowed('interpretersChangeEvent', info.resolved);
-                                    }
-                                })
-                                .catch(noop);
+                            const info = resolvedPythonEnvToJupyterEnv(getCachedEnvironment(e.env));
+                            if (info) {
+                                this.triggerEventIfAllowed('interpreterChangeEvent', info);
+                                this.triggerEventIfAllowed('interpretersChangeEvent', info);
+                            }
                         },
                         this,
                         this.disposables
+                    );
+                    this.didChangeInterpreters.fire(
+                        getCachedEnvironments()
+                            .map(resolvedPythonEnvToJupyterEnv)
+                            .filter((e) => !!e)
+                            .map((e) => e as PythonEnvironment)
                     );
                 }
             })

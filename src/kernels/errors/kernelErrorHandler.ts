@@ -59,7 +59,14 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platform/errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 import { fileToCommandArgument } from '../../platform/common/helpers';
-import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
+import {
+    getCachedEnvironment,
+    getEnvironmentType,
+    getPythonEnvDisplayName,
+    getPythonEnvironmentName,
+    getSysPrefix,
+    isCondaEnvironmentWithoutPython
+} from '../../platform/interpreter/helpers';
 import { JupyterServerCollection } from '../../api';
 import { getJupyterDisplayName } from '../jupyter/connection/jupyterServerProviderRegistry';
 
@@ -148,9 +155,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     ? error.product
                     : ProductNames.get(error.product) || `${error.product}`;
             const interpreterDisplayName = getPythonEnvDisplayName(error.interpreter) || error.interpreter.id || '';
-            const displayPath = getDisplayPath(
-                'executable' in error.interpreter ? error.interpreter.executable.uri : error.interpreter.uri
-            );
+            const env = getCachedEnvironment(error.interpreter);
+            const displayPath = getDisplayPath(env?.executable.uri);
             let displayName = interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
             return DataScience.packageNotInstalledWindowsLongPathNotEnabledError(packageName, displayName);
         } else if (
@@ -161,8 +167,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             !(await this.fs.exists(error.kernelConnectionMetadata.interpreter.uri))
         ) {
             return DataScience.failedToStartKernelDueToMissingPythonEnv(
-                error.kernelConnectionMetadata.interpreter.displayName ||
-                    error.kernelConnectionMetadata.interpreter.envName ||
+                getPythonEnvDisplayName(error.kernelConnectionMetadata.interpreter) ||
+                    getPythonEnvironmentName(error.kernelConnectionMetadata.interpreter) ||
                     getDisplayPath(error.kernelConnectionMetadata.interpreter.uri)
             );
         } else if (
@@ -177,12 +183,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             // its possible the kernel failed to start due to missing dependencies.
             return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
         } else if (error instanceof BaseKernelError || error instanceof WrappedKernelError) {
-            const files = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
+            const [files, sysPrefix] = await Promise.all([
+                this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource),
+                getSysPrefix(error.kernelConnectionMetadata.interpreter)
+            ]);
             const failureInfo = analyzeKernelErrors(
                 workspace.workspaceFolders || [],
                 error,
                 getDisplayNameOrNameOfKernelConnection(error.kernelConnectionMetadata),
-                error.kernelConnectionMetadata.interpreter?.sysPrefix,
+                sysPrefix,
                 files.map((f) => f.uri)
             );
             if (failureInfo) {
@@ -416,15 +425,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     if (details) {
                         sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
                             envMissingReason: 'Unknown',
-                            isEmptyCondaEnv: details.isCondaEnvWithoutPython,
-                            pythonEnvType: details.envType,
+                            isEmptyCondaEnv: isCondaEnvironmentWithoutPython(details),
+                            pythonEnvType: getEnvironmentType(details),
                             fileExists
                         });
                     } else {
                         sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
                             envMissingReason: 'EmptyEnvDetailsFromPython',
-                            isEmptyCondaEnv: kernelConnection.interpreter.isCondaEnvWithoutPython,
-                            pythonEnvType: kernelConnection.interpreter.envType,
+                            isEmptyCondaEnv: isCondaEnvironmentWithoutPython(kernelConnection.interpreter),
+                            pythonEnvType: getEnvironmentType(kernelConnection.interpreter),
                             fileExists
                         });
                     }
@@ -433,8 +442,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     const fileExists = await this.fs.exists(kernelConnection.interpreter.uri);
                     sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
                         envMissingReason: 'FailedToGetEnvDetailsFromPython',
-                        isEmptyCondaEnv: kernelConnection.interpreter.isCondaEnvWithoutPython,
-                        pythonEnvType: kernelConnection.interpreter.envType,
+                        isEmptyCondaEnv: isCondaEnvironmentWithoutPython(kernelConnection.interpreter),
+                        pythonEnvType: getEnvironmentType(kernelConnection.interpreter),
                         fileExists
                     });
                 })
@@ -443,8 +452,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             window
                 .showErrorMessage(
                     DataScience.failedToStartKernelDueToMissingPythonEnv(
-                        kernelConnection.interpreter.displayName ||
-                            kernelConnection.interpreter.envName ||
+                        getPythonEnvDisplayName(kernelConnection.interpreter) ||
+                            getPythonEnvironmentName(kernelConnection.interpreter) ||
                             getDisplayPath(kernelConnection.interpreter.uri)
                     )
                 )
@@ -472,12 +481,16 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 tokenSource.dispose();
             }
         } else {
-            const files = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
+            const [files, sysPrefix] = await Promise.all([
+                this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource),
+                getSysPrefix(kernelConnection.interpreter)
+            ]);
+
             const failureInfo = analyzeKernelErrors(
                 workspace.workspaceFolders || [],
                 err,
                 getDisplayNameOrNameOfKernelConnection(kernelConnection),
-                kernelConnection.interpreter?.sysPrefix,
+                sysPrefix,
                 files.map((f) => f.uri)
             );
             this.sendKernelTelemetry(err, errorContext, resource, failureInfo?.reason);
@@ -597,22 +610,26 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
         return;
     }
     const displayNameOfKernel =
-        kernelConnection.interpreter.displayName || getFilePath(kernelConnection.interpreter.uri);
+        getPythonEnvDisplayName(kernelConnection.interpreter) || getFilePath(kernelConnection.interpreter.uri);
     const ipyKernelName = ProductNames.get(Product.ipykernel)!;
     const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
 
     let installerCommand = `${fileToCommandArgument(
         getFilePath(kernelConnection.interpreter.uri)
     )} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
-    if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
-        if (kernelConnection.interpreter?.envName) {
-            installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName} --update-deps --force-reinstall`;
-        } else if (kernelConnection.interpreter?.envPath) {
+    if (kernelConnection.interpreter && getEnvironmentType(kernelConnection.interpreter) === EnvironmentType.Conda) {
+        const env = getCachedEnvironment(kernelConnection.interpreter);
+        if (env?.environment?.name) {
+            installerCommand = `conda install -n ${env?.environment?.name} ${ipyKernelModuleName} --update-deps --force-reinstall`;
+        } else if (env?.environment?.folderUri) {
             installerCommand = `conda install -p ${getFilePath(
-                kernelConnection.interpreter?.envPath
+                env?.environment?.folderUri
             )} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         }
-    } else if (kernelConnection.interpreter?.envType === EnvironmentType.Unknown) {
+    } else if (
+        kernelConnection.interpreter &&
+        getEnvironmentType(kernelConnection.interpreter) === EnvironmentType.Unknown
+    ) {
         installerCommand = `${fileToCommandArgument(
             getFilePath(kernelConnection.interpreter.uri)
         )} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;

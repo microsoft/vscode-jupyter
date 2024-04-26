@@ -26,7 +26,14 @@ import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { sendTelemetryEvent } from '../telemetry';
 import { IPlatformService } from '../platform/common/platform/types';
 import { splitLines } from '../platform/common/helpers';
-import { getPythonEnvironmentName } from '../platform/interpreter/helpers';
+import {
+    getCachedEnvironment,
+    getCachedVersion,
+    getEnvironmentType,
+    getPythonEnvDisplayName,
+    getPythonEnvironmentName,
+    isCondaEnvironmentWithoutPython
+} from '../platform/interpreter/helpers';
 import { cellOutputToVSCCellOutput } from './execution/helpers';
 import { handleTensorBoardDisplayDataOutput } from './execution/executionHelpers';
 import { once } from '../platform/common/utils/functional';
@@ -75,7 +82,7 @@ export function createInterpreterKernelSpecWithName(
     const defaultSpec: KernelSpec.ISpecModel = {
         name,
         language: 'python',
-        display_name: interpreter?.displayName || 'Python 3',
+        display_name: (interpreter ? getCachedEnvironment(interpreter)?.environment?.name : '') || 'Python 3',
         metadata: {
             interpreter: interpreterMetadata
         },
@@ -255,17 +262,15 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         case 'startUsingRemoteKernelSpec':
         case 'startUsingLocalKernelSpec': {
             if (
-                kernelConnection.interpreter?.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
+                kernelConnection.interpreter &&
+                getEnvironmentType(kernelConnection.interpreter) !== EnvironmentType.Unknown
             ) {
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
                     const pythonVersion = `Python ${
-                        getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                        getTelemetrySafeVersion(getCachedVersion(kernelConnection.interpreter)) || ''
                     }`.trim();
-                    return kernelConnection.interpreter.envName
-                        ? `${oldDisplayName} (${pythonVersion})`
-                        : oldDisplayName;
+                    return envName ? `${oldDisplayName} (${pythonVersion})` : oldDisplayName;
                 } else {
                     // Non-Python kernelspec that launches via python interpreter
                     return envName ? `${oldDisplayName} (${envName})` : oldDisplayName;
@@ -276,11 +281,11 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         }
         case 'startUsingPythonInterpreter':
             const pythonVersion = (
-                getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                getTelemetrySafeVersion(getCachedVersion(kernelConnection.interpreter)) || ''
             ).trim();
             if (
-                kernelConnection.interpreter.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
+                kernelConnection.interpreter &&
+                getEnvironmentType(kernelConnection.interpreter) !== EnvironmentType.Unknown
             ) {
                 // If user has created a custom kernelspec, then use that.
                 if (
@@ -291,9 +296,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                     return kernelConnection.kernelSpec.display_name;
                 }
                 // If this is a conda environment without Python, then don't display `Python` in it.
-                const isCondaEnvWithoutPython =
-                    kernelConnection.interpreter.envType === EnvironmentType.Conda &&
-                    kernelConnection.interpreter.isCondaEnvWithoutPython === true;
+                const isCondaEnvWithoutPython = isCondaEnvironmentWithoutPython(kernelConnection.interpreter);
                 const pythonDisplayName = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (isCondaEnvWithoutPython && envName) {
@@ -320,7 +323,9 @@ function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: Kerne
             : kernelConnection.kernelSpec?.name;
 
     const interpreterName =
-        kernelConnection.kind === 'startUsingPythonInterpreter' ? kernelConnection.interpreter.displayName : undefined;
+        kernelConnection.kind === 'startUsingPythonInterpreter'
+            ? getPythonEnvDisplayName(kernelConnection.interpreter)
+            : undefined;
 
     return [displayName, name, interpreterName, ''].find((item) => typeof item === 'string' && item.length > 0) || '';
 }
@@ -354,7 +359,8 @@ export function getKernelDisplayPathFromKernelConnection(kernelConnection?: Kern
         const pathValue =
             kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.executable;
         if (pathValue === '/python' || pathValue === 'python') {
-            return kernelConnection.interpreter?.displayPath;
+            const env = getCachedEnvironment(kernelConnection.interpreter);
+            return env?.environment?.folderUri || (env ? Uri.file(env.path) : undefined);
         }
         return pathValue ? Uri.file(pathValue) : undefined;
     } else {
@@ -496,7 +502,7 @@ export const autoGeneratedKernelNameIdentifier = 'jvsc74a57bd0';
 export async function getInterpreterKernelSpecName(interpreter?: PythonEnvironment): Promise<string> {
     // Generate a name from a hash of the interpreter
     // Note it must be prefixed with 'python' and the version number.
-    const version = interpreter?.sysVersion ? getTelemetrySafeVersion(interpreter.sysVersion) || '3' : '';
+    const version = getTelemetrySafeVersion(getCachedVersion(interpreter)) || '3';
     const versionWithSafeStrings = version.replace(/\./g, '');
     const prefix = interpreter ? `python${versionWithSafeStrings}` : '';
     return interpreter
@@ -746,8 +752,16 @@ export function executeSilentlyAndEmitOutput(
                     output_type: 'display_data',
                     data: handleTensorBoardDisplayDataOutput(msg.content.data),
                     metadata: msg.content.metadata,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    transient: msg.content.transient as any // NOSONAR
+                    transient: msg.content.transient
+                })
+            );
+        } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
+            onOutput(
+                cellOutputToVSCCellOutput({
+                    output_type: 'display_data',
+                    data: handleTensorBoardDisplayDataOutput(msg.content.data),
+                    metadata: msg.content.metadata,
+                    transient: msg.content.transient
                 })
             );
         } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {

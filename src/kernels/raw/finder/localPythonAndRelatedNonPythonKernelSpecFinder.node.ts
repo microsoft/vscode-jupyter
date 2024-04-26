@@ -25,6 +25,12 @@ import {
 } from './interpreterKernelSpecFinderHelper.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { raceCancellation } from '../../../platform/common/cancellation';
+import {
+    getCachedEnvironment,
+    getCachedEnvironments,
+    resolvedPythonEnvToJupyterEnv
+} from '../../../platform/interpreter/helpers';
+import { sleep } from '../../../platform/common/utils/async';
 
 type InterpreterId = string;
 
@@ -87,7 +93,15 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             this.disposables
         );
         interpreterService.onDidRemoveInterpreter(
-            (e) => {
+            async (e) => {
+                // This is a farily destructive operation, hence lets wait a few seconds.
+                // In the past Python extension triggered this even incorrectly
+                // Lets wait a few seconds and see if the env still exists
+                await sleep(1_000);
+                if (getCachedEnvironment(e)) {
+                    return;
+                }
+
                 traceVerbose(`Interpreter removed ${e.id}`);
                 const deletedKernels: LocalKernelConnectionMetadata[] = [];
                 this._kernels.forEach((k) => {
@@ -215,7 +229,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 // It is also possible the user deleted a python environment,
                 // E.g. user deleted a conda env or a virtual env and they refreshed the list of interpreters/kernels.
                 // We should now remove those kernels as well.
-                const validInterpreterIds = new Set(this.interpreterService.resolvedEnvironments.map((i) => i.id));
+                const validInterpreterIds = new Set(getCachedEnvironments().map((i) => i.id));
+                // const validInterpreterIds = new Set(this.interpreterService.resolvedEnvironments.map((i) => i.id));
                 const kernelsThatPointToInvalidValidInterpreters = Array.from(this._kernels.values()).filter((item) => {
                     if (item.interpreter && !validInterpreterIds.has(item.interpreter.id)) {
                         return true;
@@ -271,21 +286,19 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         this._onDidChangeKernels.fire();
         const kernels = Array.from(this._kernels.values());
         this.updateCachePromise = this.updateCachePromise.finally(() =>
-            this.writeToMementoCache(kernels, localPythonKernelsCacheKey()).catch(noop)
+            this.writeToMementoCache(kernels, localPythonKernelsCacheKey())
         );
         return this.updateCachePromise;
     }
 
     private async listKernelsImplementation(cancelToken: CancellationToken, forceRefresh: boolean) {
-        const interpreters = this.extensionChecker.isPythonExtensionInstalled
-            ? this.interpreterService.resolvedEnvironments
-            : [];
+        const interpreters = this.extensionChecker.isPythonExtensionInstalled ? getCachedEnvironments() : [];
         const interpreterPromise = Promise.all(
             interpreters.map(async (interpreter) => {
                 let finder = this.interpreterKernelSpecs.get(interpreter.id);
                 if (!finder) {
                     finder = new InterpreterSpecificKernelSpecsFinder(
-                        interpreter,
+                        resolvedPythonEnvToJupyterEnv(interpreter)!,
                         this.interpreterService,
                         this.jupyterPaths,
                         this.extensionChecker,

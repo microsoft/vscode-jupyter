@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IDisposable } from '@fluentui/react';
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
@@ -18,6 +17,7 @@ import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import type { IDisposable } from '../../../platform/common/types';
 
 /* eslint-disable  */
 
@@ -29,18 +29,14 @@ suite('Jupyter Interpreter Service', () => {
     let selectedInterpreterEventArgs: PythonEnvironment | undefined;
     let memento: Memento;
     let interpreterSelectionState: JupyterInterpreterStateStore;
-    const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
+    const selectedJupyterInterpreter = createPythonInterpreter();
     const pythonInterpreter: PythonEnvironment = {
         uri: Uri.file('some path'),
-        id: Uri.file('some path').fsPath,
-        sysPrefix: '',
-        sysVersion: ''
+        id: Uri.file('some path').fsPath
     };
     const secondPythonInterpreter: PythonEnvironment = {
         uri: Uri.file('second interpreter path'),
-        id: Uri.file('second interpreter path').fsPath,
-        sysPrefix: '',
-        sysVersion: ''
+        id: Uri.file('second interpreter path').fsPath
     };
     let disposables: IDisposable[] = [];
 

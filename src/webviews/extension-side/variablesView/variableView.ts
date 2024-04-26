@@ -137,6 +137,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     // Handle a request from the react UI to show our data viewer. Public for testing
     @swallowExceptions()
     public async showDataViewer(request: IShowDataViewer) {
+        request.variable.fileName = request.variable.fileName ?? this.notebookWatcher.activeKernel?.notebook.uri;
         try {
             if (this.experiments.inExperiment(Experiments.DataViewerContribution)) {
                 // jupyterVariableViewers

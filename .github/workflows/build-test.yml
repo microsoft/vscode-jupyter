@@ -210,14 +210,14 @@ jobs:
         id: npm-cache
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-      - name: Cache npm on windows
-        uses: actions/cache@v4
-        if: matrix.os == 'windows-latest'
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      #   - name: Cache npm on windows
+      #     uses: actions/cache@v4
+      #     if: matrix.os == 'windows-latest'
+      #     with:
+      #       path: ${{ steps.npm-cache.outputs.dir }}
+      #       key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      #       restore-keys: |
+      #         ${{ runner.os }}-node-
 
       - name: Cache compiled TS files
         # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
@@ -373,6 +373,7 @@ jobs:
 
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v5
+        id: setupPythonVersion
         if: matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           python-version: ${{matrix.pythonVersion}}
@@ -388,11 +389,9 @@ jobs:
             python=${{matrix.pythonVersion}}
 
       - name: Set CI Path
-        uses: ./.github/actions/set-python
-        id: set-python
+        shell: bash
         if: matrix.python != 'conda' && matrix.python != 'noPython'
-        with:
-          PYTHON_VERSION: ${{matrix.pythonVersion}}
+        run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
       - name: Set CI Path for Conda
         uses: ./.github/actions/set-python-conda
@@ -482,14 +481,14 @@ jobs:
         id: npm-cache
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-      - name: Cache npm on windows
-        uses: actions/cache@v4
-        if: matrix.os == 'windows-latest'
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      #   - name: Cache npm on windows
+      #     uses: actions/cache@v4
+      #     if: matrix.os == 'windows-latest'
+      #     with:
+      #       path: ${{ steps.npm-cache.outputs.dir }}
+      #       key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      #       restore-keys: |
+      #         ${{ runner.os }}-node-
 
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
@@ -756,14 +755,13 @@ jobs:
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v5
+        id: setupPythonVersion
         with:
           python-version: ${{matrix.python}}
 
       - name: Set CI Path
-        uses: ./.github/actions/set-python
-        id: set-python
-        with:
-          PYTHON_VERSION: ${{matrix.python}}
+        shell: bash
+        run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v4
@@ -866,7 +864,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/cobertura-coverage.xml

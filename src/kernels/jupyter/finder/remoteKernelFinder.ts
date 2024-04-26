@@ -22,7 +22,7 @@ import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
-import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
+import { ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
@@ -42,7 +42,7 @@ export type CacheDataFormat = {
 };
 
 // This class watches a single jupyter server URI and returns kernels from it
-export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelFinder {
+export class RemoteKernelFinder extends ObservableDisposable implements IRemoteKernelFinder {
     private _status: 'discovering' | 'idle' = 'idle';
     public get status() {
         return this._status;
@@ -170,32 +170,27 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
         await this.loadCache(true, true);
     }
 
-    private numberOfFailures = 0;
     private getListOfKernelsWithCachedConnection(
         displayProgress: boolean,
         ignoreCache: boolean = false
     ): Promise<RemoteKernelConnectionMetadata[]> {
-        const usingCache = !!this.cachedConnection;
-        this.cachedConnection = this.cachedConnection || this.getRemoteConnectionInfo(displayProgress);
+        if (!this.cachedConnection || ignoreCache) {
+            this.cachedConnection = this.getRemoteConnectionInfo(displayProgress);
+        }
         return this.cachedConnection
             .then((connInfo) => {
-                this.numberOfFailures = 0;
-                if (connInfo && !usingCache) {
+                if (connInfo) {
                     this.cachedConnection = Promise.resolve(connInfo);
+                    return this.listKernelsFromConnection(connInfo);
                 }
-                return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
+                return Promise.resolve([]);
             })
             .catch((ex) => {
-                this.numberOfFailures += 1;
                 if (this.isDisposed) {
                     return Promise.reject(ex);
                 }
-                if (this.numberOfFailures > 9) {
-                    traceWarning(`Remote Kernel Finder: ${this.id} has failed to connect 10 times in a row.`, ex);
-                    return Promise.reject(ex);
-                }
-                if (usingCache) {
-                    return this.getListOfKernelsWithCachedConnection(displayProgress, ignoreCache);
+                if (!ignoreCache) {
+                    return this.getListOfKernelsWithCachedConnection(displayProgress, true);
                 }
                 this.cachedConnection = undefined;
                 return Promise.reject(ex);

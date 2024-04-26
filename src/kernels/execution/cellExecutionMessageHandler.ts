@@ -27,14 +27,15 @@ import {
 import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { concatMultilineString, formatStreamText, isJupyterNotebook } from '../../platform/common/utils';
 import {
     traceCellMessage,
     cellOutputToVSCCellOutput,
     translateCellDisplayOutput,
-    CellOutputMimeTypes
+    CellOutputMimeTypes,
+    findErrorLocation
 } from './helpers';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
@@ -486,7 +487,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             //     //
             // }
             this.execution?.start(this.startTime);
-            traceInfo(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
+            traceVerbose(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
         }
 
         // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -638,7 +639,10 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (this.cell.document.isClosed) {
             return;
         }
-        traceCellMessage(this.cell, 'Update output');
+        traceCellMessage(
+            this.cell,
+            () => `Update output with mimes ${cellOutput.items.map((item) => item.mime).toString()}`
+        );
         // Append to the data (we would push here but VS code requires a recreation of the array)
         // Possible execution of cell has completed (the task would have been disposed).
         // This message could have come from a background thread.
@@ -706,7 +710,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             return true;
         }
         if (mime === WIDGET_MIMETYPE) {
-            const data: WidgetData = JSON.parse(Buffer.from(outputItem.data).toString());
+            const data: WidgetData = JSON.parse(new TextDecoder().decode(outputItem.data));
             // Jupyter Output widgets cannot be rendered properly by the widget manager,
             // We need to render that.
             if (typeof data.model_id === 'string' && this.commIdsMappedToWidgetOutputModels.has(data.model_id)) {
@@ -763,7 +767,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                     return false;
                 }
                 try {
-                    const value = JSON.parse(Buffer.from(outputItem.data).toString()) as { model_id?: string };
+                    const value = JSON.parse(new TextDecoder().decode(outputItem.data)) as { model_id?: string };
                     return value.model_id === expectedModelId;
                 } catch (ex) {
                     traceWarning(`Failed to deserialize the widget data`, ex);
@@ -1069,6 +1073,18 @@ export class CellExecutionMessageHandler implements IDisposable {
             traceback
         };
 
+        if (this.cell.notebook.notebookType !== 'interactive') {
+            const cellExecution = CellExecutionCreator.get(this.cell);
+            if (cellExecution && msg.content.ename !== 'KeyboardInterrupt') {
+                cellExecution.errorInfo = {
+                    message: `${msg.content.ename}: ${msg.content.evalue}`,
+                    location: findErrorLocation(msg.content.traceback, this.cell),
+                    uri: this.cell.document.uri,
+                    stack: msg.content.traceback.join('\n')
+                };
+            }
+        }
+
         this.addToCellData(output, msg);
         this.cellHasErrorsInOutput = true;
     }
@@ -1098,7 +1114,8 @@ export class CellExecutionMessageHandler implements IDisposable {
         }
         const outputToBeUpdated = CellOutputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
         if (!outputToBeUpdated) {
-            traceWarning('Update display data message received, but no output found to update', msg.content);
+            // Possible this is a display Id that was created by code executed by an extension.
+            traceVerbose('Update display data message received, but no output found to update', msg.content);
             return;
         }
         if (outputToBeUpdated.cell.document.isClosed) {

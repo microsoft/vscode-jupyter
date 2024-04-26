@@ -151,7 +151,7 @@ export class ControllerPreferredService {
                 isPythonNbOrInteractiveWindow
             ) {
                 const defaultPythonController = await this.defaultService.computeDefaultController(
-                    document.uri,
+                    document,
                     document.notebookType
                 );
                 if (preferredSearchToken.token.isCancellationRequested) {
@@ -268,7 +268,7 @@ export class ControllerPreferredService {
 
                 // For interactive set the preferred controller as the interpreter or default
                 const defaultInteractiveController = await this.defaultService.computeDefaultController(
-                    document.uri,
+                    document,
                     'interactive'
                 );
                 preferredConnection = defaultInteractiveController?.connection;
@@ -411,10 +411,9 @@ export class ControllerPreferredService {
         cancelToken: CancellationToken,
         preferredInterpreter: PythonEnvironment | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
-        const uri = notebook.uri;
         let preferredConnection: KernelConnectionMetadata | undefined;
         const rankedConnections = await this.kernelRankHelper.rankKernels(
-            uri,
+            notebook,
             this.registration.all,
             notebookMetadata,
             preferredInterpreter,
@@ -438,7 +437,7 @@ export class ControllerPreferredService {
             }
 
             // Are we an exact match based on metadata hash / name / ect...?
-            const isExactMatch = await this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
+            const isExactMatch = await this.kernelRankHelper.isExactMatch(notebook, potentialMatch, notebookMetadata);
             if (cancelToken.isCancellationRequested) {
                 return;
             }

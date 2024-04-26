@@ -20,6 +20,7 @@ import { traceVerbose, traceWarning } from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IControllerRegistration } from './types';
+import { getEnvironmentType } from '../../platform/interpreter/helpers';
 
 type CreateEnvironmentResult = {
     path: string | undefined;
@@ -123,7 +124,7 @@ export class PythonEnvKernelConnectionCreator {
 
         sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, {
             dependenciesInstalled,
-            envType: envResult.interpreter.envType
+            envType: getEnvironmentType(envResult.interpreter)
         });
         return { kernelConnection };
     }
@@ -184,11 +185,6 @@ export class PythonEnvKernelConnectionCreator {
     private async createPythonEnvironment(): Promise<{ interpreter?: PythonEnvironment; action?: 'Back' | 'Cancel' }> {
         const interpreterService = ServiceContainer.instance.get<IInterpreterService>(IInterpreterService);
         const cancellation = new CancellationTokenSource();
-        // While we're busy creating this env ignore other events from python extension
-        // Else we might end up creating a controller for this event and that could get selected some other way (e.g. made preferred or other)
-        // E.g. if the user has previously used .venv for this notebook,. then as soon as this venv is created
-        // we'll end up creating a controller for this venv and that will get selected by vscode
-        interpreterService.pauseInterpreterDetection(cancellation.token);
         try {
             const result: CreateEnvironmentResult = await commands.executeCommand('python.createEnvironment', {
                 showBackButton: true,

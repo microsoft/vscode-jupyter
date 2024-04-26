@@ -21,7 +21,7 @@ import { dispose } from '../../platform/common/utils/lifecycle';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { ControllerRegistration } from './controllerRegistration';
 import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
@@ -32,7 +32,6 @@ import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 suite('Controller Registration', () => {
     const activePythonEnv: PythonEnvironment = {
         id: 'activePythonEnv',
-        sysPrefix: '',
         uri: Uri.file('activePythonEnv')
     };
     const activePythonConnection = PythonKernelConnectionMetadata.create({
@@ -47,9 +46,7 @@ suite('Controller Registration', () => {
     });
     const condaPython: PythonEnvironment = {
         id: 'condaPython',
-        sysPrefix: '',
-        uri: Uri.file('condaPython'),
-        envType: EnvironmentType.Conda
+        uri: Uri.file('condaPython')
     };
     const condaPythonConnection = PythonKernelConnectionMetadata.create({
         id: 'condaKernel',
@@ -184,7 +181,7 @@ suite('Controller Registration', () => {
             instance(contributedPythonKernelFinder)
         ]);
         when(kernelFinder.kernels).thenReturn([]);
-        when(interpreters.resolvedEnvironments).thenReturn([activePythonEnv]);
+        // when(interpreters.resolvedEnvironments).thenReturn([activePythonEnv]);
         when(kernelFilter.isPythonEnvironmentExcluded(anything())).thenReturn(false);
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);

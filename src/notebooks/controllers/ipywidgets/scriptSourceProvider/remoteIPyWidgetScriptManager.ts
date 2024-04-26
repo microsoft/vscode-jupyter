@@ -16,6 +16,7 @@ import { noop } from '../../../../platform/common/utils/misc';
 import { IFileSystem } from '../../../../platform/common/platform/types';
 import { trimQuotes } from '../../../../platform/common/helpers';
 import { HttpClient } from '../../../../platform/common/net/httpClient';
+import { JupyterConnection } from '../../../../kernels/jupyter/connection/jupyterConnection';
 
 /**
  * IPyWidgetScriptManager for remote kernels
@@ -27,7 +28,8 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
     constructor(
         kernel: IKernel,
         private readonly context: IExtensionContext,
-        private readonly fs: IFileSystem
+        private readonly fs: IFileSystem,
+        private readonly connection: JupyterConnection
     ) {
         super(kernel);
         if (
@@ -128,14 +130,38 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         }
     }
     protected async getWidgetScriptSource(script: Uri): Promise<string> {
+        const httpClientResponse = this.getWidgetScriptSourceUsingHttpClient(script);
+        const fetchResponse = this.getWidgetScriptSourceUsingFetch(script);
+        const promise = httpClientResponse.catch(() => fetchResponse);
+        // If we fail to download using both mechanisms, then log an error.
+        promise.catch((ex) => {
+            httpClientResponse.catch((ex) =>
+                traceError(`Failed to download widget script source from ${script.toString(true)}`, ex)
+            );
+            traceError(`Failed to download widget script source from ${script.toString(true)}`, ex);
+        });
+        return promise;
+    }
+    private async getWidgetScriptSourceUsingHttpClient(script: Uri): Promise<string> {
         const uri = script.toString(true);
         const httpClient = new HttpClient();
         const response = await httpClient.downloadFile(uri);
         if (response.status === 200) {
             return response.text();
         } else {
-            traceError(`Error downloading from ${uri}: ${response.statusText}`);
             throw new Error(`Error downloading from ${uri}: ${response.statusText}`);
+        }
+    }
+    private async getWidgetScriptSourceUsingFetch(script: Uri): Promise<string> {
+        const connection = await this.connection.createConnectionInfo(this.kernelConnection.serverProviderHandle);
+        const uri = script.toString(true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const httpClient = new HttpClient(connection.settings.fetch as any);
+        const response = await httpClient.downloadFile(uri);
+        if (response.status === 200) {
+            return response.text();
+        } else {
+            throw new Error(`Error downloading from ${uri} using custom fetch: ${response.statusText}`);
         }
     }
 }

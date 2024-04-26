@@ -48,17 +48,15 @@ export class FileSystem implements IFileSystem {
 
     async readFile(uri: vscode.Uri): Promise<string> {
         const result = await this.vscfs.readFile(uri);
-        const data = Buffer.from(result);
-        return data.toString(ENCODING);
+        return new TextDecoder().decode(result);
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return this.vscfs.stat(uri);
     }
 
-    async writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void> {
-        const data = typeof text === 'string' ? Buffer.from(text) : text;
-        return this.vscfs.writeFile(uri, data);
+    async writeFile(uri: vscode.Uri, text: string | Uint8Array): Promise<void> {
+        return this.vscfs.writeFile(uri, typeof text === 'string' ? new TextEncoder().encode(text) : text);
     }
 
     async exists(

@@ -3,12 +3,14 @@
 
 import { inject, injectable } from 'inversify';
 import {
+    CancellationError,
     CancellationToken,
     CompletionContext,
     CompletionItem,
     CompletionItemKind,
     CompletionItemProvider,
     CompletionList,
+    Disposable,
     Position,
     Range,
     TextDocument,
@@ -18,37 +20,39 @@ import {
     workspace
 } from 'vscode';
 import { raceCancellation } from '../../platform/common/cancellation';
-import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
-import {
-    Experiments,
-    IDisposable,
-    IDisposableRegistry,
-    IExperimentService,
-    Resource
-} from '../../platform/common/types';
+import { traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { IDisposable, IDisposableRegistry, Resource } from '../../platform/common/types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IKernelProvider, IKernel } from '../../kernels/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { mapJupyterKind } from './conversion';
-import { PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
+import { Settings, Telemetry } from '../../platform/common/constants';
 import { INotebookCompletion } from './types';
 import { translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ServiceContainer } from '../../platform/ioc/container';
-import { DisposableBase, DisposableStore } from '../../platform/common/utils/lifecycle';
-import { createDeferredFromPromise, raceTimeout, sleep } from '../../platform/common/utils/async';
+import { DisposableBase } from '../../platform/common/utils/lifecycle';
+import { createDeferredFromPromise, raceTimeout, raceTimeoutError, sleep } from '../../platform/common/utils/async';
 import { TelemetryMeasures, TelemetryProperties, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { generateSortString } from './helpers';
 import { resolveCompletionItem } from './resolveCompletionItem';
+import type { ICompleteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
+import { escapeStringToEmbedInPythonCode } from '../../kernels/chat/generator';
+import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
+
+class RequestTimedoutError extends Error {
+    constructor() {
+        super('Request timed out');
+    }
+}
 
 class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProvider {
     constructor(
         private readonly kernelId: string,
         private readonly kernel: IKernel,
-        private readonly monacoLanguage: string,
-        private readonly toDispose: DisposableStore
+        private readonly monacoLanguage: string
     ) {}
     public allowStringFilterForPython: boolean;
     private pendingCompletionRequest = new WeakMap<TextDocument, { position: Position; version: number }>();
@@ -65,14 +69,21 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         if (!this.kernel.session?.kernel) {
             return [];
         }
+        const version = document.version;
         // Most likely being called again by us in getCompletionsFromOtherLanguageProviders
-        if (
-            this.pendingCompletionRequest.get(document)?.position.isEqual(position) &&
-            this.pendingCompletionRequest.get(document)?.version === document.version
-        ) {
+        // Or a previous request for completions has not yet completed, hence no point trying another.
+        if (this.pendingCompletionRequest.has(document)) {
             return [];
         }
-        this.pendingCompletionRequest.set(document, { position, version: document.version });
+        this.pendingCompletionRequest.set(document, { position, version });
+        const disposable = new Disposable(() => {
+            if (
+                this.pendingCompletionRequest.get(document)?.position.isEqual(position) &&
+                this.pendingCompletionRequest.get(document)?.version === version
+            ) {
+                this.pendingCompletionRequest.delete(document);
+            }
+        });
         try {
             // Request completions from other language providers.
             // Do this early, as we know kernel completions will take longer.
@@ -87,32 +98,39 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
                 )
             );
 
-            // Wait for 100ms, as we do not want to flood the kernel with too many messages.
-            // if after 100ms, the token isn't cancelled, then send the request.
             const stopWatch = new StopWatch();
-            await sleep(100);
+            // Wait for 50ms, as we do not want to flood the kernel with too many messages.
+            // if after 50ms, the token isn't cancelled, then send the request.
+            await sleep(50);
             if (token.isCancellationRequested) {
                 return [];
             }
-            const completions = await this.provideCompletionItemsFromKernel(document, position, token, context);
-            if (token.isCancellationRequested) {
+            const completions = await raceTimeoutError(
+                Settings.IntellisenseTimeout,
+                new RequestTimedoutError(),
+                this.provideCompletionItemsFromKernel(document, position, token, context)
+            );
+            if (token.isCancellationRequested || !completions || !completions.length) {
                 return [];
             }
             // Wait no longer than the kernel takes to provide the completions,
             // If kernel is faster than other language providers, then so be it.
             // Adding delays here could just slow things down in VS Code.
-            // NOTE: We have already waited for 100ms earlier.
+            // NOTE: We have already waited for 50ms earlier.
             let otherCompletions = await raceTimeout(0, completionsFromOtherSourcesPromise.promise);
             if (
                 isPythonKernelConnection(this.kernel.kernelConnectionMetadata) &&
                 !completionsFromOtherSourcesPromise.completed &&
-                stopWatch.elapsedTime < 300
+                stopWatch.elapsedTime < Settings.IntellisenseTimeout + 50
             ) {
-                // Wait another 100ms, hoping that the other language providers will return something.
+                // Wait another few ms, hoping that the other language providers will return something.
                 // Else we could end up with duplicates,
                 // So the goal is to try to avoid duplicates by waiting for other language providers to return something.
-                // But not wait for too long, in this case we wait for max of 300ms
-                otherCompletions = await raceTimeout(200, completionsFromOtherSourcesPromise.promise);
+                // But not wait for too long, in this case we wait for max of 250ms
+                otherCompletions = await raceTimeout(
+                    Settings.IntellisenseTimeout - stopWatch.elapsedTime,
+                    completionsFromOtherSourcesPromise.promise
+                );
             }
 
             const existingCompletionItems = new Set(
@@ -121,13 +139,16 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             return completions.filter(
                 (item) => !existingCompletionItems.has(typeof item.label === 'string' ? item.label : item.label.label)
             );
-        } finally {
-            if (
-                this.pendingCompletionRequest.get(document)?.position.isEqual(position) &&
-                this.pendingCompletionRequest.get(document)?.version === document.version
-            ) {
-                this.pendingCompletionRequest.delete(document);
+        } catch (ex) {
+            if (ex instanceof RequestTimedoutError) {
+                return [];
             }
+            if (!(ex instanceof CancellationError)) {
+                traceVerbose(`Completions failed`, ex);
+            }
+            throw ex;
+        } finally {
+            disposable.dispose();
         }
     }
     async provideCompletionItemsFromKernel(
@@ -142,6 +163,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         const stopWatch = new StopWatch();
         const measures: TelemetryMeasures<Telemetry.KernelCodeCompletion> = {
             duration: 0,
+            timesExceededTimeout: 0,
             requestDuration: 0,
             completionItems: 0
         };
@@ -158,33 +180,26 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
         // No point sending completions if we're not connected.
         // Even if we're busy restarting, then no point, by the time it starts, the user would have typed something else
         // Hence no point sending requests that would unnecessarily slow things down.
-        if (this.kernel.status !== 'idle') {
-            sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
+        if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata) && this.kernel.status !== 'idle') {
             return [];
         }
         const code = document.getText();
         const cursor_pos = document.offsetAt(position);
 
         properties.requestSent = true;
-        const kernelCompletions = await raceCancellation(
-            token,
-            this.kernel.session.kernel.requestComplete({
-                code,
-                cursor_pos
-            })
-        );
+        const kernelCompletions = await raceCancellation(token, this.getKernelCompletion(code, cursor_pos, token));
         traceVerbose(`Jupyter completion time: ${stopWatch.elapsedTime}`);
         properties.cancelled = token.isCancellationRequested;
         properties.completed = !token.isCancellationRequested;
         properties.kernelStatusAfterRequest = this.kernel.status;
         measures.requestDuration = token.isCancellationRequested ? 0 : stopWatch.elapsedTime;
 
-        if (
-            token.isCancellationRequested ||
-            kernelCompletions?.content?.status !== 'ok' ||
-            (kernelCompletions?.content?.matches?.length ?? 0) === 0
-        ) {
-            sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
+        if (token.isCancellationRequested) {
+            return [];
+        }
+
+        if (kernelCompletions?.content?.status !== 'ok' || (kernelCompletions?.content?.matches?.length ?? 0) === 0) {
+            sendCompletionTelemetry(this.kernel, measures, properties);
             return [];
         }
         const result: INotebookCompletion = {
@@ -198,7 +213,7 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
 
         const experimentMatches = result.metadata ? result.metadata._jupyter_types_experimental : [];
         measures.completionItems = result.matches.length;
-        sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
+        sendCompletionTelemetry(this.kernel, measures, properties);
 
         // Check if we have more information about the completion items & whether its valid.
         // This will ensure that we don't regress (as long as all items are valid & we have the same number of completions items
@@ -301,9 +316,69 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             this.kernelId,
             this.monacoLanguage,
             document,
-            position,
-            this.toDispose
+            position
         );
+    }
+
+    private async getKernelCompletion(code: string, cursor_pos: number, token: CancellationToken) {
+        if (!this.kernel.session?.kernel) {
+            return;
+        }
+        if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
+            return raceCancellation(
+                token,
+                this.kernel.session.kernel.requestComplete({
+                    code,
+                    cursor_pos
+                })
+            );
+        }
+        return this.getPythonKernelCompletion(code, cursor_pos, token);
+    }
+
+    private async getPythonKernelCompletion(code: string, cursor_pos: number, token: CancellationToken) {
+        const codeToExecute = `return get_ipython().kernel.do_complete("${escapeStringToEmbedInPythonCode(
+            code
+        )}", ${cursor_pos})`;
+        const content = await execCodeInBackgroundThread<ICompleteReplyMsg['content']>(
+            this.kernel,
+            [codeToExecute],
+            token
+        );
+        return { content } as ICompleteReplyMsg;
+    }
+}
+
+const lastSentCompletionTimes = new WeakMap<IKernel, StopWatch>();
+const lastTelemetryExceedingMaxTimeout = new WeakMap<
+    IKernel,
+    {
+        count: number;
+        measures: TelemetryMeasures<Telemetry.KernelCodeCompletion>;
+        properties: TelemetryProperties<Telemetry.KernelCodeCompletion>;
+    }
+>();
+
+function sendCompletionTelemetry(
+    kernel: IKernel,
+    measures: TelemetryMeasures<Telemetry.KernelCodeCompletion>,
+    properties: TelemetryProperties<Telemetry.KernelCodeCompletion>
+) {
+    let lastSentCompletionTime = lastSentCompletionTimes.get(kernel);
+    let timesExceededTimeout = lastTelemetryExceedingMaxTimeout.get(kernel)?.count || 0;
+    if (measures.duration >= Settings.IntellisenseTimeout) {
+        lastTelemetryExceedingMaxTimeout.set(kernel, { count: timesExceededTimeout + 1, measures, properties });
+    }
+    measures.timesExceededTimeout = timesExceededTimeout;
+    if (!lastSentCompletionTime) {
+        sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
+        lastSentCompletionTime = new StopWatch();
+        lastSentCompletionTimes.set(kernel, new StopWatch());
+        lastTelemetryExceedingMaxTimeout.delete(kernel);
+    } else if (lastSentCompletionTime.elapsedTime > 60_000) {
+        sendTelemetryEvent(Telemetry.KernelCodeCompletion, measures, properties);
+        lastSentCompletionTime.reset();
+        lastTelemetryExceedingMaxTimeout.delete(kernel);
     }
 }
 
@@ -312,7 +387,6 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
     private completionItemsSent = new WeakMap<CompletionItem, NotebookCellSpecificKernelCompletionProvider>();
     private completionProvider?: IDisposable;
     private readonly monacoLanguage = getKernelLanguageAsMonacoLanguage(this.kernel);
-    private readonly toDispose = this._register(new DisposableStore());
     private allowStringFilterForPython: boolean;
 
     constructor(
@@ -338,8 +412,6 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
                 ) {
                     return;
                 }
-                this.completionProvider?.dispose();
-                this.completionProvider = undefined;
                 this.registerCompletionProvider();
             })
         );
@@ -355,12 +427,14 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
             return;
         }
 
-        traceInfo(
+        traceVerbose(
             `Registering Kernel Completion Provider from kernel ${getDisplayNameOrNameOfKernelConnection(
                 this.kernel.kernelConnectionMetadata
             )} for language ${this.monacoLanguage}`
         );
         this.allowStringFilterForPython = triggerCharacters.includes("'") || triggerCharacters.includes('"');
+        this.completionProvider?.dispose();
+        this.completionProvider = undefined;
         this.completionProvider = languages.registerCompletionItemProvider(
             this.monacoLanguage,
             this,
@@ -384,12 +458,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
         let provider = this.cellCompletionProviders.get(document);
         if (!provider) {
             const kernelId = await getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
-            provider = new NotebookCellSpecificKernelCompletionProvider(
-                kernelId,
-                this.kernel,
-                this.monacoLanguage,
-                this.toDispose
-            );
+            provider = new NotebookCellSpecificKernelCompletionProvider(kernelId, this.kernel, this.monacoLanguage);
             this.cellCompletionProviders.set(document, provider);
         }
         provider.allowStringFilterForPython = this.allowStringFilterForPython;
@@ -431,15 +500,8 @@ export class KernelCompletionProvider extends DisposableBase implements IExtensi
                     void e.session.kernel.requestComplete({ code: '__file__.', cursor_pos: 9 });
                 }
 
-                const experiment = ServiceContainer.instance.get<IExperimentService>(IExperimentService);
                 const language = getKernelLanguageAsMonacoLanguage(e);
                 if (!language) {
-                    return;
-                }
-                if (
-                    !experiment.inExperiment(Experiments.KernelCompletions) &&
-                    language.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()
-                ) {
                     return;
                 }
                 if (this.kernelCompletionProviders.has(e)) {

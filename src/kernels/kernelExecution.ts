@@ -21,7 +21,7 @@ import { DisplayOptions } from './displayOptions';
 import { CellExecutionFactory } from './execution/cellExecution';
 import { CellExecutionMessageHandlerService } from './execution/cellExecutionMessageHandlerService';
 import { CellExecutionQueue } from './execution/cellExecutionQueue';
-import { traceCellMessage } from './execution/helpers';
+import { cellOutputToVSCCellOutput, traceCellMessage } from './execution/helpers';
 import { executeSilently } from './helpers';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from './telemetry/helper';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
@@ -35,13 +35,18 @@ import {
 import { SessionDisposedError } from '../platform/errors/sessionDisposedError';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { noop } from '../platform/common/utils/misc';
-// Disable ES Lint rule for now, as this is only for telemetry (hence not a layer breaking change)
-import {
-    pendingInspectRequests
-    // eslint-disable-next-line import/no-restricted-paths
-} from '../standalone/intellisense/resolveCompletionItem';
 import { createDeferred, createDeferredFromPromise } from '../platform/common/utils/async';
 import { dispose } from '../platform/common/utils/lifecycle';
+import { JVSC_EXTENSION_ID } from '../platform/common/constants';
+import type { IMessage } from '@jupyterlab/services/lib/kernel/messages';
+import type { KernelMessage } from '@jupyterlab/services';
+import type * as nbformat from '@jupyterlab/nbformat';
+import {
+    isDisplayIdTrackedForAnExtension,
+    trackDisplayDataForExtension
+} from './execution/extensionDisplayDataTracker';
+import { CodeExecution } from './execution/codeExecution';
+import type { ICodeExecution } from './execution/types';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -58,6 +63,9 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
     public readonly onPostExecute = this._onPostExecute.event;
     private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionQueue>();
     private readonly executionFactory: CellExecutionFactory;
+    private readonly _onDidReceiveDisplayUpdate = new EventEmitter<NotebookCellOutput>();
+    public readonly onDidReceiveDisplayUpdate = this._onDidReceiveDisplayUpdate.event;
+    private readonly hookedSesions = new WeakSet<IKernelSession>();
 
     constructor(
         private readonly kernel: IKernel,
@@ -89,7 +97,40 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         kernel.addHook('willInterrupt', this.onWillInterrupt, this, this.disposables);
         kernel.addHook('willCancel', this.onWillCancel, this, this.disposables);
         kernel.addHook('willRestart', (sessionPromise) => this.onWillRestart(sessionPromise), this, this.disposables);
+        kernel.onStatusChanged(this.hookupIOPubHandler, this, this.disposables);
+        kernel.onRestarted(this.hookupIOPubHandler, this, this.disposables);
+        this.hookupIOPubHandler();
         this.disposables.push(this._onPreExecute);
+    }
+    private hookupIOPubHandler() {
+        const session = this.kernel.session;
+        if (!session || this.hookedSesions.has(session)) {
+            return;
+        }
+        this.hookedSesions.add(session);
+        const handler = (_: unknown, msg: IMessage) => {
+            if (msg.header.msg_type !== 'update_display_data' && msg.header.msg_type !== 'display_data') {
+                return;
+            }
+            const iopubMsg = msg as KernelMessage.IUpdateDisplayDataMsg | KernelMessage.IDisplayDataMsg;
+            const displayId = iopubMsg.content.transient?.display_id;
+            if (!displayId || !isDisplayIdTrackedForAnExtension(session, displayId)) {
+                return;
+            }
+            const newOutput = cellOutputToVSCCellOutput({
+                output_type: 'display_data',
+                data: iopubMsg.content.data,
+                metadata: iopubMsg.content.metadata,
+                transient: iopubMsg.content.transient
+            } as nbformat.IDisplayData);
+            this._onDidReceiveDisplayUpdate.fire(newOutput);
+        };
+        session.iopubMessage.connect(handler);
+        this.disposables.push({
+            dispose: () => {
+                session?.iopubMessage.disconnect(handler);
+            }
+        });
     }
     public get pendingCells(): readonly NotebookCell[] {
         return this.documentExecutions.get(this.notebook)?.queue || [];
@@ -125,9 +166,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
     }
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<void> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
-        const pendingInspectRequestsBefore = this.kernel.session?.kernel
-            ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
-            : 0;
         const stopWatch = new StopWatch();
         if (cell.kind == NotebookCellKind.Markup) {
             return;
@@ -158,13 +196,8 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                 `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
             );
             traceVerbose(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
-            const pendingInspectRequestsAfter = this.kernel.session?.kernel
-                ? pendingInspectRequests.get(this.kernel.session.kernel)?.count || 0
-                : 0;
             sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell, {
-                duration: stopWatch.elapsedTime,
-                pendingInspectRequestsAfter,
-                pendingInspectRequestsBefore
+                duration: stopWatch.elapsedTime
             });
         }
     }
@@ -188,8 +221,21 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         await this.kernel.restarting;
 
         const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
-        const result = executionQueue.queueCode(code, extensionId, token);
-        traceVerbose(`Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`);
+
+        let result: ICodeExecution;
+        if (extensionId === JVSC_EXTENSION_ID) {
+            // No need to queue code execution for JVSC, as it will be executed immediately.
+            // Only 3rd party code needs to be queued (as we need to give user code preference over 3rd party ext code)
+            result = CodeExecution.fromCode(code, extensionId);
+            void sessionPromise.then((session) => result.start(session));
+        } else {
+            result = executionQueue.queueCode(code, extensionId, token);
+        }
+        if (extensionId !== JVSC_EXTENSION_ID) {
+            traceVerbose(
+                `Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`
+            );
+        }
         let completed = false;
         const disposables: IDisposable[] = [];
         result.result
@@ -197,12 +243,14 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                 completed = true;
                 !token.isCancellationRequested &&
                     traceInfo(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`);
-                sendKernelTelemetryEvent(
-                    this.kernel.resourceUri,
-                    Telemetry.ExecuteCode,
-                    { duration: stopWatch.elapsedTime },
-                    { extensionId }
-                );
+                if (extensionId !== JVSC_EXTENSION_ID) {
+                    sendKernelTelemetryEvent(
+                        this.kernel.resourceUri,
+                        Telemetry.ExecuteCode,
+                        { duration: stopWatch.elapsedTime },
+                        { extensionId }
+                    );
+                }
                 dispose(disposables);
             })
             .catch(noop);
@@ -235,8 +283,13 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             if (completed) {
                 outputsReceived = createDeferred<void>();
             }
+            const session = this.kernel.session;
             while (outputs.length) {
-                yield outputs.shift()!;
+                const output = outputs.shift()!;
+                if (session) {
+                    trackDisplayDataForExtension(extensionId, session, output);
+                }
+                yield output;
             }
             if (done.completed) {
                 break;
