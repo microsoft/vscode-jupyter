@@ -252,7 +252,7 @@ async function waitForKernelToBeReady(kernel: IKernel, token: CancellationToken)
                     return;
                 }
                 // Perhaps we have some async code.
-                setInterval(statusChangeHandler, 100);
+                setTimeout(statusChangeHandler, 1000);
             };
             once(token.onCancellationRequested)(
                 () => {
