@@ -390,6 +390,7 @@ jobs:
 
       - name: Set CI Path
         shell: bash
+        if: matrix.python != 'conda' && matrix.python != 'noPython'
         run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
       - name: Set CI Path for Conda
