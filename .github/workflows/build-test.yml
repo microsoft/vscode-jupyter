@@ -373,6 +373,7 @@ jobs:
 
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v5
+        id: setupPythonVersion
         if: matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           python-version: ${{matrix.pythonVersion}}
