@@ -388,11 +388,8 @@ jobs:
             python=${{matrix.pythonVersion}}
 
       - name: Set CI Path
-        uses: ./.github/actions/set-python
-        id: set-python
-        if: matrix.python != 'conda' && matrix.python != 'noPython'
-        with:
-          PYTHON_VERSION: ${{matrix.pythonVersion}}
+        shell: bash
+        run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
       - name: Set CI Path for Conda
         uses: ./.github/actions/set-python-conda
@@ -760,7 +757,7 @@ jobs:
         with:
           python-version: ${{matrix.python}}
 
-      - name: Push to environment
+      - name: Set CI Path
         shell: bash
         run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
