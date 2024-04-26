@@ -756,14 +756,13 @@ jobs:
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v5
+        id: setupPythonVersion
         with:
           python-version: ${{matrix.python}}
 
-      - name: Set CI Path
-        uses: ./.github/actions/set-python
-        id: set-python
-        with:
-          PYTHON_VERSION: ${{matrix.python}}
+      - name: Push to environment
+        shell: bash
+        run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v4
