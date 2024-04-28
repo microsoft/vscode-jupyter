@@ -16,12 +16,12 @@ import {
 } from 'vscode';
 import { JupyterNotebookView, Telemetry } from '../../platform/common/constants';
 import type { API } from '../vscode-notebook-perf/src/api';
-import { PerformanceExtensionId } from '../constants';
+import { IS_PERF_TEST, PerformanceExtensionId } from '../constants';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { countCells } from '../utils/notebook';
 
-suite('Notebook Performance (@notebookPerformance)', function () {
+(IS_PERF_TEST() ? suite : suite.skip)('Notebook Performance (@notebookPerformance)', function () {
     let api: API;
     let notebook: NotebookDocument;
     this.timeout(120_000);

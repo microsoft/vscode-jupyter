@@ -14,14 +14,14 @@ import {
 import { JupyterNotebookView, Telemetry } from '../../platform/common/constants';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../constants.node';
+import { IS_PERF_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../constants.node';
 import { PVSC_EXTENSION_ID, PythonExtension, type Environment } from '@vscode/python-extension';
 import { PYTHON_PATH, sleep } from '../common.node';
 import type { IExtensionApi } from '../../standalone/api';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
 import { countCells, startKernelUsingApiByRunningFirstAvailableCodeCell } from '../utils/notebook';
 
-suite('Extension Performance (@executionPerformance)', function () {
+(IS_PERF_TEST() ? suite : suite.skip)('Extension Performance (@executionPerformance)', function () {
     let notebook: NotebookDocument;
     let activeEnv: Environment;
     this.timeout(120_000);
