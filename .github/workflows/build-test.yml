@@ -294,9 +294,9 @@ jobs:
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
         exclude:
-          - tags: '@notebookPerformance'
+          - tags: '@notebookPerformance' # Run only as part of scheduled CI runs
             isScheduled: false
-          - tags: '@executionPerformance'
+          - tags: '@executionPerformance' # Run only as part of scheduled CI runs
             isScheduled: false
         include:
           # Mandatory tests
