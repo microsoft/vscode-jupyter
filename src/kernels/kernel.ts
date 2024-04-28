@@ -481,7 +481,6 @@ abstract class BaseKernel implements IBaseKernel {
                     throw ex;
                 });
         }
-        this._jupyterSessionPromise.finally(() => this.sendKernelStartedTelemetry()).catch(noop);
         return this._jupyterSessionPromise;
     }
 
