@@ -281,7 +281,7 @@ jobs:
             '@iw',
             '@webview|@export|@lsp|@variableViewer',
             '@debugger',
-            # '@notebookPerformance', # Disabled for now, separate PR this will be enabled via cron (want to make PR smaller)
+            '@notebookPerformance', # Disabled for now, separate PR this will be enabled via cron (want to make PR smaller)
             '@executionPerformance'
           ]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
