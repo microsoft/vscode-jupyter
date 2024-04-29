@@ -3,7 +3,7 @@
 
 import { IExtensionActivationManager, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { IBackgroundThreadService, INotebookExporter, INotebookImporter } from '../kernels/jupyter/types';
+import { INotebookExporter, INotebookImporter } from '../kernels/jupyter/types';
 import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
@@ -27,7 +27,8 @@ import { EagerlyActivateJupyterUriProviders } from './api/unstable/activateJupyt
 import { ExposeUsedAzMLServerHandles } from './api/unstable/usedAzMLServerHandles.deprecated';
 import { IExportedKernelServiceFactory } from './api/unstable/types';
 import { KernelApi } from './api/kernels/accessManagement';
-import { BackgroundThreadService } from './api/kernels/backgroundExecution';
+import { JupyterVariablesProvider } from './variables/JupyterVariablesProvider';
+import { IJupyterVariablesProvider } from '../kernels/variables/IJupyterVariablesProvider';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -99,5 +100,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelApi);
 
-    serviceManager.addSingleton<IBackgroundThreadService>(IBackgroundThreadService, BackgroundThreadService);
+    // Variables
+    serviceManager.addSingleton<IJupyterVariablesProvider>(IJupyterVariablesProvider, JupyterVariablesProvider);
 }

@@ -16,9 +16,7 @@ import {
     IJupyterConnection,
     GetServerOptions,
     LiveRemoteKernelConnectionMetadata,
-    RemoteKernelConnectionMetadata,
-    IKernel
-} from '../types';
+    RemoteKernelConnectionMetadata} from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
 import { JupyterServerCollection, JupyterServerProvider } from '../../api';
@@ -257,13 +255,4 @@ export interface IJupyterServerProviderRegistry {
         label: string,
         serverProvider: JupyterServerProvider
     ): JupyterServerCollection;
-}
-
-export const IBackgroundThreadService = Symbol('IBackgroundThreadService');
-export interface IBackgroundThreadService {
-    execCodeInBackgroundThread<T>(
-        kernel: IKernel,
-        codeWithReturnStatement: string[],
-        token: CancellationToken
-    ): Promise<T | undefined>;
 }

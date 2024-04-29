@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as React from 'react';
-import { IJupyterVariable } from '../../../kernels/variables/types';
+import { IJupyterVariable } from '../../../standalone/variables/types';
 
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';

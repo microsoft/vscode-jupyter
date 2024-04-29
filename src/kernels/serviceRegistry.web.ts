@@ -21,10 +21,10 @@ import {
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder';
 import { PreferredRemoteKernelIdProvider } from './jupyter/connection/preferredRemoteKernelIdProvider';
-import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
-import { KernelVariables } from './variables/kernelVariables';
-import { JupyterVariables } from './variables/jupyterVariables';
-import { PythonVariablesRequester } from './variables/pythonVariableRequester';
+import { IJupyterVariables, IKernelVariableRequester } from '../standalone/variables/types';
+import { KernelVariables } from '../standalone/variables/kernelVariables';
+import { JupyterVariables } from '../standalone/variables/jupyterVariables';
+import { PythonVariablesRequester } from '../standalone/variables/pythonVariableRequester';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';

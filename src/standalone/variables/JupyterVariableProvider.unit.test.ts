@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import { JupyterVariablesProvider } from './JupyterVariablesProvider';
 import { NotebookDocument, CancellationTokenSource, EventEmitter, VariablesResult, Variable, Disposable } from 'vscode';
 import { mock, instance, when, anything, verify, objectContaining } from 'ts-mockito';
-import { IKernelProvider, IKernel } from '../types';
+import { IKernelProvider, IKernel } from '../../kernels/types';
 import { IJupyterVariables, IVariableDescription } from './types';
 
 suite('JupyterVariablesProvider', () => {
@@ -83,9 +83,7 @@ suite('JupyterVariablesProvider', () => {
         when(kernelProvider.get(anything())).thenReturn(instance(kernel));
         provider = new JupyterVariablesProvider(
             instance(variables),
-            instance(kernelProvider),
-            controllerId,
-            disposables
+            instance(kernelProvider)
         );
     });
 
@@ -327,20 +325,5 @@ suite('JupyterVariablesProvider', () => {
         );
         assert.include(variablesChangedForNotebooks, '/1.ipynb');
         assert.include(variablesChangedForNotebooks, '/2.ipynb');
-    });
-
-    test('Kernel restart are handled by only one variable provider', async () => {
-        new JupyterVariablesProvider(instance(variables), instance(kernelProvider), 'different', disposables);
-
-        let variablesChangedForNotebooks: string[] = [];
-        provider.onDidChangeVariables((e) => {
-            variablesChangedForNotebooks.push(e.uri.path);
-        });
-
-        fireKernelStatusChange('/1.ipynb', 'idle');
-        fireKernelStatusChange('/1.ipynb', 'restarting');
-        fireKernelStatusChange('/1.ipynb', 'idle');
-
-        assert.equal(variablesChangedForNotebooks.length, 1, 'variable change event should have fired once');
     });
 });

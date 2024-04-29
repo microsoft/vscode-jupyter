@@ -30,7 +30,8 @@ import {
     IVSCodeNotebookControllerUpdateEvent
 } from './types';
 import { VSCodeNotebookController } from './vscodeNotebookController';
-import { IJupyterVariables } from '../../kernels/variables/types';
+import { IJupyterVariables } from '../../standalone/variables/types';
+import { IJupyterVariablesProvider } from '../../kernels/variables/IJupyterVariablesProvider';
 
 /**
  * Keeps track of registered controllers and available KernelConnectionMetadatas.
@@ -360,7 +361,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.extensionChecker,
                         this.serviceContainer,
                         this.serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider),
-                        this.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.KERNEL_VARIABLES)
+                        this.serviceContainer.get<IJupyterVariablesProvider>(IJupyterVariablesProvider)
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     const controllerDisposables: IDisposable[] = [];

@@ -4,44 +4,46 @@
 import {
     CancellationToken,
     NotebookDocument,
-    NotebookVariableProvider,
     Variable,
     NotebookVariablesRequestKind,
     VariablesResult,
     EventEmitter
 } from 'vscode';
 import { IJupyterVariables, IRichVariableResult, IVariableDescription } from './types';
-import { IKernel, IKernelProvider } from '../types';
+import { IKernel, IKernelProvider } from '../../kernels/types';
 import { VariableResultCache, VariableSummaryCache } from './variableResultCache';
-import { IDisposable } from '../../platform/common/types';
+import { inject, injectable, named } from 'inversify';
+import { Identifiers } from '../../platform/common/constants';
+import { IJupyterVariablesProvider } from '../../kernels/variables/IJupyterVariablesProvider';
 
-export class JupyterVariablesProvider implements NotebookVariableProvider {
+@injectable()
+export class JupyterVariablesProvider implements IJupyterVariablesProvider {
     private variableResultCache = new VariableResultCache();
     private variableSummaryCache = new VariableSummaryCache();
     private runningKernels = new Set<string>();
+    private notebooksRequested = new Set<string>();
 
     _onDidChangeVariables = new EventEmitter<NotebookDocument>();
     onDidChangeVariables = this._onDidChangeVariables.event;
 
     constructor(
-        private readonly variables: IJupyterVariables,
-        private readonly kernelProvider: IKernelProvider,
-        private readonly controllerId: string,
-        disposables: IDisposable[]
+        @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variables: IJupyterVariables,
+        @inject(IKernelProvider) private kernelProvider: IKernelProvider
     ) {
-        disposables.push(this.kernelProvider.onKernelStatusChanged(this.onKernelStatusChanged, this));
+        this.kernelProvider.onKernelStatusChanged(this.onKernelStatusChanged, this);
     }
 
     private onKernelStatusChanged({ kernel }: { kernel: IKernel }) {
-        if (kernel.controller.id !== this.controllerId) {
+        const notebookUri = kernel.notebook.uri.toString();
+        if (!this.notebooksRequested.has(notebookUri)) {
             return;
         }
 
-        const kernelWasRunning = this.runningKernels.has(kernel.notebook.uri.toString());
+        const kernelWasRunning = this.runningKernels.has(notebookUri);
         if (kernel.status === 'idle' && !kernelWasRunning) {
-            this.runningKernels.add(kernel.notebook.uri.toString());
+            this.runningKernels.add(notebookUri);
         } else if (kernel.status !== 'busy' && kernel.status !== 'idle' && kernelWasRunning) {
-            this.runningKernels.delete(kernel.notebook.uri.toString());
+            this.runningKernels.delete(notebookUri);
             this._onDidChangeVariables.fire(kernel.notebook);
         }
     }
@@ -65,6 +67,7 @@ export class JupyterVariablesProvider implements NotebookVariableProvider {
         if (token.isCancellationRequested) {
             return;
         }
+        this.notebooksRequested.add(notebook.uri.toString());
         const kernel = this.kernelProvider.get(notebook);
         if (!kernel || kernel.status === 'dead' || kernel.status === 'terminating') {
             return;

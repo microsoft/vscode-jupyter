@@ -3,7 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
-import { IJupyterVariables } from '../../../kernels/variables/types';
+import { IJupyterVariables } from '../../../standalone/variables/types';
 import { IWebviewViewProvider } from '../../../platform/common/application/types';
 import { Identifiers, isTestExecution } from '../../../platform/common/constants';
 import {

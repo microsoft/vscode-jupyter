@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ITracebackFormatter } from '../kernels/types';
-import { IJupyterVariables } from '../kernels/variables/types';
+import { IJupyterVariables } from '../standalone/variables/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { Identifiers } from '../platform/common/constants';
 import { IDataScienceCommandListener } from '../platform/common/types';

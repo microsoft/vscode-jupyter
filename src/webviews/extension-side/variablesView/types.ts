@@ -5,7 +5,7 @@ import { Event } from 'vscode';
 import { IVariableExplorerHeight } from '../../../webviews/webview-side/interactive-common/redux/reducers/types';
 import { InteractiveWindowMessages, IShowDataViewer, SharedMessages } from '../../../messageTypes';
 import { IKernel } from '../../../kernels/types';
-import { IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../kernels/variables/types';
+import { IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../standalone/variables/types';
 import { IVSCWebviewViewProvider } from '../../../platform/webviews/types';
 
 // Mapping of Message to payload that our VariableViewPanel needs to support

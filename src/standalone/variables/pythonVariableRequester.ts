@@ -9,12 +9,12 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
 import { Telemetry } from '../../telemetry';
-import { executeSilently, SilentExecutionErrorOptions } from '../helpers';
-import { IKernel } from '../types';
+import { executeSilently, SilentExecutionErrorOptions } from '../../kernels/helpers';
+import { IKernel } from '../../kernels/types';
 import { IKernelVariableRequester, IJupyterVariable, IVariableDescription } from './types';
 import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../../platform/common/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
-import { IBackgroundThreadService } from '../jupyter/types';
+import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -76,8 +76,7 @@ async function safeExecuteSilently(
 export class PythonVariablesRequester implements IKernelVariableRequester {
     constructor(
         @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,
-        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator,
-        @inject(IBackgroundThreadService) private readonly backgroundThreadService: IBackgroundThreadService
+        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator
     ) {}
 
     public async getDataFrameInfo(
@@ -154,11 +153,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const code = await this.varScriptGenerator.generateCodeToGetVariableValueSummary(targetVariable.name);
 
         try {
-            const content = await this.backgroundThreadService.execCodeInBackgroundThread<{ summary: string }>(
-                kernel,
-                code.split(/\r?\n/),
-                token
-            );
+            const content = await execCodeInBackgroundThread<{ summary: string }>(kernel, code.split(/\r?\n/), token);
 
             return content?.summary;
         } catch (ex) {
@@ -182,11 +177,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const options = parent ? { root: parent.root, propertyChain: parent.propertyChain, startIndex } : undefined;
         const code = await this.varScriptGenerator.generateCodeToGetAllVariableDescriptions(options);
 
-        const content = await this.backgroundThreadService.execCodeInBackgroundThread<IVariableDescription[]>(
-            kernel,
-            code.split(/\r?\n/),
-            token
-        );
+        const content = await execCodeInBackgroundThread<IVariableDescription[]>(kernel, code.split(/\r?\n/), token);
 
         if (kernel.disposed || kernel.disposing || token?.isCancellationRequested || !content) {
             return [];

@@ -12,7 +12,7 @@ import {
     IJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
-} from '../../../kernels/variables/types';
+} from '../../../standalone/variables/types';
 import { IWebviewViewProvider } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { traceError } from '../../../platform/logging';

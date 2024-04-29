@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, Event, Uri, Variable } from 'vscode';
-import { IKernel } from '../types';
+import { IKernel } from '../../kernels/types';
 import type { JSONObject } from '@lumino/coreutils';
 
 // Get variables from the currently running active Jupyter server or debugger
