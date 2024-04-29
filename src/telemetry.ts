@@ -1799,41 +1799,6 @@ export class IEventNamePropertyMapping {
         source: 'User Action'
     };
     /**
-     * Whether we managed to start a remote kernel successfully without a backing file.
-     */
-    [Telemetry.StartedRemoteJupyterSessionWithBackingFile]: TelemetryEventInfo<{
-        /**
-         * Failed to start the session without the backing file.
-         */
-        failedWithoutBackingFile: boolean;
-        /**
-         * Failed to start the session without the backing file.
-         */
-        failedWithBackingFile: boolean;
-        /**
-         * Whether this is a local host connection or remote.
-         */
-        localHost: boolean;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            failedWithoutBackingFile: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            failedWithBackingFile: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            localHost: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Information used to determine the zmq binary support.
      * the alpine, libc, armv version is used by the node module @aminya/node-gyp-build to load the zeromq.js binary.
      */
