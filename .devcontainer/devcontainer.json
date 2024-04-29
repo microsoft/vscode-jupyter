@@ -1,7 +1,7 @@
 {
-	"name": "test-alpine-x64-python",
+	"name": "test-alpine-arm64-python",
 	"build": {
-		"context": "../..",
+		"context": "..",
 		"dockerfile": "./Dockerfile"
 	},
 	"customizations": {
