@@ -161,7 +161,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         displayDataProvider: IConnectionDisplayDataProvider,
         jupyterVariables: IJupyterVariables
     ): IVSCodeNotebookController {
-        return new VSCodeNotebookController(
+        const controller = new VSCodeNotebookController(
             kernelConnection,
             id,
             _viewType,
@@ -172,10 +172,13 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             configuration,
             extensionChecker,
             serviceContainer,
-            displayDataProvider,
-            jupyterVariables
+            displayDataProvider
         );
+        controller.attachVariableProvider(jupyterVariables);
+
+        return controller;
     }
+
     constructor(
         private kernelConnection: KernelConnectionMetadata,
         id: string,
@@ -187,8 +190,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly configuration: IConfigurationService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly displayDataProvider: IConnectionDisplayDataProvider,
-        jupyterVariables: IJupyterVariables
+        private readonly displayDataProvider: IConnectionDisplayDataProvider
     ) {
         trackControllerCreation(kernelConnection.id, kernelConnection.interpreter?.id);
         disposableRegistry.push(this);
@@ -212,14 +214,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
-        if (this.controller.supportedLanguages.includes('python')) {
-            this.controller.variableProvider = new JupyterVariablesProvider(
-                jupyterVariables,
-                this.kernelProvider,
-                this.controller.id,
-                this.disposables
-            );
-        }
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
         workspace.onDidCloseNotebookDocument(
@@ -230,7 +224,24 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this.disposables
         );
     }
+
+    private attachVariableProvider(jupyterVariables: IJupyterVariables) {
+        try {
+            if (this.controller.supportedLanguages && this.controller.supportedLanguages.includes('python')) {
+                this.controller.variableProvider = new JupyterVariablesProvider(
+                    jupyterVariables,
+                    this.kernelProvider,
+                    this.id,
+                    this.disposables
+                );
+            }
+        } catch (ex) {
+            traceWarning('Failed to attach variable provider', ex);
+        }
+    }
+
     private readonly restoredConnections = new WeakSet<NotebookDocument>();
+
     public async restoreConnection(notebook: NotebookDocument) {
         if (this.restoredConnections.has(notebook)) {
             return;
