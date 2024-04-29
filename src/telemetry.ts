@@ -2450,54 +2450,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
-     */
-    [Telemetry.IPyWidgetOverhead]: TelemetryEventInfo<{
-        /**
-         * Total time in ms
-         */
-        totalOverheadInMs: number;
-        /**
-         * Number of messages
-         */
-        numberOfMessagesWaitedOn: number;
-        /**
-         * Average wait timne.
-         */
-        averageWaitTime: number;
-        /**
-         * Number of registered hook.
-         */
-        numberOfRegisteredHooks: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        tags: ['Widgets'],
-        source: 'N/A',
-        measures: {
-            totalOverheadInMs: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            numberOfMessagesWaitedOn: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            averageWaitTime: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            numberOfRegisteredHooks: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight',
-                isMeasurement: true
-            }
-        }
-    };
-    /**
      * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
      */
     [Telemetry.IPyWidgetRenderFailure]: TelemetryEventInfo<never | undefined> = {
