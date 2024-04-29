@@ -80,8 +80,10 @@ class KernelExecutionProgressIndicator {
         return (this.disposable = new Disposable(() => this.deferred?.resolve()));
     }
     private async showProgress() {
-        // Give a grace period of 500ms to avoid displaying progress indicators too aggressively.
-        await sleep(500);
+        // Give a grace period of 1000ms to avoid displaying progress indicators too aggressively.
+        // Clearly some extensions can take a while, see here https://github.com/microsoft/vscode-jupyter/issues/15613
+        // More than 1s is too long
+        await sleep(1_000);
         if (!this.deferred || this.deferred.completed || this.displayInProgress) {
             return;
         }
