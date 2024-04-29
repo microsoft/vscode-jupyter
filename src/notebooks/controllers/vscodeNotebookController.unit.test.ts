@@ -40,7 +40,6 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IConnectionDisplayDataProvider } from './types';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData.node';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
-import { IJupyterVariables } from '../../kernels/variables/types';
 import { Environment, PythonExtension } from '@vscode/python-extension';
 import { crateMockedPythonApi, whenResolveEnvironment } from '../../kernels/helpers.unit.test';
 
@@ -68,7 +67,6 @@ suite(`Notebook Controller`, function () {
     let trustedPaths: ITrustedKernelPaths;
     let displayDataProvider: IConnectionDisplayDataProvider;
     let interpreterService: IInterpreterService;
-    let jupyterVariables: IJupyterVariables;
     setup(async function () {
         resetVSCodeMocks();
         disposables.push(new Disposable(() => resetVSCodeMocks()));
@@ -83,7 +81,6 @@ suite(`Notebook Controller`, function () {
         extensionChecker = mock<IPythonExtensionChecker>();
         controller = mock<NotebookController>();
         kernel = mock<IKernel>();
-        jupyterVariables = mock<IJupyterVariables>();
         onDidChangeSelectedNotebooks = new EventEmitter<{
             readonly notebook: NotebookDocument;
             readonly selected: boolean;
