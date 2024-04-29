@@ -124,8 +124,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 configuration,
                 extensionChecker,
                 api.serviceContainer,
-                displayDataProvider,
-                jupyterVariables
+                displayDataProvider
             );
             disposables.push(interpreterController);
 

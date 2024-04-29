@@ -155,8 +155,7 @@ suite(`Notebook Controller`, function () {
             instance(configService),
             instance(extensionChecker),
             instance(serviceContainer),
-            displayDataProvider,
-            jupyterVariables
+            displayDataProvider
         );
         notebook = new TestNotebookDocument(undefined, viewType);
     }
