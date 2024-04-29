@@ -1799,41 +1799,6 @@ export class IEventNamePropertyMapping {
         source: 'User Action'
     };
     /**
-     * Whether we managed to start a remote kernel successfully without a backing file.
-     */
-    [Telemetry.StartedRemoteJupyterSessionWithBackingFile]: TelemetryEventInfo<{
-        /**
-         * Failed to start the session without the backing file.
-         */
-        failedWithoutBackingFile: boolean;
-        /**
-         * Failed to start the session without the backing file.
-         */
-        failedWithBackingFile: boolean;
-        /**
-         * Whether this is a local host connection or remote.
-         */
-        localHost: boolean;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            failedWithoutBackingFile: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            failedWithBackingFile: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            localHost: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Information used to determine the zmq binary support.
      * the alpine, libc, armv version is used by the node module @aminya/node-gyp-build to load the zeromq.js binary.
      */
@@ -2450,54 +2415,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
-     */
-    [Telemetry.IPyWidgetOverhead]: TelemetryEventInfo<{
-        /**
-         * Total time in ms
-         */
-        totalOverheadInMs: number;
-        /**
-         * Number of messages
-         */
-        numberOfMessagesWaitedOn: number;
-        /**
-         * Average wait timne.
-         */
-        averageWaitTime: number;
-        /**
-         * Number of registered hook.
-         */
-        numberOfRegisteredHooks: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        tags: ['Widgets'],
-        source: 'N/A',
-        measures: {
-            totalOverheadInMs: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            numberOfMessagesWaitedOn: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            averageWaitTime: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            numberOfRegisteredHooks: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight',
-                isMeasurement: true
-            }
-        }
-    };
-    /**
      * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
      */
     [Telemetry.IPyWidgetRenderFailure]: TelemetryEventInfo<never | undefined> = {
@@ -2708,43 +2625,6 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties
         },
         measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Telemetry sent when user Kernel startup fails due to a missing python env.
-     */
-    [Telemetry.KernelStartFailureDueToMissingEnv]: TelemetryEventInfo<
-        ResourceTypeTelemetryProperty &
-            TelemetryErrorProperties & {
-                envMissingReason: 'Unknown' | 'EmptyEnvDetailsFromPython' | 'FailedToGetEnvDetailsFromPython';
-                isEmptyCondaEnv: boolean;
-                pythonEnvType: string;
-                fileExists: boolean;
-            }
-    > = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        source: 'User Action',
-        properties: {
-            ...commonClassificationForResourceType(),
-            ...commonClassificationForErrorProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
-            envMissingReason: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            isEmptyCondaEnv: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            pythonEnvType: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            fileExists: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
     };
     /**
      * Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
