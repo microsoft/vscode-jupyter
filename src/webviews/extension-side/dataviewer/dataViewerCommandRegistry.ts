@@ -4,7 +4,7 @@
 import { inject, injectable, named, optional } from 'inversify';
 import { DebugConfiguration, Memento, Uri, commands, window, workspace } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { convertDebugProtocolVariableToIJupyterVariable } from '../../../standalone/variables/helpers';
+import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandNameArgumentTypeMapping } from '../../../commands';
 import { IDebugService } from '../../../platform/common/application/types';

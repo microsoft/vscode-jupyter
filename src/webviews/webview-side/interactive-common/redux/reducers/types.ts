@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IJupyterVariablesRequest } from '../../../../../standalone/variables/types';
+import { IJupyterVariablesRequest } from '../../../../../kernels/variables/types';
 import {
     IShowDataViewer,
     InteractiveWindowMessages,

@@ -15,28 +15,7 @@ import { IKernelVariableRequester, IJupyterVariable, IVariableDescription } from
 import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../../platform/common/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
-
-type DataFrameSplitFormat = {
-    index: (number | string)[];
-    columns: string[];
-    data: Record<string, unknown>[];
-};
-
-export function parseDataFrame(df: DataFrameSplitFormat) {
-    const rowIndexValues = df.index;
-    const columns = df.columns;
-    const rowData = df.data;
-    const data = rowData.map((row, index) => {
-        const rowData: Record<string, unknown> = {
-            index: rowIndexValues[index]
-        };
-        columns.forEach((column, columnIndex) => {
-            rowData[column] = row[columnIndex];
-        });
-        return rowData;
-    });
-    return { data };
-}
+import { DataFrameSplitFormat, parseDataFrame } from '../../kernels/variables/helpers';
 
 async function safeExecuteSilently(
     kernel: IKernel,
