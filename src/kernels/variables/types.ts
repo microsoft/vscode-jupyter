@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, Uri, Variable } from 'vscode';
-import { IKernel } from '../../kernels/types';
+import { CancellationToken, Event, NotebookVariableProvider, Uri, Variable } from 'vscode';
+import { IKernel } from '../types';
 import type { JSONObject } from '@lumino/coreutils';
 
 // Get variables from the currently running active Jupyter server or debugger
@@ -143,3 +143,6 @@ export interface IKernelVariableRequester {
     ): Promise<string | undefined>;
     getDataFrameInfo(targetVariable: IJupyterVariable, kernel: IKernel, expression: string): Promise<IJupyterVariable>;
 }
+
+export const IJupyterVariablesProvider = Symbol('IJupyterVariablesProvider');
+export interface IJupyterVariablesProvider extends NotebookVariableProvider {}

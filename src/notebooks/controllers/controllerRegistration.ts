@@ -30,7 +30,7 @@ import {
     IVSCodeNotebookControllerUpdateEvent
 } from './types';
 import { VSCodeNotebookController } from './vscodeNotebookController';
-import { IJupyterVariables } from '../../standalone/variables/types';
+import { IJupyterVariables } from '../../kernels/variables/types';
 import { IJupyterVariablesProvider } from '../../kernels/variables/IJupyterVariablesProvider';
 
 /**

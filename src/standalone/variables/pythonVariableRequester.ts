@@ -11,7 +11,7 @@ import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRate
 import { Telemetry } from '../../telemetry';
 import { executeSilently, SilentExecutionErrorOptions } from '../../kernels/helpers';
 import { IKernel } from '../../kernels/types';
-import { IKernelVariableRequester, IJupyterVariable, IVariableDescription } from './types';
+import { IKernelVariableRequester, IJupyterVariable, IVariableDescription } from '../../kernels/variables/types';
 import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../../platform/common/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';

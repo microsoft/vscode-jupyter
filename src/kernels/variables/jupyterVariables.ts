@@ -7,7 +7,7 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { Identifiers } from '../../platform/common/constants';
 import { capturePerfTelemetry, Telemetry } from '../../telemetry';
-import { IKernel } from '../../kernels/types';
+import { IKernel } from '../types';
 import {
     IJupyterVariables,
     IConditionalJupyterVariables,

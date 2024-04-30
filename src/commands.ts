@@ -14,7 +14,7 @@ import {
 import { Commands as DSCommands, CommandSource } from './platform/common/constants';
 import { PythonEnvironment } from './platform/pythonEnvironments/info';
 import { Channel } from './platform/common/application/types';
-import { IJupyterVariable } from './standalone/variables/types';
+import { IJupyterVariable } from './kernels/variables/types';
 import { IShowDataViewerFromVariablePanel } from './messageTypes';
 
 export type CommandIds = keyof ICommandNameArgumentTypeMapping;

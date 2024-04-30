@@ -13,7 +13,7 @@ import { Delayer, raceTimeout } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { IJupyterVariables } from '../../standalone/variables/types';
+import { IJupyterVariables } from '../../kernels/variables/types';
 import { IInteractiveWindowProvider } from '../types';
 import { getInteractiveCellMetadata } from '../helpers';
 import {

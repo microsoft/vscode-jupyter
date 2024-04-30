@@ -41,11 +41,8 @@ import {
     IStartupCodeProviders,
     IThirdPartyKernelProvider
 } from './types';
-import { JupyterVariables } from '../standalone/variables/jupyterVariables';
-import { KernelVariables } from '../standalone/variables/kernelVariables';
-import { PreWarmActivatedJupyterEnvironmentVariables } from '../standalone/variables/preWarmVariables.node';
-import { PythonVariablesRequester } from '../standalone/variables/pythonVariableRequester';
-import { IJupyterVariables, IKernelVariableRequester } from '../standalone/variables/types';
+import { JupyterVariables } from './variables/jupyterVariables';
+import { IJupyterVariables } from './variables/types';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
 import { KernelChatStartupCodeProvider } from './chat/kernelStartupCodeProvider';
@@ -91,17 +88,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        PreWarmActivatedJupyterEnvironmentVariables
-    );
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
-    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
-    serviceManager.addSingleton<IKernelVariableRequester>(
-        IKernelVariableRequester,
-        PythonVariablesRequester,
-        Identifiers.PYTHON_VARIABLES_REQUESTER
-    );
+
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IExtensionSyncActivationService>(

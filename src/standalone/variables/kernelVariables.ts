@@ -17,7 +17,7 @@ import {
     IJupyterVariablesResponse,
     IKernelVariableRequester,
     IVariableDescription
-} from './types';
+} from '../../kernels/variables/types';
 import type { Kernel } from '@jupyterlab/services';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports

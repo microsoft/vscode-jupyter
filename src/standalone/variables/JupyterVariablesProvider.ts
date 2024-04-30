@@ -9,7 +9,7 @@ import {
     VariablesResult,
     EventEmitter
 } from 'vscode';
-import { IJupyterVariables, IRichVariableResult, IVariableDescription } from './types';
+import { IJupyterVariables, IRichVariableResult, IVariableDescription } from '../../kernels/variables/types';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { VariableResultCache, VariableSummaryCache } from './variableResultCache';
 import { inject, injectable, named } from 'inversify';

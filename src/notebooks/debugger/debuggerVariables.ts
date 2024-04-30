@@ -16,7 +16,7 @@ import {
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
     IVariableDescription
-} from '../../standalone/variables/types';
+} from '../../kernels/variables/types';
 import { IDebugService } from '../../platform/common/application/types';
 import { Identifiers } from '../../platform/common/constants';
 import {

@@ -6,7 +6,7 @@ import { JupyterVariablesProvider } from './JupyterVariablesProvider';
 import { NotebookDocument, CancellationTokenSource, EventEmitter, VariablesResult, Variable, Disposable } from 'vscode';
 import { mock, instance, when, anything, verify, objectContaining } from 'ts-mockito';
 import { IKernelProvider, IKernel } from '../../kernels/types';
-import { IJupyterVariables, IVariableDescription } from './types';
+import { IJupyterVariables, IVariableDescription } from '../../kernels/variables/types';
 
 suite('JupyterVariablesProvider', () => {
     let variables: IJupyterVariables;
@@ -81,10 +81,7 @@ suite('JupyterVariablesProvider', () => {
         kernelProvider = mock<IKernelProvider>();
         when(kernelProvider.onKernelStatusChanged).thenReturn(kernelEventEmitter.event);
         when(kernelProvider.get(anything())).thenReturn(instance(kernel));
-        provider = new JupyterVariablesProvider(
-            instance(variables),
-            instance(kernelProvider)
-        );
+        provider = new JupyterVariablesProvider(instance(variables), instance(kernelProvider));
     });
 
     test('provideVariables without parent should yield variables', async () => {

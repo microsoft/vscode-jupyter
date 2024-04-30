@@ -28,7 +28,11 @@ import { ExposeUsedAzMLServerHandles } from './api/unstable/usedAzMLServerHandle
 import { IExportedKernelServiceFactory } from './api/unstable/types';
 import { KernelApi } from './api/kernels/accessManagement';
 import { JupyterVariablesProvider } from './variables/JupyterVariablesProvider';
-import { IJupyterVariablesProvider } from '../kernels/variables/IJupyterVariablesProvider';
+import { IJupyterVariables, IJupyterVariablesProvider, IKernelVariableRequester } from '../kernels/variables/types';
+import { KernelVariables } from './variables/kernelVariables';
+import { Identifiers } from '../platform/common/constants';
+import { PythonVariablesRequester } from './variables/pythonVariableRequester';
+import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -102,4 +106,14 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
 
     // Variables
     serviceManager.addSingleton<IJupyterVariablesProvider>(IJupyterVariablesProvider, JupyterVariablesProvider);
+    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
+    serviceManager.addSingleton<IKernelVariableRequester>(
+        IKernelVariableRequester,
+        PythonVariablesRequester,
+        Identifiers.PYTHON_VARIABLES_REQUESTER
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PreWarmActivatedJupyterEnvironmentVariables
+    );
 }

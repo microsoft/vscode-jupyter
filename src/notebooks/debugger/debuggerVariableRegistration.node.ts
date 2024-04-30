@@ -9,7 +9,7 @@ import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { pythonIWKernelDebugAdapter, pythonKernelDebugAdapter } from './constants';
 import { IJupyterDebugService } from './debuggingTypes';
-import { IJupyterVariables } from '../../standalone/variables/types';
+import { IJupyterVariables } from '../../kernels/variables/types';
 
 /**
  * Registes a DebugAdapter for handling variable values when debugging.

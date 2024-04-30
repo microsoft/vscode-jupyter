@@ -8,7 +8,7 @@ import {
 } from './webviews/webview-side/interactive-common/redux/reducers/types';
 // eslint-disable-next-line
 import { KernelSocketOptions } from './kernels/types';
-import { IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from './standalone/variables/types';
+import { IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from './kernels/variables/types';
 import { WidgetScriptSource } from './notebooks/controllers/ipywidgets/types';
 
 export type NotifyIPyWidgetWidgetVersionNotSupportedAction = {
