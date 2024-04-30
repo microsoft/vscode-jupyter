@@ -16,7 +16,8 @@ import {
     IJupyterConnection,
     GetServerOptions,
     LiveRemoteKernelConnectionMetadata,
-    RemoteKernelConnectionMetadata} from '../types';
+    RemoteKernelConnectionMetadata
+} from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
 import { JupyterServerCollection, JupyterServerProvider } from '../../api';
