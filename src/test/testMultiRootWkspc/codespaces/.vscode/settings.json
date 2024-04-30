@@ -1,0 +1,11 @@
+{
+    "jupyter.kernels.excludePythonEnvironments": [
+        "/usr/bin/python",
+        // These are the default python envs in the container, that do not work.
+        // Either because pip doesn't exist or other.
+        "/usr/bin/python3"
+    ],
+    // Ensure we default this so that the active env in Python is what works,
+    // Else Python will recommend the ones that do not work.
+    "python.defaultInterpreterPath": "/usr/local/bin/python"
+}
