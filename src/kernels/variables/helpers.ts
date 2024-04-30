@@ -29,3 +29,25 @@ export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugPr
         frameId: variable.variablesReference
     };
 }
+
+export type DataFrameSplitFormat = {
+    index: (number | string)[];
+    columns: string[];
+    data: Record<string, unknown>[];
+};
+
+export function parseDataFrame(df: DataFrameSplitFormat) {
+    const rowIndexValues = df.index;
+    const columns = df.columns;
+    const rowData = df.data;
+    const data = rowData.map((row, index) => {
+        const rowData: Record<string, unknown> = {
+            index: rowIndexValues[index]
+        };
+        columns.forEach((column, columnIndex) => {
+            rowData[column] = row[columnIndex];
+        });
+        return rowData;
+    });
+    return { data };
+}

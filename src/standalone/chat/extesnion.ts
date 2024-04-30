@@ -7,7 +7,7 @@ import { IKernel, IKernelProvider } from '../../kernels/types';
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { JupyterVariablesProvider } from '../../kernels/variables/JupyterVariablesProvider';
+import { JupyterVariablesProvider } from '../variables/JupyterVariablesProvider';
 import { traceWarning } from '../../platform/logging';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {

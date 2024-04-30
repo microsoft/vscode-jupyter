@@ -80,10 +80,9 @@ import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessa
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
 import { openInBrowser } from '../../platform/common/net/browser';
 import { KernelError } from '../../kernels/errors/kernelError';
-import { JupyterVariablesProvider } from '../../kernels/variables/JupyterVariablesProvider';
-import { IJupyterVariables } from '../../kernels/variables/types';
 import { getVersion } from '../../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker, trackControllerCreation } from '../../kernels/telemetry/notebookTelemetry';
+import { IJupyterVariablesProvider } from '../../kernels/variables/types';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -159,7 +158,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         extensionChecker: IPythonExtensionChecker,
         serviceContainer: IServiceContainer,
         displayDataProvider: IConnectionDisplayDataProvider,
-        jupyterVariables: IJupyterVariables
+        jupyterVairablesProvider: IJupyterVariablesProvider
     ): IVSCodeNotebookController {
         const controller = new VSCodeNotebookController(
             kernelConnection,
@@ -174,7 +173,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             serviceContainer,
             displayDataProvider
         );
-        controller.attachVariableProvider(jupyterVariables);
+
+        try {
+            controller.controller.variableProvider = jupyterVairablesProvider;
+        } catch (ex) {
+            traceWarning('Failed to attach variable provider', ex);
+        }
 
         return controller;
     }
@@ -223,21 +227,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this,
             this.disposables
         );
-    }
-
-    private attachVariableProvider(jupyterVariables: IJupyterVariables) {
-        try {
-            if (this.controller.supportedLanguages && this.controller.supportedLanguages.includes('python')) {
-                this.controller.variableProvider = new JupyterVariablesProvider(
-                    jupyterVariables,
-                    this.kernelProvider,
-                    this.id,
-                    this.disposables
-                );
-            }
-        } catch (ex) {
-            traceWarning('Failed to attach variable provider', ex);
-        }
     }
 
     private readonly restoredConnections = new WeakSet<NotebookDocument>();

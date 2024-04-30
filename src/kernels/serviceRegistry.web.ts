@@ -21,10 +21,8 @@ import {
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder';
 import { PreferredRemoteKernelIdProvider } from './jupyter/connection/preferredRemoteKernelIdProvider';
-import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
-import { KernelVariables } from './variables/kernelVariables';
+import { IJupyterVariables } from './variables/types';
 import { JupyterVariables } from './variables/jupyterVariables';
-import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
@@ -58,13 +56,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
     serviceManager.addSingleton<IStartupCodeProviders>(IStartupCodeProviders, KernelStartupCodeProviders);
-    serviceManager.addSingleton<IKernelVariableRequester>(
-        IKernelVariableRequester,
-        PythonVariablesRequester,
-        Identifiers.PYTHON_VARIABLES_REQUESTER
-    );
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
-    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IExtensionSyncActivationService>(

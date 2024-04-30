@@ -8,8 +8,11 @@ import * as uriPath from '../../platform/vscode-path/resources';
 import { DebugAdapterTracker, Disposable, Event, EventEmitter, window } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from '../../kernels/variables/helpers';
-import { parseDataFrame } from '../../kernels/variables/pythonVariableRequester';
+import {
+    convertDebugProtocolVariableToIJupyterVariable,
+    DataViewableTypes,
+    parseDataFrame
+} from '../../kernels/variables/helpers';
 import {
     IConditionalJupyterVariables,
     IJupyterVariable,

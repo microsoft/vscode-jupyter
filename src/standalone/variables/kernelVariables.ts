@@ -8,8 +8,8 @@ import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { stripAnsi } from '../../platform/common/utils/regexp';
-import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
-import { IKernel, IKernelProvider } from '../types';
+import { getKernelConnectionLanguage, isPythonKernelConnection } from '../../kernels/helpers';
+import { IKernel, IKernelProvider } from '../../kernels/types';
 import {
     IJupyterVariable,
     IJupyterVariables,
@@ -17,7 +17,7 @@ import {
     IJupyterVariablesResponse,
     IKernelVariableRequester,
     IVariableDescription
-} from './types';
+} from '../../kernels/variables/types';
 import type { Kernel } from '@jupyterlab/services';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
