@@ -140,7 +140,7 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
             'vscodeGetVariablesForProvider.py'
         );
         const contents = await this.fs.readFile(scriptPath);
-        VariableScriptGenerator.contentsOfScript = contents;
+        VariableScriptGenerator.contentsOfVariablesScript = contents;
         return contents;
     }
 }
