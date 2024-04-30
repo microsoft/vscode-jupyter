@@ -6,7 +6,7 @@ import {
     IJupyterVariable,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
-} from '../../../../../standalone/variables/types';
+} from '../../../../../kernels/variables/types';
 import { InteractiveWindowMessages, IInteractiveWindowMapping, SharedMessages } from '../../../../../messageTypes';
 import { IJupyterExtraSettings } from '../../../../../platform/webviews/types';
 import { BaseReduxActionPayload } from '../../../../types';

@@ -3,7 +3,6 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
-import { IJupyterVariables } from '../../../standalone/variables/types';
 import { IWebviewViewProvider } from '../../../platform/common/application/types';
 import { Identifiers, isTestExecution } from '../../../platform/common/constants';
 import {
@@ -15,6 +14,7 @@ import {
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { INotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
+import { IJupyterVariables } from '../../../kernels/variables/types';
 
 // This class creates our UI for our variable view and links it to the vs code webview view
 @injectable()

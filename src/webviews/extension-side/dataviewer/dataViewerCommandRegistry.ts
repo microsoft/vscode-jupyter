@@ -5,7 +5,6 @@ import { inject, injectable, named, optional } from 'inversify';
 import { DebugConfiguration, Memento, Uri, commands, window, workspace } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../standalone/variables/helpers';
-import { IJupyterVariable, IJupyterVariables } from '../../../standalone/variables/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandNameArgumentTypeMapping } from '../../../commands';
 import { IDebugService } from '../../../platform/common/application/types';
@@ -33,6 +32,8 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IKernelProvider } from '../../../kernels/types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
+import { IJupyterVariable } from '../../../api';
+import { IJupyterVariables } from '../../../kernels/variables/types';
 
 export const PromptAboutDeprecation = 'ds_prompt_about_deprecation';
 

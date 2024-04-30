@@ -82,7 +82,7 @@ import { openInBrowser } from '../../platform/common/net/browser';
 import { KernelError } from '../../kernels/errors/kernelError';
 import { getVersion } from '../../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker, trackControllerCreation } from '../../kernels/telemetry/notebookTelemetry';
-import { IJupyterVariablesProvider } from '../../kernels/variables/IJupyterVariablesProvider';
+import { IJupyterVariablesProvider } from '../../kernels/variables/types';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed

@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import * as React from 'react';
-import { IJupyterVariable } from '../../../standalone/variables/types';
-
 import { VariableExplorer } from './variableExplorer';
+import { IJupyterVariable } from '../../../kernels/variables/types';
 
 export interface IVariablePanelProps {
     baseTheme: string;

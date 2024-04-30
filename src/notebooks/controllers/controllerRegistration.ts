@@ -9,7 +9,7 @@ import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMet
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { isCancellationError } from '../../platform/common/cancellation';
-import { isCI, JupyterNotebookView, InteractiveWindowView, Identifiers } from '../../platform/common/constants';
+import { isCI, JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import {
     IDisposableRegistry,
     IConfigurationService,
@@ -30,8 +30,7 @@ import {
     IVSCodeNotebookControllerUpdateEvent
 } from './types';
 import { VSCodeNotebookController } from './vscodeNotebookController';
-import { IJupyterVariables } from '../../kernels/variables/types';
-import { IJupyterVariablesProvider } from '../../kernels/variables/IJupyterVariablesProvider';
+import { IJupyterVariablesProvider } from '../../kernels/variables/types';
 
 /**
  * Keeps track of registered controllers and available KernelConnectionMetadatas.

@@ -14,7 +14,7 @@ import { IKernel, IKernelProvider } from '../../kernels/types';
 import { VariableResultCache, VariableSummaryCache } from './variableResultCache';
 import { inject, injectable, named } from 'inversify';
 import { Identifiers } from '../../platform/common/constants';
-import { IJupyterVariablesProvider } from '../../kernels/variables/IJupyterVariablesProvider';
+import { IJupyterVariablesProvider } from '../../kernels/variables/types';
 
 @injectable()
 export class JupyterVariablesProvider implements IJupyterVariablesProvider {

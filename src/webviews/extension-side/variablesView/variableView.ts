@@ -7,12 +7,6 @@ import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../te
 import { INotebookWatcher, IVariableViewPanelMapping, IVariableViewer } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
 import { InteractiveWindowMessages, IShowDataViewer } from '../../../messageTypes';
-import {
-    IJupyterVariable,
-    IJupyterVariables,
-    IJupyterVariablesRequest,
-    IJupyterVariablesResponse
-} from '../../../standalone/variables/types';
 import { IWebviewViewProvider } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { traceError } from '../../../platform/logging';
@@ -31,6 +25,12 @@ import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
 import { Commands, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { extensions } from 'vscode';
+import {
+    IJupyterVariable,
+    IJupyterVariables,
+    IJupyterVariablesRequest,
+    IJupyterVariablesResponse
+} from '../../../kernels/variables/types';
 
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection

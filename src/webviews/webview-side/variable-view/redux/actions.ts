@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IJupyterVariable, IJupyterVariablesRequest } from '../../../../standalone/variables/types';
+import { IJupyterVariable, IJupyterVariablesRequest } from '../../../../kernels/variables/types';
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../messageTypes';
 import {
     CommonAction,

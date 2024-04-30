@@ -3,11 +3,11 @@
 
 import { Event } from 'vscode';
 import { IKernel } from '../../../kernels/types';
-import { IJupyterVariable } from '../../../standalone/variables/types';
 import { IDisposable } from '../../../platform/common/types';
 import { SharedMessages } from '../../../messageTypes';
 import { SliceOperationSource } from '../../../platform/telemetry/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { IJupyterVariable } from '../../../kernels/variables/types';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
