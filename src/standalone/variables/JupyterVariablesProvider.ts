@@ -21,7 +21,6 @@ export class JupyterVariablesProvider implements IJupyterVariablesProvider {
     private variableResultCache = new VariableResultCache();
     private variableSummaryCache = new VariableSummaryCache();
     private runningKernels = new Set<string>();
-    private notebooksRequested = new Set<string>();
 
     _onDidChangeVariables = new EventEmitter<NotebookDocument>();
     onDidChangeVariables = this._onDidChangeVariables.event;
@@ -34,11 +33,11 @@ export class JupyterVariablesProvider implements IJupyterVariablesProvider {
     }
 
     private onKernelStatusChanged({ kernel }: { kernel: IKernel }) {
-        const notebookUri = kernel.notebook.uri.toString();
-        if (!this.notebooksRequested.has(notebookUri)) {
+        if ('variableProvider' in kernel.controller && kernel.controller.variableProvider !== this) {
             return;
         }
 
+        const notebookUri = kernel.notebook.uri.toString();
         const kernelWasRunning = this.runningKernels.has(notebookUri);
         if (kernel.status === 'idle' && !kernelWasRunning) {
             this.runningKernels.add(notebookUri);
@@ -67,7 +66,7 @@ export class JupyterVariablesProvider implements IJupyterVariablesProvider {
         if (token.isCancellationRequested) {
             return;
         }
-        this.notebooksRequested.add(notebook.uri.toString());
+
         const kernel = this.kernelProvider.get(notebook);
         if (!kernel || kernel.status === 'dead' || kernel.status === 'terminating') {
             return;
