@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Event, EventEmitter } from '@c4312/evt';
 import { IDisposable } from '../types';
 import { once } from './functional';
