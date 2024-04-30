@@ -139,6 +139,17 @@ function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return getNormalizedInterpreterPath(process.env.CI_PYTHON_PATH);
     }
+    if (os.platform() === 'win32') {
+        const venv = path.join(__dirname, '..', '..', '.venv', 'Scripts', 'python.exe');
+        if (fs.existsSync(venv)) {
+            return venv;
+        }
+    } else {
+        const venv = path.join(__dirname, '..', '..', '.venv', 'bin', 'python');
+        if (fs.existsSync(venv)) {
+            return venv;
+        }
+    }
     // eslint-disable-next-line
     // TODO: Change this to python3.
     // See https://github.com/microsoft/vscode-python/issues/10910.

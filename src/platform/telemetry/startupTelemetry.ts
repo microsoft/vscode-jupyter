@@ -7,13 +7,15 @@ import { sendTelemetryEvent } from '.';
 import { EventName } from './constants';
 import { workspace } from 'vscode';
 
-interface IStopWatch {
-    elapsedTime: number;
-}
+export const startupDurations: {
+    workspaceFolderCount: number;
+    totalActivateTime: number;
+    codeLoadingTime: number;
+    startActivateTime: number;
+    endActivateTime: number;
+} = { codeLoadingTime: 0, endActivateTime: 0, startActivateTime: 0, totalActivateTime: 0, workspaceFolderCount: 0 };
 
-export async function sendStartupTelemetry(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    activatedPromise: Promise<any>,
+export function sendStartupTelemetry(
     durations: {
         workspaceFolderCount: number;
         totalActivateTime: number;
@@ -21,45 +23,51 @@ export async function sendStartupTelemetry(
         startActivateTime: number;
         endActivateTime: number;
     },
-    stopWatch: IStopWatch
+    stopWatch: {
+        elapsedTime: number;
+    }
 ) {
     if (isTestExecution()) {
         return;
     }
 
     try {
-        await activatedPromise;
+        durations.endActivateTime = stopWatch.elapsedTime;
         durations.totalActivateTime = stopWatch.elapsedTime;
-        await updateActivationTelemetryProps(durations);
+        Object.assign(startupDurations, durations);
+        updateActivationTelemetryProps(durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations);
     } catch (ex) {
         traceError('sendStartupTelemetry() failed.', ex);
     }
 }
 
-export async function sendErrorTelemetry(
+export function sendErrorTelemetry(
     ex: Error,
     durations: {
         workspaceFolderCount: number;
         totalActivateTime: number;
+        endActivateTime: number;
         codeLoadingTime: number;
+    },
+    stopWatch: {
+        elapsedTime: number;
     }
 ) {
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let props: any = {};
-        try {
-            await updateActivationTelemetryProps(durations);
-        } catch (ex) {
-            traceError('getActivationTelemetryProps() failed.', ex);
-        }
+        durations.endActivateTime = stopWatch.elapsedTime;
+        durations.totalActivateTime = stopWatch.elapsedTime;
+        Object.assign(startupDurations, durations);
+        updateActivationTelemetryProps(durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations, props, ex);
     } catch (exc2) {
         traceError('sendErrorTelemetry() failed.', exc2);
     }
 }
 
-async function updateActivationTelemetryProps(durations: { workspaceFolderCount: number }) {
+function updateActivationTelemetryProps(durations: { workspaceFolderCount: number }) {
     // eslint-disable-next-line
     // TODO: Not all of this data is showing up in the database...
     // eslint-disable-next-line

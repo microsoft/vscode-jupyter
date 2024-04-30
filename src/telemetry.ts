@@ -1799,41 +1799,6 @@ export class IEventNamePropertyMapping {
         source: 'User Action'
     };
     /**
-     * Whether we managed to start a remote kernel successfully without a backing file.
-     */
-    [Telemetry.StartedRemoteJupyterSessionWithBackingFile]: TelemetryEventInfo<{
-        /**
-         * Failed to start the session without the backing file.
-         */
-        failedWithoutBackingFile: boolean;
-        /**
-         * Failed to start the session without the backing file.
-         */
-        failedWithBackingFile: boolean;
-        /**
-         * Whether this is a local host connection or remote.
-         */
-        localHost: boolean;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            failedWithoutBackingFile: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            failedWithBackingFile: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            localHost: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Information used to determine the zmq binary support.
      * the alpine, libc, armv version is used by the node module @aminya/node-gyp-build to load the zeromq.js binary.
      */
@@ -2450,54 +2415,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
-     */
-    [Telemetry.IPyWidgetOverhead]: TelemetryEventInfo<{
-        /**
-         * Total time in ms
-         */
-        totalOverheadInMs: number;
-        /**
-         * Number of messages
-         */
-        numberOfMessagesWaitedOn: number;
-        /**
-         * Average wait timne.
-         */
-        averageWaitTime: number;
-        /**
-         * Number of registered hook.
-         */
-        numberOfRegisteredHooks: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        tags: ['Widgets'],
-        source: 'N/A',
-        measures: {
-            totalOverheadInMs: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            numberOfMessagesWaitedOn: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            averageWaitTime: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            numberOfRegisteredHooks: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight',
-                isMeasurement: true
-            }
-        }
-    };
-    /**
      * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
      */
     [Telemetry.IPyWidgetRenderFailure]: TelemetryEventInfo<never | undefined> = {
@@ -2710,43 +2627,6 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
-     * Telemetry sent when user Kernel startup fails due to a missing python env.
-     */
-    [Telemetry.KernelStartFailureDueToMissingEnv]: TelemetryEventInfo<
-        ResourceTypeTelemetryProperty &
-            TelemetryErrorProperties & {
-                envMissingReason: 'Unknown' | 'EmptyEnvDetailsFromPython' | 'FailedToGetEnvDetailsFromPython';
-                isEmptyCondaEnv: boolean;
-                pythonEnvType: string;
-                fileExists: boolean;
-            }
-    > = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        source: 'User Action',
-        properties: {
-            ...commonClassificationForResourceType(),
-            ...commonClassificationForErrorProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
-            envMissingReason: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            isEmptyCondaEnv: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            pythonEnvType: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            fileExists: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
-    };
-    /**
      * Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
      * This is useful to see what the user does with this error message.
      */
@@ -2805,6 +2685,353 @@ export class IEventNamePropertyMapping {
             exitCode: {
                 classification: 'CallstackOrException',
                 purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            }
+        }
+    };
+
+    /**
+     * This event is sent to measure the times involved in various parts of extension when running a cell.
+     * The reference time is `openedAfter` (time when the notebook was opened).
+     * All other times are relative to this time, except in the case where a notebook was already opened before the extension was activated.
+     * In this case, the reference time is the time we detected the notebook after the extension started.
+     * I.e. in such a case the `openedAfter` would be approx the time the extension took to activate.
+     * In other cases this is 0
+     */
+    [Telemetry.NotebookFirstStartBreakDown]: TelemetryEventInfo<
+        {
+            /**
+             * Whether the user manually selected a kernel.
+             */
+            manuallySelectedKernel?: boolean;
+            /**
+             * Whether the notebook was already open when the extension was activated.
+             */
+            wasAlreadyOpen: boolean;
+            /**
+             * % Time taken to compute the cwd.
+             */
+            computeCwd: number;
+            /**
+             * Total duration (from run cell to getting the execution count of the first cell).
+             */
+            duration: number;
+            /**
+             * % Time to get env vars
+             */
+            envVars: number;
+            /**
+             * % Time to run the first cell & get the execution count.
+             */
+            executeCell: number;
+            /**
+             * % Time to get the kernel connection.
+             */
+            getConnection: number;
+            /**
+             * % Time to start the interrupt handle (win32 only)
+             */
+            interruptHandle: number;
+            /**
+             * % Time waiting for kernel to be idle
+             */
+            kernelIdle: number;
+            /**
+             * % Time waiting for kernel info
+             */
+            kernelInfo: number;
+            /**
+             * % Time waiting for kernel to be ready
+             */
+            kernelReady: number;
+            /**
+             * % Time waiting for kernel ports to be used.
+             */
+            portUsage: number;
+            /**
+             * % Time spent in post kernel start.
+             */
+            postKernelStart: number;
+            /**
+             * % Time spent in generating the pre-execute telemetry.
+             */
+            preExecuteCellTelemetry: number;
+            /**
+             * % Time spent in getting env vars for python.
+             */
+            pythonEnvVars: number;
+            /**
+             * % Time spent in getting session telemetry.
+             */
+            sessionTelemetry: number;
+            /**
+             * % Time spent in spawning kernel proc.
+             */
+            spawn: number;
+            /**
+             * % Time spent in starting the kernel.
+             */
+            startKernel: number;
+            /**
+             * % Time spent in executing startup code.
+             */
+            startupCode: number;
+            /**
+             * % Time spent in updating the kernel connection.
+             */
+            updateConnection: number;
+            /**
+             * Number of code cells in the notebook.
+             */
+            codeCellCount: number;
+            /**
+             * Number of md cells in the notebook.
+             */
+            mdCellCount: number;
+            /**
+             * Total char length of all text in all code cells.
+             */
+            codeCellCharLength: number;
+            /**
+             * Total char length of all text in all md cells.
+             */
+            mdCellCharLength: number;
+            /**
+             * Total number of outputs in all cells.
+             */
+            outputCount: number;
+            /**
+             * Total bytes of all outputs in all cells.
+             */
+            outputsByteSize: number;
+            /**
+             * Total number of attachments
+             */
+            attachmentCount: number;
+            /**
+             * Total number of chars in the attachment (generally these are base64 encoded strings).
+             */
+            attachmentCharLength: number;
+        } & ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook'],
+        source: 'N/A',
+        properties: {
+            ...commonClassificationForResourceType(),
+            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
+            manuallySelectedKernel: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            wasAlreadyOpen: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        },
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            computeCwd: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            duration: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            envVars: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            executeCell: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            getConnection: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            interruptHandle: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            kernelIdle: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            kernelInfo: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            kernelReady: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            portUsage: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            postKernelStart: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            preExecuteCellTelemetry: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            pythonEnvVars: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            sessionTelemetry: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            spawn: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            startKernel: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            startupCode: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            updateConnection: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            mdCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            codeCellCharLength: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            mdCellCharLength: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            outputCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            outputsByteSize: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            attachmentCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            attachmentCharLength: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            }
+        }
+    };
+
+    /**
+     * This event is sent to measure the times involved in automatically selecting the first kernel of a notebook.
+     */
+    [Telemetry.NotebookFirstKernelAutoSelectionBreakDown]: TelemetryEventInfo<
+        {
+            /**
+             * Whether the notebook was already opened when the extension activated.
+             */
+            wasAlreadyOpen: boolean;
+            /**
+             * Percentage of time spent between activation of Jupyter Ext and calling Python Ext Api.
+             */
+            callPythonApi: number;
+            /**
+             * Percentage of time spent in activating Python Ext.
+             */
+            activatePython: number;
+            /**
+             * Percentage of time spent in discovering Env.
+             */
+            discoverEnv: number;
+            /**
+             * Percentage of time spent in creating the controller.
+             */
+            createController: number;
+            /**
+             * Percentage of time spent in receiving the selected event.
+             */
+            selectController: number;
+        } & ResourceSpecificTelemetryProperties &
+            DurationMeasurement
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook'],
+        source: 'N/A',
+        properties: {
+            ...commonClassificationForResourceType(),
+            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
+            wasAlreadyOpen: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        },
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            callPythonApi: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            activatePython: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            discoverEnv: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            createController: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            selectController: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
                 isMeasurement: true
             }
         }
@@ -3977,5 +4204,162 @@ export class IEventNamePropertyMapping {
         owner: 'IanMatthewHuff',
         feature: ['DataFrameViewer'],
         source: 'N/A'
+    };
+    /**
+     * Telemetry sent during test on CI to measure performance of execution of large notebooks.
+     */
+    [Telemetry.NativeNotebookExecutionPerformance]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * The kind of outputs generated in the notebook
+             */
+            outputType: 'text' | 'html' | 'image';
+            /**
+             * Code cell count
+             */
+            codeCellCount: number;
+            /**
+             * Code cell count
+             */
+            markdownCellCount: number;
+            /**
+             * Total time spent in VS Code before extension starts execution.
+             */
+            preExecuteDuration: number;
+            /**
+             * Total time spent executing cells
+             */
+            executeDuration: number;
+            /**
+             * Total time spent in VS Code after executing cells
+             */
+            postExecuteDuration: number;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of code cells.',
+                isMeasurement: true
+            },
+            markdownCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of markdown cells.',
+                isMeasurement: true
+            },
+            preExecuteDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total time spent in VS Code before starting execution.',
+                isMeasurement: true
+            },
+            executeDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total time spent executing cells.',
+                isMeasurement: true
+            },
+            postExecuteDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total time spent in VS Code after executing cells.',
+                isMeasurement: true
+            }
+        },
+        properties: {
+            outputType: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight',
+                comment: 'The kind of outputs generated in the notebook, text, html or images.'
+            }
+        }
+    };
+    /**
+     * Telemetry sent during test on CI to measure performance of execution of large notebooks.
+     */
+    [Telemetry.JupyterNotebookExecutionPerformance]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * The kind of outputs generated in the notebook
+             */
+            outputType: 'text' | 'html' | 'image';
+            /**
+             * Code cell count
+             */
+            codeCellCount: number;
+            /**
+             * Code cell count
+             */
+            markdownCellCount: number;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of code cells.',
+                isMeasurement: true
+            },
+            markdownCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of markdown cells.',
+                isMeasurement: true
+            }
+        },
+        properties: {
+            outputType: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight',
+                comment: 'The kind of outputs generated in the notebook, text, html or images.'
+            }
+        }
+    };
+    /**
+     * Telemetry sent during test on CI to measure performance of execution of large notebooks.
+     */
+    [Telemetry.NativeNotebookEditPerformance]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * Code cell count
+             */
+            codeCellCount: number;
+            /**
+             * Code cell count
+             */
+            markdownCellCount: number;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of code cells.',
+                isMeasurement: true
+            },
+            markdownCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of markdown cells.',
+                isMeasurement: true
+            }
+        }
     };
 }

@@ -48,7 +48,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IRawNotebookSupportedService,
         RawNotebookSupportedService
     );
-    setSharedProperty('isInsiderExtension', isPreReleaseVersion());
+    setSharedProperty('isInsiderExtension', isPreReleaseVersion() ? 'true' : 'false');
 
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(

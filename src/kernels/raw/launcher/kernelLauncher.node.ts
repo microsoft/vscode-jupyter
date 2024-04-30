@@ -16,7 +16,6 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
-import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
@@ -41,6 +40,7 @@ import { IPythonExecutionFactory } from '../../../platform/interpreter/types.nod
 import { UsedPorts, ignorePortForwarding } from '../../common/usedPorts';
 import { isPythonKernelConnection } from '../../helpers';
 import { once } from '../../../platform/common/utils/events';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -63,20 +63,6 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(PythonKernelInterruptDaemon) private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon,
         @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {}
-
-    public static async cleanupStartPort() {
-        try {
-            // Destroy the file
-            const port = await KernelLauncher.startPortPromise;
-            traceVerbose(`Cleaning up port start file : ${port}`);
-
-            const filePath = path.join(os.tmpdir(), format(PortFormatString, port.toString()));
-            await fsextra.remove(filePath);
-        } catch (exc) {
-            // If it fails it doesn't really matter. Just a temp file
-            traceWarning(`Kernel port mutex failed to cleanup: `, exc);
-        }
-    }
 
     private static async computeStartPort(): Promise<number> {
         if (isTestExecution()) {
@@ -111,94 +97,11 @@ export class KernelLauncher implements IKernelLauncher {
         workingDirectory: string,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
+        logIPyKernelPath(resource, kernelConnectionMetadata, this.pythonExecFactory, cancelToken).catch(noop);
         const stopWatch = new StopWatch();
-        const promise = (async () => {
-            this.logIPyKernelPath(resource, kernelConnectionMetadata, cancelToken).catch(noop);
-
-            // Should be available now, wait with a timeout
-            return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
-        })();
-        promise
-            .then(() =>
-                /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
-                sendTelemetryEvent(
-                    Telemetry.KernelLauncherPerf,
-                    { duration: stopWatch.elapsedTime },
-                    { resourceType: getResourceType(resource) }
-                )
-            )
-            .catch(noop);
-        return promise;
-    }
-
-    /**
-     * Sometimes users install this in user site_packages and things don't work as expected.
-     * It should be installed into the specific python env.
-     * Logging this information would be helpful in diagnosing issues.
-     */
-    @swallowExceptions('Failed to capture IPyKernel version and path')
-    private async logIPyKernelPath(
-        resource: Resource,
-        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
-        token: CancellationToken
-    ) {
-        const interpreter = kernelConnectionMetadata.interpreter;
-        if (
-            !isLocalConnection(kernelConnectionMetadata) ||
-            !isPythonKernelConnection(kernelConnectionMetadata) ||
-            !interpreter
-        ) {
-            return;
-        }
-        const service = await this.pythonExecFactory.createActivatedEnvironment({
-            interpreter,
-            resource
-        });
-        const output = await service.exec(
-            [
-                '-c',
-                'import ipykernel; print(ipykernel.__version__); print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d"); print(ipykernel.__file__)'
-            ],
-            { token }
-        );
-        if (token.isCancellationRequested) {
-            return;
-        }
-        const displayInterpreterPath = getDisplayPath(interpreter.uri);
-        if (output.stdout) {
-            const outputs = output.stdout
-                .trim()
-                .split('5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d')
-                .map((s) => s.trim())
-                .filter((s) => s.length > 0);
-            if (outputs.length === 2) {
-                traceVerbose(
-                    `ipykernel version & path ${outputs[0]}, ${getDisplayPathFromLocalFile(
-                        outputs[1]
-                    )} for ${displayInterpreterPath}`
-                );
-            } else {
-                traceVerbose(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
-            }
-        }
-        if (output.stderr) {
-            const formattedOutput = splitLines(output.stderr.trim(), { removeEmptyEntries: true, trim: true })
-                .map((l, i) => (i === 0 ? l : `    ${l}`))
-                .join('\n');
-            traceWarning(
-                `Stderr output when getting ipykernel version & path ${formattedOutput} for ${displayInterpreterPath}`
-            );
-        }
-    }
-
-    private async launchProcess(
-        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
-        resource: Resource,
-        workingDirectory: string,
-        timeout: number,
-        cancelToken: CancellationToken
-    ): Promise<IKernelProcess> {
+        const tracker = getNotebookTelemetryTracker(resource)?.getConnection();
         const connection = await raceCancellationError(cancelToken, this.getKernelConnection(kernelConnectionMetadata));
+        tracker?.stop();
         // Create a new output channel for this kernel
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);
@@ -266,6 +169,13 @@ export class KernelLauncher implements IKernelLauncher {
             await kernelProcess.dispose();
             throw new CancellationError();
         }
+        /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
+        sendTelemetryEvent(
+            Telemetry.KernelLauncherPerf,
+            { duration: stopWatch.elapsedTime },
+            { resourceType: getResourceType(resource) }
+        );
+
         return kernelProcess;
     }
 
@@ -313,5 +223,65 @@ export class KernelLauncher implements IKernelLauncher {
             iopub_port: ports[4],
             kernel_name: kernelConnectionMetadata.kernelSpec?.name || 'python'
         };
+    }
+}
+
+/**
+ * Sometimes users install this in user site_packages and things don't work as expected.
+ * It should be installed into the specific python env.
+ * Logging this information would be helpful in diagnosing issues.
+ */
+async function logIPyKernelPath(
+    resource: Resource,
+    kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+    pythonExecFactory: IPythonExecutionFactory,
+    token: CancellationToken
+) {
+    const interpreter = kernelConnectionMetadata.interpreter;
+    if (
+        !isLocalConnection(kernelConnectionMetadata) ||
+        !isPythonKernelConnection(kernelConnectionMetadata) ||
+        !interpreter
+    ) {
+        return;
+    }
+    const service = await pythonExecFactory.createActivatedEnvironment({
+        interpreter,
+        resource
+    });
+    const output = await service.exec(
+        [
+            '-c',
+            'import ipykernel; print(ipykernel.__version__); print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d"); print(ipykernel.__file__)'
+        ],
+        { token }
+    );
+    if (token.isCancellationRequested) {
+        return;
+    }
+    const displayInterpreterPath = getDisplayPath(interpreter.uri);
+    if (output.stdout) {
+        const outputs = output.stdout
+            .trim()
+            .split('5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+        if (outputs.length === 2) {
+            traceVerbose(
+                `ipykernel version & path ${outputs[0]}, ${getDisplayPathFromLocalFile(
+                    outputs[1]
+                )} for ${displayInterpreterPath}`
+            );
+        } else {
+            traceVerbose(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
+        }
+    }
+    if (output.stderr) {
+        const formattedOutput = splitLines(output.stderr.trim(), { removeEmptyEntries: true, trim: true })
+            .map((l, i) => (i === 0 ? l : `    ${l}`))
+            .join('\n');
+        traceWarning(
+            `Stderr output when getting ipykernel version & path ${formattedOutput} for ${displayInterpreterPath}`
+        );
     }
 }

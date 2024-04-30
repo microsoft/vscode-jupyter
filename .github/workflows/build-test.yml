@@ -210,14 +210,14 @@ jobs:
         id: npm-cache
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-      - name: Cache npm on windows
-        uses: actions/cache@v4
-        if: matrix.os == 'windows-latest'
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      #   - name: Cache npm on windows
+      #     uses: actions/cache@v4
+      #     if: matrix.os == 'windows-latest'
+      #     with:
+      #       path: ${{ steps.npm-cache.outputs.dir }}
+      #       key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      #       restore-keys: |
+      #         ${{ runner.os }}-node-
 
       - name: Cache compiled TS files
         # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
@@ -275,21 +275,29 @@ jobs:
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
         packageVersion: ['']
-        tags:
-          [
+        tags: [
             '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter',
             '@widgets',
             '@iw',
             '@webview|@export|@lsp|@variableViewer',
-            '@debugger'
+            '@debugger',
+            '@notebookPerformance', # Disabled for now, separate PR this will be enabled via cron (want to make PR smaller)
+            '@executionPerformance'
           ]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
         ipywidgetsVersion: ['']
+        isScheduled:
+          - ${{ github.event_name == 'schedule' && 'true' || '' }} # We need an empty value to preserve the matrix name (as we enforce mandatory tests based on names).
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
+        exclude:
+          - tags: '@notebookPerformance' # Run only as part of scheduled CI runs
+            isScheduled: ''
+          - tags: '@executionPerformance' # Run only as part of scheduled CI runs
+            isScheduled: ''
         include:
           # Mandatory tests
           - jupyterConnection: remote
@@ -373,6 +381,7 @@ jobs:
 
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v5
+        id: setupPythonVersion
         if: matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           python-version: ${{matrix.pythonVersion}}
@@ -388,11 +397,9 @@ jobs:
             python=${{matrix.pythonVersion}}
 
       - name: Set CI Path
-        uses: ./.github/actions/set-python
-        id: set-python
+        shell: bash
         if: matrix.python != 'conda' && matrix.python != 'noPython'
-        with:
-          PYTHON_VERSION: ${{matrix.pythonVersion}}
+        run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
       - name: Set CI Path for Conda
         uses: ./.github/actions/set-python-conda
@@ -482,14 +489,14 @@ jobs:
         id: npm-cache
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-      - name: Cache npm on windows
-        uses: actions/cache@v4
-        if: matrix.os == 'windows-latest'
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      #   - name: Cache npm on windows
+      #     uses: actions/cache@v4
+      #     if: matrix.os == 'windows-latest'
+      #     with:
+      #       path: ${{ steps.npm-cache.outputs.dir }}
+      #       key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      #       restore-keys: |
+      #         ${{ runner.os }}-node-
 
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
@@ -507,7 +514,7 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8' && matrix.tags != '@notebookPerformance'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
@@ -522,7 +529,7 @@ jobs:
           python -m pip install jupyterlab notebook
 
       - name: Install Python Libs (IPyWidget 8)
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8' && matrix.tags != '@notebookPerformance'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
@@ -543,7 +550,7 @@ jobs:
 
       - name: Install matplotlib widgets into user and system paths
         if:
-          matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory'
+          matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@notebookPerformance'
           # This test will ensure widgets work when installed in 3 places
           # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
           # 2. In user's home folder (ipympl will be installed in there)
@@ -586,23 +593,30 @@ jobs:
           VSC_JUPYTER_CI_SKIP_WEB_BUNDLE: 1
           VSC_JUPYTER_CI_FAST_COMPILATION: 1
 
+      - name: Compile Performance Test Extension
+        if: matrix.tags == '@notebookPerformance'
+        run: npm run compile
+        working-directory: src/test/vscode-notebook-perf
+
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Deno
         uses: denoland/setup-deno@v1
+        if: matrix.tags != '@notebookPerformance'
         with:
           deno-version: ${{ env.DENO_VERSION}}
 
       - name: Install Deno Kernel
+        if: matrix.tags != '@notebookPerformance'
         run: npx tsx ./build/installDenoKernel.ts
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@notebookPerformance'
 
       - name: Create Virtual Env for Tests (ipywidgets 8)
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@notebookPerformance'
         with:
           IPyWidgetVersion: '8'
 
@@ -647,7 +661,45 @@ jobs:
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_ubuntu
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web' && matrix.tags != '@notebookPerformance'
+
+      - name: Run Notebook Perf Test Without Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: ${{ env.xvfbCommand }} npm run testPerfInVSCode
+        env:
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_PERF_TEST: ${{ matrix.matrix == '@notebookPerformance' }}
+          VSC_JUPYTER_NOTEBOOK_PERF_TEST: ${{ matrix.matrix == '@notebookPerformance' }}
+          VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT: ${{ matrix.matrix == '@notebookPerformance' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
+        id: test_notebook_perf_vscode_ubuntu
+        if: matrix.tags == '@notebookPerformance'
+
+      - name: Run Execution Perf Test With Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: ${{ env.xvfbCommand }} npm run testExecPerfInVSCode
+        env:
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_PERF_TEST: ${{ matrix.matrix == '@executionPerformance' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
+        id: test_exec_perf_vscode_ubuntu
+        if: matrix.tags == '@executionPerformance'
 
       - name: Build web bundle for testing
         run: npm run compile-web-test
@@ -756,14 +808,13 @@ jobs:
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v5
+        id: setupPythonVersion
         with:
           python-version: ${{matrix.python}}
 
       - name: Set CI Path
-        uses: ./.github/actions/set-python
-        id: set-python
-        with:
-          PYTHON_VERSION: ${{matrix.python}}
+        shell: bash
+        run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v4
@@ -866,7 +917,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/cobertura-coverage.xml

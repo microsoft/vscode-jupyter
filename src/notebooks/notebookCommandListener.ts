@@ -60,12 +60,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             commands.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
         );
         this.disposableRegistry.push(
-            commands.registerCommand(Commands.NotebookEditorCollapseAllCells, () => this.collapseAll())
-        );
-        this.disposableRegistry.push(
-            commands.registerCommand(Commands.NotebookEditorExpandAllCells, () => this.expandAll())
-        );
-        this.disposableRegistry.push(
             // TODO: if contributed anywhere, add context support
             commands.registerCommand(Commands.RestartKernelAndRunUpToSelectedCell, () =>
                 this.restartKernelAndRunUpToSelectedCell()
@@ -128,34 +122,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             edit.set(document.uri, [nbEdit]);
         }).then(noop, noop);
     }
-    private collapseAll() {
-        const document = window.activeNotebookEditor?.notebook;
-        if (!document) {
-            return;
-        }
-
-        chainWithPendingUpdates(document, (edit) => {
-            document.getCells().forEach((cell, index) => {
-                const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: true };
-                edit.set(document.uri, [NotebookEdit.updateCellMetadata(index, metadata)]);
-            });
-        }).then(noop, noop);
-    }
-
-    private expandAll() {
-        const document = window.activeNotebookEditor?.notebook;
-        if (!document) {
-            return;
-        }
-
-        chainWithPendingUpdates(document, (edit) => {
-            document.getCells().forEach((cell, index) => {
-                const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: true };
-                edit.set(document.uri, [NotebookEdit.updateCellMetadata(index, metadata)]);
-            });
-        }).then(noop, noop);
-    }
-
     private async interruptKernel(notebookUri: Uri | undefined): Promise<void> {
         const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());

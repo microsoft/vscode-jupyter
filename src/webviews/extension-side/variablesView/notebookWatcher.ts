@@ -2,18 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    Event,
-    EventEmitter,
-    NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookDocument,
-    NotebookEditor,
-    notebooks,
-    window,
-    workspace
-} from 'vscode';
+import { Event, EventEmitter, NotebookCell, NotebookDocument, NotebookEditor, window, workspace } from 'vscode';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
@@ -21,6 +10,11 @@ import { IDisposableRegistry } from '../../../platform/common/types';
 import { IDataViewerFactory } from '../dataviewer/types';
 import { JupyterNotebookView } from '../../../platform/common/constants';
 import { isJupyterNotebook } from '../../../platform/common/utils';
+import {
+    NotebookCellExecutionState,
+    notebookCellExecutions,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../../platform/notebooks/cellExecutionStateService';
 
 type KernelStateEventArgs = {
     notebook: NotebookDocument;
@@ -98,7 +92,7 @@ export class NotebookWatcher implements INotebookWatcher {
             this,
             this.disposables
         );
-        notebooks.onDidChangeNotebookCellExecutionState(
+        notebookCellExecutions.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables

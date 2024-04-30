@@ -2,14 +2,7 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import {
-    NotebookCellOutput,
-    NotebookCellOutputItem,
-    NotebookCell,
-    NotebookCellData,
-    NotebookCellKind,
-    NotebookCellExecutionState
-} from 'vscode';
+import { NotebookCellOutput, NotebookCellOutputItem, NotebookCell, Position, Range } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import type { KernelMessage } from '@jupyterlab/services';
 import fastDeepEqual from 'fast-deep-equal';
@@ -29,9 +22,10 @@ import {
     getKernelRegistrationInfo
 } from '../helpers';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { getExtensionSpecifcStack } from '../../platform/errors/errors';
+import { getExtensionSpecificStack } from '../../platform/errors/errors';
 import { getCachedEnvironment, getVersion } from '../../platform/interpreter/helpers';
 import { base64ToUint8Array, uint8ArrayToBase64 } from '../../platform/common/utils/string';
+import type { NotebookCellExecutionState } from '../../platform/notebooks/cellExecutionStateService';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -39,61 +33,6 @@ export enum CellOutputMimeTypes {
     stdout = 'application/vnd.code.notebook.stdout'
 }
 
-export function createJupyterCellFromVSCNotebookCell(
-    vscCell: NotebookCell | NotebookCellData
-): nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell {
-    let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
-    if (vscCell.kind === NotebookCellKind.Markup) {
-        cell = createMarkdownCellFromNotebookCell(vscCell);
-    } else if (
-        ('document' in vscCell && vscCell.document.languageId === 'raw') ||
-        ('languageId' in vscCell && vscCell.languageId === 'raw')
-    ) {
-        cell = createRawCellFromNotebookCell(vscCell);
-    } else {
-        cell = createCodeCellFromNotebookCell(vscCell);
-    }
-    return cell;
-}
-
-function createRawCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.IRawCell {
-    const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
-    const rawCell: nbformat.IRawCell = {
-        cell_type: 'raw',
-        source: splitMultilineString('document' in cell ? cell.document.getText() : cell.value),
-        metadata: cellMetadata?.metadata || {} // This cannot be empty.
-    };
-    if (cellMetadata?.attachments) {
-        rawCell.attachments = cellMetadata.attachments;
-    }
-    return rawCell;
-}
-
-function createCodeCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.ICodeCell {
-    const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
-    const code = 'document' in cell ? cell.document.getText() : cell.value;
-    const codeCell: nbformat.ICodeCell = {
-        cell_type: 'code',
-        execution_count: cell.executionSummary?.executionOrder ?? null,
-        source: splitMultilineString(code),
-        outputs: (cell.outputs || []).map(translateCellDisplayOutput),
-        metadata: cellMetadata?.metadata || {} // This cannot be empty.
-    };
-    return codeCell;
-}
-
-function createMarkdownCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.IMarkdownCell {
-    const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
-    const markdownCell: nbformat.IMarkdownCell = {
-        cell_type: 'markdown',
-        source: splitMultilineString('document' in cell ? cell.document.getText() : cell.value),
-        metadata: cellMetadata?.metadata || {} // This cannot be empty.
-    };
-    if (cellMetadata?.attachments) {
-        markdownCell.attachments = cellMetadata.attachments;
-    }
-    return markdownCell;
-}
 const orderOfMimeTypes = [
     'application/vnd.*',
     'application/vdom.*',
@@ -172,7 +111,7 @@ export function traceCellMessage(cell: NotebookCell, message: string | (() => st
             `Cell Index:${cell.index}, of document ${uriPath.basename(
                 cell.notebook.uri
             )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${cell.executionSummary
-                ?.executionOrder}. ${messageToLog()}. called from ${getExtensionSpecifcStack()}`
+                ?.executionOrder}. ${messageToLog()}. called from ${getExtensionSpecificStack()}`
     );
 }
 
@@ -316,20 +255,6 @@ type JupyterOutput =
     | nbformat.IStream
     | nbformat.IError;
 
-/**
- * Metadata we store in VS Code cells.
- * This contains the original metadata from the Jupyuter cells.
- */
-type CellMetadata = {
-    /**
-     * Stores attachments for cells.
-     */
-    attachments?: nbformat.IAttachments;
-    /**
-     * Stores cell metadata.
-     */
-    metadata?: Partial<nbformat.ICellMetadata>;
-};
 /**
  * Metadata we store in VS Code cell output items.
  * This contains the original metadata from the Jupyuter Outputs.
@@ -655,7 +580,7 @@ export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
 }
 
 // eslint-disable-next-line complexity
-export async function updateNotebookMetadata(
+export async function updateNotebookMetadataWithSelectedKernel(
     metadata?: nbformat.INotebookMetadata,
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
@@ -844,10 +769,39 @@ export async function endCellAndDisplayErrorsInCell(
 
     // Start execution if not already (Cell execution wrapper will ensure it won't start twice)
     const execution = CellExecutionCreator.getOrCreate(cell, controller);
+    const originalExecutionOrder = execution.executionOrder;
     if (!execution.started) {
-        execution.start(cell.executionSummary?.timing?.endTime);
-        execution.executionOrder = cell.executionSummary?.executionOrder;
+        execution.start(cell.executionSummary?.timing?.startTime);
+        execution.executionOrder = cell.executionSummary?.executionOrder || originalExecutionOrder;
     }
     await execution.appendOutput(output);
     execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
+}
+
+export function findErrorLocation(traceback: string[], cell: NotebookCell) {
+    const cellRegex = /Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
+    // older versions of IPython ~8.3.0
+    const inputRegex =
+        /Input\s+?(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\][^<]*<cell line:\s?(?<lineNumber>\d+)>.*/;
+    let lineNumber: number | undefined = undefined;
+    for (const line of traceback) {
+        const lineMatch = cellRegex.exec(line) ?? inputRegex.exec(line);
+        if (lineMatch && lineMatch.groups) {
+            lineNumber = parseInt(lineMatch.groups['lineNumber']);
+            break;
+        }
+    }
+
+    let range: Range | undefined = undefined;
+    if (lineNumber && lineNumber > 0 && lineNumber <= cell.document.lineCount) {
+        const line = cell.document.lineAt(lineNumber - 1);
+        const end = line.text.split('#')[0].trimEnd().length;
+
+        range = new Range(
+            new Position(line.lineNumber, line.firstNonWhitespaceCharacterIndex),
+            new Position(line.lineNumber, end)
+        );
+    }
+
+    return range;
 }

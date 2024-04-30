@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type * as nbformat from '@jupyterlab/nbformat';
 import { ConfigurationTarget, Disposable, Event, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandIds } from '../../commands';
@@ -243,8 +242,8 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
 
 export enum Experiments {
     DataViewerContribution = 'DataViewerContribution',
-    KernelCompletions = 'KernelCompletions',
-    DoNotWaitForZmqPortsToBeUsed = 'DoNotWaitForZmqPortsToBeUsed'
+    DoNotWaitForZmqPortsToBeUsed = 'DoNotWaitForZmqPortsToBeUsed',
+    DataViewerDeprecation = 'DataViewerDeprecation'
 }
 
 /**
@@ -270,11 +269,6 @@ export interface IDisplayOptions {
 }
 
 // Basic structure for a cell from a notebook
-export interface ICell {
-    uri?: Uri;
-    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
-}
-
 // CellRange is used as the basis for creating new ICells.
 // Was only intended to aggregate together ranges to create an ICell
 // However the "range" aspect is useful when working with plain text document
@@ -302,6 +296,11 @@ type ScriptCode = {
      */
     cleanupCode?: string;
 };
+export type ParentOptions = {
+    root: string;
+    propertyChain: (string | number)[];
+    startIndex: number;
+};
 export interface IVariableScriptGenerator {
     generateCodeToGetVariableInfo(options: { isDebugging: boolean; variableName: string }): Promise<ScriptCode>;
     generateCodeToGetVariableProperties(options: {
@@ -310,11 +309,8 @@ export interface IVariableScriptGenerator {
         stringifiedAttributeNameList: string;
     }): Promise<ScriptCode>;
     generateCodeToGetVariableTypes(options: { isDebugging: boolean }): Promise<ScriptCode>;
-    generateCodeToGetAllVariableDescriptions(options: {
-        isDebugging: boolean;
-        parent: { root: string; propertyChain: (string | number)[] } | undefined;
-        startIndex: number;
-    }): Promise<ScriptCode>;
+    generateCodeToGetAllVariableDescriptions(parentOptions: ParentOptions | undefined): Promise<string>;
+    generateCodeToGetVariableValueSummary(variableName: string): Promise<string>;
 }
 export const IDataFrameScriptGenerator = Symbol('IDataFrameScriptGenerator');
 export interface IDataFrameScriptGenerator {

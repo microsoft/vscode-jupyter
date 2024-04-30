@@ -330,11 +330,11 @@ export async function loadKernelSpec(
     }
     let kernelJson: ReadWrite<IJupyterKernelSpec>;
     try {
-        traceVerbose(
-            `Loading kernelspec from ${getDisplayPath(specPath)} ${
-                interpreter?.uri ? `for ${getDisplayPath(interpreter.uri)}` : ''
-            }`
-        );
+        // traceVerbose(
+        //     `Loading kernelspec from ${getDisplayPath(specPath)} ${
+        //         interpreter?.uri ? `for ${getDisplayPath(interpreter.uri)}` : ''
+        //     }`
+        // );
         kernelJson = JSON.parse(await fs.readFile(specPath));
     } catch (ex) {
         traceError(`Failed to parse kernelspec ${specPath}`, ex);

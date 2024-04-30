@@ -23,6 +23,7 @@ import { DataScience } from '../platform/common/utils/localize';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../platform/notebooks/cellExecutionStateService';
 
 suite('Kernel Crash Monitor', () => {
     let kernelProvider: IKernelProvider;
@@ -35,7 +36,6 @@ suite('Kernel Crash Monitor', () => {
     }>;
     let onDidStartKernel: EventEmitter<IKernel>;
     let kernelExecution: INotebookKernelExecution;
-    let onPreExecute: EventEmitter<NotebookCell>;
     let cell: NotebookCell;
     let kernelSession: IKernelSession;
     let notebook: TestNotebookDocument;
@@ -72,15 +72,14 @@ suite('Kernel Crash Monitor', () => {
             kernel: IKernel;
         }>();
         onDidStartKernel = new EventEmitter<IKernel>();
-        onPreExecute = new EventEmitter<NotebookCell>();
         notebook = new TestNotebookDocument();
         cell = await notebook.appendCodeCell('1234');
         controller = createKernelController('1');
         disposables.push(onDidStartKernel);
         disposables.push(onKernelStatusChanged);
-        disposables.push(onPreExecute);
         when(kernel.dispose()).thenResolve();
         when(kernel.disposed).thenReturn(false);
+        when(kernel.notebook).thenReturn(notebook);
         when(kernel.controller).thenReturn(controller);
         when(kernel.disposing).thenReturn(false);
         when(kernel.session).thenReturn(instance(kernelSession));
@@ -91,7 +90,7 @@ suite('Kernel Crash Monitor', () => {
         when(kernelProvider.onKernelStatusChanged).thenReturn(onKernelStatusChanged.event);
         when(kernelProvider.getOrCreate(anything(), anything())).thenReturn(instance(kernel));
         when(kernelProvider.getKernelExecution(anything())).thenReturn(instance(kernelExecution));
-        when(kernelExecution.onPreExecute).thenReturn(onPreExecute.event);
+        when(kernelProvider.get(anything())).thenReturn(instance(kernel));
 
         kernelCrashMonitor = new KernelCrashMonitor(disposables, instance(kernelProvider));
         clock = fakeTimers.install();
@@ -105,7 +104,7 @@ suite('Kernel Crash Monitor', () => {
         // Ensure we have a kernel and have started a cell.
         kernelCrashMonitor.activate();
         onDidStartKernel.fire(instance(kernel));
-        onPreExecute.fire(cell);
+        notebookCellExecutions.changeCellState(cell, NotebookCellExecutionState.Executing);
         const execution = controller.createNotebookCellExecution(cell);
         execution.start();
 
@@ -135,7 +134,7 @@ suite('Kernel Crash Monitor', () => {
         // Ensure we have a kernel and have started a cell.
         kernelCrashMonitor.activate();
         onDidStartKernel.fire(instance(kernel));
-        onPreExecute.fire(cell);
+        notebookCellExecutions.changeCellState(cell, NotebookCellExecutionState.Executing);
         const execution = controller.createNotebookCellExecution(cell);
         execution.start();
 

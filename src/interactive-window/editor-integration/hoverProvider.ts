@@ -9,13 +9,17 @@ import { raceCancellation } from '../../platform/common/cancellation';
 import { Identifiers, InteractiveWindowView, PYTHON, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { raceTimeout } from '../../platform/common/utils/async';
+import { Delayer, raceTimeout } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { IInteractiveWindowProvider } from '../types';
 import { getInteractiveCellMetadata } from '../helpers';
+import {
+    notebookCellExecutions,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../platform/notebooks/cellExecutionStateService';
 
 /**
  * Provides hover support in python files based on the state of a jupyter kernel. Files that are
@@ -26,7 +30,8 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
     private runFiles = new Set<string>();
     private hoverProviderRegistration: vscode.Disposable | undefined;
     private stopWatch = new StopWatch();
-
+    private delayer = new Delayer<void>(300);
+    private onDidChangeNotebookCellExecutionStateHandler: vscode.Disposable;
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
@@ -34,21 +39,21 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {}
     public activate() {
-        vscode.notebooks.onDidChangeNotebookCellExecutionState(
-            this.onDidChangeNotebookCellExecutionState,
-            this,
-            this.disposables
-        );
+        this.onDidChangeNotebookCellExecutionStateHandler =
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState(
+                (e) => this.delayer.trigger(() => this.onDidChangeNotebookCellExecutionState(e)),
+                this
+            );
         this.kernelProvider.onDidRestartKernel(() => this.runFiles.clear(), this, this.disposables);
     }
     public dispose() {
+        this.delayer.dispose();
+        this.onDidChangeNotebookCellExecutionStateHandler.dispose();
         if (this.hoverProviderRegistration) {
             this.hoverProviderRegistration.dispose();
         }
     }
-    private async onDidChangeNotebookCellExecutionState(
-        e: vscode.NotebookCellExecutionStateChangeEvent
-    ): Promise<void> {
+    private async onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): Promise<void> {
         try {
             if (e.cell.notebook.notebookType !== InteractiveWindowView) {
                 return;
@@ -59,7 +64,10 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
                 this.runFiles.add(metadata.interactive.uristring);
             }
             if (size !== this.runFiles.size) {
-                await this.initializeHoverProvider();
+                this.initializeHoverProvider();
+                // Once we have created the hover provider, no need to listen to this event anymore
+                // The executionStateChange event is very (very) chatty, so we don't want to keep listening to it
+                this.onDidChangeNotebookCellExecutionStateHandler.dispose();
             }
         } catch (exc) {
             // Don't let exceptions in a preExecute mess up normal operation
@@ -84,7 +92,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         return result;
     }
 
-    private async initializeHoverProvider() {
+    private initializeHoverProvider() {
         if (!this.hoverProviderRegistration) {
             this.hoverProviderRegistration = vscode.languages.registerHoverProvider(PYTHON, this);
         }

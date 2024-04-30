@@ -2,17 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    CodeLens,
-    Command,
-    Event,
-    EventEmitter,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    Range,
-    TextDocument,
-    workspace
-} from 'vscode';
+import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, workspace } from 'vscode';
 
 import { traceWarning, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 
@@ -24,7 +14,11 @@ import { CodeLensCommands, Commands, InteractiveWindowView } from '../../platfor
 import { generateCellRangesFromDocument } from './cellFactory';
 import { CodeLensPerfMeasures, ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { notebooks } from 'vscode';
+import {
+    NotebookCellExecutionState,
+    notebookCellExecutions,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../platform/notebooks/cellExecutionStateService';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
@@ -76,7 +70,11 @@ export class CodeLensFactory implements ICodeLensFactory {
         workspace.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
         workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
-        notebooks.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
+        notebookCellExecutions.onDidChangeNotebookCellExecutionState(
+            this.onDidChangeNotebookCellExecutionState,
+            this,
+            disposables
+        );
         kernelProvider.onDidDisposeKernel(
             (kernel) => {
                 this.notebookData.delete(kernel.notebook.uri.toString());
@@ -387,7 +385,6 @@ export class CodeLensFactory implements ICodeLensFactory {
                         range.start.character
                     ]);
                 }
-                break;
             case Commands.RunCellAndAllBelowPalette:
             case Commands.RunCellAndAllBelow:
                 return this.generateCodeLens(range, Commands.RunCellAndAllBelow, runAllBelowTitle, [

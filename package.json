@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2024.3.0",
+    "version": "2024.5.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.88.0"
+        "vscode": "^1.89.0"
     },
     "l10n": "./l10n",
     "extensionKind": [
@@ -637,18 +637,6 @@
                 "enablement": "!jupyter.webExtension"
             },
             {
-                "command": "jupyter.notebookeditor.expandallcells",
-                "title": "%jupyter.command.jupyter.notebookeditor.expandallcells.title%",
-                "category": "Notebook",
-                "enablement": "!jupyter.webExtension"
-            },
-            {
-                "command": "jupyter.notebookeditor.collapseallcells",
-                "title": "%jupyter.command.jupyter.notebookeditor.collapseallcells.title%",
-                "category": "Notebook",
-                "enablement": "!jupyter.webExtension"
-            },
-            {
                 "command": "jupyter.expandallcells",
                 "title": "%jupyter.command.jupyter.expandallcells.title%",
                 "shortTitle": "%jupyter.command.jupyter.expandallcells.shorttitle%",
@@ -810,6 +798,18 @@
                 "command": "jupyter.debugCellSymbols",
                 "title": "Debug Cell Symbols",
                 "icon": "$(debug-alt-small)",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.listPipPackages",
+                "title": "List Pip Packages",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.listVariables",
+                "title": "List Variables",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
                 "category": "Jupyter"
             }
@@ -1282,18 +1282,6 @@
                     "when": "jupyter.isnativeactive && isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.notebookeditor.expandallcells",
-                    "title": "%jupyter.command.jupyter.expandallcells.title%",
-                    "category": "Notebook",
-                    "when": "notebookEditorFocused && notebookType == 'jupyter-notebook'"
-                },
-                {
-                    "command": "jupyter.notebookeditor.collapseallcells",
-                    "title": "%jupyter.command.jupyter.collapseallcells.title%",
-                    "category": "Notebook",
-                    "when": "notebookEditorFocused && notebookType == 'jupyter-notebook'"
-                },
-                {
                     "command": "jupyter.expandallcells",
                     "title": "%jupyter.command.jupyter.expandallcells.title%",
                     "shortTitle": "%jupyter.command.jupyter.expandallcells.shorttitle%",
@@ -1447,6 +1435,14 @@
                 {
                     "command": "jupyter.debugCellSymbols",
                     "when": "config.jupyter.executionAnalysis.enabled"
+                },
+                {
+                    "command": "jupyter.listPipPackages",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.listVariables",
+                    "when": "false"
                 }
             ],
             "debug/variables/context": [
@@ -1460,7 +1456,8 @@
                 {
                     "command": "jupyter.runFileInteractive",
                     "group": "jupyter",
-                    "when": "resourceLangId == python && !isInDiffEditor && !notebookEditorFocused && isWorkspaceTrusted"
+                    "title": "%jupyter.command.jupyter.runFileInteractive.title%",
+                    "when": "resourceLangId == python && !isInDiffEditor && isWorkspaceTrusted"
                 }
             ]
         },
@@ -1498,7 +1495,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "KernelCompletions",
                             "DoNotWaitForZmqPortsToBeUsed"
                         ]
                     },
@@ -1510,7 +1506,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "KernelCompletions",
                             "DoNotWaitForZmqPortsToBeUsed"
                         ]
                     },
@@ -1835,6 +1830,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.formatStackTraces.description%",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.formatStackTraces.deprecationMessage%",
                     "scope": "application"
                 },
                 "jupyter.completionTriggerCharacters": {
@@ -2072,7 +2068,6 @@
         "notebookDeprecated",
         "notebookMessaging",
         "notebookMime",
-        "notebookCellExecutionState",
         "contribNotebookStaticPreloads",
         "portsAttributes",
         "quickPickSortByLabel",
@@ -2080,6 +2075,7 @@
         "interactiveWindow",
         "quickPickItemTooltip",
         "notebookExecution",
+        "notebookCellExecution",
         "notebookVariableProvider"
     ],
     "scripts": {
@@ -2112,6 +2108,10 @@
         "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_JUPYTER_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js && node ./out/test/languageServers/jedi/lspTeardown.node.js",
         "pretestNativeNotebooksInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
         "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
+        "pretestPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@notebookPerformance VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true VSC_JUPYTER_PERF_TEST=1 VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
+        "testPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@notebookPerformance VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true VSC_JUPYTER_NOTEBOOK_PERF_TEST=true VSC_JUPYTER_PERF_TEST=1 CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
+        "pretestExecPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@executionPerformance VSC_JUPYTER_PERF_TEST=1 VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
+        "testExecPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@executionPerformance VSC_JUPYTER_PERF_TEST=1 CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING= node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
         "testNativeNotebooksInVSCodeWithoutTestSuffix": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_FORCE_LOGGING=1 node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
         "pretestNativeNotebooksWithoutPythonInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
         "testNativeNotebooksWithoutPythonInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_CI_TEST_GREP=@nonPython VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
@@ -2267,11 +2267,13 @@
         "@typescript-eslint/eslint-plugin-tslint": "^6.9.0",
         "@typescript-eslint/parser": "^6.9.0",
         "@vscode/dts": "^0.4.0",
-        "@vscode/test-electron": "^2.3.8",
-        "@vscode/test-web": "^0.0.44",
+        "@vscode/test-cli": "^0.0.8",
+        "@vscode/test-electron": "^2.3.9",
+        "@vscode/test-web": "^0.0.50",
         "@vscode/zeromq": "^0.2.1",
         "acorn": "^8.9.0",
         "babel-polyfill": "^6.26.0",
+        "buffer": "^6.0.3",
         "bufferutil": "^4.0.6",
         "chai": "^4.3.10",
         "chai-arrays": "^2.2.0",

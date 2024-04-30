@@ -273,6 +273,11 @@ export class ProcessService implements IProcessService {
             defaultOptions.env.PYTHONIOENCODING = 'utf-8';
         }
 
+        // Always ensure we have unbuffered output.
+        if (!defaultOptions.env.PYTHON_FROZEN_MODULES) {
+            defaultOptions.env.PYTHON_FROZEN_MODULES = 'on';
+        }
+
         return defaultOptions;
     }
 }

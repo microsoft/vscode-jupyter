@@ -2,27 +2,20 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellKind,
-    NotebookDocument,
-    TextDocument,
-    Uri,
-    notebooks,
-    workspace
-} from 'vscode';
-import { ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
+import { Disposable, NotebookCell, NotebookCellKind, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
+import { ResourceTypeTelemetryProperty, onDidChangeTelemetryEnablement, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { dispose } from '../../platform/common/utils/lifecycle';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
+import { IDisposableRegistry, type IDisposable } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { isTelemetryDisabled } from '../../telemetry';
 import { ResourceMap } from '../../platform/common/utils/map';
+import { Delayer } from '../../platform/common/utils/async';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../../platform/notebooks/cellExecutionStateService';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
@@ -53,48 +46,40 @@ const MAX_DOCUMENT_LINES = 1000;
 // have this value set.
 const testExecution = isTestExecution();
 
-export const IImportTracker = Symbol('IImportTracker');
-export interface IImportTracker {}
-
 /**
  * Sends hashed names of imported packages to telemetry. Hashes are updated on opening, closing, and saving of documents.
  */
 @injectable()
-export class ImportTracker implements IExtensionSyncActivationService, IDisposable {
-    private pendingChecks = new ResourceMap<NodeJS.Timer | number>();
-    private disposables: IDisposable[] = [];
+export class ImportTracker implements IExtensionSyncActivationService {
+    private pendingChecks = new ResourceMap<IDisposable>();
+    private disposables = new DisposableStore();
     private sentMatches = new Set<string>();
-    private get isTelemetryDisabled() {
-        return isTelemetryDisabled();
-    }
-    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
-        disposables.push(this);
-        workspace.onDidOpenNotebookDocument(
-            (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
-            this.disposables
+    private readonly processedNotebookCells = new WeakMap<NotebookCell, number>();
+    private isTelemetryDisabled: boolean;
+    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry, delay = 1_000) {
+        disposables.push(this.disposables);
+        this.disposables.add(new Disposable(() => dispose(this.pendingChecks.values())));
+        this.isTelemetryDisabled = isTelemetryDisabled();
+        this.disposables.add(
+            workspace.onDidOpenNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'))
         );
-        workspace.onDidCloseNotebookDocument(
-            (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
-            this.disposables
+        this.disposables.add(
+            workspace.onDidCloseNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'))
         );
-        workspace.onDidSaveNotebookDocument(
-            (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
-            this.disposables
+        this.disposables.add(
+            workspace.onDidSaveNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'))
         );
-        notebooks.onDidChangeNotebookCellExecutionState(
-            (e) => {
-                if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
-                    this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
-                }
-            },
-            this,
-            disposables
+        const delayer = this.disposables.add(new Delayer<void>(delay));
+        this.disposables.add(
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+                void delayer.trigger(() => {
+                    if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
+                        this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
+                    }
+                });
+            }, this)
         );
-    }
-
-    public dispose() {
-        dispose(this.disposables);
-        this.pendingChecks.clear();
+        this.disposables.add(onDidChangeTelemetryEnablement((enabled) => (this.isTelemetryDisabled = enabled)));
     }
 
     public activate() {
@@ -124,7 +109,7 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
         const currentTimeout = this.pendingChecks.get(file);
         if (currentTimeout) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            clearTimeout(currentTimeout as any);
+            currentTimeout.dispose();
             this.pendingChecks.delete(file);
         }
 
@@ -134,7 +119,8 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
             check();
         } else {
             // Wait five seconds to make sure we don't already have this document pending.
-            this.pendingChecks.set(file, setTimeout(check, 5000));
+            const timeout = setTimeout(check, 5000);
+            this.pendingChecks.set(file, new Disposable(() => clearTimeout(timeout)));
         }
     }
 
@@ -149,11 +135,13 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
         if (
             !isJupyterNotebook(cell.notebook) ||
             cell.kind !== NotebookCellKind.Code ||
-            cell.document.languageId !== PYTHON_LANGUAGE
+            cell.document.languageId !== PYTHON_LANGUAGE ||
+            this.processedNotebookCells.get(cell) === cell.document.version
         ) {
             return;
         }
         try {
+            this.processedNotebookCells.set(cell, cell.document.version);
             const resourceType = cell.notebook.notebookType === JupyterNotebookView ? 'notebook' : 'interactive';
             await this.sendTelemetryForImports(this.getDocumentLines(cell.document), resourceType, when);
         } catch (ex) {

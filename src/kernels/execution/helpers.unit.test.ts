@@ -5,7 +5,11 @@ import * as sinon from 'sinon';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import { Uri } from 'vscode';
-import { cellOutputToVSCCellOutput, getNotebookCellOutputMetadata, updateNotebookMetadata } from './helpers';
+import {
+    cellOutputToVSCCellOutput,
+    getNotebookCellOutputMetadata,
+    updateNotebookMetadataWithSelectedKernel
+} from './helpers';
 import { IJupyterKernelSpec, PythonKernelConnectionMetadata } from '../types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { PythonExtension } from '@vscode/python-extension';
@@ -56,12 +60,12 @@ suite(`UpdateNotebookMetadata`, () => {
         disposables = dispose(disposables);
     });
     test('Empty call does not change anything', async () => {
-        const value = await updateNotebookMetadata();
+        const value = await updateNotebookMetadataWithSelectedKernel();
         assert.strictEqual(value.changed, false);
     });
     test('Ensure Language', async () => {
         const notebookMetadata = { orig_nbformat: 4 };
-        const value = await updateNotebookMetadata(notebookMetadata);
+        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata);
 
         // Verify lang info added
         verifyMetadata(notebookMetadata, { orig_nbformat: 4, language_info: { name: '' } });
@@ -74,7 +78,7 @@ suite(`UpdateNotebookMetadata`, () => {
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
         });
-        const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
+        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
 
         // Verify lang info added
         verifyMetadata(notebookMetadata, {
@@ -92,7 +96,7 @@ suite(`UpdateNotebookMetadata`, () => {
             interpreter: python37Global,
             kernelSpec: pythonDefaultKernelSpec
         });
-        const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
+        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
 
         // Verify version updated 3.6 => 3.7
         verifyMetadata(notebookMetadata, {
@@ -114,7 +118,7 @@ suite(`UpdateNotebookMetadata`, () => {
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
         });
-        const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
+        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
 
         // Verify kernel_spec name updated JUNK => python3
         verifyMetadata(notebookMetadata, {
@@ -146,7 +150,7 @@ suite(`UpdateNotebookMetadata`, () => {
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
         });
-        const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
+        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
 
         // Verify display_name updated due to interpreter hash change
         verifyMetadata(notebookMetadata, {
@@ -194,7 +198,7 @@ suite(`UpdateNotebookMetadata`, () => {
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
         });
-        const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
+        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
 
         // Verify display_name updated due to interpreter hash change
         verifyMetadata(newNotebookMetadata, {

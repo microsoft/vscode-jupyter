@@ -74,7 +74,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         controller: IVSCodeNotebookController;
         selected: boolean;
     }>();
-    private selectedControllers = new Map<string, IVSCodeNotebookController>();
+    private selectedControllers = new WeakMap<NotebookDocument, IVSCodeNotebookController>();
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(PythonEnvironmentFilter) private readonly pythonEnvFilter: PythonEnvironmentFilter,
@@ -295,7 +295,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         );
     }
     public getSelected(document: NotebookDocument): IVSCodeNotebookController | undefined {
-        return this.selectedControllers.get(document.uri.toString());
+        return this.selectedControllers.get(document);
     }
     addOrUpdate(
         metadata: KernelConnectionMetadata,
@@ -385,7 +385,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                     controller.onNotebookControllerSelected(
                         (e) => {
                             traceInfoIfCI(`Controller ${e.controller?.id} selected for ${e.notebook.uri.toString()}`);
-                            this.selectedControllers.set(e.notebook.uri.toString(), e.controller);
+                            this.selectedControllers.set(e.notebook, e.controller);
                             // Now notify out that we have updated a notebooks controller
                             this.selectedEmitter.fire(e);
                         },

@@ -18,7 +18,6 @@ import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 import { Telemetry } from '../common/constants';
 import { ignoreLogging, logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../logging';
 import { TraceOptions } from '../logging/types';
-import { pythonEnvToJupyterEnv, serializePythonEnvironment } from '../api/pythonApi';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { noop } from '../common/utils/misc';
 import { CancellationToken, workspace } from 'vscode';
@@ -91,7 +90,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         return raceCancellation(token, promise);
     }
-    @traceDecoratorVerbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Getting activated env variables', TraceOptions.Arguments)
     private async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         @logValue<Environment>('id') environment: Environment,
@@ -166,22 +165,16 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         let failureEx: Error | undefined;
 
         let env = await this.apiProvider.getApi().then((api) =>
-            api
-                .getActivatedEnvironmentVariables(
-                    resource,
-                    serializePythonEnvironment(pythonEnvToJupyterEnv(environment))!,
-                    false
-                )
-                .catch((ex) => {
-                    traceError(
-                        `Failed to get activated env variables from Python Extension for ${getDisplayPath(
-                            environment.path
-                        )}`,
-                        ex
-                    );
-                    reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
-                    return undefined;
-                })
+            api.getActivatedEnvironmentVariables(resource, environment, false).catch((ex) => {
+                traceError(
+                    `Failed to get activated env variables from Python Extension for ${getDisplayPath(
+                        environment.path
+                    )}`,
+                    ex
+                );
+                reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
+                return undefined;
+            })
         );
         if (token?.isCancellationRequested) {
             return;
@@ -201,9 +194,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         if (env) {
             traceVerbose(
-                `Got env vars with python ${getDisplayPath(environment.path)}, with env var count ${
-                    Object.keys(env || {}).length
-                } in ${stopWatch.elapsedTime}ms. \n    PATH value is ${env.PATH} and \n    Path value is ${env.Path}`
+                `Got env vars from Python Ext in ${stopWatch.elapsedTime}ms for ${getDisplayPath(
+                    environment.path
+                )}, with env var count ${Object.keys(env || {}).length}. \n    PATH value is ${
+                    env.PATH
+                } and \n    Path value is ${env.Path}`
             );
         } else if (envType === EnvironmentType.Conda) {
             // We must get activated env variables for Conda env, if not running stuff against conda will not work.
@@ -286,12 +281,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         // Ensure the first path in PATH variable points to the directory of python executable.
         // We need to add this to ensure kernels start and work correctly, else things can fail miserably.
-        traceVerbose(`Prepend PATH with python bin for ${getDisplayPath(environment.path)}`);
         // This way all executables from that env are used.
         // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
         // Also applies to `!java` where java could be an executable in the conda bin directory.
         // Also required for conda environments that do not have Python installed (in the conda env).
         if (environment.executable.uri) {
+            traceVerbose(`Prepend PATH with python bin for ${getDisplayPath(environment.path)}`);
             this.envVarsService.prependPath(env, path.dirname(environment.executable.uri.fsPath));
         }
 

@@ -3,6 +3,7 @@
 
 import {
     CancellationToken,
+    CellExecutionError,
     NotebookCell,
     NotebookCellExecution,
     NotebookCellOutput,
@@ -12,6 +13,7 @@ import {
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IKernelController } from '../types';
 import { noop } from '../../platform/common/utils/misc';
+import { getNotebookTelemetryTracker } from '../telemetry/notebookTelemetry';
 
 /**
  * Wrapper class around NotebookCellExecution that allows us to
@@ -19,8 +21,12 @@ import { noop } from '../../platform/common/utils/misc';
  * - Do something when 'end' is called
  */
 export class NotebookCellExecutionWrapper implements NotebookCellExecution {
-    public started: boolean = false;
+    public _started: boolean = false;
+    public get started() {
+        return this._started;
+    }
     private _startTime?: number;
+    public errorInfo: CellExecutionError;
     /**
      * @param {boolean} [clearOutputOnStartWithTime=false] If true, clear the output when start is called with a time.
      */
@@ -40,6 +46,9 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
         return this._impl.executionOrder;
     }
     public set executionOrder(value: number | undefined) {
+        if (value) {
+            getNotebookTelemetryTracker(this._impl.cell.notebook)?.executeCellAcknowledged();
+        }
         this._impl.executionOrder = value;
     }
     private startIfNecessary() {
@@ -50,7 +59,7 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     start(startTime?: number): void {
         // Allow this to be called more than once (so we can switch out a kernel during running a cell)
         if (!this.started) {
-            this.started = true;
+            this._started = true;
             this._impl.start(startTime);
             this._startTime = startTime;
             // We clear the output as soon as we start,
@@ -68,11 +77,11 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     end(success: boolean | undefined, endTime?: number): void {
         if (this._endCallback) {
             try {
-                this._impl.end(success, endTime);
+                this._impl.end(success, endTime, this.errorInfo);
                 traceInfo(
-                    `End cell ${this.cell.index} execution after ${
+                    `Cell ${this.cell.index} completed in ${
                         ((endTime || 0) - (this._startTime || 0)) / 1000
-                    }s, completed @ ${endTime}, started @ ${this._startTime}`
+                    }s (start: ${this._startTime}, end: ${endTime})`
                 );
             } finally {
                 this._endCallback();

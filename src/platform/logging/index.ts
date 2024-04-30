@@ -45,10 +45,6 @@ export function setHomeDirectory(homeDir: string) {
     homeAsLowerCase = homeDir.toLowerCase();
 }
 
-export function traceLog(message: string, ...args: Arguments): void {
-    loggers.forEach((l) => l.traceLog(message, ...args));
-}
-
 function formatErrors(...args: Arguments) {
     // Format the error message, if showing verbose then include all of the error stack & other details.
     const formatError = globalLoggingLevel <= LogLevel.Trace ? false : true;

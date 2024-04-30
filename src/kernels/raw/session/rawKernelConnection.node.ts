@@ -35,6 +35,9 @@ import {
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { KernelSocketMap } from '../../kernelSocket';
+import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
+import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError';
+import { once } from '../../../platform/common/utils/functional';
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -129,6 +132,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         const disposables: IDisposable[] = [];
         const postStartToken = wrapCancellationTokens(token);
         disposables.push(postStartToken);
+        let kernelExitedError: KernelProcessExitedError | undefined = undefined;
         try {
             const oldKernelProcess = this.kernelProcess;
             this.kernelProcess = undefined;
@@ -161,21 +165,37 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 (info) => this.infoDeferred.resolve(info),
                 (ex) => this.infoDeferred.reject(ex)
             );
-
+            once(this.kernelProcess.exited)(
+                (e) => {
+                    kernelExitedError = new KernelProcessExitedError(
+                        e.exitCode || -1,
+                        e.stderr,
+                        this.kernelConnectionMetadata
+                    );
+                    postStartToken.cancel();
+                },
+                this,
+                disposables
+            );
             const timeout = setTimeout(() => postStartToken.cancel(), this.launchTimeout);
             disposables.push({ dispose: () => clearTimeout(timeout) });
             await KernelProgressReporter.wrapAndReportProgress(
                 this.resource,
                 DataScience.waitingForJupyterSessionToBeIdle,
-                () =>
-                    postStartKernel(
+                () => {
+                    const tracker = getNotebookTelemetryTracker(this.resource)?.kernelReady();
+                    return postStartKernel(
                         postStartToken.token,
                         this.launchTimeout,
                         this.resource,
                         this.kernelConnectionMetadata,
                         result.realKernel
-                    )
+                    ).finally(() => tracker?.stop());
+                }
             );
+            if (kernelExitedError) {
+                throw kernelExitedError;
+            }
             if (token.isCancellationRequested) {
                 throw new CancellationError();
             }
@@ -190,6 +210,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                     ?.shutdown()
                     .catch((ex) => traceWarning(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex))
             ]);
+            if (kernelExitedError) {
+                throw kernelExitedError;
+            }
             if (
                 isCancellationError(error) &&
                 postStartToken.token.isCancellationRequested &&
@@ -485,6 +508,8 @@ async function postStartKernel(
     const gotIoPubMessage = createDeferred<boolean>();
     const kernelInfoRequestHandled = createDeferred<boolean>();
     const iopubHandler = () => gotIoPubMessage.resolve(true);
+    gotIoPubMessage.promise.catch(noop);
+    kernelInfoRequestHandled.promise.catch(noop);
     kernel.iopubMessage.connect(iopubHandler);
     const sendKernelInfoRequestOnControlChannel = () => {
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');

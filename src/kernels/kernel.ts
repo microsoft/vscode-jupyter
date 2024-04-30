@@ -14,7 +14,8 @@ import {
     NotebookDocument,
     Memento,
     CancellationError,
-    window
+    window,
+    workspace
 } from 'vscode';
 import {
     CodeSnippets,
@@ -64,6 +65,7 @@ import { getKernelInfo } from './kernelInfo';
 import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { getCachedVersion, getEnvironmentType, getPythonEnvDisplayName } from '../platform/interpreter/helpers';
+import { getNotebookTelemetryTracker } from './telemetry/notebookTelemetry';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**
@@ -419,13 +421,8 @@ abstract class BaseKernel implements IBaseKernel {
                 this.startupUI.disableUI = false;
             }
         });
-        if (!this.startupUI.disableUI) {
-            // This means the user is actually running something against the kernel (deliberately).
-            await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
-                this.resourceUri,
-                this.kernelConnectionMetadata
-            );
-        } else {
+        const notebook = workspace.notebookDocuments.find((item) => item.uri.toString() === this.uri.toString());
+        if (this.startupUI.disableUI) {
             this.startupUI.onDidChangeDisableUI(
                 () => {
                     if (this.disposing || this.disposed || this.startupUI.disableUI) {
@@ -448,15 +445,26 @@ abstract class BaseKernel implements IBaseKernel {
 
         if (!this._jupyterSessionPromise) {
             const stopWatch = new StopWatch();
-            await trackKernelResourceInformation(this.resourceUri, {
-                kernelConnection: this.kernelConnectionMetadata,
-                actionSource: this.creator
-            });
-            if (this.disposing) {
-                throw new CancellationError();
-            }
-            Cancellation.throwIfCanceled(this.startCancellation.token);
-            this._jupyterSessionPromise = this.createJupyterSession()
+
+            const initializeTelemetry = async () => {
+                const telemetryTracker = notebook
+                    ? getNotebookTelemetryTracker(notebook)?.jupyterSessionTelemetry()
+                    : undefined;
+                await trackKernelResourceInformation(this.resourceUri, {
+                    kernelConnection: this.kernelConnectionMetadata,
+                    actionSource: this.creator,
+                    // This means the user is actually running something against the kernel (deliberately).
+                    userExecutedCell: !this.startupUI.disableUI
+                });
+                if (this.disposing) {
+                    throw new CancellationError();
+                }
+                telemetryTracker?.stop();
+                Cancellation.throwIfCanceled(this.startCancellation.token);
+            };
+
+            this._jupyterSessionPromise = initializeTelemetry()
+                .then(() => this.createJupyterSession())
                 .then((session) => {
                     sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, {
                         duration: stopWatch.elapsedTime
@@ -473,7 +481,6 @@ abstract class BaseKernel implements IBaseKernel {
                     throw ex;
                 });
         }
-        this._jupyterSessionPromise.finally(() => this.sendKernelStartedTelemetry()).catch(noop);
         return this._jupyterSessionPromise;
     }
 
@@ -701,100 +708,112 @@ abstract class BaseKernel implements IBaseKernel {
     }
 
     protected async initializeAfterStart(session: IKernelSession | undefined) {
-        await Promise.all(
-            Array.from(this.hooks.get('didStart') || new Set<Hook>()).map((h) =>
-                h(session, this.startCancellation.token).catch(noop)
-            )
-        );
-        traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
-        if (!session) {
-            traceVerbose('Not running kernel initialization');
-            return;
-        }
-        if (!this.hookedSessionForEvents.has(session)) {
-            this.hookedSessionForEvents.add(session);
-            session.onDidKernelSocketChange((e) => this._onDidKernelSocketChange.fire(e));
-            session.onDidDispose(() => {
-                traceInfoIfCI(
-                    `Kernel got disposed as a result of session.onDisposed (1) ${getDisplayPath(
-                        this.resourceUri || this.uri
-                    )}`
-                );
-                // Ignore when session is disposed as a result of failed restarts.
-                if (!this._ignoreJupyterSessionDisposedErrors) {
-                    traceInfo(
-                        `Kernel got disposed as a result of session.onDisposed ${getDisplayPath(
-                            this.resourceUri || this.uri
-                        )} & _ignoreJupyterSessionDisposedErrors = false.`
-                    );
-                    const isActiveSessionDead = this._session === session;
-
-                    this._jupyterSessionPromise = undefined;
-                    this._session = undefined;
-
-                    // If the active session died, then kernel is dead.
-                    if (isActiveSessionDead) {
-                        this.isKernelDead = true;
-                        this._onStatusChanged.fire('dead');
-                    }
-                }
-            });
-            const statusChangeHandler = (_: unknown, status: KernelMessage.Status) =>
-                this._onStatusChanged.fire(status);
-            session.statusChanged.connect(statusChangeHandler);
-            this.disposables.push(
-                new Disposable(() => swallowExceptions(() => session.statusChanged.disconnect(statusChangeHandler)))
-            );
-        }
-
-        // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
-        // Restart sessions and retries might make this hard to do correctly otherwise.
-        session.kernel?.registerCommTarget(Identifiers.DefaultCommTarget, noop);
-
-        if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
-            // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
-            // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
-            // And the longer we wait, the more data we need to hold onto in memory that later needs to be sent to the kernel in renderer.
-            this.determineVersionOfIPyWidgets(session).catch((ex) =>
-                traceError(`Failed to determine IPyWidget version`, ex)
-            );
-
-            // Gather all of the startup code at one time and execute as one cell
-            this.gatherInternalStartupCode()
-                .then((startupCode) =>
-                    this.executeSilently(session, startupCode, {
-                        traceErrors: true,
-                        traceErrorsMessage: 'Error executing jupyter extension internal startup code'
-                    })
-                )
-                .catch((ex) => traceError(`Failed to execute internal startup code`, ex));
-        } else {
-            // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
-            // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
-            // And the longer we wait, the more data we need to hold onto in memory that later needs to be sent to the kernel in renderer.
-            await this.determineVersionOfIPyWidgets(session);
-
-            // Gather all of the startup code at one time and execute as one cell
-            const startupCode = await this.gatherInternalStartupCode();
-            await this.executeSilently(session, startupCode, {
-                traceErrors: true,
-                traceErrorsMessage: 'Error executing jupyter extension internal startup code'
-            });
-            // Run user specified startup commands
-            await this.executeSilently(session, this.getUserStartupCommands(), { traceErrors: false });
-        }
-
-        // Then request our kernel info (indicates kernel is ready to go)
+        const nb = workspace.notebookDocuments.find((nb) => nb.uri.toString() === this.uri.toString());
+        const tracker = getNotebookTelemetryTracker(nb);
+        const postInitialization = nb ? tracker?.postKernelStartup() : undefined;
         try {
-            traceVerbose('Requesting Kernel info');
-            this._info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento);
-        } catch (ex) {
-            traceWarning('Failed to request KernelInfo', ex);
-        }
-        if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
-            traceVerbose('End running kernel initialization, now waiting for idle');
-            await session.waitForIdle(this.kernelSettings.launchTimeout, this.startCancellation.token);
-            traceVerbose('End running kernel initialization, session is idle');
+            await Promise.all(
+                Array.from(this.hooks.get('didStart') || new Set<Hook>()).map((h) =>
+                    h(session, this.startCancellation.token).catch(noop)
+                )
+            );
+            traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
+            if (!session) {
+                traceVerbose('Not running kernel initialization');
+                return;
+            }
+            if (!this.hookedSessionForEvents.has(session)) {
+                this.hookedSessionForEvents.add(session);
+                session.onDidKernelSocketChange((e) => this._onDidKernelSocketChange.fire(e));
+                session.onDidDispose(() => {
+                    traceInfoIfCI(
+                        `Kernel got disposed as a result of session.onDisposed (1) ${getDisplayPath(
+                            this.resourceUri || this.uri
+                        )}`
+                    );
+                    // Ignore when session is disposed as a result of failed restarts.
+                    if (!this._ignoreJupyterSessionDisposedErrors) {
+                        traceInfo(
+                            `Kernel got disposed as a result of session.onDisposed ${getDisplayPath(
+                                this.resourceUri || this.uri
+                            )} & _ignoreJupyterSessionDisposedErrors = false.`
+                        );
+                        const isActiveSessionDead = this._session === session;
+
+                        this._jupyterSessionPromise = undefined;
+                        this._session = undefined;
+
+                        // If the active session died, then kernel is dead.
+                        if (isActiveSessionDead) {
+                            this.isKernelDead = true;
+                            this._onStatusChanged.fire('dead');
+                        }
+                    }
+                });
+                const statusChangeHandler = (_: unknown, status: KernelMessage.Status) =>
+                    this._onStatusChanged.fire(status);
+                session.statusChanged.connect(statusChangeHandler);
+                this.disposables.push(
+                    new Disposable(() => swallowExceptions(() => session.statusChanged.disconnect(statusChangeHandler)))
+                );
+            }
+
+            // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
+            // Restart sessions and retries might make this hard to do correctly otherwise.
+            session.kernel?.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
+            if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
+                // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
+                // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
+                // And the longer we wait, the more data we need to hold onto in memory that later needs to be sent to the kernel in renderer.
+                this.determineVersionOfIPyWidgets(session).catch((ex) =>
+                    traceError(`Failed to determine IPyWidget version`, ex)
+                );
+
+                // Gather all of the startup code at one time and execute as one cell
+                this.gatherInternalStartupCode()
+                    .then((startupCode) =>
+                        this.executeSilently(session, startupCode, {
+                            traceErrors: true,
+                            traceErrorsMessage: 'Error executing jupyter extension internal startup code'
+                        })
+                    )
+                    .catch((ex) => traceError(`Failed to execute internal startup code`, ex));
+            } else {
+                // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
+                // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
+                // And the longer we wait, the more data we need to hold onto in memory that later needs to be sent to the kernel in renderer.
+                await this.determineVersionOfIPyWidgets(session);
+
+                // Gather all of the startup code at one time and execute as one cell
+                const startupCode = await this.gatherInternalStartupCode();
+                await this.executeSilently(session, startupCode, {
+                    traceErrors: true,
+                    traceErrorsMessage: 'Error executing jupyter extension internal startup code'
+                });
+                // Run user specified startup commands
+                await this.executeSilently(session, this.getUserStartupCommands(), { traceErrors: false });
+            }
+
+            postInitialization?.stop();
+            // Then request our kernel info (indicates kernel is ready to go)
+            const kernelInfo = tracker?.kernelInfo();
+            try {
+                traceVerbose('Requesting Kernel info');
+                this._info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento);
+            } catch (ex) {
+                traceWarning('Failed to request KernelInfo', ex);
+            }
+            kernelInfo?.stop();
+            const kernelIdle = tracker?.kernelIdle();
+            if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
+                traceVerbose('End running kernel initialization, now waiting for idle');
+                await session.waitForIdle(this.kernelSettings.launchTimeout, this.startCancellation.token);
+                traceVerbose('End running kernel initialization, session is idle');
+            }
+            kernelIdle?.stop();
+        } finally {
+            postInitialization?.stop();
         }
     }
     /**

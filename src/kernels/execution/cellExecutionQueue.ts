@@ -4,13 +4,15 @@
 import { CancellationToken, Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
-import { createJupyterCellFromVSCNotebookCell, traceCellMessage } from './helpers';
+import { traceCellMessage } from './helpers';
 import { CellExecutionFactory } from './cellExecution';
 import { IKernelSession, KernelConnectionMetadata, ResumeCellExecutionInformation } from '../../kernels/types';
 import { Resource } from '../../platform/common/types';
 import { ICellExecution, ICodeExecution } from './types';
 import { CodeExecution } from './codeExecution';
 import { once } from '../../platform/common/utils/events';
+import { getCellMetadata } from '../../platform/common/utils';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../../platform/notebooks/cellExecutionStateService';
 
 /**
  * A queue responsible for execution of cells.
@@ -24,8 +26,6 @@ export class CellExecutionQueue implements Disposable {
     }
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
-    private readonly _onPreExecute = new EventEmitter<NotebookCell>();
-    private readonly _onPostExecute = new EventEmitter<NotebookCell>();
     private disposables: Disposable[] = [];
     private lastCellExecution?: ICellExecution | ICodeExecution;
     /**
@@ -54,14 +54,6 @@ export class CellExecutionQueue implements Disposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
         this.lastCellExecution?.dispose();
-    }
-
-    public get onPreExecute() {
-        return this._onPreExecute.event;
-    }
-
-    public get onPostExecute() {
-        return this._onPostExecute.event;
     }
 
     /**
@@ -100,7 +92,6 @@ export class CellExecutionQueue implements Disposable {
             const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
             executionItem = cellExecution;
             this.disposables.push(cellExecution);
-            cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
             this.queueOfItemsToExecute.push(cellExecution);
 
             traceCellMessage(cell, 'User queued cell for execution');
@@ -244,7 +235,11 @@ export class CellExecutionQueue implements Disposable {
                 }
 
                 if (itemToExecute.type === 'cell') {
-                    this._onPostExecute.fire(itemToExecute.cell);
+                    notebookCellExecutions.changeCellState(
+                        itemToExecute.cell,
+                        NotebookCellExecutionState.Idle,
+                        itemToExecute.executionOrder
+                    );
                 }
             }
 
@@ -253,7 +248,7 @@ export class CellExecutionQueue implements Disposable {
             // I.e. if the cell has the tag `raises-exception`, then ignore exceptions
             if (
                 itemToExecute.type === 'cell' &&
-                createJupyterCellFromVSCNotebookCell(itemToExecute.cell).metadata?.tags?.includes('raises-exception')
+                getCellMetadata(itemToExecute.cell).metadata?.tags?.includes('raises-exception')
             ) {
                 cellErrorsAllowed = true;
             }

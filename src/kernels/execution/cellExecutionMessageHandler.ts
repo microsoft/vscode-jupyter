@@ -27,14 +27,15 @@ import {
 import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { concatMultilineString, formatStreamText, isJupyterNotebook } from '../../platform/common/utils';
 import {
     traceCellMessage,
     cellOutputToVSCCellOutput,
     translateCellDisplayOutput,
-    CellOutputMimeTypes
+    CellOutputMimeTypes,
+    findErrorLocation
 } from './helpers';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
@@ -448,8 +449,8 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.previousResultsToRestore = { ...(this.cell.executionSummary || {}) };
         this.temporaryExecution = CellExecutionCreator.getOrCreate(this.cell, this.controller);
         this.temporaryExecution?.start();
-        if (this.previousResultsToRestore?.executionOrder && this.execution) {
-            this.execution.executionOrder = this.previousResultsToRestore.executionOrder;
+        if (this.previousResultsToRestore?.executionOrder && this.temporaryExecution) {
+            this.temporaryExecution.executionOrder = this.previousResultsToRestore.executionOrder;
         }
         return this.temporaryExecution;
     }
@@ -486,7 +487,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             //     //
             // }
             this.execution?.start(this.startTime);
-            traceInfo(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
+            traceVerbose(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
         }
 
         // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -1071,6 +1072,18 @@ export class CellExecutionMessageHandler implements IDisposable {
             evalue: msg.content.evalue,
             traceback
         };
+
+        if (this.cell.notebook.notebookType !== 'interactive') {
+            const cellExecution = CellExecutionCreator.get(this.cell);
+            if (cellExecution && msg.content.ename !== 'KeyboardInterrupt') {
+                cellExecution.errorInfo = {
+                    message: `${msg.content.ename}: ${msg.content.evalue}`,
+                    location: findErrorLocation(msg.content.traceback, this.cell),
+                    uri: this.cell.document.uri,
+                    stack: msg.content.traceback.join('\n')
+                };
+            }
+        }
 
         this.addToCellData(output, msg);
         this.cellHasErrorsInOutput = true;

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken } from 'vscode';
+import { CancellationToken, NotebookDocument } from 'vscode';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import type * as nbformat from '@jupyterlab/nbformat';
 import {
@@ -14,10 +14,9 @@ import {
     isPythonNotebook
 } from '../../../kernels/helpers';
 import { IJupyterKernelSpec, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { isCI, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { InteractiveWindowView, isCI, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { Resource } from '../../../platform/common/types';
-import { getResourceType, NotebookMetadata } from '../../../platform/common/utils';
+import { NotebookMetadata } from '../../../platform/common/utils';
 import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
@@ -93,14 +92,14 @@ function getVSCodeInfoInInMetadata(
 }
 export async function rankKernels(
     kernels: KernelConnectionMetadata[],
-    resource: Resource,
+    notebook: NotebookDocument,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredInterpreter: PythonEnvironment | undefined,
     preferredRemoteKernelId: string | undefined,
     cancelToken?: CancellationToken
 ): Promise<KernelConnectionMetadata[] | undefined> {
     traceInfo(
-        `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
+        `Find preferred kernel for ${getDisplayPath(notebook.uri)} with metadata ${JSON.stringify(
             notebookMetadata || {}
         )} & preferred interpreter ${
             preferredInterpreter?.uri ? getDisplayPath(preferredInterpreter?.uri) : '<undefined>'
@@ -162,7 +161,7 @@ export async function rankKernels(
 
     // Now perform our big comparison on the kernel list
     // Interactive window always defaults to Python kernels.
-    if (getResourceType(resource) === 'interactive') {
+    if (notebook.notebookType === InteractiveWindowView) {
         // TODO: Based on the resource, we should be able to find the language.
         possibleNbMetadataLanguage = PYTHON_LANGUAGE;
     } else {
@@ -186,7 +185,7 @@ export async function rankKernels(
     );
     kernels.sort((a, b) =>
         compareKernels(
-            resource,
+            notebook,
             possibleNbMetadataLanguage,
             actualNbMetadataLanguage,
             notebookMetadata,
@@ -283,7 +282,7 @@ function isKernelSpecExactMatch(
 }
 
 export function compareKernels(
-    _resource: Resource,
+    _resource: NotebookDocument,
     possibleNbMetadataLanguage: string | undefined,
     actualNbMetadataLanguage: string | undefined,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
@@ -978,23 +977,20 @@ export class KernelRankingHelper {
     constructor(private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider) {}
 
     public async rankKernels(
-        resource: Resource,
+        notebook: NotebookDocument,
         kernels: KernelConnectionMetadata[],
         notebookMetadata?: nbformat.INotebookMetadata | undefined,
         preferredInterpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata[] | undefined> {
         try {
-            const preferredRemoteKernelId =
-                resource && this.preferredRemoteFinder
-                    ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)
-                    : undefined;
+            const preferredRemoteKernelId = await this.preferredRemoteFinder.getPreferredRemoteKernelId(notebook);
             if (cancelToken?.isCancellationRequested) {
                 return;
             }
             let rankedKernels = await rankKernels(
                 kernels,
-                resource,
+                notebook,
                 notebookMetadata,
                 preferredInterpreter,
                 preferredRemoteKernelId,
@@ -1009,14 +1005,11 @@ export class KernelRankingHelper {
     }
 
     public async isExactMatch(
-        resource: Resource,
+        notebook: NotebookDocument,
         kernelConnection: KernelConnectionMetadata,
         notebookMetadata: nbformat.INotebookMetadata | undefined
     ): Promise<boolean> {
-        const preferredRemoteKernelId =
-            resource && this.preferredRemoteFinder
-                ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)
-                : undefined;
+        const preferredRemoteKernelId = await this.preferredRemoteFinder.getPreferredRemoteKernelId(notebook);
 
         return isExactMatch(kernelConnection, notebookMetadata, preferredRemoteKernelId);
     }

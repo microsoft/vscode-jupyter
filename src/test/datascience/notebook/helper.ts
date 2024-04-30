@@ -23,7 +23,6 @@ import {
     Memento,
     NotebookCell,
     NotebookCellData,
-    NotebookCellExecutionState,
     NotebookCellKind,
     NotebookCellOutputItem,
     NotebookData,
@@ -43,7 +42,6 @@ import {
     debug,
     env,
     languages,
-    notebooks,
     window,
     workspace
 } from 'vscode';
@@ -101,6 +99,11 @@ import { ControllerPreferredService } from './controllerPreferredService';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { JupyterLabHelper } from '../../../kernels/jupyter/session/jupyterLabHelper';
 import { getRootFolder } from '../../../platform/common/application/workspace.base';
+import { activateIPynbExtension, useCustomMetadata } from '../../../platform/common/utils';
+import {
+    NotebookCellExecutionState,
+    notebookCellExecutions
+} from '../../../platform/notebooks/cellExecutionStateService';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -834,6 +837,7 @@ export async function prewarmNotebooks() {
     if (prewarmNotebooksDone.done) {
         return;
     }
+    await activateIPynbExtension();
     const { serviceContainer } = await getServices();
     await closeActiveWindows();
 
@@ -863,18 +867,29 @@ export async function createNewNotebook() {
     const language = PYTHON_LANGUAGE;
     const cell = new NotebookCellData(NotebookCellKind.Code, '', language);
     const data = new NotebookData([cell]);
-    data.metadata = {
-        custom: {
-            cells: [],
-            metadata: <nbformat.INotebookMetadata>{
-                language_info: {
-                    name: language
-                }
-            },
-            nbformat: defaultNotebookFormat.major,
-            nbformat_minor: defaultNotebookFormat.minor
-        }
-    };
+    data.metadata = useCustomMetadata()
+        ? {
+              custom: {
+                  cells: [],
+                  metadata: <nbformat.INotebookMetadata>{
+                      language_info: {
+                          name: language
+                      }
+                  },
+                  nbformat: defaultNotebookFormat.major,
+                  nbformat_minor: defaultNotebookFormat.minor
+              }
+          }
+        : {
+              cells: [],
+              metadata: <nbformat.INotebookMetadata>{
+                  language_info: {
+                      name: language
+                  }
+              },
+              nbformat: defaultNotebookFormat.major,
+              nbformat_minor: defaultNotebookFormat.minor
+          };
     const doc = await workspace.openNotebookDocument(JupyterNotebookView, data);
     return window.showNotebookDocument(doc);
 }
@@ -906,6 +921,7 @@ export async function waitForCellExecutionToComplete(cell: NotebookCell) {
         defaultNotebookTestTimeout,
         'Execution did not complete'
     );
+
     await sleep(100);
 }
 export async function waitForCellExecutionState(
@@ -915,7 +931,7 @@ export async function waitForCellExecutionState(
     timeout: number = defaultNotebookTestTimeout
 ) {
     const deferred = createDeferred<boolean>();
-    const disposable = notebooks.onDidChangeNotebookCellExecutionState((e) => {
+    const disposable = notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
         if (e.cell !== cell) {
             return;
         }
@@ -956,10 +972,14 @@ export async function waitForExecutionCompletedSuccessfully(
             () =>
                 `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
                     cell
-                )}`
+                )}, & state = ${NotebookCellStateTracker.getCellState(cell)}`
         ),
         waitForCellExecutionToComplete(cell)
     ]);
+    // Some of the tests run the exact same checks,
+    // hence we can have a race condition
+    // Wait for an additional 100ms to ensure all code has been executed.
+    await sleep(100);
 }
 
 export async function waitForCompletions(

@@ -49,14 +49,6 @@
     "jupyter.command.jupyter.runFileInteractive.title": "Run Current File in Interactive Window",
     "jupyter.command.jupyter.debugFileInteractive.title": "Debug Current File in Interactive Window",
     "jupyter.command.jupyter.runallcells.title": "Run All Cells",
-    "jupyter.command.jupyter.notebookeditor.expandallcells.title": {
-        "message": "Expand All Notebook Cells",
-        "comment": ["{Locked='Notebook'}"]
-    },
-    "jupyter.command.jupyter.notebookeditor.collapseallcells.title": {
-        "message": "Collapse All Notebook Cells",
-        "comment": ["{Locked='Notebook'}"]
-    },
     "jupyter.command.jupyter.runallcellsabove.title": "Run Above",
     "jupyter.command.jupyter.runcellandallbelow.title": "Run Below",
     "jupyter.command.jupyter.runallcellsabove.palette.title": "Run Cells Above Current Cell",
@@ -229,6 +221,7 @@
     "jupyter.configuration.jupyter.enableExtendedKernelCompletions.deprecationMessage": "This setting has been deprecated in favor of jupyter.enableExtendedPythonKernelCompletions.",
     "jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription": "Enable code completions in Notebooks and Interactive Windows using results from the associated Jupyter Kernel.",
     "jupyter.configuration.jupyter.formatStackTraces.description": "Inject stack frame links into the stored traceback for the notebook.",
+    "jupyter.configuration.jupyter.formatStackTraces.deprecationMessage": "This setting has been deprecated and will be removed in a future release.",
     "DataScience.exportDialogTitle": {
         "message": "Export to Jupyter Notebook",
         "comment": ["{Locked='Notebook'}"]

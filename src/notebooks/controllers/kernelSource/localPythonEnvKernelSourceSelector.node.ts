@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationError, CancellationTokenSource, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { IKernelFinder, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { dispose } from '../../../platform/common/utils/lifecycle';
+import { ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -21,7 +21,6 @@ import { KernelFinder } from '../../../kernels/kernelFinder';
 import { LocalPythonKernelSelector } from './localPythonKernelSelector.node';
 import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { ILocalPythonNotebookKernelSourceSelector } from '../types';
-import { DisposableBase } from '../../../platform/common/utils/lifecycle';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceWarning } from '../../../platform/logging';
@@ -36,7 +35,7 @@ export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectio
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
 export class LocalPythonEnvNotebookKernelSourceSelector
-    extends DisposableBase
+    extends ObservableDisposable
     implements
         ILocalPythonNotebookKernelSourceSelector,
         IContributedKernelFinder<PythonKernelConnectionMetadata>,

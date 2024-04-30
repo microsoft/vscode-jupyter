@@ -5,7 +5,7 @@ import { Event, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import type { SemVer } from 'semver';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
-import { PythonExtension } from '@vscode/python-extension';
+import { PythonExtension, type Environment } from '@vscode/python-extension';
 
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
@@ -64,7 +64,7 @@ export interface PythonApi {
      */
     getActivatedEnvironmentVariables(
         resource: Resource,
-        interpreter: PythonEnvironment_PythonApi,
+        interpreter: Environment,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined>;
     /**
@@ -91,12 +91,4 @@ export interface PythonApi {
      * @param func : The function that Python should call when requesting the Python path.
      */
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
-
-    /**
-     * Call to provide a function that the Python extension can call to request the notebook
-     * document URI related to a particular text document URI, or undefined if there is no
-     * associated notebook.
-     * @param func : The function that Python should call when requesting the notebook URI.
-     */
-    registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
 }

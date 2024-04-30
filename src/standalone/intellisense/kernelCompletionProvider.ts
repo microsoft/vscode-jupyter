@@ -20,19 +20,13 @@ import {
     workspace
 } from 'vscode';
 import { raceCancellation } from '../../platform/common/cancellation';
-import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
-import {
-    Experiments,
-    IDisposable,
-    IDisposableRegistry,
-    IExperimentService,
-    Resource
-} from '../../platform/common/types';
+import { traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { IDisposable, IDisposableRegistry, Resource } from '../../platform/common/types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IKernelProvider, IKernel } from '../../kernels/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { mapJupyterKind } from './conversion';
-import { PYTHON_LANGUAGE, Settings, Telemetry } from '../../platform/common/constants';
+import { Settings, Telemetry } from '../../platform/common/constants';
 import { INotebookCompletion } from './types';
 import { translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
@@ -418,8 +412,6 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
                 ) {
                     return;
                 }
-                this.completionProvider?.dispose();
-                this.completionProvider = undefined;
                 this.registerCompletionProvider();
             })
         );
@@ -435,12 +427,14 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
             return;
         }
 
-        traceInfo(
+        traceVerbose(
             `Registering Kernel Completion Provider from kernel ${getDisplayNameOrNameOfKernelConnection(
                 this.kernel.kernelConnectionMetadata
             )} for language ${this.monacoLanguage}`
         );
         this.allowStringFilterForPython = triggerCharacters.includes("'") || triggerCharacters.includes('"');
+        this.completionProvider?.dispose();
+        this.completionProvider = undefined;
         this.completionProvider = languages.registerCompletionItemProvider(
             this.monacoLanguage,
             this,
@@ -506,15 +500,8 @@ export class KernelCompletionProvider extends DisposableBase implements IExtensi
                     void e.session.kernel.requestComplete({ code: '__file__.', cursor_pos: 9 });
                 }
 
-                const experiment = ServiceContainer.instance.get<IExperimentService>(IExperimentService);
                 const language = getKernelLanguageAsMonacoLanguage(e);
                 if (!language) {
-                    return;
-                }
-                if (
-                    !experiment.inExperiment(Experiments.KernelCompletions) &&
-                    language.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()
-                ) {
                     return;
                 }
                 if (this.kernelCompletionProviders.has(e)) {

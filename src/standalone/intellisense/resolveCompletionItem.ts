@@ -8,14 +8,13 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { raceTimeoutError } from '../../platform/common/utils/async';
 import { raceCancellation, wrapCancellationTokens } from '../../platform/common/cancellation';
-import { dispose } from '../../platform/common/utils/lifecycle';
+import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { traceInfo, traceVerbose, traceWarning } from '../../platform/logging';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { Settings } from '../../platform/common/constants';
 import { convertDocumentationToMarkdown } from './completionDocumentationFormatter';
 import { once } from '../../platform/common/utils/events';
-import { IDisposable } from '../../platform/common/types';
 import { splitLines } from '../../platform/common/helpers';
 import { escapeStringToEmbedInPythonCode } from '../../kernels/chat/generator';
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
@@ -241,29 +240,31 @@ async function waitForKernelToBeReady(kernel: IKernel, token: CancellationToken)
         }, waiting for it to be ready.`
     );
     const kernelConnection = kernel.session.kernel;
-    const disposables: IDisposable[] = [];
+    const disposables = new DisposableStore();
     await raceCancellation(
         token,
         new Promise<void>((resolve) => {
             const statusChangeHandler = () => {
+                if (token.isCancellationRequested) {
+                    return;
+                }
                 if (!doesKernelHaveTooManyPendingRequests(kernel)) {
                     resolve();
                     dispose(disposables);
                     return;
                 }
                 // Perhaps we have some async code.
-                setInterval(statusChangeHandler, 100);
+                const timeout = setTimeout(statusChangeHandler, 100);
+                disposables.add({ dispose: () => clearTimeout(timeout) });
             };
-            once(token.onCancellationRequested)(
-                () => {
+            disposables.add(
+                once(token.onCancellationRequested)(() => {
                     resolve();
                     kernelConnection.statusChanged.disconnect(statusChangeHandler);
-                },
-                undefined,
-                disposables
+                })
             );
             kernelConnection.statusChanged.connect(statusChangeHandler);
-            disposables.push({
+            disposables.add({
                 dispose: () => {
                     kernelConnection.statusChanged.disconnect(statusChangeHandler);
                 }

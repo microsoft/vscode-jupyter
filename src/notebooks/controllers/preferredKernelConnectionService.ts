@@ -53,7 +53,7 @@ export class PreferredKernelConnectionService {
     ): Promise<RemoteKernelConnectionMetadata | undefined> {
         const preferredRemoteKernelId = await ServiceContainer.instance
             .get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider)
-            .getPreferredRemoteKernelId(notebook.uri);
+            .getPreferredRemoteKernelId(notebook);
 
         const findLiveKernelConnection = async () => {
             let liveKernelMatchingIdFromCurrentKernels = kernelFinder.kernels.find(

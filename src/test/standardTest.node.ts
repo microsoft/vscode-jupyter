@@ -15,23 +15,41 @@ import {
     isCI
 } from '../platform/common/constants';
 import { DownloadPlatform } from '@vscode/test-electron/out/download';
+import { arch } from 'os';
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_JUPYTER_CI_TEST = '1';
 const workspacePath = process.env.CODE_TESTS_WORKSPACE
     ? process.env.CODE_TESTS_WORKSPACE
     : path.join(__dirname, '..', '..', 'src', 'test');
-const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
+const extensionDevelopmentPathForTestsWithJupyter = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
+const extensionDevelopmentPathForPerfTestsWithoutJupyter = path.join(
+    extensionDevelopmentPathForTestsWithJupyter,
+    'src',
+    'test',
+    'vscode-notebook-perf'
+);
+const extensionDevelopmentPath = isNotebookPerfTestWithoutJupyter()
+    ? extensionDevelopmentPathForPerfTestsWithoutJupyter
+    : extensionDevelopmentPathForTestsWithJupyter;
+
 const isRunningVSCodeTests = process.env.TEST_FILES_SUFFIX?.includes('vscode.test');
 setTestExecution(true);
 
 function requiresPythonExtensionToBeInstalled() {
-    if (process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
+    if (
+        process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT &&
+        process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT !== 'false'
+    ) {
         return;
     }
     return isRunningVSCodeTests || IS_SMOKE_TEST() || IS_PERF_TEST();
+}
+
+function isNotebookPerfTestWithoutJupyter() {
+    return !!process.env.VSC_JUPYTER_NOTEBOOK_PERF_TEST;
 }
 
 const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
@@ -41,7 +59,7 @@ const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase(
 function computePlatform() {
     switch (process.platform) {
         case 'darwin':
-            return 'darwin';
+            return arch() === 'arm64' ? 'darwin-arm64' : 'darwin';
         case 'win32':
             return process.arch === 'ia32' ? 'win32-archive' : 'win32-x64-archive';
         default:
@@ -63,7 +81,7 @@ async function createTempDir() {
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
 async function installPythonExtension(vscodeExecutablePath: string, extensionsDir: string, platform: DownloadPlatform) {
-    if (!requiresPythonExtensionToBeInstalled()) {
+    if (!requiresPythonExtensionToBeInstalled() || isNotebookPerfTestWithoutJupyter()) {
         console.info('Python Extension not required');
         return;
     }
@@ -129,8 +147,13 @@ async function createSettings(): Promise<string> {
         // To get widgets working.
         'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com'],
         // New Kernel Picker.
-        'notebook.kernelPicker.type': 'mru'
+        'notebook.kernelPicker.type': 'mru',
+        'jupyter.experimental.dropCustomMetadata': true, // On CI always run without custom metadata.
+        'jupyter.drop.custom.property': true, // On CI always run without custom metadata.
+        'notebook.stickyScroll.enabled': true, // Required for perf tests
+        'notebook.outline.showCodeCells': true // Required for perf tests
     };
+
     if (IS_SMOKE_TEST()) {
         defaultSettings['python.languageServer'] = 'None';
     }
@@ -162,6 +185,7 @@ async function start() {
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
     const userDataDirectory = await createSettings();
     const extensionsDir = await getExtensionsDir();
+    console.error(`Using extensions development path: ${extensionDevelopmentPath}`);
     await installPythonExtension(vscodeExecutablePath, extensionsDir, platform);
     await runTests({
         vscodeExecutablePath,

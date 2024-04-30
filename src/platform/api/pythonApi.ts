@@ -36,6 +36,7 @@ import { getOSType, OSType } from '../common/utils/platform';
 import { SemVer } from 'semver';
 import {
     getCachedEnvironment,
+    getCachedEnvironments,
     getCachedVersion,
     getEnvironmentType,
     getPythonEnvironmentName,
@@ -43,6 +44,7 @@ import {
     setPythonApi
 } from '../interpreter/helpers';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
+import { trackInterpreterDiscovery, trackPythonExtensionActivation } from '../../kernels/telemetry/notebookTelemetry';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -149,6 +151,9 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         }
         if (extension?.exports) {
             setPythonApi(extension.exports);
+            extension.exports.environments.known.forEach((e) => {
+                trackInterpreterDiscovery(e);
+            });
         }
         return extension?.exports;
     }
@@ -184,8 +189,14 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         }
         let activated = false;
         if (!pythonExtension.isActive) {
+            const tracker = trackPythonExtensionActivation();
             try {
-                await pythonExtension.activate();
+                const promise = pythonExtension.activate();
+                promise.then(
+                    () => tracker.stop(),
+                    () => tracker.stop()
+                );
+                await promise;
                 activated = true;
             } catch (ex) {
                 traceError(`Failed activating the python extension: `, ex);
@@ -336,6 +347,9 @@ export class InterpreterService implements IInterpreterService {
         this.refreshPromises.onStateChange(() => {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
+    }
+    public initialize() {
+        this.hookupOnDidChangeInterpreterEvent();
     }
     public async resolveEnvironment(id: string | Environment): Promise<ResolvedEnvironment | undefined> {
         return this.getApi().then((api) => {
@@ -612,13 +626,19 @@ export class InterpreterService implements IInterpreterService {
                                 return;
                             }
                             const info = resolvedPythonEnvToJupyterEnv(getCachedEnvironment(e.env));
-                            if (e.type === 'update' && info) {
+                            if (info) {
                                 this.triggerEventIfAllowed('interpreterChangeEvent', info);
                                 this.triggerEventIfAllowed('interpretersChangeEvent', info);
                             }
                         },
                         this,
                         this.disposables
+                    );
+                    this.didChangeInterpreters.fire(
+                        getCachedEnvironments()
+                            .map(resolvedPythonEnvToJupyterEnv)
+                            .filter((e) => !!e)
+                            .map((e) => e as PythonEnvironment)
                     );
                 }
             })

@@ -10,6 +10,19 @@ import { raceCancellation } from '../../../platform/common/cancellation';
 import { getNotebookCellOutputMetadata } from '../../../kernels/execution/helpers';
 import { unTrackDisplayDataForExtension } from '../../../kernels/execution/extensionDisplayDataTracker';
 import { traceWarning } from '../../../platform/logging';
+import { IBackgroundThreadService } from '../../../kernels/jupyter/types';
+import { injectable } from 'inversify';
+
+@injectable()
+export class BackgroundThreadService implements IBackgroundThreadService {
+    execCodeInBackgroundThread<T>(
+        kernel: IKernel,
+        codeWithReturnStatement: string[],
+        token: CancellationToken
+    ): Promise<T | undefined> {
+        return execCodeInBackgroundThread(kernel, codeWithReturnStatement, token);
+    }
+}
 
 export const executionCounters = new WeakMap<IKernel, number>();
 export async function execCodeInBackgroundThread<T>(
@@ -19,15 +32,17 @@ export async function execCodeInBackgroundThread<T>(
 ) {
     const counter = executionCounters.get(kernel) || 0;
     executionCounters.set(kernel, counter + 1);
-    const api = createKernelApiForExtension(JVSC_EXTENSION_ID, kernel, { accessAllowed: true });
+    const api = createKernelApiForExtension(JVSC_EXTENSION_ID, kernel);
     const mime = `application/vnd.vscode.bg.execution.${counter}`;
     const mimeFinalResult = `application/vnd.vscode.bg.execution.${counter}.result`;
+    const mimeErrorResult = `application/vnd.vscode.bg.execution.${counter}.error`;
     let displayId = '';
 
     const codeToSend = `
 def __jupyter_exec_background__():
     from IPython.display import display
     from threading import Thread
+    from traceback import format_exc
 
     # First send a dummy response to get the display id.
     # Later we'll send the real response with the actual data.
@@ -41,8 +56,8 @@ def __jupyter_exec_background__():
     def bg_main():
         try:
             output.update({"${mimeFinalResult}": do_implementation()}, raw=True)
-        except:
-            pass
+        except Exception as e:
+            output.update({"${mimeErrorResult}": format_exc()}, raw=True)
 
 
     Thread(target=bg_main, daemon=True).start()
@@ -55,9 +70,9 @@ del __jupyter_exec_background__
     disposables.add(token.onCancellationRequested(() => disposables.dispose()));
     const promise = raceCancellation(
         token,
-        new Promise<T | undefined>((resolve) => {
+        new Promise<T | undefined>((resolve, reject) => {
             disposables.add(
-                api.onDidRecieveDisplayUpdate(async (output) => {
+                api.onDidReceiveDisplayUpdate(async (output) => {
                     if (token.isCancellationRequested) {
                         return resolve(undefined);
                     }
@@ -69,12 +84,20 @@ del __jupyter_exec_background__
                     if (!result) {
                         return;
                     }
-                    return resolve(JSON.parse(new TextDecoder().decode(result.data)) as T);
+
+                    try {
+                        return resolve(JSON.parse(new TextDecoder().decode(result.data)) as T);
+                    } catch (ex) {
+                        return reject(new Error('Failed to parse the result', ex));
+                    }
                 })
             );
         })
         // We no longer need to track any more outputs from the kernel that are related to this output.
-    ).finally(() => kernel.session && unTrackDisplayDataForExtension(kernel.session, displayId));
+    ).finally(() => {
+        kernel.session && unTrackDisplayDataForExtension(kernel.session, displayId);
+        disposables.dispose();
+    });
 
     for await (const output of api.executeCode(codeToSend, token)) {
         if (token.isCancellationRequested) {
@@ -84,16 +107,20 @@ del __jupyter_exec_background__
         if (!metadata?.transient?.display_id) {
             continue;
         }
-        const result = output.items.find((item) => item.mime === mime || item.mime === mimeFinalResult);
-        if (!result) {
-            continue;
-        }
-        if (result.mime === mime) {
+        const dummyMessage = output.items.find((item) => item.mime === mime);
+        if (dummyMessage) {
             displayId = metadata.transient.display_id;
             continue;
         }
-        if (result.mime === mimeFinalResult && displayId === metadata.transient.display_id) {
-            return JSON.parse(new TextDecoder().decode(result.data)) as T;
+
+        if (displayId === metadata.transient.display_id) {
+            const result = output.items.find((item) => item.mime === mimeFinalResult || item.mime === mimeErrorResult);
+            if (result?.mime === mimeFinalResult) {
+                return JSON.parse(new TextDecoder().decode(result.data)) as T;
+            } else if (result?.mime === mimeErrorResult) {
+                traceWarning('Error in background execution:\n', new TextDecoder().decode(result.data));
+                return;
+            }
         }
     }
     if (token.isCancellationRequested) {

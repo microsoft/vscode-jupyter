@@ -3,7 +3,15 @@
 
 import * as vscode from 'vscode';
 import { INotebookLanguageClient } from './pylance';
-import { cellIndexesToRanges, areRangesEqual, LocationWithReferenceKind, noop, Range } from './common';
+import {
+    cellIndexesToRanges,
+    areRangesEqual,
+    LocationWithReferenceKind,
+    noop,
+    Range,
+    cellRangesToIndexes
+} from './common';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../../platform/notebooks/cellExecutionStateService';
 
 const writeDecorationType = vscode.window.createTextEditorDecorationType({
     after: {
@@ -27,7 +35,7 @@ export interface ILocationWithReferenceKind {
     kind?: string;
 }
 
-type ISymbol = vscode.SymbolInformation & vscode.DocumentSymbol;
+type ISymbol = vscode.DocumentSymbol;
 
 export interface ILocationWithReferenceKindAndSymbol extends ILocationWithReferenceKind {
     associatedSymbol?: ISymbol;
@@ -109,7 +117,7 @@ export class CellAnalysis {
         }
 
         const cellFragment = cell.document.uri.fragment;
-        this._resolveDependencies(reversedCellRefs, cellBitmap, cellFragment, slicedCellExecution);
+        this._resolveDependencies(reversedCellRefs, cellBitmap, cellFragment, slicedCellExecution, forceReadNotebook);
 
         const cellData: vscode.NotebookCell[] = [];
         for (let i = 0; i < cellBitmap.length; i++) {
@@ -183,18 +191,29 @@ export class CellAnalysis {
         reversedCellRefs: Map<string, string[]>,
         cellBitmap: boolean[],
         cellFragment: string,
-        cellExecution: vscode.NotebookCell[]
+        cellExecution: vscode.NotebookCell[],
+        ignoreUnboundDependencies: boolean = false
     ) {
         if (reversedCellRefs.has(cellFragment)) {
             for (const dependency of reversedCellRefs.get(cellFragment)!) {
                 const index = cellExecution.findIndex((cell) => cell.document.uri.fragment === dependency);
 
                 if (index === -1) {
-                    throw new Error(`Dependency ${dependency} is not in the execution list.`);
+                    if (!ignoreUnboundDependencies) {
+                        throw new Error(`Dependency ${dependency} is not in the execution list.`);
+                    } else {
+                        continue;
+                    }
                 }
                 if (!cellBitmap[index]) {
                     cellBitmap[index] = true;
-                    this._resolveDependencies(reversedCellRefs, cellBitmap, dependency, cellExecution);
+                    this._resolveDependencies(
+                        reversedCellRefs,
+                        cellBitmap,
+                        dependency,
+                        cellExecution,
+                        ignoreUnboundDependencies
+                    );
                 }
             }
         }
@@ -241,23 +260,22 @@ export class NotebookDocumentSymbolTracker {
                     });
 
                     e.cellChanges.forEach((change) => {
-                        this._requestCellSymbols(change.cell, false).then(noop, noop);
-                        this._updateCellStatus(change.cell, CellExecutionStatus.Stale);
+                        if (change.document) {
+                            this._requestCellSymbols(change.cell, false).then(noop, noop);
+                            this._updateCellStatus(change.cell, CellExecutionStatus.Stale);
+                        }
                     });
                 }
             })
         );
 
         this._disposables.push(
-            vscode.notebooks.onDidChangeNotebookCellExecutionState((e) => {
-                if (
-                    e.state === vscode.NotebookCellExecutionState.Executing &&
-                    e.cell.document.languageId === 'python'
-                ) {
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+                if (e.state === NotebookCellExecutionState.Executing && e.cell.document.languageId === 'python') {
                     this._updateCellStatus(e.cell, CellExecutionStatus.Executing);
                 }
 
-                if (e.state === vscode.NotebookCellExecutionState.Idle && e.cell.document.languageId === 'python') {
+                if (e.state === NotebookCellExecutionState.Idle && e.cell.document.languageId === 'python') {
                     // just finished execution
                     this._cellExecution.push({
                         cell: e.cell,
@@ -274,7 +292,7 @@ export class NotebookDocumentSymbolTracker {
         this._staleCellRefs.set(cell.document.uri.fragment, status);
     }
 
-    async requestCellSymbolsSync() {
+    private async _requestCellSymbolsSync() {
         const _pendingRequestsKeys = [...this._pendingRequests.keys()];
         this._pendingRequests.forEach((r) => r.cancel());
         this._pendingRequests.clear();
@@ -287,34 +305,47 @@ export class NotebookDocumentSymbolTracker {
         }
     }
 
-    async selectPrecedentCells(cell: vscode.NotebookCell) {
-        await this.requestCellSymbolsSync();
-        const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
-        try {
-            const precedentCells = analysis.getPredecessorCells(cell);
-            this._notebookEditor.selections = cellIndexesToRanges(precedentCells.map((cell) => cell.index));
+    async getCellSymbolRefs(cell: vscode.NotebookCell) {
+        const refs = this._cellRefs.get(cell.document.uri.fragment);
+        if (!refs) {
             return;
-        } catch {}
-
-        try {
-            const precedentCells = analysis.getPredecessorCells(cell, true);
-            this._notebookEditor.selections = cellIndexesToRanges(precedentCells.map((cell) => cell.index));
-            return;
-        } catch {
-            // noop
         }
+
+        return refs;
+    }
+
+    async selectPrecedentCells(cell: vscode.NotebookCell) {
+        const cellRanges = await this.getPrecedentCells(cell);
+        this._notebookEditor.selections = cellRanges;
     }
 
     async selectSuccessorCells(cell: vscode.NotebookCell) {
-        await this.requestCellSymbolsSync();
-        const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
-        const successorCells = analysis.getSuccessorCells(cell) as vscode.NotebookCell[];
-        const cellRanges = cellIndexesToRanges(successorCells.map((cell) => cell.index));
+        const cellRanges = await this.getSuccessorCells(cell);
         this._notebookEditor.selections = cellRanges;
     }
 
     async runPrecedentCells(cell: vscode.NotebookCell) {
-        await this.requestCellSymbolsSync();
+        const cellRanges = await this.getPrecedentCells(cell);
+        await vscode.commands
+            .executeCommand('notebook.cell.execute', {
+                ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
+                document: this._notebookEditor.notebook.uri
+            })
+            .then(noop, noop);
+    }
+
+    async runSuccessorCells(cell: vscode.NotebookCell) {
+        const cellRanges = await this.getSuccessorCells(cell);
+        await vscode.commands
+            .executeCommand('notebook.cell.execute', {
+                ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
+                document: this._notebookEditor.notebook.uri
+            })
+            .then(noop, noop);
+    }
+
+    async getPrecedentCells(cell: vscode.NotebookCell) {
+        await this._requestCellSymbolsSync();
         const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
         let precedentCells: vscode.NotebookCell[] = [];
 
@@ -339,30 +370,22 @@ export class NotebookDocumentSymbolTracker {
         const cellRanges = cellIndexesToRanges(
             (staleCellIndex === -1 ? precedentCells : precedentCells.slice(staleCellIndex)).map((cell) => cell.index)
         );
-        await vscode.commands
-            .executeCommand('notebook.cell.execute', {
-                ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
-                document: this._notebookEditor.notebook.uri
-            })
-            .then(noop, noop);
+
+        return cellRanges;
     }
 
-    async runSuccessorCells(cell: vscode.NotebookCell) {
-        await this.requestCellSymbolsSync();
+    async getSuccessorCells(cell: vscode.NotebookCell) {
+        await this._requestCellSymbolsSync();
         const analysis = new CellAnalysis(this._notebookEditor.notebook, this._cellExecution, this._cellRefs);
         const successorCells = analysis.getSuccessorCells(cell) as vscode.NotebookCell[];
         const cellRanges = cellIndexesToRanges(successorCells.map((cell) => cell.index));
-        await vscode.commands
-            .executeCommand('notebook.cell.execute', {
-                ranges: cellRanges.map((range) => ({ start: range.start, end: range.end })),
-                document: this._notebookEditor.notebook.uri
-            })
-            .then(noop, noop);
+
+        return cellRanges;
     }
 
     async debugSymbols() {
         const locations: ILocationWithReferenceKind[] = [];
-        await this.requestCellSymbolsSync();
+        await this._requestCellSymbolsSync();
 
         console.log(JSON.stringify(Array.from(this._cellRefs.entries())));
 
@@ -461,10 +484,20 @@ export class NotebookDocumentSymbolTracker {
     }
 
     private async _getDocumentSymbols(cell: vscode.NotebookCell) {
-        return vscode.commands.executeCommand<(vscode.SymbolInformation & vscode.DocumentSymbol)[] | undefined>(
-            'vscode.executeDocumentSymbolProvider',
-            cell.document.uri
-        );
+        if (this._client.getDocumentSymbols) {
+            const tokenSource = new vscode.CancellationTokenSource();
+            const symbols = await this._client.getDocumentSymbols(cell.document, tokenSource.token);
+            if (symbols && symbols.length > 0) {
+                tokenSource.dispose();
+                return symbols;
+            }
+        }
+        if (cell.document.lineCount > 1 || cell.document.lineAt(0).text.length > 0) {
+            return vscode.commands.executeCommand<(vscode.SymbolInformation & vscode.DocumentSymbol)[] | undefined>(
+                'vscode.executeDocumentSymbolProvider',
+                cell.document.uri
+            );
+        }
     }
 
     private async _doRequestCellSymbols(cell: vscode.NotebookCell, token: vscode.CancellationToken) {
@@ -483,10 +516,12 @@ export class NotebookDocumentSymbolTracker {
             );
             if (symbolReferences) {
                 references.push(
-                    ...symbolReferences.map((ref) => ({
-                        ...ref,
-                        associatedSymbol: symbol
-                    }))
+                    ...symbolReferences
+                        .filter((ref) => ref.uri.scheme === 'vscode-notebook-cell')
+                        .map((ref) => ({
+                            ...ref,
+                            associatedSymbol: symbol
+                        }))
                 );
             }
         }
@@ -497,7 +532,7 @@ export class NotebookDocumentSymbolTracker {
                 cell.document.uri.fragment,
                 references.map((ref) => ({
                     range: ref.range,
-                    uri: vscode.Uri.parse(ref.uri),
+                    uri: ref.uri,
                     kind: areRangesEqual(ref.range, ref.associatedSymbol.selectionRange) ? 'write' : ref.kind,
                     associatedSymbol: ref.associatedSymbol
                 }))
@@ -549,6 +584,10 @@ export class SymbolsTracker {
         );
     }
 
+    getNotebookDocumentSymbolTracker(notebookUri: vscode.Uri) {
+        return this._notebookDocumentSymbolTrackers.get(notebookUri.toString());
+    }
+
     async debugSymbols(notebookDocument: vscode.NotebookDocument) {
         const tracker = this._notebookDocumentSymbolTrackers.get(notebookDocument.uri.toString());
         if (tracker) {
@@ -587,5 +626,102 @@ export class SymbolsTracker {
     dispose() {
         this._disposables.forEach((d) => d.dispose());
         this._disposables = [];
+    }
+}
+
+export class ExecutionFixCodeActionsProvider implements vscode.CodeActionProvider {
+    constructor(private readonly symbolsTracker: SymbolsTracker) {}
+    async provideCodeActions(
+        document: vscode.TextDocument,
+        range: vscode.Range | vscode.Selection,
+        context: vscode.CodeActionContext,
+        token: vscode.CancellationToken
+    ): Promise<vscode.CodeAction[]> {
+        // find the cell
+        const notebookDocuments = vscode.workspace.notebookDocuments.filter(
+            (notebookDocument) => notebookDocument.uri.path === document.uri.path
+        );
+        let targetCell: vscode.NotebookCell | undefined;
+        let notebookDocument: vscode.NotebookDocument | undefined;
+        for (const doc of notebookDocuments) {
+            targetCell = doc.getCells().find((cell) => cell.document.uri.toString() === document.uri.toString());
+            if (targetCell) {
+                notebookDocument = doc;
+                break;
+            }
+        }
+
+        if (!targetCell || !notebookDocument) {
+            return [];
+        }
+
+        const tracker = this.symbolsTracker.getNotebookDocumentSymbolTracker(notebookDocument.uri);
+        if (!tracker) {
+            return [];
+        }
+
+        // check the range has an error which is "NameError: name '  ' is not defined"
+        const diagnostic = context.diagnostics.find(
+            (diagnostic) =>
+                diagnostic.source === 'Cell Execution Error' &&
+                diagnostic.message.startsWith('NameError') &&
+                diagnostic.message.endsWith('is not defined')
+        );
+
+        if (!diagnostic) {
+            return [];
+        }
+
+        // NameError: name 'pd' is not defined
+        const match = diagnostic.message.match(/NameError: name '(.+)' is not defined/);
+        if (!match) {
+            return [];
+        }
+        const name = match[1];
+
+        const precedentCellsRanges = await tracker.getPrecedentCells(targetCell);
+
+        // get cells from ranges
+        const matchingRefs = await Promise.all(
+            cellRangesToIndexes(precedentCellsRanges).map(async (index) => {
+                const cell = notebookDocument?.cellAt(index);
+                if (!cell) {
+                    return false;
+                }
+                const symbols = await tracker.getCellSymbolRefs(cell);
+                if (!symbols || symbols.length <= 0) {
+                    return false;
+                }
+
+                const symbolRef = symbols
+                    .filter((s) => s.associatedSymbol?.name === name)
+                    .find((s) => s.uri.toString() === targetCell?.document.uri.toString());
+
+                if (!symbolRef) {
+                    return false;
+                }
+
+                if (Range.intersects(symbolRef.range, range)) {
+                    return true;
+                }
+            })
+        );
+
+        if (token.isCancellationRequested) {
+            return [];
+        }
+
+        if (matchingRefs.some((r) => r)) {
+            const action = new vscode.CodeAction('Run Precedent Cells', vscode.CodeActionKind.QuickFix);
+            action.command = {
+                command: 'jupyter.runPrecedentCells',
+                title: 'Run Precedent Cells',
+                arguments: [targetCell]
+            };
+
+            return [action];
+        }
+
+        return [];
     }
 }

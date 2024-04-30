@@ -1,12 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Event, EventEmitter } from '@c4312/evt';
 import { IDisposable } from '../types';
 import { once } from './functional';
 import { Iterable } from './iterable';
 
 let disposableTracker: IDisposable[] | undefined = undefined;
+export const EmptyDisposable = {
+    dispose: () => {
+        /** */
+    }
+};
 
 export function setDisposableTracker(tracker: IDisposable[] | undefined): void {
     disposableTracker = tracker;
@@ -280,4 +287,54 @@ export class DisposableMap<K, V extends IDisposable = IDisposable> implements ID
     [Symbol.iterator](): IterableIterator<[K, V]> {
         return this._store[Symbol.iterator]();
     }
+}
+
+export class RefCountedDisposable {
+    private _counter: number = 1;
+
+    constructor(private readonly _disposable: IDisposable) {}
+
+    acquire() {
+        this._counter++;
+        return this;
+    }
+
+    release() {
+        if (--this._counter === 0) {
+            this._disposable.dispose();
+        }
+        return this;
+    }
+}
+
+export interface IReference<T> extends IDisposable {
+    readonly object: T;
+}
+
+export abstract class ReferenceCollection<T> {
+    private readonly references: Map<string, { readonly object: T; counter: number }> = new Map();
+
+    acquire(key: string, ...args: any[]): IReference<T> {
+        let reference = this.references.get(key);
+
+        if (!reference) {
+            reference = { counter: 0, object: this.createReferencedObject(key, ...args) };
+            this.references.set(key, reference);
+        }
+
+        const { object } = reference;
+        const dispose = once(() => {
+            if (reference && --reference.counter === 0) {
+                this.destroyReferencedObject(key, reference.object);
+                this.references.delete(key);
+            }
+        });
+
+        reference.counter++;
+
+        return { object, dispose };
+    }
+
+    protected abstract createReferencedObject(key: string, ...args: any[]): T;
+    protected abstract destroyReferencedObject(key: string, object: T): void;
 }

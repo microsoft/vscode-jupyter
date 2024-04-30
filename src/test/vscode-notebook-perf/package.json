@@ -1,0 +1,53 @@
+{
+  "activationEvents": [
+    "onNotebook:jupyter-notebook"
+  ],
+  "author": {
+    "name": "Microsoft Corporation"
+  },
+  "categories": [
+    "Other"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-notebook-perf.runAllTextOutput",
+        "title": "Notebook Perf: Run all (text output)"
+      },
+      {
+        "command": "vscode-notebook-perf.runAllHtmlOutput",
+        "title": "Notebook Perf: Run all (html output)"
+      },
+      {
+        "command": "vscode-notebook-perf.runAllImageOutput",
+        "title": "Notebook Perf: Run all (image output)"
+      }
+    ]
+  },
+  "description": "",
+  "devDependencies": {
+    "@types/glob": "^5.0.35",
+    "@types/mocha": "^9.1.0",
+    "@types/node": "^18.15.0",
+    "@types/vscode": "^1.78.0",
+    "@vscode/test-cli": "^0.0.8",
+    "@vscode/test-electron": "^2.3.9",
+    "glob": "^7.1.2",
+    "mocha": "^10.2.0",
+    "typescript": "^5.3.3"
+  },
+  "displayName": "Notebook Performance Test",
+  "engines": {
+    "vscode": "^1.78.0"
+  },
+  "main": "./out/extension.js",
+  "name": "vscode-notebook-perf",
+  "publisher": "ms-toolsai",
+  "scripts": {
+    "compile": "tsc -p .",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js",
+    "watch": "tsc -p . --watch"
+  },
+  "version": "0.0.1"
+}

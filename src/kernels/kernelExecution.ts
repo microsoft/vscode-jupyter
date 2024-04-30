@@ -6,8 +6,6 @@ import {
     NotebookCell,
     NotebookCellKind,
     EventEmitter,
-    notebooks,
-    NotebookCellExecutionState,
     NotebookDocument,
     workspace,
     CancellationToken,
@@ -47,6 +45,7 @@ import {
 } from './execution/extensionDisplayDataTracker';
 import { CodeExecution } from './execution/codeExecution';
 import type { ICodeExecution } from './execution/types';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../platform/notebooks/cellExecutionStateService';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -57,14 +56,10 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         return this._visibleExecutionCount;
     }
     private _visibleExecutionCount = 0;
-    private readonly _onPreExecute = new EventEmitter<NotebookCell>();
-    public readonly onPreExecute = this._onPreExecute.event;
-    private readonly _onPostExecute = new EventEmitter<NotebookCell>();
-    public readonly onPostExecute = this._onPostExecute.event;
     private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionQueue>();
     private readonly executionFactory: CellExecutionFactory;
-    private readonly _onDidRecieveDisplayUpdate = new EventEmitter<NotebookCellOutput>();
-    public readonly onDidRecieveDisplayUpdate = this._onDidRecieveDisplayUpdate.event;
+    private readonly _onDidReceiveDisplayUpdate = new EventEmitter<NotebookCellOutput>();
+    public readonly onDidReceiveDisplayUpdate = this._onDidReceiveDisplayUpdate.event;
     private readonly hookedSesions = new WeakSet<IKernelSession>();
 
     constructor(
@@ -81,15 +76,16 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         );
         this.disposables.push(requestListener);
         this.executionFactory = new CellExecutionFactory(kernel.controller, requestListener);
-
-        notebooks.onDidChangeNotebookCellExecutionState((e) => {
-            if (e.cell.notebook === kernel.notebook) {
-                if (e.state === NotebookCellExecutionState.Idle && e.cell.executionSummary?.executionOrder) {
-                    this._visibleExecutionCount = Math.max(
-                        this._visibleExecutionCount,
-                        e.cell.executionSummary.executionOrder
-                    );
-                }
+        notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+            if (
+                e.cell.notebook === kernel.notebook &&
+                e.state === NotebookCellExecutionState.Idle &&
+                e.cell.executionSummary?.executionOrder
+            ) {
+                this._visibleExecutionCount = Math.max(
+                    this._visibleExecutionCount,
+                    e.cell.executionSummary.executionOrder
+                );
             }
         });
         kernel.onRestarted(() => (this._visibleExecutionCount = 0), this, this.disposables);
@@ -100,7 +96,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         kernel.onStatusChanged(this.hookupIOPubHandler, this, this.disposables);
         kernel.onRestarted(this.hookupIOPubHandler, this, this.disposables);
         this.hookupIOPubHandler();
-        this.disposables.push(this._onPreExecute);
     }
     private hookupIOPubHandler() {
         const session = this.kernel.session;
@@ -123,7 +118,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                 metadata: iopubMsg.content.metadata,
                 transient: iopubMsg.content.transient
             } as nbformat.IDisplayData);
-            this._onDidRecieveDisplayUpdate.fire(newOutput);
+            this._onDidReceiveDisplayUpdate.fire(newOutput);
         };
         session.iopubMessage.connect(handler);
         this.disposables.push({
@@ -372,8 +367,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             this,
             this.disposables
         );
-        newCellExecutionQueue.onPreExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
-        newCellExecutionQueue.onPostExecute((c) => this._onPostExecute.fire(c), this, this.disposables);
         this.documentExecutions.set(document, newCellExecutionQueue);
         return newCellExecutionQueue;
     }

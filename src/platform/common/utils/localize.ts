@@ -281,11 +281,11 @@ export namespace DataScience {
             'Do not translate the text "command:jupyter.viewOutput", that is a command Id that will be used by VS Code to open the output panel'
         ]
     });
-    export const kernelDied = (kernelName: string) =>
+    export const kernelDied = (message: string) =>
         l10n.t({
             message:
                 'The kernel died. Error: {0}... View Jupyter [log](command:jupyter.viewOutput) for further details.',
-            args: [kernelName],
+            args: [message],
             comment: [
                 'Do not translate the text "command:jupyter.viewOutput", that is a command Id that will be used by VS Code to open the output panel'
             ]
@@ -744,6 +744,10 @@ export namespace DataScience {
     export const failedToFetchKernelSpecsRemoteErrorMessageForQuickPickDetail = l10n.t(
         'Ensure the server is running and reachable.'
     );
+    export const dataViewerDeprecationMessage = l10n.t(
+        'The built-in data viewer will be deprecated soon. Please install other data viewing extensions to keep the ability to inspect data.'
+    );
+    export const dataViewerDeprecationRecommendationActionMessage = l10n.t('See Recommended Extensions');
 }
 export namespace WebViews {
     export const collapseSingle = l10n.t('Collapse');

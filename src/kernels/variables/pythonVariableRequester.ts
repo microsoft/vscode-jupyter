@@ -4,7 +4,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { traceError } from '../../platform/logging';
+import { traceError, traceWarning } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
@@ -14,6 +14,7 @@ import { IKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable, IVariableDescription } from './types';
 import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../../platform/common/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
+import { IBackgroundThreadService } from '../jupyter/types';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -75,7 +76,8 @@ async function safeExecuteSilently(
 export class PythonVariablesRequester implements IKernelVariableRequester {
     constructor(
         @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,
-        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator
+        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator,
+        @inject(IBackgroundThreadService) private readonly backgroundThreadService: IBackgroundThreadService
     ) {}
 
     public async getDataFrameInfo(
@@ -148,39 +150,50 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         return result;
     }
 
+    public async getVariableValueSummary(targetVariable: IJupyterVariable, kernel: IKernel, token: CancellationToken) {
+        const code = await this.varScriptGenerator.generateCodeToGetVariableValueSummary(targetVariable.name);
+
+        try {
+            const content = await this.backgroundThreadService.execCodeInBackgroundThread<{ summary: string }>(
+                kernel,
+                code.split(/\r?\n/),
+                token
+            );
+
+            return content?.summary;
+        } catch (ex) {
+            traceWarning(
+                `Exception when getting variable summary for variable "${targetVariable.name}": ${ex.message}`
+            );
+            return undefined;
+        }
+    }
+
     public async getAllVariableDiscriptions(
         kernel: IKernel,
         parent: IVariableDescription | undefined,
         startIndex: number,
-        token?: CancellationToken
+        token: CancellationToken
     ): Promise<IVariableDescription[]> {
         if (!kernel.session) {
             return [];
         }
 
-        const { code, cleanupCode, initializeCode } =
-            await this.varScriptGenerator.generateCodeToGetAllVariableDescriptions({
-                isDebugging: false,
-                parent,
-                startIndex
-            });
+        const options = parent ? { root: parent.root, propertyChain: parent.propertyChain, startIndex } : undefined;
+        const code = await this.varScriptGenerator.generateCodeToGetAllVariableDescriptions(options);
 
-        const results = await safeExecuteSilently(
+        const content = await this.backgroundThreadService.execCodeInBackgroundThread<IVariableDescription[]>(
             kernel,
-            { code, cleanupCode, initializeCode },
-            {
-                traceErrors: true,
-                traceErrorsMessage: 'Failure in execute_request when retrieving variables',
-                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-            }
+            code.split(/\r?\n/),
+            token
         );
 
-        if (kernel.disposed || kernel.disposing || token?.isCancellationRequested) {
+        if (kernel.disposed || kernel.disposing || token?.isCancellationRequested || !content) {
             return [];
         }
 
         try {
-            return this.deserializeJupyterResult(results) as Promise<IVariableDescription[]>;
+            return content;
         } catch (ex) {
             traceError(ex);
             return [];

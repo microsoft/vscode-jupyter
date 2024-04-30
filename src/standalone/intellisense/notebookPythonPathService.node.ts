@@ -2,20 +2,19 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, extensions, Uri, workspace, window } from 'vscode';
+import { Disposable, extensions, Uri } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { PylanceExtension } from '../../platform/common/constants';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceInfo } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { isInteractiveInputTab } from '../../interactive-window/helpers';
 import { IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { noop } from '../../platform/common/utils/misc';
 import { raceTimeout } from '../../platform/common/utils/async';
 import * as fs from 'fs-extra';
-import { getNotebookUriFromInputBoxUri } from './notebookPythonPathService';
+import { isUsingPylance } from './notebookPythonPathService';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -51,11 +50,6 @@ export class NotebookPythonPathService implements IExtensionSyncActivationServic
                 if (api.registerJupyterPythonPathFunction !== undefined) {
                     api.registerJupyterPythonPathFunction((uri) => this._jupyterPythonPathFunction(uri));
                 }
-                if (api.registerGetNotebookUriForTextDocumentUriFunction !== undefined) {
-                    api.registerGetNotebookUriForTextDocumentUriFunction((uri) =>
-                        this._getNotebookUriForTextDocumentUri(uri)
-                    );
-                }
             })
             .catch(noop);
     }
@@ -84,18 +78,7 @@ export class NotebookPythonPathService implements IExtensionSyncActivationServic
      */
     public isUsingPylance() {
         if (this._isEnabled === undefined) {
-            const pythonConfig = workspace.getConfiguration('python');
-            const languageServer = pythonConfig?.get<string>('languageServer');
-
-            // Only enable the experiment if we're in the treatment group and the installed
-            // versions of Python and Pylance support the experiment.
-            this._isEnabled = false;
-            if (languageServer !== 'Pylance' && languageServer !== 'Default') {
-                traceInfo(`Not using Pylance`);
-            } else {
-                this._isEnabled = true;
-                traceInfo(`Using Pylance`);
-            }
+            this._isEnabled = isUsingPylance();
         }
 
         return this._isEnabled;
@@ -150,6 +133,12 @@ del _VSCODE_os, _VSCODE_sys, _VSCODE_builtins
             if (!executable || !(await fs.pathExists(executable))) {
                 return;
             }
+            traceVerbose(
+                `Remote Interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}" is ${getDisplayPath(
+                    executable
+                )}`
+            );
+
             return executable;
         }
 
@@ -157,30 +146,14 @@ del _VSCODE_os, _VSCODE_sys, _VSCODE_builtins
 
         if (!interpreter) {
             // Empty string is special, means do not use any interpreter at all.
-            traceInfo(`No interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}"`);
+            traceVerbose(`No interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}"`);
             return '';
         }
+        traceVerbose(
+            `Interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}" is ${getDisplayPath(
+                interpreter.uri
+            )}`
+        );
         return getFilePath(interpreter.uri);
-    }
-
-    private _getNotebookUriForTextDocumentUri(textDocumentUri: Uri): Uri | undefined {
-        const notebookUri = getNotebookUriFromInputBoxUri(textDocumentUri);
-        if (!notebookUri) {
-            return undefined;
-        }
-
-        let result: string | undefined = undefined;
-        window.tabGroups.all.find((group) => {
-            group.tabs.find((tab) => {
-                if (isInteractiveInputTab(tab)) {
-                    const tabUri = tab.input.uri.toString();
-                    // the interactive resource URI was altered to start with `/`, this will account for both URI formats
-                    if (tab.input.uri.toString().endsWith(notebookUri.path)) {
-                        result = tabUri;
-                    }
-                }
-            });
-        });
-        return result;
     }
 }

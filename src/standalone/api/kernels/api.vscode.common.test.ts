@@ -22,7 +22,7 @@ import {
     waitForExecutionCompletedSuccessfully
 } from '../../../test/datascience/notebook/helper';
 import { getKernelsApi } from '.';
-import { raceTimeoutError } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeoutError } from '../../../platform/common/utils/async';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
@@ -31,6 +31,7 @@ import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../../test/constants';
 import { KernelError } from '../../../kernels/errors/kernelError';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { escapeStringToEmbedInPythonCode } from '../../../kernels/chat/generator';
+import { notebookCellExecutions } from '../../../platform/notebooks/cellExecutionStateService';
 
 suiteMandatory('Kernel API Tests @typescript', function () {
     const disposables: IDisposable[] = [];
@@ -110,7 +111,14 @@ suiteMandatory('Kernel API Tests @typescript', function () {
 
         // Ensure user has executed some code against this kernel.
         const cell = notebook.cellAt(0)!;
-        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
+        const executionOrderSet = createDeferred();
+        const eventHandler = notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+            if (e.cell === cell && e.cell.executionSummary?.executionOrder) {
+                executionOrderSet.resolve();
+            }
+        });
+        disposables.push(eventHandler);
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
 
         const kernel = await kernels.getKernel(notebook.uri);
         if (!kernel) {

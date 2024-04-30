@@ -138,6 +138,10 @@ export class DebuggerVariables
         }
     }
 
+    public async getVariableValueSummary(_targetVariable: IJupyterVariable) {
+        return undefined;
+    }
+
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
         kernel?: IKernel,

@@ -64,8 +64,7 @@ import {
     getEnvironmentType,
     getPythonEnvDisplayName,
     getPythonEnvironmentName,
-    getSysPrefix,
-    isCondaEnvironmentWithoutPython
+    getSysPrefix
 } from '../../platform/interpreter/helpers';
 import { JupyterServerCollection } from '../../api';
 import { getJupyterDisplayName } from '../jupyter/connection/jupyterServerProviderRegistry';
@@ -417,37 +416,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             this.interpreterService &&
             !(await this.fs.exists(kernelConnection.interpreter.uri))
         ) {
-            // Try to figure out why this happens, is it because the user deleted the env?
-            this.interpreterService
-                .getInterpreterDetails(kernelConnection.interpreter.id)
-                .then(async (details) => {
-                    const fileExists = await this.fs.exists(kernelConnection.interpreter.uri);
-                    if (details) {
-                        sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
-                            envMissingReason: 'Unknown',
-                            isEmptyCondaEnv: isCondaEnvironmentWithoutPython(details),
-                            pythonEnvType: getEnvironmentType(details),
-                            fileExists
-                        });
-                    } else {
-                        sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
-                            envMissingReason: 'EmptyEnvDetailsFromPython',
-                            isEmptyCondaEnv: isCondaEnvironmentWithoutPython(kernelConnection.interpreter),
-                            pythonEnvType: getEnvironmentType(kernelConnection.interpreter),
-                            fileExists
-                        });
-                    }
-                })
-                .catch(async () => {
-                    const fileExists = await this.fs.exists(kernelConnection.interpreter.uri);
-                    sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
-                        envMissingReason: 'FailedToGetEnvDetailsFromPython',
-                        isEmptyCondaEnv: isCondaEnvironmentWithoutPython(kernelConnection.interpreter),
-                        pythonEnvType: getEnvironmentType(kernelConnection.interpreter),
-                        fileExists
-                    });
-                })
-                .catch(noop);
             this.sendKernelTelemetry(err, errorContext, resource, KernelFailureReason.pythonEnvironmentMissing);
             window
                 .showErrorMessage(

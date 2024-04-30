@@ -177,8 +177,6 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.NativeNotebookExport]: [Uri | undefined | { notebookEditor: { notebookUri: Uri } }];
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
-    [DSCommands.NotebookEditorExpandAllCells]: [];
-    [DSCommands.NotebookEditorCollapseAllCells]: [];
     [DSCommands.ShowDataViewer]: [IJupyterVariable | IShowDataViewerFromVariablePanel];
     [DSCommands.RefreshDataViewer]: [];
     [DSCommands.ClearSavedJupyterUris]: [];
