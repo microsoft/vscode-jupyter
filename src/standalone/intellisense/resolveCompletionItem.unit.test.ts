@@ -43,6 +43,7 @@ import { setPythonApi } from '../../platform/interpreter/helpers';
 import type { Output } from '../../api';
 import { executionCounters } from '../api/kernels/backgroundExecution';
 import { cellOutputToVSCCellOutput } from '../../kernels/execution/helpers';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 suite('Jupyter Kernel Completion (requestInspect)', () => {
     let kernel: IKernel;
@@ -487,6 +488,8 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             const container = mock<ServiceContainer>();
             const kernelProvider = mock<IKernelProvider>();
             kernelExecution = mock<NotebookKernelExecution>();
+            const controllerRegistration = mock<IControllerRegistration>();
+            when(controllerRegistration.getSelected(anything())).thenReturn(undefined);
             when(kernelExecution.onDidReceiveDisplayUpdate).thenReturn(onDidReceiveDisplayUpdate.event);
             when(kernelExecution.executeCode(anything(), anything(), anything(), anything())).thenCall(() =>
                 mockOutput()
@@ -494,6 +497,9 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
             when(kernelProvider.getKernelExecution(instance(kernel))).thenReturn(instance(kernelExecution));
             when(container.get<IKernelProvider>(IKernelProvider)).thenReturn(instance(kernelProvider));
             when(container.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
+            when(container.get<IControllerRegistration>(IControllerRegistration)).thenReturn(
+                instance(controllerRegistration)
+            );
             sinon.stub(ServiceContainer, 'instance').get(() => instance(container));
 
             const pythonApi = mock<PythonExtension>();
@@ -558,7 +564,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
                 new Position(0, 4)
             );
 
-            // Create the output mimem type
+            // Create the output mime type
             const outputs = createCompletionOutputs(instance(kernel), 'Some documentation');
             resolveOutputs.resolve(outputs);
 
