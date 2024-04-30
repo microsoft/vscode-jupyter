@@ -20,8 +20,8 @@ import { IVariableState } from './redux/reducers/variables';
 // eslint-disable-next-line import/no-unresolved
 import './variableExplorerGrid.css';
 import { VariableExplorerLoadingRowsView } from './variableExplorerLoadingRows';
-import { RegExpValues } from '../../../platform/common/constants';
 import { IJupyterVariable } from '../../../kernels/variables/types';
+import { RegExpValues } from '../../../platform/common/constants';
 
 interface IVariableExplorerProps {
     baseTheme: string;

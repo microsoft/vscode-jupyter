@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import * as React from 'react';
+import { IJupyterVariable } from '../../../kernels/variables/types';
 
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 
 import './variableExplorerButtonCellFormatter.css';
-import { IJupyterVariable } from '../../../kernels/variables/types';
 
 export interface IButtonCellValue {
     supportsDataExplorer: boolean;
