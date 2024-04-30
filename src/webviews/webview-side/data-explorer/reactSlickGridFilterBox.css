@@ -25,9 +25,3 @@ input:focus {
     color: var(--vscode-editor-foreground);
 }
 
-/* Override clear button in FluentUI search box */
-[class*='ms-Button'] {
-    background-color: transparent !important;
-    color: var(--vscode-settings-textInputForeground) !important;
-    opacity: 0.8;
-}

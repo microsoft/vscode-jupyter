@@ -154,7 +154,7 @@ details[open] > summary::before {
 }
 
 /* Overrides for Fluent UI controls */
-[class*='ms-Dropdown-label'] {
+label.slice-control-dropdown-label {
     color: var(--vscode-editor-foreground);
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
@@ -162,12 +162,12 @@ details[open] > summary::before {
 }
 
 /* This needs to match VS Code settings dropdowns */
-.dropdownTitleOverrides .ms-Dropdown-title {
+select.slice-control-dropdown {
     /* Usually want to avoid !important but in this case
        it's necessary to ensure that when the dropdown
        has focus, the default dropdown :focus color (black)
        is not applied */
-    color: var(--vscode-dropdown-foreground) !important; 
+    color: var(--vscode-dropdown-foreground) !important;
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);

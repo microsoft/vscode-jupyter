@@ -20,7 +20,6 @@ import { SliceControl } from './sliceControl';
 import debounce from 'lodash/debounce';
 import uuid from 'uuid/v4';
 
-import { initializeIcons } from '@fluentui/react';
 import { SharedMessages } from '../../../messageTypes';
 import {
     IDataViewerMapping,
@@ -35,7 +34,6 @@ import {
     IGetSliceRequest
 } from '../../extension-side/dataviewer/types';
 import { IJupyterExtraSettings } from '../../../platform/webviews/types';
-initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);
 const RowNumberColumnName = uuid(); // Unique key for our column containing row numbers

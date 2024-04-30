@@ -2,10 +2,7 @@
 // Licensed under the MIT License.
 
 import * as React from 'react';
-
 import './reactSlickGridFilterBox.css';
-
-
 
 interface IFilterProps {
     column: Slick.Column<Slick.SlickData>;
