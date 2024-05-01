@@ -111,6 +111,7 @@ export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug
 
 export interface ILoggingSettings {
     readonly level: LoggingLevelSettingType | 'off';
+    readonly widgets?: LoggingLevelSettingType | 'off';
 }
 
 export interface IExperiments {

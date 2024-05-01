@@ -196,9 +196,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             traceVerbose(
                 `Got env vars from Python Ext in ${stopWatch.elapsedTime}ms for ${getDisplayPath(
                     environment.path
-                )}, with env var count ${Object.keys(env || {}).length}. \n    PATH value is ${
-                    env.PATH
-                } and \n    Path value is ${env.Path}`
+                )}, with env var count ${Object.keys(env || {}).length}.`
             );
         } else if (envType === EnvironmentType.Conda) {
             // We must get activated env variables for Conda env, if not running stuff against conda will not work.
@@ -290,11 +288,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.envVarsService.prependPath(env, path.dirname(environment.executable.uri.fsPath));
         }
 
-        traceVerbose(
-            `Activated Env Variables for ${getDisplayPath(environment.path)}, \n    PATH value is ${
-                env.PATH
-            } and \n    Path value is ${env.Path}`
-        );
         return env;
     }
 }
