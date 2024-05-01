@@ -3,12 +3,10 @@
 
 import { assert } from 'chai';
 /* eslint-disable , no-invalid-this, @typescript-eslint/no-explicit-any */
-import * as fs from 'fs-extra';
-import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { logger } from '../../platform/logging';
 import { PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../constants.node';
+import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../constants.node';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
 import { captureScreenShot } from '../common';
@@ -73,45 +71,47 @@ suite('Smoke Tests', function () {
     // }).timeout(timeoutForCellToRun);
 
     test('Run Cell in Notebook', async function () {
-        const file = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src',
-            'test',
-            'pythonFiles',
-            'datascience',
-            'simple_nb.ipynb'
+        const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print("Hello World")', 'python');
+        const notebook = await vscode.workspace.openNotebookDocument(
+            'jupyter-notebook',
+            new vscode.NotebookData([cell])
         );
-        const fileContents = await fs.readFile(file, { encoding: 'utf-8' });
-        const outputFile = path.join(path.dirname(file), 'ds_n.log');
-        await fs.writeFile(file, fileContents.replace("'ds_n.log'", `'${outputFile.replace(/\\/g, '/')}'`), {
-            encoding: 'utf-8'
-        });
-        if (await fs.pathExists(outputFile)) {
-            await fs.unlink(outputFile);
-        }
-        logger.info(`Opening notebook file ${file}`);
-        const notebook = await vscode.workspace.openNotebookDocument(vscode.Uri.file(file));
-        await vscode.window.showNotebookDocument(notebook);
-
-        let pythonPath = PYTHON_PATH;
-        const nb = vscode.window.activeNotebookEditor?.notebook;
-        if (!nb) {
-            throw new Error('No active notebook');
-        }
-        const pythonEnv = await PythonExtension.api().then((api) => api.environments.resolveEnvironment(pythonPath));
-        if (!pythonEnv) {
-            throw new Error(`Python environment not found ${pythonPath}`);
-        }
         const jupyterExt = vscode.extensions.getExtension<JupyterApi>(JVSC_EXTENSION_ID_FOR_TESTS);
         if (!jupyterExt) {
             throw new Error('Jupyter extension not found');
         }
-        await jupyterExt?.activate();
+        const [pythonEnv] = await Promise.all([
+            PythonExtension.api().then((api) => api.environments.resolveEnvironment(PYTHON_PATH)),
+            vscode.window.showNotebookDocument(notebook),
+            jupyterExt.activate()
+        ]);
+
+        const nb = vscode.window.activeNotebookEditor?.notebook;
+        if (!nb) {
+            throw new Error('No active notebook');
+        }
+        if (!pythonEnv) {
+            throw new Error(`Python environment not found ${PYTHON_PATH}`);
+        }
         await jupyterExt.exports.openNotebook(nb.uri, pythonEnv);
 
         await vscode.commands.executeCommand<void>('notebook.execute');
-        const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-        await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
+        await new Promise<void>((resolve) => {
+            const disposable = vscode.workspace.onDidChangeNotebookDocument((e) => {
+                if (e.cellChanges.length) {
+                    const cellChange = e.cellChanges[0];
+                    if (
+                        cellChange.outputs?.length &&
+                        cellChange.outputs.some((o) =>
+                            o.items.some((i) => Buffer.from(i.data).toString('utf-8').includes('Hello World'))
+                        )
+                    ) {
+                        disposable.dispose();
+                        resolve();
+                    }
+                }
+            });
+        });
 
         // Give time for the file to be saved before we shutdown
         await sleep(300);
