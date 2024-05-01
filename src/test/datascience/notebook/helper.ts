@@ -975,26 +975,33 @@ export async function waitForExecutionCompletedSuccessfullyV2(
     disposables: IDisposable[] | DisposableStore
 ) {
     const checkCompletedSuccessfully = () => {
+        traceInfo(
+            `10.a Check execution summary: ${cell.index}: Success = ${cell.executionSummary?.success}, order = ${cell.executionSummary?.executionOrder}, End Time = ${cell.executionSummary?.timing?.endTime}`
+        );
         return cell.executionSummary?.success &&
             cell.executionSummary.executionOrder &&
             cell.executionSummary.timing?.endTime
             ? true
             : false;
     };
+    traceInfo(`10. Check execution summary: Check ${cell.index}`);
     if (checkCompletedSuccessfully()) {
+        traceInfo(`11. Check execution summary: Success ${cell.index}`);
         return;
     }
     await new Promise((resolve) => {
+        traceInfo(`12. Check execution summary: Event Handler Added ${cell.index}`);
         const disposable = workspace.onDidChangeNotebookDocument((e) => {
             if (e.notebook !== cell.notebook) {
+                traceInfo(`13. Check execution summary: Wrong Notebook ${cell.index}`);
                 return;
             }
-            e.cellChanges.forEach(() => {
-                if (checkCompletedSuccessfully()) {
-                    disposable.dispose();
-                    resolve;
-                }
-            });
+            traceInfo(`14. Check execution summary: Check ${cell.index}`);
+            if (checkCompletedSuccessfully()) {
+                traceInfo(`14. Check execution summary: Resolve ${cell.index}`);
+                disposable.dispose();
+                resolve;
+            }
         });
         if (Array.isArray(disposables)) {
             disposables.push(disposable);
@@ -1250,18 +1257,25 @@ export async function waitForTextOutputV2(
     disposables: IDisposable[] | DisposableStore
 ) {
     try {
+        traceInfo(`2. Check output in cell ${cell.index}`);
         assertHasTextOutputInVSCode(cell, text, index, isExactMatch);
+        traceInfo(`3. Check output in cell: Success ${cell.index}`);
         return;
-    } catch {
+    } catch (ex) {
+        traceInfo(`3.a Check output in cell: Fail ${cell.index}`, ex);
         //
     }
     await new Promise<void>((resolve) => {
+        traceInfo(`4. Check output in cell: Added EventHandler ${cell.index}`);
         const disposable = workspace.onDidChangeNotebookDocument((e) => {
             if (e.notebook !== cell.notebook) {
+                traceInfo(`5. Check output in cell: Wrong Notebook ${cell.index}`);
                 return;
             }
             try {
+                traceInfo(`6. Check output in cell: Event Received ${cell.index}`);
                 assertHasTextOutputInVSCode(cell, text, index, isExactMatch);
+                traceInfo(`7. Check output in cell: Resolved ${cell.index}`);
                 resolve();
             } catch {
                 //
