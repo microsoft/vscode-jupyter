@@ -56,6 +56,11 @@ import { DOMWindow, JSDOM } from 'jsdom';
 import { noop } from '../../platform/common/utils/misc';
 
 class MockCanvas implements CanvasRenderingContext2D {
+    fontStretch: CanvasFontStretch;
+    fontVariantCaps: CanvasFontVariantCaps;
+    letterSpacing: string;
+    textRendering: CanvasTextRendering;
+    wordSpacing: string;
     roundRect(
         _x: number,
         _y: number,
