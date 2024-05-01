@@ -124,7 +124,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         const ndim = this.props.originalVariableShape.length;
         const numDropdowns = Math.max(ndim - 2, 1); // Ensure at least 1 set of dropdowns for 2D data
         const dropdowns = [];
-        const width = measureText(Math.max(...this.props.originalVariableShape).toString(), null) + 40
+        const width = measureText(Math.max(...this.props.originalVariableShape).toString(), null) + 40;
 
         for (let i = 0; i < numDropdowns; i++) {
             const updateIndexHandler = this.generateIndexHandler(i);
@@ -139,7 +139,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     <label>{getLocString('sliceDropdownAxisLabel', 'Axis:')}</label>
                     <select
                         className="slice-control-dropdown"
-                        style={{ marginRight: '10px', width: `${width}px`}}
+                        style={{ marginRight: '10px', width: `${width}px` }}
                         disabled={!this.state.isEnabled || this.props.loadingData}
                         value={axisKey}
                         onChange={updateAxisHandler}
@@ -153,7 +153,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     <label>{getLocString('sliceDropdownIndexLabel', 'Index:')}</label>
                     <select
                         className="slice-control-dropdown"
-                        style={{ marginRight: '10px', width: `${width}px`}}
+                        style={{ marginRight: '10px', width: `${width}px` }}
                         disabled={
                             !this.state.isEnabled ||
                             this.state[`selectedAxis${i}`] === undefined ||
