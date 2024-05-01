@@ -136,7 +136,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
 
             dropdowns.push(
                 <div className="slice-control-row slice-form-container">
-                    <label className="slice-control-dropdown-label">{getLocString('sliceDropdownAxisLabel', 'Axis')}</label>
+                    <label>{getLocString('sliceDropdownAxisLabel', 'Axis:')}</label>
                     <select
                         className="slice-control-dropdown"
                         style={{ marginRight: '10px', width: `${width}px`}}
@@ -150,9 +150,10 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                             </option>
                         ))}
                     </select>
-                    <label className="slice-control-dropdown-label">{getLocString('sliceDropdownIndexLabel', 'Index')}</label>
+                    <label>{getLocString('sliceDropdownIndexLabel', 'Index:')}</label>
                     <select
                         className="slice-control-dropdown"
+                        style={{ marginRight: '10px', width: `${width}px`}}
                         disabled={
                             !this.state.isEnabled ||
                             this.state[`selectedAxis${i}`] === undefined ||
