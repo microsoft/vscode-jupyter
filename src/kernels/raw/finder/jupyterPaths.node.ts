@@ -195,8 +195,6 @@ export class JupyterPaths {
                         if (!dataDir.has(sitePath)) {
                             dataDir.set(sitePath, dataDir.size);
                         }
-                    } else {
-                        traceWarning(`Got a non-existent Jupyter Data Dir ${sitePath}`);
                     }
                 } else {
                     traceWarning(`Got an empty Jupyter Data Dir from ${interpreter.id}, stderr = ${result.stderr}`);

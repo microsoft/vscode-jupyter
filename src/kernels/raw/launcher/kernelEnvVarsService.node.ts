@@ -134,10 +134,6 @@ export class KernelEnvironmentVariablesService {
             this.envVarsService.mergeVariables(customEnvVars, mergedVars); // custom vars win over all.
         }
 
-        traceVerbose(
-            `Kernel Env Variables for ${kernelSpec.specFile || kernelSpec.name}, PATH value is ${mergedVars.PATH}`
-        );
-
         // env variables in kernelSpecs can contain variables that need to be substituted
         for (const [key, value] of Object.entries(kernelSpecVariablesRequiringSubstitution)) {
             mergedVars[key] = substituteEnvVars(key, value, mergedVars);

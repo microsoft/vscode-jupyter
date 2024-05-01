@@ -246,7 +246,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
                 isDefaultKernelSpec(jupyterKernelSpec)
             ) {
                 traceVerbose(
-                    `Hiding default KernelSpec '${jupyterKernelSpec.name}', ${getDisplayPath(
+                    `Hiding default KernelSpec ${getDisplayPath(
                         jupyterKernelSpec.argv[0]
                     )} for interpreter ${getDisplayPath(
                         jupyterKernelSpec.interpreterPath

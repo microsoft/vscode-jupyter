@@ -5,7 +5,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { traceVerbose, traceError } from '../../../../platform/logging';
+import { traceVerboseWidgets, traceError } from '../../../../platform/logging';
 import { Identifiers, WIDGET_MIMETYPE } from '../../../../platform/common/constants';
 import { IDisposable } from '../../../../platform/common/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
@@ -121,7 +121,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 if (payload.category === 'error') {
                     traceError(`Widget Error: ${payload.message}`);
                 } else {
-                    traceVerbose(`Widget Message: ${payload.message}`);
+                    traceVerboseWidgets(`Widget Message: ${payload.message}`);
                 }
                 break;
             }
@@ -437,7 +437,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 return;
             }
 
-            traceVerbose(`Registering commtarget ${targetName}`);
+            traceVerboseWidgets(`Registering commtarget ${targetName}`);
             this.commTargetsRegistered.add(targetName);
             this.pendingTargetNames.delete(targetName);
 

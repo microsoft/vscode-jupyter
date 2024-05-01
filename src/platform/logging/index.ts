@@ -37,7 +37,12 @@ const logLevelMap: Map<string | undefined, LogLevel> = new Map([
 ]);
 
 let globalLoggingLevel: LogLevel = LogLevel.Debug;
-export function setLoggingLevel(level?: LoggingLevelSettingType | number): void {
+let _enabledWidgetLogging: LoggingLevelSettingType = 'off';
+export function setLoggingLevel(
+    level?: LoggingLevelSettingType | number,
+    enabledWidgetLogging?: LoggingLevelSettingType
+): void {
+    _enabledWidgetLogging = enabledWidgetLogging || 'off';
     globalLoggingLevel = typeof level === 'number' ? level : logLevelMap.get(level) ?? LogLevel.Error;
 }
 
@@ -127,9 +132,19 @@ export function traceInfo(message: string, ...args: Arguments): void {
         loggers.forEach((l) => l.traceInfo(message, ...args));
     }
 }
+export function traceInfoWidgets(message: string, ...args: Arguments): void {
+    if (_enabledWidgetLogging !== 'off' && globalLoggingLevel <= LogLevel.Info) {
+        loggers.forEach((l) => l.traceInfo(message, ...args));
+    }
+}
 
 export function traceVerbose(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Trace) {
+        loggers.forEach((l) => l.traceVerbose(message, ...args));
+    }
+}
+export function traceVerboseWidgets(message: string, ...args: Arguments): void {
+    if (_enabledWidgetLogging !== 'off' && globalLoggingLevel <= LogLevel.Trace) {
         loggers.forEach((l) => l.traceVerbose(message, ...args));
     }
 }

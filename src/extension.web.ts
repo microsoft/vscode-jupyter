@@ -249,9 +249,9 @@ async function activateLegacy(
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
     // XXX Move this *after* abExperiments is activated?
     const settings = configuration.getSettings();
-    setLoggingLevel(settings.logging.level);
+    setLoggingLevel(settings.logging.level, settings.logging.widgets);
     settings.onDidChange(() => {
-        setLoggingLevel(settings.logging.level);
+        setLoggingLevel(settings.logging.level, settings.logging.widgets);
     });
 
     // "initialize" "services"

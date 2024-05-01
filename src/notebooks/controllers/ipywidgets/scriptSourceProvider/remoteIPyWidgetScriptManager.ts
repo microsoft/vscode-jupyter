@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import * as path from '../../../../platform/vscode-path/path';
 import { ExtensionMode, Uri } from 'vscode';
 import { IExtensionContext } from '../../../../platform/common/types';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerboseWidgets } from '../../../../platform/logging';
 import { executeSilently, isPythonKernelConnection } from '../../../../kernels/helpers';
 import { IKernel, RemoteKernelConnectionMetadata } from '../../../../kernels/types';
 import { IIPyWidgetScriptManager } from '../types';
@@ -111,7 +111,7 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
             return [];
         }
         try {
-            traceVerbose(`Widget Outputs include, ${output.text}`);
+            traceVerboseWidgets(`Widget Outputs include, ${output.text}`);
             // Value will be an array of the form `['xyz', 'abc']`
             const items = (output.text as string)
                 .trim()
