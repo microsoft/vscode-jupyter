@@ -83,7 +83,7 @@ import { dispose, type DisposableStore } from '../../../platform/common/utils/li
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { createDeferred, raceTimeoutError, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isWeb } from '../../../platform/common/utils/misc';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
