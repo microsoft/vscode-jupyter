@@ -735,7 +735,7 @@ async function updateNotebookDocumentMetadata(
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
-    const metadata: INotebookMetadata = getNotebookMetadata(document) || {} as any;
+    const metadata: INotebookMetadata = getNotebookMetadata(document) || {};
     const { changed } = await updateNotebookMetadataWithSelectedKernel(metadata, kernelConnection, kernelInfo);
     if (changed) {
         await updateNotebookMetadata(document, metadata);
