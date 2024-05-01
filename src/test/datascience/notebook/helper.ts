@@ -79,11 +79,11 @@ import {
     defaultNotebookFormat,
     isWebExtension
 } from '../../../platform/common/constants';
-import { dispose } from '../../../platform/common/utils/lifecycle';
+import { dispose, type DisposableStore } from '../../../platform/common/utils/lifecycle';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeoutError, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isWeb } from '../../../platform/common/utils/misc';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
@@ -970,6 +970,40 @@ export async function waitForExecutionCompletedSuccessfully(
     await sleep(100);
 }
 
+export async function waitForExecutionCompletedSuccessfullyV2(
+    cell: NotebookCell,
+    disposables: IDisposable[] | DisposableStore
+) {
+    const checkCompletedSuccessfully = () => {
+        return cell.executionSummary?.success &&
+            cell.executionSummary.executionOrder &&
+            cell.executionSummary.timing?.endTime
+            ? true
+            : false;
+    };
+    if (checkCompletedSuccessfully()) {
+        return;
+    }
+    await new Promise((resolve) => {
+        const disposable = workspace.onDidChangeNotebookDocument((e) => {
+            if (e.notebook !== cell.notebook) {
+                return;
+            }
+            e.cellChanges.forEach(() => {
+                if (checkCompletedSuccessfully()) {
+                    disposable.dispose();
+                    resolve;
+                }
+            });
+        });
+        if (Array.isArray(disposables)) {
+            disposables.push(disposable);
+        } else {
+            disposables.add(disposable);
+        }
+    });
+}
+
 export async function waitForCompletions(
     completionProvider: CompletionItemProvider,
     cell: NotebookCell,
@@ -1207,6 +1241,38 @@ export async function waitForTextOutput(
                 )
                 .join(',\n')}`
     );
+}
+export async function waitForTextOutputV2(
+    cell: NotebookCell,
+    text: string,
+    index: number = 0,
+    isExactMatch = true,
+    disposables: IDisposable[] | DisposableStore
+) {
+    try {
+        assertHasTextOutputInVSCode(cell, text, index, isExactMatch);
+        return;
+    } catch {
+        //
+    }
+    await new Promise<void>((resolve) => {
+        const disposable = workspace.onDidChangeNotebookDocument((e) => {
+            if (e.notebook !== cell.notebook) {
+                return;
+            }
+            try {
+                assertHasTextOutputInVSCode(cell, text, index, isExactMatch);
+                resolve();
+            } catch {
+                //
+            }
+        });
+        if (Array.isArray(disposables)) {
+            disposables.push(disposable);
+        } else {
+            disposables.add(disposable);
+        }
+    });
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;

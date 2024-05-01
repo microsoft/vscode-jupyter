@@ -11,6 +11,8 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize.no
 import { captureScreenShot } from '../common';
 import { getCachedEnvironments } from '../../platform/interpreter/helpers';
 import { PythonExtension, type EnvironmentPath } from '@vscode/python-extension';
+import { waitForExecutionCompletedSuccessfullyV2, waitForTextOutputV2 } from '../datascience/notebook/helper';
+import { DisposableStore } from '../../platform/common/utils/lifecycle';
 
 type JupyterApi = {
     openNotebook(uri: vscode.Uri, env: EnvironmentPath): Promise<void>;
@@ -19,6 +21,7 @@ type JupyterApi = {
 const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', function () {
     this.timeout(timeoutForCellToRun);
+    const disposableStore = new DisposableStore();
     suiteSetup(async function () {
         this.timeout(timeoutForCellToRun);
         if (!IS_SMOKE_TEST()) {
@@ -33,6 +36,7 @@ suite('Smoke Tests', function () {
     });
     suiteTeardown(closeActiveWindows);
     teardown(async function () {
+        disposableStore.clear();
         logger.info(`End Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
@@ -69,15 +73,15 @@ suite('Smoke Tests', function () {
     // }).timeout(timeoutForCellToRun);
 
     test('Run Cell in Notebook', async function () {
-        const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print("Hello World")', 'python');
         const jupyterExt = vscode.extensions.getExtension<JupyterApi>(JVSC_EXTENSION_ID_FOR_TESTS);
         if (!jupyterExt) {
             throw new Error('Jupyter extension not found');
         }
+        const cellData = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print("Hello World")', 'python');
         const [pythonEnv, { notebook }] = await Promise.all([
             PythonExtension.api().then((api) => api.environments.resolveEnvironment(PYTHON_PATH)),
             vscode.workspace
-                .openNotebookDocument('jupyter-notebook', new vscode.NotebookData([cell]))
+                .openNotebookDocument('jupyter-notebook', new vscode.NotebookData([cellData]))
                 .then((notebook) => vscode.window.showNotebookDocument(notebook)),
             jupyterExt.activate()
         ]);
@@ -87,22 +91,11 @@ suite('Smoke Tests', function () {
         }
         await jupyterExt.exports.openNotebook(notebook.uri, pythonEnv);
 
-        await vscode.commands.executeCommand<void>('notebook.execute');
-
-        await new Promise<void>((resolve) => {
-            const disposable = vscode.workspace.onDidChangeNotebookDocument((e) => {
-                e.cellChanges.forEach((change) => {
-                    if (
-                        change.outputs?.some((o) =>
-                            o.items.some((i) => Buffer.from(i.data).toString('utf-8').includes('Hello World'))
-                        )
-                    ) {
-                        disposable.dispose();
-                        resolve();
-                    }
-                });
-            });
-        });
+        await Promise.all([
+            vscode.commands.executeCommand<void>('notebook.execute'),
+            waitForTextOutputV2(notebook.cellAt(0), 'Hello World', 0, false, disposableStore),
+            waitForExecutionCompletedSuccessfullyV2(notebook.cellAt(0), disposableStore)
+        ]);
     }).timeout(timeoutForCellToRun);
 
     test('Interactive window should always pick up current active interpreter', async function () {
