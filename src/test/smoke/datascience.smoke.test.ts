@@ -70,30 +70,25 @@ suite('Smoke Tests', function () {
 
     test('Run Cell in Notebook', async function () {
         const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print("Hello World")', 'python');
-        const notebook = await vscode.workspace.openNotebookDocument(
-            'jupyter-notebook',
-            new vscode.NotebookData([cell])
-        );
         const jupyterExt = vscode.extensions.getExtension<JupyterApi>(JVSC_EXTENSION_ID_FOR_TESTS);
         if (!jupyterExt) {
             throw new Error('Jupyter extension not found');
         }
-        const [pythonEnv] = await Promise.all([
+        const [pythonEnv, { notebook }] = await Promise.all([
             PythonExtension.api().then((api) => api.environments.resolveEnvironment(PYTHON_PATH)),
-            vscode.window.showNotebookDocument(notebook),
+            vscode.workspace
+                .openNotebookDocument('jupyter-notebook', new vscode.NotebookData([cell]))
+                .then((notebook) => vscode.window.showNotebookDocument(notebook)),
             jupyterExt.activate()
         ]);
 
-        const nb = vscode.window.activeNotebookEditor?.notebook;
-        if (!nb) {
-            throw new Error('No active notebook');
-        }
         if (!pythonEnv) {
             throw new Error(`Python environment not found ${PYTHON_PATH}`);
         }
-        await jupyterExt.exports.openNotebook(nb.uri, pythonEnv);
+        await jupyterExt.exports.openNotebook(notebook.uri, pythonEnv);
 
         await vscode.commands.executeCommand<void>('notebook.execute');
+
         await new Promise<void>((resolve) => {
             const disposable = vscode.workspace.onDidChangeNotebookDocument((e) => {
                 if (e.cellChanges.length) {
