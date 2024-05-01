@@ -14,7 +14,6 @@ import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { noop } from '../../platform/common/utils/misc';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { getVersion } from '../../platform/interpreter/helpers';
-import { useCustomMetadata } from '../../platform/common/utils';
 
 /**
  * Provides export for the interactive window
@@ -87,19 +86,11 @@ export class JupyterExporter implements INotebookExporter {
             throw new Error('vscode.ipynb extension not found');
         }
         const notebook = new NotebookData(cells);
-        notebook.metadata = useCustomMetadata()
-            ? {
-                  custom: {
-                      metadata,
-                      nbformat: defaultNotebookFormat.major,
-                      nbformat_minor: defaultNotebookFormat.minor
-                  }
-              }
-            : {
-                  metadata,
-                  nbformat: defaultNotebookFormat.major,
-                  nbformat_minor: defaultNotebookFormat.minor
-              };
+        notebook.metadata = {
+            metadata,
+            nbformat: defaultNotebookFormat.major,
+            nbformat_minor: defaultNotebookFormat.minor
+        };
         return ipynbMain.exportNotebook(notebook);
     }
     private extractPythonMainVersion = async (): Promise<number> => {

@@ -99,7 +99,6 @@ import { ControllerPreferredService } from './controllerPreferredService';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { JupyterLabHelper } from '../../../kernels/jupyter/session/jupyterLabHelper';
 import { getRootFolder } from '../../../platform/common/application/workspace.base';
-import { activateIPynbExtension, useCustomMetadata } from '../../../platform/common/utils';
 import {
     NotebookCellExecutionState,
     notebookCellExecutions
@@ -837,7 +836,6 @@ export async function prewarmNotebooks() {
     if (prewarmNotebooksDone.done) {
         return;
     }
-    await activateIPynbExtension();
     const { serviceContainer } = await getServices();
     await closeActiveWindows();
 
@@ -867,29 +865,16 @@ export async function createNewNotebook() {
     const language = PYTHON_LANGUAGE;
     const cell = new NotebookCellData(NotebookCellKind.Code, '', language);
     const data = new NotebookData([cell]);
-    data.metadata = useCustomMetadata()
-        ? {
-              custom: {
-                  cells: [],
-                  metadata: <nbformat.INotebookMetadata>{
-                      language_info: {
-                          name: language
-                      }
-                  },
-                  nbformat: defaultNotebookFormat.major,
-                  nbformat_minor: defaultNotebookFormat.minor
-              }
-          }
-        : {
-              cells: [],
-              metadata: <nbformat.INotebookMetadata>{
-                  language_info: {
-                      name: language
-                  }
-              },
-              nbformat: defaultNotebookFormat.major,
-              nbformat_minor: defaultNotebookFormat.minor
-          };
+    data.metadata = {
+        cells: [],
+        metadata: <nbformat.INotebookMetadata>{
+            language_info: {
+                name: language
+            }
+        },
+        nbformat: defaultNotebookFormat.major,
+        nbformat_minor: defaultNotebookFormat.minor
+    };
     const doc = await workspace.openNotebookDocument(JupyterNotebookView, data);
     return window.showNotebookDocument(doc);
 }

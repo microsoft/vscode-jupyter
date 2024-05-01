@@ -283,7 +283,7 @@
                 "command": "jupyter.filterKernels",
                 "title": "%jupyter.command.jupyter.filterKernels.title%",
                 "category": "Jupyter",
-                "enablement": "!jupyter.webExtension && config.notebook.kernelPicker.type != mru"
+                "enablement": "!jupyter.webExtension"
             },
             {
                 "command": "jupyter.runByLine",

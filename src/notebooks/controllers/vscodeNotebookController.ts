@@ -83,6 +83,7 @@ import { KernelError } from '../../kernels/errors/kernelError';
 import { getVersion } from '../../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker, trackControllerCreation } from '../../kernels/telemetry/notebookTelemetry';
 import { IJupyterVariablesProvider } from '../../kernels/variables/types';
+import type { INotebookMetadata } from '@jupyterlab/nbformat';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -734,7 +735,7 @@ async function updateNotebookDocumentMetadata(
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
-    const metadata = getNotebookMetadata(document) || {};
+    const metadata: INotebookMetadata = getNotebookMetadata(document) || {} as any;
     const { changed } = await updateNotebookMetadataWithSelectedKernel(metadata, kernelConnection, kernelInfo);
     if (changed) {
         await updateNotebookMetadata(document, metadata);

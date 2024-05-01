@@ -146,10 +146,6 @@ async function createSettings(): Promise<string> {
         'jupyter.askForKernelRestart': false,
         // To get widgets working.
         'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com'],
-        // New Kernel Picker.
-        'notebook.kernelPicker.type': 'mru',
-        'jupyter.experimental.dropCustomMetadata': true, // On CI always run without custom metadata.
-        'jupyter.drop.custom.property': true, // On CI always run without custom metadata.
         'notebook.stickyScroll.enabled': true, // Required for perf tests
         'notebook.outline.showCodeCells': true // Required for perf tests
     };
