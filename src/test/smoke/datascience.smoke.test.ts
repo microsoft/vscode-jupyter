@@ -5,9 +5,8 @@ import { assert } from 'chai';
 /* eslint-disable , no-invalid-this, @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import { logger } from '../../platform/logging';
-import { PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
+import { PYTHON_PATH, waitForCondition } from '../common.node';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../constants.node';
-import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
 import { captureScreenShot } from '../common';
 import { getCachedEnvironments } from '../../platform/interpreter/helpers';
@@ -26,7 +25,6 @@ suite('Smoke Tests', function () {
             return this.skip();
         }
         await initialize();
-        await setAutoSaveDelayInWorkspaceRoot(1);
     });
     setup(async function () {
         logger.info(`Start Test ${this.currentTest?.title}`);
@@ -112,9 +110,6 @@ suite('Smoke Tests', function () {
                 }
             });
         });
-
-        // Give time for the file to be saved before we shutdown
-        await sleep(300);
     }).timeout(timeoutForCellToRun);
 
     test('Interactive window should always pick up current active interpreter', async function () {
