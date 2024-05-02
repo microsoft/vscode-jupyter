@@ -192,15 +192,18 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             if (kernel.disposed || kernel.disposing) {
                 return [];
             }
-            const varNameTypeMap = this.deserializeJupyterResult(results) as Map<String, String>;
+            const variables = this.deserializeJupyterResult(results) as {
+                name: string;
+                type: string;
+                fullType: string;
+            }[];
 
             const vars = [];
-            for (const [name, type] of Object.entries(varNameTypeMap)) {
+            for (const variable of variables) {
                 const v: IJupyterVariable = {
-                    name: name,
+                    ...variable,
                     value: undefined,
                     supportsDataExplorer: false,
-                    type: type || '',
                     size: 0,
                     shape: '',
                     count: 0,

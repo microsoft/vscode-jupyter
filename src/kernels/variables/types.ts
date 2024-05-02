@@ -14,6 +14,7 @@ export interface IJupyterVariable {
     executionCount?: number;
     supportsDataExplorer: boolean;
     type: string;
+    fullType?: string;
     size: number;
     shape: string;
     dataDimensionality?: number;
