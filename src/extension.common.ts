@@ -173,10 +173,8 @@ export async function postActivateLegacy(
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
     // XXX Move this *after* abExperiments is activated?
     const settings = configuration.getSettings();
-    setLoggingLevel(settings.logging.level, settings.logging.categories);
-    context.subscriptions.push(
-        settings.onDidChange(() => setLoggingLevel(settings.logging.level, settings.logging.categories))
-    );
+    setLoggingLevel(settings.logging);
+    context.subscriptions.push(settings.onDidChange(() => setLoggingLevel(settings.logging)));
 
     // "initialize" "services"
     commands.executeCommand('setContext', 'jupyter.vscode.channel', getVSCodeChannel()).then(noop, noop);

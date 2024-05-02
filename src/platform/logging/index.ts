@@ -11,6 +11,7 @@ import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
 import { argsToLogString, returnValueToLogString } from './util';
 import { splitLines } from '../common/helpers';
 import { getDisplayPath } from '../common/platform/fs-paths';
+import type { ILoggingSettings } from '../common/types';
 let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
@@ -47,17 +48,9 @@ let _categorySettings: {
     variables: 'off',
     debugging: 'off'
 };
-export function setLoggingLevel(
-    level: LogLevel,
-    categories: {
-        widgets: 'on' | 'off';
-        kernels: 'on' | 'off';
-        variables: 'on' | 'off';
-        debugging: 'on' | 'off';
-    }
-): void {
-    _categorySettings = categories;
-    globalLoggingLevel = level;
+export function setLoggingLevel(logging: ILoggingSettings): void {
+    _categorySettings = logging.categories;
+    globalLoggingLevel = logging.level;
 }
 
 export function setHomeDirectory(homeDir: string) {
