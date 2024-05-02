@@ -15,6 +15,7 @@ import { trackDisposable } from '../common/utils/lifecycle';
 import { OutputChannelNames } from '../common/utils/localize';
 import { OutputChannelLogger } from './outputChannelLogger';
 import { ConsoleLogger } from './consoleLogger';
+
 let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
