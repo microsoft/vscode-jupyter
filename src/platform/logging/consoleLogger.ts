@@ -14,10 +14,6 @@ function formatMessage(level: string | undefined, message: string, ...data: Argu
 export class ConsoleLogger implements ILogger {
     constructor(private readonly prefix: string | undefined) {}
 
-    public traceLog(message: string, ...data: Arguments): void {
-        console.log(format(`${this.prefix || ''} ${message}`, ...data));
-    }
-
     public error(message: string, ...data: Arguments): void {
         console.error(formatMessage('error', `${this.prefix || ''} ${message}`, ...data));
     }
