@@ -17,8 +17,7 @@ import {
     ViewColumn,
     workspace,
     WorkspaceEdit,
-    window,
-    LogLevel
+    window
 } from 'vscode';
 import { IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
@@ -93,8 +92,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         this.registerCommand(Commands.AddCellBelow, this.addCellBelow);
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.LatestExtension, this.openPythonExtensionPage);
-        this.registerCommand(Commands.EnableDebugLogging, this.enableDebugLogging);
-        this.registerCommand(Commands.ResetLoggingLevel, this.resetLoggingLevel);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
@@ -229,22 +226,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         }
 
         return undefined;
-    }
-
-    private async enableDebugLogging() {
-        const previousValue = this.configService.getSettings().logging.level;
-        if (previousValue !== LogLevel.Debug) {
-            await this.configService.updateSetting('logging.level', 'debug', undefined, ConfigurationTarget.Global);
-            commands.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
-        }
-    }
-
-    private async resetLoggingLevel() {
-        const previousValue = this.configService.getSettings().logging.level;
-        if (previousValue !== LogLevel.Error) {
-            await this.configService.updateSetting('logging.level', 'error', undefined, ConfigurationTarget.Global);
-            commands.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
-        }
     }
 
     private async enableLoadingWidgetScriptsFromThirdParty() {

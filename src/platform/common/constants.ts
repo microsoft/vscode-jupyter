@@ -224,8 +224,6 @@ export namespace Commands {
     export const NativeNotebookExport = 'jupyter.notebookeditor.export';
     export const LatestExtension = 'jupyter.latestExtension';
     export const EnableLoadingWidgetsFrom3rdPartySource = 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource';
-    export const EnableDebugLogging = 'jupyter.enableDebugLogging';
-    export const ResetLoggingLevel = 'jupyter.resetLoggingLevel';
     export const ShowDataViewer = 'jupyter.showDataViewer';
     export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';

@@ -119,8 +119,6 @@
     "jupyter.command.jupyter.createnewnotebook.title": "Create New Jupyter Notebook",
     "jupyter.command.jupyter.scrolltocell.title": "Scroll Cell Into View",
     "jupyter.command.jupyter.selectJupyterInterpreter.title": "Select Interpreter to Start Jupyter Server",
-    "jupyter.command.jupyter.enableDebugLogging.title": "Enable Debug Logging",
-    "jupyter.command.jupyter.resetLoggingLevel.title": "Reset Logging Level",
     "jupyter.command.jupyter.showDataViewer.title": "View Value in Data Viewer",
     "jupyter.command.jupyter.viewOutput.title": "Show Output",
     "jupyter.command.jupyter.clearSavedJupyterUris.title": "Clear Jupyter Remote Server List",

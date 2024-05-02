@@ -20,5 +20,5 @@
     // and that slows down tests significantly. We have other tests on CI for testing
     // downloading of LS with this setting enabled.
     "python.languageServer": "Pylance",
-    "jupyter.logging.level": "verbose"
+    "jupyter.logging.level": "debug"
 }
