@@ -15,7 +15,6 @@ import { trackDisposable } from '../common/utils/lifecycle';
 import { OutputChannelNames } from '../common/utils/localize';
 import { OutputChannelLogger } from './outputChannelLogger';
 import { ConsoleLogger } from './consoleLogger';
-
 let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
@@ -65,16 +64,15 @@ export function initializeLoggers(options: {
     return standardOutputChannel;
 }
 
-export function registerLogger(logger: ILogger): Disposable {
-    loggers.push(logger);
+export function initializeLoggers(options: {
+    addConsoleLogger: boolean;
+    userNameRegEx?: RegExp;
+    homePathRegEx?: RegExp;
+    platform?: string;
+    arch?: string;
+    homePath?: string;
+}) {
     globalLoggingLevel = getLoggingLevelFromConfig();
-    return {
-        dispose: () => {
-            loggers = loggers.filter((l) => l !== logger);
-        }
-    };
-}
-try {
     trackDisposable(
         workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration('jupyter.logging')) {
@@ -82,8 +80,22 @@ try {
             }
         })
     );
-} catch (ex) {
-    console.error('Failed to get hook configuration change event', ex);
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
+    registerLogger(new OutputChannelLogger(standardOutputChannel, options?.userNameRegEx, options?.homePathRegEx));
+
+    // In CI there's no need for the label.
+    registerLogger(new ConsoleLogger(isCI ? undefined : 'Jupyter Extension:'));
+
+    return standardOutputChannel;
+}
+
+export function registerLogger(logger: ILogger): Disposable {
+    loggers.push(logger);
+    return {
+        dispose: () => {
+            loggers = loggers.filter((l) => l !== logger);
+        }
+    };
 }
 
 type LoggingLevelSettingType = keyof typeof LogLevel | Lowercase<keyof typeof LogLevel> | 'warn' | 'Warn';
