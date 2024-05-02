@@ -48,19 +48,6 @@ import { sendTelemetryEvent } from './telemetry';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
 
-export function registerLoggerTypes(
-    context: IExtensionContext,
-    serviceManager: IServiceManager,
-    standardOutputChannel: OutputChannel
-) {
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(
-        IOutputChannel,
-        getJupyterOutputChannel(context.subscriptions),
-        JUPYTER_OUTPUT_CHANNEL
-    );
-}
-
 export function initializeLoggers(
     context: IExtensionContext,
     options: {
