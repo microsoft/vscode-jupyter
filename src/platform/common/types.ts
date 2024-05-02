@@ -1,7 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, Disposable, Event, ExtensionContext, OutputChannel, Uri, Range, type LogLevel } from 'vscode';
+import {
+    ConfigurationTarget,
+    Disposable,
+    Event,
+    ExtensionContext,
+    OutputChannel,
+    Uri,
+    Range,
+    type LogLevel
+} from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandIds } from '../../commands';
 import { ISystemVariables } from './variables/types';
