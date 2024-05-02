@@ -67,11 +67,23 @@ export function initializeLoggers(options: {
 
 export function registerLogger(logger: ILogger): Disposable {
     loggers.push(logger);
+    globalLoggingLevel = getLoggingLevelFromConfig();
     return {
         dispose: () => {
             loggers = loggers.filter((l) => l !== logger);
         }
     };
+}
+try {
+    trackDisposable(
+        workspace.onDidChangeConfiguration((e) => {
+            if (e.affectsConfiguration('jupyter.logging')) {
+                globalLoggingLevel = getLoggingLevelFromConfig();
+            }
+        })
+    );
+} catch (ex) {
+    console.error('Failed to get hook configuration change event', ex);
 }
 
 type LoggingLevelSettingType = keyof typeof LogLevel | Lowercase<keyof typeof LogLevel> | 'warn' | 'Warn';
