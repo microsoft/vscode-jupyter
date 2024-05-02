@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import type * as jupyterlabService from '@jupyterlab/services';
-import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
-import { traceError, traceInfoWidgets, traceVerboseWidgets, traceWarning } from '../../../../platform/logging';
+import { Event, EventEmitter, LogLevel, NotebookDocument, Uri } from 'vscode';
+import { traceError, traceWarning, trace } from '../../../../platform/logging';
 import { IDisposableRegistry, IConfigurationService, IDisposable } from '../../../../platform/common/types';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../../../messageTypes';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
@@ -132,7 +132,7 @@ export class IPyWidgetScriptSource {
         this.kernel.onDisposed(() => this.dispose());
         this.handlePendingRequests();
         this.sendBaseUrl();
-        traceVerboseWidgets('IPyWidgetScriptSource.initialize');
+        trace(LogLevel.Debug, 'widgets', 'IPyWidgetScriptSource.initialize');
     }
     /**
      * Sends the base url of the remote Jupyter server to the webview.
@@ -189,7 +189,7 @@ export class IPyWidgetScriptSource {
     private async onRequestWidgetScript(payload: { moduleName: string; moduleVersion: string; requestId: string }) {
         const { moduleName, moduleVersion, requestId } = payload;
 
-        traceInfoWidgets(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
+        trace(LogLevel.Info, 'widgets', `${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
         await this.sendWidgetSource(moduleName, moduleVersion, requestId).catch((ex) =>
             traceError('Failed to send widget sources upon ready', ex)
         );
@@ -221,7 +221,7 @@ export class IPyWidgetScriptSource {
 
         let widgetSource: WidgetScriptSource = { moduleName, requestId };
         try {
-            traceInfoWidgets(`${ConsoleForegroundColors.Green}Fetch Script for ${moduleName}`);
+            trace(LogLevel.Info, 'widgets', `${ConsoleForegroundColors.Green}Fetch Script for ${moduleName}`);
             widgetSource = await this.scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
             // If we have a widget source from CDN, never overwrite that.
             if (this.widgetSources.get(widgetSource.moduleName)?.source !== 'cdn') {
@@ -231,7 +231,9 @@ export class IPyWidgetScriptSource {
             traceError('Failed to get widget source due to an error', ex);
             sendTelemetryEvent(Telemetry.HashedIPyWidgetScriptDiscoveryError);
         } finally {
-            traceInfoWidgets(
+            trace(
+                LogLevel.Info,
+                'widgets',
                 `${ConsoleForegroundColors.Green}Script for ${moduleName}, is ${widgetSource.scriptUri} from ${widgetSource.source}`
             );
             // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.

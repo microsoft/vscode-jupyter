@@ -1489,6 +1489,59 @@
                     ],
                     "description": "%jupyter.configuration.jupyter.logging.level.description%"
                 },
+                "jupyter.logging.categories": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "default": {
+                        "widgets": "off",
+                        "kernels": "off",
+                        "variables": "off",
+                        "debugging": "off"
+                    },
+                    "properties": {
+                        "widgets": {
+                            "type": "string",
+                            "enum": [
+                                "off",
+                                "on"
+                            ],
+                            "default": "off",
+                            "description": "Enable logging of widgets"
+                        },
+                        "kernels": {
+                            "type": "string",
+                            "default": "off",
+                            "enum": [
+                                "on",
+                                "off"
+                            ],
+                            "enumDescriptions": [
+                                "Log everything related to Kernels",
+                                "No logging for Kernels"
+                            ],
+                            "description": "Enable logging of kernel API usage"
+                        },
+                        "variables": {
+                            "type": "string",
+                            "default": "off",
+                            "enum": [
+                                "off",
+                                "on"
+                            ],
+                            "description": "Enable logging of variable functionality"
+                        },
+                        "debugging": {
+                            "type": "string",
+                            "default": "off",
+                            "enum": [
+                                "off",
+                                "on"
+                            ],
+                            "description": "Enable logging of debugger functionality"
+                        }
+                    },
+                    "description": "Logging categories"
+                },
                 "jupyter.experiments.optInto": {
                     "type": "array",
                     "default": [],

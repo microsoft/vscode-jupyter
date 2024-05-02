@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument, Disposable, NotebookEditor, Uri, EventEmitter, workspace, window } from 'vscode';
+import { NotebookDocument, Disposable, NotebookEditor, Uri, EventEmitter, workspace, window, LogLevel } from 'vscode';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceVerboseWidgets } from '../../platform/logging';
+import { trace } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposableRegistry, IDisposable } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -142,7 +142,9 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         }
         const notebook = editor.notebook;
         if (!controller) {
-            traceVerboseWidgets(
+            trace(
+                LogLevel.Debug,
+                'widgets',
                 `No controller, hence notebook communications cannot be initialized for editor ${getDisplayPath(
                     editor.notebook.uri
                 )}`

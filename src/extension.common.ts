@@ -173,9 +173,9 @@ export async function postActivateLegacy(
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
     // XXX Move this *after* abExperiments is activated?
     const settings = configuration.getSettings();
-    setLoggingLevel(settings.logging.level, settings.logging.widgets);
+    setLoggingLevel(settings.logging.level, settings.logging.categories);
     context.subscriptions.push(
-        settings.onDidChange(() => setLoggingLevel(settings.logging.level, settings.logging.widgets))
+        settings.onDidChange(() => setLoggingLevel(settings.logging.level, settings.logging.categories))
     );
 
     // "initialize" "services"

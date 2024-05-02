@@ -9,7 +9,6 @@ import { isCI } from '../common/constants';
 import { Arguments, ILogger, TraceDecoratorType, TraceOptions } from './types';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
 import { argsToLogString, returnValueToLogString } from './util';
-import { LoggingLevelSettingType } from '../common/types';
 import { splitLines } from '../common/helpers';
 import { getDisplayPath } from '../common/platform/fs-paths';
 let homeAsLowerCase = '';
@@ -37,9 +36,27 @@ export function registerLogger(logger: ILogger): Disposable {
 }
 
 let globalLoggingLevel: LogLevel = LogLevel.Debug;
-let _enabledWidgetLogging: LoggingLevelSettingType = 'off';
-export function setLoggingLevel(level: LogLevel, enabledWidgetLogging?: LoggingLevelSettingType): void {
-    _enabledWidgetLogging = enabledWidgetLogging || 'off';
+let _categorySettings: {
+    widgets: 'on' | 'off';
+    kernels: 'on' | 'off';
+    variables: 'on' | 'off';
+    debugging: 'on' | 'off';
+} = {
+    widgets: 'off',
+    kernels: 'off',
+    variables: 'off',
+    debugging: 'off'
+};
+export function setLoggingLevel(
+    level: LogLevel,
+    categories: {
+        widgets: 'on' | 'off';
+        kernels: 'on' | 'off';
+        variables: 'on' | 'off';
+        debugging: 'on' | 'off';
+    }
+): void {
+    _categorySettings = categories;
     globalLoggingLevel = level;
 }
 
@@ -129,19 +146,9 @@ export function traceInfo(message: string, ...args: Arguments): void {
         loggers.forEach((l) => l.traceInfo(message, ...args));
     }
 }
-export function traceInfoWidgets(message: string, ...args: Arguments): void {
-    if (_enabledWidgetLogging !== 'off' && globalLoggingLevel <= LogLevel.Info) {
-        loggers.forEach((l) => l.traceInfo(message, ...args));
-    }
-}
 
 export function traceVerbose(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Debug) {
-        loggers.forEach((l) => l.traceVerbose(message, ...args));
-    }
-}
-export function traceVerboseWidgets(message: string, ...args: Arguments): void {
-    if (_enabledWidgetLogging !== 'off' && globalLoggingLevel <= LogLevel.Debug) {
         loggers.forEach((l) => l.traceVerbose(message, ...args));
     }
 }
@@ -372,5 +379,20 @@ function logTo(logLevel: LogLevel, message: string, ...args: Arguments): void {
             break;
         default:
             break;
+    }
+}
+
+export function trace(
+    logLevel: LogLevel,
+    category: keyof typeof _categorySettings | undefined = undefined,
+    message: string,
+    ...args: Arguments
+): void {
+    if (globalLoggingLevel <= logLevel) {
+        if (logLevel < LogLevel.Warning && category && _categorySettings[category] === 'off') {
+            return;
+        }
+        args = formatErrors(...args);
+        loggers.forEach((l) => l.traceError(message, ...args));
     }
 }

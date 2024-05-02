@@ -11,6 +11,7 @@ import {
     ColorThemeKind,
     Disposable,
     Uri,
+    LogLevel,
     NotebookDocument,
     Memento,
     CancellationError,
@@ -25,14 +26,7 @@ import {
 } from '../platform/common/constants';
 import { WrappedError } from '../platform/errors/types';
 import { splitLines } from '../platform/common/helpers';
-import {
-    traceInfo,
-    traceInfoIfCI,
-    traceError,
-    traceVerbose,
-    traceWarning,
-    traceVerboseWidgets
-} from '../platform/logging';
+import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning, trace } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
 import { createDeferred, raceTimeout, raceTimeoutError } from '../platform/common/utils/async';
@@ -859,7 +853,7 @@ abstract class BaseKernel implements IBaseKernel {
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
-                traceVerboseWidgets(`Determined IPyWidgets Version as ${newVersion}`);
+                trace(LogLevel.Debug, 'widgets', `Determined IPyWidgets Version as ${newVersion}`);
                 // If user does not have ipywidgets installed, then this event will never get fired.
                 this._ipywidgetsVersion == newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);

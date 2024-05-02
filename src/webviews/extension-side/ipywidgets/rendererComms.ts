@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import type { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 import type { IIOPubMessage, IOPubMessageType } from '@jupyterlab/services/lib/kernel/messages';
 import { injectable, inject } from 'inversify';
-import { Disposable, NotebookDocument, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
+import { Disposable, LogLevel, NotebookDocument, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -13,7 +13,7 @@ import { WIDGET_MIMETYPE } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { traceVerboseWidgets } from '../../../platform/logging';
+import { trace } from '../../../platform/logging';
 
 type WidgetData = {
     model_id: string;
@@ -140,10 +140,10 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         // }
         const version = kernel?.ipywidgetsVersion; // || versionInWidgetState;
         if (kernel?.ipywidgetsVersion) {
-            traceVerboseWidgets(`IPyWidget version in Kernel is ${kernel?.ipywidgetsVersion}.`);
+            trace(LogLevel.Debug, 'widgets', `IPyWidget version in Kernel is ${kernel?.ipywidgetsVersion}.`);
         }
         // if (versionInWidgetState) {
-        //     traceVerboseWidgets(`IPyWidget version in Kernel is ${versionInWidgetState}.`);
+        //     trace(LogLevel.Debug, 'widgets', `IPyWidget version in Kernel is ${versionInWidgetState}.`);
         // }
         // if (kernel?.ipywidgetsVersion && versionInWidgetState) {
         //     traceWarning(

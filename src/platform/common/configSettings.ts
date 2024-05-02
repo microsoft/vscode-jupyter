@@ -41,7 +41,15 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
     private static jupyterSettings: Map<string, JupyterSettings> = new Map<string, JupyterSettings>();
     public experiments!: IExperiments;
-    public logging: ILoggingSettings = { level: LogLevel.Error };
+    public logging: ILoggingSettings = {
+        level: LogLevel.Error,
+        categories: {
+            widgets: 'off',
+            kernels: 'off',
+            variables: 'off',
+            debugging: 'off'
+        }
+    };
     public allowUnauthorizedRemoteConnection: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;

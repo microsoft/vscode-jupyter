@@ -10,7 +10,8 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         experiments: { enabled: true, optInto: [], optOutFrom: [] },
         logging: {
             level: 5 // Not used in react side, should be removed later.
-        },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         // eslint-disable-next-line no-template-curly-in-string

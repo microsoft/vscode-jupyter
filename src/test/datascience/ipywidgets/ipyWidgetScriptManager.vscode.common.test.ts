@@ -3,7 +3,7 @@
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { commands, Uri } from 'vscode';
+import { commands, LogLevel, Uri } from 'vscode';
 import { IDisposable, IExtensionContext, IHttpClient } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, startJupyterServer } from '../../common';
 import { openNotebook } from '../helpers';
@@ -17,7 +17,7 @@ import {
 } from '../notebook/helper';
 import { initialize } from '../../initialize';
 import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfoWidgets } from '../../../platform/logging';
+import { trace } from '../../../platform/logging';
 import { IKernel, IKernelProvider, isLocalConnection } from '../../../kernels/types';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { IFileSystem } from '../../../platform/common/platform/types';
@@ -45,7 +45,7 @@ suite('IPyWidget Script Manager @widgets', function () {
     let fs: IFileSystem;
     let context: IExtensionContext;
     suiteSetup(async function () {
-        traceInfoWidgets('Suite Setup');
+        trace(LogLevel.Info, 'widgets', 'Suite Setup');
         api = await initialize();
         await closeNotebooks();
         await startJupyterServer();
@@ -97,18 +97,18 @@ suite('IPyWidget Script Manager @widgets', function () {
 
         kernel = kernelProvider.get(notebook)!;
         scriptManager = widgetScriptManagerFactory.getOrCreate(kernel);
-        traceInfoWidgets('Suite Setup (completed)');
+        trace(LogLevel.Info, 'widgets', 'Suite Setup (completed)');
     });
     setup(async function () {
-        traceInfoWidgets(`Starting Test ${this.currentTest?.title}`);
+        trace(LogLevel.Info, 'widgets', `Starting Test ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
-        traceInfoWidgets(`Ended Test ${this.currentTest?.title}`);
+        trace(LogLevel.Info, 'widgets', `Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
-        traceInfoWidgets(`Ended Test (completed) ${this.currentTest?.title}`);
+        trace(LogLevel.Info, 'widgets', `Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Returns the right base Url', async function () {

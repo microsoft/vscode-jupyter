@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceError, traceVerboseWidgets, traceWarning } from '../../../../platform/logging';
+import { traceError, trace, traceWarning } from '../../../../platform/logging';
 import { WidgetCDNs, IConfigurationService } from '../../../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
@@ -14,7 +14,7 @@ import {
 } from '../types';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 import { DisposableBase } from '../../../../platform/common/utils/lifecycle';
-import { Disposable } from 'vscode';
+import { Disposable, LogLevel } from 'vscode';
 import type { IAnyMessageArgs, IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 import type { ICommOpenMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { swallowExceptions } from '../../../../platform/common/utils/decorators';
@@ -102,7 +102,9 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
                     .join(', ')}`
             );
         } else {
-            traceVerboseWidgets(
+            trace(
+                LogLevel.Debug,
+                'widgets',
                 `Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source} and ${found.scriptUri}`
             );
         }
