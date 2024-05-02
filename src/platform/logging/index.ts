@@ -27,57 +27,67 @@ export type TraceInfo =
     | undefined;
 
 let loggers: ILogger[] = [];
+let globalLoggingLevel: LogLevel = LogLevel.Info;
+
 export function registerLogger(logger: ILogger): Disposable {
     loggers.push(logger);
+    globalLoggingLevel = getLoggingLevelFromConfig();
     return {
         dispose: () => {
             loggers = loggers.filter((l) => l !== logger);
         }
     };
 }
+try {
+    trackDisposable(
+        workspace.onDidChangeConfiguration((e) => {
+            if (e.affectsConfiguration('jupyter.logging')) {
+                globalLoggingLevel = getLoggingLevelFromConfig();
+            }
+        })
+    );
+} catch (ex) {
+    console.error('Failed to get hook configuration change event', ex);
+}
 
 type LoggingLevelSettingType = keyof typeof LogLevel | Lowercase<keyof typeof LogLevel> | 'warn' | 'Warn';
 function getLoggingLevelFromConfig() {
-    const { level } = workspace
-        .getConfiguration('jupyter')
-        .get<{ level: LoggingLevelSettingType }>('logging', { level: 'Info' });
-    switch (level) {
-        case 'debug':
-        case 'Debug': {
-            return LogLevel.Debug;
+    try {
+        const { level } = workspace
+            .getConfiguration('jupyter')
+            .get<{ level: LoggingLevelSettingType }>('logging', { level: 'Info' });
+        switch (level) {
+            case 'debug':
+            case 'Debug': {
+                return LogLevel.Debug;
+            }
+            case 'warn':
+            case 'Warn':
+            case 'warning':
+            case 'Warning': {
+                return LogLevel.Warning;
+            }
+            case 'Off':
+            case 'off': {
+                return LogLevel.Off;
+            }
+            case 'Error':
+            case 'error': {
+                return LogLevel.Error;
+            }
+            case 'Trace':
+            case 'trace': {
+                return LogLevel.Trace;
+            }
+            default: {
+                return LogLevel.Info;
+            }
         }
-        case 'warn':
-        case 'Warn':
-        case 'warning':
-        case 'Warning': {
-            return LogLevel.Warning;
-        }
-        case 'Off':
-        case 'off': {
-            return LogLevel.Off;
-        }
-        case 'Error':
-        case 'error': {
-            return LogLevel.Error;
-        }
-        case 'Trace':
-        case 'trace': {
-            return LogLevel.Trace;
-        }
-        default: {
-            return LogLevel.Info;
-        }
+    } catch (ex) {
+        console.error('Failed to get logging level from configuration', ex);
+        return LogLevel.Info;
     }
 }
-
-let globalLoggingLevel: LogLevel = getLoggingLevelFromConfig();
-trackDisposable(
-    workspace.onDidChangeConfiguration((e) => {
-        if (e.affectsConfiguration('jupyter.logging')) {
-            globalLoggingLevel = getLoggingLevelFromConfig();
-        }
-    })
-);
 
 export function setHomeDirectory(homeDir: string) {
     homeAsLowerCase = homeDir.toLowerCase();
