@@ -35,10 +35,9 @@ import {
     IOutputChannel,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
-import { Common, OutputChannelNames } from './platform/common/utils/localize';
+import { Common } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { registerLogger, traceError } from './platform/logging';
-import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
+import { initializeLoggers as init, traceError } from './platform/logging';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { isUsingPylance } from './standalone/intellisense/notebookPythonPathService';
 import { noop } from './platform/common/utils/misc';
@@ -49,20 +48,31 @@ import { sendTelemetryEvent } from './telemetry';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
 
-export function addOutputChannel(
+export function registerLoggerTypes(
     context: IExtensionContext,
     serviceManager: IServiceManager,
-    options?: { userNameRegEx?: RegExp; homePathRegEx?: RegExp; platform: string; arch: string; homePath: string }
+    standardOutputChannel: OutputChannel
 ) {
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
-    registerLogger(new OutputChannelLogger(standardOutputChannel, options?.userNameRegEx, options?.homePathRegEx));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(
         IOutputChannel,
         getJupyterOutputChannel(context.subscriptions),
         JUPYTER_OUTPUT_CHANNEL
     );
+}
 
+export function initializeLoggers(
+    context: IExtensionContext,
+    options: {
+        addConsoleLogger: boolean;
+        userNameRegEx?: RegExp;
+        homePathRegEx?: RegExp;
+        platform?: string;
+        arch?: string;
+        homePath?: string;
+    }
+) {
+    const standardOutputChannel = init(options);
     // Log env info.
     standardOutputChannel.appendLine(`${env.appName} (${version}, ${env.remoteName}, ${env.appHost})`);
     standardOutputChannel.appendLine(`Jupyter Extension Version: ${context.extension.packageJSON['version']}.`);
@@ -98,9 +108,14 @@ export function addOutputChannel(
                 .join(', ')}`
         );
     }
+
+    return standardOutputChannel;
 }
 
-export function initializeGlobals(context: IExtensionContext): [IServiceManager, IServiceContainer] {
+export function initializeGlobals(
+    context: IExtensionContext,
+    standardOutputChannel: OutputChannel
+): [IServiceManager, IServiceContainer] {
     const cont = new Container({ skipBaseClassChecks: true });
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
@@ -112,6 +127,12 @@ export function initializeGlobals(context: IExtensionContext): [IServiceManager,
     serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
     serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<OutputChannel>(
+        IOutputChannel,
+        getJupyterOutputChannel(context.subscriptions),
+        JUPYTER_OUTPUT_CHANNEL
+    );
 
     return [serviceManager, serviceContainer];
 }

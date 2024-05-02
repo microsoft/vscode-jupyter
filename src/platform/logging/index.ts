@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Disposable, Uri, LogLevel, workspace } from 'vscode';
+import { Disposable, Uri, LogLevel, workspace, window } from 'vscode';
 import { isCI } from '../common/constants';
 import { Arguments, ILogger, TraceDecoratorType, TraceOptions } from './types';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
@@ -12,6 +12,9 @@ import { argsToLogString, returnValueToLogString } from './util';
 import { splitLines } from '../common/helpers';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { trackDisposable } from '../common/utils/lifecycle';
+import { OutputChannelNames } from '../common/utils/localize';
+import { OutputChannelLogger } from './outputChannelLogger';
+import { ConsoleLogger } from './consoleLogger';
 let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
@@ -29,16 +32,15 @@ export type TraceInfo =
 let loggers: ILogger[] = [];
 let globalLoggingLevel: LogLevel = LogLevel.Info;
 
-export function registerLogger(logger: ILogger): Disposable {
-    loggers.push(logger);
+export function initializeLoggers(options: {
+    addConsoleLogger: boolean;
+    userNameRegEx?: RegExp;
+    homePathRegEx?: RegExp;
+    platform?: string;
+    arch?: string;
+    homePath?: string;
+}) {
     globalLoggingLevel = getLoggingLevelFromConfig();
-    return {
-        dispose: () => {
-            loggers = loggers.filter((l) => l !== logger);
-        }
-    };
-}
-try {
     trackDisposable(
         workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration('jupyter.logging')) {
@@ -46,8 +48,22 @@ try {
             }
         })
     );
-} catch (ex) {
-    console.error('Failed to get hook configuration change event', ex);
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
+    registerLogger(new OutputChannelLogger(standardOutputChannel, options?.userNameRegEx, options?.homePathRegEx));
+
+    // In CI there's no need for the label.
+    registerLogger(new ConsoleLogger(isCI ? undefined : 'Jupyter Extension:'));
+
+    return standardOutputChannel;
+}
+
+export function registerLogger(logger: ILogger): Disposable {
+    loggers.push(logger);
+    return {
+        dispose: () => {
+            loggers = loggers.filter((l) => l !== logger);
+        }
+    };
 }
 
 type LoggingLevelSettingType = keyof typeof LogLevel | Lowercase<keyof typeof LogLevel> | 'warn' | 'Warn';
@@ -88,7 +104,6 @@ function getLoggingLevelFromConfig() {
         return LogLevel.Info;
     }
 }
-
 export function setHomeDirectory(homeDir: string) {
     homeAsLowerCase = homeDir.toLowerCase();
 }

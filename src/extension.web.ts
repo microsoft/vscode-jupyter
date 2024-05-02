@@ -46,7 +46,7 @@ import './platform/logging';
 //===============================================
 // loading starts here
 
-import { commands, env, ExtensionMode, UIKind, workspace } from 'vscode';
+import { commands, env, ExtensionMode, UIKind, workspace, type OutputChannel } from 'vscode';
 import { buildApi, IExtensionApi } from './standalone/api';
 import { traceError } from './platform/logging';
 import { IAsyncDisposableRegistry, IExtensionContext, IsDevMode } from './platform/common/types';
@@ -60,13 +60,11 @@ import { registerTypes as registerInteractiveTypes } from './interactive-window/
 import { registerTypes as registerTerminalTypes } from './platform/terminals/serviceRegistry.web';
 import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.web';
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.web';
-import { Exiting, isCI, isTestExecution, setIsCodeSpace, setIsWebExtension } from './platform/common/constants';
-import { registerLogger } from './platform/logging';
-import { ConsoleLogger } from './platform/logging/consoleLogger';
+import { Exiting, isTestExecution, setIsCodeSpace, setIsWebExtension } from './platform/common/constants';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import {
-    addOutputChannel,
+    initializeLoggers,
     displayProgress,
     handleError,
     initializeGlobals,
@@ -87,13 +85,15 @@ let activatedServiceContainer: IServiceContainer | undefined;
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     durations.startActivateTime = stopWatch.elapsedTime;
+    const standardOutputChannel = initializeLoggers(context, { addConsoleLogger: isTestExecution() });
+
     activateNotebookTelemetry(stopWatch);
     setDisposableTracker(context.subscriptions);
     setIsCodeSpace(env.uiKind == UIKind.Web);
     setIsWebExtension(true);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
-        const [api, ready] = activateUnsafe(context);
+        const [api, ready] = activateUnsafe(context, standardOutputChannel);
         await ready;
         // Send the "success" telemetry only if activation did not fail.
         // Otherwise Telemetry is send via the error handler.
@@ -139,16 +139,20 @@ export function deactivate(): Thenable<void> {
 // activation helpers
 
 // eslint-disable-next-line
-function activateUnsafe(context: IExtensionContext): [IExtensionApi, Promise<void>, IServiceContainer] {
+function activateUnsafe(
+    context: IExtensionContext,
+    standardOutputChannel: OutputChannel
+): [IExtensionApi, Promise<void>, IServiceContainer] {
     const progress = displayProgress();
     try {
         //===============================================
         // activation starts here
 
-        const [serviceManager, serviceContainer] = initializeGlobals(context);
+        const [serviceManager, serviceContainer] = initializeGlobals(context, standardOutputChannel);
+
         activatedServiceContainer = serviceContainer;
         initializeTelemetryGlobals(() => Promise.resolve(new Map()));
-        const activationPromise = activateComponents(context, serviceManager, serviceContainer);
+        const activationPromise = activateLegacy(context, serviceManager, serviceContainer);
 
         //===============================================
         // activation ends here
@@ -157,30 +161,6 @@ function activateUnsafe(context: IExtensionContext): [IExtensionApi, Promise<voi
         return [api, activationPromise, serviceContainer];
     } finally {
         progress.dispose();
-    }
-}
-
-/////////////////////////////
-// error handling
-
-async function activateComponents(
-    context: IExtensionContext,
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer
-) {
-    // We will be pulling code over from activateLegacy().
-    return activateLegacy(context, serviceManager, serviceContainer);
-}
-
-function addConsoleLogger() {
-    if (isTestExecution()) {
-        let label = undefined;
-        // In CI there's no need for the label.
-        if (!isCI) {
-            label = 'Jupyter Extension:';
-        }
-
-        registerLogger(new ConsoleLogger(label));
     }
 }
 
@@ -209,10 +189,6 @@ async function activateLegacy(
         commands.executeCommand('setContext', 'jupyter.development', true).then(noop, noop);
     }
     commands.executeCommand('setContext', 'jupyter.webExtension', true).then(noop, noop);
-
-    // Output channel is special. We need it before everything else
-    addOutputChannel(context, serviceManager);
-    addConsoleLogger();
 
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(serviceManager);
