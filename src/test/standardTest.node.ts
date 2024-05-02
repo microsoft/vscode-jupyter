@@ -133,7 +133,7 @@ async function createSettings(): Promise<string> {
     const settingsFile = path.join(userDataDirectory, 'User', 'settings.json');
     const defaultSettings: Record<string, string | boolean | string[]> = {
         'python.insidersChannel': 'off',
-        'jupyter.logging.level': 'verbose',
+        'jupyter.logging.level': 'debug',
         'python.logging.level': 'debug',
         'files.autoSave': 'off',
         'python.experiments.enabled': true,

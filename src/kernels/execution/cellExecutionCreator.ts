@@ -10,7 +10,7 @@ import {
     NotebookCellOutputItem,
     TextDocument
 } from 'vscode';
-import { traceInfo, traceVerbose } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import { IKernelController } from '../types';
 import { noop } from '../../platform/common/utils/misc';
 import { getNotebookTelemetryTracker } from '../telemetry/notebookTelemetry';
@@ -78,7 +78,7 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
         if (this._endCallback) {
             try {
                 this._impl.end(success, endTime, this.errorInfo);
-                traceInfo(
+                traceVerbose(
                     `Cell ${this.cell.index} completed in ${
                         ((endTime || 0) - (this._startTime || 0)) / 1000
                     }s (start: ${this._startTime}, end: ${endTime})`

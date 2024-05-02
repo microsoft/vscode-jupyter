@@ -21,7 +21,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IDisposableRegistry, IExtensionContext } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironments/info/interpreter';
@@ -448,7 +448,7 @@ export class InterpreterService implements IInterpreterService {
                     }
                     this.lastLoggedResourceAndInterpreterId = key;
                     const version = getCachedVersion(item);
-                    traceInfo(
+                    traceVerbose(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
                         )} (${item && getEnvironmentType(item)}, '${

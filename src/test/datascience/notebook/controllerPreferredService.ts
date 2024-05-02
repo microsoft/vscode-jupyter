@@ -218,7 +218,7 @@ export class ControllerPreferredService {
 
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredSearchToken.token.isCancellationRequested && !preferredConnection) {
-                    traceInfo('Find preferred kernel cancelled');
+                    traceVerbose('Find preferred kernel cancelled');
                     return {};
                 }
                 if (!preferredConnection) {

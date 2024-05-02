@@ -237,7 +237,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             .finally(() => {
                 completed = true;
                 !token.isCancellationRequested &&
-                    traceInfo(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`);
+                    traceVerbose(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`);
                 if (extensionId !== JVSC_EXTENSION_ID) {
                     sendKernelTelemetryEvent(
                         this.kernel.resourceUri,

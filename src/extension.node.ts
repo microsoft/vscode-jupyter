@@ -38,14 +38,7 @@ import './platform/logging';
 import { commands, env, ExtensionMode, UIKind, workspace } from 'vscode';
 import { buildApi, IExtensionApi } from './standalone/api';
 import { setHomeDirectory, traceError } from './platform/logging';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IExperimentService,
-    IExtensionContext,
-    IFeaturesManager,
-    IsDevMode
-} from './platform/common/types';
+import { IAsyncDisposableRegistry, IExtensionContext, IsDevMode } from './platform/common/types';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
@@ -55,16 +48,8 @@ import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegis
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.node';
 import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.node';
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
-import { IExtensionActivationManager } from './platform/activation/types';
-import {
-    Exiting,
-    isCI,
-    isTestExecution,
-    setIsCodeSpace,
-    setIsWebExtension,
-    Telemetry
-} from './platform/common/constants';
-import { registerLogger, setLoggingLevel } from './platform/logging';
+import { Exiting, isCI, isTestExecution, setIsCodeSpace, setIsWebExtension } from './platform/common/constants';
+import { registerLogger } from './platform/logging';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { IInterpreterPackages } from './platform/interpreter/types';
@@ -77,9 +62,13 @@ import {
 } from './standalone/executionAnalysis/extension';
 import { activate as activateChat, deactivate as deactivateChat } from './standalone/chat/extesnion';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
-import { sendTelemetryEvent } from './telemetry';
-import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
-import { addOutputChannel, displayProgress, handleError, initializeGlobals } from './extension.common';
+import {
+    addOutputChannel,
+    displayProgress,
+    handleError,
+    initializeGlobals,
+    postActivateLegacy
+} from './extension.common';
 import { activateNotebookTelemetry } from './kernels/telemetry/notebookTelemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
@@ -276,32 +265,5 @@ async function activateLegacy(
     registerStandaloneTypes(context, serviceManager, isDevMode);
     registerWebviewTypes(serviceManager);
 
-    // Load the two data science experiments that we need to register types
-    // Await here to keep the register method sync
-    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
-    // This must be done first, this guarantees all experiment information has loaded & all telemetry will contain experiment info.
-    const stopWatch = new StopWatch();
-    await experimentService.activate();
-    const duration = stopWatch.elapsedTime;
-    sendTelemetryEvent(Telemetry.ExperimentLoad, { duration });
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-
-    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
-    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
-    // XXX Move this *after* abExperiments is activated?
-    const settings = configuration.getSettings();
-    setLoggingLevel(settings.logging.level, settings.logging.widgets);
-    settings.onDidChange(() => {
-        setLoggingLevel(settings.logging.level, settings.logging.widgets);
-    });
-
-    // "initialize" "services"
-    commands.executeCommand('setContext', 'jupyter.vscode.channel', getVSCodeChannel()).then(noop, noop);
-
-    // "activate" everything else
-    serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager).activate();
-
-    const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
-    featureManager.initialize();
-    context.subscriptions.push(featureManager);
+    await postActivateLegacy(context, serviceManager, serviceContainer);
 }
