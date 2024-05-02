@@ -17,7 +17,8 @@ import {
     ViewColumn,
     workspace,
     WorkspaceEdit,
-    window
+    window,
+    LogLevel
 } from 'vscode';
 import { IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
@@ -232,7 +233,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
 
     private async enableDebugLogging() {
         const previousValue = this.configService.getSettings().logging.level;
-        if (previousValue !== 'debug') {
+        if (previousValue !== LogLevel.Debug) {
             await this.configService.updateSetting('logging.level', 'debug', undefined, ConfigurationTarget.Global);
             commands.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
         }
@@ -240,7 +241,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
 
     private async resetLoggingLevel() {
         const previousValue = this.configService.getSettings().logging.level;
-        if (previousValue !== 'error') {
+        if (previousValue !== LogLevel.Error) {
             await this.configService.updateSetting('logging.level', 'error', undefined, ConfigurationTarget.Global);
             commands.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
         }

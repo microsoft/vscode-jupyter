@@ -9,7 +9,7 @@ export function getDefaultSettings(): IJupyterExtraSettings {
     const result: Partial<IJupyterExtraSettings> = {
         experiments: { enabled: true, optInto: [], optOutFrom: [] },
         logging: {
-            level: 'off'
+            level: 5 // Not used in react side, should be removed later.
         },
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,

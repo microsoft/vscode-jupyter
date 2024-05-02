@@ -6,7 +6,7 @@ import { Memento, workspace } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
 import { IApplicationEnvironment } from '../application/types';
 import { JVSC_EXTENSION_ID, isPreReleaseVersion } from '../constants';
-import { traceInfo, traceVerbose } from '../../logging';
+import { traceInfo } from '../../logging';
 import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IJupyterSettings, IMemento } from '../types';
 import { Experiments } from '../utils/localize';
 import { Experiments as ExperimentGroups } from '../types';
@@ -78,7 +78,6 @@ export class ExperimentService implements IExperimentService {
 
     public async activate() {
         if (this.experimentationService && this.enabled) {
-            traceVerbose(`Experimentation service retrieved: ${this.experimentationService}`);
             await this.experimentationService.initializePromise;
             if (this.getFeatures().length === 0) {
                 // Only await on this if we don't have anything in cache.

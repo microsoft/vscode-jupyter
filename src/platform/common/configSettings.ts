@@ -7,11 +7,11 @@ import {
     Disposable,
     Event,
     EventEmitter,
+    LogLevel,
     Uri,
     WorkspaceConfiguration,
     workspace
 } from 'vscode';
-import { LogLevel } from '../logging/types';
 import { isTestExecution } from './constants';
 import {
     IExperiments,
@@ -41,7 +41,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
     private static jupyterSettings: Map<string, JupyterSettings> = new Map<string, JupyterSettings>();
     public experiments!: IExperiments;
-    public logging: ILoggingSettings = { level: 'error' };
+    public logging: ILoggingSettings = { level: LogLevel.Error };
     public allowUnauthorizedRemoteConnection: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
@@ -291,19 +291,16 @@ function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefin
             return LogLevel.Info;
         }
         case 'warn': {
-            return LogLevel.Warn;
+            return LogLevel.Warning;
         }
         case 'off': {
             return 'off';
         }
-        case 'debug': {
-            return LogLevel.Debug;
-        }
-        case 'verbose': {
-            return LogLevel.Trace;
+        case 'error': {
+            return LogLevel.Error;
         }
         default: {
-            return LogLevel.Error;
+            return LogLevel.Debug;
         }
     }
 }

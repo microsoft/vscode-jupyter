@@ -65,7 +65,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         workingDirectory: Uri,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
-        traceInfo('Starting Notebook');
+        traceInfo('Starting Jupyter Server');
         // Now actually launch it
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
@@ -87,7 +87,6 @@ export class JupyterServerStarter implements IJupyterServerStarter {
             Cancellation.throwIfCanceled(cancelToken);
 
             // Then use this to launch our notebook process.
-            traceVerbose('Starting Jupyter Notebook');
             const [launchResult, tempDir, interpreter] = await Promise.all([
                 this.jupyterInterpreterService.startNotebook(args || [], {
                     throwOnStdErr: false,
@@ -256,7 +255,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         // as starting jupyter with all of the defaults.
         const configFile = path.join(tempDir.path, 'jupyter_notebook_config.py');
         await this.fs.writeFile(Uri.file(configFile), '');
-        traceInfo(`Generating custom default config at ${configFile}`);
+        traceVerbose(`Generating custom default config at ${configFile}`);
 
         // Create extra args based on if we have a config or not
         return `--config=${configFile}`;

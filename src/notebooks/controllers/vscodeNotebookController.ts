@@ -392,7 +392,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!workspace.isTrusted) {
             return;
         }
-        traceInfo(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
+        traceVerbose(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         telemetryTracker?.stop();
         // Notebook is trusted. Continue to execute cells

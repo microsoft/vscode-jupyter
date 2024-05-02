@@ -14,32 +14,41 @@ import {
     type Memento,
     type Disposable,
     type ProgressOptions,
-    ProgressLocation
+    ProgressLocation,
+    commands
 } from 'vscode';
 import {
     STANDARD_OUTPUT_CHANNEL,
     JUPYTER_OUTPUT_CHANNEL,
     PylanceExtension,
-    PythonExtension
+    PythonExtension,
+    Telemetry
 } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
+    IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExtensionContext,
+    IFeaturesManager,
     IMemento,
     IOutputChannel,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { registerLogger, traceError } from './platform/logging';
+import { registerLogger, setLoggingLevel, traceError } from './platform/logging';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { isUsingPylance } from './standalone/intellisense/notebookPythonPathService';
 import { noop } from './platform/common/utils/misc';
 import { sendErrorTelemetry } from './platform/telemetry/startupTelemetry';
 import { createDeferred } from './platform/common/utils/async';
+import { StopWatch } from './platform/common/utils/stopWatch';
+import { sendTelemetryEvent } from './telemetry';
+import { IExtensionActivationManager } from './platform/activation/types';
+import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
 
 export function addOutputChannel(
     context: IExtensionContext,
@@ -142,4 +151,39 @@ function notifyUser(msg: string) {
     } catch (ex) {
         traceError('failed to notify user', ex);
     }
+}
+
+export async function postActivateLegacy(
+    context: IExtensionContext,
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer
+) {
+    // Load the two data science experiments that we need to register types
+    // Await here to keep the register method sync
+    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
+    // This must be done first, this guarantees all experiment information has loaded & all telemetry will contain experiment info.
+    const stopWatch = new StopWatch();
+    await experimentService.activate();
+    const duration = stopWatch.elapsedTime;
+    sendTelemetryEvent(Telemetry.ExperimentLoad, { duration });
+
+    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
+
+    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
+    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
+    // XXX Move this *after* abExperiments is activated?
+    const settings = configuration.getSettings();
+    setLoggingLevel(settings.logging.level, settings.logging.widgets);
+    context.subscriptions.push(
+        settings.onDidChange(() => setLoggingLevel(settings.logging.level, settings.logging.widgets))
+    );
+
+    // "initialize" "services"
+    commands.executeCommand('setContext', 'jupyter.vscode.channel', getVSCodeChannel()).then(noop, noop);
+
+    // "activate" everything else
+    serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager).activate();
+    const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
+    featureManager.initialize();
+    context.subscriptions.push(featureManager);
 }

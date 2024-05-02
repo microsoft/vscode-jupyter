@@ -4,17 +4,27 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Disposable, Uri } from 'vscode';
+import { Disposable, Uri, LogLevel } from 'vscode';
 import { isCI } from '../common/constants';
-import { Arguments, ILogger, LogLevel, TraceDecoratorType, TraceOptions } from './types';
+import { Arguments, ILogger, TraceDecoratorType, TraceOptions } from './types';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
-import { TraceInfo, tracing as _tracing } from '../common/utils/misc';
 import { argsToLogString, returnValueToLogString } from './util';
 import { LoggingLevelSettingType } from '../common/types';
 import { splitLines } from '../common/helpers';
 import { getDisplayPath } from '../common/platform/fs-paths';
 let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
+
+// Information about a traced function/method call.
+export type TraceInfo =
+    | {
+          elapsed: number; // milliseconds
+          // Either returnValue or err will be set.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          returnValue?: any;
+          err?: Error;
+      }
+    | undefined;
 
 let loggers: ILogger[] = [];
 export function registerLogger(logger: ILogger): Disposable {
@@ -26,24 +36,11 @@ export function registerLogger(logger: ILogger): Disposable {
     };
 }
 
-const logLevelMap: Map<string | undefined, LogLevel> = new Map([
-    ['error', LogLevel.Error],
-    ['warn', LogLevel.Warn],
-    ['info', LogLevel.Info],
-    ['debug', LogLevel.Debug],
-    ['none', LogLevel.Off],
-    ['off', LogLevel.Off],
-    [undefined, LogLevel.Error]
-]);
-
 let globalLoggingLevel: LogLevel = LogLevel.Debug;
 let _enabledWidgetLogging: LoggingLevelSettingType = 'off';
-export function setLoggingLevel(
-    level?: LoggingLevelSettingType | number,
-    enabledWidgetLogging?: LoggingLevelSettingType
-): void {
+export function setLoggingLevel(level: LogLevel, enabledWidgetLogging?: LoggingLevelSettingType): void {
     _enabledWidgetLogging = enabledWidgetLogging || 'off';
-    globalLoggingLevel = typeof level === 'number' ? level : logLevelMap.get(level) ?? LogLevel.Error;
+    globalLoggingLevel = level;
 }
 
 export function setHomeDirectory(homeDir: string) {
@@ -52,7 +49,7 @@ export function setHomeDirectory(homeDir: string) {
 
 function formatErrors(...args: Arguments) {
     // Format the error message, if showing verbose then include all of the error stack & other details.
-    const formatError = globalLoggingLevel <= LogLevel.Trace ? false : true;
+    const formatError = globalLoggingLevel <= LogLevel.Debug ? false : true;
     if (!formatError) {
         return args;
     }
@@ -121,7 +118,7 @@ export function traceError(message: string, ...args: Arguments): void {
 }
 
 export function traceWarning(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Warn) {
+    if (globalLoggingLevel <= LogLevel.Warning) {
         args = formatErrors(...args);
         loggers.forEach((l) => l.traceWarn(message, ...args));
     }
@@ -139,12 +136,12 @@ export function traceInfoWidgets(message: string, ...args: Arguments): void {
 }
 
 export function traceVerbose(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Trace) {
+    if (globalLoggingLevel <= LogLevel.Debug) {
         loggers.forEach((l) => l.traceVerbose(message, ...args));
     }
 }
 export function traceVerboseWidgets(message: string, ...args: Arguments): void {
-    if (_enabledWidgetLogging !== 'off' && globalLoggingLevel <= LogLevel.Trace) {
+    if (_enabledWidgetLogging !== 'off' && globalLoggingLevel <= LogLevel.Debug) {
         loggers.forEach((l) => l.traceVerbose(message, ...args));
     }
 }
@@ -173,7 +170,7 @@ export function traceInfoIfCI(arg1: any, ...args: Arguments): void {
 /** Logging Decorators go here */
 
 export function traceDecoratorVerbose(message: string, opts: TraceOptions = DEFAULT_OPTS): TraceDecoratorType {
-    return createTracingDecorator({ message, opts, level: LogLevel.Trace });
+    return createTracingDecorator({ message, opts, level: LogLevel.Debug });
 }
 export function traceDecoratorError(message: string): TraceDecoratorType {
     return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Error });
@@ -182,7 +179,7 @@ export function traceDecoratorInfo(message: string): TraceDecoratorType {
     return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Info });
 }
 export function traceDecoratorWarn(message: string): TraceDecoratorType {
-    return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Warn });
+    return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Warning });
 }
 
 type ParameterLogInformation =
@@ -247,11 +244,6 @@ export function createTracingDecorator(logInfo: LogInfo) {
         (call, traced) => logResult(logInfo, traced, call),
         (logInfo.opts & TraceOptions.BeforeCall) > 0
     );
-}
-
-// This is like a "context manager" that logs tracing info.
-export function tracing<T>(logInfo: LogInfo, run: () => T, call?: CallInfo): T {
-    return _tracing((traced) => logResult(logInfo, traced, call), run, (logInfo.opts & TraceOptions.BeforeCall) > 0);
 }
 
 export type LogInfo = {
@@ -324,7 +316,7 @@ function formatMessages(info: LogInfo, traced: TraceInfo, call?: CallInfo): stri
         messages[messages.length - 1] = `${messages[messages.length - 1]} (started execution)`;
     }
     if ((info.opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
-        if (info.level === LogLevel.Trace) {
+        if (info.level === LogLevel.Debug) {
             // This is slower, hence do this only when user enables trace logging.
             messages.push(
                 argsToLogString(
@@ -363,20 +355,18 @@ function logResult(info: LogInfo, traced: TraceInfo, call?: CallInfo) {
     }
 }
 
-export function logTo(logLevel: LogLevel, message: string, ...args: Arguments): void {
+function logTo(logLevel: LogLevel, message: string, ...args: Arguments): void {
     switch (logLevel) {
         case LogLevel.Error:
             traceError(message, ...args);
             break;
-        case LogLevel.Warn:
+        case LogLevel.Warning:
             traceWarning(message, ...args);
             break;
         case LogLevel.Info:
             traceInfo(message, ...args);
             break;
         case LogLevel.Debug:
-            traceVerbose(message, ...args);
-            break;
         case LogLevel.Trace:
             traceVerbose(message, ...args);
             break;

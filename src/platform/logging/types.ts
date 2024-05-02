@@ -4,16 +4,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export enum LogLevel {
-    // Larger numbers are higher priority.
-    Error = 40,
-    Warn = 30,
-    Info = 20,
-    Debug = 10,
-    Trace = 5,
-    Off = 100
-}
-
 export type Arguments = unknown[];
 
 export interface ILogger {

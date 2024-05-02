@@ -61,17 +61,13 @@ export class JupyterServerHelper implements IJupyterServerHelper {
     }
 
     public async dispose(): Promise<void> {
-        traceInfo(`Disposing HostJupyterExecution`);
         if (!this._disposed) {
             this._disposed = true;
-            traceVerbose(`Disposing super HostJupyterExecution`);
             this.disposed = true;
 
             // Cleanup on dispose. We are going away permanently
-            traceVerbose(`Cleaning up server cache`);
             await this.cache?.then((s) => s.dispose()).catch(noop);
         }
-        traceVerbose(`Finished disposing HostJupyterExecution`);
     }
 
     public async startServer(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
@@ -162,7 +158,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
     private async startImpl(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         // If that works, then attempt to start the server
-        traceInfo(`Launching server`);
+        traceVerbose(`Launching server`);
         const settings = this.configuration.getSettings(resource);
         const useDefaultConfig = settings.useDefaultConfigForJupyter;
         const workingDir = await computeWorkingDirectory(resource);
