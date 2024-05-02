@@ -675,18 +675,6 @@
                 "enablement": "!jupyter.webExtension"
             },
             {
-                "command": "jupyter.enableDebugLogging",
-                "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
-                "category": "Jupyter",
-                "enablement": "!jupyter.webExtension"
-            },
-            {
-                "command": "jupyter.resetLoggingLevel",
-                "title": "%jupyter.command.jupyter.resetLoggingLevel.title%",
-                "enablement": "!jupyter.webExtension",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.showDataViewer",
                 "title": "%jupyter.command.jupyter.showDataViewer.title%",
                 "enablement": "!jupyter.webExtension",
@@ -1374,18 +1362,6 @@
                     "title": "%DataScience.notebookExportAs%",
                     "category": "Notebook",
                     "when": "false"
-                },
-                {
-                    "command": "jupyter.resetLoggingLevel",
-                    "title": "%jupyter.command.jupyter.resetLoggingLevel.title%",
-                    "category": "Jupyter",
-                    "when": "config.jupyter.logging.level != error"
-                },
-                {
-                    "command": "jupyter.enableDebugLogging",
-                    "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
-                    "category": "Jupyter",
-                    "when": "config.jupyter.logging.level != debug"
                 },
                 {
                     "command": "jupyter.showDataViewer",
