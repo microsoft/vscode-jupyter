@@ -31,27 +31,23 @@ export class OutputChannelLogger implements ILogger {
         return logMessage;
     }
 
-    public traceLog(message: string, ...data: Arguments): void {
-        this.channel.appendLine(this.format('', message, ...data));
-    }
-
-    public traceError(message: string, ...data: Arguments): void {
+    public error(message: string, ...data: Arguments): void {
         this.channel.appendLine(this.format('error', message, ...data));
     }
 
-    public traceWarn(message: string, ...data: Arguments): void {
+    public warn(message: string, ...data: Arguments): void {
         this.channel.appendLine(this.format('warn', message, ...data));
     }
 
-    public traceInfo(message: string, ...data: Arguments): void {
+    public info(message: string, ...data: Arguments): void {
         this.channel.appendLine(this.format('info', message, ...data));
     }
 
-    public traceVerbose(message: string, ...data: Arguments): void {
+    public verbose(message: string, ...data: Arguments): void {
         this.channel.appendLine(this.format('debug', message, ...data));
     }
 
-    public traceTrace(message: string, ...data: Arguments): void {
+    public trace(message: string, ...data: Arguments): void {
         this.channel.appendLine(this.format('trace', message, ...data));
     }
 }

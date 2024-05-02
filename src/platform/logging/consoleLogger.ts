@@ -18,22 +18,22 @@ export class ConsoleLogger implements ILogger {
         console.log(format(`${this.prefix || ''} ${message}`, ...data));
     }
 
-    public traceError(message: string, ...data: Arguments): void {
+    public error(message: string, ...data: Arguments): void {
         console.error(formatMessage('error', `${this.prefix || ''} ${message}`, ...data));
     }
 
-    public traceWarn(message: string, ...data: Arguments): void {
+    public warn(message: string, ...data: Arguments): void {
         console.warn(formatMessage('warn', `${this.prefix || ''} ${message}`, ...data));
     }
 
-    public traceInfo(message: string, ...data: Arguments): void {
+    public info(message: string, ...data: Arguments): void {
         console.info(formatMessage('info', `${this.prefix || ''} ${message}`, ...data));
     }
 
-    public traceVerbose(message: string, ...data: Arguments): void {
+    public verbose(message: string, ...data: Arguments): void {
         console.log(formatMessage('debug', `${this.prefix || ''} ${message}`, ...data));
     }
-    public traceTrace(message: string, ...data: Arguments): void {
+    public trace(message: string, ...data: Arguments): void {
         console.trace(formatMessage('trace', `${this.prefix || ''} ${message}`, ...data));
     }
 }

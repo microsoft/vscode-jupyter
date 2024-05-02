@@ -7,12 +7,11 @@
 export type Arguments = unknown[];
 
 export interface ILogger {
-    traceLog(message: string, ...data: Arguments): void;
-    traceError(message: string, ...data: Arguments): void;
-    traceWarn(message: string, ...data: Arguments): void;
-    traceInfo(message: string, ...data: Arguments): void;
-    traceVerbose(message: string, ...data: Arguments): void;
-    traceTrace(message: string, ...data: Arguments): void;
+    error(message: string, ...data: Arguments): void;
+    warn(message: string, ...data: Arguments): void;
+    info(message: string, ...data: Arguments): void;
+    verbose(message: string, ...data: Arguments): void;
+    trace(message: string, ...data: Arguments): void;
 }
 
 export type TraceDecoratorType = (

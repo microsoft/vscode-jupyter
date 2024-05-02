@@ -15,6 +15,7 @@ import { trackDisposable } from '../common/utils/lifecycle';
 import { OutputChannelNames } from '../common/utils/localize';
 import { OutputChannelLogger } from './outputChannelLogger';
 import { ConsoleLogger } from './consoleLogger';
+
 let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
@@ -31,6 +32,13 @@ export type TraceInfo =
 
 let loggers: ILogger[] = [];
 let globalLoggingLevel: LogLevel = LogLevel.Info;
+export const logger: ILogger = {
+    error: (message: string, ...data: Arguments) => traceError(message, ...data),
+    warn: (message: string, ...data: Arguments) => traceWarning(message, ...data),
+    info: (message: string, ...data: Arguments) => traceInfo(message, ...data),
+    verbose: (message: string, ...data: Arguments) => traceVerbose(message, ...data),
+    trace: (message: string, ...data: Arguments) => traceTrace(message, ...data)
+};
 
 export function initializeLoggers(options: {
     addConsoleLogger: boolean;
@@ -174,30 +182,30 @@ function formatErrors(...args: Arguments) {
 export function traceError(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Error) {
         args = formatErrors(...args);
-        loggers.forEach((l) => l.traceError(message, ...args));
+        loggers.forEach((l) => l.error(message, ...args));
     }
 }
 
 export function traceWarning(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Warning) {
         args = formatErrors(...args);
-        loggers.forEach((l) => l.traceWarn(message, ...args));
+        loggers.forEach((l) => l.warn(message, ...args));
     }
 }
 
 export function traceInfo(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Info) {
-        loggers.forEach((l) => l.traceInfo(message, ...args));
+        loggers.forEach((l) => l.info(message, ...args));
     }
 }
 export function traceVerbose(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Debug) {
-        loggers.forEach((l) => l.traceVerbose(message, ...args));
+        loggers.forEach((l) => l.verbose(message, ...args));
     }
 }
 export function traceTrace(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Trace) {
-        loggers.forEach((l) => l.traceTrace(message, ...args));
+        loggers.forEach((l) => l.trace(message, ...args));
     }
 }
 export function traceInfoIfCI(msg: () => [message: string, ...args: string[]] | string): void;
