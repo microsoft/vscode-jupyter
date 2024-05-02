@@ -78,7 +78,7 @@ import {
     defaultNotebookFormat,
     isWebExtension
 } from '../../../platform/common/constants';
-import { dispose } from '../../../platform/common/utils/lifecycle';
+import { dispose, type DisposableStore } from '../../../platform/common/utils/lifecycle';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
@@ -967,6 +967,47 @@ export async function waitForExecutionCompletedSuccessfully(
     await sleep(100);
 }
 
+export async function waitForExecutionCompletedSuccessfullyV2(
+    cell: NotebookCell,
+    disposables: IDisposable[] | DisposableStore
+) {
+    const checkCompletedSuccessfully = () => {
+        traceInfo(
+            `10.a Check execution summary: ${cell.index}: Success = ${cell.executionSummary?.success}, order = ${cell.executionSummary?.executionOrder}, End Time = ${cell.executionSummary?.timing?.endTime}`
+        );
+        return cell.executionSummary?.success &&
+            cell.executionSummary.executionOrder &&
+            cell.executionSummary.timing?.endTime
+            ? true
+            : false;
+    };
+    traceInfo(`10. Check execution summary: Check ${cell.index}`);
+    if (checkCompletedSuccessfully()) {
+        traceInfo(`11. Check execution summary: Success ${cell.index}`);
+        return;
+    }
+    await new Promise((resolve) => {
+        traceInfo(`12. Check execution summary: Event Handler Added ${cell.index}`);
+        const disposable = workspace.onDidChangeNotebookDocument((e) => {
+            if (e.notebook !== cell.notebook) {
+                traceInfo(`13. Check execution summary: Wrong Notebook ${cell.index}`);
+                return;
+            }
+            traceInfo(`14. Check execution summary: Check ${cell.index}`);
+            if (checkCompletedSuccessfully()) {
+                traceInfo(`14. Check execution summary: Resolve ${cell.index}`);
+                disposable.dispose();
+                resolve;
+            }
+        });
+        if (Array.isArray(disposables)) {
+            disposables.push(disposable);
+        } else {
+            disposables.add(disposable);
+        }
+    });
+}
+
 export async function waitForCompletions(
     completionProvider: CompletionItemProvider,
     cell: NotebookCell,
@@ -1204,6 +1245,45 @@ export async function waitForTextOutput(
                 )
                 .join(',\n')}`
     );
+}
+export async function waitForTextOutputV2(
+    cell: NotebookCell,
+    text: string,
+    index: number = 0,
+    isExactMatch = true,
+    disposables: IDisposable[] | DisposableStore
+) {
+    try {
+        traceInfo(`2. Check output in cell ${cell.index}`);
+        assertHasTextOutputInVSCode(cell, text, index, isExactMatch);
+        traceInfo(`3. Check output in cell: Success ${cell.index}`);
+        return;
+    } catch (ex) {
+        traceInfo(`3.a Check output in cell: Fail ${cell.index}`, ex);
+        //
+    }
+    await new Promise<void>((resolve) => {
+        traceInfo(`4. Check output in cell: Added EventHandler ${cell.index}`);
+        const disposable = workspace.onDidChangeNotebookDocument((e) => {
+            if (e.notebook !== cell.notebook) {
+                traceInfo(`5. Check output in cell: Wrong Notebook ${cell.index}`);
+                return;
+            }
+            try {
+                traceInfo(`6. Check output in cell: Event Received ${cell.index}`);
+                assertHasTextOutputInVSCode(cell, text, index, isExactMatch);
+                traceInfo(`7. Check output in cell: Resolved ${cell.index}`);
+                resolve();
+            } catch {
+                //
+            }
+        });
+        if (Array.isArray(disposables)) {
+            disposables.push(disposable);
+        } else {
+            disposables.add(disposable);
+        }
+    });
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
