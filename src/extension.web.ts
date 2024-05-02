@@ -223,5 +223,5 @@ async function activateLegacy(
     registerStandaloneTypes(context, serviceManager, isDevMode);
     registerWebviewTypes(serviceManager);
 
-    await postActivateLegacy(context, serviceManager, serviceContainer);
+    await postActivateLegacy(context, serviceContainer);
 }

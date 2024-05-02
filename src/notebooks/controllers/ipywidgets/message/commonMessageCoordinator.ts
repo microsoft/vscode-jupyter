@@ -4,7 +4,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri, commands, env, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL, WIDGET_VERSION_NON_PYTHON_KERNELS } from '../../../../platform/common/constants';
-import { traceVerboseWidgets, traceError, traceInfoWidgets, traceInfoIfCI } from '../../../../platform/logging';
+import { traceTrace, traceError, traceInfoIfCI } from '../../../../platform/logging';
 import {
     IDisposableRegistry,
     IOutputChannel,
@@ -167,7 +167,7 @@ export class CommonMessageCoordinator {
             }
             // IPyWidgets scripts will not be loaded if we're unable to determine the version of IPyWidgets.
             const version = await deferred.promise;
-            traceVerboseWidgets(`Version of IPyWidgets ${version} determined after ${stopWatch.elapsedTime / 1000}s`);
+            traceTrace(`Version of IPyWidgets ${version} determined after ${stopWatch.elapsedTime / 1000}s`);
             webview
                 .postMessage({
                     type: IPyWidgetMessages.IPyWidgets_Reply_Widget_Version,
@@ -189,7 +189,7 @@ export class CommonMessageCoordinator {
                     void env.openExternal(Uri.parse(m.url));
                 }
                 if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
-                    traceVerboseWidgets('Web view is ready to receive widget messages');
+                    traceTrace('Web view is ready to receive widget messages');
                     this.readyMessageReceived = true;
                     this.sendPendingWebViewMessages(webview);
                 }
@@ -327,7 +327,7 @@ export class CommonMessageCoordinator {
                     const errorMsg = msg as KernelMessage.IErrorMsg;
                     errorMsg.content.traceback = errorMsg.content.traceback.map(stripAnsi);
                 }
-                traceInfoWidgets(`Unhandled widget kernel message: ${msg.header.msg_type} ${msg.content}`);
+                traceTrace(`Unhandled widget kernel message: ${msg.header.msg_type} ${msg.content}`);
                 this.jupyterOutput.appendLine(
                     DataScience.unhandledMessage(msg.header.msg_type, JSON.stringify(msg.content))
                 );

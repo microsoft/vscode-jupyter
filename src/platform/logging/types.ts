@@ -12,6 +12,7 @@ export interface ILogger {
     traceWarn(message: string, ...data: Arguments): void;
     traceInfo(message: string, ...data: Arguments): void;
     traceVerbose(message: string, ...data: Arguments): void;
+    traceTrace(message: string, ...data: Arguments): void;
 }
 
 export type TraceDecoratorType = (

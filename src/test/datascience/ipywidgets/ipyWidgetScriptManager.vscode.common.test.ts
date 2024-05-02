@@ -17,7 +17,7 @@ import {
 } from '../notebook/helper';
 import { initialize } from '../../initialize';
 import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfoWidgets } from '../../../platform/logging';
+import { traceTrace } from '../../../platform/logging';
 import { IKernel, IKernelProvider, isLocalConnection } from '../../../kernels/types';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { IFileSystem } from '../../../platform/common/platform/types';
@@ -45,7 +45,7 @@ suite('IPyWidget Script Manager @widgets', function () {
     let fs: IFileSystem;
     let context: IExtensionContext;
     suiteSetup(async function () {
-        traceInfoWidgets('Suite Setup');
+        traceTrace('Suite Setup');
         api = await initialize();
         await closeNotebooks();
         await startJupyterServer();
@@ -97,18 +97,18 @@ suite('IPyWidget Script Manager @widgets', function () {
 
         kernel = kernelProvider.get(notebook)!;
         scriptManager = widgetScriptManagerFactory.getOrCreate(kernel);
-        traceInfoWidgets('Suite Setup (completed)');
+        traceTrace('Suite Setup (completed)');
     });
     setup(async function () {
-        traceInfoWidgets(`Starting Test ${this.currentTest?.title}`);
+        traceTrace(`Starting Test ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
-        traceInfoWidgets(`Ended Test ${this.currentTest?.title}`);
+        traceTrace(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
-        traceInfoWidgets(`Ended Test (completed) ${this.currentTest?.title}`);
+        traceTrace(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Returns the right base Url', async function () {

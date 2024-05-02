@@ -27,7 +27,6 @@ import {
 import { getDisplayPath } from './platform/common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
-    IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
     IExtensionContext,
@@ -38,7 +37,7 @@ import {
 } from './platform/common/types';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { registerLogger, setLoggingLevel, traceError } from './platform/logging';
+import { registerLogger, traceError } from './platform/logging';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { isUsingPylance } from './standalone/intellisense/notebookPythonPathService';
@@ -153,11 +152,7 @@ function notifyUser(msg: string) {
     }
 }
 
-export async function postActivateLegacy(
-    context: IExtensionContext,
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer
-) {
+export async function postActivateLegacy(context: IExtensionContext, serviceContainer: IServiceContainer) {
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
@@ -166,17 +161,6 @@ export async function postActivateLegacy(
     await experimentService.activate();
     const duration = stopWatch.elapsedTime;
     sendTelemetryEvent(Telemetry.ExperimentLoad, { duration });
-
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-
-    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
-    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
-    // XXX Move this *after* abExperiments is activated?
-    const settings = configuration.getSettings();
-    setLoggingLevel(settings.logging.level, settings.logging.widgets);
-    context.subscriptions.push(
-        settings.onDidChange(() => setLoggingLevel(settings.logging.level, settings.logging.widgets))
-    );
 
     // "initialize" "services"
     commands.executeCommand('setContext', 'jupyter.vscode.channel', getVSCodeChannel()).then(noop, noop);

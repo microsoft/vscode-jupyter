@@ -8,7 +8,7 @@ import { GLOBAL_MEMENTO, IConfigurationService, IMemento, WidgetCDNs } from '../
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { noop } from '../../../../platform/common/utils/misc';
-import { traceError, traceInfoWidgets, traceInfoIfCI, traceVerboseWidgets } from '../../../../platform/logging';
+import { traceError, traceTrace, traceInfoIfCI } from '../../../../platform/logging';
 import { ConsoleForegroundColors } from '../../../../platform/logging/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from '../types';
@@ -165,7 +165,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         moduleName: string,
         moduleVersion: string
     ): Promise<WidgetScriptSource> {
-        traceInfoWidgets(
+        traceTrace(
             `${
                 ConsoleForegroundColors.Green
             }Searching for Widget Script ${moduleName}#${moduleVersion} using cdns ${this.cdnProviders.join(' ')}`
@@ -180,7 +180,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         );
         const scriptUri = uris.find((u) => u);
         if (scriptUri) {
-            traceInfoWidgets(
+            traceTrace(
                 `${ConsoleForegroundColors.Green}Widget Script ${moduleName}#${moduleVersion} found at URI: ${scriptUri}`
             );
             return { moduleName, scriptUri, source: 'cdn' };
@@ -200,7 +200,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 return downloadUrl;
             }
         } catch (ex) {
-            traceVerboseWidgets(`Failed downloading ${moduleName}:${moduleVersion} from ${cdn}`);
+            traceTrace(`Failed downloading ${moduleName}:${moduleVersion} from ${cdn}`);
             return undefined;
         }
     }
