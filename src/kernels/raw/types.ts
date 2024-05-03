@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, Event } from 'vscode';
-import { IAsyncDisposable, Resource } from '../../platform/common/types';
+import { Resource } from '../../platform/common/types';
 import {
     IRawKernelSession,
     LocaLKernelSessionCreationOptions,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../types';
+import type { ObservableDisposable } from '../../platform/common/utils/lifecycle';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
@@ -34,7 +35,7 @@ export interface IKernelConnection {
     kernel_name?: string;
 }
 
-export interface IKernelProcess extends IAsyncDisposable {
+export interface IKernelProcess extends ObservableDisposable {
     readonly pid?: number;
     readonly connection: Readonly<IKernelConnection>;
     readonly kernelConnectionMetadata: Readonly<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;

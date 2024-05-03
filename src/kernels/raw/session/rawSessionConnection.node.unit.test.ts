@@ -47,6 +47,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         reason?: string | undefined;
         stderr: string;
     }>;
+    let onDidDispose: EventEmitter<void>;
     const launchTimeout = 1_000;
     let disposables: IDisposable[] = [];
     let kernelConnectionMetadata: LocalKernelSpecConnectionMetadata;
@@ -106,6 +107,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
     };
     function createKernelProcess() {
         const kernelProcess = mock<IKernelProcess>();
+        let disposed = false;
         when(kernelProcess.canInterrupt).thenReturn(true);
         when(kernelProcess.connection).thenReturn({
             control_port: 1,
@@ -118,8 +120,13 @@ suite('Raw Session & Raw Kernel Connection', () => {
             stdin_port: 5,
             transport: 'tcp'
         });
-        when(kernelProcess.dispose()).thenResolve();
+        when(kernelProcess.isDisposed).thenCall(() => disposed);
+        when(kernelProcess.dispose()).thenCall(() => {
+            disposed = true;
+            onDidDispose.fire();
+        });
         when(kernelProcess.exited).thenReturn(exitedEvent.event);
+        when(kernelProcess.onDidDispose).thenReturn(onDidDispose.event);
         when(kernelProcess.canInterrupt).thenReturn(true);
         when(kernelProcess.interrupt()).thenResolve();
         when(kernelProcess.kernelConnectionMetadata).thenReturn(kernelConnectionMetadata);
@@ -181,6 +188,9 @@ suite('Raw Session & Raw Kernel Connection', () => {
             reason?: string | undefined;
             stderr: string;
         }>();
+        disposables.push(exitedEvent);
+        onDidDispose = new EventEmitter<void>();
+        disposables.push(onDidDispose);
         nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
         const workspaceConfig = mock<WorkspaceConfiguration>();
         when(workspaceConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);

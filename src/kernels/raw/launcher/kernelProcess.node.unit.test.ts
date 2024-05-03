@@ -137,7 +137,7 @@ suite('kernel Process', () => {
                     });
                     const interrupter = {
                         handle: 1,
-                        dispose: () => Promise.resolve(),
+                        dispose: noop,
                         interrupt: () => Promise.resolve()
                     };
                     when(daemon.createInterrupter(anything(), anything())).thenResolve(interrupter);
@@ -516,7 +516,7 @@ suite('Kernel Process', () => {
                     when(settings.enablePythonKernelLogging).thenReturn(false);
                     const interruptDaemon = mock<PythonKernelInterruptDaemon>();
                     when(interruptDaemon.createInterrupter(anything(), anything())).thenResolve({
-                        dispose: () => Promise.resolve(),
+                        dispose: noop,
                         interrupt: () => Promise.resolve(),
                         handle: 1
                     });

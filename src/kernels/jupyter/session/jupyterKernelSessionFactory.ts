@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationError, CancellationToken, Disposable } from 'vscode';
+import { CancellationError, CancellationToken } from 'vscode';
 import { Cancellation, raceCancellationError } from '../../../platform/common/cancellation';
 import uuid from 'uuid/v4';
 import * as urlPath from '../../../platform/vscode-path/resources';
@@ -45,6 +45,7 @@ import { getNameOfKernelConnection, jvscIdentifier } from '../../helpers';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { JupyterLabHelper } from './jupyterLabHelper';
 import { JupyterSessionWrapper, getRemoteSessionOptions } from './jupyterSession';
+import { disposeAsync } from '../../../platform/common/utils';
 
 @injectable()
 export class JupyterKernelSessionFactory implements IKernelSessionFactory {
@@ -97,8 +98,8 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             await raceCancellationError(options.token, this.validateLocalKernelDependencies(options));
 
             const sessionManager = JupyterLabHelper.create(connection.settings);
-            this.asyncDisposables.push(sessionManager);
-            disposablesIfAnyErrors.push(new Disposable(() => sessionManager.dispose().catch(noop)));
+            this.asyncDisposables.push({ dispose: () => disposeAsync(sessionManager) });
+            disposablesIfAnyErrors.push(sessionManager);
 
             await raceCancellationError(options.token, this.validateRemoteServer(options, sessionManager));
 
@@ -130,7 +131,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             );
             const disposed = session.disposed;
             const onDidDisposeSession = () => {
-                sessionManager.dispose().catch(noop);
+                sessionManager.dispose();
                 disposed.disconnect(onDidDisposeSession);
             };
             this.asyncDisposables.push({

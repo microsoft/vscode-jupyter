@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { noop } from '../../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../../platform/errors/types';
 import { createJupyterConnectionInfo, handleExpiredCertsError, handleSelfCertsError } from '../jupyterUtils';
@@ -127,7 +126,7 @@ export class JupyterConnection {
         } finally {
             connection.dispose();
             if (sessionManager) {
-                sessionManager.dispose().catch(noop);
+                sessionManager.dispose();
             }
         }
     }

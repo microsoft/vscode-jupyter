@@ -20,21 +20,17 @@ import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { IJupyterKernel } from '../types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { dispose } from '../../../platform/common/utils/lifecycle';
+import { ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec';
 import { noop } from '../../../platform/common/utils/misc';
 
-export class JupyterLabHelper {
+export class JupyterLabHelper extends ObservableDisposable {
     public sessionManager: SessionManager;
     public kernelSpecManager: KernelSpecManager;
     public kernelManager: KernelManager;
     public contentsManager: ContentsManager;
     private _jupyterlab?: typeof import('@jupyterlab/services');
-    private disposed?: boolean;
-    public get isDisposed() {
-        return this.disposed === true;
-    }
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -43,6 +39,7 @@ export class JupyterLabHelper {
         return this._jupyterlab!;
     }
     private constructor(private readonly serverSettings: ServerConnection.ISettings) {
+        super();
         this.kernelSpecManager = new this.jupyterlab.KernelSpecManager({ serverSettings: this.serverSettings });
         this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings: this.serverSettings });
         this.sessionManager = new this.jupyterlab.SessionManager({
@@ -55,36 +52,41 @@ export class JupyterLabHelper {
         return new JupyterLabHelper(serverSettings);
     }
 
-    public async dispose() {
-        if (this.disposed) {
+    private _isDisposing = false;
+    public override dispose() {
+        if (this.isDisposed || this._isDisposing) {
             return;
         }
-        this.disposed = true;
-        logger.trace(`Disposing Jupyter Lab Helper`);
-        try {
-            if (this.contentsManager) {
-                logger.trace('SessionManager - dispose contents manager');
-                this.contentsManager.dispose();
-            }
-            if (this.sessionManager && !this.sessionManager.isDisposed) {
-                logger.trace('ShutdownSessionAndConnection - dispose session manager');
-                // Make sure it finishes startup.
-                await raceTimeout(10_000, this.sessionManager.ready);
+        this._isDisposing = true;
+        (async () => {
+            logger.trace(`Disposing Jupyter Lab Helper`);
+            try {
+                if (this.contentsManager) {
+                    logger.trace('SessionManager - dispose contents manager');
+                    this.contentsManager.dispose();
+                }
+                if (this.sessionManager && !this.sessionManager.isDisposed) {
+                    logger.trace('ShutdownSessionAndConnection - dispose session manager');
+                    // Make sure it finishes startup.
+                    await raceTimeout(10_000, this.sessionManager.ready);
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
+                }
+                if (!this.kernelManager?.isDisposed) {
+                    this.kernelManager?.dispose();
+                }
+                if (!this.kernelSpecManager?.isDisposed) {
+                    this.kernelSpecManager?.dispose();
+                }
+            } catch (e) {
+                logger.error(`Exception on Jupyter Lab Helper shutdown: `, e);
+            } finally {
+                logger.trace('Finished disposing Jupyter Lab Helper');
             }
-            if (!this.kernelManager?.isDisposed) {
-                this.kernelManager?.dispose();
-            }
-            if (!this.kernelSpecManager?.isDisposed) {
-                this.kernelSpecManager?.dispose();
-            }
-        } catch (e) {
-            logger.error(`Exception on Jupyter Lab Helper shutdown: `, e);
-        } finally {
-            logger.trace('Finished disposing Jupyter Lab Helper');
-        }
+        })()
+            .catch(noop)
+            .finally(() => super.dispose());
     }
 
     public async getRunningSessions(): Promise<Session.IModel[]> {

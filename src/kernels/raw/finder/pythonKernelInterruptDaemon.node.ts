@@ -5,7 +5,7 @@ import { logger } from '../../../platform/logging';
 import { ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { inject, injectable } from 'inversify';
-import { IAsyncDisposable, IDisposableRegistry, IExtensionContext, Resource } from '../../../platform/common/types';
+import { IDisposableRegistry, IExtensionContext, Resource, type IDisposable } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Disposable, Uri } from 'vscode';
 import { EOL } from 'os';
@@ -57,7 +57,7 @@ type Command =
     | { command: 'INITIALIZE_INTERRUPT' }
     | { command: 'INTERRUPT'; handle: InterruptHandle }
     | { command: 'DISPOSE_INTERRUPT_HANDLE'; handle: InterruptHandle };
-export type Interrupter = IAsyncDisposable & {
+export type Interrupter = IDisposable & {
     handle: InterruptHandle;
     interrupt: () => Promise<void>;
 };
@@ -103,8 +103,8 @@ export class PythonKernelInterruptDaemon {
             interrupt: async () => {
                 await this.sendCommand({ command: 'INTERRUPT', handle: interruptHandle }, pythonEnvironment, resource);
             },
-            dispose: async () => {
-                await this.sendCommand(
+            dispose: () => {
+                void this.sendCommand(
                     { command: 'DISPOSE_INTERRUPT_HANDLE', handle: interruptHandle },
                     pythonEnvironment,
                     resource
