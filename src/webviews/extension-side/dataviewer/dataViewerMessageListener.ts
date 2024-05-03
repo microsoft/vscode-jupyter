@@ -26,7 +26,7 @@ export class DataViewerMessageListener implements IWebviewPanelMessageListener {
         this.viewChanged = viewChanged;
     }
 
-    public async dispose() {
+    public dispose() {
         this.disposedCallback();
     }
 

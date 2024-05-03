@@ -26,7 +26,7 @@ export class PlotViewerMessageListener implements IWebviewPanelMessageListener {
         this.viewChanged = viewChanged;
     }
 
-    public async dispose() {
+    public dispose() {
         this.disposedCallback();
     }
 

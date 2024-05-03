@@ -3,23 +3,23 @@
 
 import { inject, injectable } from 'inversify';
 import { IPlotViewer, IPlotViewerProvider } from './types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 
 @injectable()
-export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable {
+export class PlotViewerProvider implements IPlotViewerProvider, IDisposable {
     private currentViewer: IPlotViewer | undefined;
     private currentViewerClosed: IDisposable | undefined;
     private imageList: string[] = [];
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry
+        @inject(IDisposableRegistry) asyncRegistry: IDisposableRegistry
     ) {
         asyncRegistry.push(this);
     }
 
-    public async dispose() {
+    public dispose() {
         if (this.currentViewer) {
             this.currentViewer.dispose();
         }
