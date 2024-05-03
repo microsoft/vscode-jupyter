@@ -11,7 +11,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { getCachedEnvironments, getPythonEnvDisplayName } from '../helpers';
 import { isPythonEnvInListOfHiddenEnvs } from './filterService';
-import { traceWarning } from '../../logging';
+import { logger } from '../../logging';
 
 @injectable()
 export class PythonEnvFilterCompletionProvider implements CompletionItemProvider, IExtensionSyncActivationService {
@@ -82,7 +82,7 @@ export class PythonEnvFilterCompletionProvider implements CompletionItemProvider
             const items = getNodeValue(settingsNode) as string[];
             return Array.isArray(items) ? items : [];
         } catch (ex) {
-            traceWarning(`Failed to provide completions for python env filter`, ex);
+            logger.warn(`Failed to provide completions for python env filter`, ex);
             return [];
         }
     }

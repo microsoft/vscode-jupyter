@@ -11,7 +11,7 @@ import type {
 } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
 import { Disposable } from 'vscode';
-import { traceError, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { createInterpreterKernelSpec } from '../../helpers';
@@ -60,14 +60,14 @@ export class JupyterLabHelper {
             return;
         }
         this.disposed = true;
-        traceVerbose(`Disposing Jupyter Lab Helper`);
+        logger.debug(`Disposing Jupyter Lab Helper`);
         try {
             if (this.contentsManager) {
-                traceVerbose('SessionManager - dispose contents manager');
+                logger.debug('SessionManager - dispose contents manager');
                 this.contentsManager.dispose();
             }
             if (this.sessionManager && !this.sessionManager.isDisposed) {
-                traceVerbose('ShutdownSessionAndConnection - dispose session manager');
+                logger.debug('ShutdownSessionAndConnection - dispose session manager');
                 // Make sure it finishes startup.
                 await raceTimeout(10_000, this.sessionManager.ready);
 
@@ -81,9 +81,9 @@ export class JupyterLabHelper {
                 this.kernelSpecManager?.dispose();
             }
         } catch (e) {
-            traceError(`Exception on Jupyter Lab Helper shutdown: `, e);
+            logger.error(`Exception on Jupyter Lab Helper shutdown: `, e);
         } finally {
-            traceVerbose('Finished disposing Jupyter Lab Helper');
+            logger.debug('Finished disposing Jupyter Lab Helper');
         }
     }
 
@@ -141,7 +141,7 @@ export class JupyterLabHelper {
             const stopWatch = new StopWatch();
             const specsManager = this.kernelSpecManager;
             if (!specsManager) {
-                traceError(
+                logger.error(
                     `No SessionManager to enumerate kernelspecs (no specs manager). Returning a default kernel. Specs ${JSON.stringify(
                         this.kernelSpecManager?.specs?.kernelspecs || {}
                     )}.`
@@ -225,7 +225,7 @@ export class JupyterLabHelper {
                 );
                 return specs;
             } else {
-                traceError(
+                logger.error(
                     `Jupyter Lab Helper cannot enumerate kernelspecs. Returning a default kernel. Specs ${JSON.stringify(
                         kernelspecs
                     )}.`
@@ -241,7 +241,7 @@ export class JupyterLabHelper {
                 return [await createInterpreterKernelSpec()];
             }
         } catch (e) {
-            traceError(`Jupyter Lab Helper:getKernelSpecs failure: `, e);
+            logger.error(`Jupyter Lab Helper:getKernelSpecs failure: `, e);
             // For some reason this is failing. Just return nothing
             return [];
         }

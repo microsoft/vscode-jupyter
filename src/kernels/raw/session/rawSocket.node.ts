@@ -6,7 +6,7 @@ import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelSocket } from '../../types';
@@ -69,7 +69,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             try {
                 closable.close();
             } catch (ex) {
-                traceError(`Error during socket shutdown`, ex);
+                logger.error(`Error during socket shutdown`, ex);
             }
         };
         closer(this.channels.control);
@@ -123,8 +123,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     ): T {
         const result = ctor();
         result.connect(formConnectionString(connection, channel));
-        this.processSocketMessages(channel, result).catch(
-            traceError.bind(`Failed to read messages from channel ${channel}`)
+        this.processSocketMessages(channel, result).catch((ex) =>
+            logger.error(`Failed to read messages from channel ${channel}`, ex)
         );
         return result;
     }
@@ -242,7 +242,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 this.onmessage({ data: message as any, type: 'message', target: this });
             } catch (ex) {
                 // Swallow this error, so that other messages get processed.
-                traceError(`Failed to handle message in Jupyter Kernel package ${JSON.stringify(message)}`, ex);
+                logger.error(`Failed to handle message in Jupyter Kernel package ${JSON.stringify(message)}`, ex);
             }
         }
     }
@@ -262,7 +262,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                     try {
                         await this.postToSocket(msg.channel, data);
                     } catch (ex) {
-                        traceError(`Failed to write data to the kernel channel ${msg.channel}`, data, ex);
+                        logger.error(`Failed to write data to the kernel channel ${msg.channel}`, data, ex);
                         // No point throwing this error, as that would mean nothing else works from here on end.
                         // Lets ignore this error but log it and then continue
                         // Hopefully users will file bugs and we can fix this (based on the error message).
@@ -282,10 +282,10 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         const socket = (this.channels as any)[channel];
         if (socket) {
             (socket as Dealer).send(data).catch((exc) => {
-                traceError(`Error communicating with the kernel`, exc);
+                logger.error(`Error communicating with the kernel`, exc);
             });
         } else {
-            traceError(`Attempting to send message on invalid channel: ${channel}`);
+            logger.error(`Attempting to send message on invalid channel: ${channel}`);
         }
     }
 }

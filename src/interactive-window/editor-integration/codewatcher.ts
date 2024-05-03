@@ -29,7 +29,7 @@ import { Telemetry, Commands, Identifiers, InteractiveWindowView } from '../../p
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
 import { CellMatcher } from './cellMatcher';
 import { ICodeWatcher, ICodeLensFactory } from './types';
-import { traceDecoratorVerbose } from '../../platform/logging';
+import { debugDecorator } from '../../platform/logging';
 import { TraceOptions } from '../../platform/logging/types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
@@ -324,7 +324,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    @traceDecoratorVerbose('CodeWatcher::runCell', TraceOptions.BeforeCall)
+    @debugDecorator('CodeWatcher::runCell', TraceOptions.BeforeCall)
     public async runCell(range: Range): Promise<void> {
         if (!window.activeTextEditor || !window.activeTextEditor.document) {
             return;

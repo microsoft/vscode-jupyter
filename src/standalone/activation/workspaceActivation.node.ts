@@ -6,7 +6,7 @@ import { TextDocument, workspace } from 'vscode';
 import { sendActivationTelemetry } from '../../platform/telemetry/envFileTelemetry.node';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
-import { traceDecoratorError } from '../../platform/logging';
+import { errorDecorator } from '../../platform/logging';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -40,7 +40,7 @@ export class WorkspaceActivation implements IExtensionSyncActivationService {
             : undefined;
     }
 
-    @traceDecoratorError('Failed to activate a workspace')
+    @errorDecorator('Failed to activate a workspace')
     public async activateWorkspace(resource: Resource) {
         const key = this.getWorkspaceKey(resource);
         if (this.activatedWorkspaces.has(key)) {

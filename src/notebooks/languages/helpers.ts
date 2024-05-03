@@ -4,7 +4,7 @@
 import { NotebookCellKind, NotebookDocument } from 'vscode';
 import { getLanguageInNotebookMetadata } from '../../kernels/helpers';
 import { getNotebookMetadata } from '../../platform/common/utils';
-import { traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 
 // Get the language of the notebook document, preference given to metadata over the language of
 // the first cell
@@ -17,6 +17,6 @@ export function getLanguageOfNotebookDocument(doc: NotebookDocument): string | u
         // Fall back to the language of the first code cell in the notebook.
         return language || doc.getCells().find((cell) => cell.kind === NotebookCellKind.Code)?.document.languageId;
     } catch (ex) {
-        traceWarning('Failed to determine language of first cell', ex);
+        logger.warn('Failed to determine language of first cell', ex);
     }
 }

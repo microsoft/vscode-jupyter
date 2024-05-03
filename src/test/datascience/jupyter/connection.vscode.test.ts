@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IEncryptedStorage } from '../../../platform/common/application/types';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -149,7 +149,7 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         if (!IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         const api = await initialize();
         inputBox = {
             show: noop,
@@ -216,14 +216,14 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
         );
         userUriProvider.activate();
 
-        traceInfo(`Start Test Completed ${this.currentTest?.title}`);
+        logger.info(`Start Test Completed ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
-        traceInfo(`End Test ${this.currentTest?.title}`);
+        logger.info(`End Test ${this.currentTest?.title}`);
         sinon.restore();
         dispose(disposables);
-        traceInfo(`End Test Completed ${this.currentTest?.title}`);
+        logger.info(`End Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 

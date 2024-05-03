@@ -7,7 +7,7 @@ import { ITracebackFormatter } from '../../kernels/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
-import { traceInfoIfCI } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IConfigurationService } from '../../platform/common/types';
 const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
 
@@ -53,7 +53,7 @@ export class NotebookTracebackFormatter implements ITracebackFormatter {
             return `${prefix}${num}${suffix}\n`;
         });
 
-        traceInfoIfCI(`Trace frame to match: ${traceFrame}`);
+        logger.ci(`Trace frame to match: ${traceFrame}`);
 
         const tracebackLinkify = (traceFrame: string, line: string) => {
             // We have a match, replace source lines first

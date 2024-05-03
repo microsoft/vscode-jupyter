@@ -4,7 +4,7 @@
 import { EventEmitter, ExtensionMode, Uri, env, extensions, l10n, window, workspace } from 'vscode';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import { once } from '../../../platform/common/utils/functional';
 import { Common } from '../../../platform/common/utils/localize';
@@ -64,7 +64,7 @@ async function requestKernelAccessImpl(
     }
     const displayName = extensions.getExtension(extensionId)?.packageJSON?.displayName;
     if (!displayName) {
-        traceError(`Kernel API access revoked, as extension ${extensionId} does not exist!`);
+        logger.error(`Kernel API access revoked, as extension ${extensionId} does not exist!`);
         return { result: 'denied' };
     }
     const allow = l10n.t('Allow');
@@ -145,7 +145,7 @@ async function getAccessForExtensionsFromStore(ignoreCache: boolean = false): Pr
         cachedAccessInfo = new Map<string, boolean>(Object.entries(JSON.parse(json)));
         return cachedAccessInfo;
     } catch (ex) {
-        traceError(`Failed to parse API access information ${json}`, ex);
+        logger.error(`Failed to parse API access information ${json}`, ex);
         return new Map<string, boolean>();
     }
 }
@@ -169,7 +169,7 @@ export async function updateListOfExtensionsAllowedToAccessApi(extensionIds: str
             await context.secrets.store(apiAccessSecretKey, JSON.stringify(Object.fromEntries(cachedAccessInfo)));
             onDidChange.fire();
         } catch (ex) {
-            traceError(
+            logger.error(
                 `Failed to update API access information ${JSON.stringify(Object.fromEntries(cachedAccessInfo))}`,
                 ex
             );
@@ -192,7 +192,7 @@ async function updateIndividualExtensionAccessInStore(extensionId: string, acces
             await context.secrets.store(apiAccessSecretKey, JSON.stringify(Object.fromEntries(apiAccess)));
             onDidChange.fire();
         } catch (ex) {
-            traceError(`Failed to store API access information ${JSON.stringify(Object.fromEntries(apiAccess))}`, ex);
+            logger.error(`Failed to store API access information ${JSON.stringify(Object.fromEntries(apiAccess))}`, ex);
         }
     }));
 }

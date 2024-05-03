@@ -8,7 +8,7 @@ import { Telemetry } from '../../platform/common/constants';
 import { IConfigurationService } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { ProgressReporter } from '../../platform/progress/progressReporter';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportFileOpener } from './exportFileOpener';
@@ -77,11 +77,11 @@ export abstract class FileConverterBase implements IFileConverter {
             }
             await this.performExport(format, sourceDocument, target, token, candidateInterpreter);
         } catch (e) {
-            traceError('Export failed', e);
+            logger.error('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
 
             if (format === ExportFormat.pdf) {
-                traceError(localize.DataScience.exportToPDFDependencyMessage);
+                logger.error(localize.DataScience.exportToPDFDependencyMessage);
             }
 
             this.showExportFailed(localize.DataScience.exportFailedGeneralMessage);

@@ -7,7 +7,7 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { CancellationTokenSource, workspace } from 'vscode';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import {
     getPythonEnvironmentCategory,
     pythonEnvironmentQuickPick
@@ -101,7 +101,7 @@ export class JupyterInterpreterSelector {
             }
             return item;
         } catch (ex) {
-            traceError(`Failed to select a Python Environment to start Jupyter`, ex);
+            logger.error(`Failed to select a Python Environment to start Jupyter`, ex);
         } finally {
             dispose(disposables);
         }

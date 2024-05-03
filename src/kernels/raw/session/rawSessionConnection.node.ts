@@ -4,7 +4,7 @@
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { Signal } from '@lumino/signaling';
 import uuid from 'uuid/v4';
-import { traceInfoIfCI, traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { Telemetry } from '../../../telemetry';
 import { LocalKernelConnectionMetadata } from '../../types';
@@ -162,7 +162,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
         this.statusChanged.emit('terminating');
         await this._kernel
             .shutdown()
-            .catch((ex) => traceWarning(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex));
+            .catch((ex) => logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex));
         this.isTerminating = false;
         // Before triggering any status events ensure this is marked as disposed.
         if (this._isDisposing) {
@@ -172,7 +172,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
         this.statusChanged.emit(this.status);
     }
     private onKernelStatus(_sender: Kernel.IKernelConnection, state: KernelMessage.Status) {
-        traceInfoIfCI(`RawSession status changed to ${state}`);
+        logger.ci(`RawSession status changed to ${state}`);
         this.statusChanged.emit(state);
     }
 

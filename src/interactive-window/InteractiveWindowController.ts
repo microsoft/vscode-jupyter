@@ -9,7 +9,7 @@ import { InteractiveWindowMode, Resource } from '../platform/common/types';
 import { IInteractiveControllerHelper } from './types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { SystemInfoCell, getFinishConnectMessage, getStartConnectMessage } from './systemInfoCell';
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import { SysInfoReason } from '../messageTypes';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
@@ -68,12 +68,12 @@ export class InteractiveWindowController {
             // When restart finishes, rerun our initialization code
             kernel.onRestarted(
                 async () => {
-                    traceVerbose('Restart event handled in IW');
+                    logger.debug('Restart event handled in IW');
                     this.fileInKernel = undefined;
                     try {
                         await this.setFileInKernel(kernel);
                     } catch (ex) {
-                        traceError(`Failed to run initialization after restarting`);
+                        logger.error(`Failed to run initialization after restarting`);
                     } finally {
                         this.finishSysInfoMessage(kernel, SysInfoReason.Restart);
                     }
@@ -136,26 +136,26 @@ export class InteractiveWindowController {
     private async setFileInKernel(kernel: IKernel): Promise<void> {
         const file = this.owner;
         if (!file) {
-            traceInfoIfCI('Unable to run initialization for IW');
+            logger.ci('Unable to run initialization for IW');
             return;
         }
         // If in perFile mode, set only once
         const path = getFilePath(file);
         const execution = this.kernelProvider.getKernelExecution(kernel!);
         if (this.mode === 'perFile' && !this.fileInKernel) {
-            traceVerbose(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
+            logger.debug(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             this.fileInKernel = file;
             await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else if (
             (!this.fileInKernel || this.fileInKernel.toString() !== file.toString()) &&
             this.mode !== 'perFile'
         ) {
-            traceVerbose(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
+            logger.debug(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
             await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else {
-            traceVerbose(
+            logger.debug(
                 `Not Initializing __file__ in setFileInKernel with ${path} for mode ${this.mode} currently ${this.fileInKernel}`
             );
         }
@@ -203,7 +203,7 @@ export class InteractiveWindowController {
             this.systemInfoCell
                 .updateMessage(message)
                 .catch((error) =>
-                    traceWarning(`could not update info cell with message: "${message}", error: ${error}`)
+                    logger.warn(`could not update info cell with message: "${message}", error: ${error}`)
                 );
         }
     }
@@ -218,7 +218,7 @@ export class InteractiveWindowController {
         this.systemInfoCell
             ?.updateMessage(message)
             .catch((error) =>
-                traceWarning(`System info message was not updated: "${message}" because of error: ${error}`)
+                logger.warn(`System info message was not updated: "${message}" because of error: ${error}`)
             );
         this.systemInfoCell = undefined;
     }
@@ -230,7 +230,7 @@ export class InteractiveWindowController {
         this.systemInfoCell
             ?.updateMessage(message)
             .catch((error) =>
-                traceWarning(`System info message was not updated: "${message}" because of error: ${error}`)
+                logger.warn(`System info message was not updated: "${message}" because of error: ${error}`)
             );
         this.systemInfoCell = undefined;
     }

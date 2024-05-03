@@ -9,7 +9,7 @@ import { sendKernelTelemetryEvent } from './sendKernelTelemetryEvent';
 import { Telemetry } from '../../platform/common/constants';
 import type { Environment } from '@vscode/python-extension';
 import { getCellMetadata } from '../../platform/common/utils';
-import { traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
@@ -516,7 +516,7 @@ function computeNotebookSummary(notebook: NotebookDocument) {
                     }
                 });
             } catch (error) {
-                traceWarning(`Error parsing attachments in cell metadata`, error);
+                logger.warn(`Error parsing attachments in cell metadata`, error);
             }
         } else {
             notebookSummary.codeCellCount += 1;

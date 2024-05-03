@@ -35,7 +35,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { ExportFormat, IFileConverter } from '../../notebooks/export/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
-import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { generateCellsFromDocument } from '../editor-integration/cellFactory';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
@@ -391,7 +391,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             if (iw && iw.notebookDocument) {
                 const kernel = this.kernelProvider.get(iw.notebookDocument);
                 if (kernel) {
-                    traceVerbose(`Interrupt kernel due to debug stop of IW ${uri.toString()}`);
+                    logger.debug(`Interrupt kernel due to debug stop of IW ${uri.toString()}`);
                     // If we have a matching iw, then stop current execution
                     await kernel.interrupt();
                 }
@@ -578,7 +578,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             result = await promise();
             return result;
         } catch (err) {
-            traceError('listenForErrors', err as any);
+            logger.error('listenForErrors', err as any);
             this.dataScienceErrorHandler.handleError(err).then(noop, noop);
         }
         return result;
@@ -678,7 +678,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
 
     private async expandAllCells(uri?: Uri) {
         const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
-        traceInfo(`Expanding all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
+        logger.info(`Expanding all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
         if (interactiveWindow) {
             await interactiveWindow.expandAllCells();
         }
@@ -686,7 +686,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
 
     private async collapseAllCells(uri?: Uri) {
         const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
-        traceInfo(`Collapsing all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
+        logger.info(`Collapsing all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
         if (interactiveWindow) {
             await interactiveWindow.collapseAllCells();
         }

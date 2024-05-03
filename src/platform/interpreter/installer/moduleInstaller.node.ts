@@ -9,7 +9,7 @@ import {
     ProgressOptions,
     window
 } from 'vscode';
-import { traceVerbose } from '../../logging';
+import { logger } from '../../logging';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types.node';
 import { createDeferred } from '../../common/utils/async';
 import { Products } from '../../common/utils/localize';
@@ -94,7 +94,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 }
                 try {
                     const results = await proc.shellExec(args.args.join(' '), { cwd: args.cwd });
-                    traceVerbose(results.stdout);
+                    logger.debug(results.stdout);
                     deferred.resolve();
                 } catch (ex) {
                     deferred.reject(ex);
@@ -139,7 +139,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                         const message =
                             trimmedOutput.length > 28 ? `${trimmedOutput.substring(0, 28)}${suffix}` : trimmedOutput;
                         progress.report({ message });
-                        traceVerbose(output.out);
+                        logger.debug(output.out);
                         if (output.source === 'stderr') {
                             // https://github.com/microsoft/vscode-jupyter/issues/12703
                             // Sometimes on windows we get an error that says "ERROR: Could not install packages due to an OSError: [Errno 2] No such file or directory:"

@@ -87,7 +87,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { isWeb } from '../../../platform/common/utils/misc';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import { initialize, waitForCondition } from '../../common';
@@ -284,7 +284,7 @@ export async function createEmptyPythonNotebook(
     rootFolder?: Uri,
     dontWaitForKernel?: boolean
 ) {
-    traceInfoIfCI('Creating an empty notebook');
+    logger.ci('Creating an empty notebook');
     await getServices();
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
@@ -305,12 +305,12 @@ export async function createEmptyPythonNotebook(
     }
     await deleteAllCellsAndWait();
     const notebook = window.activeNotebookEditor!.notebook;
-    traceVerbose(`Empty notebook created ${getDisplayPath(notebook.uri)}`);
+    logger.debug(`Empty notebook created ${getDisplayPath(notebook.uri)}`);
     return { notebook, editor: window.activeNotebookEditor! };
 }
 
 async function shutdownAllNotebooks() {
-    traceVerbose('Shutting down all kernels');
+    logger.debug('Shutting down all kernels');
     const api = await initialize();
     const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider) as IKernelProvider;
     await Promise.all(kernelProvider.kernels.map((k) => k.dispose().catch(noop)));
@@ -383,7 +383,7 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     if (!isInsiders()) {
         return false;
     }
-    traceVerbose(
+    logger.debug(
         `Before Closing all notebooks, currently opened ${workspace.notebookDocuments
             .map((item) => getDisplayPath(item.uri))
             .join(', ')}`
@@ -406,13 +406,13 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     dispose(disposables);
     await shutdownAllNotebooks();
     if (workspace.notebookDocuments.length) {
-        traceVerbose(
+        logger.debug(
             `After Closing all notebooks, currently opened ${workspace.notebookDocuments
                 .map((item) => getDisplayPath(item.uri))
                 .join(', ')}`
         );
     } else {
-        traceVerbose(`Closed all notebooks`);
+        logger.debug(`Closed all notebooks`);
     }
 }
 
@@ -474,13 +474,13 @@ async function waitForKernelToChangeImpl(
                 );
             if (controller) {
                 // eslint-disable-next-line local-rules/dont-use-fspath
-                traceVerbose(`Did match a controller that matches the interpreter ${interpreterPath.fsPath}`);
+                logger.debug(`Did match a controller that matches the interpreter ${interpreterPath.fsPath}`);
             } else {
                 // eslint-disable-next-line local-rules/dont-use-fspath
-                traceWarning(`Did not find a controller that matches the interpreter ${interpreterPath.fsPath}`);
+                logger.warn(`Did not find a controller that matches the interpreter ${interpreterPath.fsPath}`);
             }
         }
-        traceInfo(
+        logger.info(
             `Switching to kernel id ${controller?.id}, current controllers ${controllerRegistration.all
                 .map(
                     (c) =>
@@ -499,10 +499,10 @@ async function waitForKernelToChangeImpl(
             return false;
         }
         if (selectedController.id === controller?.id) {
-            traceInfo(`Found selected kernel id:label ${selectedController.id}:${selectedController.label}`);
+            logger.info(`Found selected kernel id:label ${selectedController.id}:${selectedController.label}`);
             return true;
         }
-        traceInfo(`Active kernel is id:label = ${selectedController.id}:${selectedController.label}`);
+        logger.info(`Active kernel is id:label = ${selectedController.id}:${selectedController.label}`);
         return false;
     };
     if (!(await isRightKernel())) {
@@ -514,7 +514,7 @@ async function waitForKernelToChangeImpl(
                 if (!(await isRightKernel()) && !skipAutoSelection) {
                     const criteria = typeof searchCriteria === 'function' ? await searchCriteria() : searchCriteria;
                     lastCriteria = JSON.stringify(lastCriteria);
-                    traceInfoIfCI(
+                    logger.ci(
                         `Notebook select.kernel command switching to kernel id ${controller?.connection
                             .kind}${controller?.id}: Try ${tryCount} for ${JSON.stringify(criteria)}`
                     );
@@ -523,7 +523,7 @@ async function waitForKernelToChangeImpl(
                         id: controller?.id,
                         extension: JVSC_EXTENSION_ID
                     });
-                    traceInfoIfCI(
+                    logger.ci(
                         `Notebook select.kernel command switched to kernel id ${controller?.connection.kind}:${controller?.id}`
                     );
                     tryCount += 1;
@@ -537,7 +537,7 @@ async function waitForKernelToChangeImpl(
         );
         // Make sure the kernel is actually in use before returning (switching is async)
         await sleep(500);
-        traceInfoIfCI(
+        logger.ci(
             `Notebook select.kernel command successfully switched to kernel id ${controller?.connection.kind}${controller?.id}: after ${tryCount} attempts.`
         );
     }
@@ -734,14 +734,14 @@ export async function waitForKernelToGetAutoSelectedImpl(
     timeout = 100_000,
     skipAutoSelection: boolean = false
 ) {
-    traceInfoIfCI('Wait for kernel to get auto selected');
+    logger.ci('Wait for kernel to get auto selected');
     const { controllerRegistration, controllerPreferred, interpreterService } = await getServices();
     const useRemoteKernelSpec = IS_REMOTE_NATIVE_TEST() || isWebExtension(); // Web is only remote
 
     // Wait for the active editor to come up
     notebookEditor = await waitForActiveNotebookEditor(notebookEditor);
 
-    traceInfoIfCI(`Wait for kernel - got notebook controllers`);
+    logger.ci(`Wait for kernel - got notebook controllers`);
     const notebookControllers = controllerRegistration.registered;
 
     // Make sure we don't already have a selection (this function gets run even after opening a document)
@@ -757,9 +757,9 @@ export async function waitForKernelToGetAutoSelectedImpl(
         await controllerPreferred.computePreferred(notebookEditor!.notebook);
         preferred = controllerPreferred.getPreferred(notebookEditor!.notebook);
         if (!preferred) {
-            traceInfoIfCI(`Did not find a controller with document affinity`);
+            logger.ci(`Did not find a controller with document affinity`);
         }
-        traceInfoIfCI(
+        logger.ci(
             `Wait for kernel - got a preferred notebook controller: ${preferred?.connection.kind}:${preferred?.id}`
         );
 
@@ -780,7 +780,7 @@ export async function waitForKernelToGetAutoSelectedImpl(
             }
         }
         if (!match) {
-            traceInfoIfCI(`Manually pick a preferred kernel from all kernel specs`);
+            logger.ci(`Manually pick a preferred kernel from all kernel specs`);
             const matches = notebookControllers.filter(
                 (d) =>
                     d.connection.kind != 'connectToLiveRemoteKernel' &&
@@ -789,10 +789,8 @@ export async function waitForKernelToGetAutoSelectedImpl(
             );
 
             const activeInterpreter = await interpreterService?.getActiveInterpreter(notebookEditor!.notebook.uri);
-            traceInfoIfCI(
-                `Attempt to find a kernel that matches the active interpreter ${activeInterpreter?.uri.path}`
-            );
-            traceInfoIfCI(
+            logger.ci(`Attempt to find a kernel that matches the active interpreter ${activeInterpreter?.uri.path}`);
+            logger.ci(
                 `Matches: ${matches
                     .map((m) => m.connection.kind + ', ' + m.connection.interpreter?.uri.path)
                     .join('\n ')}`
@@ -809,7 +807,7 @@ export async function waitForKernelToGetAutoSelectedImpl(
         }
 
         if (!match) {
-            traceInfoIfCI(
+            logger.ci(
                 `Houston, we have a problem, no match. Expected language ${expectedLanguage}. Expected kind ${preferredKind}.`
             );
             assert.fail(
@@ -820,7 +818,7 @@ export async function waitForKernelToGetAutoSelectedImpl(
         }
 
         const criteria = { labelOrId: match!.id };
-        traceInfo(
+        logger.info(
             `Preferred kernel for selection is ${match.connection.kind}:${match?.id}, criteria = ${JSON.stringify(
                 criteria
             )}`
@@ -850,7 +848,7 @@ export async function prewarmNotebooks() {
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await selectDefaultController(notebookEditor, defaultNotebookTestTimeout);
         const cell = window.activeNotebookEditor!.notebook.cellAt(0)!;
-        traceInfoIfCI(`Running all cells in prewarm notebooks`);
+        logger.ci(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
         await closeActiveWindows();
         await shutdownAllNotebooks();
@@ -1168,7 +1166,7 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
             ? haystack === value || haystack.trim() === value
             : haystack.toLowerCase().includes(value.toLowerCase());
     } catch (ex) {
-        traceInfoIfCI(`Looking for value ${value}, but failed with error`, ex);
+        logger.ci(`Looking for value ${value}, but failed with error`, ex);
         return false;
     }
 }
@@ -1313,14 +1311,14 @@ export async function hijackPrompt(
     let displayCount = 0;
     // eslint-disable-next-line
     const stub = sinon.stub(window, promptType).callsFake(function (msg: string) {
-        traceInfo(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
+        logger.info(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
         if (
             ('exactMatch' in message && msg.trim() === message.exactMatch.trim()) ||
             ('contains' in message && msg.trim().includes(message.contains.trim())) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
             messageDisplayed.push(msg);
-            traceInfo(`Exact Message found '${msg}'`);
+            logger.info(`Exact Message found '${msg}'`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
@@ -1369,10 +1367,10 @@ export async function hijackSavePrompt(
     const messageDisplayed: string[] = [];
     let displayCount = 0;
     const showSaveDialogFake = (msg: { saveLabel: string }) => {
-        traceInfo(`Message displayed to user '${JSON.stringify(msg)}', checking for '${saveLabel}'`);
+        logger.info(`Message displayed to user '${JSON.stringify(msg)}', checking for '${saveLabel}'`);
         if (msg.saveLabel === saveLabel) {
             messageDisplayed.push(msg.saveLabel);
-            traceInfo(`Exact Message found '${msg.saveLabel}'`);
+            logger.info(`Exact Message found '${msg.saveLabel}'`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
@@ -1572,9 +1570,9 @@ export async function clickOKForRestartPrompt() {
     await initialize();
     // Ensure we click `Yes` when prompted to restart the kernel.
     const showInformationMessage = sinon.stub(window, 'showInformationMessage').callsFake(function (message: string) {
-        traceInfo(`Step 2. ShowInformationMessage ${message}`);
+        logger.info(`Step 2. ShowInformationMessage ${message}`);
         if (message === DataScience.restartKernelMessage) {
-            traceInfo(`Step 3. ShowInformationMessage & yes to restart`);
+            logger.info(`Step 3. ShowInformationMessage & yes to restart`);
             // User clicked ok to restart it.
             return DataScience.restartKernelMessageYes;
         }

@@ -17,7 +17,7 @@ import {
     isRemoteConnection
 } from '../../types';
 import { IJupyterKernelService, IJupyterServerProvider } from '../types';
-import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { inject, injectable, optional } from 'inversify';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
@@ -119,7 +119,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 swallowExceptions(() => session.dispose());
             }
             Cancellation.throwIfCanceled(options.token);
-            traceInfo(`Started session for kernel ${options.kernelConnection.kind}:${options.kernelConnection.id}`);
+            logger.info(`Started session for kernel ${options.kernelConnection.kind}:${options.kernelConnection.id}`);
 
             const wrapperSession = new JupyterSessionWrapper(
                 session,
@@ -182,7 +182,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         try {
             await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs()]);
         } catch (ex) {
-            traceError(
+            logger.error(
                 'Failed to fetch running kernels from remote server, connection may be outdated or remote server may be unreachable',
                 ex
             );
@@ -262,7 +262,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                     )
                 );
             } else {
-                traceVerbose(`createNewKernelSession ${options.kernelConnection?.id}`);
+                logger.debug(`createNewKernelSession ${options.kernelConnection?.id}`);
                 session = await this.createNewSession(options);
 
                 await waitForIdleOnSession(
@@ -281,13 +281,13 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         } catch (exc) {
             // Don't log errors if UI is disabled (e.g. auto starting a kernel)
             // Else we just pollute the logs with lots of noise.
-            const loggerFn = options.ui.disableUI ? traceVerbose : traceError;
+            const log = options.ui.disableUI ? logger.debug : logger.error;
             // Don't swallow known exceptions.
             if (exc instanceof BaseError) {
-                loggerFn('Failed to change kernel, re-throwing', exc);
+                log('Failed to change kernel, re-throwing', exc);
                 throw exc;
             } else {
-                loggerFn('Failed to change kernel', exc);
+                log('Failed to change kernel', exc);
                 // Throw a new exception indicating we cannot change.
                 throw new JupyterInvalidKernelError(options.kernelConnection);
             }
@@ -355,7 +355,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             if (!session.kernel) {
                 throw new JupyterSessionStartError(new Error(`No kernel created`));
             }
-            traceInfo(DataScience.createdNewKernel(options.connection.baseUrl, session?.kernel?.id || ''));
+            logger.info(DataScience.createdNewKernel(options.connection.baseUrl, session?.kernel?.id || ''));
             return session;
         } catch (ex) {
             if (ex instanceof JupyterSessionStartError) {

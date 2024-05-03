@@ -4,7 +4,7 @@
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import { splitLines } from '../helpers';
-import { traceError } from '../../logging';
+import { logger } from '../../logging';
 export type DistroInfo = {
     id: string;
     version_id: string;
@@ -115,7 +115,7 @@ export async function getDistroInfo(): Promise<DistroInfo> {
             }
         });
     } catch (ex) {
-        traceError(`Failed to read distro info`, ex);
+        logger.error(`Failed to read distro info`, ex);
     }
 
     return distro;

@@ -4,7 +4,7 @@
 import { EventEmitter, Memento, env } from 'vscode';
 import { inject, injectable, named } from 'inversify';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
-import { traceError, traceInfoIfCI } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -94,7 +94,7 @@ export class JupyterServerUriStorage extends DisposableBase implements IJupyterS
     }
     public async add(jupyterHandle: JupyterServerProviderHandle, options?: { time: number }): Promise<void> {
         this.hookupStorageEvents();
-        traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
+        logger.ci(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
         const entry: IJupyterServerUriEntry = {
             time: options?.time ?? Date.now(),
             displayName: '',
@@ -251,7 +251,7 @@ class NewStorage {
                     }
                 }
             })
-            .catch((ex) => traceError(`Failed to remove Server handle ${JSON.stringify(server)}`, ex)));
+            .catch((ex) => logger.error(`Failed to remove Server handle ${JSON.stringify(server)}`, ex)));
     }
     public getAll(): IJupyterServerUriEntry[] {
         const data = this.memento.get<StorageMRUItem[]>(this.mementoKey, []);

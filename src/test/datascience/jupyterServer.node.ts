@@ -274,11 +274,11 @@ export class JupyterServer {
                 if (result.proc.pid) {
                     this.pid = result.proc.pid;
                 }
-                // result.proc.once('close', () => traceVerbose('Shutting Jupyter server used for remote tests (closed)'));
+                // result.proc.once('close', () => logger.debug('Shutting Jupyter server used for remote tests (closed)'));
                 // result.proc.once('disconnect', () =>
-                //     traceVerbose('Shutting Jupyter server used for remote tests (disconnected)')
+                //     logger.debug('Shutting Jupyter server used for remote tests (disconnected)')
                 // );
-                // result.proc.once('exit', () => traceVerbose('Shutting Jupyter server used for remote tests (exited)'));
+                // result.proc.once('exit', () => logger.debug('Shutting Jupyter server used for remote tests (exited)'));
                 const procDisposable = {
                     dispose: () => {
                         if (!result.proc) {

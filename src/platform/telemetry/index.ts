@@ -3,7 +3,7 @@
 
 import type TelemetryReporter from '@vscode/extension-telemetry';
 import { AppinsightsKey, Telemetry, isTestExecution, isUnitTestExecution } from '../common/constants';
-import { traceError } from '../logging';
+import { logger } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { ExcludeType, noop, PickType, UnionToIntersection } from '../common/utils/misc';
 import { populateTelemetryWithErrorInfo } from '../errors';
@@ -107,7 +107,7 @@ function sanitizeProperties(eventName: string, data: Record<string, any>) {
                     ? 'object'
                     : data[prop].toString();
         } catch (ex) {
-            traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
+            logger.error(`Failed to serialize ${prop} for ${eventName}`, ex);
         }
     });
     return customProperties;

@@ -6,7 +6,7 @@ import { NotebookCell, Uri } from 'vscode';
 import { ITracebackFormatter } from '../../kernels/types';
 import { IGeneratedCode, IFileGeneratedCodes, IGeneratedCodeStorageFactory } from '../editor-integration/types';
 import { untildify } from '../../platform/common/utils/platform';
-import { traceInfoIfCI } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { stripAnsi } from '../../platform/common/utils/regexp';
@@ -76,7 +76,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
             return `${prefix}${num}${suffix}\n`;
         });
 
-        traceInfoIfCI(`Trace frame to match: ${traceFrame}`);
+        logger.ci(`Trace frame to match: ${traceFrame}`);
 
         let executionCount: number | undefined;
         let location: string | undefined;

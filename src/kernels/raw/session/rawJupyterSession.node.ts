@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { traceVerbose, traceInfoIfCI } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { raceTimeout } from '../../../platform/common/utils/async';
 import { IRawKernelSession, LocalKernelConnectionMetadata } from '../../types';
@@ -38,7 +38,7 @@ export class RawJupyterSessionWrapper
         if (this.session.kernel) {
             return this.session.kernel.status;
         }
-        traceInfoIfCI(`Real kernel is ${this.session.kernel ? 'defined' : 'undefined'}`);
+        logger.ci(`Real kernel is ${this.session.kernel ? 'defined' : 'undefined'}`);
         return 'unknown';
     }
 
@@ -64,7 +64,7 @@ export class RawJupyterSessionWrapper
         try {
             await waitForIdleOnSession(this.kernelConnectionMetadata, this.resource, this.session, timeout, token);
         } catch (ex) {
-            traceInfoIfCI(`Error waiting for idle`, ex);
+            logger.ci(`Error waiting for idle`, ex);
             await this.shutdown().catch(noop);
             throw ex;
         }
@@ -78,11 +78,11 @@ export class RawJupyterSessionWrapper
         this.terminatingStatus = 'terminating';
         this.statusChanged.emit('terminating');
         const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata?.id}`;
-        traceVerbose(`Shutdown session ${kernelIdForLogging} - start called from ${new Error('').stack}`);
+        logger.debug(`Shutdown session ${kernelIdForLogging} - start called from ${new Error('').stack}`);
         suppressShutdownErrors(this.session.kernel);
         await raceTimeout(1000, this.session.shutdown().catch(noop));
         this.didShutdown.fire();
         super.dispose();
-        traceVerbose(`Shutdown session ${kernelIdForLogging} - shutdown complete`);
+        logger.debug(`Shutdown session ${kernelIdForLogging} - shutdown complete`);
     }
 }

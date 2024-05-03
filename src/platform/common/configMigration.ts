@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
-import { traceWarning } from '../logging';
+import { logger } from '../logging';
 import { noop } from './utils/misc';
 import { PYTHON_LANGUAGE } from './constants';
 
@@ -138,5 +138,5 @@ export class ConfigMigration {
 }
 
 function handleSettingMigrationFailure(e: Error) {
-    traceWarning('Error migrating Jupyter configuration', e);
+    logger.warn('Error migrating Jupyter configuration', e);
 }

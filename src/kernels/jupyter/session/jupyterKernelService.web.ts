@@ -3,7 +3,7 @@
 
 import { injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { traceVerbose, logValue, ignoreLogging } from '../../../platform/logging';
+import { logger, logValue, ignoreLogging } from '../../../platform/logging';
 import { Resource, IDisplayOptions } from '../../../platform/common/types';
 import { KernelConnectionMetadata } from '../../types';
 import { IJupyterKernelService } from '../types';
@@ -29,7 +29,7 @@ export class JupyterKernelService implements IJupyterKernelService {
         @ignoreLogging() _cancelToken: CancellationToken,
         _cannotChangeKernels?: boolean
     ): Promise<void> {
-        traceVerbose('Check if a kernel is usable');
+        logger.debug('Check if a kernel is usable');
         // For now web kernels are always usable.
     }
 }

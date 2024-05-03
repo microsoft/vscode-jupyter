@@ -11,7 +11,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IDebuggingManager, INotebookDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
 import { Commands, JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
-import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
@@ -41,7 +41,7 @@ suite('Run By Line @debugger', function () {
     let debuggingManager: IDebuggingManager;
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo(`Start Test Suite - Run By Line @debugger`);
+        logger.info(`Start Test Suite - Run By Line @debugger`);
         try {
             this.timeout(120_000);
             // Don't run if we can't use the native notebook interface
@@ -50,32 +50,32 @@ suite('Run By Line @debugger', function () {
             }
 
             api = await initialize();
-            traceVerbose('Step1');
+            logger.debug('Step1');
             await closeNotebooksAndCleanUpAfterTests(disposables);
-            traceVerbose('Step2');
+            logger.debug('Step2');
             await prewarmNotebooks();
-            traceVerbose('Step3');
+            logger.debug('Step3');
             sinon.restore();
-            traceVerbose('Step4');
+            logger.debug('Step4');
             const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            traceVerbose('Step5');
+            logger.debug('Step5');
             variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
             debuggingManager = api.serviceContainer.get<IDebuggingManager>(INotebookDebuggingManager);
         } catch (ex) {
-            traceError('Failed to setup suite for Run By Line @debugger', ex);
+            logger.error('Failed to setup suite for Run By Line @debugger', ex);
             throw ex;
         } finally {
-            traceInfo(`Start Test Suite (completed) - Run By Line @debugger`);
+            logger.info(`Start Test Suite (completed) - Run By Line @debugger`);
         }
     });
     setup(async function () {
         this.timeout(120_000);
-        traceInfo(`Start Test (1) ${this.currentTest?.title}`);
+        logger.info(`Start Test (1) ${this.currentTest?.title}`);
         sinon.restore();
         const metadata = await getDefaultKernelConnection();
         const controllerRegistry = await api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-        traceInfo(`Start Test (2) ${metadata.id}`);
+        logger.info(`Start Test (2) ${metadata.id}`);
 
         const controller = await waitForCondition(
             () =>
@@ -85,26 +85,26 @@ suite('Run By Line @debugger', function () {
             defaultNotebookTestTimeout,
             `Controller not found for connection ${metadata.id}`
         );
-        traceInfo(`Start Test (3) ${controller.id}`);
+        logger.info(`Start Test (3) ${controller.id}`);
         await createEmptyPythonNotebook(disposables, undefined, true);
-        traceInfo(`Start Test (4) ${controller.id}`);
+        logger.info(`Start Test (4) ${controller.id}`);
         await commands.executeCommand('notebook.selectKernel', {
             id: controller!.id,
             extension: JVSC_EXTENSION_ID
         });
-        traceInfo(`Start Test (5) ${controller.id}`);
+        logger.info(`Start Test (5) ${controller.id}`);
 
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
             await captureScreenShot(this);
         }
         await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
 
     // Cleanup after suite is finished
@@ -123,10 +123,10 @@ suite('Run By Line @debugger', function () {
 
             const cell = await insertCodeCell('a=1\na', { index: 0 });
             const doc = window.activeNotebookEditor?.notebook!;
-            traceInfo(`Inserted cell`);
+            logger.info(`Inserted cell`);
 
             await commands.executeCommand(Commands.RunByLine, cell);
-            traceInfo(`Executed run by line`);
+            logger.info(`Executed run by line`);
             const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
             // Make sure that we stop to dump the files
@@ -161,10 +161,10 @@ suite('Run By Line @debugger', function () {
         // Run by line seems to end up on the second line of the function, not the first
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = window.activeNotebookEditor?.notebook!;
-        traceInfo(`Inserted cell`);
+        logger.info(`Inserted cell`);
 
         await commands.executeCommand(Commands.RunByLine, cell);
-        traceInfo(`Executed run by line`);
+        logger.info(`Executed run by line`);
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         const stoppedEvent = await waitForStoppedEvent(debugAdapter!);
@@ -173,14 +173,14 @@ suite('Run By Line @debugger', function () {
         });
         assert.isTrue(stack.stackFrames.length > 0, 'has frames');
         assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
-        traceInfo(`Got past first stop event`);
+        logger.info(`Got past first stop event`);
 
         const coreVariableView = await variableViewProvider.activeVariableView;
         const variableView = coreVariableView as unknown as ITestWebviewHost;
 
         await commands.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!);
-        traceInfo(`Got past second stop event`);
+        logger.info(`Got past second stop event`);
 
         const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
         await waitForVariablesToMatch(expectedVariables, variableView);
@@ -196,7 +196,7 @@ suite('Run By Line @debugger', function () {
             defaultNotebookTestTimeout,
             'Cell should have output'
         );
-        traceInfo(`Got past third stop event`);
+        logger.info(`Got past third stop event`);
 
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });

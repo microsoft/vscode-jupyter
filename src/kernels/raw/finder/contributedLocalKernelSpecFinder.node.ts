@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { EventEmitter, extensions } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { traceDecoratorError, traceError } from '../../../platform/logging';
+import { errorDecorator, logger } from '../../../platform/logging';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { areObjectsWithUrisTheSame } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
@@ -137,7 +137,7 @@ export class ContributedLocalKernelSpecFinder
         await promise;
     }
 
-    @traceDecoratorError('List kernels failed')
+    @errorDecorator('List kernels failed')
     private updateCache() {
         try {
             let kernels: LocalKernelConnectionMetadata[] = [];
@@ -156,7 +156,7 @@ export class ContributedLocalKernelSpecFinder
             kernels = kernels.concat(kernelSpecs).concat(kernelSpecsFromPythonKernelFinder);
             this.writeToCache(kernels);
         } catch (ex) {
-            traceError('Exception Saving loaded kernels', ex);
+            logger.error('Exception Saving loaded kernels', ex);
         }
     }
     public get kernels(): LocalKernelConnectionMetadata[] {

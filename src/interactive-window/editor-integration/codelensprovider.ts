@@ -13,7 +13,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import {
     CodeLensCommands,
     EditorContexts,
@@ -158,7 +158,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
                     return false;
                 });
             } else {
-                traceInfoIfCI(
+                logger.ci(
                     `Detected debugging context because activeDebugSession is name:"${this.debugService.activeDebugSession.name}", type: "${this.debugService.activeDebugSession.type}", ` +
                         `but fell through with debugLocation: ${JSON.stringify(
                             debugLocation
@@ -185,7 +185,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             return codeWatcher.getCodeLenses();
         }
 
-        traceVerbose(`Creating a new watcher for document ${document.uri}`);
+        logger.debug(`Creating a new watcher for document ${document.uri}`);
         const newCodeWatcher = this.createNewCodeWatcher(document);
         return newCodeWatcher.getCodeLenses();
     }
@@ -199,7 +199,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // Create a new watcher for this file if we can find a matching document
         const possibleDocuments = vscode.workspace.textDocuments.filter((d) => d.uri.toString() === uri.toString());
         if (possibleDocuments && possibleDocuments.length > 0) {
-            traceVerbose(`creating new code watcher with matching document ${uri}`);
+            logger.debug(`creating new code watcher with matching document ${uri}`);
             return this.createNewCodeWatcher(possibleDocuments[0]);
         }
 

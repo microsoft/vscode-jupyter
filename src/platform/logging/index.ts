@@ -33,11 +33,18 @@ export type TraceInfo =
 let loggers: ILogger[] = [];
 let globalLoggingLevel: LogLevel = LogLevel.Info;
 export const logger: ILogger = {
-    error: (message: string, ...data: Arguments) => traceError(message, ...data),
-    warn: (message: string, ...data: Arguments) => traceWarning(message, ...data),
-    info: (message: string, ...data: Arguments) => traceInfo(message, ...data),
-    verbose: (message: string, ...data: Arguments) => traceVerbose(message, ...data),
-    trace: (message: string, ...data: Arguments) => traceTrace(message, ...data)
+    error: (message: string, ...data: Arguments) => logError(message, ...data),
+    warn: (message: string, ...data: Arguments) => logWarning(message, ...data),
+    info: (message: string, ...data: Arguments) => logInfo(message, ...data),
+    debug: (message: string, ...data: Arguments) => logDebug(message, ...data),
+    trace: (message: string, ...data: Arguments) => logTrace(message, ...data),
+    ci: (arg1: any, ...data: string[]) => {
+        if (data && Array.isArray(data)) {
+            logInfoIfCI(arg1, ...data);
+        } else {
+            logInfoIfCI(arg1);
+        }
+    }
 };
 
 export function initializeLoggers(options: {
@@ -204,38 +211,38 @@ function formatErrors(...args: Arguments) {
             .join('\n');
     });
 }
-export function traceError(message: string, ...args: Arguments): void {
+function logError(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Error) {
         args = formatErrors(...args);
         loggers.forEach((l) => l.error(message, ...args));
     }
 }
 
-export function traceWarning(message: string, ...args: Arguments): void {
+function logWarning(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Warning) {
         args = formatErrors(...args);
         loggers.forEach((l) => l.warn(message, ...args));
     }
 }
 
-export function traceInfo(message: string, ...args: Arguments): void {
+function logInfo(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Info) {
         loggers.forEach((l) => l.info(message, ...args));
     }
 }
-export function traceVerbose(message: string, ...args: Arguments): void {
+function logDebug(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Debug) {
-        loggers.forEach((l) => l.verbose(message, ...args));
+        loggers.forEach((l) => l.debug(message, ...args));
     }
 }
-export function traceTrace(message: string, ...args: Arguments): void {
+function logTrace(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Trace) {
         loggers.forEach((l) => l.trace(message, ...args));
     }
 }
-export function traceInfoIfCI(msg: () => [message: string, ...args: string[]] | string): void;
-export function traceInfoIfCI(message: string, ...args: string[]): void;
-export function traceInfoIfCI(arg1: any, ...args: Arguments): void {
+function logInfoIfCI(msg: () => [message: string, ...args: string[]] | string): void;
+function logInfoIfCI(message: string, ...args: string[]): void;
+function logInfoIfCI(arg1: any, ...args: Arguments): void {
     if (isCI) {
         if (typeof arg1 === 'function') {
             const fn: () => string | [message: string, ...args: string[]] = arg1;
@@ -248,25 +255,25 @@ export function traceInfoIfCI(arg1: any, ...args: Arguments): void {
                 message = result.shift()!;
                 rest = result;
             }
-            traceInfo(message, ...rest);
+            logger.info(message, ...rest);
         } else {
-            traceInfo(arg1, ...args);
+            logger.info(arg1, ...args);
         }
     }
 }
 
 /** Logging Decorators go here */
 
-export function traceDecoratorVerbose(message: string, opts: TraceOptions = DEFAULT_OPTS): TraceDecoratorType {
+export function debugDecorator(message: string, opts: TraceOptions = DEFAULT_OPTS): TraceDecoratorType {
     return createTracingDecorator({ message, opts, level: LogLevel.Debug });
 }
-export function traceDecoratorError(message: string): TraceDecoratorType {
+export function errorDecorator(message: string): TraceDecoratorType {
     return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Error });
 }
-export function traceDecoratorInfo(message: string): TraceDecoratorType {
+export function infoDecorator(message: string): TraceDecoratorType {
     return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Info });
 }
-export function traceDecoratorWarn(message: string): TraceDecoratorType {
+export function warnDecorator(message: string): TraceDecoratorType {
     return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Warning });
 }
 
@@ -327,14 +334,14 @@ export function ignoreLogging() {
         });
     };
 }
-export function createTracingDecorator(logInfo: LogInfo) {
+function createTracingDecorator(logInfo: LogInfo) {
     return traceDecorator(
         (call, traced) => logResult(logInfo, traced, call),
         (logInfo.opts & TraceOptions.BeforeCall) > 0
     );
 }
 
-export type LogInfo = {
+type LogInfo = {
     opts: TraceOptions;
     message: string;
     level?: LogLevel;
@@ -446,17 +453,17 @@ function logResult(info: LogInfo, traced: TraceInfo, call?: CallInfo) {
 function logTo(logLevel: LogLevel, message: string, ...args: Arguments): void {
     switch (logLevel) {
         case LogLevel.Error:
-            traceError(message, ...args);
+            logger.error(message, ...args);
             break;
         case LogLevel.Warning:
-            traceWarning(message, ...args);
+            logWarning(message, ...args);
             break;
         case LogLevel.Info:
-            traceInfo(message, ...args);
+            logger.info(message, ...args);
             break;
         case LogLevel.Debug:
         case LogLevel.Trace:
-            traceVerbose(message, ...args);
+            logger.debug(message, ...args);
             break;
         default:
             break;

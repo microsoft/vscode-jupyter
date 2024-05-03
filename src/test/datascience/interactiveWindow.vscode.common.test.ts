@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import * as vscode from 'vscode';
-import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable, InteractiveWindowMode } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
@@ -62,16 +62,16 @@ suite(`Interactive window execution @iw`, async function () {
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         if (IS_REMOTE_NATIVE_TEST()) {
             await startJupyterServer();
         }
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
             await captureScreenShot(this);
@@ -80,7 +80,7 @@ suite(`Interactive window execution @iw`, async function () {
         // restore the default value
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindow.creationMode', 'multiple');
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('__file__ exists even after restarting a kernel', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/12251
@@ -261,13 +261,13 @@ ${actualCode}
 
 
 `;
-        traceInfoIfCI('Before submitting');
+        logger.ci('Before submitting');
         const { activeInteractiveWindow: interactiveWindow } = await submitFromPythonFile(
             interactiveWindowProvider,
             codeWithWhitespace,
             disposables
         );
-        traceInfoIfCI('After submitting');
+        logger.ci('After submitting');
         const lastCell = await waitForLastCellToComplete(interactiveWindow);
         const actualCellText = lastCell.document.getText();
         assert.equal(actualCellText, dedentedCode);

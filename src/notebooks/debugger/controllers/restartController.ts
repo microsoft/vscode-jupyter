@@ -4,7 +4,7 @@
 import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { traceError, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDebuggingDelegate, IKernelDebugAdapter, INotebookDebuggingManager, KernelDebugMode } from '../debuggingTypes';
 
 /**
@@ -23,11 +23,11 @@ export class RestartController implements IDebuggingDelegate {
     }
 
     private trace(tag: string, msg: string) {
-        traceVerbose(`[Debug-Restart] ${tag}: ${msg}`);
+        logger.debug(`[Debug-Restart] ${tag}: ${msg}`);
     }
 
     private error(tag: string, msg: string) {
-        traceError(`[Debug-Restart] ${tag}: ${msg}`);
+        logger.error(`[Debug-Restart] ${tag}: ${msg}`);
     }
 
     public async willSendResponse(response: DebugProtocol.Response): Promise<void> {

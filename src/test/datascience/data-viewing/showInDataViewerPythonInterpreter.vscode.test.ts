@@ -5,7 +5,7 @@
 import * as vscode from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, openFile } from '../../common.node';
 import { initialize } from '../../initialize.node';
@@ -29,12 +29,12 @@ suite('DataViewer @webview', function () {
     );
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo('Suite Setup');
+        logger.info('Suite Setup');
         this.timeout(120_000);
         try {
             await initialize();
             sinon.restore();
-            traceInfo('Suite Setup (completed)');
+            logger.info('Suite Setup (completed)');
         } catch (e) {
             await captureScreenShot('data-viewer-suite');
             throw e;

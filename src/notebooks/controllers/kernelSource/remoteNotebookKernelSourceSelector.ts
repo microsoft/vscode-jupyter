@@ -46,7 +46,7 @@ import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterCo
 import { generateIdFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
 import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBasedQuickPick';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from '../../../kernels/jupyter/finder/types';
 import { raceCancellationError } from '../../../platform/common/cancellation';
 import { JupyterServer, JupyterServerCollection, JupyterServerCommand } from '../../../api';
@@ -417,7 +417,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         state.notebook,
                         Promise.resolve(selectedSource.kernelFinderInfo as IRemoteKernelFinder),
                         token
-                    ).catch((ex) => traceError(`Failed to select a kernel`, ex));
+                    ).catch((ex) => logger.error(`Failed to select a kernel`, ex));
                     if (result && result === InputFlowAction.back) {
                         if (selectedSource === defaultSelection) {
                             throw InputFlowAction.back;
@@ -447,7 +447,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     })();
 
                     const result = await this.selectRemoteKernelFromPicker(state.notebook, finderPromise, token).catch(
-                        (ex) => traceError(`Failed to select a kernel`, ex)
+                        (ex) => logger.error(`Failed to select a kernel`, ex)
                     );
                     if (result && result === InputFlowAction.back) {
                         if (selectedSource === defaultSelection) {
@@ -521,7 +521,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         })();
 
         const result = await this.selectRemoteKernelFromPicker(state.notebook, finderPromise, token).catch((ex) =>
-            traceError(`Failed to select a kernel`, ex)
+            logger.error(`Failed to select a kernel`, ex)
         );
         if (result && result === InputFlowAction.back) {
             // Do not go back to the previous command,
@@ -578,7 +578,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 }
                 remoteKernelPicker.selected = item;
             })
-            .catch((ex) => traceError(`Failed to determine preferred remote kernel`, ex));
+            .catch((ex) => logger.error(`Failed to determine preferred remote kernel`, ex));
         return remoteKernelPicker.selectItem(token);
     }
 }

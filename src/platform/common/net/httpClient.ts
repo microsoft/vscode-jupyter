@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IHttpClient } from '../types';
-import { traceVerbose } from '../../logging';
+import { logger } from '../../logging';
 import * as fetch from 'cross-fetch';
 import { workspace } from 'vscode';
 
@@ -29,7 +29,7 @@ export class HttpClient implements IHttpClient {
             const response = await this.downloadFile(uri);
             return response.status === 200;
         } catch (ex) {
-            traceVerbose(`HttpClient - Failure checking for file ${uri}: ${ex}`);
+            logger.debug(`HttpClient - Failure checking for file ${uri}: ${ex}`);
             return false;
         }
     }

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
@@ -34,7 +34,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
         const outputs = await executeSilently(kernel.session.kernel, command);
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
-            traceWarning(DataScience.failedToGetVersionOfPandas, error.message);
+            logger.warn(DataScience.failedToGetVersionOfPandas, error.message);
         }
         return outputs.map((item) => item.text?.toString());
     }
@@ -43,7 +43,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
         const outputs = await this.execute(kernelGetPandasVersion, kernel);
         const output = outputs.map((text) => (text ? text.toString() : undefined)).find((item) => item);
         if (!output?.includes(separator)) {
-            traceWarning(DataScience.failedToGetVersionOfPandas, `Output is ${output}`);
+            logger.warn(DataScience.failedToGetVersionOfPandas, `Output is ${output}`);
             return '';
         }
         const items = splitLines(output.trim());

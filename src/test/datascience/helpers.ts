@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
@@ -31,10 +31,10 @@ import { isEqual } from '../../platform/vscode-path/resources';
 import { instance } from 'ts-mockito';
 
 export async function openNotebook(ipynbFile: vscode.Uri) {
-    traceInfo(`Opening notebook ${getFilePath(ipynbFile)}`);
+    logger.info(`Opening notebook ${getFilePath(ipynbFile)}`);
     const notebook = await vscode.workspace.openNotebookDocument(ipynbFile);
     const editor = await vscode.window.showNotebookDocument(notebook);
-    traceInfo(`Opened notebook ${getFilePath(ipynbFile)}`);
+    logger.info(`Opened notebook ${getFilePath(ipynbFile)}`);
     return { notebook, editor };
 }
 
@@ -83,7 +83,7 @@ export async function insertIntoInputEditor(source: string, interactiveWindow?: 
             (e) => e.document.uri.path === interactiveWindow.inputUri.path
         );
         if (!inputBox) {
-            traceError(
+            logger.error(
                 `couldn't find input box ${interactiveWindow.inputUri.path} in visible text editors ${JSON.stringify(
                     vscode.window.visibleTextEditors.map((e) => e.document.uri.path)
                 )}`
@@ -218,7 +218,7 @@ export async function waitForInteractiveWindow(
             let inputBox = vscode.window.visibleTextEditors.find(
                 (e) => e.document.uri.path === interactiveWindow?.inputUri?.path
             );
-            traceVerbose(
+            logger.debug(
                 `Waiting for Interactive Window '${interactiveWindow.notebookUri?.toString()}',`,
                 `found notebook '${notebookDocument?.uri.toString()}' and input '${inputBox?.document.uri.toString()}'`
             );
@@ -265,7 +265,7 @@ export async function waitForLastCellToComplete(
     } else {
         await waitForExecutionCompletedSuccessfully(codeCell!);
     }
-    traceInfoIfCI(`finished waiting for last cell to complete of ${codeCells.length} cells`);
+    logger.ci(`finished waiting for last cell to complete of ${codeCells.length} cells`);
     return codeCell!;
 }
 
@@ -301,7 +301,7 @@ export async function waitForCodeLenses(document: vscode.Uri, command: string) {
         `Code lens with command ${command} not found`
     );
 
-    traceInfoIfCI(`Found code lenses with command ${command}`);
+    logger.ci(`Found code lenses with command ${command}`);
     return codeLenses;
 }
 

@@ -22,7 +22,7 @@ import { CheckboxState } from '../../../platform/telemetry/constants';
 import { IKernel } from '../../../kernels/types';
 import { IWebviewPanelProvider } from '../../../platform/common/application/types';
 import { HelpLinks, Telemetry } from '../../../platform/common/constants';
-import { traceError, traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import {
     IConfigurationService,
     IMemento,
@@ -98,7 +98,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             this.dataProvider = dataProvider;
 
             // Load the web panel using our current directory as we don't expect to load any other files
-            await super.loadWebview(Uri.file(process.cwd())).catch(traceError);
+            await super.loadWebview(Uri.file(process.cwd())).catch(logger.error);
 
             super.setTitle(title);
 
@@ -149,7 +149,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 dataFrameInfo = await this.getDataFrameInfo(newSlice);
             }
         }
-        traceInfo(`Refreshing data viewer for variable ${dataFrameInfo.name}`);
+        logger.info(`Refreshing data viewer for variable ${dataFrameInfo.name}`);
         // Send a message with our data
         this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).catch(noop);
     }
@@ -287,7 +287,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             return await func();
         } catch (e) {
             if (e instanceof JupyterDataRateLimitError) {
-                traceError(e.message);
+                logger.error(e.message);
                 const actionTitle = localize.DataScience.pythonInteractiveHelpLink;
                 window.showErrorMessage(localize.DataScience.jupyterDataRateExceeded, actionTitle).then((v) => {
                     // User clicked on the link, open it.
@@ -297,7 +297,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 }, noop);
                 this.dispose();
             }
-            traceError(e);
+            logger.error(e);
             this.errorHandler.handleError(e).then(noop, noop);
         } finally {
             this.sendElapsedTimeTelemetry();

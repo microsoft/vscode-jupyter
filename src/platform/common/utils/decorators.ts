@@ -6,7 +6,7 @@
 import { isTestExecution } from '../constants';
 import { DataWithExpiry, getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
 import { noop } from './misc';
-import { traceError, traceVerbose, type TraceInfo } from '../../logging';
+import { logger, type TraceInfo } from '../../logging';
 import { StopWatch } from './stopWatch';
 import { isPromise } from './async';
 
@@ -28,7 +28,7 @@ export function cache(expiryDurationMs: number) {
             const key = getCacheKeyFromFunctionArgs(keyPrefix, args);
             const cachedItem = cacheStoreForMethods.get(key);
             if (cachedItem && !cachedItem.expired) {
-                traceVerbose(`Cached data exists ${key}`);
+                logger.debug(`Cached data exists ${key}`);
                 return Promise.resolve(cachedItem.data);
             }
             const promise = originalMethod.apply(this, args) as Promise<any>;
@@ -64,14 +64,14 @@ export function swallowExceptions(scopeName?: string) {
                         if (isTestExecution()) {
                             return;
                         }
-                        traceError(errorMessage, error);
+                        logger.error(errorMessage, error);
                     });
                 }
             } catch (error) {
                 if (isTestExecution()) {
                     return;
                 }
-                traceError(errorMessage, error);
+                logger.error(errorMessage, error);
             }
         };
     };

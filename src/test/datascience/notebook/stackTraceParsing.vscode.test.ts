@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { findErrorLocation } from '../../../kernels/execution/helpers';
 import { closeNotebooksAndCleanUpAfterTests, createEmptyPythonNotebook, insertCodeCell } from './helper';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { window } from 'vscode';
 import sinon from 'sinon';
 import { IDisposable } from '../../../platform/common/types';
@@ -15,20 +15,20 @@ suite('StackTraceParsing', () => {
 
     setup(async function () {
         this.timeout(120_000);
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await createEmptyPythonNotebook(disposables, undefined, true);
         assert.isOk(window.activeNotebookEditor, 'No active notebook');
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
 
     test('Correct range is identified for raw stack strace', async () => {

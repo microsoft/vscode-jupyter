@@ -8,7 +8,7 @@ import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../../platform/c
 import { PromiseChain } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { traceError, traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
 import { extensions } from 'vscode';
 import { getVSCodeChannel } from '../../../platform/common/application/applicationEnvironment';
@@ -51,7 +51,7 @@ export class ApiAccessService {
             !info.extensionId || info.extensionId === unknownExtensionId ? '' : info.extensionId.split('.')[0] || '';
         if (this.context.extensionMode === ExtensionMode.Test || !publisherId || getVSCodeChannel() === 'insiders') {
             if (!TrustedExtensionPublishers.has(publisherId) && !PublishersAllowedWithPrompts.has(publisherId)) {
-                traceWarning(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
+                logger.warn(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
                 const displayName = extensions.getExtension(info.extensionId)?.packageJSON?.displayName || '';
                 const extensionDisplay =
                     displayName && info.extensionId
@@ -83,7 +83,7 @@ export class ApiAccessService {
                     `Please contact the Jupyter Extension to get access to the Kernel API. Publisher ${publisherId}`
                 )
                 .then(noop, noop);
-            traceError(`Publisher ${publisherId} is not allowed to access the Kernel API.`);
+            logger.error(`Publisher ${publisherId} is not allowed to access the Kernel API.`);
             return { extensionId: info.extensionId, accessAllowed: false };
         }
         const extensionPermissions = this.globalState.get<ApiExtensionInfo | undefined>(API_ACCESS_GLOBAL_KEY);

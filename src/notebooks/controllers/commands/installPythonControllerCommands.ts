@@ -11,7 +11,7 @@ import { IDisposableRegistry } from '../../../platform/common/types';
 import { raceTimeout } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import { traceError, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
 
@@ -93,14 +93,14 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
 
                 // Make sure that we didn't timeout waiting for the hook
                 if (this.extensionChecker.isPythonExtensionInstalled && hookResult === hooked) {
-                    traceVerbose('Python Extension installed via Kernel Picker command');
+                    logger.debug('Python Extension installed via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'success'
                     });
 
                     return true;
                 } else {
-                    traceError('Failed to install Python Extension via Kernel Picker command');
+                    logger.error('Failed to install Python Extension via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'failed'
                     });

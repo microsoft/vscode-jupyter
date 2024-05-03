@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, Uri, window } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { captureScreenShot, IExtensionTestApi, initialize, waitForCondition } from '../../common';
 import { openNotebook } from '../helpers';
 import { closeNotebooksAndCleanUpAfterTests } from './helper';
@@ -54,7 +54,7 @@ suite('Remote Kernel Execution', function () {
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         if (!this.currentTest?.title.includes('preferred')) {
             await startJupyterServer();
@@ -79,24 +79,24 @@ suite('Remote Kernel Execution', function () {
             ],
             disposables
         );
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Local Kernel state is not lost when connecting to remote', async function () {
         const activeInterpreter = await interpreterService.getActiveInterpreter();
-        traceInfoIfCI(`active interpreter ${activeInterpreter?.uri.path}`);
+        logger.ci(`active interpreter ${activeInterpreter?.uri.path}`);
         const { notebook } = await createEmptyPythonNotebook(disposables);
         const controllerManager = svcContainer.get<IControllerRegistration>(IControllerRegistration);
         const preferredController = controllerManager.getSelected(notebook);
-        traceInfoIfCI(`preferred controller ${preferredController?.connection.id}`);
+        logger.ci(`preferred controller ${preferredController?.connection.id}`);
 
         await insertCodeCell('a = "123412341234"', { index: 0 });
         await insertCodeCell('print(a)', { index: 1 });
@@ -111,8 +111,8 @@ suite('Remote Kernel Execution', function () {
         await waitForCondition(
             async () => {
                 const controllers = controllerRegistration.registered;
-                traceInfoIfCI(`Check ${controllers.length} registered controllers`);
-                traceInfoIfCI(
+                logger.ci(`Check ${controllers.length} registered controllers`);
+                logger.ci(
                     `list controllers ${controllers.length}: ${controllers
                         .map((i) => `${i.connection.id}, ${i.connection.kind}`)
                         .join('\n')}`
@@ -124,7 +124,7 @@ suite('Remote Kernel Execution', function () {
         );
 
         const newPreferredController = controllerManager.getSelected(notebook);
-        traceInfoIfCI(`new preferred controller ${newPreferredController?.connection.id}`);
+        logger.ci(`new preferred controller ${newPreferredController?.connection.id}`);
 
         // Run the second cell and verify we still have the same kernel state.
         await Promise.all([runCell(cell2), waitForTextOutput(cell2, '123412341234')]);

@@ -3,7 +3,7 @@
 
 import { injectable, multiInject, optional } from 'inversify';
 import { IExtensionActivationManager, IExtensionSyncActivationService } from '../../platform/activation/types';
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 
 /**
  * Responsible for calling the 'activate' method on all of the IExtensionSyncActivationServices.
@@ -21,7 +21,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             try {
                 item.activate();
             } catch (ex) {
-                traceError(`Error in activating extension, failed in ${(item as Object).constructor.name}`, ex);
+                logger.error(`Error in activating extension, failed in ${(item as Object).constructor.name}`, ex);
             }
         });
     }

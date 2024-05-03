@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import { IFileSystem } from './types';
 import * as uriPath from '../../vscode-path/resources';
 import { isFileNotFoundError } from './errors';
-import { traceError } from '../../logging';
+import { logger } from '../../logging';
 import { computeHash } from '../crypto';
 import { HttpClient } from '../net/httpClient';
 
@@ -82,7 +82,7 @@ export class FileSystem implements IFileSystem {
             if (isFileNotFoundError(err)) {
                 return false;
             }
-            traceError(`stat() failed for "${filename}"`, err);
+            logger.error(`stat() failed for "${filename}"`, err);
             return false;
         }
 

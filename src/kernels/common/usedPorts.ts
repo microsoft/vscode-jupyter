@@ -10,7 +10,7 @@ import {
     workspace
 } from 'vscode';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 
 // Keeps track of all ports used by Kernels and other processes spawned by Kernels and related code
 export const UsedPorts = new Set<number>();
@@ -38,7 +38,7 @@ export function ignorePortForwarding(...ports: number[]) {
         }
     } catch (ex) {
         // In case proposed API changes.
-        traceError('Failure in registering port attributes', ex);
+        logger.error('Failure in registering port attributes', ex);
     }
 
     return disposableStore;

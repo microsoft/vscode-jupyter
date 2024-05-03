@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, CompletionList, Position, window } from 'vscode';
-import { traceInfo } from '../../../../platform/logging';
+import { logger } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -23,29 +23,29 @@ suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', funct
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo(`Start Suite Code Completion via Jupyter`);
+        logger.info(`Start Suite Code Completion via Jupyter`);
         this.timeout(120_000);
         await initialize();
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();
-        traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
+        logger.info(`Start Suite (Completed) Code Completion via Jupyter`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await startJupyterServer();
         await createEmptyPythonNotebook(disposables);
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell and get completions for variable', async () => {
@@ -57,12 +57,12 @@ suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', funct
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
         const outputText = getTextOutputValue(cell.outputs[0]).trim();
-        traceInfo(`Cell Output ${outputText}`);
+        logger.info(`Cell Output ${outputText}`);
         await insertCodeCell('a.', { index: 1 });
         const cell2 = window.activeNotebookEditor!.notebook.cellAt(1);
 
         const position = new Position(0, 2);
-        traceInfo('Get completions in test');
+        logger.info('Get completions in test');
         // Executing the command `vscode.executeCompletionItemProvider` to simulate triggering completion
         const completions = (await commands.executeCommand(
             'vscode.executeCompletionItemProvider',

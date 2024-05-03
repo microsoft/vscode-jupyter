@@ -7,7 +7,7 @@ import { CancellationToken, EventEmitter } from 'vscode';
 import type { IChangedArgs } from '@jupyterlab/coreutils';
 import { IDisposable } from '../../platform/common/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IBaseKernelSession, IKernelSocket } from '../types';
 import { KernelSocketMap } from '../kernelSocket';
 
@@ -138,7 +138,7 @@ export abstract class BaseJupyterSessionConnection<
     public async restart(): Promise<void> {
         await this.session.kernel?.restart();
         this.initializeKernelSocket();
-        traceInfo(`Restarted ${this.session?.kernel?.id}`);
+        logger.info(`Restarted ${this.session?.kernel?.id}`);
     }
     private previousKernelSocketInformation?: {
         kernel: Kernel.IKernelConnection;
@@ -192,7 +192,7 @@ export abstract class BaseJupyterSessionConnection<
     private onStatusChanged(_: unknown, value: Kernel.Status) {
         this.statusChanged.emit(value);
         const status = this.status;
-        traceInfoIfCI(`Server Status = ${status}`);
+        logger.ci(`Server Status = ${status}`);
     }
     private onConnectionStatusChanged(_: unknown, value: Kernel.ConnectionStatus) {
         this.connectionStatusChanged.emit(value);
@@ -201,7 +201,7 @@ export abstract class BaseJupyterSessionConnection<
         this.iopubMessage.emit(value);
     }
     private onUnhandledMessage(_: unknown, value: KernelMessage.IMessage) {
-        traceWarning(`Unhandled message found: ${value.header.msg_type}`);
+        logger.warn(`Unhandled message found: ${value.header.msg_type}`);
         this.unhandledMessage.emit(value);
     }
     private onAnyMessage(_: unknown, value: Kernel.IAnyMessageArgs) {
@@ -220,6 +220,6 @@ export abstract class BaseJupyterSessionConnection<
         return this.session.changeKernel(options);
     }
     private onKernelConnectionStatusHandler(_: unknown, kernelConnection: Kernel.ConnectionStatus) {
-        traceInfoIfCI(`Server Kernel Status = ${kernelConnection}`);
+        logger.ci(`Server Kernel Status = ${kernelConnection}`);
     }
 }

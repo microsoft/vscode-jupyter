@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { DebugConfiguration, Disposable, NotebookDocument } from 'vscode';
 import { IPythonApiProvider } from '../../platform/api/types';
-import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -76,7 +76,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         const notebook = kernel.notebook;
         const config = this.configs.get(notebook);
         if (config) {
-            traceInfo('stop debugging');
+            logger.info('stop debugging');
 
             // Tell our debug service to shutdown if possible
             this.debuggingActive = false;
@@ -93,7 +93,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
     public async updateSourceMaps(hashes: IFileGeneratedCodes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
         if (this.debugService.activeDebugSession && this.debuggingActive) {
-            traceInfoIfCI(`Sending debug request for source map`);
+            logger.ci(`Sending debug request for source map`);
             await Promise.all(
                 hashes.map(async (fileHash) => {
                     if (this.debuggingActive) {
@@ -134,14 +134,14 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         kernel: IKernel,
         extraConfig: Partial<DebugConfiguration>
     ) {
-        traceInfo('start debugging');
+        logger.info('start debugging');
         if (!kernel.session?.kernel) {
             return;
         }
         // Try to connect to this notebook
         const config = await this.connect(kernel, extraConfig);
         if (config) {
-            traceInfo('connected to notebook during debugging');
+            logger.info('connected to notebook during debugging');
 
             this.debuggingActive = await startCommand(config);
 
@@ -157,9 +157,9 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
                     telemetryName: Telemetry.InteractiveWindowDebugSetupCodeFailure
                 });
                 if (importResults.some((item) => item.output_type === 'error')) {
-                    traceWarning(`${this.debuggerPackage} not found in path.`);
+                    logger.warn(`${this.debuggerPackage} not found in path.`);
                 } else {
-                    traceInfo(`import startup: ${getPlainTextOrStreamOutput(importResults)}`);
+                    logger.info(`import startup: ${getPlainTextOrStreamOutput(importResults)}`);
                 }
 
                 // After attach initially disable debugging
@@ -182,7 +182,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
                 ...extraConfig
             };
         }
-        traceInfo('enable debugger attach');
+        logger.info('enable debugger attach');
 
         // Append any specific debugger paths that we have
         await this.appendDebuggerPaths(kernel);
@@ -276,7 +276,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
                       }
                   )
                 : [];
-            traceInfo(`Appending paths: ${getPlainTextOrStreamOutput(result)}`);
+            logger.info(`Appending paths: ${getPlainTextOrStreamOutput(result)}`);
         }
     }
 

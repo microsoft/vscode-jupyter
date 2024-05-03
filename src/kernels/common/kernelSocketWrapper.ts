@@ -4,7 +4,7 @@
 import { EventEmitter } from 'vscode';
 import * as WebSocketWS from 'ws';
 import { ClassType } from '../../platform/ioc/types';
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IKernelSocket } from '../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -101,7 +101,7 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
                 this.msgChain = this.msgChain
                     .then(() => Promise.all(this.receiveHooks.map((p) => p(args[0]))))
                     .then(() => superHandler(event, ...args))
-                    .catch((e) => traceError(`Exception while handling messages: ${e}`));
+                    .catch((e) => logger.error(`Exception while handling messages: ${e}`));
                 // True value indicates there were handlers. We definitely have 'message' handlers.
                 return true;
             } else {

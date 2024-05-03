@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationTokenSource, Memento, NotebookDocument, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfo, traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -76,7 +76,7 @@ export class ServerPreload implements IExtensionSyncActivationService {
         const source = new CancellationTokenSource();
         const ui = new DisplayOptions(true);
         try {
-            traceInfo(`Attempting to start a server because of preload conditions ...`);
+            logger.info(`Attempting to start a server because of preload conditions ...`);
 
             // If it didn't start, attempt for local and if allowed.
             if (!this.configService.getSettings(undefined).disableJupyterAutoStart) {
@@ -88,7 +88,7 @@ export class ServerPreload implements IExtensionSyncActivationService {
                 });
             }
         } catch (exc) {
-            traceError(`Error starting server in serverPreload: `, exc);
+            logger.error(`Error starting server in serverPreload: `, exc);
         } finally {
             ui.dispose();
             source.dispose();

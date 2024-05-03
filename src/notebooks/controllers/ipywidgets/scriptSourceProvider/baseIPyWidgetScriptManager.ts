@@ -5,7 +5,7 @@ import { Uri } from 'vscode';
 import { splitLines, trimQuotes } from '../../../../platform/common/helpers';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../../platform/common/types';
-import { traceError, traceWarning } from '../../../../platform/logging';
+import { logger } from '../../../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { IKernel, isLocalConnection } from '../../../../kernels/types';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
@@ -183,11 +183,11 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
                 if (isCI) {
                     message += `with contents ${contents}`;
                 }
-                traceWarning(message);
+                logger.warn(message);
             }
             return config;
         } catch (ex) {
-            traceError(
+            logger.error(
                 `Failed to extract require.config entry for ${widgetFolderName} from ${getDisplayPath(script)}`,
                 ex
             );

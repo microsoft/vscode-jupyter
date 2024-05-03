@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { Event, EventEmitter, Uri, ViewColumn, window } from 'vscode';
 
-import { traceError, traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
 import { IExportPlotRequest, IPlotViewer, IPlotViewerMapping, PlotViewerMessages } from './types';
 import { IWebviewPanelProvider } from '../../../platform/common/application/types';
@@ -44,7 +44,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         // Load the web panel using our current directory as we don't expect to load any other files
         super
             .loadWebview(Uri.file(process.cwd()))
-            .catch(traceError)
+            .catch(logger.error)
             .finally(() => {
                 // Send our telemetry for the webview loading when the load is done.
                 sendTelemetryEvent(Telemetry.PlotViewerWebviewLoaded, { duration: startupTimer.elapsedTime });
@@ -121,7 +121,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
     }
 
     protected async exportPlot(payload: IExportPlotRequest): Promise<void> {
-        traceInfo('exporting plot...');
+        logger.info('exporting plot...');
         const filtersObject: Record<string, string[]> = {};
         filtersObject[localize.DataScience.pngFilter] = ['png'];
         filtersObject[localize.DataScience.svgFilter] = ['svg'];
@@ -148,7 +148,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
                 }
             }
         } catch (e) {
-            traceError(e);
+            logger.error(e);
             window.showErrorMessage(localize.DataScience.exportImageFailed(e.toString())).then(noop, noop);
         }
     }

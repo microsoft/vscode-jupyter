@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutputItem, NotebookDocument } from 'vscode';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IPlotViewerProvider } from '../plotting/types';
 import { uint8ArrayToBase64 } from '../../../platform/common/utils/string';
@@ -26,7 +26,7 @@ export class PlotViewHandler {
             const pngOutput = getOutputItem(notebook, outputId, pngMimeType);
 
             if (!pngOutput) {
-                return traceError(`No SVG or PNG Plot to open ${getDisplayPath(notebook.uri)}, id: ${outputId}`);
+                return logger.error(`No SVG or PNG Plot to open ${getDisplayPath(notebook.uri)}, id: ${outputId}`);
             }
 
             // If we did find a PNG wrap it in an SVG element so that we can display it

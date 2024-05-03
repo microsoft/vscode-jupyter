@@ -8,7 +8,7 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry, isWebExtension } from '../../common/constants';
 import { getDisplayPath } from '../../common/platform/fs-paths';
-import { traceVerbose } from '../../logging';
+import { logger } from '../../logging';
 import { Environment } from '@vscode/python-extension';
 
 /**
@@ -46,7 +46,7 @@ export class PythonEnvironmentFilter implements IDisposable {
         const interpreterUri = 'uri' in interpreter ? interpreter.uri : interpreter.executable.uri;
         if (hidden) {
             sendTelemetryEvent(Telemetry.JupyterKernelHiddenViaFilter);
-            traceVerbose(`Python Env hidden via filter: ${getDisplayPath(interpreterUri)}`);
+            logger.debug(`Python Env hidden via filter: ${getDisplayPath(interpreterUri)}`);
         }
         return hidden;
     }

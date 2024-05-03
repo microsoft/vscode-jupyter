@@ -8,7 +8,7 @@ import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { JupyterVariablesProvider } from '../variables/JupyterVariablesProvider';
-import { traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     context.subscriptions.push(
@@ -26,7 +26,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                         }
                     } catch (ex) {
                         // ignore
-                        traceWarning('Failed to get pip packages', ex);
+                        logger.warn('Failed to get pip packages', ex);
                     }
                 }
             }

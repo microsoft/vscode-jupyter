@@ -37,7 +37,7 @@ import {
 } from './platform/common/types';
 import { Common } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { initializeLoggers as init, traceError } from './platform/logging';
+import { initializeLoggers as init, logger } from './platform/logging';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { isUsingPylance } from './standalone/intellisense/notebookPythonPathService';
 import { noop } from './platform/common/utils/misc';
@@ -148,7 +148,7 @@ export function handleError(
     notifyUser(Common.handleExtensionActivationError);
     // Possible logger hasn't initialized either.
     console.error('extension activation failed', ex);
-    traceError('extension activation failed', ex);
+    logger.error('extension activation failed', ex);
     sendErrorTelemetry(ex, startupDurations, stopWatch);
 }
 
@@ -156,7 +156,7 @@ function notifyUser(msg: string) {
     try {
         window.showErrorMessage(msg).then(noop, noop);
     } catch (ex) {
-        traceError('failed to notify user', ex);
+        logger.error('failed to notify user', ex);
     }
 }
 

@@ -14,7 +14,7 @@ import {
     IKernelController
 } from '../../kernels/types';
 import { CancellationError, Memento, NotebookDocument, Uri, commands, window } from 'vscode';
-import { traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../platform/common/utils/async';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -270,7 +270,7 @@ export class KernelConnector {
             );
         }
 
-        traceVerbose(
+        logger.debug(
             `${initialContext} the kernel, options.disableUI=${options.disableUI} for ${getDisplayPath(
                 'notebook' in notebookResource ? notebookResource.notebook.uri : notebookResource.resource
             )}`
@@ -441,7 +441,7 @@ export class KernelConnector {
                 }
             } catch (error) {
                 if (!isCancellationError(error)) {
-                    traceWarning(
+                    logger.warn(
                         `Error occurred while trying to ${currentContext} the kernel, options.disableUI=${options.disableUI}`,
                         error
                     );

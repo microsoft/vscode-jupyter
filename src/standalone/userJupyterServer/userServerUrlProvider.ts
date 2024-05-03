@@ -49,7 +49,7 @@ import {
 } from '../../platform/common/types';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { JupyterPasswordConnect } from './jupyterPasswordConnect';
 import {
     IJupyterServerUri,
@@ -218,7 +218,7 @@ export class UserJupyterServerUrlProvider
             if (ex instanceof CancellationError) {
                 throw ex;
             }
-            traceError(`Failed to select a Jupyter Server`, ex);
+            logger.error(`Failed to select a Jupyter Server`, ex);
             return;
         } finally {
             token.cancel();
@@ -508,7 +508,7 @@ export class UserJupyterServerUrlProvider
                                 true
                             );
                         } catch (err) {
-                            traceWarning('Uri verification error', err);
+                            logger.warn('Uri verification error', err);
                             // If we failed to verify the connection & we previously failed at capturing password,
                             // Then go back to url with the same error message
                             if (failedUrlPasswordCapture && validationErrorMessage) {
@@ -688,7 +688,7 @@ export class UserJupyterServerUrlProvider
                 serverUriToReturn.token = passwordResult.remappedToken;
             }
         } catch (ex) {
-            traceError(`Failed to validate Password info`, ex);
+            logger.error(`Failed to validate Password info`, ex);
         }
 
         return serverUriToReturn;
@@ -799,7 +799,7 @@ export async function getBaseJupyterUrl(url: string, requestCreator: IJupyterReq
             return loginPage.substring(0, loginPage.indexOf('login?'));
         }
     } catch (ex) {
-        traceVerbose(`Unable to identify the baseUrl of the Jupyter Server`, ex);
+        logger.debug(`Unable to identify the baseUrl of the Jupyter Server`, ex);
     }
 }
 
@@ -826,7 +826,7 @@ function sendRemoteTelemetryForAdditionOfNewRemoteServer(
                 reason: failureReason
             });
         })
-        .catch((ex) => traceError(`Failed to hash remote url ${baseUrl}`, ex));
+        .catch((ex) => logger.error(`Failed to hash remote url ${baseUrl}`, ex));
 }
 
 export class UserJupyterServerDisplayName {
@@ -928,7 +928,7 @@ export function parseUri(uri: string, displayName?: string): IJupyterServerUri |
             displayName: displayName || url.hostname
         };
     } catch (err) {
-        traceError(`Failed to parse URI ${uri}`, err);
+        logger.error(`Failed to parse URI ${uri}`, err);
         // This should already have been parsed when set, so just throw if it's not right here
         return undefined;
     }

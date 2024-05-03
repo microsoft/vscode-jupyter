@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from '../../vscode-path/path';
-import { traceVerbose, traceError } from '../../logging';
+import { logger } from '../../logging';
 import { cache } from '../../common/utils/decorators';
 import { getOSType, getUserHomeDir, OSType } from '../../common/utils/platform.node';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -141,7 +141,7 @@ export class Poetry {
         // First thing this method awaits on should be poetry command execution, hence perform all operations
         // before that synchronously.
 
-        traceVerbose(`Getting poetry for cwd ${cwd}`);
+        logger.debug(`Getting poetry for cwd ${cwd}`);
         // Produce a list of candidate binaries to be probed by exec'ing them.
         function* getCandidates() {
             const customPoetryPath = getPythonSetting<string>('poetryPath');
@@ -162,18 +162,18 @@ export class Poetry {
 
         // Probe the candidates, and pick the first one that exists and does what we need.
         for (const poetryPath of getCandidates()) {
-            traceVerbose(`Probing poetry binary for ${cwd}: ${poetryPath}`);
+            logger.debug(`Probing poetry binary for ${cwd}: ${poetryPath}`);
             const poetry = new Poetry(poetryPath, cwd);
             const virtualenvs = await poetry.getEnvList();
             if (virtualenvs !== undefined) {
-                traceVerbose(`Found poetry via filesystem probing for ${cwd}: ${poetryPath}`);
+                logger.debug(`Found poetry via filesystem probing for ${cwd}: ${poetryPath}`);
                 return poetry;
             }
-            traceVerbose(`Failed to find poetry for ${cwd}: ${poetryPath}`);
+            logger.debug(`Failed to find poetry for ${cwd}: ${poetryPath}`);
         }
 
         // Didn't find anything.
-        traceVerbose(`No poetry binary found for ${cwd}`);
+        logger.debug(`No poetry binary found for ${cwd}`);
         return undefined;
     }
 
@@ -285,13 +285,13 @@ export class Poetry {
             timeout: POETRY_TIMEOUT
         }).catch((ex) => {
             if (logVerbose) {
-                traceVerbose(ex);
+                logger.debug(ex);
             } else {
-                traceError(ex);
+                logger.error(ex);
             }
             return undefined;
         });
-        traceVerbose(`Time taken to run ${command} in ms`, stopWatch.elapsedTime);
+        logger.debug(`Time taken to run ${command} in ms`, stopWatch.elapsedTime);
         return result;
     }
 }

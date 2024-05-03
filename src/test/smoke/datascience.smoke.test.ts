@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../constants.node';
 import { sleep } from '../core';
@@ -31,18 +31,18 @@ suite('Smoke Tests', function () {
         await setAutoSaveDelayInWorkspaceRoot(1);
     });
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         await initializeTest();
-        traceInfo(`Start Test Completed ${this.currentTest?.title}`);
+        logger.info(`Start Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(closeActiveWindows);
     teardown(async function () {
-        traceInfo(`End Test ${this.currentTest?.title}`);
+        logger.info(`End Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
         await closeActiveWindows();
-        traceInfo(`End Test Complete ${this.currentTest?.title}`);
+        logger.info(`End Test Complete ${this.currentTest?.title}`);
     });
 
     // test('Run Cell in interactive window', async () => {
@@ -89,7 +89,7 @@ suite('Smoke Tests', function () {
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }
-        traceInfo(`Opening notebook file ${file}`);
+        logger.info(`Opening notebook file ${file}`);
         const notebook = await vscode.workspace.openNotebookDocument(vscode.Uri.file(file));
         await vscode.window.showNotebookDocument(notebook);
 

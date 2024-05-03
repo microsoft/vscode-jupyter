@@ -5,7 +5,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { traceTrace, traceError } from '../../../../platform/logging';
+import { logger } from '../../../../platform/logging';
 import { Identifiers, WIDGET_MIMETYPE } from '../../../../platform/common/constants';
 import { IDisposable } from '../../../../platform/common/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
@@ -119,9 +119,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             case IPyWidgetMessages.IPyWidgets_logMessage: {
                 const payload: IInteractiveWindowMapping[IPyWidgetMessages.IPyWidgets_logMessage] = message.payload;
                 if (payload.category === 'error') {
-                    traceError(`Widget Error: ${payload.message}`);
+                    logger.error(`Widget Error: ${payload.message}`);
                 } else {
-                    traceTrace(`Widget Message: ${payload.message}`);
+                    logger.trace(`Widget Message: ${payload.message}`);
                 }
                 break;
             }
@@ -419,7 +419,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 // & not the widget (renderer/webview side) kernel
                 this.pendingMessages.shift();
             } catch (ex) {
-                traceError('Failed to send message to Kernel', ex);
+                logger.error('Failed to send message to Kernel', ex);
                 return;
             }
         }
@@ -437,7 +437,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 return;
             }
 
-            traceTrace(`Registering commtarget ${targetName}`);
+            logger.trace(`Registering commtarget ${targetName}`);
             this.commTargetsRegistered.add(targetName);
             this.pendingTargetNames.delete(targetName);
 

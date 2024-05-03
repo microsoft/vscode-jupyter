@@ -4,7 +4,7 @@
 import { SpawnOptions } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { ExecutionResult } from '../../../platform/common/process/types.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -122,7 +122,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
 
         const defaultAction = () => {
             if (exception) {
-                traceError(`Exception attempting to enumerate kernelspecs: `, exception);
+                logger.error(`Exception attempting to enumerate kernelspecs: `, exception);
                 throw exception;
             }
             return output;
@@ -150,7 +150,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
                 return output;
             }
         } catch (innerEx) {
-            traceError('Failed to get a list of the kernelspec using python script', innerEx);
+            logger.error('Failed to get a list of the kernelspec using python script', innerEx);
         }
         return defaultAction();
     }

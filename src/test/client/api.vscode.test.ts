@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from '../datascience/notebook/helper.node';
 import { initialize } from '../initialize.node';
@@ -21,16 +21,16 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
     this.timeout(120_000);
     let notebook: TestNotebookDocument;
     suiteSetup(async function () {
-        traceInfo('Suite Setup 3rd Party Kernel Service API');
+        logger.info('Suite Setup 3rd Party Kernel Service API');
         this.timeout(120_000);
         try {
             api = await initialize();
             await startJupyterServer();
             sinon.restore();
             notebook = new TestNotebookDocument();
-            traceInfo('Suite Setup (completed)');
+            logger.info('Suite Setup (completed)');
         } catch (e) {
-            traceInfo('Suite Setup (failed) - 3rd Party Kernel Service API');
+            logger.info('Suite Setup (failed) - 3rd Party Kernel Service API');
             await captureScreenShot('API-suite');
             throw e;
         }
@@ -58,12 +58,12 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         kernelProvider.getKernelExecution(kernel);
 
         sinon.restore();
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 

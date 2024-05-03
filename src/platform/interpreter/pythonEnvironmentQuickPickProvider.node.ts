@@ -9,7 +9,7 @@ import { IExtensionSyncActivationService } from '../activation/types';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { PromiseMonitor } from '../common/utils/promises';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
-import { traceError } from '../logging';
+import { logger } from '../logging';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { dispose } from '../common/utils/lifecycle';
@@ -70,7 +70,7 @@ export class PythonEnvironmentQuickPickItemProvider
                     this._onDidChange.fire();
                     api.environments.onDidChangeEnvironments(() => this._onDidChange.fire(), this, this.disposables);
                 })
-                .catch((ex) => traceError('Failed to get python api', ex));
+                .catch((ex) => logger.error('Failed to get python api', ex));
         };
         if (extensionChecker.isPythonExtensionInstalled) {
             initializeApi();
