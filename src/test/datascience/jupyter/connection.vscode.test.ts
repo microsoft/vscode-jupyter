@@ -179,7 +179,7 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
             return new Disposable(noop);
         });
         sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
-        sinon.stub(commands, 'registerCommand').resolves();
+        sinon.stub(commands, 'registerCommand').returns({ dispose: noop });
         token = new CancellationTokenSource();
         disposables.push(new Disposable(() => token.cancel()));
         disposables.push(token);
