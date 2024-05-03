@@ -256,6 +256,7 @@ suiteMandatory('Kernel API Tests @typescript/@python', function () {
 
         await closeNotebooksAndCleanUpAfterTests(disposables);
         logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
+        console.error(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     testMandatory('Execute chat code', async function () {
         // Ensure user has executed some code against this kernel.

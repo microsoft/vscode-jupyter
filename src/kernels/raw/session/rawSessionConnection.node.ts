@@ -36,21 +36,8 @@ export class RawSessionConnection implements Session.ISessionConnection {
     public readonly disposed = new Signal<this, void>(this);
     public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
     public readonly propertyChanged = new Signal<this, 'path' | 'name' | 'type'>(this);
-    private _jupyterLabServices?: typeof import('@jupyterlab/services');
-    private cellExecutedSuccessfully?: boolean;
     private _didShutDownOnce = false;
     private _isDisposing?: boolean;
-    public get atleastOneCellExecutedSuccessfully() {
-        return this.cellExecutedSuccessfully === true;
-    }
-    private get jupyterLabServices() {
-        if (!this._jupyterLabServices) {
-            // Lazy load jupyter lab for faster extension loading.
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            this._jupyterLabServices = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
-        }
-        return this._jupyterLabServices;
-    }
 
     public get connectionStatus() {
         return this._kernel?.connectionStatus || 'disconnected';
@@ -189,19 +176,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
         throw new Error('Not yet implemented');
     }
 
-    // Private
-    // Send out a message when our kernel changes state
     private onIOPubMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IIOPubMessage) {
-        if (
-            !this.cellExecutedSuccessfully &&
-            msg.header.msg_type === 'execute_result' &&
-            msg.content &&
-            (this.jupyterLabServices.KernelMessage.isExecuteResultMsg(msg) ||
-                this.jupyterLabServices.KernelMessage.isExecuteInputMsg(msg)) &&
-            msg.content.execution_count
-        ) {
-            this.cellExecutedSuccessfully = true;
-        }
         this.iopubMessage.emit(msg);
     }
     private onAnyMessage(_sender: Kernel.IKernelConnection, msg: Kernel.IAnyMessageArgs) {

@@ -58,13 +58,8 @@ export class JupyterSessionWrapper
     public override dispose() {
         this.restartToken?.cancel();
         this.restartToken?.dispose();
-        this.shutdownImplementation(false).catch(noop);
+        void this.shutdownImplementation(false).finally(() => super.dispose());
     }
-    public override async disposeAsync(): Promise<void> {
-        await this.shutdownImplementation(false).catch(noop);
-        await super.disposeAsync();
-    }
-
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         try {
             await waitForIdleOnSession(this.kernelConnectionMetadata, this.resource, this.session, timeout, token);
@@ -121,11 +116,12 @@ export class JupyterSessionWrapper
         return this.shutdownImplementation(true);
     }
 
+    private isShuttingDown = false;
     private async shutdownImplementation(shutdownEvenIfRemote?: boolean) {
-        if (this._isDisposed) {
+        if (this.isDisposed || this.isShuttingDown) {
             return;
         }
-        this._isDisposed = true;
+        this.isShuttingDown = true;
         // We are only interested in our stack, not in VS Code or others.
         const stack = (new Error().stack || '').split('\n').filter((l) => l.includes(JVSC_EXTENSION_ID));
         logger.trace(`Shutdown session - current session, called from \n ${stack.map((l) => `    ${l}`).join('\n')}`);

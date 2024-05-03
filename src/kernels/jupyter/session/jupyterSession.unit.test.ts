@@ -23,6 +23,7 @@ import { dispose } from '../../../platform/common/utils/lifecycle';
 import { resolvableInstance } from '../../../test/datascience/helpers';
 import { createEventHandler } from '../../../test/common';
 import { JupyterSessionWrapper } from './jupyterSession';
+import { disposeAsync } from '../../../platform/common/utils';
 
 suite('JupyterSession', () => {
     let disposables: IDisposable[] = [];
@@ -105,7 +106,9 @@ suite('JupyterSession', () => {
         );
     }
     teardown(async () => {
-        await jupyterSession.disposeAsync().catch(noop);
+        if (!jupyterSession.disposed) {
+            await disposeAsync(jupyterSession, disposables);
+        }
         disposables = dispose(disposables);
     });
 
@@ -125,22 +128,19 @@ suite('JupyterSession', () => {
             const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
             let disposeSignalled = false;
             jupyterSession.disposed.connect(() => (disposeSignalled = true));
-            // const onDidDispose = jupyterSession.
             when(session.shutdown()).thenResolve();
-            when(session.dispose()).thenReturn();
 
-            await jupyterSession.disposeAsync();
+            await disposeAsync(jupyterSession, disposables);
 
             // Shutdown sessions started for Interactive window.
             verify(session.shutdown()).once();
-            verify(session.dispose()).once();
             assert.strictEqual(onDidShutdown.count, 1);
             assert.strictEqual(onDidDispose.count, 1);
             assert.strictEqual(jupyterSession.status, 'dead');
             assert.strictEqual(jupyterSession.isDisposed, true);
             assert.strictEqual(disposeSignalled, true);
         });
-        test('New Remote sessions started with Interactive should be shutdown when disposing the session (without calling disposeAsync)', async () => {
+        test('New Remote sessions started with Interactive should be shutdown when disposing the session (without calling dispose)', async () => {
             createJupyterSession(
                 Uri.file('test.py'),
                 RemoteKernelSpecConnectionMetadata.create({
@@ -155,9 +155,7 @@ suite('JupyterSession', () => {
             const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
             let disposeSignalled = false;
             jupyterSession.disposed.connect(() => (disposeSignalled = true));
-            // const onDidDispose = jupyterSession.
             when(session.shutdown()).thenResolve();
-            when(session.dispose()).thenReturn();
 
             jupyterSession.dispose();
             await onDidShutdown.assertFiredExactly(1, 100);
@@ -165,7 +163,6 @@ suite('JupyterSession', () => {
 
             // Shutdown sessions started for Interactive window.
             verify(session.shutdown()).once();
-            verify(session.dispose()).once();
             assert.strictEqual(onDidShutdown.count, 1);
             assert.strictEqual(onDidDispose.count, 1);
             assert.strictEqual(jupyterSession.status, 'dead');
@@ -190,7 +187,7 @@ suite('JupyterSession', () => {
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
-            await jupyterSession.disposeAsync();
+            await disposeAsync(jupyterSession, disposables);
 
             // Never shutdown live sessions connected from Interactive window.
             verify(session.shutdown()).never();
@@ -219,7 +216,7 @@ suite('JupyterSession', () => {
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
-            await jupyterSession.disposeAsync();
+            await disposeAsync(jupyterSession, disposables);
 
             // Never shutdown sessions started from Notebooks.
             verify(session.shutdown()).never();
@@ -248,7 +245,7 @@ suite('JupyterSession', () => {
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
-            await jupyterSession.disposeAsync();
+            await disposeAsync(jupyterSession, disposables);
 
             // Never shutdown live sessions connected from Notebooks.
             verify(session.shutdown()).never();
@@ -276,7 +273,7 @@ suite('JupyterSession', () => {
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
-            await jupyterSession.disposeAsync();
+            await disposeAsync(jupyterSession, disposables);
 
             // always kill the sessions.
             verify(session.shutdown()).once();

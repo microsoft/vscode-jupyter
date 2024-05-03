@@ -32,7 +32,7 @@ import { createDeferred, raceTimeout, raceTimeoutError } from '../platform/commo
 import { DataScience } from '../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
-import { concatMultilineString, getResourceType } from '../platform/common/utils';
+import { concatMultilineString, disposeAsync, getResourceType } from '../platform/common/utils';
 import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import {
@@ -319,7 +319,7 @@ abstract class BaseKernel implements IBaseKernel {
                 : undefined;
             this._jupyterSessionPromise = undefined;
             if (this._session) {
-                promises.push(this._session.disposeAsync().catch(noop));
+                promises.push(disposeAsync(this._session, this.disposables));
                 this._session = undefined;
             }
             this._disposed = true;
@@ -396,7 +396,10 @@ abstract class BaseKernel implements IBaseKernel {
                     undefined,
                     ex
                 );
-                await session?.disposeAsync().catch(noop);
+
+                if (session) {
+                    await disposeAsync(session, this.disposables);
+                }
                 this._ignoreJupyterSessionDisposedErrors = false;
                 throw ex;
             }
@@ -681,7 +684,7 @@ abstract class BaseKernel implements IBaseKernel {
         }
     }
 
-    protected async initializeAfterStart(session: IKernelSession | undefined) {
+    private async initializeAfterStart(session: IKernelSession | undefined) {
         const nb = workspace.notebookDocuments.find((nb) => nb.uri.toString() === this.uri.toString());
         const tracker = getNotebookTelemetryTracker(nb);
         const postInitialization = nb ? tracker?.postKernelStartup() : undefined;

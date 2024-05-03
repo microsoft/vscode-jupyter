@@ -7,12 +7,20 @@
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--enable-proposed-api"],
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--enable-proposed-api"
+            ],
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/dist/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "env": {
                 // Disable this to turoff on redux & console logging during debugging
                 "VSC_JUPYTER_FORCE_LOGGING": "1",
@@ -33,8 +41,14 @@
             "type": "extensionHost",
             "debugWebWorkerHost": true,
             "request": "launch",
-            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionDevelopmentKind=web"],
-            "outFiles": ["${workspaceFolder}/dist/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionDevelopmentKind=web"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
             "preLaunchTask": "Compile",
             "presentation": {
                 "group": "1_extension",
@@ -46,8 +60,14 @@
             "type": "extensionHost",
             "debugWebWorkerHost": true,
             "request": "launch",
-            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionDevelopmentKind=web"],
-            "outFiles": ["${workspaceFolder}/dist/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionDevelopmentKind=web"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
             "presentation": {
                 "group": "1_extension",
                 "order": 1
@@ -58,11 +78,19 @@
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--enable-proposed-api"],
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--enable-proposed-api"
+            ],
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/dist/**/*", "!${workspaceFolder}/**/node_modules**/*"],
-            "skipFiles": ["<node_internals>/**"],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "env": {
                 // Disable this to turoff on redux & console logging during debugging
                 "VSC_JUPYTER_FORCE_LOGGING": "1",
@@ -83,10 +111,16 @@
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/data"],
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "${workspaceFolder}/data"
+            ],
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/dist/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
             "preLaunchTask": "Compile",
             "presentation": {
                 "group": "1_extension",
@@ -105,7 +139,9 @@
                 "--extensionDevelopmentKind=web",
                 "--extensionTestsPath=${workspaceFolder}/out/extension.web.bundle"
             ],
-            "outFiles": ["${workspaceFolder}/out/**/*.*"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.*"
+            ],
             "sourceMaps": true,
             "preLaunchTask": "Start Jupyter Server", // Update the env variables for this script in tasks.json with a remote URI to use your own
             "postDebugTask": "Stop Jupyter Server",
@@ -119,7 +155,9 @@
             "type": "node",
             "program": "${workspaceFolder}/build/launchWebTest.js",
             "request": "launch",
-            "outFiles": ["${workspaceFolder}/out/**/*.*"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.*"
+            ],
             "sourceMaps": true,
             "preLaunchTask": "compile-web-test",
             "presentation": {
@@ -149,9 +187,14 @@
                 "VSC_JUPYTER_CI_TEST_GREP": "Smoke Test"
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "presentation": {
                 "group": "2_tests",
                 "order": 10
@@ -172,9 +215,14 @@
                 "VSC_JUPYTER_CI_TEST_GREP": "Language Server:"
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
             "preLaunchTask": "preTestJediLSP",
-            "skipFiles": ["<node_internals>/**"],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "presentation": {
                 "group": "2_tests",
                 "order": 4
@@ -209,9 +257,14 @@
                 // "VSC_JUPYTER_CI_IS_CONDA": "true" // Enable to run conda tests
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "presentation": {
                 "group": "2_tests",
                 "order": 6
@@ -239,8 +292,13 @@
                 "VSC_JUPYTER_EXPOSE_SVC": "1"
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "skipFiles": ["<node_internals>/**"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "presentation": {
                 "group": "2_tests",
                 "order": 6
@@ -268,8 +326,13 @@
                 "VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT": "true"
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "skipFiles": ["<node_internals>/**"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "presentation": {
                 "group": "2_tests",
                 "order": 6
@@ -290,8 +353,13 @@
                 //"--grep", "",
                 "--timeout=300000"
             ],
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "skipFiles": ["<node_internals>/**"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "presentation": {
                 "group": "2_tests",
                 "order": 7
@@ -327,7 +395,9 @@
                 "${workspaceFolder}/src/test/vscode-notebook-perf/out/**/*.js",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "skipFiles": ["<node_internals>/**"],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "presentation": {
                 "group": "2_tests",
                 "order": 6
@@ -348,12 +418,17 @@
                 "VSC_JUPYTER_PERF_TEST": "1",
                 "VSC_JUPYTER_CI_TEST_GREP": "@executionPerformance",
                 "VSC_JUPYTER_CI_TEST_VSC_CHANNEL": "insiders",
-                "CI_PYTHON_PATH": "/Users/donjayamanne/Development/vsc/vscode-jupyter/.venv/bin/python",
+                "CI_PYTHON_PATH": "",
                 "TEST_FILES_SUFFIX": "*.vscode.test"
             },
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "skipFiles": ["<node_internals>/**"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "presentation": {
                 "group": "2_tests",
                 "order": 6
@@ -364,8 +439,12 @@
             "request": "launch",
             "name": "Gulp tasks (helpful for debugging gulpfile.js)",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
-            "args": ["generateTelemetryMd"],
-            "skipFiles": ["<node_internals>/**"],
+            "args": [
+                "generateTelemetryMd"
+            ],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "presentation": {
                 "group": "3_misc",
                 "order": 1
@@ -375,7 +454,9 @@
             "name": "Node: Current File",
             "program": "${file}",
             "request": "launch",
-            "skipFiles": ["<node_internals>/**"],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "type": "node",
             "presentation": {
                 "group": "3_misc",
@@ -388,7 +469,9 @@
             "request": "launch",
             "module": "IPython",
             "console": "integratedTerminal",
-            "args": ["${file}"], // Additional args should be prefixed with a '--' first.
+            "args": [
+                "${file}"
+            ], // Additional args should be prefixed with a '--' first.
             "presentation": {
                 "group": "3_misc",
                 "order": 3

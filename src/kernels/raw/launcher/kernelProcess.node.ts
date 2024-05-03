@@ -38,7 +38,7 @@ import {
 } from '../../../platform/common/types';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
+import { noop } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../../errors/kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError';
@@ -355,15 +355,13 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             } catch (ex) {
                 logger.error(`Error disposing kernel process ${pid}`, ex);
             }
-            swallowExceptions(async () => {
-                if (this.connectionFile) {
-                    await this.fileSystem
-                        .delete(this.connectionFile)
-                        .catch((ex) =>
-                            logger.warn(`Failed to delete connection file ${this.connectionFile} for pid ${pid}`, ex)
-                        );
-                }
-            });
+            if (this.connectionFile) {
+                await this.fileSystem
+                    .delete(this.connectionFile)
+                    .catch((ex) =>
+                        logger.warn(`Failed to delete connection file ${this.connectionFile} for pid ${pid}`, ex)
+                    );
+            }
             logger.debug(`Disposed Kernel process ${pid}.`);
         })();
         super.dispose();
