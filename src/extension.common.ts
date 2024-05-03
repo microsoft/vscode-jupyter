@@ -27,7 +27,6 @@ import {
 import { getDisplayPath } from './platform/common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
-    IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
     IExtensionContext,
@@ -36,10 +35,9 @@ import {
     IOutputChannel,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
-import { Common, OutputChannelNames } from './platform/common/utils/localize';
+import { Common } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { registerLogger, setLoggingLevel, traceError } from './platform/logging';
-import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
+import { initializeLoggers as init, traceError } from './platform/logging';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { isUsingPylance } from './standalone/intellisense/notebookPythonPathService';
 import { noop } from './platform/common/utils/misc';
@@ -50,20 +48,18 @@ import { sendTelemetryEvent } from './telemetry';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
 
-export function addOutputChannel(
+export function initializeLoggers(
     context: IExtensionContext,
-    serviceManager: IServiceManager,
-    options?: { userNameRegEx?: RegExp; homePathRegEx?: RegExp; platform: string; arch: string; homePath: string }
+    options: {
+        addConsoleLogger: boolean;
+        userNameRegEx?: RegExp;
+        homePathRegEx?: RegExp;
+        platform?: string;
+        arch?: string;
+        homePath?: string;
+    }
 ) {
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
-    registerLogger(new OutputChannelLogger(standardOutputChannel, options?.userNameRegEx, options?.homePathRegEx));
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(
-        IOutputChannel,
-        getJupyterOutputChannel(context.subscriptions),
-        JUPYTER_OUTPUT_CHANNEL
-    );
-
+    const standardOutputChannel = init(options);
     // Log env info.
     standardOutputChannel.appendLine(`${env.appName} (${version}, ${env.remoteName}, ${env.appHost})`);
     standardOutputChannel.appendLine(`Jupyter Extension Version: ${context.extension.packageJSON['version']}.`);
@@ -99,9 +95,14 @@ export function addOutputChannel(
                 .join(', ')}`
         );
     }
+
+    return standardOutputChannel;
 }
 
-export function initializeGlobals(context: IExtensionContext): [IServiceManager, IServiceContainer] {
+export function initializeGlobals(
+    context: IExtensionContext,
+    standardOutputChannel: OutputChannel
+): [IServiceManager, IServiceContainer] {
     const cont = new Container({ skipBaseClassChecks: true });
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
@@ -113,6 +114,12 @@ export function initializeGlobals(context: IExtensionContext): [IServiceManager,
     serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
     serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<OutputChannel>(
+        IOutputChannel,
+        getJupyterOutputChannel(context.subscriptions),
+        JUPYTER_OUTPUT_CHANNEL
+    );
 
     return [serviceManager, serviceContainer];
 }
@@ -153,11 +160,7 @@ function notifyUser(msg: string) {
     }
 }
 
-export async function postActivateLegacy(
-    context: IExtensionContext,
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer
-) {
+export async function postActivateLegacy(context: IExtensionContext, serviceContainer: IServiceContainer) {
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
@@ -166,17 +169,6 @@ export async function postActivateLegacy(
     await experimentService.activate();
     const duration = stopWatch.elapsedTime;
     sendTelemetryEvent(Telemetry.ExperimentLoad, { duration });
-
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-
-    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
-    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
-    // XXX Move this *after* abExperiments is activated?
-    const settings = configuration.getSettings();
-    setLoggingLevel(settings.logging.level, settings.logging.widgets);
-    context.subscriptions.push(
-        settings.onDidChange(() => setLoggingLevel(settings.logging.level, settings.logging.widgets))
-    );
 
     // "initialize" "services"
     commands.executeCommand('setContext', 'jupyter.vscode.channel', getVSCodeChannel()).then(noop, noop);

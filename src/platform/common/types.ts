@@ -1,16 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {
-    ConfigurationTarget,
-    Disposable,
-    Event,
-    ExtensionContext,
-    OutputChannel,
-    Uri,
-    Range,
-    type LogLevel
-} from 'vscode';
+import { ConfigurationTarget, Disposable, Event, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandIds } from '../../commands';
 import { ISystemVariables } from './variables/types';
@@ -54,7 +45,6 @@ export interface IRandom {
 
 export interface IJupyterSettings {
     readonly experiments: IExperiments;
-    readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection: boolean;
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
@@ -114,13 +104,6 @@ export interface IJupyterSettings {
 export interface IWatchableJupyterSettings extends IJupyterSettings {
     readonly onDidChange: Event<void>;
     createSystemVariables(resource: Resource): ISystemVariables;
-}
-
-export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
-
-export interface ILoggingSettings {
-    readonly level: LogLevel;
-    readonly widgets?: LoggingLevelSettingType | 'off';
 }
 
 export interface IExperiments {

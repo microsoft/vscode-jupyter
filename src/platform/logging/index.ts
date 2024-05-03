@@ -4,14 +4,18 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Disposable, Uri, LogLevel } from 'vscode';
+import { Disposable, Uri, LogLevel, workspace, window } from 'vscode';
 import { isCI } from '../common/constants';
 import { Arguments, ILogger, TraceDecoratorType, TraceOptions } from './types';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
 import { argsToLogString, returnValueToLogString } from './util';
-import { LoggingLevelSettingType } from '../common/types';
 import { splitLines } from '../common/helpers';
 import { getDisplayPath } from '../common/platform/fs-paths';
+import { trackDisposable } from '../common/utils/lifecycle';
+import { OutputChannelNames } from '../common/utils/localize';
+import { OutputChannelLogger } from './outputChannelLogger';
+import { ConsoleLogger } from './consoleLogger';
+
 let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
@@ -27,6 +31,40 @@ export type TraceInfo =
     | undefined;
 
 let loggers: ILogger[] = [];
+let globalLoggingLevel: LogLevel = LogLevel.Info;
+export const logger: ILogger = {
+    error: (message: string, ...data: Arguments) => traceError(message, ...data),
+    warn: (message: string, ...data: Arguments) => traceWarning(message, ...data),
+    info: (message: string, ...data: Arguments) => traceInfo(message, ...data),
+    verbose: (message: string, ...data: Arguments) => traceVerbose(message, ...data),
+    trace: (message: string, ...data: Arguments) => traceTrace(message, ...data)
+};
+
+export function initializeLoggers(options: {
+    addConsoleLogger: boolean;
+    userNameRegEx?: RegExp;
+    homePathRegEx?: RegExp;
+    platform?: string;
+    arch?: string;
+    homePath?: string;
+}) {
+    globalLoggingLevel = getLoggingLevelFromConfig();
+    trackDisposable(
+        workspace.onDidChangeConfiguration((e) => {
+            if (e.affectsConfiguration('jupyter.logging')) {
+                globalLoggingLevel = getLoggingLevelFromConfig();
+            }
+        })
+    );
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
+    registerLogger(new OutputChannelLogger(standardOutputChannel, options?.userNameRegEx, options?.homePathRegEx));
+
+    // In CI there's no need for the label.
+    registerLogger(new ConsoleLogger(isCI ? undefined : 'Jupyter Extension:'));
+
+    return standardOutputChannel;
+}
+
 export function registerLogger(logger: ILogger): Disposable {
     loggers.push(logger);
     return {
@@ -36,13 +74,44 @@ export function registerLogger(logger: ILogger): Disposable {
     };
 }
 
-let globalLoggingLevel: LogLevel = LogLevel.Debug;
-let _enabledWidgetLogging: LoggingLevelSettingType = 'off';
-export function setLoggingLevel(level: LogLevel, enabledWidgetLogging?: LoggingLevelSettingType): void {
-    _enabledWidgetLogging = enabledWidgetLogging || 'off';
-    globalLoggingLevel = level;
+type LoggingLevelSettingType = keyof typeof LogLevel | Lowercase<keyof typeof LogLevel> | 'warn' | 'Warn';
+function getLoggingLevelFromConfig() {
+    try {
+        const { level } = workspace
+            .getConfiguration('jupyter')
+            .get<{ level: LoggingLevelSettingType }>('logging', { level: 'Info' });
+        switch (level) {
+            case 'debug':
+            case 'Debug': {
+                return LogLevel.Debug;
+            }
+            case 'warn':
+            case 'Warn':
+            case 'warning':
+            case 'Warning': {
+                return LogLevel.Warning;
+            }
+            case 'Off':
+            case 'off': {
+                return LogLevel.Off;
+            }
+            case 'Error':
+            case 'error': {
+                return LogLevel.Error;
+            }
+            case 'Trace':
+            case 'trace': {
+                return LogLevel.Trace;
+            }
+            default: {
+                return LogLevel.Info;
+            }
+        }
+    } catch (ex) {
+        console.error('Failed to get logging level from configuration', ex);
+        return LogLevel.Info;
+    }
 }
-
 export function setHomeDirectory(homeDir: string) {
     homeAsLowerCase = homeDir.toLowerCase();
 }
@@ -113,36 +182,30 @@ function formatErrors(...args: Arguments) {
 export function traceError(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Error) {
         args = formatErrors(...args);
-        loggers.forEach((l) => l.traceError(message, ...args));
+        loggers.forEach((l) => l.error(message, ...args));
     }
 }
 
 export function traceWarning(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Warning) {
         args = formatErrors(...args);
-        loggers.forEach((l) => l.traceWarn(message, ...args));
+        loggers.forEach((l) => l.warn(message, ...args));
     }
 }
 
 export function traceInfo(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Info) {
-        loggers.forEach((l) => l.traceInfo(message, ...args));
+        loggers.forEach((l) => l.info(message, ...args));
     }
 }
-export function traceInfoWidgets(message: string, ...args: Arguments): void {
-    if (_enabledWidgetLogging !== 'off' && globalLoggingLevel <= LogLevel.Info) {
-        loggers.forEach((l) => l.traceInfo(message, ...args));
-    }
-}
-
 export function traceVerbose(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Debug) {
-        loggers.forEach((l) => l.traceVerbose(message, ...args));
+        loggers.forEach((l) => l.verbose(message, ...args));
     }
 }
-export function traceVerboseWidgets(message: string, ...args: Arguments): void {
-    if (_enabledWidgetLogging !== 'off' && globalLoggingLevel <= LogLevel.Debug) {
-        loggers.forEach((l) => l.traceVerbose(message, ...args));
+export function traceTrace(message: string, ...args: Arguments): void {
+    if (globalLoggingLevel <= LogLevel.Trace) {
+        loggers.forEach((l) => l.trace(message, ...args));
     }
 }
 export function traceInfoIfCI(msg: () => [message: string, ...args: string[]] | string): void;

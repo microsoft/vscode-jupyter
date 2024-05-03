@@ -1461,7 +1461,16 @@
                         "error",
                         "warn",
                         "info",
-                        "debug"
+                        "debug",
+                        "trace"
+                    ],
+                    "enumDescriptions": [
+                        "%jupyter.configuration.jupyter.logging.level.off%",
+                        "%jupyter.configuration.jupyter.logging.level.error%",
+                        "%jupyter.configuration.jupyter.logging.level.warn%",
+                        "%jupyter.configuration.jupyter.logging.level.info%",
+                        "%jupyter.configuration.jupyter.logging.level.debug%",
+                        "%jupyter.configuration.jupyter.logging.level.trace%"
                     ],
                     "description": "%jupyter.configuration.jupyter.logging.level.description%"
                 },
