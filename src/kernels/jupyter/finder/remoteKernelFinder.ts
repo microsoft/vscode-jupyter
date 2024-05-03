@@ -390,7 +390,7 @@ export class RemoteKernelFinder extends ObservableDisposable implements IRemoteK
 
     private async writeToCache(values: RemoteKernelConnectionMetadata[]) {
         try {
-            logger.debug(
+            logger.trace(
                 `UniversalRemoteKernelFinder: Writing ${values.length} remote kernel connection metadata to cache`
             );
 

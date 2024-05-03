@@ -31,13 +31,13 @@ export async function waitForIdleOnSession(
         disposables.push(progress);
     }
     try {
-        logger.debug(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+        logger.trace(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
         // When our kernel connects and gets a status message it triggers the ready promise
         const kernelStatus = createDeferred<string>();
         token.onCancellationRequested(() => kernelStatus.reject(new CancellationError()), undefined, disposables);
         const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
-            logger.debug(`Got status ${status} in waitForIdleOnSession`);
+            logger.trace(`Got status ${status} in waitForIdleOnSession`);
             if (status == 'idle') {
                 kernelStatus.resolve(status);
             }
@@ -66,7 +66,7 @@ export async function waitForIdleOnSession(
             throw new JupyterInvalidKernelError(kernelConnectionMetadata);
         }
 
-        logger.debug(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+        logger.trace(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
         if (result == 'idle') {
             return;

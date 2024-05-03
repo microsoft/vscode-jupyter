@@ -323,7 +323,7 @@ async function sendInspectRequest(
     const stopWatch = new StopWatch();
 
     const codeForLogging = splitLines(message.code).reverse()[0].slice(-50);
-    logger.debug(`Inspecting code ${codeForLogging}`);
+    logger.trace(`Inspecting code ${codeForLogging}`);
     const request = isPythonKernelConnection(kernel.kernelConnectionMetadata)
         ? sendPythonInspectRequest(kernel, message, token)
         : kernel.session.kernel.requestInspect(message);

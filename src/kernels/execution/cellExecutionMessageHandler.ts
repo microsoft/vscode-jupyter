@@ -1115,7 +1115,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         const outputToBeUpdated = CellOutputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
         if (!outputToBeUpdated) {
             // Possible this is a display Id that was created by code executed by an extension.
-            logger.debug('Update display data message received, but no output found to update', msg.content);
+            logger.trace('Update display data message received, but no output found to update', msg.content);
             return;
         }
         if (outputToBeUpdated.cell.document.isClosed) {
@@ -1132,7 +1132,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         } as nbformat.IDisplayData);
         // If there was no output and still no output, then nothing to do.
         if (outputToBeUpdated.outputItems.length === 0 && newOutput.items.length === 0) {
-            logger.debug('Update display data message received, but no output to update', msg.content);
+            logger.trace('Update display data message received, but no output to update', msg.content);
             return;
         }
         // Compare each output item (at the end of the day everything is serializable).
@@ -1154,7 +1154,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             }
             if (allAllOutputItemsSame) {
                 // If everything is still the same, then there's nothing to update.
-                logger.debug(
+                logger.trace(
                     'Update display data message received, but no output to update (data is the same)',
                     msg.content
                 );

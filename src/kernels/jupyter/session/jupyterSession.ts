@@ -128,7 +128,7 @@ export class JupyterSessionWrapper
         this._isDisposed = true;
         // We are only interested in our stack, not in VS Code or others.
         const stack = (new Error().stack || '').split('\n').filter((l) => l.includes(JVSC_EXTENSION_ID));
-        logger.debug(`Shutdown session - current session, called from \n ${stack.map((l) => `    ${l}`).join('\n')}`);
+        logger.trace(`Shutdown session - current session, called from \n ${stack.map((l) => `    ${l}`).join('\n')}`);
         const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata.id}`;
         logger.debug(`shutdownSession ${kernelIdForLogging} - start`);
         try {
@@ -165,7 +165,7 @@ export class JupyterSessionWrapper
                 logger.warn('Failures in disposing the session', e);
             }
             super.dispose();
-            logger.debug('Shutdown session -- complete');
+            logger.trace('Shutdown session -- complete');
         } catch (e) {
             logger.warn('Failures in disposing the session', e);
         }

@@ -427,7 +427,7 @@ class KernelSpecificCompletionProvider extends DisposableBase implements Complet
             return;
         }
 
-        logger.debug(
+        logger.trace(
             `Registering Kernel Completion Provider from kernel ${getDisplayNameOrNameOfKernelConnection(
                 this.kernel.kernelConnectionMetadata
             )} for language ${this.monacoLanguage}`

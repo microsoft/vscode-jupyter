@@ -101,7 +101,7 @@ export class JupyterPaths {
         })();
         this.cachedKernelSpecRootPath
             .then((value) => {
-                logger.debug(`Getting Jupyter KernelSpec Root Path ${value?.toString()}`);
+                logger.trace(`Getting Jupyter KernelSpec Root Path ${value?.toString()}`);
                 this.updateCachedRootPath(value);
             })
             .catch(noop);
@@ -187,7 +187,7 @@ export class JupyterPaths {
                         }
                     }
                 } else {
-                    logger.warn(`Got an empty Jupyter Data Dir from ${interpreter.id}, stderr = ${result.stderr}`);
+                    logger.debug(`Got an empty Jupyter Data Dir from ${interpreter.id}, stderr = ${result.stderr}`);
                 }
             } catch (ex) {
                 logger.error(

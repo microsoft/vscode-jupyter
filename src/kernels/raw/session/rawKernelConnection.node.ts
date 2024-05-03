@@ -558,10 +558,10 @@ async function postStartKernel(
             }
 
             if (gotIoPubMessage.completed && kernelInfoRequestHandled.completed) {
-                logger.debug(`Got response for requestKernelInfo`);
+                logger.trace(`Got response for requestKernelInfo`);
                 break;
             } else {
-                logger.debug(`Did not get a response for requestKernelInfo`);
+                logger.trace(`Did not get a response for requestKernelInfo`);
                 continue;
             }
         }
@@ -659,7 +659,7 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
     });
     if (workspace.getConfiguration('jupyter').get('enablePythonKernelLogging', false)) {
         realKernel.anyMessage.connect((_, msg) => {
-            logger.debug(`[AnyMessage Event] [${msg.direction}] [${kernelProcess.pid}] ${JSON.stringify(msg.msg)}`);
+            logger.trace(`[AnyMessage Event] [${msg.direction}] [${kernelProcess.pid}] ${JSON.stringify(msg.msg)}`);
         });
     }
 
@@ -682,19 +682,18 @@ async function waitForReady(
     const deferred = createDeferred<'connected'>();
     const handler = (_: unknown, status: Kernel.ConnectionStatus) => {
         if (status == 'connected') {
-            logger.debug('Raw session connected');
+            logger.trace('Raw session connected');
             deferred.resolve(status);
         } else {
-            logger.debug(`Raw session not connected, status: ${status}`);
+            logger.trace(`Raw session not connected, status: ${status}`);
         }
     };
     kernel.connectionStatusChanged.connect(handler);
     if (kernel.connectionStatus === 'connected') {
-        logger.debug('Raw session connected');
+        logger.trace('Raw session connected');
         deferred.resolve(kernel.connectionStatus);
     }
 
-    logger.debug('Waiting for Raw session to be ready');
     const result = await raceTimeout(launchTimeout, deferred.promise);
     kernel.connectionStatusChanged.disconnect(handler);
     logger.debug(`Waited for Raw session to be ready & got status: ${result}`);

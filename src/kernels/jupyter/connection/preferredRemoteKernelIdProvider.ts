@@ -34,7 +34,7 @@ export class PreferredRemoteKernelIdProvider {
             // Not using a map as we're only going to store the last 40 items.
             const fileHash = await this.crypto.createHash(uri.toString());
             const entry = list.find((l) => l.fileHash === fileHash);
-            logger.debug(`Preferred Remote kernel for ${getDisplayPath(uri)} is ${entry?.kernelId}`);
+            logger.trace(`Preferred Remote kernel for ${getDisplayPath(uri)} is ${entry?.kernelId}`);
             return entry?.kernelId;
         }
     }
@@ -64,7 +64,7 @@ export class PreferredRemoteKernelIdProvider {
         if (id) {
             requiresUpdate = true;
             list.push({ fileHash, kernelId: id });
-            logger.debug(`Storing Preferred remote kernel for ${getDisplayPath(uri)} is ${id}`);
+            logger.trace(`Storing Preferred remote kernel for ${getDisplayPath(uri)} is ${id}`);
         }
 
         // Prune list if too big

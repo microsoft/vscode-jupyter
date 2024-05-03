@@ -60,14 +60,14 @@ export class JupyterLabHelper {
             return;
         }
         this.disposed = true;
-        logger.debug(`Disposing Jupyter Lab Helper`);
+        logger.trace(`Disposing Jupyter Lab Helper`);
         try {
             if (this.contentsManager) {
-                logger.debug('SessionManager - dispose contents manager');
+                logger.trace('SessionManager - dispose contents manager');
                 this.contentsManager.dispose();
             }
             if (this.sessionManager && !this.sessionManager.isDisposed) {
-                logger.debug('ShutdownSessionAndConnection - dispose session manager');
+                logger.trace('ShutdownSessionAndConnection - dispose session manager');
                 // Make sure it finishes startup.
                 await raceTimeout(10_000, this.sessionManager.ready);
 
@@ -83,7 +83,7 @@ export class JupyterLabHelper {
         } catch (e) {
             logger.error(`Exception on Jupyter Lab Helper shutdown: `, e);
         } finally {
-            logger.debug('Finished disposing Jupyter Lab Helper');
+            logger.trace('Finished disposing Jupyter Lab Helper');
         }
     }
 

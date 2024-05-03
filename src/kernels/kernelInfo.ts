@@ -69,7 +69,7 @@ export async function getKernelInfo(
     if (content === defaultResponse) {
         logger.warn('Failed to Kernel info in a timely manner, defaulting to empty info!');
     } else {
-        logger.debug('Got Kernel info');
+        logger.trace('Got Kernel info');
     }
     return content;
 }
