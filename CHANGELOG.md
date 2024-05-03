@@ -1239,7 +1239,7 @@ make this extension useful:
 
 ### Code Health
 
-1. Replace instances of `traceInfoIf` with `logger` as almost all of them were just for CI tracing.
+1. Replace instances of `traceInfoIf` with `traceInfoIfCI` as almost all of them were just for CI tracing.
    ([#7574](https://github.com/Microsoft/vscode-jupyter/issues/7574))
 1. Upgrade to the latest jupyterlab/services API for communicating with kernels and jupyter servers.
    ([#7675](https://github.com/Microsoft/vscode-jupyter/issues/7675))
