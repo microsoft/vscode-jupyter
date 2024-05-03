@@ -213,6 +213,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             vartype = _VSCODE_builtins.type(var)
             if _VSCODE_builtins.hasattr(vartype, "__name__"):
                 result["type"] = typeName = vartype.__name__
+                result["fullType"] = getFullType(vartype)
         except TypeError:
             pass
 
@@ -264,12 +265,18 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
     def _VSCODE_getVariableTypes(varnames):
         # Map with key: varname and value: vartype
-        result = {}
+        result = []
         for name in varnames:
             try:
                 vartype = _VSCODE_builtins.type(globals()[name])
                 if _VSCODE_builtins.hasattr(vartype, "__name__"):
-                    result[name] = vartype.__name__
+                    result.append(
+                        {
+                            "name": name,
+                            "type": vartype.__name__,
+                            "fullType": getFullType(vartype),
+                        }
+                    )
             except _VSCODE_builtins.TypeError:
                 pass
         if is_debugging:
