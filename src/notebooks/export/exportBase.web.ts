@@ -14,7 +14,7 @@ import { concatMultilineString } from '../../platform/common/utils';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportFormat, IExportBase, IExportUtil } from './types';
-import { traceError, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
@@ -138,7 +138,7 @@ export class ExportBase implements IExportBase {
                 throw new Error(text || `Failed to export to ${format}`);
             } else if (text) {
                 // trace the output in case we didn't identify all errors
-                traceVerbose(text);
+                logger.debug(text);
             }
 
             if (format === ExportFormat.pdf) {
@@ -188,7 +188,7 @@ export class ExportBase implements IExportBase {
                 backingFileDir.length && backingFileDir !== '.' ? `${backingFileDir}/${newName}` : newName // Note, the docs say the path uses UNIX delimiters.
             );
         } catch (exc) {
-            traceError(`Backing file not supported: ${exc}`);
+            logger.error(`Backing file not supported: ${exc}`);
         }
 
         if (backingFile) {

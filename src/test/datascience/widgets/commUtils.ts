@@ -3,7 +3,7 @@
 
 import { NotebookCell, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
 import { dispose } from '../../../platform/common/utils/lifecycle';
-import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { noop } from '../../core';
@@ -18,12 +18,12 @@ export function initializeWidgetComms(disposables: IDisposable[]): Utils {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const utils = new Utils(messageChannel, deferred.promise);
     disposables.push(utils);
-    traceInfoIfCI(`Adding comm message handler`);
+    logger.ci(`Adding comm message handler`);
     const disposable = messageChannel.onDidReceiveMessage(async ({ editor, message }) => {
         if (message && message.command === 'log') {
             const messageToLog = message.category === 'error' ? colors.red(message.message) : message.message;
             const category = message.category ? ` (${message.category})` : '';
-            traceInfo(`${colors.yellow('Widget renderer')}${category}: ${messageToLog}`);
+            logger.info(`${colors.yellow('Widget renderer')}${category}: ${messageToLog}`);
         }
         if (message && message.command === 'INIT') {
             deferred.resolve(editor);
@@ -57,7 +57,7 @@ export class Utils {
             selector
         };
         const editor = await this.editorPromise;
-        traceInfo(`Sending message to Widget renderer ${JSON.stringify(request)}`);
+        logger.info(`Sending message to Widget renderer ${JSON.stringify(request)}`);
         this.messageChannel.postMessage!(request, editor).then(noop, noop);
         return new Promise<string>((resolve, reject) => {
             const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
@@ -81,11 +81,11 @@ export class Utils {
             selector
         };
         const editor = await this.editorPromise;
-        traceInfo(`Sending message to Widget renderer ${JSON.stringify(request)}`);
+        logger.info(`Sending message to Widget renderer ${JSON.stringify(request)}`);
         this.messageChannel.postMessage!(request, editor).then(noop, noop);
         return new Promise<void>((resolve, reject) => {
             const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
-                traceInfo(`Received message (click) from Widget renderer ${JSON.stringify(message)}`);
+                logger.info(`Received message (click) from Widget renderer ${JSON.stringify(message)}`);
                 if (message && message.requestId === request.requestId) {
                     disposable.dispose();
                     if (message.error) {
@@ -107,11 +107,11 @@ export class Utils {
             value
         };
         const editor = await this.editorPromise;
-        traceInfo(`Sending message to Widget renderer ${JSON.stringify(request)}`);
+        logger.info(`Sending message to Widget renderer ${JSON.stringify(request)}`);
         this.messageChannel.postMessage!(request, editor).then(noop, noop);
         return new Promise<void>((resolve, reject) => {
             const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
-                traceInfo(`Received message (setValue) from Widget renderer ${JSON.stringify(message)}`);
+                logger.info(`Received message (setValue) from Widget renderer ${JSON.stringify(message)}`);
                 if (message && message.requestId === request.requestId) {
                     disposable.dispose();
                     if (message.error) {

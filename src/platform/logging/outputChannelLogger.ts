@@ -43,11 +43,15 @@ export class OutputChannelLogger implements ILogger {
         this.channel.appendLine(this.format('info', message, ...data));
     }
 
-    public verbose(message: string, ...data: Arguments): void {
+    public debug(message: string, ...data: Arguments): void {
         this.channel.appendLine(this.format('debug', message, ...data));
     }
 
     public trace(message: string, ...data: Arguments): void {
         this.channel.appendLine(this.format('trace', message, ...data));
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public ci(_message: any, ..._data: Arguments): void {
+        //
     }
 }

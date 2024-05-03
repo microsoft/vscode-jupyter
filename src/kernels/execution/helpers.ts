@@ -10,7 +10,7 @@ import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { concatMultilineString, splitMultilineString } from '../../platform/common/utils';
-import { traceInfoIfCI, traceError, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
@@ -106,7 +106,7 @@ export class NotebookCellStateTracker {
 
 export function traceCellMessage(cell: NotebookCell, message: string | (() => string)) {
     let messageToLog = typeof message === 'string' ? () => message : message;
-    traceInfoIfCI(
+    logger.ci(
         () =>
             `Cell Index:${cell.index}, of document ${uriPath.basename(
                 cell.notebook.uri
@@ -155,7 +155,7 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): NotebookCel
     if (fn) {
         result = fn(output);
     } else {
-        traceWarning(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
+        logger.warn(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result = translateDisplayDataOutput(output as any);
     }
@@ -357,7 +357,7 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
             return stringValue;
         }
     } catch (ex) {
-        traceError(`Failed to convert ${mime} output from a buffer ${typeof value}, ${value}`, ex);
+        logger.error(`Failed to convert ${mime} output from a buffer ${typeof value}, ${value}`, ex);
         return '';
     }
 }
@@ -384,7 +384,7 @@ function convertJupyterOutputToBuffer(mime: string, value: unknown): NotebookCel
             return NotebookCellOutputItem.text(value as string, mime);
         }
     } catch (ex) {
-        traceError(`Failed to convert ${mime} output to a buffer ${typeof value}, ${value}`, ex);
+        logger.error(`Failed to convert ${mime} output to a buffer ${typeof value}, ${value}`, ex);
         return NotebookCellOutputItem.text('');
     }
 }

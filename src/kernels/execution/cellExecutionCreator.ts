@@ -10,7 +10,7 @@ import {
     NotebookCellOutputItem,
     TextDocument
 } from 'vscode';
-import { traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IKernelController } from '../types';
 import { noop } from '../../platform/common/utils/misc';
 import { getNotebookTelemetryTracker } from '../telemetry/notebookTelemetry';
@@ -67,10 +67,10 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
             // indicating the fact that the kernel has started processing the output.
             // That's when we clear the output. (ideally it should be cleared as soon as its queued, but thats an upstream core issue).
             if (this.clearOutputOnStartWithTime) {
-                traceVerbose(`Start cell ${this.cell.index} execution @ ${startTime} (clear output)`);
+                logger.debug(`Start cell ${this.cell.index} execution @ ${startTime} (clear output)`);
                 this._impl.clearOutput().then(noop, noop);
             } else {
-                traceVerbose(`Start cell ${this.cell.index} execution @ ${startTime}`);
+                logger.debug(`Start cell ${this.cell.index} execution @ ${startTime}`);
             }
         }
     }
@@ -78,7 +78,7 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
         if (this._endCallback) {
             try {
                 this._impl.end(success, endTime, this.errorInfo);
-                traceVerbose(
+                logger.debug(
                     `Cell ${this.cell.index} completed in ${
                         ((endTime || 0) - (this._startTime || 0)) / 1000
                     }s (start: ${this._startTime}, end: ${endTime})`

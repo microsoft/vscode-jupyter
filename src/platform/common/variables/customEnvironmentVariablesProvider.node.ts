@@ -9,7 +9,7 @@ import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry.node
 import { IDisposableRegistry, Resource } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
-import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '../../logging';
+import { debugDecorator, logger } from '../../logging';
 import { dispose } from '../utils/lifecycle';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { noop } from '../utils/misc';
@@ -44,7 +44,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         dispose(this.disposables);
     }
 
-    @traceDecoratorVerbose('Get Custom Env Variables', TraceOptions.Arguments)
+    @debugDecorator('Get Custom Env Variables', TraceOptions.Arguments)
     public async getEnvironmentVariables(
         resource: Resource,
         purpose: 'RunPythonCode' | 'RunNonPythonCode',
@@ -66,7 +66,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         );
 
         if (cacheStoreIndexedByWorkspaceFolder.hasData && cacheStoreIndexedByWorkspaceFolder.data) {
-            traceVerbose(`Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`);
+            logger.debug(`Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`);
             return cacheStoreIndexedByWorkspaceFolder.data!;
         }
         const promise = this._getEnvironmentVariables(resource, purpose, token);
@@ -91,7 +91,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             : undefined;
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         if (!workspaceFolderUri) {
-            traceInfoIfCI(`No workspace folder found for ${resource ? resource.fsPath : '<No Resource>'}`);
+            logger.ci(`No workspace folder found for ${resource ? resource.fsPath : '<No Resource>'}`);
             return;
         }
 
@@ -102,7 +102,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
                     this.pythonEnvVarChangeEventHooked = true;
                     api.environments.onDidEnvironmentVariablesChange(
                         (e) => {
-                            traceVerbose(`Python env vars changed ${e.resource?.uri?.path}`);
+                            logger.debug(`Python env vars changed ${e.resource?.uri?.path}`);
                             this.onEnvironmentFileChanged(e.resource?.uri);
                             this.changeEventEmitter.fire(e.resource?.uri);
                         },
@@ -120,7 +120,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         );
 
         if (cacheStoreIndexedByWorkspaceFolder.hasData) {
-            traceVerbose(
+            logger.debug(
                 `Cached custom vars data exists getCustomEnvironmentVariables, ${
                     resource ? resource.fsPath : '<No Resource>'
                 }`
@@ -159,7 +159,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri), this, this.disposables);
             envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
         } else {
-            traceError('Failed to create file watcher for environment file');
+            logger.error('Failed to create file watcher for environment file');
         }
     }
     private getEnvFile(workspaceFolderUri: Uri) {

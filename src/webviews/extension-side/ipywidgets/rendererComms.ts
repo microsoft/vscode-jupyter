@@ -13,7 +13,7 @@ import { WIDGET_MIMETYPE } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { traceTrace } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 
 type WidgetData = {
     model_id: string;
@@ -140,13 +140,13 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         // }
         const version = kernel?.ipywidgetsVersion; // || versionInWidgetState;
         if (kernel?.ipywidgetsVersion) {
-            traceTrace(`IPyWidget version in Kernel is ${kernel?.ipywidgetsVersion}.`);
+            logger.trace(`IPyWidget version in Kernel is ${kernel?.ipywidgetsVersion}.`);
         }
         // if (versionInWidgetState) {
-        //     traceTrace(`IPyWidget version in Kernel is ${versionInWidgetState}.`);
+        //     logger.trace(`IPyWidget version in Kernel is ${versionInWidgetState}.`);
         // }
         // if (kernel?.ipywidgetsVersion && versionInWidgetState) {
-        //     traceWarning(
+        //     logger.warn(
         //         `IPyWidget version in Kernel is ${kernel?.ipywidgetsVersion} and in widget state is ${versionInWidgetState}.}`
         //     );
         // }

@@ -7,14 +7,7 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import {
-    ignoreLogging,
-    logValue,
-    traceError,
-    traceInfoIfCI,
-    traceVerbose,
-    traceWarning
-} from '../../../platform/logging';
+import { ignoreLogging, logValue, logger } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IMemento,
@@ -24,7 +17,7 @@ import {
 } from '../../../platform/common/types';
 import { tryGetRealPath } from '../../../platform/common/utils.node';
 import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
-import { traceDecoratorVerbose } from '../../../platform/logging';
+import { debugDecorator } from '../../../platform/logging';
 import { OSType } from '../../../platform/common/utils/platform.node';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -108,7 +101,7 @@ export class JupyterPaths {
         })();
         this.cachedKernelSpecRootPath
             .then((value) => {
-                traceVerbose(`Getting Jupyter KernelSpec Root Path ${value?.toString()}`);
+                logger.debug(`Getting Jupyter KernelSpec Root Path ${value?.toString()}`);
                 this.updateCachedRootPath(value);
             })
             .catch(noop);
@@ -135,7 +128,7 @@ export class JupyterPaths {
             }
         }
         if (!runtimeDir) {
-            traceError(`Failed to determine Jupyter runtime directory`);
+            logger.error(`Failed to determine Jupyter runtime directory`);
             return;
         }
 
@@ -144,7 +137,7 @@ export class JupyterPaths {
             await this.fs.createDirectory(runtimeDir);
             return runtimeDir;
         } catch (ex) {
-            traceError(`Failed to create runtime directory, reverting to temp directory ${runtimeDir}`, ex);
+            logger.error(`Failed to create runtime directory, reverting to temp directory ${runtimeDir}`, ex);
         }
     }
     /**
@@ -160,10 +153,7 @@ export class JupyterPaths {
         return this.cachedDataDirs.get(key)!;
     }
 
-    @traceDecoratorVerbose(
-        'getDataDirsImpl',
-        TraceOptions.BeforeCall | TraceOptions.Arguments | TraceOptions.ReturnValue
-    )
+    @debugDecorator('getDataDirsImpl', TraceOptions.BeforeCall | TraceOptions.Arguments | TraceOptions.ReturnValue)
     private async getDataDirsImpl(
         resource: Resource,
         @logValue<PythonEnvironment>('id') interpreter?: PythonEnvironment
@@ -182,7 +172,7 @@ export class JupyterPaths {
         // 2. Add the paths based on ENABLE_USER_SITE
         if (interpreter) {
             try {
-                traceInfoIfCI(`Getting Jupyter Data Dir for ${interpreter.uri.fsPath}`);
+                logger.ci(`Getting Jupyter Data Dir for ${interpreter.uri.fsPath}`);
                 const factory = await this.pythonExecFactory.createActivatedEnvironment({
                     interpreter,
                     resource
@@ -197,10 +187,10 @@ export class JupyterPaths {
                         }
                     }
                 } else {
-                    traceWarning(`Got an empty Jupyter Data Dir from ${interpreter.id}, stderr = ${result.stderr}`);
+                    logger.warn(`Got an empty Jupyter Data Dir from ${interpreter.id}, stderr = ${result.stderr}`);
                 }
             } catch (ex) {
-                traceError(
+                logger.error(
                     `Failed to get DataDir based on ENABLE_USER_SITE for ${getPythonEnvDisplayName(interpreter)}`,
                     ex
                 );
@@ -343,7 +333,7 @@ export class JupyterPaths {
             }
         }
 
-        traceVerbose(
+        logger.debug(
             `Kernel Spec Root Paths, ${Array.from(paths)
                 .map((uri) => getDisplayPath(uri))
                 .join(', ')}`
@@ -396,7 +386,7 @@ export class JupyterPaths {
             });
         }
 
-        traceVerbose(`Jupyter Paths ${getDisplayPath(subDir)}: ${Array.from(paths).map((uri) => getDisplayPath(uri))}`);
+        logger.debug(`Jupyter Paths ${getDisplayPath(subDir)}: ${Array.from(paths).map((uri) => getDisplayPath(uri))}`);
         return Array.from(paths);
     }
 

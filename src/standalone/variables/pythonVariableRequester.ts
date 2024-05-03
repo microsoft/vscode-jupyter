@@ -4,7 +4,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { traceError, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
@@ -136,9 +136,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
             return content?.summary;
         } catch (ex) {
-            traceWarning(
-                `Exception when getting variable summary for variable "${targetVariable.name}": ${ex.message}`
-            );
+            logger.warn(`Exception when getting variable summary for variable "${targetVariable.name}": ${ex.message}`);
             return undefined;
         }
     }
@@ -165,7 +163,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         try {
             return content;
         } catch (ex) {
-            traceError(ex);
+            logger.error(ex);
             return [];
         }
     }
@@ -256,7 +254,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                     throw new JupyterDataRateLimitError();
                 } else {
                     const error = DataScience.jupyterGetVariablesExecutionError(resultString);
-                    traceError(error);
+                    logger.error(error);
                     throw new Error(error);
                 }
             }
@@ -278,7 +276,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const traceback: string[] = codeCellOutput.traceback as string[];
                 const stripped = traceback.map(stripAnsi).join('\r\n');
                 const error = DataScience.jupyterGetVariablesExecutionError(stripped);
-                traceError(error);
+                logger.error(error);
                 throw new Error(error);
             }
         }

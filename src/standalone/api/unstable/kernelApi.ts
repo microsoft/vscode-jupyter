@@ -10,7 +10,7 @@ import {
     BaseKernelConnectionMetadata,
     IKernelFinder
 } from '../../../kernels/types';
-import { traceVerbose, traceInfoIfCI } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { PromiseChain } from '../../../platform/common/utils/async';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -78,7 +78,7 @@ class JupyterKernelService implements IExportedKernelService {
             extensionId: this.callingExtensionId,
             pemUsed: 'onDidChangeKernelSpecifications'
         });
-        traceVerbose(`API called from ${this.callingExtensionId}`);
+        logger.debug(`API called from ${this.callingExtensionId}`);
         return this._onDidChangeKernelSpecifications.event;
     }
     public get onDidChangeKernels(): Event<void> {
@@ -117,7 +117,7 @@ class JupyterKernelService implements IExportedKernelService {
         );
         this.kernelProvider.onDidDisposeKernel(
             (e) => {
-                traceInfoIfCI(
+                logger.ci(
                     `Kernel ${
                         e.kernelConnectionMetadata.id
                     }, ${e.kernelConnectionMetadata.interpreter?.uri.toString()} disposed`
@@ -129,7 +129,7 @@ class JupyterKernelService implements IExportedKernelService {
         );
         this.kernelProvider.onDidStartKernel(
             (e) => {
-                traceInfoIfCI(
+                logger.ci(
                     `Kernel ${
                         e.kernelConnectionMetadata.id
                     }, ${e.kernelConnectionMetadata.interpreter?.uri.toString()} started`
@@ -141,7 +141,7 @@ class JupyterKernelService implements IExportedKernelService {
         );
         this.thirdPartyKernelProvider.onDidDisposeKernel(
             (e) => {
-                traceInfoIfCI(
+                logger.ci(
                     `Third party Kernel ${
                         e.kernelConnectionMetadata.id
                     }, ${e.kernelConnectionMetadata.interpreter?.uri.toString()} disposed`
@@ -153,7 +153,7 @@ class JupyterKernelService implements IExportedKernelService {
         );
         this.thirdPartyKernelProvider.onDidStartKernel(
             (e) => {
-                traceInfoIfCI(
+                logger.ci(
                     `Third party Kernel ${
                         e.kernelConnectionMetadata.id
                     }, ${e.kernelConnectionMetadata.interpreter?.uri.toString()} started`

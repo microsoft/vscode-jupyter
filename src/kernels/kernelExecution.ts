@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IDisposable, IExtensionContext } from '../platform/common/types';
-import { traceInfo, traceVerbose } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { Telemetry } from '../telemetry';
 import { DisplayOptions } from './displayOptions';
 import { CellExecutionFactory } from './execution/cellExecution';
@@ -157,7 +157,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             cell,
             `NotebookKernelExecution.resumeCellExecution (completed), ${getDisplayPath(cell.notebook.uri)}`
         );
-        traceVerbose(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
+        logger.debug(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
     }
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<void> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
@@ -190,7 +190,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                 cell,
                 `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
             );
-            traceVerbose(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
+            logger.debug(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
             sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell, {
                 duration: stopWatch.elapsedTime
             });
@@ -227,7 +227,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             result = executionQueue.queueCode(code, extensionId, token);
         }
         if (extensionId !== JVSC_EXTENSION_ID) {
-            traceVerbose(
+            logger.debug(
                 `Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`
             );
         }
@@ -237,7 +237,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             .finally(() => {
                 completed = true;
                 !token.isCancellationRequested &&
-                    traceVerbose(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`);
+                    logger.debug(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`);
                 if (extensionId !== JVSC_EXTENSION_ID) {
                     sendKernelTelemetryEvent(
                         this.kernel.resourceUri,
@@ -268,7 +268,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                 if (completed) {
                     return;
                 }
-                traceVerbose(`Code execution cancelled by extension ${extensionId}`);
+                logger.debug(`Code execution cancelled by extension ${extensionId}`);
             },
             this,
             disposables
@@ -302,7 +302,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         if (!executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             return;
         }
-        traceInfo('Interrupt kernel execution');
+        logger.info('Interrupt kernel execution');
         // First cancel all the cells & then wait for them to complete.
         // Both must happen together, we cannot just wait for cells to complete, as its possible
         // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
@@ -335,7 +335,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             : Promise.resolve();
 
         if (!session) {
-            traceInfo('No kernel session to interrupt');
+            logger.info('No kernel session to interrupt');
             await pendingCells;
         }
     }
@@ -358,7 +358,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         workspace.onDidCloseNotebookDocument(
             async (e: NotebookDocument) => {
                 if (e === document) {
-                    traceVerbose(`Cancel executions after closing notebook ${getDisplayPath(e.uri)}`);
+                    logger.debug(`Cancel executions after closing notebook ${getDisplayPath(e.uri)}`);
                     if (!newCellExecutionQueue.failed || !newCellExecutionQueue.isEmpty) {
                         await newCellExecutionQueue.cancel(true);
                     }

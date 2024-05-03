@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, workspace } from 'vscode';
 
-import { traceWarning, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 
 import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
@@ -155,7 +155,7 @@ export class CodeLensFactory implements ICodeLensFactory {
             updated = true;
             // Enumerate the possible commands for the document based code lenses
             const commands = this.enumerateCommands(document.uri);
-            traceVerbose(
+            logger.debug(
                 `CodeLensFactory: Generating new code lenses for version ${document.version} of document ${
                     document.uri
                 } for commands ${commands.join(', ')}`
@@ -173,7 +173,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                 firstCell = false;
             });
         } else {
-            traceInfoIfCI(
+            logger.ci(
                 `NOT Generating new code lenses for version ${document.version} of document ${document.uri} - needUpdate: ${needUpdate}, cellRanges.length: ${cache.cellRanges.length}`
             );
         }
@@ -394,7 +394,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                 ]);
 
             default:
-                traceWarning(`Invalid command for code lens ${commandName}`);
+                logger.warn(`Invalid command for code lens ${commandName}`);
                 break;
         }
 

@@ -23,7 +23,7 @@ import { IDebugService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IDisposable } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from './constants';
@@ -71,7 +71,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         private readonly platformService: IPlatformService,
         private readonly debugService: IDebugService
     ) {
-        traceInfoIfCI(`Creating kernel debug adapter for debugging notebooks`);
+        logger.ci(`Creating kernel debug adapter for debugging notebooks`);
         const configuration = this.session.configuration;
         assertIsDebugConfig(configuration);
         this.configuration = configuration;
@@ -145,11 +145,11 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
 
     private trace(tag: string, msg: string) {
-        traceVerbose(`[Debug] ${tag}: ${msg}`);
+        logger.debug(`[Debug] ${tag}: ${msg}`);
     }
 
     async onIOPubMessage(_: unknown, msg: KernelMessage.IIOPubMessage) {
-        traceInfoIfCI(`Debug IO Pub message: ${JSON.stringify(msg)}`);
+        logger.ci(`Debug IO Pub message: ${JSON.stringify(msg)}`);
         if (isDebugEventMsg(msg)) {
             this.trace('event', JSON.stringify(msg));
             for (const d of this.delegates ?? []) {
@@ -171,7 +171,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 
     protected async handleClientMessageAsync(message: DebugProtocol.ProtocolMessage): Promise<void> {
         try {
-            traceInfoIfCI(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
+            logger.ci(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
 
             // Necessary, since dumpCell usually runs before debugging starts?
             if (message.type === 'request' && (message as DebugProtocol.Request).command === 'setBreakpoints') {
@@ -199,7 +199,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 
             await this.sendMessageToJupyterSession(message);
         } catch (e) {
-            traceError(`KernelDebugAdapter::handleMessage failure: ${e}`);
+            logger.error(`KernelDebugAdapter::handleMessage failure: ${e}`);
         }
     }
 
@@ -239,12 +239,12 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 try {
                     await Promise.all([
                         this.deleteDumpedFiles().catch((ex) =>
-                            traceWarning('Error deleting temporary debug files.', ex)
+                            logger.warn('Error deleting temporary debug files.', ex)
                         ),
                         this.session.customRequest('disconnect', { restart: false })
                     ]);
                 } catch (e) {
-                    traceError(`Failed to disconnect debug session`, e);
+                    logger.error(`Failed to disconnect debug session`, e);
                 }
             }
             this.endSession.fire(this.session);
@@ -293,7 +293,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 
     protected async sendMessageToJupyterSession(message: DebugProtocol.ProtocolMessage) {
         if (this.jupyterSession.isDisposed || this.jupyterSession.status === 'dead' || !this.jupyterSession.kernel) {
-            traceInfo(`Skipping sending message ${message.type} because session is disposed`);
+            logger.info(`Skipping sending message ${message.type} because session is disposed`);
             return;
         }
 
@@ -318,7 +318,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             return control.done;
         } else {
             // cannot send via iopub, no way to handle events even if they existed
-            traceError(`Unknown message type to send ${message.type}`);
+            logger.error(`Unknown message type to send ${message.type}`);
         }
     }
 

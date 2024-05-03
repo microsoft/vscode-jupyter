@@ -15,7 +15,7 @@ import {
 } from '../../../kernels/variables/types';
 import { IWebviewViewProvider } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import {
     Resource,
     IConfigurationService,
@@ -63,7 +63,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     @capturePerfTelemetry(Telemetry.NativeVariableViewLoaded)
     public async load(codeWebview: vscodeWebviewView) {
-        await super.loadWebview(Uri.file(process.cwd()), codeWebview).catch(traceError);
+        await super.loadWebview(Uri.file(process.cwd()), codeWebview).catch(logger.error);
 
         // After loading, hook up our visibility watch and check the initial visibility
         if (this.webviewView) {
@@ -183,7 +183,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                 return commands.executeCommand(Commands.ShowDataViewer, request.variable);
             }
         } catch (e) {
-            traceError(e);
+            logger.error(e);
             sendTelemetryEvent(Telemetry.FailedShowDataViewer);
             window.showErrorMessage(localize.DataScience.showDataViewerFail).then(noop, noop);
         }

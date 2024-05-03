@@ -22,7 +22,7 @@ import { DisplayOptions } from '../kernels/displayOptions';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
-import { traceInfo, traceVerbose } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { INotebookEditorProvider } from './types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
@@ -129,11 +129,11 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         if (document === undefined) {
             return;
         }
-        traceVerbose(`Command interrupted kernel for ${getDisplayPath(document.uri)}`);
+        logger.debug(`Command interrupted kernel for ${getDisplayPath(document.uri)}`);
 
         const kernel = this.kernelProvider.get(document);
         if (!kernel) {
-            traceInfo(`Interrupt requested & no kernel.`);
+            logger.info(`Interrupt requested & no kernel.`);
             return;
         }
         await this.wrapKernelMethod('interrupt', kernel);
@@ -169,7 +169,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
-            traceVerbose(`Restart kernel command handler for ${getDisplayPath(document.uri)}`);
+            logger.debug(`Restart kernel command handler for ${getDisplayPath(document.uri)}`);
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage;

@@ -11,7 +11,7 @@ import {
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../platform/common/utils/multiStepInput';
-import { traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import {
     IJupyterRequestAgentCreator,
@@ -70,7 +70,7 @@ export class JupyterHubPasswordConnect {
             result = this.getJupyterHubConnectionInfo(newUrl, options.validationErrorMessage).then((value) => {
                 if (!value || (value.requiresPassword && Object.keys(value).length === 1)) {
                     // If we fail to get a valid password connect info, don't save the value
-                    traceWarning(`Password for ${newUrl} was invalid.`);
+                    logger.warn(`Password for ${newUrl} was invalid.`);
                     this.savedConnectInfo.delete(options.handle);
                 }
 
@@ -117,14 +117,14 @@ export class JupyterHubPasswordConnect {
             // Ensure we get a valid JSON with a version in it.
             try {
                 const json = await response.json();
-                traceVerbose(`JupyterHub version is ${json && json.version} for url ${url}`);
+                logger.debug(`JupyterHub version is ${json && json.version} for url ${url}`);
                 return json && json.version;
             } catch {
                 //
             }
             return false;
         } catch (ex) {
-            traceVerbose(`Error in detecting whether url is isJupyterHub: ${ex}`);
+            logger.debug(`Error in detecting whether url is isJupyterHub: ${ex}`);
             return false;
         }
     }

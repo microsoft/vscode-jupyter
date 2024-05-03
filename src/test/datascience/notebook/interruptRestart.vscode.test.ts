@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { window } from 'vscode';
-import { traceError, traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
@@ -47,38 +47,38 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     let previousTestFailed: boolean | undefined = false;
     async function initSuite() {
         try {
-            traceInfo(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
+            logger.info(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
             await startJupyterServer();
             await closeNotebooksAndCleanUpAfterTests();
             notebook = new TestNotebookDocument();
             const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
             const metadata = await getDefaultKernelConnection();
-            traceInfo(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore metadata ${metadata.id}`);
+            logger.info(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore metadata ${metadata.id}`);
             const controller = createKernelController();
-            traceInfo(`Controller created`);
+            logger.info(`Controller created`);
             kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
-            traceInfo(`Kernel created`);
+            logger.info(`Kernel created`);
             await kernel.start();
-            traceInfo(`Kernel started`);
+            logger.info(`Kernel started`);
             kernelExecution = kernelProvider.getKernelExecution(kernel);
-            traceInfo(`Start Suite Test Complete Restart/Interrupt/Cancel/Errors @kernelCore`);
+            logger.info(`Start Suite Test Complete Restart/Interrupt/Cancel/Errors @kernelCore`);
         } catch (ex) {
-            traceError('Suite Setup (failed) - Test Restart/Interrupt/Cancel/Errors @kernelCore', ex);
+            logger.error('Suite Setup (failed) - Test Restart/Interrupt/Cancel/Errors @kernelCore', ex);
             await captureScreenShot('execution-suite');
             throw ex;
         }
     }
     suiteSetup(async function () {
-        traceInfo(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
+        logger.info(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
         api = await initialize();
         dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
         oldAskForRestart = dsSettings.askForKernelRestart;
         await initSuite();
     });
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         if (previousTestFailed) {
-            traceInfo(`Start Running Test Suite again for ${this.currentTest?.title}`);
+            logger.info(`Start Running Test Suite again for ${this.currentTest?.title}`);
             await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
             await initSuite();
         }
@@ -86,11 +86,11 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         notebook.cells.length = 0;
         // Disable the prompt (when attempting to restart kernel).
         dsSettings.askForKernelRestart = false;
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(function () {
         previousTestFailed = this.currentTest?.isFailed();
-        traceInfo(`End Test (completed) ${this.currentTest?.title}`);
+        logger.info(`End Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {
         if (dsSettings) {
@@ -106,16 +106,16 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         const showInformationMessage = sinon.stub(window, 'showInformationMessage');
         showInformationMessage.resolves(); // Ignore message to restart kernel.
         disposables.push({ dispose: () => showInformationMessage.restore() });
-        traceInfo('Step 1');
+        logger.info('Step 1');
         const execPromise = kernelExecution.executeCell(cell).catch(noop);
-        traceInfo('Step 2');
+        logger.info('Step 2');
 
         await waitForTextOutput(cell, '1', 0, false);
-        traceInfo('Step 3');
+        logger.info('Step 3');
 
         // Interrupt the kernel.
         const interruptPromise = kernel.interrupt().catch(noop);
-        traceInfo('Step 4');
+        logger.info('Step 4');
 
         // Wait for interruption (cell will fail with errors).
         await Promise.all([
@@ -123,84 +123,84 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
             interruptPromise,
             waitForCondition(async () => hasErrorOutput(cell.outputs), 30_000, 'No errors')
         ]);
-        traceInfo('Step 5');
+        logger.info('Step 5');
     });
     test('Restarting kernel will cancel cell execution & we can re-run a cell', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
-        traceInfo('Step 1');
+        logger.info('Step 1');
         const cell = await notebook.appendCodeCell(
             'import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)'
         );
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
 
-        traceInfo(`Step 4. Before execute`);
-        traceInfo(`Step 5. After execute`);
+        logger.info(`Step 4. Before execute`);
+        logger.info(`Step 5. After execute`);
         const promise = kernelExecution.executeCell(cell).catch(noop);
         await waitForTextOutput(cell, '1', 0, false);
 
         // Restart the kernel & use event handler to check if it was restarted successfully.
         const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
-        traceInfo('Step 9 Wait for restart');
+        logger.info('Step 9 Wait for restart');
         kernel.restart().catch(noop);
         // Wait for kernel to restart before we execute cells again.
         await waitForKernelToRestart.assertFired(30_000);
-        traceInfo('Step 10 Restarted');
+        logger.info('Step 10 Restarted');
         // Wait for cell completed
         await waitForCondition(
             async () => NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle,
             60_000,
             'Cell did not stop running'
         );
-        traceInfo('Step 11 Restarted');
+        logger.info('Step 11 Restarted');
 
         // Clear the cells
         // Clear the outputs.
         cell.outputs.length = 0;
 
         // Confirm we can execute a cell (using the new kernel session).
-        traceInfo('Step 12 Executed');
+        logger.info('Step 12 Executed');
         kernelExecution.executeCell(cell).catch(noop);
         await waitForTextOutput(cell, '1', 0, false);
-        traceInfo(`Step 13. Cell output`);
+        logger.info(`Step 13. Cell output`);
 
         // Don't have to wait for interrupt, as sometimes interrupt can timeout & we get a prompt to restart.
         // Stop execution of the cell (if possible) in kernel.
         kernel.interrupt().catch(noop);
         // Stop the cell (cleaner way to tear down this test, else VS Code can hang due to the fact that we delete/close notebooks & rest of the code is trying to access it).
 
-        traceInfo('Step 14');
+        logger.info('Step 14');
 
         // Wait for interruption (cell will fail with errors).
         await Promise.all([promise, waitForCondition(async () => hasErrorOutput(cell.outputs), 30_000, 'No errors')]);
-        traceInfo('Step 15');
+        logger.info('Step 15');
     });
     test('Restarting kernel during run all will skip the rest of the cells', async function () {
-        traceInfo('Step 1');
+        logger.info('Step 1');
         await notebook.appendCodeCell('print(1)');
         const cell = await notebook.appendCodeCell('import time\nprint(2)\ntime.sleep(60)');
         const lastCell = await notebook.appendCodeCell('print(3)');
 
         // Ensure we click `Yes` when prompted to restart the kernel.
         await clickOKForRestartPrompt();
-        traceInfo(`Step 4. Before execute`);
-        traceInfo(`Step 5. After execute`);
+        logger.info(`Step 4. Before execute`);
+        logger.info(`Step 5. After execute`);
         const executionPromise = Promise.all(
             notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))
         );
         await waitForTextOutput(cell, '2', 0, false);
-        traceInfo(`Step 6. Cell is busy`);
+        logger.info(`Step 6. Cell is busy`);
 
         // Restart the kernel & use event handler to check if it was restarted successfully.
         const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
         const restartPromise = kernel.restart().catch(noop);
 
         // Wait for kernel to restart before we execute cells again.
-        traceInfo('Step 8 Wait for restart');
+        logger.info('Step 8 Wait for restart');
         await waitForKernelToRestart.assertFired(30_000);
-        traceInfo('Step 9 Restarted');
+        logger.info('Step 9 Restarted');
 
         // Confirm last cell is empty
         await Promise.all([executionPromise, restartPromise]);
@@ -385,13 +385,13 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
 
         // Restart the kernel & use event handler to check if it was restarted successfully.
         const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
-        traceInfo('Step 9 Wait for restart');
+        logger.info('Step 9 Wait for restart');
         await Promise.all([
             kernel.restart(),
             // Wait for kernel to restart before we execute cells again.
             waitForKernelToRestart.assertFired(30_000)
         ]);
-        traceInfo('Step 10 Restarted');
+        logger.info('Step 10 Restarted');
 
         // Run the first cell again & this time it should work.
         // When we re-run the cells, the execution order shoulld start from 1 all over again

@@ -4,7 +4,7 @@
 import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import uuid from 'uuid/v4';
-import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import {
@@ -208,7 +208,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 this.kernelProcess?.dispose().catch(noop),
                 this.realKernel
                     ?.shutdown()
-                    .catch((ex) => traceWarning(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex))
+                    .catch((ex) => logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex))
             ]);
             if (kernelExitedError) {
                 throw kernelExitedError;
@@ -222,9 +222,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 throw new KernelConnectionTimeoutError(this.kernelConnectionMetadata);
             }
             if (isCancellationError(error) || token.isCancellationRequested) {
-                traceVerbose('Starting of raw session cancelled by user');
+                logger.debug('Starting of raw session cancelled by user');
             } else {
-                traceError(`Failed to connect raw kernel session: ${error}`);
+                logger.error(`Failed to connect raw kernel session: ${error}`);
             }
             throw error;
         } finally {
@@ -247,7 +247,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 return;
             }
 
-            traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
+            logger.error(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
             // Send telemetry so we know why the kernel process exited,
             // as this affects our kernel startup success
             sendKernelTelemetryEvent(
@@ -315,7 +315,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 resources
             };
         }
-        traceError('Fetching kernel spec from raw kernel using JLab API');
+        logger.error('Fetching kernel spec from raw kernel using JLab API');
         return this.realKernel!.spec;
     }
     public sendShellMessage<T extends KernelMessage.ShellMessageType>(
@@ -349,7 +349,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         if (this.kernelProcess?.canInterrupt) {
             return this.kernelProcess?.interrupt();
         } else if (this.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
-            traceInfo(`Interrupting kernel with a shell message`);
+            logger.info(`Interrupting kernel with a shell message`);
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
             const msg = jupyterLab.KernelMessage.createMessage({
                 msgType: 'interrupt_request' as any,
@@ -359,10 +359,10 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 content: {}
             }) as any as KernelMessage.IShellMessage<'inspect_request'>;
             await this.realKernel!.sendShellMessage<'interrupt_request'>(msg as any, true, true).done.catch((ex) =>
-                traceError('Failed to interrupt via a message', ex)
+                logger.error('Failed to interrupt via a message', ex)
             );
         } else {
-            traceError('Kernel interrupt not supported');
+            logger.error('Kernel interrupt not supported');
         }
     }
     public requestKernelInfo() {
@@ -483,11 +483,11 @@ async function postStartKernel(
 ): Promise<void> {
     try {
         // Wait for it to be ready
-        traceVerbose('Waiting for Raw Session to be ready in postStartRawSession');
+        logger.debug('Waiting for Raw Session to be ready in postStartRawSession');
         await raceCancellationError(token, waitForReady(kernel, kernelConnectionMetadata, launchTimeout));
-        traceVerbose('Successfully waited for Raw Session to be ready in postStartRawSession');
+        logger.debug('Successfully waited for Raw Session to be ready in postStartRawSession');
     } catch (ex) {
-        traceError('Failed waiting for Raw Session to be ready', ex);
+        logger.error('Failed waiting for Raw Session to be ready', ex);
         if (isCancellationError(ex) || token.isCancellationRequested) {
             throw new CancellationError();
         }
@@ -496,7 +496,7 @@ async function postStartKernel(
 
     // Attempt to get kernel to respond to requests (this is what jupyter does today).
     // Kinda warms up the kernel communication & ensure things are in the right state.
-    traceVerbose(`Kernel status is '${kernel?.status}' before requesting kernel info and after ready`);
+    logger.debug(`Kernel status is '${kernel?.status}' before requesting kernel info and after ready`);
     // Lets wait for the response (max of 3s), like jupyter (python code) & jupyter client (jupyter lab npm) does.
     // Lets not wait for full timeout, we don't want to slow kernel startup.
     // Note: in node_modules/@jupyterlab/services/lib/kernel/default.js we only wait for 3s.
@@ -540,7 +540,7 @@ async function postStartKernel(
         while (stopWatch.elapsedTime < launchTimeout * 1000) {
             attempts += 1;
             try {
-                traceVerbose('Sending request for kernelInfo');
+                logger.debug('Sending request for kernelInfo');
                 // In jupyter_server/services/kernels/connection/channels.py,
                 // the request for kernel information is sent on both channels
                 // To ensure max compatibility, we'll do the same.
@@ -553,24 +553,24 @@ async function postStartKernel(
                     sleep(Math.min(launchTimeout, 500)).then(noop)
                 );
             } catch (ex) {
-                traceError('Failed to request kernel info', ex);
+                logger.error('Failed to request kernel info', ex);
                 throw ex;
             }
 
             if (gotIoPubMessage.completed && kernelInfoRequestHandled.completed) {
-                traceVerbose(`Got response for requestKernelInfo`);
+                logger.debug(`Got response for requestKernelInfo`);
                 break;
             } else {
-                traceVerbose(`Did not get a response for requestKernelInfo`);
+                logger.debug(`Did not get a response for requestKernelInfo`);
                 continue;
             }
         }
         if (gotIoPubMessage.completed && kernelInfoRequestHandled.completed) {
-            traceVerbose(
+            logger.debug(
                 `Successfully completed postStartRawSession after ${attempts} attempt(s) in ${stopWatch.elapsedTime}ms`
             );
         } else {
-            traceWarning(
+            logger.warn(
                 `Didn't get response for requestKernelInfo after ${attempts} attempt(s) in ${stopWatch.elapsedTime}ms.`
             );
         }
@@ -659,7 +659,7 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
     });
     if (workspace.getConfiguration('jupyter').get('enablePythonKernelLogging', false)) {
         realKernel.anyMessage.connect((_, msg) => {
-            traceVerbose(`[AnyMessage Event] [${msg.direction}] [${kernelProcess.pid}] ${JSON.stringify(msg.msg)}`);
+            logger.debug(`[AnyMessage Event] [${msg.direction}] [${kernelProcess.pid}] ${JSON.stringify(msg.msg)}`);
         });
     }
 
@@ -677,27 +677,27 @@ async function waitForReady(
     kernelConnectionMetadata: LocalKernelConnectionMetadata,
     launchTimeout: number
 ): Promise<void> {
-    traceVerbose(`Waiting for Raw session to be ready, status: ${kernel.connectionStatus}`);
+    logger.debug(`Waiting for Raw session to be ready, status: ${kernel.connectionStatus}`);
     // When our kernel connects and gets a status message it triggers the ready promise
     const deferred = createDeferred<'connected'>();
     const handler = (_: unknown, status: Kernel.ConnectionStatus) => {
         if (status == 'connected') {
-            traceVerbose('Raw session connected');
+            logger.debug('Raw session connected');
             deferred.resolve(status);
         } else {
-            traceVerbose(`Raw session not connected, status: ${status}`);
+            logger.debug(`Raw session not connected, status: ${status}`);
         }
     };
     kernel.connectionStatusChanged.connect(handler);
     if (kernel.connectionStatus === 'connected') {
-        traceVerbose('Raw session connected');
+        logger.debug('Raw session connected');
         deferred.resolve(kernel.connectionStatus);
     }
 
-    traceVerbose('Waiting for Raw session to be ready');
+    logger.debug('Waiting for Raw session to be ready');
     const result = await raceTimeout(launchTimeout, deferred.promise);
     kernel.connectionStatusChanged.disconnect(handler);
-    traceVerbose(`Waited for Raw session to be ready & got status: ${result}`);
+    logger.debug(`Waited for Raw session to be ready & got status: ${result}`);
 
     if (result !== 'connected') {
         throw new KernelConnectionTimeoutError(kernelConnectionMetadata);

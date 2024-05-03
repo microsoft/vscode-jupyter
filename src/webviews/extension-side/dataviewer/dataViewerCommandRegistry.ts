@@ -23,7 +23,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { untildify } from '../../../platform/common/utils/platform';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { traceError, traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../platform/telemetry/constants';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
@@ -145,7 +145,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
                 }
             } catch (e) {
                 sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
-                traceError(e);
+                logger.error(e);
                 this.errorHandler.handleError(e).then(noop, noop);
             }
         } else {
@@ -163,7 +163,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
                     return await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                 }
             } catch (e) {
-                traceError(e);
+                logger.error(e);
                 sendTelemetryEvent(Telemetry.FailedShowDataViewer);
                 window.showErrorMessage(DataScience.showDataViewerFail).then(noop, noop);
             }
@@ -210,17 +210,17 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
     ): Promise<PythonEnvironment | undefined> {
         if (!this.interpreterService) {
             // Interpreter service is optional
-            traceInfo('Interpreter Service missing when trying getDebugAdapterPython');
+            logger.info('Interpreter Service missing when trying getDebugAdapterPython');
             return;
         }
 
         // Check debugAdapterPython and pythonPath
         let pythonPath: string = '';
         if (debugConfiguration.debugAdapterPython !== undefined) {
-            traceInfo('Found debugAdapterPython on Debug Configuration to use');
+            logger.info('Found debugAdapterPython on Debug Configuration to use');
             pythonPath = debugConfiguration.debugAdapterPython;
         } else if (debugConfiguration.pythonPath) {
-            traceInfo('Found pythonPath on Debug Configuration to use');
+            logger.info('Found pythonPath on Debug Configuration to use');
             pythonPath = debugConfiguration.pythonPath;
         }
 

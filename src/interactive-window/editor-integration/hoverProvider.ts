@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { raceCancellation } from '../../platform/common/cancellation';
 import { Identifiers, InteractiveWindowView, PYTHON, Telemetry } from '../../platform/common/constants';
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { Delayer, raceTimeout } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -71,7 +71,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
             }
         } catch (exc) {
             // Don't let exceptions in a preExecute mess up normal operation
-            traceError(exc);
+            logger.error(exc);
         }
     }
 

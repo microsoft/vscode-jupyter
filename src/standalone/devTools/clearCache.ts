@@ -5,7 +5,7 @@ import { Uri, commands, workspace } from 'vscode';
 import { IExtensionContext } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { Commands } from '../../platform/common/constants';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
 
 export function addClearCacheCommand(context: IExtensionContext, isDevMode: boolean) {
@@ -30,6 +30,6 @@ export function addClearCacheCommand(context: IExtensionContext, isDevMode: bool
             workspace.fs.delete(Uri.joinPath(context.globalStorageUri, 'remoteServersMRUList.json')).then(noop, noop),
             workspace.fs.delete(Uri.joinPath(context.globalStorageUri, RemoteKernelSpecCacheFileName)).then(noop, noop)
         ]);
-        traceInfo('Cache cleared');
+        logger.info('Cache cleared');
     });
 }

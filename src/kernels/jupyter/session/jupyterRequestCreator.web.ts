@@ -4,7 +4,7 @@
 import { injectable } from 'inversify';
 import WebSocketIsomorphic from 'isomorphic-ws';
 import { ClassType } from '../../../platform/ioc/types';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
 import { IJupyterRequestCreator } from '../types';
 import { KernelSocketMap } from '../../kernelSocket';
@@ -79,7 +79,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
                         }
                     };
                 } else {
-                    traceError('KernelId not extracted from Kernel WebSocket URL');
+                    logger.error('KernelId not extracted from Kernel WebSocket URL');
                 }
 
                 // TODO: Implement ping. Well actually see if ping is necessary
@@ -149,7 +149,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
                         }
                     };
                 } else {
-                    traceError('KernelId not extracted from Kernel WebSocket URL');
+                    logger.error('KernelId not extracted from Kernel WebSocket URL');
                 }
 
                 // TODO: Implement ping. Well actually see if ping is necessary

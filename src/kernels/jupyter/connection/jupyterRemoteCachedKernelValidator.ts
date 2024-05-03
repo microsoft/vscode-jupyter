@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { LiveRemoteKernelConnectionMetadata } from '../../types';
 import {
     IJupyterRemoteCachedKernelValidator,
@@ -31,7 +31,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
             (c) => c.extensionId === kernel.serverProviderHandle.extensionId && c.id === kernel.serverProviderHandle.id
         );
         if (!collection) {
-            traceWarning(
+            logger.warn(
                 `Extension ${kernel.serverProviderHandle.extensionId} may have been uninstalled for provider ${kernel.serverProviderHandle.id}, handle ${kernel.serverProviderHandle.handle}`
             );
             return false;
@@ -45,7 +45,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
             if (servers.map((s) => s.id).includes(kernel.serverProviderHandle.handle)) {
                 return true;
             } else {
-                traceWarning(
+                logger.warn(
                     `Hiding remote kernel ${kernel.id} for ${collection.id} as the remote Jupyter Server ${kernel.serverProviderHandle.extensionId}:${kernel.serverProviderHandle.id}:${kernel.serverProviderHandle.handle} is no longer available`
                 );
                 // 3rd party extensions own these kernels, if these are no longer
@@ -53,7 +53,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
                 return false;
             }
         } catch (ex) {
-            traceWarning(
+            logger.warn(
                 `Failed to fetch remote servers from ${kernel.serverProviderHandle.extensionId}:${kernel.serverProviderHandle.id}`,
                 ex
             );

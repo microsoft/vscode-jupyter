@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
-import { traceInfo } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { captureScreenShot, IExtensionTestApi, testMandatory } from './common.node';
 
 import * as ts from 'typescript';
@@ -132,17 +132,17 @@ suite('Verify serviceRegistry is correct', function () {
     let api: IExtensionTestApi;
     setup(async function () {
         try {
-            traceInfo(`Start Test ${this.currentTest?.title}`);
+            logger.info(`Start Test ${this.currentTest?.title}`);
             api = await initialize();
-            traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+            logger.info(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
             await captureScreenShot(this);
             throw e;
         }
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     testMandatory('Verify all classes with inject on them are in the container', async () => {
         assert.ok(

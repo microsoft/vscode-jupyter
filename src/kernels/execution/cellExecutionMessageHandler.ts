@@ -27,7 +27,7 @@ import {
 import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { concatMultilineString, formatStreamText, isJupyterNotebook } from '../../platform/common/utils';
 import {
@@ -416,7 +416,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         try {
             this.handleIOPub(msg);
         } catch (ex) {
-            traceError(`Failed to handle iopub message as a result of some comm message`, msg, ex);
+            logger.error(`Failed to handle iopub message as a result of some comm message`, msg, ex);
             if (!this.completedExecution && !this.cell.document.isClosed) {
                 // If there are problems handling the execution, then bubble those to the calling code.
                 // Else just log the errors.
@@ -487,7 +487,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             //     //
             // }
             this.execution?.start(this.startTime);
-            traceVerbose(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
+            logger.debug(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
         }
 
         // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -520,7 +520,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         } else if (jupyterLab.KernelMessage.isCommCloseMsg(msg)) {
             // Noop.
         } else {
-            traceWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+            logger.warn(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
         }
 
         // Set execution count, all messages should have it
@@ -585,10 +585,10 @@ export class CellExecutionMessageHandler implements IDisposable {
             const IPY_MODEL_PREFIX = 'IPY_MODEL_';
             data.state.children.forEach((item) => {
                 if (typeof item !== 'string') {
-                    return traceWarning(`Came across a comm update message a child that isn't a string`, item);
+                    return logger.warn(`Came across a comm update message a child that isn't a string`, item);
                 }
                 if (!item.startsWith(IPY_MODEL_PREFIX)) {
-                    return traceWarning(
+                    return logger.warn(
                         `Came across a comm update message a child that start start with ${IPY_MODEL_PREFIX}`,
                         item
                     );
@@ -758,7 +758,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             .getCells()
             .find((cell) => CellExecutionMessageHandler.modelIdsOwnedByCells.get(cell)?.has(expectedModelId));
         if (!cell) {
-            traceWarning(`Unable to find a cell that owns the model ${expectedModelId}`);
+            logger.warn(`Unable to find a cell that owns the model ${expectedModelId}`);
             return;
         }
         const widgetOutput = cell.outputs.find((output) => {
@@ -770,7 +770,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                     const value = JSON.parse(new TextDecoder().decode(outputItem.data)) as { model_id?: string };
                     return value.model_id === expectedModelId;
                 } catch (ex) {
-                    traceWarning(`Failed to deserialize the widget data`, ex);
+                    logger.warn(`Failed to deserialize the widget data`, ex);
                 }
                 return false;
             });
@@ -1061,11 +1061,11 @@ export class CellExecutionMessageHandler implements IDisposable {
 
     private handleError(msg: KernelMessage.IErrorMsg) {
         let traceback = msg.content.traceback;
-        traceInfoIfCI(`Traceback for error ${traceback}`);
+        logger.ci(`Traceback for error ${traceback}`);
         this.formatters.forEach((formatter) => {
             traceback = formatter.format(this.cell, traceback);
         });
-        traceInfoIfCI(`Traceback for error after formatting ${traceback}`);
+        logger.ci(`Traceback for error after formatting ${traceback}`);
         const output: nbformat.IError = {
             output_type: 'error',
             ename: msg.content.ename,
@@ -1109,17 +1109,17 @@ export class CellExecutionMessageHandler implements IDisposable {
     private handleUpdateDisplayDataMessage(msg: KernelMessage.IUpdateDisplayDataMsg) {
         const displayId = msg.content.transient.display_id;
         if (!displayId) {
-            traceWarning('Update display data message received, but no display id', msg.content);
+            logger.warn('Update display data message received, but no display id', msg.content);
             return;
         }
         const outputToBeUpdated = CellOutputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
         if (!outputToBeUpdated) {
             // Possible this is a display Id that was created by code executed by an extension.
-            traceVerbose('Update display data message received, but no output found to update', msg.content);
+            logger.debug('Update display data message received, but no output found to update', msg.content);
             return;
         }
         if (outputToBeUpdated.cell.document.isClosed) {
-            traceWarning('Update display data message received, but output cell is closed', msg.content);
+            logger.warn('Update display data message received, but output cell is closed', msg.content);
             return;
         }
         const output = translateCellDisplayOutput(
@@ -1132,7 +1132,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         } as nbformat.IDisplayData);
         // If there was no output and still no output, then nothing to do.
         if (outputToBeUpdated.outputItems.length === 0 && newOutput.items.length === 0) {
-            traceVerbose('Update display data message received, but no output to update', msg.content);
+            logger.debug('Update display data message received, but no output to update', msg.content);
             return;
         }
         // Compare each output item (at the end of the day everything is serializable).
@@ -1154,7 +1154,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             }
             if (allAllOutputItemsSame) {
                 // If everything is still the same, then there's nothing to update.
-                traceVerbose(
+                logger.debug(
                     'Update display data message received, but no output to update (data is the same)',
                     msg.content
                 );

@@ -4,7 +4,7 @@
 import uuid from 'uuid/v4';
 import { CancellationToken, Uri, workspace } from 'vscode';
 import { inject, injectable, optional } from 'inversify';
-import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,
@@ -77,7 +77,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
         if (!this.cache) {
             const promise = (this.cache = this.startJupyterWithRetry(resource, cancelToken));
             promise.catch((ex) => {
-                traceError(`Failed to start the Jupyter Server`, ex);
+                logger.error(`Failed to start the Jupyter Server`, ex);
                 if (this.cache === promise) {
                     this.cache = undefined;
                 }
@@ -126,14 +126,14 @@ export class JupyterServerHelper implements IJupyterServerHelper {
                     // Start or connect to the process
                     connection = await this.startImpl(resource, cancelToken);
 
-                    traceVerbose(`Connection complete server`);
+                    logger.debug(`Connection complete server`);
                     return connection;
                 } catch (err) {
                     lastTryError = err;
                     if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
                         // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
                         // ourselves and propagate the failure outwards.
-                        traceInfo('Retry because of wait for idle problem.');
+                        logger.info('Retry because of wait for idle problem.');
 
                         // Close existing connection.
                         connection?.dispose();
@@ -158,7 +158,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
     private async startImpl(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         // If that works, then attempt to start the server
-        traceVerbose(`Launching server`);
+        logger.debug(`Launching server`);
         const settings = this.configuration.getSettings(resource);
         const useDefaultConfig = settings.useDefaultConfigForJupyter;
         const workingDir = await computeWorkingDirectory(resource);

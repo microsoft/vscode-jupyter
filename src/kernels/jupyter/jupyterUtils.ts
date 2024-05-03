@@ -13,7 +13,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, JVSC_EXTENSION_ID, Telemetry, isBuiltInJupyterProvider } from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
 import { IJupyterServerUri } from '../../api';
-import { traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IJupyterRequestAgentCreator, IJupyterRequestCreator, JupyterServerProviderHandle } from './types';
 
 export function expandWorkingDir(
@@ -244,5 +244,5 @@ export function getOwnerExtensionOfProviderHandle(id: string) {
     if (id === 'github-codespaces') {
         return 'GitHub.codespaces';
     }
-    traceWarning(`Extension Id not found for server Id ${id}`);
+    logger.warn(`Extension Id not found for server Id ${id}`);
 }

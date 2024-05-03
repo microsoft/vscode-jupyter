@@ -37,7 +37,7 @@ import './platform/logging';
 
 import { commands, env, ExtensionMode, UIKind, workspace, type OutputChannel } from 'vscode';
 import { buildApi, IExtensionApi } from './standalone/api';
-import { setHomeDirectory, traceError } from './platform/logging';
+import { logger, setHomeDirectory } from './platform/logging';
 import { IAsyncDisposableRegistry, IExtensionContext, IsDevMode } from './platform/common/types';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
@@ -109,7 +109,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // before notifying VS Code.
         durations.endActivateTime = stopWatch.elapsedTime;
         handleError(ex, durations, stopWatch);
-        traceError('Failed to active the Jupyter Extension', ex);
+        logger.error('Failed to active the Jupyter Extension', ex);
         // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
         // Return a dummy object, to ensure other extension do not fall over.
         return {

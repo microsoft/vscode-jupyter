@@ -9,7 +9,7 @@ import { splitLines } from '../../../platform/common/helpers';
 import { IConfigurationService } from '../../../platform/common/types';
 import { parseForComments } from '../../../platform/common/utils';
 import { noop } from '../../../platform/common/utils/misc';
-import { traceInfoIfCI, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import * as path from '../../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { DebuggingTelemetry } from '../constants';
@@ -35,7 +35,7 @@ export class RunByLineController implements IDebuggingDelegate {
 
     public continue(): void {
         if (typeof this.lastPausedThreadId !== 'number') {
-            traceVerbose(`No paused thread, can't do RBL`);
+            logger.debug(`No paused thread, can't do RBL`);
             this.stop();
             return;
         }
@@ -44,7 +44,7 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     public stop(): void {
-        traceInfoIfCI(`RunbylineController::stop()`);
+        logger.ci(`RunbylineController::stop()`);
         // When debugpy gets stuck, running a cell fixes it and allows us to start another debugging session
         this.execution.executeHidden('pass').then(noop, noop);
         this.debugAdapter.disconnect().then(noop, noop);
@@ -75,7 +75,7 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     public async willSendRequest(request: DebugProtocol.Request): Promise<undefined> {
-        traceInfoIfCI(`willSendRequest: ${request.command}`);
+        logger.ci(`willSendRequest: ${request.command}`);
         if (request.command === 'configurationDone') {
             await this.initializeExecute();
         }
@@ -114,7 +114,7 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     private trace(tag: string, msg: string) {
-        traceVerbose(`[Debug-RBL] ${tag}: ${msg}`);
+        logger.debug(`[Debug-RBL] ${tag}: ${msg}`);
     }
 
     private async initializeExecute() {

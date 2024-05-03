@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import * as path from '../../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { ConfigurationTarget, Position, window, workspace, WorkspaceConfiguration, WorkspaceEdit } from 'vscode';
-import { traceInfo } from '../../../../platform/logging';
+import { logger } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import {
@@ -41,7 +41,7 @@ import { IKernelProvider } from '../../../../kernels/types';
                 if (IS_REMOTE_NATIVE_TEST()) {
                     return this.skip();
                 }
-                traceInfo(`Start Suite Code Completion via Jupyter`);
+                logger.info(`Start Suite Code Completion via Jupyter`);
                 this.timeout(120_000);
                 jupyterConfig = workspace.getConfiguration('jupyter', undefined);
                 previousJediSetting = jupyterConfig.get<boolean>('enableExtendedPythonKernelCompletions');
@@ -56,21 +56,21 @@ import { IKernelProvider } from '../../../../kernels/types';
                 sinon.restore();
                 kernelCompletionProviderRegistry =
                     api.serviceContainer.get<KernelCompletionProvider>(KernelCompletionProvider);
-                traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
+                logger.info(`Start Suite (Completed) Code Completion via Jupyter`);
             });
             // Use same notebook without starting kernel in every single test (use one for whole suite).
             setup(async function () {
-                traceInfo(`Start Test ${this.currentTest?.title}`);
+                logger.info(`Start Test ${this.currentTest?.title}`);
                 sinon.restore();
                 await startJupyterServer();
                 await createEmptyPythonNotebook(disposables, undefined, true);
-                traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+                logger.info(`Start Test (completed) ${this.currentTest?.title}`);
             });
             teardown(async function () {
                 sinon.restore();
-                traceInfo(`Ended Test ${this.currentTest?.title}`);
+                logger.info(`Ended Test ${this.currentTest?.title}`);
                 await closeNotebooksAndCleanUpAfterTests(disposables);
-                traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+                logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
             });
             suiteTeardown(async () => {
                 await jupyterConfig.update(
@@ -112,7 +112,7 @@ import { IKernelProvider } from '../../../../kernels/types';
 
                 // Wait till execution count changes and status is success.
                 await waitForExecutionCompletedSuccessfully(cell2);
-                traceInfo(`last cell output: ${getCellOutputs(cell2)}`);
+                logger.info(`last cell output: ${getCellOutputs(cell2)}`);
 
                 // Now add the cell to check intellisense.
                 await insertCodeCell(cellCode);
@@ -122,7 +122,7 @@ import { IKernelProvider } from '../../../../kernels/types';
                     0,
                     cellCode.includes('"') || cellCode.includes("'") ? cellCode.length - 1 : cellCode.length
                 );
-                traceInfo('Get completions in test');
+                logger.info('Get completions in test');
                 const kernel = api.serviceContainer
                     .get<IKernelProvider>(IKernelProvider)
                     .get(window.activeNotebookEditor!.notebook)!;

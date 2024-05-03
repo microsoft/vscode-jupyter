@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IConfigurationService, Resource } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -58,7 +58,7 @@ export class KernelEnvironmentVariablesService {
             interpreter = await this.interpreterService
                 .getInterpreterDetails(Uri.file(kernelSpec.interpreterPath), token)
                 .catch((ex) => {
-                    traceError('Failed to fetch interpreter information for interpreter that owns a kernel', ex);
+                    logger.error('Failed to fetch interpreter information for interpreter that owns a kernel', ex);
                     return undefined;
                 });
         }
@@ -73,7 +73,10 @@ export class KernelEnvironmentVariablesService {
                 ? this.envActivation
                       .getActivatedEnvironmentVariables(resource, interpreter, token)
                       .catch<undefined>((ex) => {
-                          traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
+                          logger.error(
+                              'Failed to get env variables for interpreter, hence no variables for Kernel',
+                              ex
+                          );
                           return undefined;
                       })
                 : undefined
@@ -86,7 +89,7 @@ export class KernelEnvironmentVariablesService {
         });
 
         if (!interpreterEnv && Object.keys(customEnvVars || {}).length === 0) {
-            traceVerbose('No custom variables nor do we have a conda environment');
+            logger.debug('No custom variables nor do we have a conda environment');
         }
 
         let mergedVars = { ...process.env };
@@ -121,7 +124,7 @@ export class KernelEnvironmentVariablesService {
             // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
             // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
             if (this.configService.getSettings(undefined).excludeUserSitePackages) {
-                traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter?.uri)}`);
+                logger.info(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter?.uri)}`);
                 mergedVars.PYTHONNOUSERSITE = 'True';
             }
             if (isPythonKernel) {
@@ -165,7 +168,7 @@ function substituteEnvVars(key: string, value: string, globalVars: EnvironmentVa
         return globalVars[substName] || '';
     });
     if (!invalid && replacement !== value) {
-        traceVerbose(`${key} value in kernelSpec updated from ${value} to ${replacement}`);
+        logger.debug(`${key} value in kernelSpec updated from ${value} to ${replacement}`);
         value = replacement;
     }
 

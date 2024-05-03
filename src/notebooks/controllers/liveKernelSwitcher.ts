@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, commands, window, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { KernelConnectionMetadata } from '../../kernels/types';
@@ -86,7 +86,7 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
     }
 
     private async switchKernel(n: NotebookDocument, kernel: Readonly<KernelConnectionMetadata>) {
-        traceVerbose(`Using notebook.selectKernel to force remote kernel for ${getDisplayPath(n.uri)} to ${kernel.id}`);
+        logger.debug(`Using notebook.selectKernel to force remote kernel for ${getDisplayPath(n.uri)} to ${kernel.id}`);
         // Do this in a loop as it may fail
         await commands.executeCommand('notebook.selectKernel', {
             id: kernel.id,
@@ -107,9 +107,9 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
             100
         );
         if (success) {
-            traceVerbose(`Successfully switched remote kernel for ${getDisplayPath(n.uri)} to ${kernel.id}`);
+            logger.debug(`Successfully switched remote kernel for ${getDisplayPath(n.uri)} to ${kernel.id}`);
         } else {
-            traceWarning(`Failed to switch remote kernel for ${getDisplayPath(n.uri)} to ${kernel.id}`);
+            logger.warn(`Failed to switch remote kernel for ${getDisplayPath(n.uri)} to ${kernel.id}`);
         }
     }
 }

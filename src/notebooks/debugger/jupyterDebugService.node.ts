@@ -23,7 +23,7 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceInfo, traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
@@ -276,17 +276,17 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     }
 
     private async sendStartSequence(config: DebugConfiguration, sessionId: string): Promise<void> {
-        traceInfo('Sending debugger initialize...');
+        logger.info('Sending debugger initialize...');
         await this.sendInitialize();
         if (this._breakpoints.length > 0) {
-            traceInfo('Sending breakpoints');
+            logger.info('Sending breakpoints');
             await this.sendBreakpoints();
         }
-        traceInfo('Sending debugger attach...');
+        logger.info('Sending debugger attach...');
         const attachPromise = this.sendAttach(config, sessionId);
-        traceInfo('Sending configuration done');
+        logger.info('Sending configuration done');
         await this.sendConfigurationDone();
-        traceInfo('Session started.');
+        logger.info('Session started.');
         return attachPromise.then(() => {
             this.sessionStartedEvent.fire(this.session!);
         });
@@ -352,14 +352,14 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         this.protocolParser.on(`response_${command}`, (resp: any) => {
             if (resp.request_seq === sequenceNumber) {
                 this.sendToTrackers(resp);
-                traceInfo(`Received response from debugger: ${JSON.stringify(args)}`);
+                logger.info(`Received response from debugger: ${JSON.stringify(args)}`);
                 disposable.dispose();
                 response.resolve(resp.body);
             }
         });
         this.socket?.on('error', (err) => response.reject(err)); // NOSONAR
         this.emitMessage(command, args).catch((exc) => {
-            traceError(`Exception attempting to emit ${command} to debugger: `, exc);
+            logger.error(`Exception attempting to emit ${command} to debugger: `, exc);
         });
         return response.promise;
     }
@@ -376,7 +376,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
                     };
                     this.sequence += 1;
                     const objString = JSON.stringify(obj);
-                    traceInfo(`Sending request to debugger: ${objString}`);
+                    logger.info(`Sending request to debugger: ${objString}`);
                     const message = `Content-Length: ${objString.length}\r\n\r\n${objString}`;
                     this.socket.write(message, (_a: any) => {
                         this.sendToTrackers(obj);
@@ -400,12 +400,12 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
 
     private onOutput(args: any): void {
         this.sendToTrackers(args);
-        traceInfo(JSON.stringify(args));
+        logger.info(JSON.stringify(args));
     }
 
     private onError(args: any): void {
         this.sendToTrackers(args);
-        traceInfo(JSON.stringify(args));
+        logger.info(JSON.stringify(args));
     }
 
     private onClose(): void {

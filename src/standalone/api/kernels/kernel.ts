@@ -30,7 +30,7 @@ import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { once } from '../../../platform/common/utils/events';
-import { traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/generator';
 import {
@@ -408,7 +408,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 measures.cancelledAfter = stopwatch.elapsedTime;
                 properties.cancelledBeforeRequestSent = !properties.requestSent;
                 properties.cancelledBeforeRequestAcknowledged = !properties.requestAcknowledged;
-                traceVerbose(`Code execution cancelled by extension ${this.extensionId}`);
+                logger.debug(`Code execution cancelled by extension ${this.extensionId}`);
             },
             this,
             disposables

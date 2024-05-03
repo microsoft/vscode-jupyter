@@ -18,7 +18,7 @@ import {
 } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
@@ -108,7 +108,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                                 this.canControllerBeDisposed(controller)
                             ) {
                                 // This item was selected but is no longer allowed in the kernel list. Remove it
-                                traceWarning(
+                                logger.warn(
                                     `Removing controller ${controller.id} for ${controller.connection.kind} from kernel list`
                                 );
                                 controller.dispose();
@@ -133,7 +133,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         this.controllersPromise = this.loadControllersImpl();
         sendKernelListTelemetry(this.registered.map((v) => v.connection));
 
-        traceInfoIfCI(`Providing notebook controllers with length ${this.registered.length}.`);
+        logger.ci(`Providing notebook controllers with length ${this.registered.length}.`);
     }
     public get loaded() {
         return this.controllersPromise;
@@ -174,7 +174,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                 return false;
             }
             if (!connectionIsStillValid) {
-                traceVerbose(
+                logger.debug(
                     `Controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}' is no longer a valid`
                 );
             }
@@ -182,7 +182,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         });
         // If we have any out of date connections, dispose of them
         disposedControllers.forEach((controller) => {
-            traceWarning(
+            logger.warn(
                 `Disposing old controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}'`
             );
             controller.dispose(); // This should remove it from the registered list
@@ -210,7 +210,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                 this.registered
                     .filter((item) => deletedConnections.has(item.connection.id))
                     .forEach((controller) => {
-                        traceWarning(
+                        logger.warn(
                             `Deleting controller ${controller.id} as it is associated with a connection that has been deleted ${controller.connection.kind}:${controller.id}`
                         );
                         controller.dispose();
@@ -240,7 +240,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                     c.connection.serverProviderHandle.id === item.id &&
                     c.connection.serverProviderHandle.handle === item.handle
                 ) {
-                    traceWarning(
+                    logger.warn(
                         `Deleting controller ${c.id} as it is associated with a connection that has been removed`
                     );
                     c.dispose();
@@ -266,7 +266,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
             // If we have a notebook opened and its using a kernel.
             // Else we end up killing the execution as well.
             if (this.isFiltered(item.connection) && this.canControllerBeDisposed(item)) {
-                traceWarning(
+                logger.warn(
                     `Deleting controller ${item.id} as it is associated with a connection that has been hidden`
                 );
                 item.dispose();
@@ -311,7 +311,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
     ): { added: IVSCodeNotebookController[]; existing: IVSCodeNotebookController[] } {
         const added: IVSCodeNotebookController[] = [];
         const existing: IVSCodeNotebookController[] = [];
-        traceInfoIfCI(`Create Controller for ${metadata.kind} and id '${metadata.id}' for view ${types.join(', ')}`);
+        logger.ci(`Create Controller for ${metadata.kind} and id '${metadata.id}' for view ${types.join(', ')}`);
         try {
             // Create notebook selector
             types
@@ -335,16 +335,16 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         // Add to results so that callers can find
                         existing.push(controller);
 
-                        traceInfoIfCI(
+                        logger.ci(
                             `Found existing controller '${controller.id}', not creating a new one just updating it`
                         );
                         return false;
                     } else if (this.isFiltered(metadata)) {
                         // Filter out those in our kernel filter
-                        traceInfoIfCI(`Existing controller '${id}' will be excluded as it is filtered`);
+                        logger.ci(`Existing controller '${id}' will be excluded as it is filtered`);
                         return false;
                     }
-                    traceInfoIfCI(`Existing controller not found for '${id}', hence creating a new one`);
+                    logger.ci(`Existing controller not found for '${id}', hence creating a new one`);
                     return true;
                 })
                 .forEach(([id, viewType]) => {
@@ -366,7 +366,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                     const controllerDisposables: IDisposable[] = [];
                     controller.onDidDispose(
                         () => {
-                            traceInfoIfCI(
+                            logger.ci(
                                 `Deleting controller '${controller.id}' associated with view ${viewType} from registration as it was disposed`
                             );
                             this.registeredControllers.delete(controller.id);
@@ -384,7 +384,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                     added.push(controller);
                     controller.onNotebookControllerSelected(
                         (e) => {
-                            traceInfoIfCI(`Controller ${e.controller?.id} selected for ${e.notebook.uri.toString()}`);
+                            logger.ci(`Controller ${e.controller?.id} selected for ${e.notebook.uri.toString()}`);
                             this.selectedControllers.set(e.notebook, e.controller);
                             // Now notify out that we have updated a notebooks controller
                             this.selectedEmitter.fire(e);
@@ -407,7 +407,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                 // Hence swallow cancellation errors.
                 return { added, existing };
             }
-            traceError(`Failed to create notebook controller for ${metadata.id}`, ex);
+            logger.error(`Failed to create notebook controller for ${metadata.id}`, ex);
         }
         return { added, existing };
     }

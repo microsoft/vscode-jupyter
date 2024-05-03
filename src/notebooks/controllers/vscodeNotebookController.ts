@@ -24,7 +24,7 @@ import {
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
     IConfigurationService,
@@ -178,7 +178,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         try {
             controller.controller.variableProvider = jupyterVairablesProvider;
         } catch (ex) {
-            traceWarning('Failed to attach variable provider', ex);
+            logger.warn('Failed to attach variable provider', ex);
         }
 
         return controller;
@@ -307,7 +307,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public postMessage(message: any, editor?: NotebookEditor): Thenable<boolean> {
         const messageType = message && 'message' in message ? message.message : '';
-        traceInfoIfCI(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
+        logger.ci(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
         return this.controller.postMessage(message, editor);
     }
     /**
@@ -330,12 +330,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         const nbDocumentUris = workspace.notebookDocuments
             .filter((item) => this.associatedDocuments.has(item))
             .map((item) => item.uri.toString());
-        traceVerbose(
+        logger.debug(
             `Disposing controller ${this.id} associated with connection ${this.connection.id} ${
                 nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
             }`
         );
-        traceInfoIfCI(
+        logger.ci(
             `Disposing controller ${this.id} associated with connection ${this.connection.id} ${
                 nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
             } called from ${new Error('').stack}`
@@ -378,7 +378,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // See here https://github.com/microsoft/vscode-jupyter/runs/5581627878?check_suite_focus=true
         cells = cells.filter((cell) => {
             if (cell.index < 0) {
-                traceWarning(
+                logger.warn(
                     `Attempting to run a cell with index ${cell.index}, kind ${
                         cell.kind
                     }, text = ${cell.document.getText()}`
@@ -392,14 +392,14 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!workspace.isTrusted) {
             return;
         }
-        traceVerbose(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
+        logger.debug(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         telemetryTracker?.stop();
         // Notebook is trusted. Continue to execute cells
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
-        traceInfoIfCI(
+        logger.ci(
             `NotebookController selection event called for notebook ${event.notebook.uri.toString()} & controller ${
                 this.connection.kind
             }:${this.id}. Selected ${event.selected} `
@@ -414,7 +414,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             // Possible user selected a controller that's not contributed by us at all.
             const kernel = this.kernelProvider.get(event.notebook);
             if (kernel?.kernelConnectionMetadata.id === this.kernelConnection.id) {
-                traceInfo(
+                logger.info(
                     `Disposing kernel ${this.kernelConnection.id} for notebook ${getDisplayPath(
                         event.notebook.uri
                     )} due to selection of another kernel or closing of the notebook`
@@ -439,7 +439,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         );
         void warnWhenUsingOutdatedPython(this.kernelConnection);
         const deferred = createDeferred<void>();
-        traceInfoIfCI(
+        logger.ci(
             `Controller ${this.connection.kind}:${this.id} associated with nb ${getDisplayPath(event.notebook.uri)}`
         );
         this.associatedDocuments.set(event.notebook, deferred.promise);
@@ -449,7 +449,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // If this NotebookController was selected, fire off the event
         this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
         this._onNotebookControllerSelectionChanged.fire(event);
-        traceVerbose(`Controller selection change completed`);
+        logger.debug(`Controller selection change completed`);
         deferred.resolve();
     }
 
@@ -513,11 +513,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     private handleInterrupt(notebook: NotebookDocument) {
-        traceVerbose(`VS Code interrupted kernel for ${getDisplayPath(notebook.uri)}`);
+        logger.debug(`VS Code interrupted kernel for ${getDisplayPath(notebook.uri)}`);
         notebook.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         commands
             .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: notebook.uri } })
-            .then(noop, (ex) => traceError('Failed to interrupt', ex));
+            .then(noop, (ex) => logger.error('Failed to interrupt', ex));
     }
 
     private createCellExecutionIfNecessary(cell: NotebookCell, controller: IKernelController) {
@@ -597,7 +597,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 return;
             }
             if (!isCancellationError(ex)) {
-                traceError(`Error in execution`, ex);
+                logger.error(`Error in execution`, ex);
             }
             if (!kernelStarted) {
                 exec.start();
@@ -674,7 +674,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             existingKernel &&
             areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
         ) {
-            traceInfo('Switch kernel did not change kernel.');
+            logger.info('Switch kernel did not change kernel.');
             return;
         }
 
@@ -710,7 +710,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             controller: this.controller,
             resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
         });
-        traceVerbose(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
+        logger.debug(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
 
         // If this is a Python notebook and Python isn't installed, then don't auto-start the kernel.
         if (isPythonKernelConnection(this.kernelConnection) && !this.extensionChecker.isPythonExtensionInstalled) {

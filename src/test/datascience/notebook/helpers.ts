@@ -7,7 +7,7 @@ import { JupyterNotebookView, InteractiveWindowView } from '../../../platform/co
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { Resource } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { traceInfoIfCI } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 
 // This is here so the default service and the loader service can both use it without having
@@ -31,7 +31,7 @@ export async function createActiveInterpreterController(
         const controllers = registration.addOrUpdate(metadata, [viewType]);
         const controller = controllers[0]; // Should only create one because only one view type
         registration.trackActiveInterpreterControllers(controllers);
-        traceInfoIfCI(
+        logger.ci(
             `Active Interpreter Controller ${controller.connection.kind}:${
                 controller.id
             } created for View ${viewType} with resource ${getDisplayPath(resource)}`

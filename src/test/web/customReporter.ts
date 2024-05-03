@@ -183,11 +183,14 @@ class ConsoleHijacker implements ILogger {
     traceEverything(message: string, ...data: Arguments): void {
         this.logMessage(undefined, message, data);
     }
-    verbose(message: string, ...data: Arguments): void {
+    debug(message: string, ...data: Arguments): void {
         this.logMessage(undefined, message, data);
     }
     trace(message: string, ...data: Arguments): void {
         this.logMessage(undefined, message, data);
+    }
+    ci(_message: any, ..._data: Arguments): void {
+        //
     }
     logMessage(category: 'error' | 'warn' | undefined, message: string, ...data: Arguments) {
         if (!this.captureLogs) {

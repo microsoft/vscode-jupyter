@@ -9,7 +9,7 @@ import { IDebugLocationTrackerFactory, IDumpCellResponse } from '../../../notebo
 import { KernelDebugAdapterBase } from '../../../notebooks/debugger/kernelDebugAdapterBase';
 import { IDebugService } from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { traceError, traceInfoIfCI } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import * as path from '../../../platform/vscode-path/path';
 import { InteractiveCellMetadata } from '../../editor-integration/types';
 /**
@@ -65,7 +65,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
     }
 
     override handleClientMessageAsync(message: DebugProtocol.ProtocolMessage): Promise<void> {
-        traceInfoIfCI(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
+        logger.ci(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
         if (message.type === 'request' && this.debugLocationTracker?.onWillReceiveMessage) {
             this.debugLocationTracker.onWillReceiveMessage(message);
         }
@@ -111,7 +111,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
                 (a, b) => b.metadata.interactive.lineIndex - a.metadata.interactive.lineIndex
             );
         } catch (err) {
-            traceError(`Failed to dump cell for ${cell.index} with code ${metadata.interactive.originalSource}`, err);
+            logger.error(`Failed to dump cell for ${cell.index} with code ${metadata.interactive.originalSource}`, err);
         }
     }
 

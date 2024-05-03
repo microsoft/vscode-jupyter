@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, optional } from 'inversify';
 
 import { NotebookData, Uri, extensions, window, type NotebookCellData } from 'vscode';
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { defaultNotebookFormat } from '../../platform/common/constants';
@@ -48,7 +48,7 @@ export class JupyterExporter implements INotebookExporter {
                     }
                 }, noop);
         } catch (exc) {
-            traceError('Error in exporting notebook file');
+            logger.error('Error in exporting notebook file');
             window
                 .showInformationMessage(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { Resource } from '../../platform/common/types';
 import { INotebookEditorProvider } from '../types';
 import { commands } from 'vscode';
@@ -19,6 +19,6 @@ export async function selectKernel(
             notebookEditor
         }) as Promise<boolean>;
     }
-    traceError(`Unable to select kernel as the Notebook document could not be identified`);
+    logger.error(`Unable to select kernel as the Notebook document could not be identified`);
     return false;
 }

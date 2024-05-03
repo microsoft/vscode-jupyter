@@ -24,7 +24,7 @@ import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { JupyterServerCollection, JupyterServerProvider } from '../../../api';
 import { CancellationTokenSource } from 'vscode';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from './types';
 import { CodespaceExtensionId } from '../../../platform/common/constants';
 import { trackRemoteServerDisplayName } from '../connection/jupyterServerProviderRegistry';
@@ -161,7 +161,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
                 }
             });
         } catch (ex) {
-            traceError(`Failed to get servers for Collection ${collection.id} in ${collection.extensionId}`, ex);
+            logger.error(`Failed to get servers for Collection ${collection.id} in ${collection.extensionId}`, ex);
         } finally {
             token.dispose();
         }

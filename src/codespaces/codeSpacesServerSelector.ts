@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
 import { inject, injectable } from 'inversify';
-import { traceError } from '../platform/logging';
+import { logger } from '../platform/logging';
 import {
     IJupyterServerProviderRegistry,
     IJupyterServerUriStorage,
@@ -41,7 +41,7 @@ export class CodespacesJupyterServerSelector {
         try {
             await this.jupyterConnection.validateRemoteUri(provider);
         } catch (err) {
-            traceError(`Error in validating the Remote Uri ${provider.id}.${provider.handle}`, err);
+            logger.error(`Error in validating the Remote Uri ${provider.id}.${provider.handle}`, err);
             return;
         }
 

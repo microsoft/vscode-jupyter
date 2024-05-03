@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { isTestExecution } from '../common/constants';
-import { traceError } from '../logging';
+import { logger } from '../logging';
 import { sendTelemetryEvent } from '.';
 import { EventName } from './constants';
 import { workspace } from 'vscode';
@@ -38,7 +38,7 @@ export function sendStartupTelemetry(
         updateActivationTelemetryProps(durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations);
     } catch (ex) {
-        traceError('sendStartupTelemetry() failed.', ex);
+        logger.error('sendStartupTelemetry() failed.', ex);
     }
 }
 
@@ -63,7 +63,7 @@ export function sendErrorTelemetry(
         updateActivationTelemetryProps(durations);
         sendTelemetryEvent(EventName.EXTENSION_LOAD, durations, props, ex);
     } catch (exc2) {
-        traceError('sendErrorTelemetry() failed.', exc2);
+        logger.error('sendErrorTelemetry() failed.', exc2);
     }
 }
 

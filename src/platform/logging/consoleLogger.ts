@@ -26,10 +26,14 @@ export class ConsoleLogger implements ILogger {
         console.info(formatMessage('info', `${this.prefix || ''} ${message}`, ...data));
     }
 
-    public verbose(message: string, ...data: Arguments): void {
+    public debug(message: string, ...data: Arguments): void {
         console.log(formatMessage('debug', `${this.prefix || ''} ${message}`, ...data));
     }
     public trace(message: string, ...data: Arguments): void {
         console.trace(formatMessage('trace', `${this.prefix || ''} ${message}`, ...data));
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public ci(_message: any, ..._data: Arguments): void {
+        //
     }
 }

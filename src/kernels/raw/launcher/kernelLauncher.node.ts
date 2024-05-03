@@ -11,7 +11,7 @@ import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, raceCancellationError } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import { traceVerbose, traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
@@ -82,7 +82,7 @@ export class KernelLauncher implements IKernelLauncher {
                     portStart += 1_000;
                 }
             }
-            traceVerbose(`Computed port start for KernelLauncher is : ${result}`);
+            logger.debug(`Computed port start for KernelLauncher is : ${result}`);
 
             return result;
         } else {
@@ -267,20 +267,20 @@ async function logIPyKernelPath(
             .map((s) => s.trim())
             .filter((s) => s.length > 0);
         if (outputs.length === 2) {
-            traceVerbose(
+            logger.debug(
                 `ipykernel version & path ${outputs[0]}, ${getDisplayPathFromLocalFile(
                     outputs[1]
                 )} for ${displayInterpreterPath}`
             );
         } else {
-            traceVerbose(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
+            logger.debug(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
         }
     }
     if (output.stderr) {
         const formattedOutput = splitLines(output.stderr.trim(), { removeEmptyEntries: true, trim: true })
             .map((l, i) => (i === 0 ? l : `    ${l}`))
             .join('\n');
-        traceWarning(
+        logger.warn(
             `Stderr output when getting ipykernel version & path ${formattedOutput} for ${displayInterpreterPath}`
         );
     }

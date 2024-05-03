@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, UIKind, env, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import {
     BannerType,
     IDisposableRegistry,
@@ -76,7 +76,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                 }
                 break;
             default:
-                traceError('Invalid Banner Type');
+                logger.error('Invalid Banner Type');
                 return false;
         }
         return false;
@@ -195,7 +195,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case BannerType.ExperimentNotebookSurvey:
                 return this.getPersistentState(ExperimentNotebookSurveyStateKeys.ExecutionCount);
             default:
-                traceError('Invalid Banner type');
+                logger.error('Invalid Banner type');
                 return -1;
         }
     }
@@ -242,7 +242,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case BannerType.ExperimentNotebookSurvey:
                 return localize.InsidersNativeNotebooksSurveyBanner.bannerMessage;
             default:
-                traceError('Invalid Banner type');
+                logger.error('Invalid Banner type');
                 return '';
         }
     }
@@ -254,7 +254,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case BannerType.ExperimentNotebookSurvey:
                 return 'https://aka.ms/vscnbexp';
             default:
-                traceError('Invalid Banner type');
+                logger.error('Invalid Banner type');
                 return '';
         }
     }

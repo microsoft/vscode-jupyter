@@ -5,7 +5,7 @@ import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { getTelemetrySafeVersion } from '../telemetry/helpers';
 import { basename } from '../../platform/vscode-path/resources';
 import { Environment, KnownEnvironmentTools, KnownEnvironmentTypes, PythonExtension } from '@vscode/python-extension';
-import { traceWarning } from '../logging';
+import { logger } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { Uri } from 'vscode';
 import { getOSType, OSType } from '../common/utils/platform';
@@ -164,7 +164,7 @@ export async function getSysPrefix(interpreter?: { id: string }) {
     const api = await PythonExtension.api();
     const sysPrefix = await api.environments.resolveEnvironment(interpreter.id).then((i) => i?.executable?.sysPrefix);
     if (!sysPrefix) {
-        traceWarning(`Unable to find sysPrefix for interpreter ${getDisplayPath(interpreter.id)}`);
+        logger.warn(`Unable to find sysPrefix for interpreter ${getDisplayPath(interpreter.id)}`);
     }
     return sysPrefix;
 }
@@ -193,7 +193,7 @@ export async function getVersion(interpreter?: { id?: string }, ignoreCache = fa
     const api = await PythonExtension.api();
     const info = await api.environments.resolveEnvironment(interpreter.id);
     if (!info?.version) {
-        traceWarning(`Unable to find Version for interpreter ${getDisplayPath(interpreter.id)}`);
+        logger.warn(`Unable to find Version for interpreter ${getDisplayPath(interpreter.id)}`);
     }
     return info?.version;
 }
@@ -229,7 +229,7 @@ export function resolvedPythonEnvToJupyterEnv(env?: Environment): PythonEnvironm
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
                     : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
         } else {
-            traceWarning(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
+            logger.warn(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
             return;
         }
     } else {

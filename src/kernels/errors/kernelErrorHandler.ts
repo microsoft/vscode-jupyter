@@ -9,7 +9,7 @@ import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
-import { traceError, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IConfigurationService, Resource } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
@@ -90,7 +90,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
     private handledErrors = new WeakSet<Error>();
     private handledKernelErrors = new WeakSet<Error>();
     public async handleError(err: Error): Promise<void> {
-        traceWarning('DataScience Error', err);
+        logger.warn('DataScience Error', err);
         err = WrappedError.unwrap(err);
         if (this.handledErrors.has(err)) {
             return;
@@ -131,7 +131,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
     public async getErrorMessageForDisplayInCell(error: Error, errorContext: KernelAction, resource: Resource) {
         error = WrappedError.unwrap(error);
         if (!isCancellationError(error)) {
-            traceError(`Error in execution (get message for cell)`, error);
+            logger.error(`Error in execution (get message for cell)`, error);
         }
         if (error instanceof KernelDeadError) {
             // When we get this we've already asked the user to restart the kernel,
@@ -285,7 +285,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         actionSource: KernelActionSource
     ): Promise<KernelInterpreterDependencyResponse> {
         if (!isCancellationError(err)) {
-            traceWarning(`Kernel Error, context = ${errorContext}`, err);
+            logger.warn(`Kernel Error, context = ${errorContext}`, err);
         }
         err = WrappedError.unwrap(err);
 
@@ -294,7 +294,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             this.sendKernelTelemetry(err, errorContext, resource, 'cancelled');
             return KernelInterpreterDependencyResponse.cancel;
         } else if (err instanceof JupyterKernelDependencyError) {
-            traceWarning(`Jupyter Kernel Dependency Error, reason=${err.reason}`, err);
+            logger.warn(`Jupyter Kernel Dependency Error, reason=${err.reason}`, err);
             this.sendKernelTelemetry(err, errorContext, resource, err.category);
             if (err.reason === KernelInterpreterDependencyResponse.uiHidden && this.kernelDependency) {
                 // At this point we're handling the error, and if the error was initially swallowed due to

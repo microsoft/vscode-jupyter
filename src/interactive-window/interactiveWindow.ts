@@ -21,7 +21,7 @@ import {
     commands
 } from 'vscode';
 import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE, isWebExtension } from '../platform/common/constants';
-import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
@@ -191,7 +191,7 @@ export class InteractiveWindow implements IInteractiveWindow {
 
     public async ensureInitialized() {
         if (!this.notebookDocument) {
-            traceVerbose(`Showing Interactive editor to initialize codeGenerator from notebook document`);
+            logger.debug(`Showing Interactive editor to initialize codeGenerator from notebook document`);
             await this.showInteractiveEditor();
 
             if (!this.notebookDocument) {
@@ -210,7 +210,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         if (this.controller.controller) {
             this.controller.startKernel().catch(noop);
         } else {
-            traceInfo('No controller selected for Interactive Window initialization');
+            logger.info('No controller selected for Interactive Window initialization');
             this.controller.setInfoMessageCell(DataScience.selectKernelForEditor);
         }
     }
@@ -238,7 +238,7 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     private async openNotebookDocument(): Promise<NotebookDocument> {
-        traceVerbose(`Opening notebook document ${this.notebookUri}`);
+        logger.debug(`Opening notebook document ${this.notebookUri}`);
         return await workspace.openNotebookDocument(this.notebookUri);
     }
 
@@ -256,12 +256,12 @@ export class InteractiveWindow implements IInteractiveWindow {
             try {
                 await execution.appendOutput(output);
             } catch (err) {
-                traceWarning(`Could not append error message "${output}" to cell: ${err}`);
+                logger.warn(`Could not append error message "${output}" to cell: ${err}`);
             } finally {
                 execution.end(false, notebookCell.executionSummary?.timing?.endTime);
             }
         } else {
-            traceInfo(`Could not append error message to cell "${output}"`);
+            logger.info(`Could not append error message to cell "${output}"`);
         }
     }
 
@@ -398,7 +398,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         if (!this.controller || !this.notebookDocument) {
             return false;
         }
-        traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
+        logger.ci('InteractiveWindow.ts.createExecutionPromise.start');
         // Kick of starting kernels early.
         const kernelPromise = this.controller.startKernel();
         const cell = await notebookCellPromise;
@@ -425,17 +425,17 @@ export class InteractiveWindow implements IInteractiveWindow {
                 );
                 this.interactiveWindowDebugger.enable(kernel);
             }
-            traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
+            logger.ci('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             const iwCellMetadata = getInteractiveCellMetadata(cell);
             const execution = this.kernelProvider.getKernelExecution(kernel!);
             success = await execution.executeCell(cell, iwCellMetadata?.generatedCode?.code).then(
                 () => true,
                 () => false
             );
-            traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
+            logger.ci('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
         } finally {
             await detachKernel();
-            traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.end');
+            logger.ci('InteractiveWindow.ts.createExecutionPromise.end');
         }
 
         if (!success) {

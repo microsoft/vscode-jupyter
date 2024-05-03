@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { Uri, window } from 'vscode';
-import { traceError, traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { IExportPlotRequest } from './types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
@@ -27,7 +27,7 @@ export class PlotViewer extends PlotViewerBase {
     }
 
     protected override async exportPlot(payload: IExportPlotRequest): Promise<void> {
-        traceInfo('exporting plot...');
+        logger.info('exporting plot...');
         const filtersObject: Record<string, string[]> = {};
         filtersObject[localize.DataScience.pdfFilter] = ['pdf'];
         filtersObject[localize.DataScience.pngFilter] = ['png'];
@@ -59,14 +59,14 @@ export class PlotViewer extends PlotViewerBase {
                 }
             }
         } catch (e) {
-            traceError(e);
+            logger.error(e);
             window.showErrorMessage(localize.DataScience.exportImageFailed(e)).then(noop, noop);
         }
     }
 }
 
 export async function saveSvgToPdf(svg: string, fs: IFileSystemNode, file: Uri) {
-    traceInfo('Attempting pdf write...');
+    logger.info('Attempting pdf write...');
     // Import here since pdfkit is so huge.
     const SVGtoPDF = (await import('svg-to-pdfkit')).default;
     const deferred = createDeferred<void>();
@@ -74,14 +74,14 @@ export async function saveSvgToPdf(svg: string, fs: IFileSystemNode, file: Uri) 
     const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');
     const doc = new pdfkit();
     const ws = fs.createLocalWriteStream(file.fsPath);
-    traceInfo(`Writing pdf to ${file.fsPath}`);
+    logger.info(`Writing pdf to ${file.fsPath}`);
     ws.on('finish', () => deferred.resolve);
     // See docs or demo from source https://cdn.statically.io/gh/alafr/SVG-to-PDFKit/master/examples/demo.htm
     // How to resize to fit (fit within the height & width of page).
     SVGtoPDF(doc, svg, 0, 0, { preserveAspectRatio: 'xMinYMin meet' });
     doc.pipe(ws);
     doc.end();
-    traceInfo(`Finishing pdf to ${file.fsPath}`);
+    logger.info(`Finishing pdf to ${file.fsPath}`);
     await deferred.promise;
-    traceInfo(`Completed pdf to ${file.fsPath}`);
+    logger.info(`Completed pdf to ${file.fsPath}`);
 }

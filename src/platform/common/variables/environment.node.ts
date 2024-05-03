@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import * as path from '../../vscode-path/path';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { traceError } from '../../logging';
+import { logger } from '../../logging';
 import { isFileNotFoundError } from '../platform/errors';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 import { Uri } from 'vscode';
@@ -30,7 +30,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             return parseEnvFile(await this.fs.readFile(Uri.file(filePath)), baseVars);
         } catch (ex) {
             if (!isFileNotFoundError(ex)) {
-                traceError(`Failed to parse env file ${filePath}`, ex);
+                logger.error(`Failed to parse env file ${filePath}`, ex);
             }
         }
     }

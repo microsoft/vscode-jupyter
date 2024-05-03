@@ -14,9 +14,9 @@ import {
     Product,
     ProductType
 } from './types';
-import { logValue, traceDecoratorVerbose } from '../../logging';
+import { logValue, debugDecorator } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { traceError } from '../../logging';
+import { logger } from '../../logging';
 import { IProcessServiceFactory } from '../../common/process/types.node';
 import {
     IConfigurationService,
@@ -50,7 +50,7 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
               .getPackageVersion(interpreter, packageName)
               .then((version) => (typeof version === 'string' ? 'found' : 'notfound'))
               .catch((ex) => {
-                  traceError('Failed to get interpreter package version', ex);
+                  logger.error('Failed to get interpreter package version', ex);
                   return undefined;
               })
         : Promise.resolve(undefined);
@@ -61,7 +61,7 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
             return version === 'found';
         }
     } catch (ex) {
-        traceError(`Failed to check if package exists ${ProductNames.get(product)}`);
+        logger.error(`Failed to check if package exists ${ProductNames.get(product)}`);
     }
 }
 
@@ -115,7 +115,7 @@ export class DataScienceInstaller {
         });
     }
 
-    @traceDecoratorVerbose('Checking if product is installed')
+    @debugDecorator('Checking if product is installed')
     public async isInstalled(
         product: Product,
         @logValue('path') interpreter: PythonEnvironment | Environment

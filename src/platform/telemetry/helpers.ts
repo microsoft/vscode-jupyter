@@ -3,7 +3,7 @@
 
 import { Environment } from '@vscode/python-extension';
 import { computeHash } from '../common/crypto';
-import { traceError } from '../logging';
+import { logger } from '../logging';
 
 export function getTelemetrySafeVersion(version: string | Environment['version']): string {
     if (typeof version === 'string') {
@@ -20,7 +20,7 @@ export function getTelemetrySafeVersion(version: string | Environment['version']
             }
             return `${major}.${minor}.${patch}`;
         } catch (ex) {
-            traceError(`Failed to parse version ${version}`, ex);
+            logger.error(`Failed to parse version ${version}`, ex);
             return '';
         }
     }

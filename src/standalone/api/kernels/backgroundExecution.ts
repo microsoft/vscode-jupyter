@@ -9,7 +9,7 @@ import { DisposableStore } from '../../../platform/common/utils/lifecycle';
 import { raceCancellation } from '../../../platform/common/cancellation';
 import { getNotebookCellOutputMetadata } from '../../../kernels/execution/helpers';
 import { unTrackDisplayDataForExtension } from '../../../kernels/execution/extensionDisplayDataTracker';
-import { traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 
 export const executionCounters = new WeakMap<IKernel, number>();
 export async function execCodeInBackgroundThread<T>(
@@ -105,7 +105,7 @@ del __jupyter_exec_background__
             if (result?.mime === mimeFinalResult) {
                 return JSON.parse(new TextDecoder().decode(result.data)) as T;
             } else if (result?.mime === mimeErrorResult) {
-                traceWarning('Error in background execution:\n', new TextDecoder().decode(result.data));
+                logger.warn('Error in background execution:\n', new TextDecoder().decode(result.data));
                 return;
             }
         }
@@ -114,7 +114,7 @@ del __jupyter_exec_background__
         return;
     }
     if (!displayId) {
-        traceWarning('Failed to get display id for completions');
+        logger.warn('Failed to get display id for completions');
         return;
     }
 

@@ -12,7 +12,7 @@ import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../te
 import { ProductNames } from '../../../platform/interpreter/installer/productNames';
 import { Product } from '../../../platform/interpreter/installer/types';
 import { CancellationToken, CancellationTokenSource, window } from 'vscode';
-import { traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { isCodeSpace } from '../../../platform/constants';
 
 /**
@@ -29,7 +29,7 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
             const version = await this._getVersion(executer, token);
             return typeof version === 'string' ? parseSemVer(version) : version;
         } catch (e) {
-            traceWarning(DataScience.failedToGetVersionOfPandas, e.message);
+            logger.warn(DataScience.failedToGetVersionOfPandas, e.message);
             return;
         }
     }

@@ -8,7 +8,7 @@ import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, PYTHON_PATH } from '../../common.node';
 import { initialize } from '../../initialize.node';
@@ -51,7 +51,7 @@ suite('Export @export', function () {
     let template: string;
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo('Suite Setup');
+        logger.info('Suite Setup');
         this.timeout(120_000);
         try {
             api = await initialize();
@@ -69,7 +69,7 @@ suite('Export @export', function () {
 
             sinon.restore();
             proc = new ProcessService();
-            traceInfo('Suite Setup (completed)');
+            logger.info('Suite Setup (completed)');
         } catch (e) {
             await captureScreenShot('export-suite');
             throw e;
@@ -82,12 +82,12 @@ suite('Export @export', function () {
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
         try {
-            traceInfo(`Start Test ${this.currentTest?.title}`);
+            logger.info(`Start Test ${this.currentTest?.title}`);
             sinon.restore();
             await startJupyterServer();
             await createEmptyPythonNotebook(disposables);
             assert.isOk(window.activeNotebookEditor, 'No active notebook');
-            traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+            logger.info(`Start Test (completed) ${this.currentTest?.title}`);
             activeInterpreter = (await interpreterService.getActiveInterpreter(
                 window.activeNotebookEditor?.notebook.uri
             ))!;
@@ -104,7 +104,7 @@ suite('Export @export', function () {
         }
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
@@ -113,7 +113,7 @@ suite('Export @export', function () {
         await settings.update('pythonExportMethod', 'direct', ConfigurationTarget.Global);
 
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Export a basic notebook document', async () => {

@@ -6,7 +6,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingDelegate } from '../../../notebooks/debugger/debuggingTypes';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import { traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 
 /**
  * Implements the "restart" request.
@@ -15,7 +15,7 @@ export class RestartNotSupportedController implements IDebuggingDelegate {
     constructor(public readonly debugCell: NotebookCell) {}
 
     private trace(tag: string, msg: string) {
-        traceVerbose(`[Debug-IWRestart] ${tag}: ${msg}`);
+        logger.debug(`[Debug-IWRestart] ${tag}: ${msg}`);
     }
 
     public async willSendResponse(response: DebugProtocol.Response): Promise<void> {

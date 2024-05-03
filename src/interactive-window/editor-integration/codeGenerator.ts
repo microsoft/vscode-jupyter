@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 
 import { splitMultilineString } from '../../platform/common/utils';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { uncommentMagicCommands } from './cellFactory';
 import { CellMatcher } from './cellMatcher';
@@ -196,7 +196,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
             hasCellMarker
         };
 
-        traceInfo(`Generated code for ${expectedCount} = ${runtimeFile} with ${stripped.length} lines`);
+        logger.info(`Generated code for ${expectedCount} = ${runtimeFile} with ${stripped.length} lines`);
         this.storage.store(Uri.parse(metadata.interactive.uristring), hash);
         return hash;
     }

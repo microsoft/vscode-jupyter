@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutput, NotebookDocument, Uri, window, workspace } from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -28,10 +28,12 @@ export class PlotSaveHandler implements IPlotSaveHandler {
         }
         const output = getOutputItem(notebook, outputId, mimeType);
         if (!output) {
-            return traceError(`No plot to save ${getDisplayPath(notebook.uri)}, id: ${outputId} for ${mimeType}`);
+            return logger.error(`No plot to save ${getDisplayPath(notebook.uri)}, id: ${outputId} for ${mimeType}`);
         }
         if (!(mimeType.toLowerCase() in imageExtensionForMimeType)) {
-            return traceError(`Unsupported MimeType ${getDisplayPath(notebook.uri)}, id: ${outputId} for ${mimeType}`);
+            return logger.error(
+                `Unsupported MimeType ${getDisplayPath(notebook.uri)}, id: ${outputId} for ${mimeType}`
+            );
         }
 
         const saveLocation = await this.getSaveTarget(output, mimeType);
@@ -87,7 +89,7 @@ export class PlotSaveHandler implements IPlotSaveHandler {
     }
 
     protected async saveAsPdf(_output: NotebookCellOutput, _target: Uri) {
-        return traceError(`Save as PDF is not yet supported on the web.`);
+        return logger.error(`Save as PDF is not yet supported on the web.`);
     }
 }
 
