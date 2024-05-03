@@ -38,6 +38,7 @@ import { KernelSocketMap } from '../../kernelSocket';
 import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError';
 import { once } from '../../../platform/common/utils/functional';
+import { disposeAsync } from '../../../platform/common/utils';
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -136,7 +137,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         try {
             const oldKernelProcess = this.kernelProcess;
             this.kernelProcess = undefined;
-            oldKernelProcess?.dispose()?.catch(noop);
+            oldKernelProcess?.dispose();
             swallowExceptions(() => this.socket?.dispose());
             swallowExceptions(() => this.realKernel?.dispose());
             // Try to start up our raw session, allow for cancellation or timeout
@@ -205,7 +206,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             this.statusChanged.emit(this.status);
         } catch (error) {
             await Promise.all([
-                this.kernelProcess?.dispose().catch(noop),
+                this.kernelProcess ? disposeAsync(this.kernelProcess) : Promise.resolve(),
                 this.realKernel
                     ?.shutdown()
                     .catch((ex) => logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex))
@@ -283,7 +284,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         this.restartToken?.cancel();
         this.restartToken?.dispose();
         suppressShutdownErrors(this.realKernel);
-        await this.kernelProcess?.dispose().catch(noop);
+        await (this.kernelProcess ? disposeAsync(this.kernelProcess).catch(noop) : Promise.resolve());
         this.socket.dispose();
         this.stopHandlingKernelMessages();
         this.isShuttingDown = false;

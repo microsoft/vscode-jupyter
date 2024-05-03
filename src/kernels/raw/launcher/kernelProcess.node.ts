@@ -332,9 +332,9 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         }
     }
 
-    public override async dispose(): Promise<void> {
+    public override dispose() {
         if (this._disposingPromise) {
-            return this._disposingPromise;
+            return;
         }
         if (this.isDisposed) {
             return;
@@ -347,7 +347,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 this.killChildProcesses(this._process?.pid).catch(noop)
             );
             try {
-                this.interrupter?.dispose().catch(noop);
+                this.interrupter?.dispose();
                 this._process?.kill(); // NOSONAR
                 if (!this.exitEventFired) {
                     this.exitEvent.fire({ stderr: '' });
@@ -364,7 +364,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             }
             logger.debug(`Disposed Kernel process ${pid}.`);
         })();
-        super.dispose();
+        void this._disposingPromise.finally(() => super.dispose()).catch(noop);
     }
 
     private async killChildProcesses(pid?: number) {
