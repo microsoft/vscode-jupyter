@@ -31,6 +31,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { computeServerId, generateIdFromRemoteProvider } from '../jupyterUtils';
 import { RemoteKernelSpecCacheFileName } from '../constants';
 import { JupyterLabHelper } from '../session/jupyterLabHelper';
+import { disposeAsync } from '../../../platform/common/utils';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -327,7 +328,7 @@ export class RemoteKernelFinder extends ObservableDisposable implements IRemoteK
         const disposables: IAsyncDisposable[] = [];
         try {
             const sessionManager = JupyterLabHelper.create(connInfo.settings);
-            disposables.push(sessionManager);
+            disposables.push({ dispose: () => disposeAsync(sessionManager) });
 
             // Get running and specs at the same time
             const [running, specs, sessions, serverId] = await Promise.all([

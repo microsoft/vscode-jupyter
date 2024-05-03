@@ -103,6 +103,7 @@ import {
     NotebookCellExecutionState,
     notebookCellExecutions
 } from '../../../platform/notebooks/cellExecutionStateService';
+import { disposeAsync } from '../../../platform/common/utils';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -343,7 +344,9 @@ async function shutdownRemoteKernels() {
         // ignore
     } finally {
         cancelToken.dispose();
-        await sessionManager?.dispose().catch(noop);
+        if (sessionManager) {
+            await disposeAsync(sessionManager);
+        }
     }
 }
 export const MockNotebookDocuments: NotebookDocument[] = [];
