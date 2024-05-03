@@ -72,31 +72,6 @@ export function initializeLoggers(options: {
     return standardOutputChannel;
 }
 
-export function initializeLoggers(options: {
-    addConsoleLogger: boolean;
-    userNameRegEx?: RegExp;
-    homePathRegEx?: RegExp;
-    platform?: string;
-    arch?: string;
-    homePath?: string;
-}) {
-    globalLoggingLevel = getLoggingLevelFromConfig();
-    trackDisposable(
-        workspace.onDidChangeConfiguration((e) => {
-            if (e.affectsConfiguration('jupyter.logging')) {
-                globalLoggingLevel = getLoggingLevelFromConfig();
-            }
-        })
-    );
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
-    registerLogger(new OutputChannelLogger(standardOutputChannel, options?.userNameRegEx, options?.homePathRegEx));
-
-    // In CI there's no need for the label.
-    registerLogger(new ConsoleLogger(isCI ? undefined : 'Jupyter Extension:'));
-
-    return standardOutputChannel;
-}
-
 export function registerLogger(logger: ILogger): Disposable {
     loggers.push(logger);
     return {
