@@ -42,7 +42,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
     public activate() {
         this.onDidChangeNotebookCellExecutionStateHandler =
             notebookCellExecutions.onDidChangeNotebookCellExecutionState(
-                (e) => this.delayer.trigger(() => this.onDidChangeNotebookCellExecutionState(e)).catch(noop()),
+                (e) => this.delayer.trigger(() => this.onDidChangeNotebookCellExecutionState(e)).catch(noop),
                 this
             );
         this.kernelProvider.onDidRestartKernel(() => this.runFiles.clear(), this, this.disposables);
