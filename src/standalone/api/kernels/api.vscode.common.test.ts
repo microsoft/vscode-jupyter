@@ -219,7 +219,7 @@ suiteMandatory('Kernel API Tests @typescript', function () {
 });
 
 // eslint-disable-next-line no-only-tests/no-only-tests
-suite.only('Kernel API Tests @typescript/@python', function () {
+suite('Kernel API Tests @typescript/@python', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     let notebook: NotebookDocument;
