@@ -83,7 +83,7 @@ suite('Raw Jupyter Session Wrapper', () => {
         await sessionWrapper.shutdown();
 
         verify(session.shutdown()).once();
-        verify(session.dispose()).never();
+        verify(session.dispose()).once();
         assert.strictEqual(sessionWrapper.status, 'dead');
         assert.deepEqual(statuses, ['terminating', 'dead']);
     });

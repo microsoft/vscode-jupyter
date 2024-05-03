@@ -76,7 +76,7 @@ export class RawJupyterSessionWrapper
         suppressShutdownErrors(this.session.kernel);
         await raceTimeout(1000, this.session.shutdown().catch(noop));
         this.didShutdown.fire();
-        super.dispose();
+        this.dispose();
         logger.debug(`Shutdown session ${kernelIdForLogging} - shutdown complete`);
     }
 }
