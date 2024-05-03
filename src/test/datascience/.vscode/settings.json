@@ -30,7 +30,7 @@
     "python.experiments.enabled": true,
     // See https://github.com/microsoft/vscode-jupyter/issues/10258
     "jupyter.forceIPyKernelDebugger": false,
-    "python.defaultInterpreterPath": "/Users/donjayamanne/Development/vsc/vscode-jupyter/.venv/bin/python",
+    "python.defaultInterpreterPath": "",
     "task.problemMatchers.neverPrompt": {
         "shell": true,
         "npm": true
