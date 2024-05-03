@@ -18,8 +18,7 @@ import {
     WebviewView as vscodeWebviewView,
     WorkspaceFolder
 } from 'vscode';
-
-import { IAsyncDisposable, Resource } from '../types';
+import { Resource, type IDisposable } from '../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
@@ -148,7 +147,7 @@ export interface IWebviewMessageListener {
 }
 
 export const IWebviewPanelMessageListener = Symbol('IWebviewPanelMessageListener');
-export interface IWebviewPanelMessageListener extends IWebviewMessageListener, IAsyncDisposable {
+export interface IWebviewPanelMessageListener extends IWebviewMessageListener, IDisposable {
     /**
      * Listens to web panel state changes
      */
@@ -156,7 +155,7 @@ export interface IWebviewPanelMessageListener extends IWebviewMessageListener, I
 }
 
 export const IWebviewViewMessageListener = Symbol('IWebviewViewMessageListener');
-export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable {}
+export interface IWebviewViewMessageListener extends IWebviewMessageListener, IDisposable {}
 
 export type WebviewMessage = {
     /**
