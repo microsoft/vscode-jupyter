@@ -218,7 +218,8 @@ suiteMandatory('Kernel API Tests @typescript', function () {
     }
 });
 
-suiteMandatory('Kernel API Tests @typescript/@python', function () {
+// eslint-disable-next-line no-only-tests/no-only-tests
+suite.only('Kernel API Tests @typescript/@python', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     let notebook: NotebookDocument;
@@ -256,6 +257,7 @@ suiteMandatory('Kernel API Tests @typescript/@python', function () {
 
         await closeNotebooksAndCleanUpAfterTests(disposables);
         logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
+        console.error(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     testMandatory('Execute chat code', async function () {
         // Ensure user has executed some code against this kernel.

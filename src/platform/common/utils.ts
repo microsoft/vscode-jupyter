@@ -12,6 +12,7 @@ import {
     Uri,
     WorkspaceEdit,
     workspace,
+    type Event,
     type NotebookCell
 } from 'vscode';
 import {
@@ -21,6 +22,8 @@ import {
     WIDGET_STATE_MIMETYPE
 } from './constants';
 import { splitLines } from './helpers';
+import { toPromise } from './utils/events';
+import type { IDisposable } from './types';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -450,4 +453,13 @@ function doSortObjectPropertiesRecursively(obj: any): any {
         );
     }
     return obj;
+}
+
+export async function disposeAsync(
+    disposable: { dispose: () => void; onDidDispose: Event<void> },
+    disposables: IDisposable[] = []
+): Promise<void> {
+    const promise = toPromise(disposable.onDidDispose, undefined, disposables);
+    disposable.dispose();
+    await promise;
 }

@@ -579,7 +579,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly kind: T;
     readonly status: KernelMessage.Status;
     readonly onDidKernelSocketChange: Event<void>;
-    disposeAsync(): Promise<void>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
     restart(): Promise<void>;

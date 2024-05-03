@@ -38,7 +38,7 @@ suite('Base Jupyter Session Connection', () => {
             super('remoteJupyter', session);
             this.initializeKernelSocket();
         }
-        override shutdown(): Promise<void> {
+        shutdown(): Promise<void> {
             throw new Error('Method not implemented.');
         }
     }

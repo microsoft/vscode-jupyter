@@ -20,6 +20,7 @@ import {
     notebookCellExecutions,
     type NotebookCellExecutionStateChangeEvent
 } from '../../platform/notebooks/cellExecutionStateService';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * Provides hover support in python files based on the state of a jupyter kernel. Files that are
@@ -41,7 +42,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
     public activate() {
         this.onDidChangeNotebookCellExecutionStateHandler =
             notebookCellExecutions.onDidChangeNotebookCellExecutionState(
-                (e) => this.delayer.trigger(() => this.onDidChangeNotebookCellExecutionState(e)),
+                (e) => this.delayer.trigger(() => this.onDidChangeNotebookCellExecutionState(e)).catch(noop()),
                 this
             );
         this.kernelProvider.onDidRestartKernel(() => this.runFiles.clear(), this, this.disposables);

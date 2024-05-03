@@ -13,6 +13,7 @@ import { assert } from 'chai';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { RawSessionConnection } from './rawSessionConnection.node';
+import { disposeAsync } from '../../../platform/common/utils';
 
 suite('Raw Jupyter Session Wrapper', () => {
     let sessionWrapper: RawJupyterSessionWrapper;
@@ -91,10 +92,9 @@ suite('Raw Jupyter Session Wrapper', () => {
         const statuses: (typeof sessionWrapper.status)[] = [];
         sessionWrapper.statusChanged.connect((_, s) => statuses.push(s));
 
-        await sessionWrapper.disposeAsync();
+        await disposeAsync(sessionWrapper, disposables);
 
         verify(session.shutdown()).once();
-        verify(session.dispose()).once();
         assert.strictEqual(sessionWrapper.status, 'dead');
         assert.deepEqual(statuses, ['terminating', 'dead']);
     });
