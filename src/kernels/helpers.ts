@@ -613,7 +613,7 @@ export async function executeSilently(
     code: string,
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {
-    logger.debug(
+    logger.trace(
         `Executing silently Code (${kernelConnection.status}) = ${splitLines(code.substring(0, 100)).join('\\n')}`
     );
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -699,7 +699,7 @@ export async function executeSilently(
         handleExecuteSilentErrors(outputs, errorOptions, codeForLogging);
     }
 
-    logger.debug(`Executing silently Code (completed) = ${codeForLogging} with ${outputs.length} output(s)`);
+    logger.trace(`Executing silently Code (completed) = ${codeForLogging} with ${outputs.length} output(s)`);
 
     return outputs;
 }

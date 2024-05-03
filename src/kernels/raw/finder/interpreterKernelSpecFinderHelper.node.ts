@@ -179,7 +179,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
         void this.kernelSpecPromise.then(() => {
             switch (this._kernels.size) {
                 case 0:
-                    logger.debug(`No Kernels found in interpreter ${this.interpreter.id}`);
+                    logger.trace(`No Kernels found in interpreter ${this.interpreter.id}`);
                     break;
                 case 1:
                     // Thats the default kernel we create for this interpreter.
@@ -187,7 +187,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
                     // No need to log this, just noise. It will be an obvious entry
                     break;
                 default:
-                    logger.debug(
+                    logger.trace(
                         `Kernels for interpreter ${this.interpreter.id} are ${Array.from(this._kernels.keys()).join(
                             ', '
                         )}`
@@ -223,7 +223,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
             return;
         }
 
-        logger.debug(`Search for KernelSpecs in Interpreter ${getDisplayPath(this.interpreter.uri)}`);
+        logger.trace(`Search for KernelSpecs in Interpreter ${getDisplayPath(this.interpreter.uri)}`);
 
         // If the user has interpreters, then don't display the default kernel specs such as `python`, `python3`.
         // Such kernel specs are ambiguous, and we have absolutely no idea what interpreters they point to.
@@ -245,7 +245,7 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
                 (!jupyterKernelSpec.env || Object.keys(jupyterKernelSpec.env).length === 0) &&
                 isDefaultKernelSpec(jupyterKernelSpec)
             ) {
-                logger.debug(
+                logger.trace(
                     `Hiding default KernelSpec ${getDisplayPath(
                         jupyterKernelSpec.argv[0]
                     )} for interpreter ${getDisplayPath(
@@ -410,7 +410,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
                 kernelSpec.metadata?.interpreter?.path &&
                 areInterpreterPathsSame(Uri.file(kernelSpec.metadata.interpreter.path), i.executable.uri)
             ) {
-                logger.debug(
+                logger.trace(
                     `Kernel ${kernelSpec.name} matches ${getDisplayPath(i.id)} based on metadata.interpreter.`
                 );
                 return true;
@@ -435,7 +435,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
             const pathInArgVUri = Uri.file(pathInArgv);
             const exactMatchBasedOnArgv = interpreters.find((i) => {
                 if (areInterpreterPathsSame(pathInArgVUri, i.executable.uri)) {
-                    logger.debug(`Kernel ${kernelSpec.name} matches ${getDisplayPath(i.id)} based on argv.`);
+                    logger.trace(`Kernel ${kernelSpec.name} matches ${getDisplayPath(i.id)} based on argv.`);
                     return true;
                 }
                 return false;
@@ -512,7 +512,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
                     kernelSpec.interpreterPath &&
                     areInterpreterPathsSame(kernelSpecInterpreterPath, i.executable.uri)
                 ) {
-                    logger.debug(`Kernel ${kernelSpec.name} matches ${getDisplayPath(i.id)} based on interpreterPath.`);
+                    logger.trace(`Kernel ${kernelSpec.name} matches ${getDisplayPath(i.id)} based on interpreterPath.`);
                     return true;
                 }
                 return false;
@@ -539,7 +539,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
             interpreters.find((i) => {
                 // 4. Check display name
                 if (kernelSpec.display_name === getCachedEnvironment(i)?.environment?.name) {
-                    logger.debug(`Kernel ${kernelSpec.name} matches ${getDisplayPath(i.id)} based on display name`);
+                    logger.trace(`Kernel ${kernelSpec.name} matches ${getDisplayPath(i.id)} based on display name`);
                     // This is a bad one, matching by name is never going to be accurate
                     sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                         kernelSpecHash,
@@ -590,7 +590,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         //     (workspace.workspaceFolders || []).map((folder) => this.interpreterService.getActiveInterpreter(folder.uri))
         // );
 
-        // logger.debug(`Finding Global Python KernelSpecs`);
+        // logger.trace(`Finding Global Python KernelSpecs`);
         // const activeInterpreters = await raceCancellation(cancelToken, [], activeInterpreterInAWorkspacePromise);
         // if (cancelToken.isCancellationRequested) {
         //     return [];
@@ -642,7 +642,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
                     ) {
                         return true;
                     }
-                    logger.debug(
+                    logger.trace(
                         `Kernel Spec for '${item.kernelSpec.display_name}' (${getDisplayPath(
                             item.kernelSpec.specFile
                         )}) is hidden. (isDefaultKernelSpec = ${isDefaultKernelSpec(item.kernelSpec)}, language = ${
@@ -701,7 +701,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         //                         (!kernelSpec.env || Object.keys(kernelSpec.env).length === 0) &&
         //                         isDefaultKernelSpec(kernelSpec)
         //                     ) {
-        //                         logger.debug(
+        //                         logger.trace(
         //                             `Hiding default kernel spec '${kernelSpec.display_name}', '${
         //                                 kernelSpec.name
         //                             }', ${getDisplayPath(kernelSpec.argv[0])} for interpreter ${getDisplayPath(
@@ -711,7 +711,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         //                         return false;
         //                     }
         //                     if (kernelSpec.specFile && globalKernelSpecsLoadedForPython.has(kernelSpec.specFile)) {
-        //                         logger.debug(
+        //                         logger.trace(
         //                             `Global kernel spec ${kernelSpec.name}${getDisplayPath(
         //                                 kernelSpec.specFile
         //                             )} already found with a matching Python Env`
@@ -720,7 +720,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         //                     }
         //                     // Check if this is a kernelspec registered by an old version of the extension.
         //                     if (getKernelRegistrationInfo(kernelSpec) === 'registeredByOldVersionOfExt') {
-        //                         logger.debug(
+        //                         logger.trace(
         //                             `Ignoring Global Python KernelSpec '${kernelSpec.display_name}', '${
         //                                 kernelSpec.name
         //                             }' (${getDisplayPath(kernelSpec.specFile)}) registered by an old version of the extension`
@@ -842,7 +842,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         //                             interpreter: kernelInterpreter,
         //                             id: getKernelId(k, kernelInterpreter)
         //                         });
-        //                         logger.debug(`Interpreter for Local kernel ${result.id} is ${kernelInterpreter?.id}`);
+        //                         logger.trace(`Interpreter for Local kernel ${result.id} is ${kernelInterpreter?.id}`);
 
         //                         return result;
         //                     }
@@ -853,7 +853,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         //                     }
 
         //                     const kernelSpec = await item;
-        //                     logger.debug(`Found kernel spec at end of discovery ${kernelSpec?.id}`);
+        //                     logger.trace(`Found kernel spec at end of discovery ${kernelSpec?.id}`);
         //                     // Check if we have already seen this.
         //                     if (kernelSpec && !distinctKernelMetadata.has(kernelSpec.id)) {
         //                         distinctKernelMetadata.set(kernelSpec.id, kernelSpec);

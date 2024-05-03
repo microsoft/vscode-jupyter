@@ -59,7 +59,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         // Listen on stderr for its connection information
         this.subscriptions.push(
             launchResult.out.onDidChange((output: Output<string>) => {
-                logger.debug(output.out);
+                logger.trace(output.out);
                 this.output += output.out;
                 if (RegExpValues.HttpPattern.exec(this.output) && !this.startPromise.completed) {
                     // .then so that we can keep from pushing aync up to the subscribed observable function

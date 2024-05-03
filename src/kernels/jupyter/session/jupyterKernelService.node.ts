@@ -105,7 +105,7 @@ export class JupyterKernelService implements IJupyterKernelService {
                 logger.debug(`Updating Kernel Environment for ${kernel.id} for interpreter ${kernel.interpreter.id}`);
                 await this.updateKernelEnvironment(resource, kernel, specFile, cancelToken);
             } else {
-                logger.debug(`Not Updating Kernel Environment for ${kernel.id}`);
+                logger.trace(`Not Updating Kernel Environment for ${kernel.id}`);
             }
         }
     }
@@ -246,7 +246,7 @@ export class JupyterKernelService implements IJupyterKernelService {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     specModel.metadata.interpreter = interpreter as any;
                 } else {
-                    logger.debug(`KernelSpec argv[0] not updated for ${kernelConnection.id} ('${specModel.argv[0]}')`);
+                    logger.trace(`KernelSpec argv[0] not updated for ${kernelConnection.id} ('${specModel.argv[0]}')`);
                 }
 
                 specModel.env = await this.kernelEnvVars.getEnvironmentVariables(resource, interpreter, specedKernel);

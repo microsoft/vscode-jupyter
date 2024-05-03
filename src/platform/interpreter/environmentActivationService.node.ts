@@ -252,7 +252,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // First value in PATH is expected to be the directory of python executable.
             // Second value in PATH is expected to be the site packages directory.
             if (executablesPath && pathValues[1] !== executablesPath.fsPath) {
-                logger.debug(
+                logger.trace(
                     `Prepend PATH with user site path for ${getDisplayPath(environment.path)}, user site ${
                         executablesPath.fsPath
                     }`
@@ -284,7 +284,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Also applies to `!java` where java could be an executable in the conda bin directory.
         // Also required for conda environments that do not have Python installed (in the conda env).
         if (environment.executable.uri) {
-            logger.debug(`Prepend PATH with python bin for ${getDisplayPath(environment.path)}`);
+            logger.trace(`Prepend PATH with python bin for ${getDisplayPath(environment.path)}`);
             this.envVarsService.prependPath(env, path.dirname(environment.executable.uri.fsPath));
         }
 

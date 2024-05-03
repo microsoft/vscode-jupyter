@@ -21,7 +21,7 @@ function traceExecMessage(extensionId: string, executionId: string, message: str
     if (extensionId === JVSC_EXTENSION_ID) {
         return;
     }
-    logger.debug(`Execution Id:${executionId}. ${message}.`);
+    logger.trace(`Execution Id:${executionId}. ${message}.`);
 }
 
 const extensionIdsPerExtension = new Map<string, number>();

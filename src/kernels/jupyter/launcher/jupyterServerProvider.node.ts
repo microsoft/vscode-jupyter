@@ -42,11 +42,11 @@ export class JupyterServerProvider implements IJupyterServerProvider {
 
         // Check to see if we support ipykernel or not
         try {
-            logger.debug(`Checking for server usability.`);
+            logger.trace(`Checking for server usability.`);
 
             const usable = await this.checkUsable();
             if (!usable) {
-                logger.debug('Server not usable (should ask for install now)');
+                logger.trace('Server not usable (should ask for install now)');
                 // Indicate failing.
                 throw new JupyterInstallError(
                     DataScience.jupyterNotSupported(await jupyterServerHelper.getJupyterServerError())

@@ -57,7 +57,7 @@ export class LocalKernelSpecFinder implements IDisposable {
         private readonly jupyterPaths: JupyterPaths
     ) {
         if (this.oldKernelSpecsFolder) {
-            logger.debug(
+            logger.trace(
                 `Old kernelSpecs (created by Jupyter Extension) stored in directory ${this.oldKernelSpecsFolder}`
             );
         }
@@ -131,7 +131,7 @@ export class LocalKernelSpecFinder implements IDisposable {
         await this.fs.createDirectory(Uri.file(path.dirname(destinationFile)));
         await this.fs.copy(Uri.file(kernelSpecFile), Uri.file(destinationFile)).catch(noop);
         await this.fs.delete(Uri.file(kernelSpecFile));
-        logger.debug(`Old KernelSpec '${kernelSpecFile}' deleted and backup stored in ${destinationFolder}`);
+        logger.trace(`Old KernelSpec '${kernelSpecFile}' deleted and backup stored in ${destinationFolder}`);
     }
     /**
      * Load kernelspec json from disk
@@ -180,7 +180,7 @@ export class LocalKernelSpecFinder implements IDisposable {
             if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
                 this.findKernelSpecsInPathCache.delete(cacheKey);
             }
-            logger.debug(`Failed to search for kernels in ${getDisplayPath(kernelSearchPath)} with an error`, ex);
+            logger.warn(`Failed to search for kernels in ${getDisplayPath(kernelSearchPath)} with an error`, ex);
         });
         return promise;
     }

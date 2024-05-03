@@ -123,14 +123,14 @@ export class JupyterInterpreterSubCommandExecutionService
             ...envVars,
             JUPYTER_PATH: jupyterDataPaths.join(path.delimiter)
         };
-        logger.debug(`Start Jupyter Notebook with JUPYTER_PATH=${jupyterDataPaths.join(path.delimiter)}`);
-        logger.debug(`Start Jupyter Notebook with PYTHONPATH=${envVars['PYTHONPATH'] || ''}`);
+        logger.trace(`Start Jupyter Notebook with JUPYTER_PATH=${jupyterDataPaths.join(path.delimiter)}`);
+        logger.trace(`Start Jupyter Notebook with PYTHONPATH=${envVars['PYTHONPATH'] || ''}`);
         const pathVariables = Object.keys(envVars).filter((key) => key.toLowerCase() === 'path');
         if (pathVariables.length) {
             const pathValues = pathVariables
                 .map((pathVariable) => `${pathVariable}=${envVars[pathVariable]}`)
                 .join(',');
-            logger.debug(`Start Jupyter Notebook with PATH variable. ${pathValues}`);
+            logger.trace(`Start Jupyter Notebook with PATH variable. ${pathValues}`);
         } else {
             logger.error(`Start Jupyter Notebook without a PATH variable`);
         }

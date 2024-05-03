@@ -262,7 +262,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                     )
                 );
             } else {
-                logger.debug(`createNewKernelSession ${options.kernelConnection?.id}`);
+                logger.trace(`createNewKernelSession ${options.kernelConnection?.id}`);
                 session = await this.createNewSession(options);
 
                 await waitForIdleOnSession(

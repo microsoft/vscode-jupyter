@@ -82,7 +82,7 @@ export class KernelLauncher implements IKernelLauncher {
                     portStart += 1_000;
                 }
             }
-            logger.debug(`Computed port start for KernelLauncher is : ${result}`);
+            logger.trace(`Computed port start for KernelLauncher is : ${result}`);
 
             return result;
         } else {
@@ -267,13 +267,13 @@ async function logIPyKernelPath(
             .map((s) => s.trim())
             .filter((s) => s.length > 0);
         if (outputs.length === 2) {
-            logger.debug(
+            logger.trace(
                 `ipykernel version & path ${outputs[0]}, ${getDisplayPathFromLocalFile(
                     outputs[1]
                 )} for ${displayInterpreterPath}`
             );
         } else {
-            logger.debug(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
+            logger.trace(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
         }
     }
     if (output.stderr) {

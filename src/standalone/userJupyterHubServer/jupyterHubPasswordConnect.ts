@@ -117,7 +117,7 @@ export class JupyterHubPasswordConnect {
             // Ensure we get a valid JSON with a version in it.
             try {
                 const json = await response.json();
-                logger.debug(`JupyterHub version is ${json && json.version} for url ${url}`);
+                logger.trace(`JupyterHub version is ${json && json.version} for url ${url}`);
                 return json && json.version;
             } catch {
                 //

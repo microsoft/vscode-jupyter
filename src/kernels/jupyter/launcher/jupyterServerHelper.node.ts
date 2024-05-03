@@ -126,7 +126,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
                     // Start or connect to the process
                     connection = await this.startImpl(resource, cancelToken);
 
-                    logger.debug(`Connection complete server`);
+                    logger.trace(`Connection complete server`);
                     return connection;
                 } catch (err) {
                     lastTryError = err;

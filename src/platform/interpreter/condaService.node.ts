@@ -83,7 +83,7 @@ export class CondaService {
                 .then((api) => (api.getCondaFile ? api.getCondaFile() : undefined));
             latestInfo
                 .then((file) => {
-                    logger.debug(`Conda file is ${file}`);
+                    logger.trace(`Conda file is ${file}`);
                     this._file = file ? Uri.file(file) : undefined;
                     this.updateCache().catch(noop);
                 })

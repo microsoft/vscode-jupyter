@@ -93,7 +93,7 @@ export class GlobalPythonExecutablePathService {
                     `USER_SITE ${sitePath.fsPath} dir does not exist for the interpreter ${getDisplayPath(executable)}`
                 );
             }
-            logger.debug(`USER_SITE for ${getDisplayPath(executable)} is ${sitePath.fsPath}`);
+            logger.trace(`USER_SITE for ${getDisplayPath(executable)} is ${sitePath.fsPath}`);
             return sitePath;
         } else {
             throw new Error(`USER_SITE not found for the interpreter ${getDisplayPath(executable)}. Stdout: ${stdout}`);

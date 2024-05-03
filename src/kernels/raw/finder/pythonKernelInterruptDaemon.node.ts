@@ -185,7 +185,7 @@ export class PythonKernelInterruptDaemon {
                                     const [command, id, response] = output.split(':');
                                     const deferred = this.messages.get(parseInt(id, 10));
                                     if (deferred) {
-                                        logger.debug(`Got a response of ${response} for ${command}:${id}`);
+                                        logger.trace(`Got a response of ${response} for ${command}:${id}`);
                                         deferred.deferred.resolve(response);
                                         this.messages.delete(parseInt(id, 10));
                                     } else {

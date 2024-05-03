@@ -448,7 +448,7 @@ export class InterpreterService implements IInterpreterService {
                     }
                     this.lastLoggedResourceAndInterpreterId = key;
                     const version = getCachedVersion(item);
-                    logger.debug(
+                    logger.trace(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
                         )} (${item && getEnvironmentType(item)}, '${
@@ -608,7 +608,7 @@ export class InterpreterService implements IInterpreterService {
                     );
                     api.environments.onDidChangeActiveEnvironmentPath(
                         () => {
-                            logger.debug(`Detected change in Active Python environment via Python API`);
+                            logger.trace(`Detected change in Active Python environment via Python API`);
                             this.workspaceCachedActiveInterpreter.clear();
                             this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
                         },
@@ -617,7 +617,7 @@ export class InterpreterService implements IInterpreterService {
                     );
                     api.environments.onDidChangeEnvironments(
                         async (e) => {
-                            logger.debug(`Python API env change detected, ${e.type} => '${e.env.id}'`);
+                            logger.trace(`Python API env change detected, ${e.type} => '${e.env.id}'`);
                             // Remove items that are no longer valid.
                             if (e.type === 'remove') {
                                 this.triggerEventIfAllowed('interpreterChangeEvent', undefined);

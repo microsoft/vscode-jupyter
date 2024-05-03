@@ -34,7 +34,7 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
     ) {}
 
     public async create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession> {
-        logger.debug(`Creating raw notebook for resource '${getDisplayPath(options.resource)}'`);
+        logger.trace(`Creating raw notebook for resource '${getDisplayPath(options.resource)}'`);
         let session: RawSessionConnection | undefined;
         const cwdTracker = getNotebookTelemetryTracker(options.resource)?.computeCwd();
         const [workingDirectory, localWorkingDirectory] = await Promise.all([

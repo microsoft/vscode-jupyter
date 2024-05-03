@@ -157,7 +157,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             cell,
             `NotebookKernelExecution.resumeCellExecution (completed), ${getDisplayPath(cell.notebook.uri)}`
         );
-        logger.debug(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
+        logger.trace(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
     }
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<void> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
@@ -190,7 +190,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                 cell,
                 `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
             );
-            logger.debug(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
+            logger.trace(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
             sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell, {
                 duration: stopWatch.elapsedTime
             });
@@ -227,7 +227,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             result = executionQueue.queueCode(code, extensionId, token);
         }
         if (extensionId !== JVSC_EXTENSION_ID) {
-            logger.debug(
+            logger.trace(
                 `Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`
             );
         }
