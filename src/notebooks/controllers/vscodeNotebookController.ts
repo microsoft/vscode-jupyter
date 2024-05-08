@@ -84,6 +84,7 @@ import { getVersion } from '../../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker, trackControllerCreation } from '../../kernels/telemetry/notebookTelemetry';
 import { IJupyterVariablesProvider } from '../../kernels/variables/types';
 import type { INotebookMetadata } from '@jupyterlab/nbformat';
+import { InteractiveExecutionPrompt } from './InteractiveExecutionPrompt';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -103,6 +104,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     private readonly _onDidDispose = new EventEmitter<void>();
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
+    private interactiveExecutionPrompt: InteractiveExecutionPrompt;
     public readonly controller: NotebookController;
     /**
      * Used purely for testing purposes.
@@ -228,6 +230,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this,
             this.disposables
         );
+        this.interactiveExecutionPrompt = new InteractiveExecutionPrompt(this.configuration);
     }
 
     private readonly restoredConnections = new WeakSet<NotebookDocument>();
@@ -367,6 +370,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (cells.length < 1) {
             return;
         }
+        await this.interactiveExecutionPrompt.checkToPrompt(cells[0]);
         const tracker = getNotebookTelemetryTracker(notebook);
         tracker?.cellExecutionCount(cells.length);
         const telemetryTracker = tracker?.preExecuteCellTelemetry();
@@ -398,6 +402,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // Notebook is trusted. Continue to execute cells
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
+
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
         logger.ci(
             `NotebookController selection event called for notebook ${event.notebook.uri.toString()} & controller ${
