@@ -16,14 +16,15 @@ export class InteractiveExecutionPrompt {
         if (cell.notebook.notebookType === 'interactive' && !cell.metadata.interactive) {
             const settings = this.configurationService.getSettings(cell.document.uri);
             const config = workspace.getConfiguration('interactiveWindow');
+            const setting = config.get('executeWithShiftEnter');
 
             // can we check if the keybinding for interactive.execute is set to 'enter'?
-            if (!settings.promptToChangeInteractiveExecute || config.get('interactiveShiftEnter')) {
+            if (!settings.promptToChangeInteractiveExecute || setting === undefined || setting === true) {
                 return;
             }
 
             const response = await window.showInformationMessage(
-                'Would you like to have `shift+enter` execute input and `enter` create a new line? (previous behavior)',
+                'Change execute keyboard shortcut to shift+enter? (previous behavior)',
                 'shift+enter to execute',
                 'enter to execute'
             );
