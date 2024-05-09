@@ -89,8 +89,21 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
     }
 
     private async delegateDataViewer(request: IJupyterVariable | IShowDataViewerFromVariablePanel) {
-        const variable = 'variable' in request ? request.variable : request;
+        const variable = 'variable' in request ? await this.getVariableFromRequest(request) : request;
+        if (!variable) {
+            return;
+        }
         return this.dataViewerDelegator.showContributedDataViewer(variable);
+    }
+
+    // get the information needed about the request from the debug variable view
+    private async getVariableFromRequest(request: IShowDataViewerFromVariablePanel) {
+        if (this.variableProvider) {
+            const variable = convertDebugProtocolVariableToIJupyterVariable(
+                request.variable as unknown as DebugProtocol.Variable
+            );
+            return this.variableProvider.getFullVariable(variable);
+        }
     }
 
     private async showJupyterVariableView(requestVariable: IJupyterVariable) {
@@ -136,17 +149,13 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
                     pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
                 }
 
-                const variable = convertDebugProtocolVariableToIJupyterVariable(
-                    requestVariable as unknown as DebugProtocol.Variable
-                );
-                const jupyterVariable = await this.variableProvider.getFullVariable(variable);
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
-                    jupyterVariable
+                    requestVariable
                 );
                 const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
                 const columnSize = dataFrameInfo?.columns?.length;
                 if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
-                    const title: string = `${DataScience.dataExplorerTitle} - ${jupyterVariable.name}`;
+                    const title: string = `${DataScience.dataExplorerTitle} - ${requestVariable.name}`;
                     const dv = await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                     return dv;
