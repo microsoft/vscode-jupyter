@@ -77,7 +77,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
             return;
         }
         this.registerCommand(Commands.ShowDataViewer, this.delegateDataViewer);
-        this.registerCommand(Commands.ShowDeprecatedDataViewer, this.showDataViewer);
+        this.registerCommand(Commands.ShowJupyterDataViewer, this.showJupyterVariableView);
     }
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
@@ -87,11 +87,13 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         const disposable = commands.registerCommand(command, callback, this);
         this.disposables.push(disposable);
     }
+
     private async delegateDataViewer(request: IJupyterVariable | IShowDataViewerFromVariablePanel) {
         const variable = 'variable' in request ? request.variable : request;
         return this.dataViewerDelegator.showContributedDataViewer(variable);
     }
-    private async showDataViewer(requestVariable: IJupyterVariable) {
+
+    private async showJupyterVariableView(requestVariable: IJupyterVariable) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
 
         // DataViewerDeprecation

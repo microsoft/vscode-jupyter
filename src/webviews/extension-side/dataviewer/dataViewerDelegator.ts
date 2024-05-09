@@ -23,18 +23,15 @@ export class DataViewerDelegator {
                 const variableViewers = this.getMatchingVariableViewers(variable);
                 if (variableViewers.length === 0) {
                     // No data frame viewer extensions, show notifications
-                    await commands.executeCommand('workbench.extensions.search', '@tag:jupyterVariableViewers');
-                    return;
+                    return commands.executeCommand('workbench.extensions.search', '@tag:jupyterVariableViewers');
                 } else if (variableViewers.length === 1) {
                     const command = variableViewers[0].jupyterVariableViewers.command;
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    await commands.executeCommand(command as any, variable);
+                    return commands.executeCommand(command, variable);
                 } else {
                     const thirdPartyViewers = variableViewers.filter((d) => d.extension.id !== JVSC_EXTENSION_ID);
                     if (thirdPartyViewers.length === 1) {
                         const command = thirdPartyViewers[0].jupyterVariableViewers.command;
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        await commands.executeCommand(command as any, variable);
+                        return commands.executeCommand(command, variable);
                     }
                     // show quick pick
                     const quickPick = window.createQuickPick<QuickPickItem & { command: string }>();
@@ -50,15 +47,13 @@ export class DataViewerDelegator {
                         const item = quickPick.selectedItems[0];
                         if (item) {
                             quickPick.hide();
-                            await commands
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                .executeCommand(item.command as any, variable);
+                            return commands.executeCommand(item.command, variable);
                         }
                     });
                     quickPick.show();
                 }
             } else {
-                await commands.executeCommand(Commands.ShowDeprecatedDataViewer, variable);
+                return commands.executeCommand(Commands.ShowJupyterDataViewer, variable);
             }
         } catch (e) {
             logger.error(e);
@@ -69,14 +64,12 @@ export class DataViewerDelegator {
 
     private getMatchingVariableViewers(
         variable: IJupyterVariable
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ): { extension: Extension<any>; jupyterVariableViewers: IVariableViewer }[] {
+    ): { extension: Extension<unknown>; jupyterVariableViewers: IVariableViewer }[] {
         const variableViewers = this.getVariableViewers();
         return variableViewers.filter((d) => d.jupyterVariableViewers.dataTypes.includes(variable.type));
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public getVariableViewers(): { extension: Extension<any>; jupyterVariableViewers: IVariableViewer }[] {
+    public getVariableViewers(): { extension: Extension<unknown>; jupyterVariableViewers: IVariableViewer }[] {
         const variableViewers = extensions.all
             .filter(
                 (e) =>
