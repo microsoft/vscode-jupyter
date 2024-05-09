@@ -33,6 +33,7 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IKernelProvider } from '../../../kernels/types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
+import { DataViewerDelegator } from './dataViewerDelegator';
 
 export const PromptAboutDeprecation = 'ds_prompt_about_deprecation';
 
@@ -60,7 +61,8 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(DataViewerDelegator) private readonly dataViewerDelegator: DataViewerDelegator
     ) {
         this.dataViewerChecker = new DataViewerChecker(configService);
         if (!workspace.isTrusted) {
@@ -74,7 +76,8 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         if (!workspace.isTrusted) {
             return;
         }
-        this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);
+        this.registerCommand(Commands.ShowDataViewer, this.delegateDataViewer);
+        this.registerCommand(Commands.ShowDeprecatedDataViewer, this.showDataViewer);
     }
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
@@ -84,8 +87,11 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         const disposable = commands.registerCommand(command, callback, this);
         this.disposables.push(disposable);
     }
-    private async onVariablePanelShowDataViewerRequest(request: IJupyterVariable | IShowDataViewerFromVariablePanel) {
-        const requestVariable = 'variable' in request ? request.variable : request;
+    private async delegateDataViewer(request: IJupyterVariable | IShowDataViewerFromVariablePanel) {
+        const variable = 'variable' in request ? request.variable : request;
+        return this.dataViewerDelegator.showContributedDataViewer(variable);
+    }
+    private async showDataViewer(requestVariable: IJupyterVariable) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
 
         // DataViewerDeprecation

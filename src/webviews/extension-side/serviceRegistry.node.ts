@@ -5,6 +5,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataViewer } from './dataviewer/dataViewer';
 import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
+import { DataViewerDelegator } from './dataviewer/dataViewerDelegator';
 import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService.node';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataProvider';
@@ -46,6 +47,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         DataViewerCommandRegistry
     );
+    serviceManager.addSingleton<DataViewerDelegator>(DataViewerDelegator, DataViewerDelegator);
 
     // Plot Viewer
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);

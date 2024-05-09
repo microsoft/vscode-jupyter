@@ -176,6 +176,7 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.ShowDataViewer]: [IJupyterVariable | IShowDataViewerFromVariablePanel];
+    [DSCommands.ShowDeprecatedDataViewer]: [IJupyterVariable];
     [DSCommands.RefreshDataViewer]: [];
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.RunByLine]: [NotebookCell];

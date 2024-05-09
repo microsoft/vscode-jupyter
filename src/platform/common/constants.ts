@@ -225,6 +225,7 @@ export namespace Commands {
     export const LatestExtension = 'jupyter.latestExtension';
     export const EnableLoadingWidgetsFrom3rdPartySource = 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource';
     export const ShowDataViewer = 'jupyter.showDataViewer';
+    export const ShowDeprecatedDataViewer = 'jupyter.showDeprecatedDataViewer';
     export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
