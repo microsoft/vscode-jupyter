@@ -2033,7 +2033,7 @@
         ],
         "jupyterVariableViewers": [
             {
-                "command": "jupyter.showDataViewer",
+                "command": "jupyter.showJupyterDataViewer",
                 "title": "%jupyter.command.jupyter.showDataViewer.title%",
                 "dataTypes": [
                     "DataFrame",

@@ -112,6 +112,7 @@ suite('DataViewer @webview', function () {
                 evaluateName: 'my_list',
                 name: 'my_list',
                 value: '[1, 2, 3]',
+                type: 'list',
                 variablesReference
             }
         };
