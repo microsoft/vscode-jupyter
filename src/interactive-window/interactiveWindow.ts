@@ -190,6 +190,7 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     public async ensureInitialized() {
+        await updateExecuteConfigSetting();
         if (!this.notebookDocument) {
             logger.debug(`Showing Interactive editor to initialize codeGenerator from notebook document`);
             await this.showInteractiveEditor();
@@ -627,5 +628,15 @@ export class InteractiveWindow implements IInteractiveWindow {
                 )
                 .then(noop, noop);
         }
+    }
+}
+
+async function updateExecuteConfigSetting() {
+    const config = workspace.getConfiguration('interactiveWindow');
+    const inspected = config.inspect<boolean>('executeWithShiftEnter');
+    if (!inspected?.workspaceValue && !inspected?.workspaceFolderValue && !inspected?.globalValue) {
+        // Update the setting to execute with shift+enter if the user has not set it explicitly
+        // This is to ensure that the behavior stays consistent, but we should only keep doing this for a single release cycle
+        await config.update('executeWithShiftEnter', true).then(noop, noop);
     }
 }
