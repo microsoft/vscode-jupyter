@@ -136,7 +136,7 @@
     "jupyter.configuration.jupyter.showVariableViewWhenDebugging.description": "Bring up the Variable View when starting a Run by Line session.",
     "jupyter.configuration.jupyter.logging.level.off": "No messages are logged with this level.",
     "jupyter.configuration.jupyter.logging.level.trace": "All messages are logged with this level.",
-    "jupyter.configuration.jupyter.logging.level.debug": " ",
+    "jupyter.configuration.jupyter.logging.level.debug": "Debug and higher severity messages are logged with this level.",
     "jupyter.configuration.jupyter.logging.level.info": "Information, warning and error messages are logged with this level.",
     "jupyter.configuration.jupyter.logging.level.warn": "Warning and error messages are logged with this level.",
     "jupyter.configuration.jupyter.logging.level.error": "Only error messages are logged with this level.",
