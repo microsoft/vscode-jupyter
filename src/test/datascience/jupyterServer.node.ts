@@ -410,7 +410,7 @@ export class JupyterServer {
 }
 
 function generateHashedPassword(password: string) {
-    const hash = crypto.createHash('sha1');
+    const hash = crypto.createHash('sha1'); // CodeQL [SM04514] This is used only in tests and not in production. Also this is a requirement of the Jupyter Application (out of our control).
     const salt = genRandomString(16);
     hash.update(password); // CodeQL [SM01511] This password is hashed as per the requirements of Jupyter Server application, it is only used in tests (to launch a password protected jupyter server) and not production.
     hash.update(salt);
