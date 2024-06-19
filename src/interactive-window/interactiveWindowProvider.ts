@@ -171,7 +171,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         return result;
     }
 
-
     /**
      * Given a text document, return the associated interactive window if one exists.
      * @param owner The URI of a text document which may be associated with an interactive window.
