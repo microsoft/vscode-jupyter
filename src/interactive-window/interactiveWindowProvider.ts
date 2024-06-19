@@ -122,9 +122,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
                 Uri.parse(iw.inputBoxUriString)
             );
 
-            this.updateExecuteConfigSetting().catch((ex) =>
-                logger.warn('Failed to update executeWithShiftEnter setting', ex)
-            );
             result.notifyConnectionReset();
 
             this._windows.push(result);
@@ -170,34 +167,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         }
 
         await result.ensureInitialized();
-        this.updateExecuteConfigSetting().catch((ex) =>
-            logger.warn('Failed to update executeWithShiftEnter setting', ex)
-        );
 
         return result;
-    }
-
-    private async updateExecuteConfigSetting() {
-        const updatedExecuteConfigKey = 'updatedExecuteInteractiveConfig';
-        const updatedExecuteConfig = this.globalMemento.get<boolean>(updatedExecuteConfigKey);
-        if (updatedExecuteConfig) {
-            // We've already updated the setting, don't change it again if the user removed it
-            return;
-        }
-
-        const config = workspace.getConfiguration('interactiveWindow');
-        const inspected = config.inspect<boolean>('executeWithShiftEnter');
-
-        if (
-            inspected?.workspaceValue === undefined &&
-            inspected?.workspaceFolderValue === undefined &&
-            inspected?.globalValue === undefined
-        ) {
-            // Update the setting to execute with shift+enter if the user has not set it explicitly
-            // This is to ensure that the behavior stays consistent, but we should only keep doing this for a single release cycle
-            await config.update('executeWithShiftEnter', true, ConfigurationTarget.Global);
-            await this.globalMemento.update(updatedExecuteConfigKey, undefined);
-        }
     }
 
     /**
