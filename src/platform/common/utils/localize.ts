@@ -795,6 +795,9 @@ export namespace WebViews {
             'Do not translate the the Hyperlink text "<a href={0}>size limit</a>" and "<a href={1}>in a text editor</a>". However the text inside those tags can be translated'
         ]
     });
+    export const dvDeprecationWarning = l10n.t(
+        'The built-in data viewer will be deprecated and no longer usable starting with Visual Studio Code 1.92. Please <a href="command:workbench.extensions.search?%22@tag:jupyterVariableViewers%22">install other data viewing extensions</a> to continue inspecting data'
+    );
 }
 
 export namespace Deprecated {
