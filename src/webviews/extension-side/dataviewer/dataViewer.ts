@@ -202,7 +202,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 break;
 
             case DataViewerMessages.DeprecationWarningClicked:
-                commands.executeCommand('workbench.extensions.search', '@tag:jupyterVariableViewers');
+                commands.executeCommand('workbench.extensions.search', '@tag:jupyterVariableViewers').then(noop, noop);
                 break;
 
             default:
