@@ -48,7 +48,7 @@
 .custom-editor-banner {
     border-width: 1px;
     border-style: solid;
-    border-color: var(--override-badge-background, var(--vscode-badge-background));
+    border-color: var(--vscode-inputValidation-warningBackground);
     color: var(--vscode-inputValidation-warningForeground, --vscode-foreground);
     text-align: center;
     overflow: hidden;
