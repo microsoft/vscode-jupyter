@@ -157,6 +157,7 @@ export type LocalizedMessages = {
     deletePlot: string;
     selectedImageListLabel: string;
     selectedImageLabel: string;
+    dvDeprecationWarning: string;
 };
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {

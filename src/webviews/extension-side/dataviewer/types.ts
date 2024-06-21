@@ -32,6 +32,7 @@ export namespace DataViewerMessages {
     export const GetSliceRequest = 'get_slice_request';
     export const RefreshDataViewer = 'refresh_data_viewer';
     export const SliceEnablementStateChanged = 'slice_enablement_state_changed';
+    export const DeprecationWarningClicked = 'deprecation_warning_clicked';
 }
 
 export interface IGetRowsRequest {
@@ -64,6 +65,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
     [DataViewerMessages.RefreshDataViewer]: never | undefined;
     [DataViewerMessages.SliceEnablementStateChanged]: { newState: boolean };
+    [DataViewerMessages.DeprecationWarningClicked]: never | undefined;
 };
 
 export interface IDataFrameInfo {

@@ -257,7 +257,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             exportPlot: localize.WebViews.exportPlot,
             deletePlot: localize.WebViews.deletePlot,
             selectedImageListLabel: localize.WebViews.selectedImageListLabel,
-            selectedImageLabel: localize.WebViews.selectedImageLabel
+            selectedImageLabel: localize.WebViews.selectedImageLabel,
+            dvDeprecationWarning: localize.WebViews.dvDeprecationWarning
         };
         this.postMessageInternal(SharedMessages.LocInit, JSON.stringify(locStrings)).catch(noop);
     }
