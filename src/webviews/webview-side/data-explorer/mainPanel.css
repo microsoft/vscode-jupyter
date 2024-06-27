@@ -44,3 +44,23 @@
 .breadcrumb-codicon {
     color: var(--vscode-breadcrumb-foreground);
 }
+
+.custom-editor-banner {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--vscode-inputValidation-warningBackground);
+    color: var(--vscode-inputValidation-warningForeground, --vscode-foreground);
+    text-align: center;
+    overflow: hidden;
+    padding: 2px 6px;
+    background-color: var(--vscode-inputValidation-warningBackground);
+    grid-area: banner;
+    line-height: 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-editor-banner a {
+    color: var(--vscode-textLink-foreground);
+}

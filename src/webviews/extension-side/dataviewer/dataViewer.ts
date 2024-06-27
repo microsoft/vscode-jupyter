@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { EventEmitter, Memento, Uri, ViewColumn, env, window } from 'vscode';
+import { commands, EventEmitter, Memento, Uri, ViewColumn, env, window } from 'vscode';
 
 import { capturePerfTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { JupyterDataRateLimitError } from '../../../platform/errors/jupyterDataRateLimitError';
@@ -199,6 +199,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 void sendTelemetryEvent(Telemetry.DataViewerSliceEnablementStateChanged, undefined, {
                     newState: payload.newState ? CheckboxState.Checked : CheckboxState.Unchecked
                 });
+                break;
+
+            case DataViewerMessages.DeprecationWarningClicked:
+                commands.executeCommand('workbench.extensions.search', '@tag:jupyterVariableViewers').then(noop, noop);
                 break;
 
             default:
