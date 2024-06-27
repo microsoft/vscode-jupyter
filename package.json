@@ -2183,7 +2183,7 @@
         "vscode-debugprotocol": "^1.41.0",
         "vscode-languageclient": "8.0.2-next.5",
         "vscode-tas-client": "^0.1.75",
-        "ws": "^6.2.2",
+        "ws": "^6.2.3",
         "zeromq": "^6.0.0-beta.16",
         "zeromqold": "npm:zeromq@^6.0.0-beta.6"
     },
