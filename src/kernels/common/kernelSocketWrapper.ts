@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { EventEmitter } from 'vscode';
-import * as WebSocketWS from 'ws';
+import type * as WebSocketWS from 'ws';
 import { ClassType } from '../../platform/ioc/types';
 import { logger } from '../../platform/logging';
 import { IKernelSocket } from '../types';

@@ -2182,7 +2182,7 @@
         "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.41.0",
         "vscode-languageclient": "8.0.2-next.5",
-        "vscode-tas-client": "^0.1.75",
+        "vscode-tas-client": "^0.1.84",
         "ws": "^6.2.3",
         "zeromq": "^6.0.0-beta.16",
         "zeromqold": "npm:zeromq@^6.0.0-beta.6"
@@ -2358,6 +2358,9 @@
         "jquery-ui@<1.13.2": "1.13.2",
         "@jupyterlab/coreutils": {
             "url-parse": "$url-parse"
+        },
+        "@jupyterlab/services": {
+            "ws": "7.5.10"
         },
         "d3-color": "3.1.0"
     }
