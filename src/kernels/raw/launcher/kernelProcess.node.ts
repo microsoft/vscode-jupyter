@@ -501,15 +501,30 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             fileExtension: '.json',
             prefix: 'kernel-v2-'
         });
-        // Note: We have to dispose the temp file and recreate it else the file
-        // system will hold onto the file with an open handle. THis doesn't work so well when
-        // a different process tries to open it.
-        const connectionFile = runtimeDir
-            ? path.join(runtimeDir.fsPath, path.basename(tempFile.filePath))
-            : tempFile.filePath;
-        // Ensure we dispose this, and don't maintain a handle on this file.
-        await tempFile.dispose(); // Do not remove this line.
-        return Uri.file(connectionFile);
+        try {
+            // Note: We have to dispose the temp file and recreate it else the file
+            // system will hold onto the file with an open handle. THis doesn't work so well when
+            // a different process tries to open it.
+            let connectionFile = runtimeDir
+                ? path.join(runtimeDir.fsPath, path.basename(tempFile.filePath))
+                : tempFile.filePath;
+
+            // Check if we have access to the runtime dir
+            if (runtimeDir) {
+                try {
+                    // Try to write some empty contents to the file and see if we have access to the runtime dir
+                    await fs.writeFile(connectionFile, '');
+                } catch (ex) {
+                    logger.error(`Failed to access runtime dir ${runtimeDir.fsPath}`, ex);
+                    connectionFile = tempFile.filePath;
+                }
+            }
+
+            return Uri.file(connectionFile);
+        } finally {
+            // Ensure we dispose this, and don't maintain a handle on this file.
+            await tempFile.dispose(); // Do not remove this line.
+        }
     }
     // Add the command line arguments
     private addPythonConnectionArgs(connectionFile: Uri): string[] {
