@@ -513,7 +513,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             if (runtimeDir) {
                 try {
                     // Try to write some empty contents to the file and see if we have access to the runtime dir
-                    await fs.writeFile(connectionFile, '');
+                    await this.fileSystem.writeFile(Uri.file(connectionFile), '');
                 } catch (ex) {
                     logger.error(`Failed to access runtime dir ${runtimeDir.fsPath}`, ex);
                     connectionFile = tempFile.filePath;

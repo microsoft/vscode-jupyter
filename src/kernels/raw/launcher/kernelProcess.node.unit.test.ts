@@ -258,6 +258,7 @@ suite('kernel Process', () => {
                     when(fs.exists(anything())).thenCall(
                         (file: Uri) => file.fsPath === Uri.file(expectedConnectionFile).fsPath
                     );
+                    when(fs.writeFile(uriEquals(expectedConnectionFile), anything())).thenResolve();
 
                     await kernelProcess.launch('', 0, token.token);
 
@@ -341,6 +342,7 @@ suite('kernel Process', () => {
                     when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
                     when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
                     when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
+                    when(fs.writeFile(uriEquals(expectedConnectionFile), anything())).thenResolve();
                     const expectedArgs = [`-m`, `ipykernel`, `--f="${expectedConnectionFile}"`, `--debug`];
                     await kernelProcess.launch(__dirname, 0, token.token);
 
