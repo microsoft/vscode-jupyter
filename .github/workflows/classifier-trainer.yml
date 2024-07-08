@@ -14,7 +14,7 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
-    environment: main
+    environment: insider
     steps:
       - name: Checkout Actions
         uses: actions/checkout@v4
