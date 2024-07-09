@@ -1,4 +1,9 @@
 name: 'Classifier: Runner'
+
+permissions:
+  id-token: write
+  contents: read
+
 on:
   schedule:
     - cron: 0 * * * *
@@ -9,7 +14,13 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
+    environment: insider
     steps:
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
       - name: Checkout Actions
         uses: actions/checkout@v4
         with:
@@ -27,7 +38,6 @@ jobs:
           from: 130
           until: 5
           blobContainerName: vscode-jupyter-models
-          blobStorageKey: ${{secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING}}
       - name: Set up Python 3.7
         uses: actions/setup-python@v5
         with:
