@@ -396,7 +396,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         telemetryTracker?.stop();
         // Notebook is trusted. Continue to execute cells
-        await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
+        cells.forEach(async (cell) => await this.executeCell(notebook, cell));
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
         logger.ci(
