@@ -202,7 +202,7 @@ export class JupyterPasswordConnect {
         let tokenUrl = new URL('login?', addTrailingSlash(url)).toString();
 
         if (sessionCookie != '') {
-            tokenUrl = new URL('tree', addTrailingSlash(url)).toString();
+            tokenUrl = new URL('lab', addTrailingSlash(url)).toString();
             headers = {
                 Connection: 'keep-alive',
                 Cookie: sessionCookie
