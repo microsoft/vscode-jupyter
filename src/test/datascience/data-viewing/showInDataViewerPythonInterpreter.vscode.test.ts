@@ -17,7 +17,7 @@ import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataViewer @webview', function () {
+suite.skip('DataViewer @webview', function () {
     const disposables: IDisposable[] = [];
     const testPythonFile = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,

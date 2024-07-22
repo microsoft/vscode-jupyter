@@ -6,12 +6,7 @@ import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscod
 import { IJupyterVariables } from '../../../kernels/variables/types';
 import { IWebviewViewProvider } from '../../../platform/common/application/types';
 import { Identifiers, isTestExecution } from '../../../platform/common/constants';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    IExtensionContext
-} from '../../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { INotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
@@ -48,7 +43,6 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variables: IJupyterVariables,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
-        @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(DataViewerDelegator) private readonly dataViewerDelegator: DataViewerDelegator
     ) {}
 
@@ -67,7 +61,6 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.variables,
             this.disposables,
             this.notebookWatcher,
-            this.experiments,
             this.dataViewerDelegator
         );
 
