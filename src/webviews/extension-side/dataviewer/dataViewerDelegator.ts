@@ -43,7 +43,7 @@ export class DataViewerDelegator {
                 }
                 // show quick pick
                 const quickPick = window.createQuickPick<QuickPickItem & { command: string }>();
-                quickPick.title = 'Select DataFrame Viewer';
+                quickPick.title = localize.DataScience.selectExternalDataViewer;
                 quickPick.items = variableViewers.map((d) => {
                     return {
                         label: d.jupyterVariableViewers.title,
