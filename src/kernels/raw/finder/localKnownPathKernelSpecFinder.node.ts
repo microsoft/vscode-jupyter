@@ -115,14 +115,17 @@ export class LocalKnownPathKernelSpecFinder
         // Find all the possible places to look for this resource
         const paths = await this.jupyterPaths.getKernelSpecRootPaths(cancelToken);
         if (cancelToken.isCancellationRequested) {
+            logger.debug(`1. Stop searching for kernelspecs`);
             return [];
         }
         const searchResults = await Promise.all(
             paths.map((kernelPath) => this.kernelSpecFinder.findKernelSpecsInPaths(kernelPath, cancelToken))
         );
         if (cancelToken.isCancellationRequested) {
+            logger.debug(`2. Stop searching for kernelspecs`);
             return [];
         }
+        logger.debug(`findKernelSpecs.searchResults ${JSON.stringify(searchResults)}`);
         // Filter out duplicates. This can happen when
         // 1) Conda installs kernel
         // 2) Same kernel is registered in the global location
@@ -136,20 +139,36 @@ export class LocalKnownPathKernelSpecFinder
         await Promise.all(
             searchResults.flat().map(async (kernelSpecFile) => {
                 try {
+                    logger.debug(`Processing KernelSpec ${kernelSpecFile}`);
                     // Add these into our path cache to speed up later finds
                     const kernelSpec = await this.kernelSpecFinder.loadKernelSpec(kernelSpecFile, cancelToken);
                     if (!kernelSpec || cancelToken.isCancellationRequested) {
+                        logger.debug(
+                            `NOT Processing KernelSpec (empty or cancelled) ${kernelSpecFile.fsPath}, ${JSON.stringify(
+                                kernelSpec
+                            )}`
+                        );
                         return;
                     }
                     sendKernelSpecTelemetry(kernelSpec, 'local');
                     if (kernelSpec.metadata?.originalSpecFile) {
                         if (originalSpecFiles.has(kernelSpec.metadata.originalSpecFile)) {
+                            logger.debug(
+                                `NOT Processing KernelSpec (originalSpecFiles.has(kernelSpec.metadata.originalSpecFile)) ${
+                                    kernelSpecFile.fsPath
+                                }, ${JSON.stringify(kernelSpec)}`
+                            );
                             return;
                         }
                         originalSpecFiles.add(kernelSpec.metadata.originalSpecFile);
                     }
                     if (kernelSpec.specFile) {
                         if (originalSpecFiles.has(kernelSpec.specFile)) {
+                            logger.debug(
+                                `NOT Processing KernelSpec (originalSpecFiles.has(kernelSpec.specFile)) ${
+                                    kernelSpecFile.fsPath
+                                }, ${JSON.stringify(kernelSpec)}`
+                            );
                             return;
                         }
                         originalSpecFiles.add(kernelSpec.specFile);
@@ -160,6 +179,10 @@ export class LocalKnownPathKernelSpecFinder
                         interpreter: undefined,
                         id: getKernelId(kernelSpec)
                     });
+                    logger.debug(
+                        `New KernelSpec ${kernelSpecFile.fsPath}, ${JSON.stringify(kernelSpec)} ${JSON.stringify(item)}`
+                    );
+
                     if (existing && existing.executable !== kernelSpec.executable) {
                         // This item is a dupe but has a different path to start the exe
                         unique.push(item);
@@ -188,6 +211,7 @@ export class LocalKnownPathKernelSpecFinder
             })
         );
 
+        logger.debug(`findKernelSpecs ${JSON.stringify(unique)}`);
         return unique;
     }
 }
