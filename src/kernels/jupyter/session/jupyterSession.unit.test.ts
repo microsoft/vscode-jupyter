@@ -307,7 +307,7 @@ suite('JupyterSession', () => {
                 });
                 suiteTeardown(() => token.dispose());
                 test('Will timeout', async () => {
-                    when(kernel.status).thenReturn('unknown');
+                    when(kernel.status).thenReturn('busy');
                     clock = fakeTimers.install();
                     disposables.push(new Disposable(() => clock.uninstall()));
 
