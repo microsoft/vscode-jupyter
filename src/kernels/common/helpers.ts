@@ -34,7 +34,7 @@ export async function waitForIdleOnSession(
         logger.trace(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
         // When our kernel connects and gets a status message it triggers the ready promise
-        const kernelStatus = createDeferred<string>();
+        const kernelStatus = createDeferred<Kernel.Status>();
         token.onCancellationRequested(() => kernelStatus.reject(new CancellationError()), undefined, disposables);
         const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
             logger.trace(`Got status ${status} in waitForIdleOnSession`);
@@ -50,8 +50,8 @@ export async function waitForIdleOnSession(
             kernelStatus.resolve(session.kernel.status);
         }
         // Check for possibility that kernel has died.
-        const sessionDisposed = createDeferred<string>();
-        const sessionDisposedHandler = () => sessionDisposed.resolve('');
+        const sessionDisposed = createDeferred<undefined>();
+        const sessionDisposedHandler = () => sessionDisposed.resolve();
         session.disposed.connect(sessionDisposedHandler, sessionDisposed);
         disposables.push(
             new Disposable(() =>
@@ -60,7 +60,8 @@ export async function waitForIdleOnSession(
         );
         sessionDisposed.promise.catch(noop);
         kernelStatus.promise.catch(noop);
-        const result = await raceTimeout(timeout, '', kernelStatus.promise, sessionDisposed.promise);
+        await raceTimeout(timeout, undefined, kernelStatus.promise, sessionDisposed.promise);
+
         if (session.isDisposed) {
             logger.error('Session disposed while waiting for session to be idle.');
             throw new JupyterInvalidKernelError(kernelConnectionMetadata);
@@ -68,7 +69,13 @@ export async function waitForIdleOnSession(
 
         logger.trace(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-        if (result == 'idle') {
+        if (session.kernel.status == 'idle') {
+            return;
+        }
+        if (session.kernel.status == 'unknown') {
+            logger.warn(
+                `Timeout waiting for kernel to be idle, continuing to use it as Status is Unknown: ${session.kernel.id}`
+            );
             return;
         }
         logger.error(
