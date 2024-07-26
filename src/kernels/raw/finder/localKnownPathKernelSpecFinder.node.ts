@@ -80,7 +80,9 @@ export class LocalKnownPathKernelSpecFinder
     private async listKernelSpecs(cancelToken: CancellationToken): Promise<LocalKernelSpecConnectionMetadata[]> {
         const fn = async () => {
             const newKernelSpecs = await this.findKernelSpecs(cancelToken);
+            logger.trace(`ListKernelSpecs ${JSON.stringify(newKernelSpecs)}`);
             if (cancelToken.isCancellationRequested) {
+                logger.trace(`isCancellationRequested`);
                 return [];
             }
             const oldSortedKernels = Array.from(this._kernels.values()).sort((a, b) => a.id.localeCompare(b.id));
@@ -105,6 +107,7 @@ export class LocalKnownPathKernelSpecFinder
                 this._onDidChangeKernels.fire();
                 this.writeKernelsToMemento();
             }
+            logger.trace(`ListKernelSpecs.final ${JSON.stringify(newKernelSpecs)}`);
             return newKernelSpecs;
         };
         const promise = fn();
@@ -114,6 +117,7 @@ export class LocalKnownPathKernelSpecFinder
     private async findKernelSpecs(cancelToken: CancellationToken): Promise<LocalKernelSpecConnectionMetadata[]> {
         // Find all the possible places to look for this resource
         const paths = await this.jupyterPaths.getKernelSpecRootPaths(cancelToken);
+        logger.trace(`Paths to search ${JSON.stringify(paths.map((p) => p.fsPath))}`);
         if (cancelToken.isCancellationRequested) {
             logger.debug(`1. Stop searching for kernelspecs`);
             return [];
