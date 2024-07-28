@@ -7,7 +7,6 @@
 /** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
 
 import * as crypto from 'crypto';
-import * as tcpPortUsed from 'tcp-port-used';
 import getPort from 'get-port';
 import uuid from 'uuid/v4';
 import * as path from 'path';
@@ -21,6 +20,7 @@ const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datas
 import { sleep } from '../core';
 import { noop } from '../../platform/common/utils/misc';
 import { dispose } from '../../platform/common/utils/lifecycle';
+import { TcpPortUsage } from '../../kernels/raw/launcher/kernelProcess.node';
 
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
@@ -91,10 +91,10 @@ export class JupyterServer {
         console.log(`Disposing jupyter server instance`);
         dispose(this._disposables);
         if (this.availablePort) {
-            await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000).catch(noop);
+            await TcpPortUsage.waitUntilFree(this.availablePort, 200, 5_000).catch(noop);
         }
         if (this.availableSecondPort) {
-            await tcpPortUsed.waitUntilFree(this.availableSecondPort, 200, 5_000).catch(noop);
+            await TcpPortUsage.waitUntilFree(this.availableSecondPort, 200, 5_000).catch(noop);
         }
     }
 
@@ -105,7 +105,7 @@ export class JupyterServer {
                 const port = await getPort({ host: 'localhost', port: this.nextPort });
                 // Possible previous instance of jupyter has not completely shutdown.
                 // Wait for it to shutdown fully so that we can re-use the same port.
-                await tcpPortUsed.waitUntilFree(port, 200, 10_000);
+                await TcpPortUsage.waitUntilFree(port, 200, 10_000);
                 try {
                     const { url } = await this.startJupyterServer({
                         port,
@@ -133,7 +133,7 @@ export class JupyterServer {
         const port = await getPort({ host: 'localhost', port: this.nextPort });
         // Possible previous instance of jupyter has not completely shutdown.
         // Wait for it to shutdown fully so that we can re-use the same port.
-        await tcpPortUsed.waitUntilFree(port, 200, 10_000);
+        await TcpPortUsage.waitUntilFree(port, 200, 10_000);
         const token = typeof options.token === 'string' ? options.token : this.generateToken();
         const result = await this.startJupyterServer({ ...options, port, token });
         await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
@@ -147,7 +147,7 @@ export class JupyterServer {
                 const port = await this.getFreePort();
                 // Possible previous instance of jupyter has not completely shutdown.
                 // Wait for it to shutdown fully so that we can re-use the same port.
-                await tcpPortUsed.waitUntilFree(port, 200, 10_000);
+                await TcpPortUsage.waitUntilFree(port, 200, 10_000);
                 try {
                     const { url } = await this.startJupyterServer({
                         port,
@@ -169,7 +169,7 @@ export class JupyterServer {
                 const port = await this.getSecondFreePort();
                 // Possible previous instance of jupyter has not completely shutdown.
                 // Wait for it to shutdown fully so that we can re-use the same port.
-                await tcpPortUsed.waitUntilFree(port, 200, 10_000);
+                await TcpPortUsage.waitUntilFree(port, 200, 10_000);
                 try {
                     const { url } = await this.startJupyterServer({
                         port,

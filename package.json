@@ -2315,7 +2315,6 @@
         "postcss-preset-env": "^8.5.1",
         "prettier": "^3.0.0",
         "relative": "^3.0.2",
-        "rewiremock": "^3.14.5",
         "rimraf": "^5.0.1",
         "screenshot-desktop": "^1.14.0",
         "sinon": "^15.2.0",
