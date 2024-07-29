@@ -171,7 +171,10 @@ export class KernelConnector {
         {
             kernel: Deferred<{
                 kernel: IKernel;
-                deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
+                deadKernelAction?:
+                    | 'deadKernelNeedsToBeRestarted'
+                    | 'deadKernelWasNoRestarted'
+                    | 'deadKernelWasRestarted';
             }>;
             options: IDisplayOptions;
         }
@@ -181,7 +184,10 @@ export class KernelConnector {
         {
             kernel: Deferred<{
                 kernel: IBaseKernel;
-                deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
+                deadKernelAction?:
+                    | 'deadKernelNeedsToBeRestarted'
+                    | 'deadKernelWasNoRestarted'
+                    | 'deadKernelWasRestarted';
             }>;
             options: IDisplayOptions;
         }
@@ -194,17 +200,25 @@ export class KernelConnector {
         promise:
             | Promise<{
                   kernel: IBaseKernel;
-                  deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
+                  deadKernelAction?:
+                      | 'deadKernelNeedsToBeRestarted'
+                      | 'deadKernelWasNoRestarted'
+                      | 'deadKernelWasRestarted';
               }>
             | Promise<{
                   kernel: IKernel;
-                  deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
+                  deadKernelAction?:
+                      | 'deadKernelNeedsToBeRestarted'
+                      | 'deadKernelWasNoRestarted'
+                      | 'deadKernelWasRestarted';
               }>,
         actionSource: KernelActionSource,
         onAction: (action: KernelAction, kernel: IBaseKernel) => void,
-        disposables: IDisposable[]
+        disposables: IDisposable[],
+        kernelWasRestartedDueToDeadKernel?: { kernelWasRestartedDueToDeadKernel: Deferred<boolean> }
     ): Promise<IKernel | IBaseKernel> {
-        const { kernel, deadKernelAction } = await promise;
+        const info = await promise;
+        const { kernel, deadKernelAction } = info;
         // Before returning, but without disposing the kernel, double check it's still valid
         // If a restart didn't happen, then we can't connect. Throw an error.
         // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
@@ -215,9 +229,17 @@ export class KernelConnector {
             if (deadKernelAction === 'deadKernelWasNoRestarted') {
                 throw new KernelDeadError(kernel.kernelConnectionMetadata);
             } else if (deadKernelAction === 'deadKernelWasRestarted') {
-                return kernel;
+                throw new KernelDeadError(kernel.kernelConnectionMetadata);
+            } else if (kernelWasRestartedDueToDeadKernel?.kernelWasRestartedDueToDeadKernel.value === true) {
+                throw new KernelDeadError(kernel.kernelConnectionMetadata);
             }
+            info.deadKernelAction = 'deadKernelWasRestarted';
             // Kernel is dead and we didn't prompt the user to restart it, hence re-run the code that will prompt the user for a restart.
+            const deferred = createDeferred<boolean>();
+            deferred.resolve(true);
+            kernelWasRestartedDueToDeadKernel = kernelWasRestartedDueToDeadKernel || {
+                kernelWasRestartedDueToDeadKernel: deferred
+            };
             return KernelConnector.wrapKernelMethod(
                 kernel.kernelConnectionMetadata,
                 'start',
@@ -226,7 +248,8 @@ export class KernelConnector {
                 notebookResource,
                 options,
                 disposables,
-                onAction
+                onAction,
+                kernelWasRestartedDueToDeadKernel
             );
         }
         return kernel;
@@ -240,7 +263,8 @@ export class KernelConnector {
         notebookResource: NotebookResource,
         options: IDisplayOptions,
         disposables: IDisposable[],
-        onAction: (action: KernelAction, kernel: IBaseKernel | IKernel) => void = () => noop()
+        onAction: (action: KernelAction, kernel: IBaseKernel | IKernel) => void = () => noop(),
+        kernelWasRestartedDueToDeadKernel?: { kernelWasRestartedDueToDeadKernel: Deferred<boolean> }
     ): Promise<IBaseKernel | IKernel> {
         let currentPromise = this.getKernelInfo(notebookResource);
         if (!options.disableUI && currentPromise?.options.disableUI) {
@@ -276,6 +300,9 @@ export class KernelConnector {
             )}`
         );
 
+        kernelWasRestartedDueToDeadKernel = kernelWasRestartedDueToDeadKernel || {
+            kernelWasRestartedDueToDeadKernel: createDeferred<boolean>()
+        };
         const promise = KernelConnector.wrapKernelMethodImpl(
             metadata,
             initialContext,
@@ -283,8 +310,12 @@ export class KernelConnector {
             notebookResource,
             options,
             actionSource,
-            onAction
+            onAction,
+            kernelWasRestartedDueToDeadKernel
         );
+        if (kernelWasRestartedDueToDeadKernel?.kernelWasRestartedDueToDeadKernel.resolved) {
+            kernelWasRestartedDueToDeadKernel.kernelWasRestartedDueToDeadKernel.resolve(true);
+        }
         const deferred = createDeferredFromPromise(promise);
         deferred.promise.catch(noop);
         // If the kernel gets disposed or we fail to create the kernel, then ensure we remove the cached result.
@@ -310,7 +341,8 @@ export class KernelConnector {
             deferred.promise,
             actionSource,
             onAction,
-            disposables
+            disposables,
+            kernelWasRestartedDueToDeadKernel
         );
     }
     private static getKernelInfo(notebookResource: NotebookResource) {
@@ -322,7 +354,11 @@ export class KernelConnector {
         notebookResource: NotebookResource,
         deferred: Deferred<{
             kernel: IBaseKernel;
-            deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted' | undefined;
+            deadKernelAction?:
+                | 'deadKernelNeedsToBeRestarted'
+                | 'deadKernelWasNoRestarted'
+                | 'deadKernelWasRestarted'
+                | undefined;
         }>,
         options: IDisplayOptions
     ) {
@@ -330,7 +366,11 @@ export class KernelConnector {
             KernelConnector.connectionsByNotebook.set(notebookResource.notebook, {
                 kernel: deferred as Deferred<{
                     kernel: IKernel;
-                    deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted' | undefined;
+                    deadKernelAction?:
+                        | 'deadKernelNeedsToBeRestarted'
+                        | 'deadKernelWasNoRestarted'
+                        | 'deadKernelWasRestarted'
+                        | undefined;
                 }>,
                 options
             });
@@ -342,7 +382,11 @@ export class KernelConnector {
         notebookResource: NotebookResource,
         matchingKernelPromise?: Promise<{
             kernel: IBaseKernel;
-            deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted' | undefined;
+            deadKernelAction?:
+                | 'deadKernelNeedsToBeRestarted'
+                | 'deadKernelWasNoRestarted'
+                | 'deadKernelWasRestarted'
+                | undefined;
         }>
     ) {
         if (!matchingKernelPromise) {
@@ -385,10 +429,11 @@ export class KernelConnector {
         notebookResource: NotebookResource,
         options: IDisplayOptions,
         actionSource: KernelActionSource,
-        onAction: (action: KernelAction, kernel: IBaseKernel) => void
+        onAction: (action: KernelAction, kernel: IBaseKernel) => void,
+        kernelWasRestartedDueToDeadKernel?: { kernelWasRestartedDueToDeadKernel: Deferred<boolean> }
     ): Promise<{
         kernel: IBaseKernel | IKernel;
-        deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
+        deadKernelAction?: 'deadKernelNeedsToBeRestarted' | 'deadKernelWasNoRestarted';
     }> {
         const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
         const thirdPartyKernelProvider = serviceContainer.get<IThirdPartyKernelProvider>(IThirdPartyKernelProvider);
@@ -416,15 +461,20 @@ export class KernelConnector {
                           resourceUri: notebookResource.resource
                       });
 
+            let attemptedToRestart = false;
             try {
                 // If the kernel is dead, ask the user if they want to restart.
                 // We need to perform this check first, as its possible we'd call this method for dead kernels.
                 // & if the kernel is dead, prompt to restart.
                 if (initialContext !== 'restart' && isKernelDead(kernel) && !options.disableUI) {
+                    attemptedToRestart = true;
                     const restarted = await KernelConnector.notifyAndRestartDeadKernel(kernel);
+                    if (restarted && kernelWasRestartedDueToDeadKernel) {
+                        kernelWasRestartedDueToDeadKernel.kernelWasRestartedDueToDeadKernel.resolve(true);
+                    }
                     return {
                         kernel,
-                        deadKernelAction: restarted ? 'deadKernelWasRestarted' : 'deadKernelWasNoRestarted'
+                        deadKernelAction: restarted ? 'deadKernelNeedsToBeRestarted' : 'deadKernelWasNoRestarted'
                     };
                 } else {
                     onAction(currentContext, kernel);
@@ -440,6 +490,10 @@ export class KernelConnector {
                     }
                 }
             } catch (error) {
+                if (attemptedToRestart && kernelWasRestartedDueToDeadKernel) {
+                    kernelWasRestartedDueToDeadKernel.kernelWasRestartedDueToDeadKernel.resolve(true);
+                }
+
                 if (!isCancellationError(error)) {
                     logger.warn(
                         `Error occurred while trying to ${currentContext} the kernel, options.disableUI=${options.disableUI}`,

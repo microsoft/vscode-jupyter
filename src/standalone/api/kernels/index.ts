@@ -7,6 +7,8 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../../../kernels/types';
 import { createKernelApiForExtension as createKernelApiForExtension } from './kernel';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
+import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
 
 const kernelCache = new WeakMap<IKernel, Kernel>();
 
@@ -38,6 +40,12 @@ export function getKernelsApi(extensionId: string): Kernels {
                     accessAllowed
                 });
                 return;
+            }
+            if (extensionId !== JVSC_EXTENSION_ID) {
+                void initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+                    kernel.resourceUri,
+                    kernel.kernelConnectionMetadata
+                );
             }
             let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
             kernelCache.set(kernel, wrappedKernel);
