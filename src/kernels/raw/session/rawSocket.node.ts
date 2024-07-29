@@ -4,7 +4,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import uuid from 'uuid/v4';
-import * as WebSocketWS from 'ws';
+import type * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
 import { logger } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';

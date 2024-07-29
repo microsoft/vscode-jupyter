@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2024.6.0",
+    "version": "2024.8.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.91.0"
+        "vscode": "^1.92.0"
     },
     "l10n": "./l10n",
     "extensionKind": [
@@ -2182,7 +2182,7 @@
         "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.41.0",
         "vscode-languageclient": "8.0.2-next.5",
-        "vscode-tas-client": "^0.1.75",
+        "vscode-tas-client": "^0.1.84",
         "ws": "^6.2.3",
         "zeromq": "^6.0.0-beta.16",
         "zeromqold": "npm:zeromq@^6.0.0-beta.6"
@@ -2247,7 +2247,7 @@
         "@vscode/dts": "^0.4.0",
         "@vscode/test-cli": "^0.0.8",
         "@vscode/test-electron": "^2.3.9",
-        "@vscode/test-web": "^0.0.50",
+        "@vscode/test-web": "^0.0.56",
         "@vscode/zeromq": "^0.2.1",
         "acorn": "^8.9.0",
         "babel-polyfill": "^6.26.0",
@@ -2287,7 +2287,7 @@
         "flat": "^5.0.1",
         "get-port": "^3.2.0",
         "glob-parent": "^6.0.2",
-        "gulp": "^4.0.2",
+        "gulp": "^5.0.0",
         "gulp-filter": "^7.0.0",
         "gulp-rename": "^2.0.0",
         "gulp-typescript": "^6.0.0-alpha.1",
@@ -2358,6 +2358,9 @@
         "jquery-ui@<1.13.2": "1.13.2",
         "@jupyterlab/coreutils": {
             "url-parse": "$url-parse"
+        },
+        "@jupyterlab/services": {
+            "ws": "7.5.10"
         },
         "d3-color": "3.1.0"
     }

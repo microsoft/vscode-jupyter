@@ -20,9 +20,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IDisposable,
-    IExtensionContext,
-    IExperimentService,
-    Experiments
+    IExtensionContext
 } from '../../../platform/common/types';
 import { WebviewViewHost } from '../../../platform/webviews/webviewViewHost';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
@@ -43,7 +41,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly variables: IJupyterVariables,
         private readonly disposables: IDisposableRegistry,
         private readonly notebookWatcher: INotebookWatcher,
-        private readonly experiments: IExperimentService,
         private readonly dataViewerDelegator: DataViewerDelegator
     ) {
         const variableViewDir = joinPath(context.extensionUri, 'dist', 'webviews', 'webview-side', 'viewers');
@@ -142,11 +139,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     private postProcessSupportsDataExplorer(response: IJupyterVariablesResponse) {
         const variableViewers = this.dataViewerDelegator.getVariableViewers();
         response.pageResponse.forEach((variable) => {
-            if (this.experiments.inExperiment(Experiments.DataViewerContribution)) {
-                variable.supportsDataExplorer = variableViewers.some((d) =>
-                    d.jupyterVariableViewers.dataTypes.includes(variable.type)
-                );
-            }
+            variable.supportsDataExplorer = variableViewers.some((d) =>
+                d.jupyterVariableViewers.dataTypes.includes(variable.type)
+            );
         });
 
         return response;

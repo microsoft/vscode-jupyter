@@ -748,6 +748,10 @@ export namespace DataScience {
         'The built-in data viewer will be deprecated soon. Please install other data viewing extensions to keep the ability to inspect data.'
     );
     export const dataViewerDeprecationRecommendationActionMessage = l10n.t('See Recommended Extensions');
+    export const dataViewerExtensionRequired = l10n.t(
+        'A Data Viewer Extension is required to view data frames. Click Yes to see recommended extensions.'
+    );
+    export const selectExternalDataViewer = l10n.t('Select DataFrame Viewer');
 }
 export namespace WebViews {
     export const collapseSingle = l10n.t('Collapse');
