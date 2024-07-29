@@ -34,7 +34,6 @@ const deskTopNodeModulesToExternalize = [
     '@jupyterlab/services',
     '@jupyterlab/nbformat',
     '@jupyterlab/services/lib/kernel/serialize',
-    '@jupyterlab/services/lib/kernel/nonSerializingKernel',
     'vscode-jsonrpc' // Used by a few modules, might as well pull this out, instead of duplicating it in separate bundles.
 ];
 const commonExternals = [

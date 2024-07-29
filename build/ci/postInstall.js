@@ -10,14 +10,12 @@ const constants = require('../constants');
 const common = require('../webpack/common');
 const { downloadZMQ } = require('@vscode/zeromq');
 /**
- * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
- * However it expects to be talking to a websocket which is serializing the messages to strings.
- * Our raw kernel is not a web socket and needs to do its own serialization. To do so, we make a copy
- * of the default kernel with the serialization stripped out. This is simpler than making a copy of the module
- * at runtime.
+ * Kernel WebSockets support a new Protocol v1KernelWebsocketJupyterOrg.
+ * For now, we'll disable this protocol as it is not supported by the Jupyter Extension.
+ * This is the same as using the older version of the Jupyter Lab npm packages that didn't support it.
  */
-function createJupyterKernelWithoutSerialization() {
-    var relativePath = path.join('node_modules', '@jupyterlab', 'services', 'lib', 'kernel', 'default.js');
+function disableKernelWebSocketProtocols() {
+    var relativePath = path.join('node_modules', '@jupyterlab', 'services', 'lib', 'kernel', 'messages.js');
     var filePath = path.join(constants.ExtensionRootDir, relativePath);
     if (!fs.existsSync(filePath)) {
         throw new Error(
@@ -25,18 +23,15 @@ function createJupyterKernelWithoutSerialization() {
         );
     }
     var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
-    var replacedContents = fileContents
-        .replace(/^const serialize =.*$/gm, 'const serialize = { serialize: (a) => a, deserialize: (a) => a };')
-        .replace(
-            'const owned = team.session === this.clientId;',
-            'const owned = parentHeader.session === this.clientId;'
-        );
+    var replacedContents = fileContents.replace(
+        'supportedKernelWebSocketProtocols["v1KernelWebsocketJupyterOrg"] = "v1.kernel.websocket.jupyter.org";',
+        '// supportedKernelWebSocketProtocols["v1KernelWebsocketJupyterOrg"] = "v1.kernel.websocket.jupyter.org";'
+    );
     if (replacedContents === fileContents) {
-        throw new Error('Jupyter lab default kernel cannot be made non serializing');
+        throw new Error('Jupyter lab kernel messages.js could not be updated');
     }
-    var destPath = path.join(path.dirname(filePath), 'nonSerializingKernel.js');
-    fs.writeFileSync(destPath, replacedContents);
-    console.log(colors.green(destPath + ' file generated (by Jupyter VSC)'));
+    fs.writeFileSync(filePath, replacedContents);
+    console.log(colors.green(filePath + ' file updated (by Jupyter VSC)'));
 }
 function fixVariableNameInKernelDefaultJs() {
     var relativePath = path.join('node_modules', '@jupyterlab', 'services', 'lib', 'kernel', 'default.js');
@@ -228,7 +223,7 @@ function commentOutInvalidExport() {
 
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
-createJupyterKernelWithoutSerialization();
+disableKernelWebSocketProtocols();
 fixVariableNameInKernelDefaultJs();
 removeUnnecessaryLoggingFromKernelDefault();
 fixStripComments();
