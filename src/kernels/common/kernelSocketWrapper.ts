@@ -110,6 +110,9 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
         }
 
         public override emit(event: string | symbol, ...args: any[]): boolean {
+            if (event === 'unexpected-response' || event === 'error') {
+                logger.error(`Error in websocket: ${JSON.stringify(args)}`);
+            }
             return this.handleEvent((ev, ...args) => super.emit(ev, ...args), event, ...args);
         }
 
