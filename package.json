@@ -2362,6 +2362,9 @@
         "@jupyterlab/services": {
             "ws": "7.5.10"
         },
+        "jsdom": {
+            "ws": "^8.17.0"
+        },
         "d3-color": "3.1.0"
     }
 }
