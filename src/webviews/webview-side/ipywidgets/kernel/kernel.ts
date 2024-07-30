@@ -111,7 +111,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         options: KernelSocketOptions,
         private postOffice: PostOffice
     ) {
-        debugger;
         // Dummy websocket we give to the underlying real kernel
         let proxySocketInstance: any;
         const protocol = options.protocol;
@@ -121,7 +120,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
             public sendEnabled: boolean = true;
             public readonly protocol: string = protocol;
             constructor() {
-                debugger;
                 proxySocketInstance = this;
             }
             public close(_code?: number | undefined, _reason?: string | undefined): void {
@@ -294,7 +292,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
                 break;
 
             case IPyWidgetMessages.IPyWidgets_msg:
-                debugger;
                 if (this.websocket && this.websocket.onmessage) {
                     this.websocket.onmessage({ target: this.websocket, data: payload.data, type: '' });
                 }
@@ -302,7 +299,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
                 break;
 
             case IPyWidgetMessages.IPyWidgets_binary_msg:
-                debugger;
                 if (this.websocket && this.websocket.onmessage) {
                     const deserialized = deserializeDataViews(payload.data)![0];
                     this.websocket.onmessage({ target: this.websocket, data: deserialized as any, type: '' });
