@@ -71,6 +71,16 @@ export const kernelOutputToNotLog = [
     'Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION'
 ];
 
+export class TcpPortUsage {
+    public static async waitUntilFree(port: number, retryTimeMs: number, timeOutMs: number): Promise<void> {
+        const tcpPortUsed = (await import('tcp-port-used')).default;
+        await tcpPortUsed.waitUntilFree(port, retryTimeMs, timeOutMs);
+    }
+    public static async waitUntilUsed(port: number, retryTimeMs: number, timeOutMs: number): Promise<void> {
+        const tcpPortUsed = (await import('tcp-port-used')).default;
+        await tcpPortUsed.waitUntilUsed(port, retryTimeMs, timeOutMs);
+    }
+}
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
 export class KernelProcess extends ObservableDisposable implements IKernelProcess {
@@ -262,7 +272,6 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 .get<IExperimentService>(IExperimentService)
                 .inExperiment(Experiments.DoNotWaitForZmqPortsToBeUsed);
 
-            const tcpPortUsed = (await import('tcp-port-used')).default;
             const stopwatch = new StopWatch();
 
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
@@ -277,8 +286,8 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             const portsUsed = doNotWaitForZmqPortsToGetUsed
                 ? Promise.resolve()
                 : Promise.all([
-                      tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
-                      tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
+                      TcpPortUsage.waitUntilUsed(this.connection.shell_port, 200, timeout),
+                      TcpPortUsage.waitUntilUsed(this.connection.iopub_port, 200, timeout)
                   ]).catch((ex) => {
                       if (cancelToken.isCancellationRequested || deferred.rejected) {
                           return;

@@ -2,11 +2,20 @@
 // Licensed under the MIT License.
 'use strict';
 
+/**
+ * NOTE: THIS FILE IS ONLY USED TO BUILD THE WEB EXTENSION FOR TESTS.
+ * NOTE: THIS FILE IS ONLY USED TO BUILD THE WEB EXTENSION FOR TESTS.
+ * NOTE: THIS FILE IS ONLY USED TO BUILD THE WEB EXTENSION FOR TESTS.
+ * NOTE: THIS FILE IS ONLY USED TO BUILD THE WEB EXTENSION FOR TESTS.
+ * NOTE: THIS FILE IS ONLY USED TO BUILD THE WEB EXTENSION FOR TESTS.
+ */
+
 const path = require('path');
 const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const webpack = require('webpack');
 const constants = require('../constants');
 const common = require('./common');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.extension.web.json');
@@ -100,7 +109,8 @@ const config = {
         }),
         new webpack.optimize.LimitChunkCountPlugin({
             maxChunks: 1
-        })
+        }),
+        new NodePolyfillPlugin()
     ],
     resolve: {
         extensions: ['.ts', '.js'],
