@@ -2128,8 +2128,8 @@
     "dependencies": {
         "@c4312/evt": "^0.1.1",
         "@enonic/fnv-plus": "^1.3.0",
-        "@jupyter-widgets/base": "^4.1.6",
-        "@jupyter-widgets/controls": "^3.1.6",
+        "@jupyter-widgets/base": "^6.0.8",
+        "@jupyter-widgets/controls": "^5.0.9",
         "@jupyter-widgets/schema": "^0.5.5",
         "@jupyterlab/coreutils": "^6.2.4",
         "@jupyterlab/nbformat": "^4.2.4",
