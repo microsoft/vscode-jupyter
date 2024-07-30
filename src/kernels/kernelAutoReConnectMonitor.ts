@@ -24,6 +24,7 @@ import {
 import { IJupyterServerProviderRegistry, IJupyterServerUriStorage } from './jupyter/types';
 import { NotebookCellExecutionState, notebookCellExecutions } from '../platform/notebooks/cellExecutionStateService';
 import { DisposableStore } from '../platform/common/utils/lifecycle';
+import { logger } from '../platform/logging';
 
 /**
  * In the case of Jupyter kernels, when a kernel dies Jupyter will automatically restart that kernel.
@@ -97,6 +98,9 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
                     this.kernelProvider.get(e.cell.notebook) === kernel &&
                     e.state === NotebookCellExecutionState.Executing
                 ) {
+                    logger.trace(
+                        `1. Last executed cell for kernel ${kernel.id} is ${e.cell.index} and status is ${e.state}`
+                    );
                     this.lastExecutedCellPerKernel.set(kernel, e.cell);
                 }
             }, this)
