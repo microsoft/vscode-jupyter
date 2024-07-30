@@ -58,6 +58,11 @@ export abstract class BaseJupyterSessionConnection<
      * The kernel anyMessage signal, proxied from the current kernel.
      */
     anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
+    /**
+     * The kernel pendingInput signal, proxied from the current
+     * kernel.
+     */
+    pendingInput = new Signal<this, boolean>(this);
 
     constructor(
         public readonly kind: T,
@@ -70,6 +75,7 @@ export abstract class BaseJupyterSessionConnection<
         session.connectionStatusChanged.connect(this.onConnectionStatusChanged, this);
         session.iopubMessage.connect(this.onIOPubMessage, this);
         session.unhandledMessage.connect(this.onUnhandledMessage, this);
+        session.pendingInput.connect(this.onPendingInput, this);
         session.anyMessage.connect(this.onAnyMessage, this);
 
         this._register({
@@ -80,6 +86,7 @@ export abstract class BaseJupyterSessionConnection<
                 this.session.connectionStatusChanged.disconnect(this.onConnectionStatusChanged, this);
                 this.session.iopubMessage.disconnect(this.onIOPubMessage, this);
                 this.session.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+                this.session.pendingInput.disconnect(this.onPendingInput, this);
                 this.session.anyMessage.disconnect(this.onAnyMessage, this);
             }
         });
@@ -186,6 +193,9 @@ export abstract class BaseJupyterSessionConnection<
     }
     private onAnyMessage(_: unknown, value: Kernel.IAnyMessageArgs) {
         this.anyMessage.emit(value);
+    }
+    private onPendingInput(_: unknown, value: boolean) {
+        this.pendingInput.emit(value);
     }
     public setPath(value: string) {
         return this.session.setPath(value);

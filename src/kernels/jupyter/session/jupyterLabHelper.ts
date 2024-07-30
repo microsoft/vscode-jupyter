@@ -99,11 +99,11 @@ export class JupyterLabHelper extends ObservableDisposable {
 
         const sessions: Session.IModel[] = [];
         const iterator = this.sessionManager.running();
-        let session = iterator.next();
+        let session = iterator.next().value;
 
         while (session) {
             sessions.push(session);
-            session = iterator.next();
+            session = iterator.next().value;
         }
 
         return sessions;

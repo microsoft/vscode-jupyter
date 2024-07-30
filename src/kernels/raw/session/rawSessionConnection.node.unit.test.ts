@@ -94,7 +94,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         channel: 'iopub',
         content: {
             status: 'ok'
-        },
+        } as any,
         metadata: {},
         parent_header: {
             date: '',

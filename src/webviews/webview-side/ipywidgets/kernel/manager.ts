@@ -77,7 +77,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
                         id: '',
                         name: ''
                     },
-                    userName: ''
+                    userName: '',
+                    protocol: ''
                 },
                 widgetState
             );
