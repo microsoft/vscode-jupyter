@@ -9,30 +9,7 @@ const path = require('path');
 const constants = require('../constants');
 const common = require('../webpack/common');
 const { downloadZMQ } = require('@vscode/zeromq');
-/**
- * Kernel WebSockets support a new Protocol v1KernelWebsocketJupyterOrg.
- * For now, we'll disable this protocol as it is not supported by the Jupyter Extension.
- * This is the same as using the older version of the Jupyter Lab npm packages that didn't support it.
- */
-function disableKernelWebSocketProtocols() {
-    var relativePath = path.join('node_modules', '@jupyterlab', 'services', 'lib', 'kernel', 'messages.js');
-    var filePath = path.join(constants.ExtensionRootDir, relativePath);
-    if (!fs.existsSync(filePath)) {
-        throw new Error(
-            "Jupyter lab default kernel not found '" + filePath + "' (Jupyter Extension post install script)"
-        );
-    }
-    var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
-    var replacedContents = fileContents.replace(
-        'supportedKernelWebSocketProtocols["v1KernelWebsocketJupyterOrg"] = "v1.kernel.websocket.jupyter.org";',
-        '// supportedKernelWebSocketProtocols["v1KernelWebsocketJupyterOrg"] = "v1.kernel.websocket.jupyter.org";'
-    );
-    if (replacedContents === fileContents) {
-        throw new Error('Jupyter lab kernel messages.js could not be updated');
-    }
-    fs.writeFileSync(filePath, replacedContents);
-    console.log(colors.green(filePath + ' file updated (by Jupyter VSC)'));
-}
+
 function fixVariableNameInKernelDefaultJs() {
     var relativePath = path.join('node_modules', '@jupyterlab', 'services', 'lib', 'kernel', 'default.js');
     var filePath = path.join(constants.ExtensionRootDir, relativePath);
@@ -223,7 +200,6 @@ function commentOutInvalidExport() {
 
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
-disableKernelWebSocketProtocols();
 fixVariableNameInKernelDefaultJs();
 removeUnnecessaryLoggingFromKernelDefault();
 fixStripComments();
