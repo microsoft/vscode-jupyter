@@ -19,8 +19,6 @@ import { dispose } from '../../platform/common/utils/lifecycle';
 export interface IJupyterPasswordConnectInfo {
     requiresPassword: boolean;
     requestHeaders?: Record<string, string>;
-    remappedBaseUrl?: string;
-    remappedToken?: string;
 }
 
 /**
