@@ -7,9 +7,8 @@ import * as os from 'os';
 import { assert } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import rewiremock from 'rewiremock';
 import { anything, instance, mock, when, verify, capture, deepEqual } from 'ts-mockito';
-import { KernelProcess } from './kernelProcess.node';
+import { KernelProcess, TcpPortUsage } from './kernelProcess.node';
 import {
     IProcessService,
     IProcessServiceFactory,
@@ -145,8 +144,7 @@ suite('kernel Process', () => {
                     (instance(pythonProcess) as any).then = undefined;
                     when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
                     (instance(daemon) as any).then = undefined;
-                    rewiremock.enable();
-                    rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
+                    sinon.stub(TcpPortUsage, 'waitUntilUsed').callsFake(() => Promise.resolve());
                     when(fs.createTemporaryLocalFile(anything())).thenResolve({
                         dispose: noop,
                         filePath: 'connection.json'
@@ -171,7 +169,6 @@ suite('kernel Process', () => {
                     );
                 });
                 teardown(() => {
-                    rewiremock.disable();
                     sinon.restore();
                     disposables = dispose(disposables);
                 });
@@ -443,11 +440,9 @@ suite('Kernel Process', () => {
                     if (IS_REMOTE_NATIVE_TEST()) {
                         return this.skip();
                     }
-                    rewiremock.disable();
                     sinon.restore();
                 });
                 suiteTeardown(async function () {
-                    rewiremock.disable();
                     sinon.restore();
                 });
                 setup(() => {
@@ -459,7 +454,6 @@ suite('Kernel Process', () => {
                 //     logger.info(`Start Test ${this.currentTest?.title}`);
                 // });
                 teardown(function () {
-                    rewiremock.disable();
                     sinon.restore();
                     logger.info(`End Test Complete ${this.currentTest?.title}`);
                     disposables = dispose(disposables);
@@ -510,8 +504,7 @@ suite('Kernel Process', () => {
                         {}
                     );
                     when(processService.execObservable(anything(), anything(), anything())).thenReturn(observableProc);
-                    rewiremock.enable();
-                    rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
+                    sinon.stub(TcpPortUsage, 'waitUntilUsed').resolves();
                     const settings = mock<IJupyterSettings>();
                     when(settings.enablePythonKernelLogging).thenReturn(false);
                     const interruptDaemon = mock<PythonKernelInterruptDaemon>();
