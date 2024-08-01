@@ -514,12 +514,23 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 try {
                     // Try to write some empty contents to the file and see if we have access to the runtime dir
                     await this.fileSystem.writeFile(Uri.file(connectionFile), '');
+                    logger.trace(`Connection file ${connectionFile} successfully created (in ${runtimeDir})`);
                 } catch (ex) {
                     logger.error(`Failed to access runtime dir ${runtimeDir.fsPath}`, ex);
                     connectionFile = tempFile.filePath;
                 }
             }
 
+            if (connectionFile === tempFile.filePath) {
+                try {
+                    // Try to write some empty contents to the file and see if we have access to the runtime dir
+                    await this.fileSystem.writeFile(Uri.file(connectionFile), '');
+                    logger.trace(`Connection file ${connectionFile} successfully created (in temp)`);
+                } catch (ex) {
+                    logger.error(`Failed to access temp file ${connectionFile}`, ex);
+                    connectionFile = tempFile.filePath;
+                }
+            }
             return Uri.file(connectionFile);
         } finally {
             // Ensure we dispose this, and don't maintain a handle on this file.
