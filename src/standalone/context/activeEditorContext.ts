@@ -165,8 +165,14 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
             this.canInterruptNotebookKernelContext.set(!!canInterrupt).catch(noop);
         } else {
             logger.debug('Context Key jupyter.notebookeditor.canrestartNotebookkernel = FALSE');
-            logger.debug('Active Editor Notebook Type: ', activeEditor ? activeEditor.notebook.notebookType : 'No Active Notebook');
-            logger.debug('Kernel: ', activeEditor ? this.kernelProvider.get(activeEditor.notebook) : 'No Active Notebook');
+            logger.debug(
+                'Active Editor Notebook Type: ',
+                activeEditor ? activeEditor.notebook.notebookType : 'No Active Notebook'
+            );
+            logger.debug(
+                'Kernel: ',
+                activeEditor ? this.kernelProvider.get(activeEditor.notebook) : 'No Active Notebook'
+            );
             this.canRestartNotebookKernelContext.set(false).catch(noop);
             this.canInterruptNotebookKernelContext.set(false).catch(noop);
         }
@@ -201,8 +207,11 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
             this.isJupyterKernelSelected.set(true).catch(noop);
         } else {
             logger.debug('Context Key isJupyter = FALSE');
-            logger.debug('isJupyterNotebook: ', document ? (isJupyterNotebook(document)) : 'No NotebookDocument');
-            logger.debug('controllers.getSelected: ', document ? (this.controllers.getSelected(document)) : 'No NotebookDocument');
+            logger.debug('isJupyterNotebook: ', document ? isJupyterNotebook(document) : 'No NotebookDocument');
+            logger.debug(
+                'controllers.getSelected: ',
+                document ? this.controllers.getSelected(document) : 'No NotebookDocument'
+            );
             this.isJupyterKernelSelected.set(false).catch(noop);
         }
     }
