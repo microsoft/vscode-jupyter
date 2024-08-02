@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
+import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
@@ -27,6 +28,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { ResourceMap, ResourceSet } from '../../../platform/common/utils/map';
 import { getPythonEnvDisplayName, getSysPrefix } from '../../../platform/interpreter/helpers';
+import { getExtensionTempDir } from '../../../platform/common/temp';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -72,7 +74,7 @@ export class JupyterPaths {
      * (this way we don't register kernels in global path).
      */
     public async getKernelSpecTempRegistrationFolder() {
-        const dir = uriPath.joinPath(this.context.extensionUri, 'temp', 'jupyter', 'kernels');
+        const dir = uriPath.joinPath(getExtensionTempDir(this.context), 'jupyter', 'kernels');
         await this.fs.createDirectory(dir);
         return dir;
     }
@@ -111,7 +113,19 @@ export class JupyterPaths {
      * Returns the value for `JUPYTER_RUNTIME_DIR`, location where Jupyter stores runtime files.
      * Such as kernel connection files.
      */
-    public async getRuntimeDir(): Promise<Uri | undefined> {
+    public async getRuntimeDir(): Promise<Uri> {
+        const runtimeDir = await this.getRuntimeDirImpl();
+        if (runtimeDir) {
+            return runtimeDir;
+        }
+
+        // Run time directory doesn't exist or no permissions.
+        const extensionRuntimeDir = Uri.joinPath(getExtensionTempDir(this.context), 'jupyter', 'runtime');
+        await fs.ensureDir(extensionRuntimeDir.fsPath);
+        return extensionRuntimeDir;
+    }
+
+    private async getRuntimeDirImpl(): Promise<Uri | undefined> {
         let runtimeDir: Uri | undefined;
         const userHomeDir = this.platformService.homeDir;
         if (userHomeDir) {

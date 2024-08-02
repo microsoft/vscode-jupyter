@@ -31,6 +31,7 @@ import { createActiveInterpreterController } from '../notebook/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { HttpClient } from '../../../platform/common/net/httpClient';
+import { getExtensionTempDir } from '../../../platform/common/temp';
 
 suite('IPyWidget Script Manager @widgets', function () {
     this.timeout(120_000);
@@ -120,8 +121,7 @@ suite('IPyWidget Script Manager @widgets', function () {
                 assert.fail('We should have started a Python kernel');
             } else {
                 const expectedDir = Uri.joinPath(
-                    context.extensionUri,
-                    'temp',
+                    getExtensionTempDir(context),
                     'scripts',
                     await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
                     'jupyter'
@@ -140,8 +140,7 @@ suite('IPyWidget Script Manager @widgets', function () {
             return this.skip();
         }
         const expectedDir = Uri.joinPath(
-            context.extensionUri,
-            'temp',
+            getExtensionTempDir(context),
             'scripts',
             await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
             'jupyter'

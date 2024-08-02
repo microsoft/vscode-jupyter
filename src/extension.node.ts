@@ -68,6 +68,7 @@ import {
     postActivateLegacy
 } from './extension.common';
 import { activateNotebookTelemetry } from './kernels/telemetry/notebookTelemetry';
+import { deleteOldTempDirs } from './platform/common/temp.node';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -103,6 +104,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // Otherwise Telemetry is send via the error handler.
         durations.endActivateTime = stopWatch.elapsedTime;
         sendStartupTelemetry(durations, stopWatch);
+        deleteOldTempDirs(context).catch(noop);
         return api;
     } catch (ex) {
         // We want to completely handle the error
