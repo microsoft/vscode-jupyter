@@ -35,7 +35,8 @@ import {
     IOutputChannel,
     IJupyterSettings,
     IExperimentService,
-    Experiments
+    Experiments,
+    type IExtensionContext
 } from '../../../platform/common/types';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -136,7 +137,8 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         private readonly jupyterSettings: IJupyterSettings,
         private readonly jupyterPaths: JupyterPaths,
         private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon,
-        private readonly platform: IPlatformService
+        private readonly platform: IPlatformService,
+        private readonly context: IExtensionContext
     ) {
         super();
         logger.trace(`KernelProcess created for ${kernelConnectionMetadata.id} with ${JSON.stringify(_connection)}`);
@@ -534,6 +536,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                     // Try to write some empty contents to the file and see if we have access to the runtime dir
                     await this.fileSystem.writeFile(Uri.file(connectionFile), '');
                     logger.trace(`Connection file ${connectionFile} successfully created (in ${runtimeDir})`);
+                    return Uri.file(connectionFile);
                 } catch (ex) {
                     logger.error(`Failed to access runtime dir ${runtimeDir.fsPath}`, ex);
                     connectionFile = tempFile;
@@ -545,15 +548,26 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                     // Try to write some empty contents to the file and see if we have access to the runtime dir
                     await this.fileSystem.writeFile(Uri.file(connectionFile), '');
                     logger.trace(`Connection file ${connectionFile} successfully created (in temp)`);
+                    return Uri.file(connectionFile);
                 } catch (ex) {
                     logger.error(`Failed to access temp file ${connectionFile}`, ex);
                     connectionFile = tempFile;
                 }
             }
+            logger.trace(`Final. Connection file ${connectionFile} Creating`);
+            await this.fileSystem.writeFile(Uri.file(connectionFile), '');
+            logger.trace(`Final. Connection file ${connectionFile} successfully created (in temp)`);
             return Uri.file(connectionFile);
         } catch (ex) {
             logger.error(`Failed to create connection file for kernel ${this.kernelConnectionMetadata.id}`, ex);
-            throw ex;
+            const dir = Uri.joinPath(this.context.globalStorageUri, 'kernel-connections');
+            const connectionFile = Uri.joinPath(dir, `kernel-v3${crypto.randomBytes(20).toString('hex')}.json`);
+            logger.trace(`Ensure Extension dir exists ${dir.fsPath}`);
+            await fs.ensureDir(dir.fsPath);
+            logger.trace(
+                `Using kernel spec from directory in extension ${this.kernelConnectionMetadata.id} ${connectionFile.fsPath}`
+            );
+            return connectionFile;
         }
     }
     // Add the command line arguments

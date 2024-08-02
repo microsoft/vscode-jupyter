@@ -15,7 +15,12 @@ import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
-import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
+import {
+    IDisposableRegistry,
+    IConfigurationService,
+    IExtensionContext,
+    Resource
+} from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
@@ -61,7 +66,8 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(PythonKernelInterruptDaemon) private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon,
-        @inject(IPlatformService) private readonly platformService: IPlatformService
+        @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
 
     private static async computeStartPort(): Promise<number> {
@@ -131,7 +137,8 @@ export class KernelLauncher implements IKernelLauncher {
             jupyterSettings,
             this.jupyterPaths,
             this.pythonKernelInterruptDaemon,
-            this.platformService
+            this.platformService,
+            this.context
         );
         once(kernelProcess.onDidDispose)(() => portAttributeProvider.dispose(), this, this.disposables);
         once(kernelProcess.exited)(() => outputChannel?.dispose(), this, this.disposables);
