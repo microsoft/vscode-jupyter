@@ -519,7 +519,6 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             await fs.ensureDir(tmpDir);
         } catch (ex) {
             logger.error(`Failed to temp directory ${tmpDir}`, ex);
-            throw ex;
         }
         const tempFile = path.join(os.tmpdir(), `kernel-v3${crypto.randomBytes(20).toString('hex')}.json`);
         logger.trace(`3. Creating connection file for kernel ${this.kernelConnectionMetadata.id} as ${tempFile}`);
