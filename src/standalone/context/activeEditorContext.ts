@@ -15,6 +15,7 @@ import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/ut
 import { isPythonNotebook } from '../../kernels/helpers';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IJupyterServerProviderRegistry } from '../../kernels/jupyter/types';
+import { logger } from '../../platform/logging';
 
 /**
  * Tracks a lot of the context keys needed in the extension.
@@ -163,6 +164,9 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
             const canInterrupt = kernel.status === 'busy';
             this.canInterruptNotebookKernelContext.set(!!canInterrupt).catch(noop);
         } else {
+            logger.debug('Context Key jupyter.notebookeditor.canrestartNotebookkernel = FALSE');
+            logger.debug('Active Editor Notebook Type: ', activeEditor ? activeEditor.notebook.notebookType : 'No Active Notebook');
+            logger.debug('Kernel: ', activeEditor ? this.kernelProvider.get(activeEditor.notebook) : 'No Active Notebook');
             this.canRestartNotebookKernelContext.set(false).catch(noop);
             this.canInterruptNotebookKernelContext.set(false).catch(noop);
         }
@@ -196,6 +200,9 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         if (document && isJupyterNotebook(document) && this.controllers.getSelected(document)) {
             this.isJupyterKernelSelected.set(true).catch(noop);
         } else {
+            logger.debug('Context Key isJupyter = FALSE');
+            logger.debug('isJupyterNotebook: ', document ? (isJupyterNotebook(document)) : 'No NotebookDocument');
+            logger.debug('controllers.getSelected: ', document ? (this.controllers.getSelected(document)) : 'No NotebookDocument');
             this.isJupyterKernelSelected.set(false).catch(noop);
         }
     }
