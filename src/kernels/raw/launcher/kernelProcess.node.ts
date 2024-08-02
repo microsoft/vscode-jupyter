@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { ChildProcess } from 'child_process';
+import * as crypto from 'crypto';
 import { kill } from 'process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
@@ -510,22 +511,23 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         logger.trace(`1. Creating connection file for kernel ${this.kernelConnectionMetadata.id}`);
         const runtimeDir = await this.jupyterPaths.getRuntimeDir();
         logger.trace(`2. Creating connection file for kernel ${this.kernelConnectionMetadata.id}`);
-        const tempFile = await this.fileSystem.createTemporaryLocalFile({
-            fileExtension: '.json',
-            prefix: 'kernel-v3-'
-        });
-        logger.trace(`3. Creating connection file for kernel ${this.kernelConnectionMetadata.id}`);
+        const tmpDir = path.join(os.tmpdir(), 'jupyter');
+        logger.trace(`3. Temp directory ${tmpDir}`);
+        try {
+            await fs.ensureDir(tmpDir);
+        } catch (ex) {
+            logger.error(`Failed to temp directory ${tmpDir}`, ex);
+            throw ex;
+        }
+        const tempFile = path.join(os.tmpdir(), `kernel-v3${crypto.randomBytes(20).toString('hex')}.json`);
+        logger.trace(`3. Creating connection file for kernel ${this.kernelConnectionMetadata.id} as ${tempFile}`);
         try {
             // Note: We have to dispose the temp file and recreate it else the file
             // system will hold onto the file with an open handle. THis doesn't work so well when
             // a different process tries to open it.
-            let connectionFile = runtimeDir
-                ? path.join(runtimeDir.fsPath, path.basename(tempFile.filePath))
-                : tempFile.filePath;
+            let connectionFile = runtimeDir ? path.join(runtimeDir.fsPath, path.basename(tempFile)) : tempFile;
 
-            logger.trace(
-                `Connection file ${connectionFile} & temp file ${tempFile.filePath} & runtime dir ${runtimeDir}`
-            );
+            logger.trace(`Connection file ${connectionFile} & temp file ${tempFile} & runtime dir ${runtimeDir}`);
             // Check if we have access to the runtime dir
             if (runtimeDir) {
                 try {
@@ -534,27 +536,24 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                     logger.trace(`Connection file ${connectionFile} successfully created (in ${runtimeDir})`);
                 } catch (ex) {
                     logger.error(`Failed to access runtime dir ${runtimeDir.fsPath}`, ex);
-                    connectionFile = tempFile.filePath;
+                    connectionFile = tempFile;
                 }
             }
 
-            if (connectionFile === tempFile.filePath) {
+            if (connectionFile === tempFile) {
                 try {
                     // Try to write some empty contents to the file and see if we have access to the runtime dir
                     await this.fileSystem.writeFile(Uri.file(connectionFile), '');
                     logger.trace(`Connection file ${connectionFile} successfully created (in temp)`);
                 } catch (ex) {
                     logger.error(`Failed to access temp file ${connectionFile}`, ex);
-                    connectionFile = tempFile.filePath;
+                    connectionFile = tempFile;
                 }
             }
             return Uri.file(connectionFile);
         } catch (ex) {
             logger.error(`Failed to create connection file for kernel ${this.kernelConnectionMetadata.id}`, ex);
             throw ex;
-        } finally {
-            // Ensure we dispose this, and don't maintain a handle on this file.
-            await tempFile.dispose(); // Do not remove this line.
         }
     }
     // Add the command line arguments
