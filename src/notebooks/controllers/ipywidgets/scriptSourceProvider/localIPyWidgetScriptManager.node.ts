@@ -13,6 +13,7 @@ import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, INbExtensionsPathProvider } from '../types';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { logger } from '../../../../platform/logging';
+import { getExtensionTempDir } from '../../../../platform/common/temp';
 
 type KernelConnectionId = string;
 /**
@@ -74,7 +75,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
                 return;
             }
             const kernelHash = await getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
-            const baseUrl = Uri.joinPath(this.context.extensionUri, 'temp', 'scripts', kernelHash, 'jupyter');
+            const baseUrl = Uri.joinPath(getExtensionTempDir(this.context), 'scripts', kernelHash, 'jupyter');
 
             const targetNbExtensions = Uri.joinPath(baseUrl, 'nbextensions');
             const [jupyterDataDirectories] = await Promise.all([
