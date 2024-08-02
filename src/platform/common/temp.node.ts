@@ -8,6 +8,15 @@ import { noop } from './utils/misc';
 import { getCurrentTempDirName, TEMP_DIR_PREFIX } from './temp';
 import { logger } from '../logging';
 
+// WARNING: Do not move this into `temp.ts` as this is specific to node extension.
+// using native fs is faster than using vscode.workspace.fs.
+// WARNING: Do not move this into `temp.ts` as this is specific to node extension.
+// using native fs is faster than using vscode.workspace.fs.
+// WARNING: Do not move this into `temp.ts` as this is specific to node extension.
+// using native fs is faster than using vscode.workspace.fs.
+// WARNING: Do not move this into `temp.ts` as this is specific to node extension.
+// using native fs is faster than using vscode.workspace.fs.
+
 /**
  * Delete old temp directories that are no longer required.
  * We create temporary directories in global storage directory as thats guaranteed to be read-write.
@@ -20,6 +29,8 @@ import { logger } from '../logging';
  * Found cases where that failed.
  * We also used to store files in extension sub directory, but that's not guaranteed to be read-write.
  *
+ * No need to move this into `temp.ts` as this is specific to node extension.
+ * & using native fs is faster than using vscode.workspace.fs.
  * @param context
  */
 export async function deleteOldTempDirs(context: IExtensionContext) {
