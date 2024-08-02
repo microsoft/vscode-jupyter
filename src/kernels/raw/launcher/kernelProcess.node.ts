@@ -138,6 +138,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         private readonly platform: IPlatformService
     ) {
         super();
+        logger.trace(`KernelProcess created for ${kernelConnectionMetadata.id} with ${JSON.stringify(_connection)}`);
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
     public async interrupt(): Promise<void> {
@@ -435,6 +436,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
     // Instead of having to use a connection file update our local copy of the kernelspec to launch
     // directly with command line arguments
     private async updateConnectionArgs() {
+        logger.trace(`Update Connection Args ${JSON.stringify(this.launchKernelSpec)}`);
         // First check to see if we have a kernelspec that expects a connection file,
         // Error if we don't have one. We expect '-f', '{connectionfile}' in our launch args
         const indexOfConnectionFile = findIndexOfConnectionFile(this.launchKernelSpec);
@@ -456,7 +458,16 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             );
         }
 
-        this.connectionFile = await this.createConnectionFile();
+        try {
+            this.connectionFile = await this.createConnectionFile();
+        } catch (ex) {
+            logger.error(
+                `Failed to create connection file from (createConnectionFile) for kernel ${this.kernelConnectionMetadata.id}`,
+                ex
+            );
+            throw ex;
+        }
+
         // Python kernels are special. Handle the extra arguments.
         if (this.isPythonKernel) {
             // Slice out -f and the connection file from the args
@@ -496,11 +507,14 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         }
     }
     private async createConnectionFile() {
+        logger.trace(`1. Creating connection file for kernel ${this.kernelConnectionMetadata.id}`);
         const runtimeDir = await this.jupyterPaths.getRuntimeDir();
+        logger.trace(`2. Creating connection file for kernel ${this.kernelConnectionMetadata.id}`);
         const tempFile = await this.fileSystem.createTemporaryLocalFile({
             fileExtension: '.json',
-            prefix: 'kernel-v2-'
+            prefix: 'kernel-v3-'
         });
+        logger.trace(`3. Creating connection file for kernel ${this.kernelConnectionMetadata.id}`);
         try {
             // Note: We have to dispose the temp file and recreate it else the file
             // system will hold onto the file with an open handle. THis doesn't work so well when
@@ -509,6 +523,9 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 ? path.join(runtimeDir.fsPath, path.basename(tempFile.filePath))
                 : tempFile.filePath;
 
+            logger.trace(
+                `Connection file ${connectionFile} & temp file ${tempFile.filePath} & runtime dir ${runtimeDir}`
+            );
             // Check if we have access to the runtime dir
             if (runtimeDir) {
                 try {
@@ -532,6 +549,9 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 }
             }
             return Uri.file(connectionFile);
+        } catch (ex) {
+            logger.error(`Failed to create connection file for kernel ${this.kernelConnectionMetadata.id}`, ex);
+            throw ex;
         } finally {
             // Ensure we dispose this, and don't maintain a handle on this file.
             await tempFile.dispose(); // Do not remove this line.

@@ -130,6 +130,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         }
     }
     public async start(token: CancellationToken): Promise<void> {
+        logger.trace('Start Kernel in rawKernelConnection.node');
         const disposables: IDisposable[] = [];
         const postStartToken = wrapCancellationTokens(token);
         disposables.push(postStartToken);
