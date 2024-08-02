@@ -3,7 +3,7 @@
 
 import { FileType, Uri, workspace } from 'vscode';
 import type { IExtensionContext } from './types';
-import { noop } from './utils/misc';
+import { isWeb, noop } from './utils/misc';
 
 export const TEMP_DIR_PREFIX = 'version';
 
@@ -12,7 +12,13 @@ export function getCurrentTempDirName(context: IExtensionContext): string {
 }
 
 export function getExtensionTempDir(context: IExtensionContext): Uri {
-    return Uri.joinPath(context.globalStorageUri, getCurrentTempDirName(context));
+    if (isWeb()) {
+        return Uri.joinPath(context.globalStorageUri, getCurrentTempDirName(context));
+    } else {
+        // Ensure we use the file scheme when dealing with the desktop version of VS Code.
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        return Uri.joinPath(Uri.file(context.globalStorageUri.fsPath), getCurrentTempDirName(context));
+    }
 }
 
 export async function deleteTempDirs(context: IExtensionContext) {
