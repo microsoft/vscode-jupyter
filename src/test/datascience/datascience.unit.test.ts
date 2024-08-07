@@ -19,7 +19,6 @@ suite('Tests', () => {
     let configService: IConfigurationService;
     let settings: IWatchableJupyterSettings;
     let onDidChangeSettings: sinon.SinonStub;
-    let onDidChangeActiveTextEditor: sinon.SinonStub;
     let rawNotebookSupported: IRawNotebookSupportedService;
     setup(() => {
         configService = mock(ConfigurationService);
@@ -35,7 +34,6 @@ suite('Tests', () => {
         );
 
         onDidChangeSettings = sinon.stub();
-        onDidChangeActiveTextEditor = sinon.stub();
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.onDidChange).thenReturn(onDidChangeSettings);
         when(rawNotebookSupported.isSupported).thenReturn(true);
