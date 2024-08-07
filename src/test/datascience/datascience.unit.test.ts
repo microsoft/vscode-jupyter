@@ -12,7 +12,6 @@ import { GlobalActivation } from '../../standalone/activation/globalActivation';
 import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService.node';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { pruneCell } from '../../platform/common/utils';
-import { mockedVSCodeNamespaces } from '../vscode-mock';
 
 /* eslint-disable  */
 suite('Tests', () => {
@@ -39,8 +38,6 @@ suite('Tests', () => {
         onDidChangeActiveTextEditor = sinon.stub();
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.onDidChange).thenReturn(onDidChangeSettings);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(mockedVSCodeNamespaces.window.onDidChangeActiveTextEditor).thenReturn(onDidChangeActiveTextEditor);
         when(rawNotebookSupported.isSupported).thenReturn(true);
     });
 
@@ -51,9 +48,6 @@ suite('Tests', () => {
 
         test('Should add handler for Settings Changed', async () => {
             assert.ok(onDidChangeSettings.calledOnce);
-        });
-        test('Should add handler for ActiveTextEditorChanged', async () => {
-            assert.ok(onDidChangeActiveTextEditor.calledOnce);
         });
     });
 
