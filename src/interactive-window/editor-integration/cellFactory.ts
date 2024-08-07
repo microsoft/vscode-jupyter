@@ -75,18 +75,6 @@ export function generateCells(
     }
 }
 
-export function hasCells(document: TextDocument, settings?: IJupyterSettings): boolean {
-    const matcher = new CellMatcher(settings);
-    for (let index = 0; index < document.lineCount; index += 1) {
-        const line = document.lineAt(index);
-        if (matcher.isCell(line.text)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 export function generateCellRangesFromDocument(document: TextDocument, settings?: IJupyterSettings): ICellRange[] {
     // Implmentation of getCells here based on Don's Jupyter extension work
     const matcher = new CellMatcher(settings);
