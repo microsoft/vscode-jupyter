@@ -19,6 +19,7 @@ import {
     EditorContexts,
     InteractiveInputScheme,
     NotebookCellScheme,
+    PYTHON_LANGUAGE,
     Telemetry
 } from '../../platform/common/constants';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
@@ -56,6 +57,19 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         if (this.debugLocationTracker) {
             disposableRegistry.push(this.debugLocationTracker.updated(this.onDebugLocationUpdated.bind(this)));
         }
+
+        disposableRegistry.push(vscode.window.onDidChangeActiveTextEditor(() => this.onChangedActiveTextEditor()));
+        this.onChangedActiveTextEditor();
+    }
+
+    private onChangedActiveTextEditor() {
+        // Setup the editor context for the cells
+        const editorContext = new ContextKey(EditorContexts.HasCodeCells);
+        const activeEditor = vscode.window.activeTextEditor;
+
+        if (!activeEditor || activeEditor.document.languageId != PYTHON_LANGUAGE) {
+            editorContext.set(false).catch((ex) => logger.warn('Failed to set jupyter.HasCodeCells context', ex));
+        }
     }
 
     public dispose() {
@@ -65,6 +79,10 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
                 duration: this.totalExecutionTimeInMs / this.totalGetCodeLensCalls
             });
         }
+
+        const editorContext = new ContextKey(EditorContexts.HasCodeCells);
+        editorContext.set(false).catch(noop);
+
         dispose(this.activeCodeWatchers);
     }
 

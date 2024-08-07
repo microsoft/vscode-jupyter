@@ -14,7 +14,6 @@ import { noop } from '../../platform/common/utils/misc';
 import { EditorContexts } from '../../platform/common/constants';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
-import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
 import { window } from 'vscode';
 
 /**
@@ -85,7 +84,7 @@ export class GlobalActivation implements IExtensionSyncActivationService {
         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
             // Inform the editor context that we have cells, fire and forget is ok on the promise here
             // as we don't care to wait for this context to be set and we can't do anything if it fails
-            editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings())).catch(noop);
+            editorContext.set(true).catch(noop);
         } else {
             editorContext.set(false).catch(noop);
         }
