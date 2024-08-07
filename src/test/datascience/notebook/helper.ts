@@ -59,7 +59,8 @@ import {
     IKernelProvider,
     IThirdPartyKernelProvider,
     PythonKernelConnectionMetadata,
-    RemoteKernelSpecConnectionMetadata
+    RemoteKernelSpecConnectionMetadata,
+    type KernelConnectionMetadata
 } from '../../../kernels/types';
 import {
     IControllerRegistration,
@@ -104,6 +105,7 @@ import {
     notebookCellExecutions
 } from '../../../platform/notebooks/cellExecutionStateService';
 import { disposeAsync } from '../../../platform/common/utils';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -1569,7 +1571,7 @@ export async function getDebugSessionAndAdapter(
     return { session, debugAdapter };
 }
 
-export async function clickOKForRestartPrompt() {
+export async function clickOKForRestartPrompt(kernelConnectionMetadata?: KernelConnectionMetadata) {
     await initialize();
     // Ensure we click `Yes` when prompted to restart the kernel.
     const showInformationMessage = sinon.stub(window, 'showInformationMessage').callsFake(function (message: string) {
@@ -1581,7 +1583,24 @@ export async function clickOKForRestartPrompt() {
         }
         return (window.showInformationMessage as any).wrappedMethod.apply(window, arguments);
     });
-    return { dispose: () => showInformationMessage.restore() };
+    const showErrorMessage = sinon.stub(window, 'showErrorMessage').callsFake(function (message: string) {
+        logger.info(`Step 2. ShowErrorMessage ${message}`);
+        if (
+            message ===
+            DataScience.cannotRunCellKernelIsDead(getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata))
+        ) {
+            logger.info(`Step 3. ShowErrorMessage & yes to restart`);
+            // User clicked ok to restart it.
+            return DataScience.restartKernel;
+        }
+        return (window.showErrorMessage as any).wrappedMethod.apply(window, arguments);
+    });
+    return {
+        dispose: () => {
+            showInformationMessage.restore();
+            showErrorMessage.restore();
+        }
+    };
 }
 
 export async function ensureNoActiveDebuggingSession() {

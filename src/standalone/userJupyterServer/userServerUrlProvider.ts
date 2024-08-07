@@ -17,8 +17,7 @@ import {
     commands,
     env,
     extensions,
-    window,
-    workspace
+    window
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
@@ -40,7 +39,6 @@ import {
 } from '../../platform/common/constants';
 import {
     GLOBAL_MEMENTO,
-    IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposable,
     IDisposableRegistry,
@@ -58,7 +56,7 @@ import {
     JupyterServerCommandProvider,
     JupyterServerProvider
 } from '../../api';
-import { IMultiStepInputFactory, InputFlowAction } from '../../platform/common/utils/multiStepInput';
+import { InputFlowAction } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
 import { createDeferred } from '../../platform/common/utils/async';
@@ -105,8 +103,6 @@ export class UserJupyterServerUrlProvider
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IMultiStepInputFactory) multiStepFactory: IMultiStepInputFactory,
-        @inject(IAsyncDisposableRegistry) asyncDisposableRegistry: IAsyncDisposableRegistry,
         @inject(IJupyterRequestAgentCreator)
         @optional()
         agentCreator: IJupyterRequestAgentCreator | undefined,
@@ -136,15 +132,7 @@ export class UserJupyterServerUrlProvider
             serverUriStorage,
             disposables
         );
-        this.jupyterHubPasswordConnect = new JupyterHubPasswordConnect(
-            multiStepFactory,
-            asyncDisposableRegistry,
-            configService,
-            agentCreator,
-            requestCreator,
-            serverUriStorage,
-            disposables
-        );
+        this.jupyterHubPasswordConnect = new JupyterHubPasswordConnect(configService, agentCreator, requestCreator);
     }
     activate() {
         // Register this ASAP.
@@ -278,9 +266,6 @@ export class UserJupyterServerUrlProvider
         return this._cachedServerInfoInitialized;
     }
     private recommendInstallingJupyterHubExtension() {
-        if (workspace.getConfiguration('jupyter').get<boolean>('bypassJupyterHubExtensionCheck')) {
-            return;
-        }
         if (extensions.getExtension(JUPYTER_HUB_EXTENSION_ID)) {
             window
                 .showInformationMessage(DataScience.useJupyterHubExtension, {
@@ -353,7 +338,6 @@ export class UserJupyterServerUrlProvider
             }
         }
         try {
-            let isJupyterHub: boolean = false;
             let failedUrlPasswordCapture = false;
             while (true) {
                 try {
@@ -390,25 +374,20 @@ export class UserJupyterServerUrlProvider
                         try {
                             const errorMessage = validationErrorMessage;
                             validationErrorMessage = ''; // Never display this validation message again.
-                            isJupyterHub = await this.jupyterHubPasswordConnect.isJupyterHub(jupyterServerUri.baseUrl);
-                            if (isJupyterHub) {
+                            if (
+                                !jupyterServerUri.token &&
+                                (await this.jupyterHubPasswordConnect.isJupyterHub(jupyterServerUri.baseUrl))
+                            ) {
                                 this.recommendInstallingJupyterHubExtension();
+                                return InputFlowAction.cancel;
                             }
-                            const result = isJupyterHub
-                                ? await this.jupyterHubPasswordConnect.getPasswordConnectionInfo({
-                                      url: jupyterServerUri.baseUrl,
-                                      handle,
-                                      displayName: jupyterServerUri.displayName,
-                                      validationErrorMessage: errorMessage,
-                                      disposables: passwordDisposables
-                                  })
-                                : await this.jupyterPasswordConnect.getPasswordConnectionInfo({
-                                      url: jupyterServerUri.baseUrl,
-                                      isTokenEmpty: jupyterServerUri.token.length === 0,
-                                      handle,
-                                      validationErrorMessage: errorMessage,
-                                      disposables: passwordDisposables
-                                  });
+                            const result = await this.jupyterPasswordConnect.getPasswordConnectionInfo({
+                                url: jupyterServerUri.baseUrl,
+                                isTokenEmpty: jupyterServerUri.token.length === 0,
+                                handle,
+                                validationErrorMessage: errorMessage,
+                                disposables: passwordDisposables
+                            });
                             requiresPassword = result.requiresPassword;
                             jupyterServerUri.authorizationHeader = result.requestHeaders;
                             failedUrlPasswordCapture = false;
@@ -430,7 +409,7 @@ export class UserJupyterServerUrlProvider
                                 sendRemoteTelemetryForAdditionOfNewRemoteServer(
                                     handle,
                                     jupyterServerUri.baseUrl,
-                                    isJupyterHub,
+                                    false,
                                     'ConnectionFailure'
                                 );
                                 // Return the general connection error to show in the validation box
@@ -488,7 +467,7 @@ export class UserJupyterServerUrlProvider
                                 sendRemoteTelemetryForAdditionOfNewRemoteServer(
                                     handle,
                                     jupyterServerUri.baseUrl,
-                                    isJupyterHub,
+                                    false,
                                     'InsecureHTTP'
                                 );
                                 return InputFlowAction.cancel;
@@ -527,7 +506,7 @@ export class UserJupyterServerUrlProvider
                                 sendRemoteTelemetryForAdditionOfNewRemoteServer(
                                     handle,
                                     jupyterServerUri.baseUrl,
-                                    isJupyterHub,
+                                    false,
                                     'SelfCert'
                                 );
                                 continue;
@@ -537,7 +516,7 @@ export class UserJupyterServerUrlProvider
                                 sendRemoteTelemetryForAdditionOfNewRemoteServer(
                                     handle,
                                     jupyterServerUri.baseUrl,
-                                    isJupyterHub,
+                                    false,
                                     'ExpiredCert'
                                 );
                                 continue;
@@ -547,7 +526,7 @@ export class UserJupyterServerUrlProvider
                                 sendRemoteTelemetryForAdditionOfNewRemoteServer(
                                     handle,
                                     jupyterServerUri.baseUrl,
-                                    isJupyterHub,
+                                    false,
                                     'AuthFailure'
                                 );
                                 continue;
@@ -555,7 +534,7 @@ export class UserJupyterServerUrlProvider
                                 sendRemoteTelemetryForAdditionOfNewRemoteServer(
                                     handle,
                                     jupyterServerUri.baseUrl,
-                                    isJupyterHub,
+                                    false,
                                     'ConnectionFailure'
                                 );
                                 // Return the general connection error to show in the validation box
@@ -633,7 +612,7 @@ export class UserJupyterServerUrlProvider
                 jupyterServerUri.displayName
             );
 
-            sendRemoteTelemetryForAdditionOfNewRemoteServer(handle, jupyterServerUri.baseUrl, isJupyterHub);
+            sendRemoteTelemetryForAdditionOfNewRemoteServer(handle, jupyterServerUri.baseUrl, false);
             return handle;
         } catch (ex) {
             if (ex instanceof CancellationError) {
@@ -662,31 +641,17 @@ export class UserJupyterServerUrlProvider
             serverInfo.displayName = displayName;
         }
 
-        const isJupyterHub = await this.jupyterHubPasswordConnect.isJupyterHub(serverInfo.baseUrl);
         let serverUriToReturn: any = Object.assign({}, serverInfo);
         try {
-            const passwordResult = isJupyterHub
-                ? await this.jupyterHubPasswordConnect.getPasswordConnectionInfo({
-                      url: serverInfo.baseUrl,
-                      handle: id,
-                      displayName: serverInfo.displayName
-                  })
-                : await this.jupyterPasswordConnect.getPasswordConnectionInfo({
-                      url: serverInfo.baseUrl,
-                      isTokenEmpty: serverInfo.token.length === 0,
-                      handle: id
-                  });
+            const passwordResult = await this.jupyterPasswordConnect.getPasswordConnectionInfo({
+                url: serverInfo.baseUrl,
+                isTokenEmpty: serverInfo.token.length === 0,
+                handle: id
+            });
 
             serverUriToReturn = Object.assign({}, serverInfo, {
                 authorizationHeader: passwordResult.requestHeaders || serverInfo.authorizationHeader
             });
-
-            if (isJupyterHub && passwordResult.remappedBaseUrl) {
-                serverUriToReturn.baseUrl = passwordResult.remappedBaseUrl;
-            }
-            if (isJupyterHub && passwordResult.remappedToken) {
-                serverUriToReturn.token = passwordResult.remappedToken;
-            }
         } catch (ex) {
             logger.error(`Failed to validate Password info`, ex);
         }

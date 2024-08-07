@@ -26,6 +26,8 @@ import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '..
 import { TestNotebookDocument, createKernelController } from './executionHelper';
 import { captureScreenShot } from '../../common';
 import { NotebookCellExecutionState } from '../../../platform/notebooks/cellExecutionStateService';
+import { KernelConnector } from '../../../notebooks/controllers/kernelConnector';
+import { DisplayOptions } from '../../../kernels/displayOptions';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
@@ -406,11 +408,105 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         assert.strictEqual(cell2.executionSummary?.executionOrder, 2, 'Cell 1 should have an execution order of 2');
 
         // Restart and run the first cell
+        const restart = kernel.restart();
+        await sleep(500); // Wait a bit for restart to start (else the promises will not be setup).
         await Promise.all([
-            kernel.restart(),
+            restart,
             kernelExecution.executeCell(cell1),
             waitForExecutionCompletedSuccessfully(cell1),
             waitForTextOutput(cell1, '1', 0, false)
         ]);
+    });
+    test('Will restart a kernel after it dies and re-running all cells all over again', async function () {
+        // We have 2 cells, first cell prints 1, second cell kills the kernel.
+        // Run all cells, first cell should print 1, second cell should kill the kernel.
+        // Run again, we should be prompted to re-start the kernel.
+        // & the first cell should run again and second cell should kill the kernel again.
+
+        if (IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
+            // The kernel will auto start if it fails when using Jupyter.
+            // When using Raw we don't use jupyter.
+            return this.skip();
+        }
+
+        // Should restart upon connecting to kernel.
+        await KernelConnector.connectToNotebookKernel(
+            kernel.kernelConnectionMetadata,
+            api.serviceContainer,
+            {
+                controller: kernel.controller,
+                notebook,
+                resource: notebook.uri
+            },
+            new DisplayOptions(false),
+            disposables,
+            'jupyterExtension'
+        );
+
+        /*
+        Run cell 1 - Print some value
+        Run Cell 2 with some code that will cause the kernel to die.
+        Run cell 1 again, it should fail as the kernel is dead.
+        Restart kernel & run cell 1, it should work.
+        */
+        await notebook.appendCodeCell('1');
+        await notebook.appendCodeCell(
+            'import IPython\napp = IPython.Application.instance()\napp.kernel.do_shutdown(True)'
+        );
+
+        const [cell1, cell2] = notebook.getCells();
+        // Ensure we click `Yes` when prompted to restart the kernel.
+        disposables.push(await clickOKForRestartPrompt(kernel.kernelConnectionMetadata));
+
+        // Confirm 1 completes, 2 is in progress & 3 is queued.
+        await Promise.all([
+            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))),
+            waitForExecutionCompletedSuccessfully(cell1),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell1, '1', 0, false)
+        ]);
+        assert.isAtLeast(cell1.executionSummary!.executionOrder!, 1, 'Cell 1 should have an execution order of 1');
+        assert.strictEqual(
+            cell2.executionSummary?.executionOrder,
+            cell1.executionSummary!.executionOrder! + 1,
+            'Cell 1 should have an execution order of 2'
+        );
+
+        // Clear all outputs
+        cell1.outputs.length = 0;
+
+        // Wait a bit to make sure it cleared & for kernel to die.
+        await sleep(500);
+
+        // Should restart upon connecting to kernel.
+        try {
+            await KernelConnector.connectToNotebookKernel(
+                kernel.kernelConnectionMetadata,
+                api.serviceContainer,
+                {
+                    controller: kernel.controller,
+                    notebook,
+                    resource: notebook.uri
+                },
+                new DisplayOptions(false),
+                disposables,
+                'jupyterExtension'
+            );
+        } catch (ex) {
+            console.log(ex);
+        }
+        // Confirm 1 completes, 2 is in progress & 3 is queued.
+        await Promise.all([
+            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop))),
+            waitForExecutionCompletedSuccessfully(cell1),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell1, '1', 0, false)
+        ]);
+        assert.isAtLeast(cell1.executionSummary!.executionOrder!, 1, 'Cell 1 should have an execution order of 1');
+        assert.strictEqual(
+            cell2.executionSummary?.executionOrder,
+            cell1.executionSummary!.executionOrder! + 1,
+            'Cell 1 should have an execution order of 2'
+        );
     });
 });

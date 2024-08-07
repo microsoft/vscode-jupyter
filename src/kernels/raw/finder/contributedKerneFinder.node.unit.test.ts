@@ -144,7 +144,9 @@ import { setPythonApi } from '../../../platform/interpreter/helpers';
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
             const memento = mock<Memento>();
             const context = mock<IExtensionContext>();
+            when(context.extension).thenReturn({ packageJSON: { version: '1.0.0' } } as any);
             when(context.extensionUri).thenReturn(Uri.file(EXTENSION_ROOT_DIR));
+            when(context.globalStorageUri).thenReturn(Uri.joinPath(Uri.file(EXTENSION_ROOT_DIR), 'temp'));
             when(memento.get(anything(), anything())).thenCall((_, defaultValue) => {
                 if (Array.isArray(defaultValue)) {
                     return defaultValue;

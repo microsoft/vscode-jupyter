@@ -3,12 +3,7 @@
 
 import { IEncryptedStorage } from '../../../platform/common/application/types';
 import { logger } from '../../../platform/logging';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposable,
-    IExtensionContext
-} from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { IS_REMOTE_NATIVE_TEST, initialize } from '../../initialize.node';
 import { startJupyterServer, closeNotebooksAndCleanUpAfterTests, hijackPrompt } from '../notebook/helper.node';
 import {
@@ -45,7 +40,6 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
 import assert from 'assert';
 import { createDeferred, createDeferredFromPromise } from '../../../platform/common/utils/async';
-import { IMultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { UserJupyterServerPickerProviderId } from '../../../platform/common/constants';
 
@@ -205,8 +199,6 @@ suite('Connect to Remote Jupyter Servers @mandatory', function () {
             instance(serverUriStorage),
             instance(memento),
             disposables,
-            api.serviceContainer.get<IMultiStepInputFactory>(IMultiStepInputFactory),
-            api.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
             api.serviceContainer.get<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator),
             api.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator),
             api.serviceContainer.get<IExtensionContext>(IExtensionContext),

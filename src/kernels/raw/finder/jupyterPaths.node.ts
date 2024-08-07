@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as crypto from 'crypto';
 import { inject, injectable, named } from 'inversify';
+import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
@@ -27,6 +29,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { ResourceMap, ResourceSet } from '../../../platform/common/utils/map';
 import { getPythonEnvDisplayName, getSysPrefix } from '../../../platform/interpreter/helpers';
+import { getExtensionTempDir } from '../../../platform/common/temp';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -70,9 +73,10 @@ export class JupyterPaths {
     /**
      * Contains the name of the directory where the Jupyter extension will temporary register Kernels when using non-raw.
      * (this way we don't register kernels in global path).
+     * This path needs to be writable, as we store the kernelspecs here when we spawn kernels using Jupyter Server.
      */
     public async getKernelSpecTempRegistrationFolder() {
-        const dir = uriPath.joinPath(this.context.extensionUri, 'temp', 'jupyter', 'kernels');
+        const dir = uriPath.joinPath(getExtensionTempDir(this.context), 'jupyter', 'kernels');
         await this.fs.createDirectory(dir);
         return dir;
     }
@@ -110,8 +114,23 @@ export class JupyterPaths {
     /**
      * Returns the value for `JUPYTER_RUNTIME_DIR`, location where Jupyter stores runtime files.
      * Such as kernel connection files.
+     * This path needs to be writable, as we store the connection files in here.
      */
-    public async getRuntimeDir(): Promise<Uri | undefined> {
+    public async getRuntimeDir(): Promise<Uri> {
+        const runtimeDir = await this.getRuntimeDirImpl();
+        if (runtimeDir) {
+            return runtimeDir;
+        }
+
+        // Run time directory doesn't exist or no permissions.
+        const extensionRuntimeDir = Uri.joinPath(getExtensionTempDir(this.context), 'jupyter', 'runtime');
+        await fs.ensureDir(extensionRuntimeDir.fsPath);
+        logger.trace(`Using extension runtime directory ${extensionRuntimeDir.fsPath}`);
+        return extensionRuntimeDir;
+    }
+
+    private runtimeDirIsWritable = false;
+    private async getRuntimeDirImpl(): Promise<Uri | undefined> {
         let runtimeDir: Uri | undefined;
         const userHomeDir = this.platformService.homeDir;
         if (userHomeDir) {
@@ -133,11 +152,19 @@ export class JupyterPaths {
         }
 
         try {
-            // Make sure the local file exists
+            // Make sure the directory exists and is writable.
             await this.fs.createDirectory(runtimeDir);
+            if (!this.runtimeDirIsWritable) {
+                // Ensure this folder is writable as well, we've found cases where this folder is not writable.
+                const tempFileName = `temp-test-write-access-${crypto.randomBytes(20).toString('hex')}.txt`;
+                const tempFile = uriPath.joinPath(runtimeDir, tempFileName);
+                // If this fails, then thats find, at least we know the folder is not writable, even if it exists.
+                await fs.writeFile(tempFile.fsPath, '');
+                await fs.unlink(tempFile.fsPath).catch(noop);
+            }
             return runtimeDir;
         } catch (ex) {
-            logger.error(`Failed to create runtime directory, reverting to temp directory ${runtimeDir}`, ex);
+            logger.error(`Failed to create/or verify write access to runtime directory ${runtimeDir}`, ex);
         }
     }
     /**

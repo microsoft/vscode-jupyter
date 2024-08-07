@@ -77,7 +77,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
             return;
         }
         this.registerCommand(Commands.ShowDataViewer, this.delegateDataViewer);
-        this.registerCommand(Commands.ShowJupyterDataViewer, this.showJupyterVariableView);
+        this.registerCommand(Commands.ShowJupyterDataViewer, this.delegateDataViewer);
     }
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
@@ -106,6 +106,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         }
     }
 
+    // @ts-ignore: temporarily disable the warning and keep the code. Will be removed later.
     private async showJupyterVariableView(requestVariable: IJupyterVariable) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
 
