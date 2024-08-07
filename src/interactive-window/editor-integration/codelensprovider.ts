@@ -63,12 +63,12 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     }
 
     private onChangedActiveTextEditor() {
-        // Setup the editor context for the cells
-        const editorContext = new ContextKey(EditorContexts.HasCodeCells);
         const activeEditor = vscode.window.activeTextEditor;
 
         if (!activeEditor || activeEditor.document.languageId != PYTHON_LANGUAGE) {
-            editorContext.set(false).catch((ex) => logger.warn('Failed to set jupyter.HasCodeCells context', ex));
+            // set the context to false so our command doesn't run for other files
+            const hasCellsContext = new ContextKey(EditorContexts.HasCodeCells);
+            hasCellsContext.set(false).catch((ex) => logger.warn('Failed to set jupyter.HasCodeCells context', ex));
         }
     }
 
@@ -130,8 +130,10 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // Update the hasCodeCells context at the same time we are asked for codelens as VS code will
         // ask whenever a change occurs. Do this regardless of if we have code lens turned on or not as
         // shift+enter relies on this code context.
-        const editorContext = new ContextKey(EditorContexts.HasCodeCells);
-        editorContext.set(codeLenses && codeLenses.length > 0).catch(noop);
+        const hasCellsContext = new ContextKey(EditorContexts.HasCodeCells);
+        hasCellsContext
+            .set(codeLenses && codeLenses.length > 0)
+            .catch((ex) => logger.debug('Failed to set jupyter.HasCodeCells context', ex));
 
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings(document.uri);
