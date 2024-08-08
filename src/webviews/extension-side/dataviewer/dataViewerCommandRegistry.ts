@@ -91,7 +91,10 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
         const variable = 'variable' in request ? await this.getVariableFromRequest(request) : request;
         if (!variable) {
             logger.error('Full variable info could not be retreived');
-            sendTelemetryEvent(Telemetry.FailedShowDataViewer, undefined, { reason: 'no variable info', fromVariableView: false });
+            sendTelemetryEvent(Telemetry.FailedShowDataViewer, undefined, {
+                reason: 'no variable info',
+                fromVariableView: false
+            });
             return;
         }
         return this.dataViewerDelegator.showContributedDataViewer(variable, false);
