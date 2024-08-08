@@ -1787,7 +1787,7 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.FailedShowDataViewer]: TelemetryEventInfo<{
         reason: string;
-        debugging: boolean;
+        fromVariableView: boolean;
     }> = {
         owner: 'amunger',
         feature: ['DataFrameViewer', 'VariableViewer'],
@@ -1797,7 +1797,7 @@ export class IEventNamePropertyMapping {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             },
-            debugging: {
+            fromVariableView: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }

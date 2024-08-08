@@ -133,7 +133,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     @swallowExceptions()
     public async showDataViewer(request: IShowDataViewer) {
         request.variable.fileName = request.variable.fileName ?? this.notebookWatcher.activeKernel?.notebook.uri;
-        return this.dataViewerDelegator.showContributedDataViewer(request.variable);
+        return this.dataViewerDelegator.showContributedDataViewer(request.variable, true);
     }
 
     private postProcessSupportsDataExplorer(response: IJupyterVariablesResponse) {

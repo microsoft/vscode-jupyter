@@ -88,14 +88,13 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
     }
 
     private async delegateDataViewer(request: IJupyterVariable | IShowDataViewerFromVariablePanel) {
-        const debugging = 'variable' in request;
-        const variable = debugging ? await this.getVariableFromRequest(request) : request;
+        const variable = 'variable' in request ? await this.getVariableFromRequest(request) : request;
         if (!variable) {
             logger.error('Full variable info could not be retreived');
-            sendTelemetryEvent(Telemetry.FailedShowDataViewer, undefined, { reason: 'no variable info', debugging });
+            sendTelemetryEvent(Telemetry.FailedShowDataViewer, undefined, { reason: 'no variable info', fromVariableView: false });
             return;
         }
-        return this.dataViewerDelegator.showContributedDataViewer(variable, debugging);
+        return this.dataViewerDelegator.showContributedDataViewer(variable, false);
     }
 
     // get the information needed about the request from the debug variable view

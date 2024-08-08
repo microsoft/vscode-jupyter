@@ -13,7 +13,7 @@ import * as localize from '../../../platform/common/utils/localize';
 
 @injectable()
 export class DataViewerDelegator {
-    public async showContributedDataViewer(variable: IJupyterVariable, debugging: boolean) {
+    public async showContributedDataViewer(variable: IJupyterVariable, fromVariableView: boolean) {
         try {
             // jupyterVariableViewers
             const variableViewers = this.getMatchingExternalVariableViewers(variable);
@@ -80,7 +80,7 @@ export class DataViewerDelegator {
             }
         } catch (e) {
             logger.error(e);
-            sendTelemetryEvent(Telemetry.FailedShowDataViewer, undefined, { reason: 'exception', debugging });
+            sendTelemetryEvent(Telemetry.FailedShowDataViewer, undefined, { reason: 'exception', fromVariableView });
             window.showErrorMessage(localize.DataScience.showDataViewerFail).then(noop, noop);
         }
     }
