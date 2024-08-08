@@ -386,6 +386,8 @@
 // Failed to show the data viewer via the variable view.
 /* __GDPR__
    "DATASCIENCE.FAILED_SHOW_DATA_EXPLORER" : {
+     "reason": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"amunger"},
+     "fromVariableView": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"amunger"},
      "${include}": [
        "${F1}"
 

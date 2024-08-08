@@ -13,7 +13,7 @@ import * as localize from '../../../platform/common/utils/localize';
 
 @injectable()
 export class DataViewerDelegator {
-    public async showContributedDataViewer(variable: IJupyterVariable) {
+    public async showContributedDataViewer(variable: IJupyterVariable, fromVariableView: boolean) {
         try {
             // jupyterVariableViewers
             const variableViewers = this.getMatchingExternalVariableViewers(variable);
@@ -34,11 +34,23 @@ export class DataViewerDelegator {
                     });
             } else if (variableViewers.length === 1) {
                 const command = variableViewers[0].jupyterVariableViewers.command;
+                logger.info(
+                    `Showing data viewer with command ${command} for variable ${JSON.stringify({
+                        ...variable,
+                        value: '...'
+                    })}`
+                );
                 return commands.executeCommand(command, variable);
             } else {
                 const thirdPartyViewers = variableViewers.filter((d) => d.extension.id !== JVSC_EXTENSION_ID);
                 if (thirdPartyViewers.length === 1) {
                     const command = thirdPartyViewers[0].jupyterVariableViewers.command;
+                    logger.info(
+                        `Showing data viewer viewer with command ${command} for variable ${JSON.stringify({
+                            ...variable,
+                            value: '...'
+                        })}`
+                    );
                     return commands.executeCommand(command, variable);
                 }
                 // show quick pick
@@ -55,6 +67,12 @@ export class DataViewerDelegator {
                     const item = quickPick.selectedItems[0];
                     if (item) {
                         quickPick.hide();
+                        logger.info(
+                            `Showing data viewer viewer with command ${item.command} for variable ${JSON.stringify({
+                                ...variable,
+                                value: '...'
+                            })}`
+                        );
                         return commands.executeCommand(item.command, variable);
                     }
                 });
@@ -62,7 +80,7 @@ export class DataViewerDelegator {
             }
         } catch (e) {
             logger.error(e);
-            sendTelemetryEvent(Telemetry.FailedShowDataViewer);
+            sendTelemetryEvent(Telemetry.FailedShowDataViewer, undefined, { reason: 'exception', fromVariableView });
             window.showErrorMessage(localize.DataScience.showDataViewerFail).then(noop, noop);
         }
     }

@@ -1785,15 +1785,28 @@ export class IEventNamePropertyMapping {
     /**
      * Failed to show the data viewer via the variable view.
      */
-    [Telemetry.FailedShowDataViewer]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff',
+    [Telemetry.FailedShowDataViewer]: TelemetryEventInfo<{
+        reason: string;
+        fromVariableView: boolean;
+    }> = {
+        owner: 'amunger',
         feature: ['DataFrameViewer', 'VariableViewer'],
-        source: 'N/A'
+        source: 'N/A',
+        properties: {
+            reason: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            fromVariableView: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Sent when the jupyter.refreshDataViewer command is invoked
      */
-    [Telemetry.RefreshDataViewer]: TelemetryEventInfo<never | undefined> = {
+    [Telemetry.RefreshDataViewer]: TelemetryEventInfo<undefined | never> = {
         owner: 'IanMatthewHuff',
         feature: ['DataFrameViewer'],
         source: 'User Action'
