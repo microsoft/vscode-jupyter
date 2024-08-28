@@ -681,7 +681,7 @@ export async function updateNotebookMetadataWithSelectedKernel(
                 break;
         }
 
-        if (metadata.kernelspec?.name !== name) {
+        if (metadata.kernelspec?.name !== name || metadata.kernelspec?.display_name !== displayName) {
             changed = true;
             metadata.kernelspec = {
                 name,
