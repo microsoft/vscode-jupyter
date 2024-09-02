@@ -2303,6 +2303,7 @@
         "mocha-multi-reporters": "^1.5.1",
         "nock": "^13.3.1",
         "node-has-native-dependencies": "^1.0.2",
+        "node-html-parser": "^6.1.13",
         "node-polyfill-webpack-plugin": "^4.0.0",
         "nyc": "^15.1.0",
         "popper.js": "^1.16.1",
