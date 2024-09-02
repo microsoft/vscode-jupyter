@@ -8,7 +8,7 @@
 import glob from 'glob';
 import Mocha from 'mocha';
 import * as path from '../platform/vscode-path/path';
-import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants.node';
+import { MAX_EXTENSION_ACTIVATION_TIME } from './constants.node';
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper.node';
 import { initialize } from './initialize.node';
