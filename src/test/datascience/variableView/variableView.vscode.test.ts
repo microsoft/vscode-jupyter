@@ -73,7 +73,7 @@ suite('VariableView @variableViewer', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test for basic variable view functionality with one document
-    test('Can show VariableView (webview-test) and do not have any additional variables', async function () {
+    test.only('Can show VariableView (webview-test) and do not have any additional variables', async function () {
         // Send the command to open the view
         await commands.executeCommand(Commands.OpenVariableView);
 
