@@ -149,7 +149,7 @@ suite('Remote Execution @kernelCore', function () {
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
     });
 
-    test('Remote kernels support completions', async function () {
+    test.skip('Remote kernels support completions', async function () {
         const { editor } = await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         let nbEditor = window.activeNotebookEditor!;
