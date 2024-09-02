@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import fastDeepEqual from 'fast-deep-equal';
+import { parse } from 'node-html-parser';
 import { assert } from 'chai';
 import { waitForCondition } from '../../common';
 import { defaultNotebookTestTimeout } from '../notebook/helper';
@@ -47,28 +48,25 @@ function variablesMatch(expected: IVariableInfo[], htmlVariables: IVariableInfo[
 
 // Helper function to parse the view HTML
 function parseVariableViewHTML(html: string): IVariableInfo[] {
-    const parser = new DOMParser();
-    const htmlDoc = parser.parseFromString(html, 'text/html');
-    const variableRows = htmlDoc.getElementsByClassName('react-grid-Row');
+    const htmlDoc = parse(html);
+    const variableRows = htmlDoc
+        .querySelectorAll('div')
+        .filter((d) => d.classList.value.indexOf('react-grid-Row') >= 0);
 
     const variableInfos: IVariableInfo[] = [];
     // HTMLCollectionOf doesn't support nice iterators
-    for (let index = 0; index < variableRows.length; index++) {
-        variableInfos.push(extractVariableFromRow(variableRows[index]));
-    }
+    variableRows.forEach((child) => {
+        const cols = child.querySelectorAll('div').filter((d) => d.rawAttrs.indexOf('role="cell"') >= 0);
+        const row: IVariableInfo = {
+            name: cols[0].innerHTML,
+            type: cols[1].innerHTML,
+            length: cols[2].innerHTML,
+            value: cols[3].innerHTML
+        };
+        variableInfos.push(row);
+    });
 
     return variableInfos;
-}
-
-// From a single row pull out the values we care about
-function extractVariableFromRow(variableHTMLRow: Element): IVariableInfo {
-    const cellElements = variableHTMLRow.querySelectorAll('[role=cell]');
-    return {
-        name: cellElements[0].innerHTML,
-        type: cellElements[1].innerHTML,
-        length: cellElements[2].innerHTML,
-        value: cellElements[3].innerHTML
-    };
 }
 
 // Compare two variable infos
