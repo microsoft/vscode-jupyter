@@ -62,7 +62,6 @@ function sortProductsInOrderForInstallation(products: Product[]) {
 export function getMessageForLibrariesNotInstalled(products: Product[], interpreter: PythonEnvironment): string {
     const interpreterName =
         getPythonEnvDisplayName(interpreter) ||
-        getPythonEnvDisplayName(interpreter) ||
         getCachedEnvironment(interpreter)?.environment?.folderUri?.fsPath ||
         interpreter.uri.fsPath;
     // Even though kernelspec cannot be installed, display it so user knows what is missing.
