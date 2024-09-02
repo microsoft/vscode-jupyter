@@ -2333,7 +2333,7 @@
         "utf-8-validate": "^5.0.8",
         "util": "^0.12.4",
         "uuid-to-hex": "^1.1.1",
-        "webpack": "^5.88.1",
+        "webpack": "^5.94.0",
         "webpack-cli": "^5.1.4"
     },
     "optionalDependencies": {
