@@ -183,7 +183,7 @@ import { IKernelProvider } from '../../../../kernels/types';
                     )
                 );
             }
-            test.skip('Dataframe completions', async () => {
+            test('Dataframe completions', async () => {
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions('df.', '.', fileName, 'Age', 'S', 'Sex');
             });
@@ -192,7 +192,7 @@ import { IKernelProvider } from '../../../../kernels/types';
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions('df.Name.', '.', fileName, 'add_prefix', 'add_s', 'add_suffix');
             });
-            test.skip('Dataframe assignment completions', async () => {
+            test('Dataframe assignment completions', async () => {
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions('var_name = df.', '.', fileName, 'Age', 'S', 'Sex');
             });
