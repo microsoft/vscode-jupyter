@@ -48,7 +48,7 @@ suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', funct
         logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test.skip('Execute cell and get completions for variable', async () => {
+    test('Execute cell and get completions for variable', async () => {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
         const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
 
