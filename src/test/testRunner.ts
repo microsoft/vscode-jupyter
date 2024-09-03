@@ -8,7 +8,7 @@
 import glob from 'glob';
 import Mocha from 'mocha';
 import * as path from '../platform/vscode-path/path';
-import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants.node';
+import { MAX_EXTENSION_ACTIVATION_TIME } from './constants.node';
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper.node';
 import { initialize } from './initialize.node';
@@ -50,13 +50,6 @@ export async function run(): Promise<void> {
     const testsRoot = path.join(__dirname, '..');
     // Enable source map support.
     require('source-map-support').install();
-
-    // nteract/transforms-full expects to run in the browser so we have to fake
-    // parts of the browser here.
-    if (!IS_SMOKE_TEST()) {
-        const reactHelpers = require('./datascience/reactHelpers') as typeof import('./datascience/reactHelpers');
-        reactHelpers.setUpDomEnvironment();
-    }
 
     /**
      * Waits until the Python Extension completes loading or a timeout.

@@ -9,9 +9,13 @@ import { logger } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { Uri } from 'vscode';
 import { getOSType, OSType } from '../common/utils/platform';
+import { isCI } from '../common/constants';
 
 export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment | { id: string }) {
     const env = getCachedEnvironment(interpreter);
+    if (isCI) {
+        logger.ci(`Python Env Info for ${JSON.stringify(interpreter)} is ${JSON.stringify(env)}`);
+    }
     if (env) {
         const versionParts: string[] = [];
         if (typeof env.version?.major === 'number') {
