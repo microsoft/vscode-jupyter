@@ -69,6 +69,23 @@ suite('Jupyter Completion Unit Tests', () => {
         );
     });
 
+    test('Completions for variables are returned', async () => {
+        mockDocument = new MockDocument('a = 1234\n', 'test.ipynb', () => Promise.resolve(false));
+        const jupyterCompletions: CompletionItem[] = [
+            createCompletionItem('.bit_count', 0),
+            createCompletionItem('.bit_length', 1),
+            createCompletionItem('.conjugate', 1),
+            createCompletionItem('.from_bytes', 1)
+        ];
+        const filtered = generatePythonCompletions('.', true, jupyterCompletions, mockDocument, new Position(1, 1));
+        assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
+        assert.equal(filtered.length, 4, 'Wrong number of filtered results');
+        assert.ok(
+            filtered.find((f) => f.label == '.bit_count'),
+            'bit_count not found'
+        );
+    });
+
     test('Show paths in a string', async () => {
         const jupyterCompletions: CompletionItem[] = [
             createCompletionItem('%bar', 0),

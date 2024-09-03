@@ -615,7 +615,6 @@ export function generatePythonCompletions(
     cell: TextDocument,
     position: Position
 ) {
-    let result = completions;
     const charBeforeCursorPosition =
         position.character === 0
             ? undefined
@@ -641,7 +640,7 @@ export function generatePythonCompletions(
     // Update magics to have a much lower sort order than other strings.
     // Also change things that start with our current word to eliminate the
     // extra long label.
-    result = result
+    const result = completions
         .map((r, i) => {
             let itemText = typeof r.label === 'string' ? r.label : r.label.label;
             let label = typeof r.label === 'string' ? r.label : r.label.label;
@@ -721,6 +720,8 @@ export function generatePythonCompletions(
             // If not inside of a string, filter out file names (things that end with '/')
             if (!insideString) {
                 if (!itemText.includes('.') && !itemText.endsWith('/')) {
+                    return r;
+                } else if (itemText.startsWith('.') && !itemText.endsWith('/')) {
                     return r;
                 } else {
                     return undefined;
