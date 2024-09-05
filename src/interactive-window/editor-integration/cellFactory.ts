@@ -69,6 +69,8 @@ export function generateCells(
             // Just a single markdown cell
             return [generateMarkdownCell(split)];
         }
+    } else if (matcher.isCode(firstLine)) {
+        return [generateCodeCell(split.slice(1))];
     } else {
         // Just code
         return [generateCodeCell(split)];

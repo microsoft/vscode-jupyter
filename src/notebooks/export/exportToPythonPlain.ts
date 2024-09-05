@@ -14,18 +14,16 @@ export class ExportToPythonPlain implements IExport {
     private readonly fs: IFileSystem;
     private readonly configuration: IConfigurationService;
     private platform: IPlatformService;
+    private readonly eol: string;
     constructor() {
         this.fs = ServiceContainer.instance.get<IFileSystem>(IFileSystem);
         this.configuration = ServiceContainer.instance.get<IConfigurationService>(IConfigurationService);
         this.platform = ServiceContainer.instance.get<IPlatformService>(IPlatformService);
+        this.eol = this.platform.isWindows ? '\r\n' : '\n';
     }
 
     async writeFile(target: Uri, contents: string): Promise<void> {
         await this.fs.writeFile(target, contents);
-    }
-
-    getEOL(): string {
-        return this.platform.isWindows ? '\r\n' : '\n';
     }
 
     // Export the given document to the target source file
@@ -40,23 +38,31 @@ export class ExportToPythonPlain implements IExport {
 
     // Convert an entire NotebookDocument to a single string
     private exportDocument(document: NotebookDocument): string {
+        const cells = document.getCells();
         return document
             .getCells()
             .filter((cell) => !cell.metadata?.isInteractiveWindowMessageCell) // We don't want interactive window sys info cells
-            .reduce((previousValue, currentValue) => previousValue + this.exportCell(currentValue), '');
+            .reduce((previousValue, currentValue, index) => {
+                const cell = this.exportCell(currentValue);
+                // No need to add trailing empty lines for the last cell.
+                // Else we end up with an exported file containing empty lines at the end.
+                if (index === cells.length - 1) {
+                    return previousValue + cell;
+                } else {
+                    return previousValue + cell + `${this.eol}${this.eol}`;
+                }
+            }, '');
     }
 
     // Convert one NotebookCell to a string, created a cell marker for it
     private exportCell(cell: NotebookCell): string {
         if (cell.document.lineCount) {
             const cellMarker = this.cellMarker(cell);
-            const eol = this.getEOL();
-
             switch (cell.kind) {
                 case NotebookCellKind.Code:
-                    return `${cellMarker}${eol}${this.exportCodeCell(cell)}${eol}${eol}`;
+                    return `${cellMarker}${this.eol}${this.exportCodeCell(cell)}`;
                 case NotebookCellKind.Markup:
-                    return `${cellMarker} [markdown]${eol}${this.exportMarkdownCell(cell)}${eol}${eol}`;
+                    return `${cellMarker} [markdown]${this.eol}${this.exportMarkdownCell(cell)}`;
             }
         }
 
@@ -70,7 +76,7 @@ export class ExportToPythonPlain implements IExport {
         // Check to see if we should comment out Shell / Magic commands
         const commentMagic = this.configuration.getSettings(cell.notebook.uri).pythonExportMethod === 'commentMagics';
 
-        return appendLineFeed(code, this.getEOL(), commentMagic ? commentMagicCommands : undefined).join('');
+        return appendLineFeed(code, this.eol, commentMagic ? commentMagicCommands : undefined).join('');
     }
 
     // Convert one Markup cell to a string
@@ -78,7 +84,7 @@ export class ExportToPythonPlain implements IExport {
         let code = splitLines(cell.document.getText(), { trim: false, removeEmptyEntries: false });
 
         // Comment out lines of markdown cells
-        return appendLineFeed(code, this.getEOL(), commentLine).join('');
+        return appendLineFeed(code, this.eol, commentLine).join('');
     }
 
     // Determine the cell marker for a notebook cell, if it's in the metadata use that
