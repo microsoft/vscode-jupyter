@@ -121,7 +121,8 @@ suite('IPyWidget Script Manager @widgets', function () {
                 assert.fail('We should have started a Python kernel');
             } else {
                 const expectedDir = Uri.joinPath(
-                    getExtensionTempDir(context),
+                    context.extensionUri,
+                    'temp',
                     'scripts',
                     await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
                     'jupyter'
@@ -140,7 +141,8 @@ suite('IPyWidget Script Manager @widgets', function () {
             return this.skip();
         }
         const expectedDir = Uri.joinPath(
-            getExtensionTempDir(context),
+            context.extensionUri,
+            'temp',
             'scripts',
             await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
             'jupyter'
@@ -156,7 +158,7 @@ suite('IPyWidget Script Manager @widgets', function () {
         // await del([nbExtensionsFolder]);
         const fsNode = api.serviceContainer.get<IFileSystemNode>(IFileSystemNode);
         // eslint-disable-next-line local-rules/dont-use-fspath
-        await fsNode.delete(Uri.file(nbExtensionsFolder.fsPath));
+        await fsNode.delete(nbExtensionsFolder);
         assert.isFalse(await fs.exists(nbExtensionsFolder), `Directory '${nbExtensionsFolder}'does not exist`);
 
         await kernel.restart();
