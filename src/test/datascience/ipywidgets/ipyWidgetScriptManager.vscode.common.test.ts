@@ -31,7 +31,6 @@ import { createActiveInterpreterController } from '../notebook/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { HttpClient } from '../../../platform/common/net/httpClient';
-import { getExtensionTempDir } from '../../../platform/common/temp';
 
 suite('IPyWidget Script Manager @widgets', function () {
     this.timeout(120_000);

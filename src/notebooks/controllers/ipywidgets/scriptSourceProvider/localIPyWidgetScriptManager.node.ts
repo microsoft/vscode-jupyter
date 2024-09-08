@@ -13,7 +13,6 @@ import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, INbExtensionsPathProvider } from '../types';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { logger } from '../../../../platform/logging';
-import { getExtensionTempDir } from '../../../../platform/common/temp';
 
 type KernelConnectionId = string;
 /**
