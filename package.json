@@ -132,12 +132,12 @@
             {
                 "command": "jupyter.runcurrentcelladvance",
                 "key": "shift+enter",
-                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused"
+                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused && !isCompositeNotebook"
             },
             {
                 "command": "jupyter.runcurrentcell",
                 "key": "ctrl+enter",
-                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused"
+                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused && !isCompositeNotebook"
             },
             {
                 "command": "jupyter.runcurrentcellandaddbelow",
