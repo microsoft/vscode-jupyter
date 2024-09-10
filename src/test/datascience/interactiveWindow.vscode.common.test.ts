@@ -427,6 +427,27 @@ ${actualCode}
         assert.ok(/tmp-[^\.]*\.py:3/.test(html), 'link to file not found');
     });
 
+    test('Run code from the input box after running cells from a file', async () => {
+        // Create a new interactive window
+        const { activeInteractiveWindow } = await runNewPythonFile(
+            interactiveWindowProvider,
+            '# %%\nx = 1\nprint(x)',
+            disposables
+        );
+
+        // Wait for the last cell to complete
+        await waitForLastCellToComplete(activeInteractiveWindow, 1, true);
+
+        // Run code from the input box
+        await runInteractiveWindowInput('print("foo")', activeInteractiveWindow, 2);
+
+        // Wait for the last cell to complete
+        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 2, true);
+
+        // Verify the output
+        await waitForTextOutput(lastCell, 'foo');
+    });
+
     test('Raising an exception from within a function has a stack trace', async function () {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
