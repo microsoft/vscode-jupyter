@@ -103,7 +103,14 @@ class SafeRepr(object):
             if isinstance(obj, t) and has_obj_repr(t):
                 return self._repr_iter(obj, level, prefix, suffix, comma)
 
-        for t, prefix, suffix, item_prefix, item_sep, item_suffix in self.dict_types:  # noqa
+        for (
+            t,
+            prefix,
+            suffix,
+            item_prefix,
+            item_sep,
+            item_suffix,
+        ) in self.dict_types:  # noqa
             if isinstance(obj, t) and has_obj_repr(t):
                 return self._repr_dict(
                     obj, level, prefix, suffix, item_prefix, item_sep, item_suffix
@@ -171,7 +178,9 @@ class SafeRepr(object):
                     size = None
                 if size is not None and size > self.maxcollection[level]:
                     return True
-                return any((self._is_long_iter(item, level + 1) for item in obj))  # noqa
+                return any(
+                    (self._is_long_iter(item, level + 1) for item in obj)
+                )  # noqa
             return any(
                 i > self.maxcollection[level] or self._is_long_iter(item, level + 1)
                 for i, item in enumerate(obj)
@@ -287,7 +296,9 @@ class SafeRepr(object):
             # Slightly imprecise calculations - we may end up with a string that is
             # up to 6 characters longer than limit. If you need precise formatting,
             # you are using the wrong class.
-            left_count, right_count = max(1, int(2 * limit / 3)), max(1, int(limit / 3))  # noqa
+            left_count, right_count = max(1, int(2 * limit / 3)), max(
+                1, int(limit / 3)
+            )  # noqa
 
             # Important: only do repr after slicing to avoid duplicating a byte array that could be
             # huge.
@@ -351,7 +362,9 @@ class SafeRepr(object):
                 obj_repr = object.__repr__(obj)
             except Exception:
                 try:
-                    obj_repr = "<no repr available for " + type(obj).__name__ + ">"  # noqa
+                    obj_repr = (
+                        "<no repr available for " + type(obj).__name__ + ">"
+                    )  # noqa
                 except Exception:
                     obj_repr = "<no repr available for object>"
 
@@ -364,7 +377,9 @@ class SafeRepr(object):
         # Slightly imprecise calculations - we may end up with a string that is
         # up to 3 characters longer than limit. If you need precise formatting,
         # you are using the wrong class.
-        left_count, right_count = max(1, int(2 * limit / 3)), max(1, int(limit / 3))  # noqa
+        left_count, right_count = max(1, int(2 * limit / 3)), max(
+            1, int(limit / 3)
+        )  # noqa
 
         yield obj_repr[:left_count]
         yield "..."
