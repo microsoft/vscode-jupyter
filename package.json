@@ -1740,7 +1740,7 @@
                     "type": "array",
                     "default": "",
                     "description": "%jupyter.configuration.jupyter.runStartupCommands.description%",
-                    "scope": "application"
+                    "scope": "machine-overridable"
                 },
                 "jupyter.debugJustMyCode": {
                     "type": "boolean",
