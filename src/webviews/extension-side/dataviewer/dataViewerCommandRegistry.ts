@@ -90,7 +90,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
     private async delegateDataViewer(request: IJupyterVariable | IShowDataViewerFromVariablePanel) {
         const variable = 'variable' in request ? await this.getVariableFromRequest(request) : request;
         if (!variable) {
-            logger.error('Full variable info could not be retreived');
+            logger.error('Variable info could not be retreived');
             sendTelemetryEvent(Telemetry.FailedShowDataViewer, undefined, {
                 reason: 'no variable info',
                 fromVariableView: false
@@ -106,7 +106,13 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
             const variable = convertDebugProtocolVariableToIJupyterVariable(
                 request.variable as unknown as DebugProtocol.Variable
             );
-            return this.variableProvider.getFullVariable(variable);
+            try {
+                const result = await this.variableProvider.getFullVariable(variable);
+                return result;
+            } catch (e) {
+                logger.warn('Full variable info could not be retreived, will attempt with partial info.', e);
+                return variable;
+            }
         }
     }
 
