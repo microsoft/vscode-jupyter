@@ -110,7 +110,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
                 const result = await this.variableProvider.getFullVariable(variable);
                 return result;
             } catch (e) {
-                logger.error('Full variable info could not be retreived, will attempt with partial info.', e);
+                logger.warn('Full variable info could not be retreived, will attempt with partial info.', e);
                 return variable;
             }
         }
