@@ -1703,6 +1703,11 @@
                     "description": "%jupyter.configuration.jupyter.interactiveWindowMode.description%",
                     "default": "multiple"
                 },
+                "jupyter.interactiveWindow.notebookRepl": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%jupyter.configuration.jupyter.interactiveWindowNotebookRepl.description%"
+                },
                 "jupyter.interactiveWindow.textEditor.cellFolding": {
                     "type": "boolean",
                     "default": true,
@@ -2055,7 +2060,8 @@
         "quickPickItemTooltip",
         "notebookExecution",
         "notebookCellExecution",
-        "notebookVariableProvider"
+        "notebookVariableProvider",
+        "notebookReplDocument"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",

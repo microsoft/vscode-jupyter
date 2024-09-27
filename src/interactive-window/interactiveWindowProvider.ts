@@ -244,16 +244,26 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         resource: Resource,
         mode: InteractiveWindowMode
     ): Promise<[Uri, NotebookEditor]> {
-        const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
-        const hasOwningFile = resource !== undefined;
-        let viewColumn = this.getInteractiveViewColumn(resource);
+        const title = resource && mode === 'perFile' ? getInteractiveWindowTitle(resource) : undefined;
+        const preserveFocus = resource !== undefined;
+        const viewColumn = this.getInteractiveViewColumn(resource);
+
+        if (this.configService.getSettings(resource).interactiveReplNotebook) {
+            return this.createNotebookBackedEditor(
+                viewColumn,
+                preserveFocus,
+                preferredController?.controller.id,
+                title
+            );
+        }
+
         const { inputUri, notebookEditor } = (await commands.executeCommand(
             'interactive.open',
             // Keep focus on the owning file if there is one
-            { viewColumn: viewColumn, preserveFocus: hasOwningFile },
+            { viewColumn, preserveFocus },
             undefined,
-            controllerId,
-            resource && mode === 'perFile' ? getInteractiveWindowTitle(resource) : undefined
+            preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined,
+            title
         )) as unknown as INativeInteractiveWindow;
         if (!notebookEditor) {
             // This means VS Code failed to create an interactive window.
@@ -261,6 +271,36 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
             throw new Error('Failed to request creation of interactive window from VS Code.');
         }
         return [inputUri, notebookEditor];
+    }
+
+    private async createNotebookBackedEditor(
+        viewColumn: number,
+        preserveFocus: boolean,
+        controllerId?: string,
+        title?: string
+    ): Promise<[Uri, NotebookEditor]> {
+        title = title || 'Interactive-1';
+        const notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
+
+        const editor = await window.showNotebookDocument(notebookDocument, {
+            preserveFocus,
+            viewColumn,
+            asRepl: title
+        });
+
+        if (!editor.replOptions) {
+            throw new Error('Wrong type of editor created');
+        }
+
+        if (controllerId) {
+            await commands.executeCommand('notebook.selectKernel', {
+                editor,
+                id: controllerId,
+                extension: JVSC_EXTENSION_ID
+            });
+        }
+        const inputUri = notebookDocument.cellAt(editor.replOptions.appendIndex).document.uri;
+        return [inputUri, editor];
     }
 
     private getInteractiveViewColumn(resource: Resource): ViewColumn {
