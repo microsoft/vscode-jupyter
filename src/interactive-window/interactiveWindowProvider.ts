@@ -35,7 +35,13 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from '../notebooks/types';
 import { InteractiveWindow } from './interactiveWindow';
-import { JVSC_EXTENSION_ID, NotebookCellScheme, Telemetry } from '../platform/common/constants';
+import {
+    InteractiveWindowView,
+    JupyterNotebookView,
+    JVSC_EXTENSION_ID,
+    NotebookCellScheme,
+    Telemetry
+} from '../platform/common/constants';
 import {
     IInteractiveControllerHelper,
     IInteractiveWindow,
@@ -186,7 +192,10 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
         this.pendingCreations = creationInProgress.promise;
         try {
-            let initialController = await this.controllerHelper.getInitialController(resource, connection);
+            const useNotebookModel = this.configService.getSettings(resource).interactiveReplNotebook;
+
+            const viewType = useNotebookModel ? JupyterNotebookView : InteractiveWindowView;
+            let initialController = await this.controllerHelper.getInitialController(resource, viewType, connection);
 
             logger.info(
                 `Starting interactive window for resource '${getDisplayPath(
@@ -194,7 +203,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
                 )}' with controller '${initialController?.id}'`
             );
 
-            const [inputUri, editor] = await this.createEditor(initialController, resource, mode);
+            const [inputUri, editor] = await this.createEditor(initialController, resource, mode, useNotebookModel);
             if (initialController) {
                 initialController.controller.updateNotebookAffinity(
                     editor.notebook,
@@ -242,13 +251,14 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
     private async createEditor(
         preferredController: IVSCodeNotebookController | undefined,
         resource: Resource,
-        mode: InteractiveWindowMode
+        mode: InteractiveWindowMode,
+        notebookModel: boolean
     ): Promise<[Uri, NotebookEditor]> {
         const title = resource && mode === 'perFile' ? getInteractiveWindowTitle(resource) : undefined;
         const preserveFocus = resource !== undefined;
         const viewColumn = this.getInteractiveViewColumn(resource);
 
-        if (this.configService.getSettings(resource).interactiveReplNotebook) {
+        if (notebookModel) {
             return this.createNotebookBackedEditor(
                 viewColumn,
                 preserveFocus,
@@ -280,7 +290,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         title?: string
     ): Promise<[Uri, NotebookEditor]> {
         title = title || 'Interactive-1';
-        const notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
+        const notebookDocument = await workspace.openNotebookDocument(JupyterNotebookView);
 
         const editor = await window.showNotebookDocument(notebookDocument, {
             preserveFocus,
