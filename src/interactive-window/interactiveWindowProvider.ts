@@ -252,13 +252,13 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         preferredController: IVSCodeNotebookController | undefined,
         resource: Resource,
         mode: InteractiveWindowMode,
-        notebookModel: boolean
+        withNotebookModel: boolean
     ): Promise<[Uri, NotebookEditor]> {
         const title = resource && mode === 'perFile' ? getInteractiveWindowTitle(resource) : undefined;
         const preserveFocus = resource !== undefined;
         const viewColumn = this.getInteractiveViewColumn(resource);
 
-        if (notebookModel) {
+        if (withNotebookModel) {
             return this.createNotebookBackedEditor(
                 viewColumn,
                 preserveFocus,

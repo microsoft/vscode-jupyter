@@ -1706,7 +1706,10 @@
                 "jupyter.interactiveWindow.notebookRepl": {
                     "type": "boolean",
                     "default": false,
-                    "description": "%jupyter.configuration.jupyter.interactiveWindowNotebookRepl.description%"
+                    "description": "%jupyter.configuration.jupyter.interactiveWindowNotebookRepl.description%",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "jupyter.interactiveWindow.textEditor.cellFolding": {
                     "type": "boolean",

@@ -49,29 +49,26 @@ export class InteractiveWindowDebuggingStartupCodeProvider
             }
         }
 
-        if (kernel.notebook?.notebookType === InteractiveWindowView) {
-            if (!isLocalConnection(kernel.kernelConnectionMetadata)) {
-                // With remove kernel connection in the web, we use the new approach, i.e. Jupyter debugger protocol.
-                return [];
-            }
-
-            // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
-            // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
-            if (!this.addRunCellHookContents) {
-                this.addRunCellHookContents = this.fs.readFile(
-                    Uri.joinPath(
-                        this.context.extensionUri,
-                        'pythonFiles',
-                        'vscode_datascience_helpers',
-                        'kernel',
-                        'addRunCellHook.py'
-                    )
-                );
-            }
-            const addRunCellHook = await this.addRunCellHookContents;
-
-            return splitLines(addRunCellHook, { trim: false });
+        if (!isLocalConnection(kernel.kernelConnectionMetadata)) {
+            // With remove kernel connection in the web, we use the new approach, i.e. Jupyter debugger protocol.
+            return [];
         }
-        return [];
+
+        // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
+        // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
+        if (!this.addRunCellHookContents) {
+            this.addRunCellHookContents = this.fs.readFile(
+                Uri.joinPath(
+                    this.context.extensionUri,
+                    'pythonFiles',
+                    'vscode_datascience_helpers',
+                    'kernel',
+                    'addRunCellHook.py'
+                )
+            );
+        }
+        const addRunCellHook = await this.addRunCellHookContents;
+
+        return splitLines(addRunCellHook, { trim: false });
     }
 }
