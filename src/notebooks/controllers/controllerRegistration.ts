@@ -16,7 +16,6 @@ import {
     IExtensionContext,
     IDisposable
 } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { logger } from '../../platform/logging';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
