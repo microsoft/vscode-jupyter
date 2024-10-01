@@ -174,6 +174,20 @@ class KernelExecutionProgressIndicator {
 }
 
 /**
+ * Error to be throw to to notify calls of the API that access to the API has been revoked by the user.
+ */
+class KernelAPIAccessRevoked extends Error {
+    constructor() {
+        super(l10n.t('Access to Jupyter Kernel has been revoked'));
+        // WARNING: This name should never be changed as extensions can rely on this.
+        // Do not expose as a constant either, at least not yet
+        // Lets try this approach for now and see if there can be a better approach.
+        // Note: Same approach used in notebook renderer fallbacks.
+        this.name = 'vscode.jupyter.apiAccessRevoked';
+    }
+}
+
+/**
  * Design guidelines for separate kernel per extension.
  * Assume extension A & B use the same kernel and use this API.
  * Both can send code and so can the user via a notebook/iw.
@@ -284,7 +298,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         }
         const accessAllowed = await this.accessAllowed;
         if (!accessAllowed) {
-            throw new Error(l10n.t('Access to Jupyter Kernel has been revoked'));
+            throw new KernelAPIAccessRevoked();
         }
     }
 
