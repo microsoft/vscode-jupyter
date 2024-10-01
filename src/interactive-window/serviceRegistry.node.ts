@@ -36,9 +36,11 @@ import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldin
 import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveControllerHelper } from './InteractiveControllerHelper';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+    serviceManager.addSingleton<IReplNotebookTrackerService>(IReplNotebookTrackerService, InteractiveWindowProvider);
     serviceManager.addSingleton<IInteractiveControllerHelper>(
         IInteractiveControllerHelper,
         InteractiveControllerHelper

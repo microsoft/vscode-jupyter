@@ -58,6 +58,7 @@ import { isInteractiveInputTab } from './helpers';
 import { sendTelemetryEvent } from '../telemetry';
 import { InteractiveControllerFactory } from './InteractiveWindowController';
 import { NotebookInteractiveWindow } from './notebookInteractiveWindow';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -67,7 +68,9 @@ export const InteractiveWindowCacheKey = 'ds_interactive_window_cache';
  * Factory for InteractiveWindow
  */
 @injectable()
-export class InteractiveWindowProvider implements IInteractiveWindowProvider, IEmbedNotebookEditorProvider {
+export class InteractiveWindowProvider
+    implements IInteractiveWindowProvider, IEmbedNotebookEditorProvider, IReplNotebookTrackerService
+{
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
@@ -95,6 +98,10 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
     ) {
         this.notebookEditorProvider.registerEmbedNotebookProvider(this);
         this.restoreWindows();
+    }
+
+    isForReplEditor(notebook: NotebookDocument): boolean {
+        return this._windows.some((w) => w.notebookUri.toString() === notebook.uri.toString());
     }
 
     private restoreWindows() {

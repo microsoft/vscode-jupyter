@@ -27,9 +27,11 @@ import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startu
 import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldingProvider';
 import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
 import { InteractiveControllerHelper } from './InteractiveControllerHelper';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+    serviceManager.addSingleton<IReplNotebookTrackerService>(IReplNotebookTrackerService, InteractiveWindowProvider);
     serviceManager.addSingleton<IInteractiveControllerHelper>(
         IInteractiveControllerHelper,
         InteractiveControllerHelper

@@ -26,7 +26,7 @@ import {
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
 import { NotebookKernelExecution } from './kernelExecution';
-import { IsForVisibleReplEditor as isForVisibleReplEditor } from '../platform/notebooks/notebookTypeHelper';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 
 /**
  * Node version of a kernel provider. Needed in order to create the node version of a kernel.
@@ -43,7 +43,8 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @multiInject(ITracebackFormatter)
         private readonly formatters: ITracebackFormatter[],
         @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento,
+        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService
     ) {
         super(asyncDisposables, disposables);
         disposables.push(jupyterServerUriStorage.onDidRemove(this.handleServerRemoval.bind(this)));
@@ -56,7 +57,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
         }
         this.disposeOldKernel(notebook);
 
-        const replKernel = isForVisibleReplEditor(notebook);
+        const replKernel = this.replTracker.isForReplEditor(notebook);
         const resourceUri = replKernel ? options.resourceUri : notebook.uri;
         const settings = createKernelSettings(this.configService, resourceUri);
         const startupCodeProviders = this.startupCodeProviders.getProviders(
