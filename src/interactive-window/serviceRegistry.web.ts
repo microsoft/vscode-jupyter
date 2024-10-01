@@ -15,7 +15,7 @@ import {
     IDataScienceCodeLensProvider,
     ICodeGeneratorFactory
 } from './editor-integration/types';
-import { InteractiveWindowProvider } from './interactiveWindowProvider';
+import { InteractiveWindowProvider, ReplNotebookTrackerService } from './interactiveWindowProvider';
 import { IInteractiveControllerHelper, IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
 import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
 import { GeneratedCodeStorageFactory } from './editor-integration/generatedCodeStorageFactory';
@@ -31,7 +31,7 @@ import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookT
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    serviceManager.addSingleton<IReplNotebookTrackerService>(IReplNotebookTrackerService, InteractiveWindowProvider);
+    serviceManager.addSingleton<IReplNotebookTrackerService>(IReplNotebookTrackerService, ReplNotebookTrackerService);
     serviceManager.addSingleton<IInteractiveControllerHelper>(
         IInteractiveControllerHelper,
         InteractiveControllerHelper

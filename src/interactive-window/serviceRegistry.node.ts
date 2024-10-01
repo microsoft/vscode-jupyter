@@ -12,7 +12,7 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { GeneratedCodeStorageFactory } from './editor-integration/generatedCodeStorageFactory';
 import { HoverProvider } from './editor-integration/hoverProvider';
-import { InteractiveWindowProvider } from './interactiveWindowProvider';
+import { InteractiveWindowProvider, ReplNotebookTrackerService } from './interactiveWindowProvider';
 import {
     ICodeWatcher,
     ICodeLensFactory,
@@ -40,7 +40,7 @@ import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookT
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    serviceManager.addSingleton<IReplNotebookTrackerService>(IReplNotebookTrackerService, InteractiveWindowProvider);
+    serviceManager.addSingleton<IReplNotebookTrackerService>(IReplNotebookTrackerService, ReplNotebookTrackerService);
     serviceManager.addSingleton<IInteractiveControllerHelper>(
         IInteractiveControllerHelper,
         InteractiveControllerHelper
