@@ -18,7 +18,9 @@ import {
     window,
     NotebookEdit,
     NotebookEditorRevealType,
-    commands
+    commands,
+    TabInputNotebook,
+    TabInputInteractiveWindow
 } from 'vscode';
 import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE, isWebExtension } from '../platform/common/constants';
 import { logger } from '../platform/logging';
@@ -219,11 +221,14 @@ export class InteractiveWindow implements IInteractiveWindow {
      * Open the the editor for the interactive window, re-using the tab if it already exists.
      */
     public async showInteractiveEditor(): Promise<NotebookEditor> {
-        let currentTab: InteractiveTab | undefined;
+        let viewColumn: number | undefined = undefined;
         window.tabGroups.all.find((group) => {
             group.tabs.find((tab) => {
-                if (isInteractiveInputTab(tab) && tab.input.uri.toString() == this.notebookUri.toString()) {
-                    currentTab = tab;
+                if (
+                    (tab.input instanceof TabInputNotebook || tab.input instanceof TabInputInteractiveWindow) &&
+                    tab.input.uri.toString() == this.notebookUri.toString()
+                ) {
+                    viewColumn = tab.group.viewColumn;
                 }
             });
         });
@@ -231,7 +236,8 @@ export class InteractiveWindow implements IInteractiveWindow {
         const notebook = this.notebookDocument || (await this.openNotebookDocument());
         const editor = await window.showNotebookDocument(notebook, {
             preserveFocus: true,
-            viewColumn: currentTab?.group.viewColumn
+            viewColumn,
+            asRepl: true
         });
 
         return editor;
@@ -548,8 +554,13 @@ export class InteractiveWindow implements IInteractiveWindow {
             id: uuid()
         };
         notebookCellData.metadata = metadata;
+
+        return this.appendCell(notebookDocument, notebookCellData);
+    }
+
+    protected async appendCell(notebookDocument: NotebookDocument, cell: NotebookCellData) {
         await chainWithPendingUpdates(notebookDocument, (edit) => {
-            const nbEdit = NotebookEdit.insertCells(notebookDocument.cellCount, [notebookCellData]);
+            const nbEdit = NotebookEdit.insertCells(notebookDocument.cellCount, [cell]);
             edit.set(notebookDocument.uri, [nbEdit]);
         });
         const newCellIndex = notebookDocument.cellCount - 1;

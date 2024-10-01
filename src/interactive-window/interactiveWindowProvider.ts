@@ -57,6 +57,7 @@ import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isInteractiveInputTab } from './helpers';
 import { sendTelemetryEvent } from '../telemetry';
 import { InteractiveControllerFactory } from './InteractiveWindowController';
+import { NotebookInteractiveWindow } from './notebookInteractiveWindow';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -214,13 +215,21 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
                 `Interactive Window Editor Created: ${editor.notebook.uri.toString()} with input box: ${inputUri.toString()}`
             );
 
-            const result = new InteractiveWindow(
-                this.serviceContainer,
-                resource,
-                new InteractiveControllerFactory(this.controllerHelper, mode, initialController),
-                editor,
-                inputUri
-            );
+            const result = useNotebookModel
+                ? new NotebookInteractiveWindow(
+                      this.serviceContainer,
+                      resource,
+                      new InteractiveControllerFactory(this.controllerHelper, mode, initialController),
+                      editor,
+                      inputUri
+                  )
+                : new InteractiveWindow(
+                      this.serviceContainer,
+                      resource,
+                      new InteractiveControllerFactory(this.controllerHelper, mode, initialController),
+                      editor,
+                      inputUri
+                  );
             this._windows.push(result);
             sendTelemetryEvent(
                 Telemetry.CreateInteractiveWindow,
