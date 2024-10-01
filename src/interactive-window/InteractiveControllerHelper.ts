@@ -36,7 +36,11 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         controller: IVSCodeNotebookController;
     }>;
 
-    public async getInitialController(resource: Resource, viewType: IwViewType, preferredConnection?: KernelConnectionMetadata) {
+    public async getInitialController(
+        resource: Resource,
+        viewType: IwViewType,
+        preferredConnection?: KernelConnectionMetadata
+    ) {
         // If given a preferred connection, use that if it exists
         if (preferredConnection) {
             const controller = this.controllerRegistration.get(preferredConnection, viewType);
