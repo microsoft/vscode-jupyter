@@ -220,7 +220,7 @@ export class InteractiveWindowController {
         }
     }
 
-    public async resolveSysInfoCell(){
+    public async resolveSysInfoCell() {
         await this.systemInfoCell?.resolveCell();
     }
 
