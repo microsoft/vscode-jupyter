@@ -308,7 +308,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         const notebookDocument = await workspace.openNotebookDocument(JupyterNotebookView);
 
         const editor = await window.showNotebookDocument(notebookDocument, {
-            preserveFocus,
+            // currently, to set the controller, we need to focus the editor
+            preserveFocus: !!controller ? true : preserveFocus,
             viewColumn,
             asRepl: title
         });
