@@ -139,7 +139,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
                 Uri.parse(iw.inputBoxUriString)
             );
 
-            result.notifyConnectionReset();
+            result.notifyConnectionReset().catch(noop);
 
             this._windows.push(result);
             sendTelemetryEvent(

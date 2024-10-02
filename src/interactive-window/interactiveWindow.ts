@@ -166,27 +166,27 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
     }
 
-    public notifyConnectionReset() {
+    public async notifyConnectionReset() {
         if (!this.notebookDocument) {
-            const onNotebookOpen = workspace.onDidOpenNotebookDocument((notebook) => {
+            const onNotebookOpen = workspace.onDidOpenNotebookDocument(async (notebook) => {
                 if (notebook.uri.toString() === this.notebookUri.toString()) {
                     this._notebookDocument = notebook;
-                    this.controller = this.initController(notebook);
+                    this.controller = this.initController();
                     this.internalDisposables.push(this.controller.listenForControllerSelection());
-                    this.controller.setInfoMessageCell(DataScience.noKernelConnected);
+                    await this.controller.setInfoMessageCell(DataScience.noKernelConnected);
                     onNotebookOpen.dispose();
                 }
             });
         } else {
             if (!this.controller) {
-                this.controller = this.initController(this.notebookDocument);
+                this.controller = this.initController();
             }
-            this.controller.setInfoMessageCell(DataScience.noKernelConnected);
+            await this.controller.setInfoMessageCell(DataScience.noKernelConnected);
         }
     }
 
-    private initController(notebook: NotebookDocument) {
-        const controller = this.controllerFactory.create(notebook, this.errorHandler, this.kernelProvider, this._owner);
+    private initController() {
+        const controller = this.controllerFactory.create(this, this.errorHandler, this.kernelProvider, this._owner);
         this.internalDisposables.push(controller.listenForControllerSelection());
         return controller;
     }
@@ -206,7 +206,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         if (!this.controller) {
-            this.controller = this.initController(this.notebookDocument);
+            this.controller = this.initController();
         }
 
         if (this.controller.controller) {
@@ -555,16 +555,20 @@ export class InteractiveWindow implements IInteractiveWindow {
         };
         notebookCellData.metadata = metadata;
 
-        return this.appendCell(notebookDocument, notebookCellData);
-    }
-
-    protected async appendCell(notebookDocument: NotebookDocument, cell: NotebookCellData) {
-        await chainWithPendingUpdates(notebookDocument, (edit) => {
-            const nbEdit = NotebookEdit.insertCells(notebookDocument.cellCount, [cell]);
+        let index: number | undefined;
+        await chainWithPendingUpdates(notebookDocument, async (edit) => {
+            index = await this.getAppendIndex();
+            const nbEdit = NotebookEdit.insertCells(index, [notebookCellData]);
             edit.set(notebookDocument.uri, [nbEdit]);
         });
-        const newCellIndex = notebookDocument.cellCount - 1;
-        return notebookDocument.cellAt(newCellIndex);
+        return notebookDocument.cellAt(index!);
+    }
+
+    public async getAppendIndex() {
+        if (!this.notebookDocument) {
+            throw new Error('No notebook document');
+        }
+        return this.notebookDocument.cellCount;
     }
 
     private async generateCodeAndAddMetadata(cell: NotebookCell, isDebug: boolean, kernel: IKernel) {

@@ -1,25 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookDocument, NotebookCellData, NotebookCell, NotebookEdit, WorkspaceEdit, workspace } from 'vscode';
+import { NotebookEditor } from 'vscode';
 import { InteractiveWindow } from './interactiveWindow';
 
 export class NotebookInteractiveWindow extends InteractiveWindow {
-    protected override async appendCell(
-        notebookDocument: NotebookDocument,
-        cell: NotebookCellData
-    ): Promise<NotebookCell> {
-        const { replOptions } = await this.showInteractiveEditor();
-        if (!replOptions) {
+    private editor: NotebookEditor | undefined;
+
+    public override async getAppendIndex() {
+        if (!this.editor?.replOptions) {
+            this.editor = await this.showInteractiveEditor();
+        }
+        if (!this.editor?.replOptions) {
             throw new Error('Interactive editor not found');
         }
-
-        const cellIndex = replOptions.appendIndex;
-        const notebookEdit = NotebookEdit.insertCells(replOptions.appendIndex, [cell]);
-        const workspaceEdit = new WorkspaceEdit();
-        workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
-        await workspace.applyEdit(workspaceEdit);
-
-        return notebookDocument.cellAt(cellIndex)!;
+        return this.editor.replOptions.appendIndex;
     }
 }
