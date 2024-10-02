@@ -34,7 +34,7 @@
     - [ ] linux-x64
     - [ ] alpine-arm64
     - [ ] alpine-x64
-  - [ ] web
+- [ ] Test web by going to insiders.vscode.dev and test the latest pre-release of jupyter
 - [ ] Candidate bug fixes found from sanity test should be checked into `main` and cherry-picked to `release` branch
   - After a candidate fix is merged, a pre-release build can be released by manually running [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283) against the release branch.
 
@@ -112,6 +112,5 @@
     - [ ] linux-x64
     - [ ] alpine-arm64
     - [ ] alpine-x64
-  - [ ] web
 - [ ] Ensure that another tag was created for the new version's commit.
   * If a tag was not pushed, investigate in the  `Publish` Stage of the stable pipeline linked above, and manually add one using: `git tag -a YYYY.MM -m YYYY.MM -s -f`
