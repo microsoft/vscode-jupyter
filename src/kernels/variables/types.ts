@@ -25,6 +25,7 @@ export interface IJupyterVariable {
     indexColumn?: string;
     maximumRowChunkSize?: number;
     fileName?: Uri;
+    frameId?: number;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');

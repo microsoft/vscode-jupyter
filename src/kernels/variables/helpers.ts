@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { IJupyterVariable } from './types';
 
 export const DataViewableTypes: Set<string> = new Set<string>([
     'DataFrame',
@@ -14,7 +15,7 @@ export const DataViewableTypes: Set<string> = new Set<string>([
     'DataArray'
 ]);
 
-export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugProtocol.Variable) {
+export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugProtocol.Variable): IJupyterVariable {
     return {
         // If `evaluateName` is available use that. That is the name that we can eval in the debugger
         // but it's an optional property so fallback to `variable.name`

@@ -60,6 +60,7 @@ async function requestKernelAccessImpl(
         return { result: 'allowed' };
     }
     if (accessInfo.get(extensionId) === false) {
+        logger.warn(`Kernel API access already revoked for extension ${extensionId}`);
         return { result: 'denied' };
     }
     const displayName = extensions.getExtension(extensionId)?.packageJSON?.displayName;
@@ -90,8 +91,10 @@ async function requestKernelAccessImpl(
             return { result: 'allowed' };
         case Common.learnMore:
             return { result: 'learnMore' };
-        case deny:
+        case deny: {
+            logger.error(`Kernel API access revoked for extension ${extensionId}`);
             return { result: 'denied' };
+        }
         default:
             return { result: 'cancelled' };
     }

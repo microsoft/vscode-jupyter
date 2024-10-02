@@ -396,7 +396,7 @@ export class DebuggerVariables
 
     private monkeyPatchDataViewableVariables(variablesResponse: DebugProtocol.VariablesResponse) {
         variablesResponse.body.variables.forEach((v) => {
-            if (v.type && DataViewableTypes.has(v.type)) {
+            if (v.type && DataViewableTypes.has(v.type) && v.evaluateName) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (v as any).__vscodeVariableMenuContext = 'viewableInDataViewer';
             }

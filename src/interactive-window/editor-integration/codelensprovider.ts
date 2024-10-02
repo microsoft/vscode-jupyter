@@ -65,7 +65,11 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private onChangedActiveTextEditor() {
         const activeEditor = vscode.window.activeTextEditor;
 
-        if (!activeEditor || activeEditor.document.languageId != PYTHON_LANGUAGE) {
+        if (
+            !activeEditor ||
+            activeEditor.document.languageId != PYTHON_LANGUAGE ||
+            [NotebookCellScheme, InteractiveInputScheme].includes(activeEditor.document.uri.scheme)
+        ) {
             // set the context to false so our command doesn't run for other files
             const hasCellsContext = new ContextKey(EditorContexts.HasCodeCells);
             hasCellsContext.set(false).catch((ex) => logger.warn('Failed to set jupyter.HasCodeCells context', ex));
