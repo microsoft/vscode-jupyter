@@ -16,7 +16,7 @@ import { FileConverter } from '../../../notebooks/export/fileConverter.node';
 import { ExportFormat } from '../../../notebooks/export/types';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { ExportToPDF } from '../../../notebooks/export/exportToPDF';
 import { ExportToHTML } from '../../../notebooks/export/exportToHTML';
 import { ExportDialog } from '../../../notebooks/export/exportDialog';
@@ -26,6 +26,7 @@ import { mockedVSCodeNamespaces } from '../../vscode-mock';
 suite('File Converter @export', () => {
     let fileConverter: FileConverter;
     let fileSystem: IFileSystemNode;
+    let platform: IPlatformService;
     let exportUtil: ExportUtil;
     let exportFileOpener: sinon.SinonStub<
         [format: ExportFormat, uri: Uri, openDirectly?: boolean | undefined],
@@ -37,6 +38,7 @@ suite('File Converter @export', () => {
     setup(async () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
+        platform = mock<IPlatformService>();
         fileSystem = mock<IFileSystemNode>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
         configuration = mock<IConfigurationService>();
@@ -58,7 +60,14 @@ suite('File Converter @export', () => {
         when(exportInterpreterFinder.getExportInterpreter(anything())).thenResolve();
         exportFileOpener = sinon.stub(ExportFileOpener.prototype, 'openFile').resolves();
         sinon.stub(ServiceContainer, 'instance').get(() => ({
-            get: (id: unknown) => (id == IFileSystem ? instance(fileSystem) : undefined)
+            get: (id: unknown) => {
+                switch (id) {
+                    case IFileSystem:
+                        return instance(fileSystem);
+                    case IPlatformService:
+                        return instance(platform);
+                }
+            }
         }));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
