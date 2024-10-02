@@ -210,7 +210,8 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         if (this.controller.controller) {
-            this.controller.startKernel().catch(noop);
+            await this.controller.startKernel();
+            await this.controller.resolveSysInfoCell();
         } else {
             logger.info('No controller selected for Interactive Window initialization');
             this.controller.setInfoMessageCell(DataScience.selectKernelForEditor);

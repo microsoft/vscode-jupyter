@@ -54,6 +54,10 @@ export class SystemInfoCell {
         this.sysInfoCellPromise = this.getOrUpdate(message);
     }
 
+    public async resolveCell() {
+        return await this.sysInfoCellPromise;
+    }
+
     private async getOrUpdate(message: string) {
         const lastCellIndex = (await this.interactiveWindow.getAppendIndex()) - 1;
         if (lastCellIndex >= 0) {

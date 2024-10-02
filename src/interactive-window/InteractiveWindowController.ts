@@ -54,14 +54,14 @@ export class InteractiveWindowController {
             throw new Error('Interactive Window kernel not selected');
         }
 
-        await this.setInfoMessage(this.metadata, SysInfoReason.Start);
+        this.setInfoMessage(this.metadata, SysInfoReason.Start);
         try {
             const kernel = await this.createKernel();
             const kernelEventHookForRestart = async () => {
                 if (this.interactiveWindow.notebookDocument && this.metadata) {
                     this.systemInfoCell = undefined;
                     // If we're about to restart, insert a 'restarting' message as it happens
-                    await this.setInfoMessage(this.metadata, SysInfoReason.Restart);
+                    this.setInfoMessage(this.metadata, SysInfoReason.Restart);
                 }
             };
             // Hook pre interrupt so we can stick in a message
@@ -220,9 +220,13 @@ export class InteractiveWindowController {
         }
     }
 
+    public async resolveSysInfoCell(){
+        await this.systemInfoCell?.resolveCell();
+    }
+
     private setInfoMessage(metadata: KernelConnectionMetadata, reason: SysInfoReason) {
         const message = getStartConnectMessage(metadata, reason);
-        return this.setInfoMessageCell(message);
+        this.setInfoMessageCell(message);
     }
 
     private finishSysInfoMessage(kernel: IKernel, reason: SysInfoReason) {
