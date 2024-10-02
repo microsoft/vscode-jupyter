@@ -173,7 +173,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     this._notebookDocument = notebook;
                     this.controller = this.initController();
                     this.internalDisposables.push(this.controller.listenForControllerSelection());
-                    await this.controller.setInfoMessageCell(DataScience.noKernelConnected);
+                    this.controller.setInfoMessageCell(DataScience.noKernelConnected);
                     onNotebookOpen.dispose();
                 }
             });
@@ -181,7 +181,7 @@ export class InteractiveWindow implements IInteractiveWindow {
             if (!this.controller) {
                 this.controller = this.initController();
             }
-            await this.controller.setInfoMessageCell(DataScience.noKernelConnected);
+            this.controller.setInfoMessageCell(DataScience.noKernelConnected);
         }
     }
 
@@ -210,7 +210,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         if (this.controller.controller) {
-            await this.controller.startKernel();
+            this.controller.startKernel().catch(noop);
             await this.controller.resolveSysInfoCell();
         } else {
             logger.info('No controller selected for Interactive Window initialization');

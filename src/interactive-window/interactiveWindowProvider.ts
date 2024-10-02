@@ -7,6 +7,7 @@ import {
     Event,
     EventEmitter,
     Memento,
+    NotebookController,
     NotebookControllerAffinity,
     NotebookDocument,
     NotebookEditor,
@@ -278,12 +279,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         const viewColumn = this.getInteractiveViewColumn(resource);
 
         if (withNotebookModel) {
-            return this.createNotebookBackedEditor(
-                viewColumn,
-                preserveFocus,
-                preferredController?.controller.id,
-                title
-            );
+            return this.createNotebookBackedEditor(viewColumn, preserveFocus, preferredController?.controller, title);
         }
 
         const { inputUri, notebookEditor } = (await commands.executeCommand(
@@ -305,7 +301,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
     private async createNotebookBackedEditor(
         viewColumn: number,
         preserveFocus: boolean,
-        controllerId?: string,
+        controller: NotebookController | undefined,
         title?: string
     ): Promise<[Uri, NotebookEditor]> {
         title = title || 'Interactive-1';
@@ -321,10 +317,10 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
             throw new Error('Wrong type of editor created');
         }
 
-        if (controllerId) {
+        if (controller) {
             await commands.executeCommand('notebook.selectKernel', {
                 editor,
-                id: controllerId,
+                id: controller.id,
                 extension: JVSC_EXTENSION_ID
             });
         }
