@@ -34,7 +34,7 @@ import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-m
 import type { IFileSystem } from '../../../platform/common/platform/types';
 import { computeLocalWorkingDirectory } from './rawKernelSessionFactory.node';
 const nonSerializingKernel =
-    require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default');
+    require('@jupyterlab/services/lib/kernel/default') as typeof import('@jupyterlab/services/lib/kernel/default');
 
 suite('Raw Session & Raw Kernel Connection', () => {
     let session: RawSessionConnection;
