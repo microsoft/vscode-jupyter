@@ -16,6 +16,7 @@ import { InteractiveWindowView } from '../platform/common/constants';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { IDisposable } from '../platform/common/types';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 
 suite('GeneratedCodeStorageManager', () => {
     let disposables: IDisposable[] = [];
@@ -41,6 +42,7 @@ suite('GeneratedCodeStorageManager', () => {
         storageFactory = mock<IGeneratedCodeStorageFactory>();
         codeGeneratorFactory = mock<ICodeGeneratorFactory>();
         controllers = mock<IControllerRegistration>();
+        const replTracker = mock<IReplNotebookTrackerService>();
         when(kernelProvider.onDidCreateKernel).thenReturn(onDidCreateKernel.event);
         when(controllers.onControllerSelected).thenReturn(onNotebookControllerSelected.event);
         storageManager = new GeneratedCodeStorageManager(
@@ -48,7 +50,8 @@ suite('GeneratedCodeStorageManager', () => {
             disposables,
             instance(codeGeneratorFactory),
             instance(storageFactory),
-            instance(controllers)
+            instance(controllers),
+            instance(replTracker)
         );
         storageManager.activate();
     });

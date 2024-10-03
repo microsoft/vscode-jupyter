@@ -10,8 +10,8 @@ import { logger } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { stripAnsi } from '../../platform/common/utils/regexp';
-import { InteractiveWindowView } from '../../platform/common/constants';
 import { IConfigurationService } from '../../platform/common/types';
+import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
@@ -27,10 +27,12 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
     constructor(
         @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory,
         @inject(IPlatformService) private platformService: IPlatformService,
-        @inject(IConfigurationService) private configurationService: IConfigurationService
+        @inject(IConfigurationService) private configurationService: IConfigurationService,
+        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService
     ) {}
+
     public format(cell: NotebookCell, traceback: string[]): string[] {
-        if (cell.notebook.notebookType !== InteractiveWindowView) {
+        if (!this.replTracker.isForReplEditor(cell.notebook)) {
             return traceback;
         }
         const storage = this.storageFactory.get({ notebook: cell.notebook });

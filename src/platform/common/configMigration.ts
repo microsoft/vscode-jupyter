@@ -13,6 +13,7 @@ export class ConfigMigration {
         interactiveWindowMode: 'interactiveWindow.creationMode',
         interactiveWindowViewColumn: 'interactiveWindow.viewColumn',
         splitRunFileIntoCells: 'interactiveWindow.splitRunFileIntoCells',
+        interactiveReplNotebook: 'interactiveWindow.notebookRepl',
 
         sendSelectionToInteractiveWindow: 'interactiveWindow.textEditor.executeSelection',
         normalizeSelectionForInteractiveWindow: 'interactiveWindow.textEditor.normalizeSelection',

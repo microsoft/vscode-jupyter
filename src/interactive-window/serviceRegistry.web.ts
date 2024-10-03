@@ -15,7 +15,7 @@ import {
     IDataScienceCodeLensProvider,
     ICodeGeneratorFactory
 } from './editor-integration/types';
-import { InteractiveWindowProvider } from './interactiveWindowProvider';
+import { InteractiveWindowProvider, ReplNotebookTrackerService } from './interactiveWindowProvider';
 import { IInteractiveControllerHelper, IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
 import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
 import { GeneratedCodeStorageFactory } from './editor-integration/generatedCodeStorageFactory';
@@ -27,9 +27,11 @@ import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startu
 import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldingProvider';
 import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
 import { InteractiveControllerHelper } from './InteractiveControllerHelper';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+    serviceManager.addSingleton<IReplNotebookTrackerService>(IReplNotebookTrackerService, ReplNotebookTrackerService);
     serviceManager.addSingleton<IInteractiveControllerHelper>(
         IInteractiveControllerHelper,
         InteractiveControllerHelper

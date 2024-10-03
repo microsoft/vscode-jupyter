@@ -16,7 +16,6 @@ import {
     IExtensionContext,
     IDisposable
 } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { logger } from '../../platform/logging';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
@@ -122,11 +121,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
             this,
             this.disposables
         );
-        // Sign up for document either opening or closing
-        workspace.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
-        // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
-        workspace.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
-
         this.loadControllers();
     }
     private loadControllers() {
@@ -137,15 +131,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
     }
     public get loaded() {
         return this.controllersPromise;
-    }
-    private async onDidOpenNotebookDocument(document: NotebookDocument) {
-        // Restrict to only our notebook documents
-        if (
-            (document.notebookType !== JupyterNotebookView && document.notebookType !== InteractiveWindowView) ||
-            !workspace.isTrusted
-        ) {
-            return;
-        }
     }
 
     private async loadControllersImpl() {

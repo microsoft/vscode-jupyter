@@ -88,6 +88,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public excludeUserSitePackages: boolean = false;
     public enableExtendedPythonKernelCompletions: boolean = false;
     public formatStackTraces: boolean = false;
+    public interactiveReplNotebook: boolean = false;
     // Privates should start with _ so that they are not read from the settings.json
     private _changeEmitter = new EventEmitter<void>();
     private _workspaceRoot: Resource;

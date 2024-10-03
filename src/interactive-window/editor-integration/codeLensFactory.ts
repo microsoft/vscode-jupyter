@@ -10,7 +10,7 @@ import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from
 import * as localize from '../../platform/common/utils/localize';
 import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
-import { CodeLensCommands, Commands, InteractiveWindowView } from '../../platform/common/constants';
+import { CodeLensCommands, Commands } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory';
 import { CodeLensPerfMeasures, ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -19,6 +19,7 @@ import {
     notebookCellExecutions,
     type NotebookCellExecutionStateChangeEvent
 } from '../../platform/notebooks/cellExecutionStateService';
+import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
@@ -65,7 +66,8 @@ export class CodeLensFactory implements ICodeLensFactory {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IGeneratedCodeStorageFactory)
         private readonly generatedCodeStorageFactory: IGeneratedCodeStorageFactory,
-        @inject(IKernelProvider) kernelProvider: IKernelProvider
+        @inject(IKernelProvider) kernelProvider: IKernelProvider,
+        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService
     ) {
         workspace.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
         workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
@@ -213,7 +215,7 @@ export class CodeLensFactory implements ICodeLensFactory {
             .filter((n) => n !== undefined) as number[];
     }
     private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
-        if (e.cell.notebook.notebookType !== InteractiveWindowView) {
+        if (this.replTracker.isForReplEditor(e.cell.notebook)) {
             return;
         }
         if (e.state !== NotebookCellExecutionState.Idle || !e.cell.executionSummary?.executionOrder) {

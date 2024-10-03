@@ -13,7 +13,7 @@ import { IDisposableRegistry, IMemento, Resource, WORKSPACE_MEMENTO } from '../p
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { IServiceContainer } from '../platform/ioc/types';
 import { logger } from '../platform/logging';
-import { IInteractiveControllerHelper } from './types';
+import { IInteractiveControllerHelper, IwViewType } from './types';
 import { createInterpreterKernelSpec, getKernelId } from '../kernels/helpers';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 
@@ -36,10 +36,14 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         controller: IVSCodeNotebookController;
     }>;
 
-    public async getInitialController(resource: Resource, preferredConnection?: KernelConnectionMetadata) {
+    public async getInitialController(
+        resource: Resource,
+        viewType: IwViewType,
+        preferredConnection?: KernelConnectionMetadata
+    ) {
         // If given a preferred connection, use that if it exists
         if (preferredConnection) {
-            const controller = this.controllerRegistration.get(preferredConnection, InteractiveWindowView);
+            const controller = this.controllerRegistration.get(preferredConnection, viewType);
             if (controller) {
                 return controller;
             }
@@ -48,7 +52,7 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         // If a kernel was previously selected for an IW, use that again if it still exists
         if (this.workspaceMemento.get(MostRecentKernelSelectedKey)) {
             const metadata = this.workspaceMemento.get<KernelConnectionMetadata>(MostRecentKernelSelectedKey);
-            const controller = metadata ? this.controllerRegistration.get(metadata, InteractiveWindowView) : undefined;
+            const controller = metadata ? this.controllerRegistration.get(metadata, viewType) : undefined;
             if (controller) {
                 return controller;
             }
@@ -58,7 +62,7 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         }
         // Just use the active interpreter
         return await createActiveInterpreterController(
-            InteractiveWindowView,
+            viewType,
             resource,
             this.interpreterService,
             this.controllerRegistration

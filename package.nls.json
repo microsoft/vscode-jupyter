@@ -191,6 +191,7 @@
         "message": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
         "comment": ["{Locked='perFile'}", "{Locked=\"'single'\"}", "{Locked=\"'multiple'\"}"]
     },
+    "jupyter.configuration.jupyter.interactiveWindowNotebookRepl.description": "Experimental. The interactive window will use a notebook as the editor model.",
     "jupyter.configuration.jupyter.interactiveWindowMode.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.creationMode.",
     "jupyter.configuration.jupyter.pythonCellFolding.description": "Enable folding regions for code cells in Python files. This setting requires a reload of VS Code.",
     "jupyter.configuration.jupyter.pythonCellFolding.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.cellFolding.",

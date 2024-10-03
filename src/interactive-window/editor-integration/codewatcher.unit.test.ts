@@ -31,6 +31,7 @@ import { MockJupyterSettings } from '../../test/datascience/mockJupyterSettings'
 import { MockEditor } from '../../test/datascience/mockTextEditor';
 import { noop } from '../../test/core';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -114,6 +115,7 @@ suite('Code Watcher Unit Tests', () => {
         const storageFactory = mock<IGeneratedCodeStorageFactory>();
         const kernelProvider = mock<IKernelProvider>();
         const kernelDisposedEvent = new EventEmitter<IKernel>();
+        const replTracker = mock<IReplNotebookTrackerService>();
         when(kernelProvider.onDidDisposeKernel).thenReturn(kernelDisposedEvent.event);
         disposables.push(trustedEvent);
         disposables.push(kernelDisposedEvent);
@@ -121,7 +123,8 @@ suite('Code Watcher Unit Tests', () => {
             configService.object,
             disposables,
             instance(storageFactory),
-            instance(kernelProvider)
+            instance(kernelProvider),
+            instance(replTracker)
         );
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
@@ -132,7 +135,8 @@ suite('Code Watcher Unit Tests', () => {
                         configService.object,
                         helper.object,
                         dataScienceErrorHandler.object,
-                        codeLensFactory
+                        codeLensFactory,
+                        instance(replTracker)
                     )
             );
 
@@ -159,7 +163,8 @@ suite('Code Watcher Unit Tests', () => {
             configService.object,
             helper.object,
             dataScienceErrorHandler.object,
-            codeLensFactory
+            codeLensFactory,
+            instance(replTracker)
         );
     });
     teardown(() => (disposables = dispose(disposables)));

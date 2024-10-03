@@ -99,6 +99,7 @@ export interface IJupyterSettings {
      * TODO: in debt to merge the two settings.
      */
     readonly completionTriggerCharacters?: Record<string, string[]>;
+    readonly interactiveReplNotebook: boolean;
 }
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {
