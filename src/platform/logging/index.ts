@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Disposable, Uri, LogLevel, workspace, window } from 'vscode';
-import { isCI } from '../common/constants';
+import { isCI, isTestExecution } from '../common/constants';
 import { Arguments, ILogger, TraceDecoratorType, TraceOptions } from './types';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
 import { argsToLogString, returnValueToLogString } from './util';
@@ -66,8 +66,10 @@ export function initializeLoggers(options: {
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
     registerLogger(new OutputChannelLogger(standardOutputChannel, options?.userNameRegEx, options?.homePathRegEx));
 
-    // In CI there's no need for the label.
-    registerLogger(new ConsoleLogger(isCI ? undefined : 'Jupyter Extension:'));
+    if (options.addConsoleLogger) {
+        // In CI there's no need for the label.
+        registerLogger(new ConsoleLogger(isCI ? undefined : 'Jupyter Extension:'));
+    }
 
     return standardOutputChannel;
 }
