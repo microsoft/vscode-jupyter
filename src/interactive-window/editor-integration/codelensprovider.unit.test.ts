@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { anything, when } from 'ts-mockito';
+import { anything, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, Disposable, EventEmitter, TextDocument, Uri } from 'vscode';
+import { CancellationTokenSource, CodeLens, Disposable, EventEmitter, TextDocument, Uri, Range } from 'vscode';
 
 import { IDebugService } from '../../platform/common/application/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
 import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { ICodeWatcher, IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
+import { ICodeWatcher } from '../../interactive-window/editor-integration/types';
 import { IDebugLocationTracker } from '../../notebooks/debugger/debuggingTypes';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
@@ -17,7 +17,6 @@ import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 suite('DataScienceCodeLensProvider Unit Tests', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
-    let codeLensProvider: IDataScienceCodeLensProvider;
     let pythonSettings: TypeMoq.IMock<IWatchableJupyterSettings>;
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
@@ -37,16 +36,17 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         when(mockedVSCodeNamespaces.commands.executeCommand(anything(), anything(), anything())).thenResolve();
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
-        codeLensProvider = new DataScienceCodeLensProvider(
+    });
+
+    function provideCodeLensesForOneDoc(codeLenses: CodeLens[] = []) {
+        const codeLensProvider = new DataScienceCodeLensProvider(
             serviceContainer.object,
             debugLocationTracker.object,
             configurationService.object,
             disposables,
             debugService.object
         );
-    });
 
-    test('Initialize Code Lenses one document', async () => {
         // Create our document
         const document = TypeMoq.Mock.ofType<TextDocument>();
         const uri = Uri.file('test.py');
@@ -57,7 +57,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
         targetCodeWatcher
             .setup((tc) => tc.getCodeLenses())
-            .returns(() => [])
+            .returns(() => codeLenses)
             .verifiable(TypeMoq.Times.once());
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
@@ -65,13 +65,27 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .verifiable(TypeMoq.Times.once());
         when(mockedVSCodeNamespaces.workspace.textDocuments).thenReturn([document.object]);
 
-        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+
+        return targetCodeWatcher;
+    }
+
+    test('Initialize Code Lenses one document', async () => {
+        const targetCodeWatcher = provideCodeLensesForOneDoc();
 
         targetCodeWatcher.verifyAll();
         serviceContainer.verifyAll();
     });
 
     test('Initialize Code Lenses same doc called', async () => {
+        const codeLensProvider = new DataScienceCodeLensProvider(
+            serviceContainer.object,
+            debugLocationTracker.object,
+            configurationService.object,
+            disposables,
+            debugService.object
+        );
+
         // Create our document
         const document = TypeMoq.Mock.ofType<TextDocument>();
         const uri = Uri.file('test.py');
@@ -94,8 +108,8 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .verifiable(TypeMoq.Times.once());
         when(mockedVSCodeNamespaces.workspace.textDocuments).thenReturn([document.object]);
 
-        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
-        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
 
         // getCodeLenses should be called twice, but getting the code watcher only once due to same doc
         targetCodeWatcher.verifyAll();
@@ -103,6 +117,14 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     });
 
     test('Initialize Code Lenses different documents', async () => {
+        const codeLensProvider = new DataScienceCodeLensProvider(
+            serviceContainer.object,
+            debugLocationTracker.object,
+            configurationService.object,
+            disposables,
+            debugService.object
+        );
+
         // Create our document
         const uri1 = Uri.file('test.py');
         const document1 = TypeMoq.Mock.ofType<TextDocument>();
@@ -134,13 +156,40 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
 
         when(mockedVSCodeNamespaces.workspace.textDocuments).thenReturn([document1.object, document2.object]);
 
-        await codeLensProvider.provideCodeLenses(document1.object, tokenSource.token);
-        await codeLensProvider.provideCodeLenses(document1.object, tokenSource.token);
-        await codeLensProvider.provideCodeLenses(document2.object, tokenSource.token);
+        codeLensProvider.provideCodeLenses(document1.object, tokenSource.token);
+        codeLensProvider.provideCodeLenses(document1.object, tokenSource.token);
+        codeLensProvider.provideCodeLenses(document2.object, tokenSource.token);
 
         // service container get should be called three times as the names and versions don't match
         targetCodeWatcher1.verifyAll();
         targetCodeWatcher2.verifyAll();
         serviceContainer.verifyAll();
+    });
+
+    test('Having code lenses will update context keys to true', async () => {
+        pythonSettings.setup((p) => p.sendSelectionToInteractiveWindow).returns(() => true);
+
+        provideCodeLensesForOneDoc([new CodeLens({} as Range)]);
+
+        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', true)).atLeast(1);
+        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.hascodecells', true)).atLeast(1);
+    });
+
+    test('Having no code lenses will set context keys to false', async () => {
+        pythonSettings.setup((p) => p.sendSelectionToInteractiveWindow).returns(() => false);
+
+        provideCodeLensesForOneDoc([]);
+
+        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', false)).atLeast(1);
+        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.hascodecells', false)).atLeast(1);
+    });
+
+    test('Having no code lenses but ownership setting true will set context keys correctly', async () => {
+        pythonSettings.setup((p) => p.sendSelectionToInteractiveWindow).returns(() => true);
+
+        provideCodeLensesForOneDoc([]);
+
+        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', true)).atLeast(1);
+        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.hascodecells', false)).atLeast(1);
     });
 });

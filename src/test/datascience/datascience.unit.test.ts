@@ -8,14 +8,12 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { JupyterSettings } from '../../platform/common/configSettings';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
-import { GlobalActivation } from '../../standalone/activation/globalActivation';
 import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService.node';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { pruneCell } from '../../platform/common/utils';
 
 /* eslint-disable  */
 suite('Tests', () => {
-    let dataScience: GlobalActivation;
     let configService: IConfigurationService;
     let settings: IWatchableJupyterSettings;
     let onDidChangeSettings: sinon.SinonStub;
@@ -25,27 +23,10 @@ suite('Tests', () => {
         settings = mock(JupyterSettings);
         rawNotebookSupported = mock(RawNotebookSupportedService);
 
-        dataScience = new GlobalActivation(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            [] as any,
-            instance(rawNotebookSupported),
-            [] as any
-        );
-
         onDidChangeSettings = sinon.stub();
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.onDidChange).thenReturn(onDidChangeSettings);
         when(rawNotebookSupported.isSupported).thenReturn(true);
-    });
-
-    suite('Activate', () => {
-        setup(async () => {
-            await dataScience.activate();
-        });
-
-        test('Should add handler for Settings Changed', async () => {
-            assert.ok(onDidChangeSettings.calledOnce);
-        });
     });
 
     suite('Cell pruning', () => {
