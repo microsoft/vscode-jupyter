@@ -28,7 +28,6 @@ suite('Tests', () => {
         dataScience = new GlobalActivation(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             [] as any,
-            instance(configService),
             instance(rawNotebookSupported),
             [] as any
         );
