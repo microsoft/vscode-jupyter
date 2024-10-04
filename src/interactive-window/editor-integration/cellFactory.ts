@@ -28,8 +28,9 @@ export function uncommentMagicCommands(line: string): string {
     }
 }
 
-function generateCodeCell(code: string[]) {
-    return new NotebookCellData(NotebookCellKind.Code, code.join('\n'), 'python');
+function generateCodeCell(code: string[], matcher: CellMatcher) {
+    const lines = matcher.isCell(code[0]) && code.length > 1 ? code.slice(1) : code;
+    return new NotebookCellData(NotebookCellKind.Code, lines.join('\n'), 'python');
 }
 
 function generateMarkdownCell(code: string[]) {
@@ -63,7 +64,7 @@ export function generateCells(
             // Make sure if we split, the second cell has a new id. It's a new submission.
             return [
                 generateMarkdownCell(split.slice(0, firstNonMarkdown)),
-                generateCodeCell(split.slice(firstNonMarkdown))
+                generateCodeCell(split.slice(firstNonMarkdown), matcher)
             ];
         } else {
             // Just a single markdown cell
@@ -71,7 +72,7 @@ export function generateCells(
         }
     } else {
         // Just code
-        return [generateCodeCell(split)];
+        return [generateCodeCell(split, matcher)];
     }
 }
 
