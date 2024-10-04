@@ -3,16 +3,20 @@
 
 import { assert } from 'chai';
 import { generateCells } from './cellFactory';
-import { splitLines as originalSplitLines } from '../../platform/common/helpers';
+import { splitLines } from '../../platform/common/helpers';
 import { removeLinesFromFrontAndBack, stripComments } from '../../platform/common/utils';
 
-const splitCode = (s: string) => originalSplitLines(s, { removeEmptyEntries: false, trim: false });
-const splitMarkdown = (s: string) => originalSplitLines(s, { removeEmptyEntries: false, trim: false });
+const splitCode = (s: string) => splitLines(s, { removeEmptyEntries: false, trim: false });
+const splitMarkdown = (s: string) => splitLines(s, { removeEmptyEntries: false, trim: false });
 /* eslint-disable  */
 suite('CellFactory', () => {
     test('parsing cells', () => {
         let cells = generateCells(undefined, '#%%\na=1\na', true);
         assert.equal(cells.length, 1, 'Simple cell, not right number found');
+        //assert.equal(cells[0].value, 'a=1\na', 'Simple cell, not right contents');
+        cells = generateCells(undefined, 'a=1\na', true);
+        assert.equal(cells.length, 1, 'cell without marker, not right number found');
+        assert.equal(cells[0].value, 'a=1\na', 'Simple cell, not right contents');
         cells = generateCells(undefined, '#%% [markdown]\na=1\na', true);
         assert.equal(cells.length, 2, 'Split cell, not right number found');
         cells = generateCells(undefined, '#%% [markdown]\n# #a=1\n#a', true);
@@ -29,7 +33,7 @@ suite('CellFactory', () => {
         cells = generateCells(undefined, '#%% \n"""\n# a\nb\n"""', true);
         assert.equal(cells.length, 1, 'Code cell multline failed');
         assert.equal(cells[0].languageId, 'python', 'Code cell not generated');
-        assert.equal(splitCode(cells[0].value).length, 5, 'Lines for cell not emitted');
+        assert.equal(splitCode(cells[0].value).length, 4, 'Lines for cell not emitted');
         cells = generateCells(undefined, '#%% [markdown] \n"""# a\nb\n"""', true);
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].languageId, 'markdown', 'Markdown cell not generated');
@@ -61,11 +65,11 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         cells = generateCells(undefined, multilineCode, true);
         assert.equal(cells.length, 1, 'code cell multline failed');
         assert.equal(cells[0].languageId, 'python', 'Code cell not generated');
-        assert.equal(splitCode(cells[0].value).length, 10, 'Lines for cell not emitted');
+        assert.equal(splitCode(cells[0].value).length, 9, 'Lines for cell not emitted');
         cells = generateCells(undefined, multilineTwo, true);
         assert.equal(cells.length, 1, 'code cell multline failed');
         assert.equal(cells[0].languageId, 'python', 'Code cell not generated');
-        assert.equal(splitCode(cells[0].value).length, 10, 'Lines for cell not emitted');
+        assert.equal(splitCode(cells[0].value).length, 9, 'Lines for cell not emitted');
         // eslint-disable-next-line no-multi-str
         const multilineMarkdown = `#%% [markdown]
 # ## Block of Interest
@@ -121,9 +125,9 @@ def download(url, filename):
         cells = generateCells(undefined, multilineQuoteInFunc, true);
         assert.equal(cells.length, 1, 'cell multline failed');
         assert.equal(cells[0].languageId, 'python', 'code cell not generated');
-        assert.equal(splitCode(cells[0].value).length, 9, 'Lines for cell not emitted');
+        assert.equal(splitCode(cells[0].value).length, 8, 'Lines for cell not emitted');
         assert.equal(
-            splitCode(cells[0].value)[3],
+            splitCode(cells[0].value)[2],
             '    """ utility function to download a file """',
             'Lines for cell not emitted'
         );
