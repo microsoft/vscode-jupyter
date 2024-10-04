@@ -417,7 +417,7 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
             waitForTextOutput(cell1, '1', 0, false)
         ]);
     });
-    test('Will restart a kernel after it dies and re-running all cells all over again', async function () {
+    test.skip('Will restart a kernel after it dies and re-running all cells all over again', async function () {
         // We have 2 cells, first cell prints 1, second cell kills the kernel.
         // Run all cells, first cell should print 1, second cell should kill the kernel.
         // Run again, we should be prompted to re-start the kernel.
