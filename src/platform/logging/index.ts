@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Disposable, Uri, LogLevel, workspace, window } from 'vscode';
-import { isCI, isTestExecution } from '../common/constants';
+import { isCI } from '../common/constants';
 import { Arguments, ILogger, TraceDecoratorType, TraceOptions } from './types';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
 import { argsToLogString, returnValueToLogString } from './util';
