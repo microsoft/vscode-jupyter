@@ -73,7 +73,8 @@ export class ReplNotebookTrackerService implements IReplNotebookTrackerService {
 
     isForReplEditor(notebook: NotebookDocument): boolean {
         if (!this.interactiveWindowProvider) {
-            this.interactiveWindowProvider = this.serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+            this.interactiveWindowProvider =
+                this.serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         }
         return this.interactiveWindowProvider.getInteractiveWindowWithNotebook(notebook.uri) !== undefined;
     }
