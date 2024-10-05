@@ -51,7 +51,8 @@ export class KernelEnvironmentVariablesService {
         kernelSpec: IJupyterKernelSpec,
         token?: CancellationToken
     ) {
-        let kernelEnv = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
+        let kernelEnv =
+            kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? Object.assign({}, kernelSpec.env) : undefined;
         const isPythonKernel = (kernelSpec.language || '').toLowerCase() === PYTHON_LANGUAGE;
         // If an interpreter was not explicitly passed in, check for an interpreter path in the kernelspec to use
         if (!interpreter && kernelSpec.interpreterPath) {
