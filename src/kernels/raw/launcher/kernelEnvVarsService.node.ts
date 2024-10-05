@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { IConfigurationService, Resource } from '../../../platform/common/types';
+import { IConfigurationService, Resource, type ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import {
     IEnvironmentVariablesService,
@@ -52,7 +52,9 @@ export class KernelEnvironmentVariablesService {
         token?: CancellationToken
     ) {
         let kernelEnv =
-            kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? Object.assign({}, kernelSpec.env) : undefined;
+            kernelSpec.env && Object.keys(kernelSpec.env).length > 0
+                ? (Object.assign({}, kernelSpec.env) as ReadWrite<NodeJS.ProcessEnv>)
+                : undefined;
         const isPythonKernel = (kernelSpec.language || '').toLowerCase() === PYTHON_LANGUAGE;
         // If an interpreter was not explicitly passed in, check for an interpreter path in the kernelspec to use
         if (!interpreter && kernelSpec.interpreterPath) {
