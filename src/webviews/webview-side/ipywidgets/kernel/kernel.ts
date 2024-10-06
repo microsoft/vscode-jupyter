@@ -21,7 +21,6 @@ import { noop } from '../../../../platform/common/utils/misc';
 // we can't derive from DefaultKernel.
 class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     private readonly _ioPubMessageSignal: Signal<this, KernelMessage.IIOPubMessage>;
-    public pendingInput: Signal<this, boolean>;
     public get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
         return this._ioPubMessageSignal;
     }
@@ -87,6 +86,9 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     }
     public get disposed() {
         return this.realKernel.disposed as any; // NOSONAR
+    }
+    public get pendingInput() {
+        return this.realKernel.pendingInput as any; // NOSONAR
     }
     public clone(options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>) {
         return new ProxyKernel(
@@ -160,7 +162,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = require('@lumino/signaling') as typeof import('@lumino/signaling');
         this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
-        this.pendingInput = new signaling.Signal<this, boolean>(this);
         this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
         this.realKernel.pendingInput.connect(this.onPendingInput, this);
         this._options = options;

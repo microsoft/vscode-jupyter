@@ -294,7 +294,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // we get the kernel in the UI to have the same set of futures we have on this side
         if (typeof data === 'string' && data.includes('shell') && data.includes('execute_request')) {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const msg = JSON.parse(data) as KernelMessage.IExecuteRequestMsg;
+            const msg =
+                typeof data === 'string'
+                    ? JSON.parse(data)
+                    : (this.deserialize(data) as KernelMessage.IExecuteRequestMsg);
             if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
                 if (!shouldMessageBeMirroredWithRenderer(msg)) {
                     return;
