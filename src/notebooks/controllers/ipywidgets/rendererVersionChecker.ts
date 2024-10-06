@@ -69,7 +69,7 @@ export class RendererVersionChecker implements IExtensionSyncActivationService {
         const major = parseInt(parts[0], 10);
         const minor = parseInt(parts[1], 10);
         const patch = parseInt(parts[2], 10);
-        if (major < 1 || (major === 1 && minor === 0 && patch < 15)) {
+        if (major < 1 || (major === 1 && minor === 0 && patch < 20)) {
             this.displayUpdateMessage();
         }
     }
