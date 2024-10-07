@@ -33,7 +33,7 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
 import type { IFileSystem } from '../../../platform/common/platform/types';
 import { computeLocalWorkingDirectory } from './rawKernelSessionFactory.node';
-const nonSerializingKernel =
+const jupyterLabKernel =
     require('@jupyterlab/services/lib/kernel/default') as typeof import('@jupyterlab/services/lib/kernel/default');
 
 suite('Raw Session & Raw Kernel Connection', () => {
@@ -51,7 +51,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
     const launchTimeout = 1_000;
     let disposables: IDisposable[] = [];
     let kernelConnectionMetadata: LocalKernelSpecConnectionMetadata;
-    const OldKernelConnectionClass = nonSerializingKernel.KernelConnection;
+    const OldKernelConnectionClass = jupyterLabKernel.KernelConnection;
     const kernelInfo: KernelMessage.IInfoReply = {
         banner: '',
         help_links: [],
@@ -167,7 +167,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         when(kernel.sendControlMessage(anything(), true, true)).thenReturn({ done: deferred.promise } as any);
         when(kernel.connectionStatus).thenReturn('connected');
 
-        nonSerializingKernel.KernelConnection = function (options: { serverSettings: ServerConnection.ISettings }) {
+        jupyterLabKernel.KernelConnection = function (options: { serverSettings: ServerConnection.ISettings }) {
             new options.serverSettings.WebSocket('http://1234');
             return instance(kernel);
         } as any;
@@ -192,7 +192,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         disposables.push(exitedEvent);
         onDidDispose = new EventEmitter<void>();
         disposables.push(onDidDispose);
-        nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
+        jupyterLabKernel.KernelConnection = OldKernelConnectionClass;
         const workspaceConfig = mock<WorkspaceConfiguration>();
         when(workspaceConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
         when(mockedVSCodeNamespaces.workspace.getConfiguration(anything())).thenReturn(instance(workspaceConfig));
@@ -217,7 +217,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
     });
 
     teardown(async () => {
-        nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
+        jupyterLabKernel.KernelConnection = OldKernelConnectionClass;
         sinon.reset();
         disposables = dispose(disposables);
         await session

@@ -40,7 +40,7 @@ import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError'
 import { once } from '../../../platform/common/utils/functional';
 import { disposeAsync } from '../../../platform/common/utils';
 
-let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
+let jupyterLabKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface
@@ -668,12 +668,12 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
 
     // Then create the real kernel. We will remap its serialize/deserialize functions
     // to do nothing so that we can control serialization at our socket layer.
-    if (!nonSerializingKernel) {
+    if (!jupyterLabKernel) {
         // Note, this is done with a postInstall step (found in build\ci\postInstall.js). In that post install step
         // we eliminate the serialize import from the default kernel and remap it to do nothing.
-        nonSerializingKernel = require('@jupyterlab/services/lib/kernel/default'); // NOSONAR
+        jupyterLabKernel = require('@jupyterlab/services/lib/kernel/default'); // NOSONAR
     }
-    const realKernel = new nonSerializingKernel.KernelConnection({
+    const realKernel = new jupyterLabKernel.KernelConnection({
         serverSettings: settings,
         clientId,
         handleComms: true,
