@@ -596,11 +596,11 @@ export interface IJupyterKernelSpec {
      * @type {string}
      * @memberof IJupyterKernel
      */
-    id?: string;
-    name: string;
-    language?: string;
-    executable: string; // argv[0] of the kernelspec.json
-    env?: NodeJS.ProcessEnv | undefined;
+    readonly id?: string;
+    readonly name: string;
+    readonly language?: string;
+    readonly executable: string; // argv[0] of the kernelspec.json
+    readonly env?: Readonly<NodeJS.ProcessEnv> | undefined;
     /**
      * Kernel display name.
      *
@@ -612,37 +612,39 @@ export interface IJupyterKernelSpec {
      * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
      * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly metadata?: Record<string, any> & {
-        vscode?: {
+    readonly metadata?: Readonly<
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Record<string, any> & {
+            vscode?: {
+                /**
+                 * Optionally where the original user-created kernel spec json is located on the local FS.
+                 * Remember when using non-raw we create kernelspecs from the original spec.
+                 */
+                originalSpecFile?: string;
+                /**
+                 * E.g. assume we're loading a kernlespec for a default Python kernel, the name would be `python3`
+                 * However we give this a completely different name, and at that point its not possible to determine
+                 * whether this is a default kernel or not.
+                 * Hence keep track of the original name in the metadata.
+                 */
+                originalDisplayName?: string;
+            };
+            interpreter?: Partial<PythonEnvironment_PythonApi>; // read from disk so has to follow old format
             /**
-             * Optionally where the original user-created kernel spec json is located on the local FS.
-             * Remember when using non-raw we create kernelspecs from the original spec.
+             * @deprecated (use metadata.jupyter.originalSpecFile)
              */
             originalSpecFile?: string;
             /**
-             * E.g. assume we're loading a kernlespec for a default Python kernel, the name would be `python3`
-             * However we give this a completely different name, and at that point its not possible to determine
-             * whether this is a default kernel or not.
-             * Hence keep track of the original name in the metadata.
+             * Whether the kernels supports the debugger Protocol.
              */
-            originalDisplayName?: string;
-        };
-        interpreter?: Partial<PythonEnvironment_PythonApi>; // read from disk so has to follow old format
-        /**
-         * @deprecated (use metadata.jupyter.originalSpecFile)
-         */
-        originalSpecFile?: string;
-        /**
-         * Whether the kernels supports the debugger Protocol.
-         */
-        debugger?: boolean;
-    };
+            debugger?: boolean;
+        }
+    >;
     readonly argv: string[];
     /**
      * Optionally where this kernel spec json is located on the local FS.
      */
-    specFile?: string;
+    readonly specFile?: string;
     /**
      * Optionally the Interpreter this kernel spec belongs to.
      * You can have kernel specs that are scoped to an interpreter.
@@ -650,7 +652,7 @@ export interface IJupyterKernelSpec {
      * Then you could have kernels in `<sys.prefix folder for this interpreter>\share\jupyter\kernels`
      * Plenty of conda packages ship kernels in this manner (beakerx, etc).
      */
-    interpreterPath?: string; // Has to be a string as old kernelspecs wrote it this way
+    readonly interpreterPath?: string; // Has to be a string as old kernelspecs wrote it this way
     readonly interrupt_mode?: 'message' | 'signal';
     /**
      * Whether the kernelspec is registered by VS Code

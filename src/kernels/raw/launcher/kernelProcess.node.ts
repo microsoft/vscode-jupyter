@@ -35,7 +35,8 @@ import {
     IOutputChannel,
     IJupyterSettings,
     IExperimentService,
-    Experiments
+    Experiments,
+    type ReadWrite
 } from '../../../platform/common/types';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -117,7 +118,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string; stderr: string }>();
     private launchedOnce?: boolean;
     private connectionFile?: Uri;
-    private _launchKernelSpec?: IJupyterKernelSpec;
+    private _launchKernelSpec?: ReadWrite<IJupyterKernelSpec>;
     private interrupter?: Interrupter;
     private exitEventFired = false;
     private readonly _kernelConnectionMetadata: Readonly<
