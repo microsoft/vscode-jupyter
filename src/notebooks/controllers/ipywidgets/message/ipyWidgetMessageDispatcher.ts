@@ -12,7 +12,7 @@ import { Deferred, createDeferred } from '../../../../platform/common/utils/asyn
 import { noop } from '../../../../platform/common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../../../platform/common/utils/serializers';
 import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../messageTypes';
-import { IKernel, IKernelProvider } from '../../../../kernels/types';
+import { IKernel, IKernelProvider, type IKernelSocket } from '../../../../kernels/types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from '../types';
 import { shouldMessageBeMirroredWithRenderer } from '../../../../kernels/kernel';
 import { KernelSocketMap } from '../../../../kernels/kernelSocket';
@@ -80,7 +80,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private outputWidgetIds = new Set<string>();
     private fullHandleMessage?: { id: string; promise: Deferred<void> };
     private isUsingIPyWidgets = false;
-    private readonly deserialize: (data: string | ArrayBuffer) => KernelMessage.IMessage<KernelMessage.MessageType>;
+    private readonly deserialize: (data: ArrayBuffer, protocol?: string) => KernelMessage.IMessage;
 
     constructor(
         private readonly kernelProvider: IKernelProvider,
@@ -207,11 +207,23 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             oldKernelId = kernel.session?.kernel?.id || '';
         });
     }
+    private readonly kernelSocketHandlers = new WeakMap<
+        IKernelSocket,
+        {
+            receiveHook: (data: WebSocketData) => Promise<void>;
+            sendHook: (data: any, _cb?: (err?: Error) => void) => Promise<void>;
+        }
+    >();
     private subscribeToKernelSocketImpl(kernel: IKernel, oldKernelId?: string) {
         // Remove old handlers.
         const oldSocket = oldKernelId ? KernelSocketMap.get(oldKernelId) : undefined;
-        oldSocket?.removeReceiveHook(this.onKernelSocketMessage); // NOSONAR
-        oldSocket?.removeSendHook(this.mirrorSend); // NOSONAR
+        const handlers = oldSocket ? this.kernelSocketHandlers.get(oldSocket) : undefined;
+        if (handlers?.receiveHook) {
+            oldSocket?.removeReceiveHook(handlers.receiveHook); // NOSONAR
+        }
+        if (handlers?.sendHook) {
+            oldSocket?.removeSendHook(handlers.sendHook); // NOSONAR
+        }
         if (this.kernelWasConnectedAtLeastOnce) {
             // this means we restarted the kernel and we now have new information.
             // Discard all of the messages upto this point.
@@ -242,34 +254,50 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.kernelWasConnectedAtLeastOnce = true;
         const kernelId = kernel.session.kernel?.id;
         const newSocket = kernelId ? KernelSocketMap.get(kernelId) : undefined;
-        newSocket?.addReceiveHook(this.onKernelSocketMessage); // NOSONAR
-        newSocket?.addSendHook(this.mirrorSend); // NOSONAR
-        this.sendKernelOptions();
+        const protocol = newSocket?.protocol || '';
+        if (newSocket) {
+            const onKernelSocketMessage = this.onKernelSocketMessage.bind(this, protocol);
+            const mirrorSend = this.mirrorSend.bind(this, protocol);
+            newSocket.addReceiveHook(onKernelSocketMessage); // NOSONAR
+            newSocket.addSendHook(mirrorSend); // NOSONAR
+            this.kernelSocketHandlers.set(newSocket, { receiveHook: onKernelSocketMessage, sendHook: mirrorSend });
+        }
+        this.sendKernelOptions(protocol);
         // Since we have connected to a kernel, send any pending messages.
         this.registerCommTargets(kernel);
-        this.sendPendingMessages();
+        this.sendPendingMessages(protocol);
     }
     /**
      * Pass this information to UI layer so it can create a dummy kernel with same information.
      * Information includes kernel connection info (client id, user name, model, etc).
      */
-    private sendKernelOptions() {
-        if (!this.kernel?.session?.kernel) {
+    private sendKernelOptions(protocol: string = '') {
+        const kernel = this.kernel?.session?.kernel;
+        if (!kernel) {
             return;
         }
+
+        if (!protocol) {
+            protocol = KernelSocketMap.get(kernel.id)?.protocol || '';
+        }
+
         this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, {
-            id: this.kernel?.session?.kernel?.id || '',
-            clientId: this.kernel?.session?.kernel?.clientId || '',
-            userName: this.kernel?.session?.kernel?.username || '',
-            model: this.kernel?.session?.kernel?.model || { id: '', name: '' }
+            id: kernel.id,
+            clientId: kernel.clientId || '',
+            userName: kernel.username || '',
+            model: kernel.model || { id: '', name: '' },
+            protocol
         });
     }
-    private async mirrorSend(data: any, _cb?: (err?: Error) => void): Promise<void> {
+    private async mirrorSend(protocol: string | undefined, data: any, _cb?: (err?: Error) => void): Promise<void> {
         // If this is shell control message, mirror to the other side. This is how
         // we get the kernel in the UI to have the same set of futures we have on this side
         if (typeof data === 'string' && data.includes('shell') && data.includes('execute_request')) {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const msg = this.deserialize(data) as KernelMessage.IExecuteRequestMsg;
+            const msg =
+                typeof data === 'string'
+                    ? JSON.parse(data)
+                    : (this.deserialize(data) as KernelMessage.IExecuteRequestMsg);
             if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
                 if (!shouldMessageBeMirroredWithRenderer(msg)) {
                     return;
@@ -279,6 +307,24 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 if (this.isUsingIPyWidgets) {
                     await promise;
                 }
+            }
+        } else if (typeof data !== 'string') {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                const msg = this.deserialize(data, protocol) as KernelMessage.IExecuteRequestMsg;
+                // const msg =  this.deserialize(data) as KernelMessage.IExecuteRequestMsg;
+                if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
+                    if (!shouldMessageBeMirroredWithRenderer(msg)) {
+                        return;
+                    }
+                    const promise = this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg); // NOSONAR
+                    // If there are no ipywidgets thusfar in the notebook, then no need to synchronize messages.
+                    if (this.isUsingIPyWidgets) {
+                        await promise;
+                    }
+                }
+            } catch (ex) {
+                logger.error('Failed to mirror message to kernel', ex);
             }
         }
     }
@@ -315,7 +361,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.fullHandleMessage = undefined;
         }
     }
-    private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
+    private async onKernelSocketMessage(protocol: string | undefined, data: WebSocketData): Promise<void> {
         // Hooks expect serialized data as this normally comes from a WebSocket
 
         const msgUuid = uuid();
@@ -327,6 +373,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, { id: msgUuid, data });
             }
         } else {
+            const dataToSend = serializeDataViews([data as any]);
+            const deSerialized = deserializeDataViews(dataToSend);
+            console.error(dataToSend, deSerialized);
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_binary_msg, {
                 id: msgUuid,
                 data: serializeDataViews([data as any])
@@ -343,7 +392,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             data.includes('comm_close') ||
             data.includes('comm_msg');
         if (mustDeserialize) {
-            const message = this.deserialize(data as any) as any;
+            const message = this.deserialize(data as any, protocol) as any;
             if (!shouldMessageBeMirroredWithRenderer(message)) {
                 return;
             }
@@ -384,9 +433,12 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             pending.resultPromise.resolve();
         }
     }
-    private sendPendingMessages() {
+    private sendPendingMessages(protocol: string = '') {
         if (!this.kernel?.session?.kernel) {
             return;
+        }
+        if (!protocol) {
+            protocol = KernelSocketMap.get(this.kernel.session.kernel.id)?.protocol || '';
         }
         while (this.pendingMessages.length) {
             try {
@@ -395,7 +447,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 // This happens only when there are some array buffers (binary data) in the message.
                 // Thats why we need to first deserialize the binary into JSON.
                 const msg: KernelMessage.IMessage =
-                    typeof message === 'string' ? JSON.parse(message) : this.deserialize(message);
+                    typeof message === 'string' ? JSON.parse(message) : this.deserialize(message, protocol);
                 // However the buffers can be DataViewers
                 // When sending to the kernel, we need to convert them to ArrayBuffer
                 if (msg.buffers?.length) {

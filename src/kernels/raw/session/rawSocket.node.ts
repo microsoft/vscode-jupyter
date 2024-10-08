@@ -46,7 +46,11 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private sendChain: Promise<any> = Promise.resolve();
     private channels: IChannels;
     private closed = false;
-
+    /**
+     * Used to configure the protocol for WebSocket messages in Jupyter Lab.
+     * Empty string means no protocol (old behavior, this is simpler for raw sockets as we just want to serialize to JSON and back).
+     */
+    public readonly protocol = '';
     constructor(
         private connection: IKernelConnection,
         private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer

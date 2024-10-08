@@ -19,10 +19,14 @@ import {
 } from '@jupyterlab/services/lib/kernel/messages';
 
 function deserialize(msg: string | ArrayBuffer): KernelMessage.IMessage {
-    return typeof msg === 'string' || msg instanceof ArrayBuffer ? jupyterLabSerialize.deserialize(msg) : msg;
+    return typeof msg === 'string'
+        ? JSON.parse(msg)
+        : msg instanceof ArrayBuffer
+        ? jupyterLabSerialize.deserialize(msg)
+        : msg;
 }
-function serialize(msg: KernelMessage.IMessage): string | ArrayBuffer {
-    return jupyterLabSerialize.serialize(msg);
+function serialize(msg: KernelMessage.IMessage, protocol?: string): string | ArrayBuffer {
+    return jupyterLabSerialize.serialize(msg, protocol);
 }
 
 export interface IFakeSocket {
@@ -114,7 +118,11 @@ export function createKernelConnection(requestCreator: JupyterRequestCreator): {
             Headers: requestCreator.getHeadersCtor(),
             Request: requestCreator.getRequestCtor(),
             token: '',
-            wsUrl: ''
+            wsUrl: '',
+            serializer: {
+                serialize,
+                deserialize
+            }
         }
     });
 

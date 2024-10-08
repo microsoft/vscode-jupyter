@@ -715,6 +715,11 @@ export interface IKernelSessionFactory {
 
 export interface IKernelSocket {
     /**
+     * Used to configure the protocol for WebSocket messages in Jupyter Lab.
+     * Empty string means no protocol (old behavior, this is simpler for raw sockets as we just want to serialize to JSON and back).
+     */
+    readonly protocol?: string;
+    /**
      * Adds a listener to a socket that will be called before the socket's onMessage is called. This
      * allows waiting for a callback before processing messages
      * @param listener
@@ -765,6 +770,10 @@ export interface KernelSocketOptions {
          */
         readonly name: string;
     };
+    /**
+     * WebSocket protocol used for Jupyter Messages.
+     */
+    readonly protocol: string;
 }
 /**
  * Response for installation of kernel dependencies such as ipykernel.
