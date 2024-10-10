@@ -1708,7 +1708,8 @@
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.interactiveWindowNotebookRepl.description%",
                     "tags": [
-                        "experimental", "onExP"
+                        "experimental",
+                        "onExP"
                     ]
                 },
                 "jupyter.interactiveWindow.textEditor.cellFolding": {
@@ -1811,10 +1812,7 @@
                     "type": "boolean",
                     "default": true,
                     "markdownDescription": "%jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription%",
-                    "scope": "application",
-                    "tags": [
-                        "onExP"
-                    ]
+                    "scope": "application"
                 },
                 "jupyter.formatStackTraces": {
                     "type": "boolean",
