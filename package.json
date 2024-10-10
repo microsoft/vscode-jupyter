@@ -1708,7 +1708,7 @@
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.interactiveWindowNotebookRepl.description%",
                     "tags": [
-                        "experimental"
+                        "experimental", "onExP"
                     ]
                 },
                 "jupyter.interactiveWindow.textEditor.cellFolding": {
@@ -1802,7 +1802,10 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Experimental feature to enable execution analysis in notebooks",
-                    "scope": "application"
+                    "scope": "application",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "jupyter.enableKernelCompletions": {
                     "type": "boolean",
@@ -1810,7 +1813,7 @@
                     "markdownDescription": "%jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription%",
                     "scope": "application",
                     "tags": [
-                        "experimental"
+                        "onExP"
                     ]
                 },
                 "jupyter.formatStackTraces": {
