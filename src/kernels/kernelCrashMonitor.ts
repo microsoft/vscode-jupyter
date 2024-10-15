@@ -15,6 +15,7 @@ import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 import { swallowExceptions } from '../platform/common/utils/decorators';
 import { notebookCellExecutions } from '../platform/notebooks/cellExecutionStateService';
+import { logger } from '../platform/logging';
 
 /**
  * Monitors kernel crashes and on the event of a crash will display the results in the most recent cell.
@@ -36,6 +37,9 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         this.kernelsStartedSuccessfully.add(kernel);
         notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
             if (e.cell.notebook === kernel.notebook && this.kernelProvider.get(e.cell.notebook) === kernel) {
+                logger.trace(
+                    `2. Last executed cell for kernel ${kernel.id} is ${e.cell.index} and status is ${e.state}`
+                );
                 this.lastExecutedCellPerKernel.set(kernel, e.cell);
             }
         });
