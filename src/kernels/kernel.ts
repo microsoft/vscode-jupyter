@@ -129,6 +129,9 @@ abstract class BaseKernel implements IBaseKernel {
     get onStarted(): Event<void> {
         return this._onStarted.event;
     }
+    get onPostInitialized(): Event<void> {
+        return this._onPostInitialized.event;
+    }
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
@@ -176,6 +179,7 @@ abstract class BaseKernel implements IBaseKernel {
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
+    private readonly _onPostInitialized = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
     private _jupyterSessionPromise?: Promise<IKernelSession>;
     private readonly hookedSessionForEvents = new WeakSet<IKernelSession>();
@@ -788,6 +792,7 @@ abstract class BaseKernel implements IBaseKernel {
                 logger.trace('End running kernel initialization, session is idle');
             }
             kernelIdle?.stop();
+            this._onPostInitialized.fire();
         } finally {
             postInitialization?.stop();
         }

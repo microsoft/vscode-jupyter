@@ -234,6 +234,13 @@ export interface Kernel {
 }
 export interface Kernels {
     /**
+     * Event fired when a kernel becomes available for execution.
+     */
+    onDidInitialize: Event<{
+        uri: Uri;
+    }>;
+
+    /**
      * Gets an the kernel associated with a given resource.
      * For instance if the resource is a notebook, then get the kernel associated with the given Notebook document.
      * Only kernels which have already been started by the user and belonging to Notebooks that are currently opened will be returned.
