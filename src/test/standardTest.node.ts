@@ -105,7 +105,7 @@ async function installExtension(extension: string, cliPath: string, extensionsDi
         {
             encoding: 'utf-8',
             stdio: 'inherit',
-            shell: true // Without this, node 20 would fail to install the extensions on Windows.
+            shell: true // Without this, node 20 would fail to install the extensions on Windows. See https://github.com/nodejs/node/issues/52554
         }
     );
 
