@@ -87,43 +87,34 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
     }
     console.info(`Installing Python Extension ${PythonExtension} to ${extensionsDir}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
-    spawnSync(
-        cliPath,
-        [
-            '--install-extension',
-            PythonExtension,
-            '--pre-release',
-            '--extensions-dir',
-            extensionsDir,
-            '--disable-telemetry'
-        ],
-        {
-            encoding: 'utf-8',
-            stdio: 'inherit'
-        }
-    );
+    await installExtension(PythonExtension, cliPath, extensionsDir, ['--pre-release']);
 
     // Make sure pylance is there too as we'll use it for intellisense tests
-    console.info(`Installing Pylance Extension to ${extensionsDir}`);
-    spawnSync(
+    await installExtension(PylanceExtension, cliPath, extensionsDir);
+
+    // Make sure renderers is there too as we'll use it for widget tests
+    await installExtension(RendererExtension, cliPath, extensionsDir);
+}
+
+// Make sure renderers is there too as we'll use it for widget tests
+async function installExtension(extension: string, cliPath: string, extensionsDir: string, options: string[] = []) {
+    console.info(`Installing ${extension} Extension to ${extensionsDir}`);
+    const output = spawnSync(
         cliPath,
-        ['--install-extension', PylanceExtension, '--extensions-dir', extensionsDir, '--disable-telemetry'],
+        ['--install-extension', extension, ...options, '--extensions-dir', extensionsDir, '--disable-telemetry'],
         {
             encoding: 'utf-8',
             stdio: 'inherit'
         }
     );
 
-    // Make sure renderers is there too as we'll use it for widget tests
-    console.info(`Installing Renderer Extension to ${extensionsDir}`);
-    spawnSync(
-        cliPath,
-        ['--install-extension', RendererExtension, '--extensions-dir', extensionsDir, '--disable-telemetry'],
-        {
-            encoding: 'utf-8',
-            stdio: 'inherit'
-        }
-    );
+    if (output.error) {
+        throw output.error;
+    }
+    if (output.stderr) {
+        console.error(`Error installing ${extension} Extension to ${extensionsDir}`);
+        console.error(output.stderr);
+    }
 }
 
 async function createSettings(): Promise<string> {
