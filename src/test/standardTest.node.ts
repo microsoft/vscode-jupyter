@@ -104,7 +104,8 @@ async function installExtension(extension: string, cliPath: string, extensionsDi
         ['--install-extension', extension, ...options, '--extensions-dir', extensionsDir, '--disable-telemetry'],
         {
             encoding: 'utf-8',
-            stdio: 'inherit'
+            stdio: 'inherit',
+            shell: true
         }
     );
 
