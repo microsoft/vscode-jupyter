@@ -6,7 +6,7 @@ import { inject, injectable, named } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { raceCancellation } from '../../platform/common/cancellation';
-import { Identifiers, InteractiveWindowView, PYTHON, Telemetry } from '../../platform/common/constants';
+import { Identifiers, PYTHON, Telemetry } from '../../platform/common/constants';
 import { logger } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { Delayer, raceTimeout } from '../../platform/common/utils/async';
@@ -21,6 +21,7 @@ import {
     type NotebookCellExecutionStateChangeEvent
 } from '../../platform/notebooks/cellExecutionStateService';
 import { noop } from '../../platform/common/utils/misc';
+import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 
 /**
  * Provides hover support in python files based on the state of a jupyter kernel. Files that are
@@ -37,7 +38,8 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService
     ) {}
     public activate() {
         this.onDidChangeNotebookCellExecutionStateHandler =
@@ -56,7 +58,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
     }
     private async onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): Promise<void> {
         try {
-            if (e.cell.notebook.notebookType !== InteractiveWindowView) {
+            if (this.replTracker.isForReplEditor(e.cell.notebook)) {
                 return;
             }
             const size = this.runFiles.size;

@@ -13,6 +13,7 @@ import { logger } from '../platform/logging';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import { SysInfoReason } from '../messageTypes';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
+import { InteractiveWindow } from './interactiveWindow';
 
 export class InteractiveWindowController {
     public kernel: Deferred<IKernel> | undefined;
@@ -26,7 +27,7 @@ export class InteractiveWindowController {
     constructor(
         private readonly controllerService: IInteractiveControllerHelper,
         private mode: InteractiveWindowMode,
-        private readonly notebook: NotebookDocument,
+        private readonly interactiveWindow: InteractiveWindow,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly kernelProvider: IKernelProvider,
         private owner: Resource,
@@ -57,7 +58,7 @@ export class InteractiveWindowController {
         try {
             const kernel = await this.createKernel();
             const kernelEventHookForRestart = async () => {
-                if (this.notebook && this.metadata) {
+                if (this.interactiveWindow.notebookDocument && this.metadata) {
                     this.systemInfoCell = undefined;
                     // If we're about to restart, insert a 'restarting' message as it happens
                     this.setInfoMessage(this.metadata, SysInfoReason.Restart);
@@ -117,7 +118,7 @@ export class InteractiveWindowController {
                 this.metadata,
                 this.controller,
                 this.owner,
-                this.notebook!,
+                this.interactiveWindow.notebookDocument!,
                 this.disposables
             );
             this.metadata = kernel.kernelConnectionMetadata;
@@ -162,16 +163,19 @@ export class InteractiveWindowController {
     }
 
     public setPendingCellAdd(cellAddedPromise: Promise<void>) {
-        if (this.metadata && this.notebook) {
+        if (this.metadata && this.interactiveWindow.notebookDocument) {
             const controller = this.controllerService.getRegisteredController(this.metadata);
-            controller?.setPendingCellAddition(this.notebook, cellAddedPromise);
+            controller?.setPendingCellAddition(this.interactiveWindow.notebookDocument, cellAddedPromise);
         }
     }
 
     public listenForControllerSelection() {
         return this.controllerService.onControllerSelected(
             (e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) => {
-                if (!this.notebook || e.notebook.uri.toString() !== this.notebook?.uri?.toString()) {
+                if (
+                    !this.interactiveWindow.notebookDocument ||
+                    e.notebook.uri.toString() !== this.interactiveWindow.notebookDocument?.uri?.toString()
+                ) {
                     return;
                 }
 
@@ -197,8 +201,16 @@ export class InteractiveWindowController {
     }
 
     public setInfoMessageCell(message: string) {
+        if (!this.interactiveWindow.notebookDocument) {
+            logger.warn(`Could not set info cell: no notebook document`);
+            return;
+        }
         if (!this.systemInfoCell) {
-            this.systemInfoCell = new SystemInfoCell(this.notebook, message);
+            this.systemInfoCell = new SystemInfoCell(
+                this.interactiveWindow,
+                this.interactiveWindow.notebookDocument,
+                message
+            );
         } else {
             this.systemInfoCell
                 .updateMessage(message)
@@ -206,6 +218,10 @@ export class InteractiveWindowController {
                     logger.warn(`could not update info cell with message: "${message}", error: ${error}`)
                 );
         }
+    }
+
+    public async resolveSysInfoCell() {
+        await this.systemInfoCell?.resolveCell();
     }
 
     private setInfoMessage(metadata: KernelConnectionMetadata, reason: SysInfoReason) {
@@ -255,13 +271,16 @@ export class InteractiveControllerFactory {
     ) {}
 
     public create(
-        notebook: NotebookDocument,
+        interactiveWindow: InteractiveWindow,
         errorHandler: IDataScienceErrorHandler,
         kernelProvider: IKernelProvider,
         owner: Resource
     ) {
+        if (!interactiveWindow.notebookDocument) {
+            throw Error('could not create controller: no notebook document');
+        }
         let controller = this.initialController;
-        const selected = this.controllerService.getSelectedController(notebook);
+        const selected = this.controllerService.getSelectedController(interactiveWindow.notebookDocument);
         if (selected) {
             controller = selected;
         }
@@ -269,7 +288,7 @@ export class InteractiveControllerFactory {
         return new InteractiveWindowController(
             this.controllerService,
             this.mode,
-            notebook,
+            interactiveWindow,
             errorHandler,
             kernelProvider,
             owner,

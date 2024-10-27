@@ -90,7 +90,7 @@ export class DataViewerDelegator {
     ): { extension: Extension<unknown>; jupyterVariableViewers: IVariableViewer }[] {
         const variableViewers = this.getVariableViewers();
         return variableViewers
-            .filter((d) => d.jupyterVariableViewers.dataTypes.includes(variable.type))
+            .filter((d) => !variable.type || d.jupyterVariableViewers.dataTypes.includes(variable.type))
             .filter((e) => e.extension.id !== JVSC_EXTENSION_ID);
     }
 

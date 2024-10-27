@@ -16,6 +16,7 @@ import { IKernel, KernelConnectionMetadata } from '../kernels/types';
 import { Resource, InteractiveWindowMode } from '../platform/common/types';
 import { IFileGeneratedCodes } from './editor-integration/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
+import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 
 export type INativeInteractiveWindow = { notebookUri: Uri; inputUri: Uri; notebookEditor: NotebookEditor };
 
@@ -71,6 +72,7 @@ export interface IInteractiveControllerHelper {
     }>;
     getInitialController(
         resource: Resource,
+        viewType: IwViewType,
         connection?: KernelConnectionMetadata
     ): Promise<IVSCodeNotebookController | undefined>;
     getSelectedController(notebookDocument: NotebookDocument): IVSCodeNotebookController | undefined;
@@ -83,6 +85,8 @@ export interface IInteractiveControllerHelper {
         disposables: Disposable[]
     ): Promise<{ kernel: IKernel; actualController: NotebookController }>;
 }
+
+export type IwViewType = typeof JupyterNotebookView | typeof InteractiveWindowView;
 
 export interface IInteractiveBase extends Disposable {
     hasCell(id: string): Promise<boolean>;

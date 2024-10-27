@@ -25,7 +25,7 @@ import { isUri, noop } from '../../platform/common/utils/misc';
 import { capturePerfTelemetry, captureUsageTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
 import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
-import { Telemetry, Commands, Identifiers, InteractiveWindowView } from '../../platform/common/constants';
+import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
 import { CellMatcher } from './cellMatcher';
 import { ICodeWatcher, ICodeLensFactory } from './types';
@@ -35,6 +35,7 @@ import * as urlPath from '../../platform/vscode-path/resources';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { dedentCode } from '../../platform/common/helpers';
+import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 
 function getIndex(index: number, length: number): number {
     // return index within the length range with negative indexing
@@ -73,7 +74,8 @@ export class CodeWatcher implements ICodeWatcher {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
         @inject(IDataScienceErrorHandler) protected dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory
+        @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory,
+        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService
     ) {}
 
     public setDocument(document: TextDocument) {
@@ -1008,7 +1010,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     private ondidCloseNotebook(notebook: NotebookDocument): void {
         if (
-            notebook.notebookType === InteractiveWindowView &&
+            this.replTracker.isForReplEditor(notebook) &&
             this.configService.getSettings(this.document?.uri).addGotoCodeLenses
         ) {
             this.onCodeLensFactoryUpdated();

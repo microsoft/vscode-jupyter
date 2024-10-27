@@ -35,6 +35,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
     public readonly anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
     public readonly disposed = new Signal<this, void>(this);
     public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
+    public readonly pendingInput = new Signal<this, boolean>(this);
     public readonly propertyChanged = new Signal<this, 'path' | 'name' | 'type'>(this);
     private _didShutDownOnce = false;
     private _isDisposing?: boolean;
@@ -105,6 +106,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
         this._kernel.connectionStatusChanged.connect(this.onKernelConnectionStatus, this);
         this._kernel.unhandledMessage.connect(this.onUnhandledMessage, this);
         this._kernel.anyMessage.connect(this.onAnyMessage, this);
+        this._kernel.disposed.connect(this.onDisposed, this);
         this._kernel.disposed.connect(this.onDisposed, this);
     }
     public async startKernel(options: { token: CancellationToken }): Promise<void> {

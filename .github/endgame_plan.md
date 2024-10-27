@@ -10,11 +10,10 @@
   - [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
         Instructions on updating `npm` dependencies in `package.json` & `package-lock.json` can be found [here](https://github.com/microsoft/vscode-jupyter/wiki/Resolving-Component-Governance-and-Dependabot-issues-(updating-package-lock.json)).
 - [ ] Create new release branch with format `release/release-YYYY.MM`.
-  * Note: The release branch should not be changed after this step (not including hotfixes)
-- [ ] Create a PR to `main` with the following changes... (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
-  - [ ] At this point, the vscode engine version should also be the same as in the release branch- will be bumped when the next release happens
-  - [ ] Bump the version number in `main` to the next monthly ("YYYY.M.0") version number (e.g. if the latest is `2022.2.0`, bump it to `2022.3.0`).
-    - [ ] Run `npm install` to update `package-lock.json`
+  * Note: The release branch is now ready for to be published (or hotfixed)
+- [ ] Back on the `main` branch, bump the version in `package.json`.
+  - [ ] The version number will be the next monthly ("YYYY.M.0") version number (e.g. if the latest is `2022.2.0`, bump it to `2022.3.0`).
+  - [ ] `npm install` to update `package-lock.json` as well
 
 ## Monday (Debt/Release week)
 - [ ] Obtain VS Code [stable RC](https://builds.code.visualstudio.com/builds/stable) for sanity testing
@@ -35,6 +34,7 @@
     - [ ] linux-x64
     - [ ] alpine-arm64
     - [ ] alpine-x64
+- [ ] Test web by going to insiders.vscode.dev and test the latest pre-release of jupyter
 - [ ] Candidate bug fixes found from sanity test should be checked into `main` and cherry-picked to `release` branch
   - After a candidate fix is merged, a pre-release build can be released by manually running [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283) against the release branch.
 
@@ -101,7 +101,6 @@
   Tip: You can use the dev containers in the this repo for testing against linux (just open the repo and use thd command `Dev Containers: Reopen in Container`)
   - [ ] Windows
     - [ ] win32-x64
-    - [ ]
     - [ ] win32-arm64
   - [ ] macOS
     - [ ] darwin-x64

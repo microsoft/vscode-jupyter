@@ -848,7 +848,8 @@ export class CellExecutionMessageHandler implements IDisposable {
                     cancelToken.token
                 )
                 .then((v) => {
-                    this.kernel.sendInputReply({ value: v || '', status: 'ok' });
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    this.kernel.sendInputReply({ value: v || '', status: 'ok' }, msg.header as any);
                 }, noop);
 
             this.prompts.delete(cancelToken);

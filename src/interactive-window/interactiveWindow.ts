@@ -18,7 +18,9 @@ import {
     window,
     NotebookEdit,
     NotebookEditorRevealType,
-    commands
+    commands,
+    TabInputNotebook,
+    TabInputInteractiveWindow
 } from 'vscode';
 import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE, isWebExtension } from '../platform/common/constants';
 import { logger } from '../platform/logging';
@@ -164,12 +166,12 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
     }
 
-    public notifyConnectionReset() {
+    public async notifyConnectionReset() {
         if (!this.notebookDocument) {
-            const onNotebookOpen = workspace.onDidOpenNotebookDocument((notebook) => {
+            const onNotebookOpen = workspace.onDidOpenNotebookDocument(async (notebook) => {
                 if (notebook.uri.toString() === this.notebookUri.toString()) {
                     this._notebookDocument = notebook;
-                    this.controller = this.initController(notebook);
+                    this.controller = this.initController();
                     this.internalDisposables.push(this.controller.listenForControllerSelection());
                     this.controller.setInfoMessageCell(DataScience.noKernelConnected);
                     onNotebookOpen.dispose();
@@ -177,14 +179,14 @@ export class InteractiveWindow implements IInteractiveWindow {
             });
         } else {
             if (!this.controller) {
-                this.controller = this.initController(this.notebookDocument);
+                this.controller = this.initController();
             }
             this.controller.setInfoMessageCell(DataScience.noKernelConnected);
         }
     }
 
-    private initController(notebook: NotebookDocument) {
-        const controller = this.controllerFactory.create(notebook, this.errorHandler, this.kernelProvider, this._owner);
+    private initController() {
+        const controller = this.controllerFactory.create(this, this.errorHandler, this.kernelProvider, this._owner);
         this.internalDisposables.push(controller.listenForControllerSelection());
         return controller;
     }
@@ -204,11 +206,12 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         if (!this.controller) {
-            this.controller = this.initController(this.notebookDocument);
+            this.controller = this.initController();
         }
 
         if (this.controller.controller) {
             this.controller.startKernel().catch(noop);
+            await this.controller.resolveSysInfoCell();
         } else {
             logger.info('No controller selected for Interactive Window initialization');
             this.controller.setInfoMessageCell(DataScience.selectKernelForEditor);
@@ -219,11 +222,14 @@ export class InteractiveWindow implements IInteractiveWindow {
      * Open the the editor for the interactive window, re-using the tab if it already exists.
      */
     public async showInteractiveEditor(): Promise<NotebookEditor> {
-        let currentTab: InteractiveTab | undefined;
+        let viewColumn: number | undefined = undefined;
         window.tabGroups.all.find((group) => {
             group.tabs.find((tab) => {
-                if (isInteractiveInputTab(tab) && tab.input.uri.toString() == this.notebookUri.toString()) {
-                    currentTab = tab;
+                if (
+                    (tab.input instanceof TabInputNotebook || tab.input instanceof TabInputInteractiveWindow) &&
+                    tab.input.uri.toString() == this.notebookUri.toString()
+                ) {
+                    viewColumn = tab.group.viewColumn;
                 }
             });
         });
@@ -231,7 +237,8 @@ export class InteractiveWindow implements IInteractiveWindow {
         const notebook = this.notebookDocument || (await this.openNotebookDocument());
         const editor = await window.showNotebookDocument(notebook, {
             preserveFocus: true,
-            viewColumn: currentTab?.group.viewColumn
+            viewColumn,
+            asRepl: true
         });
 
         return editor;
@@ -548,12 +555,21 @@ export class InteractiveWindow implements IInteractiveWindow {
             id: uuid()
         };
         notebookCellData.metadata = metadata;
-        await chainWithPendingUpdates(notebookDocument, (edit) => {
-            const nbEdit = NotebookEdit.insertCells(notebookDocument.cellCount, [notebookCellData]);
+
+        let index: number | undefined;
+        await chainWithPendingUpdates(notebookDocument, async (edit) => {
+            index = await this.getAppendIndex();
+            const nbEdit = NotebookEdit.insertCells(index, [notebookCellData]);
             edit.set(notebookDocument.uri, [nbEdit]);
         });
-        const newCellIndex = notebookDocument.cellCount - 1;
-        return notebookDocument.cellAt(newCellIndex);
+        return notebookDocument.cellAt(index!);
+    }
+
+    public async getAppendIndex() {
+        if (!this.notebookDocument) {
+            throw new Error('No notebook document');
+        }
+        return this.notebookDocument.cellCount;
     }
 
     private async generateCodeAndAddMetadata(cell: NotebookCell, isDebug: boolean, kernel: IKernel) {

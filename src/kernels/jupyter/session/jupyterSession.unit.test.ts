@@ -76,6 +76,7 @@ suite('JupyterSession', () => {
         when(session.unhandledMessage).thenReturn(sessionUnhandledMessage);
         when(session.connectionStatusChanged).thenReturn(sessionConnectionStatusChanged);
         when(session.anyMessage).thenReturn(sessionAnyMessage);
+        when(session.pendingInput).thenReturn(instance(mock<ISignal<Session.ISessionConnection, boolean>>()));
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
         when(kernel.connectionStatus).thenReturn('connected');
@@ -90,6 +91,7 @@ suite('JupyterSession', () => {
             instance(mock<ISignal<Kernel.IKernelConnection, KernelMessage.IMessage<KernelMessage.MessageType>>>())
         );
         when(kernel.disposed).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, void>>()));
+        when(kernel.pendingInput).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, boolean>>()));
         when(kernel.connectionStatusChanged).thenReturn(
             instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
         );

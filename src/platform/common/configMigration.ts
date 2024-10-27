@@ -13,6 +13,7 @@ export class ConfigMigration {
         interactiveWindowMode: 'interactiveWindow.creationMode',
         interactiveWindowViewColumn: 'interactiveWindow.viewColumn',
         splitRunFileIntoCells: 'interactiveWindow.splitRunFileIntoCells',
+        interactiveReplNotebook: 'interactiveWindow.notebookRepl',
 
         sendSelectionToInteractiveWindow: 'interactiveWindow.textEditor.executeSelection',
         normalizeSelectionForInteractiveWindow: 'interactiveWindow.textEditor.normalizeSelection',
@@ -24,7 +25,8 @@ export class ConfigMigration {
         enableCellCodeLens: 'interactiveWindow.codeLens.enable',
         addGotoCodeLenses: 'interactiveWindow.codeLens.enableGotoCell',
         codeLenses: 'interactiveWindow.codeLens.commands',
-        debugCodeLenses: 'interactiveWindow.codeLes.debugCommands',
+        debugCodeLenses: 'interactiveWindow.codeLens.debugCommands',
+        'interactiveWindow.codeLes.debugCommands': 'interactiveWindow.codeLens.debugCommands',
 
         codeRegularExpression: 'interactiveWindow.cellMarker.codeRegex',
         markdownRegularExpression: 'interactiveWindow.cellMarker.markdownRegex',
