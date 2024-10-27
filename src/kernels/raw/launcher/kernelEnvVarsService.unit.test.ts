@@ -15,7 +15,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { IJupyterKernelSpec } from '../../types';
 import { Uri } from 'vscode';
-import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
+import { IConfigurationService, IWatchableJupyterSettings, type ReadWrite } from '../../../platform/common/types';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 
 use(chaiAsPromised);
@@ -34,7 +34,7 @@ suite('Kernel Environment Variables Service', () => {
         uri: pathFile,
         id: pathFile.fsPath
     };
-    let kernelSpec: IJupyterKernelSpec;
+    let kernelSpec: ReadWrite<IJupyterKernelSpec>;
     let processEnv: NodeJS.ProcessEnv;
     const originalEnvVars = Object.assign({}, process.env);
     let processPath: string | undefined;

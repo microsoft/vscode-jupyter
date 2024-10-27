@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2024.10.0",
+    "version": "2024.11.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.94.0"
+        "vscode": "^1.95.0"
     },
     "l10n": "./l10n",
     "extensionKind": [
@@ -1639,7 +1639,7 @@
                     "description": "%jupyter.configuration.jupyter.codeLenses.description%",
                     "scope": "resource"
                 },
-                "jupyter.interactiveWindow.codeLes.debugCommands": {
+                "jupyter.interactiveWindow.codeLens.debugCommands": {
                     "type": "string",
                     "default": "jupyter.debugcontinue, jupyter.debugstop, jupyter.debugstepover",
                     "description": "%jupyter.configuration.jupyter.debugCodeLenses.description%",
@@ -1708,7 +1708,8 @@
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.interactiveWindowNotebookRepl.description%",
                     "tags": [
-                        "experimental"
+                        "experimental",
+                        "onExP"
                     ]
                 },
                 "jupyter.interactiveWindow.textEditor.cellFolding": {
@@ -1802,16 +1803,16 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Experimental feature to enable execution analysis in notebooks",
-                    "scope": "application"
+                    "scope": "application",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "jupyter.enableKernelCompletions": {
                     "type": "boolean",
                     "default": true,
                     "markdownDescription": "%jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription%",
-                    "scope": "application",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "scope": "application"
                 },
                 "jupyter.formatStackTraces": {
                     "type": "boolean",
@@ -2128,13 +2129,13 @@
     "dependencies": {
         "@c4312/evt": "^0.1.1",
         "@enonic/fnv-plus": "^1.3.0",
-        "@jupyter-widgets/base": "4.0.0",
-        "@jupyter-widgets/controls": "3.0.0",
-        "@jupyter-widgets/schema": "0.4.0",
-        "@jupyterlab/coreutils": "5.1.17",
-        "@jupyterlab/nbformat": "3.1.17",
-        "@jupyterlab/services": "6.1.17",
-        "@lumino/widgets": "^1.28.0",
+        "@jupyter-widgets/base": "^6.0.8",
+        "@jupyter-widgets/controls": "^5.0.9",
+        "@jupyter-widgets/schema": "^0.5.5",
+        "@jupyterlab/coreutils": "^6.2.4",
+        "@jupyterlab/nbformat": "^4.2.4",
+        "@jupyterlab/services": "^7.2.4",
+        "@lumino/widgets": "^2.4.0",
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.7.7",
         "@vscode/python-extension": "^1.0.4",

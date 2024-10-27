@@ -78,8 +78,17 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     public createComm(targetName: string, commId?: string | undefined) {
         return this.realKernel.createComm(targetName, commId);
     }
+    public removeInputGuard() {
+        return this.realKernel.removeInputGuard();
+    }
+    public get hasPendingInput() {
+        return this.realKernel.hasPendingInput;
+    }
     public get disposed() {
         return this.realKernel.disposed as any; // NOSONAR
+    }
+    public get pendingInput() {
+        return this.realKernel.pendingInput as any; // NOSONAR
     }
     public clone(options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>) {
         return new ProxyKernel(
@@ -106,10 +115,12 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     ) {
         // Dummy websocket we give to the underlying real kernel
         let proxySocketInstance: any;
+        const protocol = options.protocol;
         class ProxyWebSocket {
             public onopen?: ((this: ProxyWebSocket) => any) | null;
             public onmessage?: ((this: ProxyWebSocket, ev: MessageEvent) => any) | null;
             public sendEnabled: boolean = true;
+            public readonly protocol: string = protocol;
             constructor() {
                 proxySocketInstance = this;
             }
@@ -152,6 +163,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         const signaling = require('@lumino/signaling') as typeof import('@lumino/signaling');
         this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
+        this.realKernel.pendingInput.connect(this.onPendingInput, this);
         this._options = options;
 
         postOffice.addHandler(this);
@@ -244,8 +256,11 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     }): Promise<KernelMessage.ICommInfoReplyMsg> {
         return this.realKernel.requestCommInfo(content);
     }
-    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void {
-        return this.realKernel.sendInputReply(content);
+    public sendInputReply(
+        content: KernelMessage.IInputReplyMsg['content'],
+        parent_header: KernelMessage.IInputReplyMsg['parent_header']
+    ): void {
+        return this.realKernel.sendInputReply(content, parent_header);
     }
     public registerCommTarget(
         targetName: string,
@@ -497,6 +512,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
                     window.console.error('Failed to send iopub_msg_handled message', ex);
                 });
         }
+    }
+
+    private onPendingInput(_sender: Kernel.IKernelConnection, message: boolean) {
+        this.pendingInput.emit(message);
     }
 
     // Finish an iopub message by sending a message to the UI and then emitting that we are done with it

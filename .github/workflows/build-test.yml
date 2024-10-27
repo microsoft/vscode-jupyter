@@ -300,13 +300,13 @@ jobs:
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            packageVersion: 'prerelease'
-            tags: '^[^@]+$|@mandatory'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
+          #   - jupyterConnection: remote
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     packageVersion: 'prerelease'
+          #     tags: '^[^@]+$|@mandatory'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: ''
           - jupyterConnection: web
             python: python
             pythonVersion: '3.10'
@@ -340,13 +340,13 @@ jobs:
             os: ubuntu-latest
             ipywidgetsVersion: ''
           # Pre-Release Versions
-          - jupyterConnection: raw
-            python: python
-            pythonVersion: '3.10'
-            packageVersion: 'prerelease'
-            tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
+          #   - jupyterConnection: raw
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     packageVersion: 'prerelease'
+          #     tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: ''
           # Without Python
           - jupyterConnection: raw
             python: noPython
@@ -595,7 +595,7 @@ jobs:
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Deno
-        uses: denoland/setup-deno@v1
+        uses: denoland/setup-deno@v2
         if: matrix.tags != '@notebookPerformance'
         with:
           deno-version: ${{ env.DENO_VERSION}}

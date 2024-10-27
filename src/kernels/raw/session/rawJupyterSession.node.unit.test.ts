@@ -50,6 +50,7 @@ suite('Raw Jupyter Session Wrapper', () => {
         when(session.connectionStatusChanged).thenReturn(sessionConnectionStatusChanged);
         when(session.anyMessage).thenReturn(sessionAnyMessage);
         when(session.isDisposed).thenReturn(false);
+        when(session.pendingInput).thenReturn(instance(mock<Signal<RawSessionConnection, boolean>>()));
         when(kernel.status).thenReturn('idle');
         when(kernel.connectionStatus).thenReturn('connected');
         when(kernel.statusChanged).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()));
@@ -63,6 +64,7 @@ suite('Raw Jupyter Session Wrapper', () => {
             instance(mock<ISignal<Kernel.IKernelConnection, KernelMessage.IMessage<KernelMessage.MessageType>>>())
         );
         when(kernel.disposed).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, void>>()));
+        when(kernel.pendingInput).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, boolean>>()));
         when(kernel.connectionStatusChanged).thenReturn(
             instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
         );

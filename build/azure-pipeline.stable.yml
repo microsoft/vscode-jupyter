@@ -88,4 +88,10 @@ extends:
       enabled: true
 
     apiScanSoftwareVersion: '2024'
-    apiScanExcludes: 'extension/dist/node_modules/zeromq/prebuilds/win32-arm64/*.*'
+
+    # Exclude win32-x64/node.napi.glibc.node, which is already scanned
+    # by the zeromq-prebuilt pipeline, until we have symbol publishing.
+    # Exclude win32-arm64/*.* because APIScan cannot process them.
+    apiScanExcludes: |
+      extension/dist/node_modules/zeromq/prebuilds/win32-x64/node.napi.glibc.node
+      extension/dist/node_modules/zeromq/prebuilds/win32-arm64/*.*

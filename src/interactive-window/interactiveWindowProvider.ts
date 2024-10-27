@@ -67,9 +67,15 @@ export const InteractiveWindowCacheKey = 'ds_interactive_window_cache';
 
 @injectable()
 export class ReplNotebookTrackerService implements IReplNotebookTrackerService {
-    constructor(@inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider) {}
+    private interactiveWindowProvider: IInteractiveWindowProvider | undefined;
+
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
     isForReplEditor(notebook: NotebookDocument): boolean {
+        if (!this.interactiveWindowProvider) {
+            this.interactiveWindowProvider =
+                this.serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+        }
         return this.interactiveWindowProvider.getInteractiveWindowWithNotebook(notebook.uri) !== undefined;
     }
 }
