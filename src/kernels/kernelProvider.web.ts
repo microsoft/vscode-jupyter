@@ -26,6 +26,8 @@ import {
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
 import { NotebookKernelExecution } from './kernelExecution';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { logger } from '../platform/logging';
 
 /**
  * Web version of a kernel provider. Needed in order to create the web version of a kernel.
@@ -52,7 +54,14 @@ export class KernelProvider extends BaseCoreKernelProvider {
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;
         }
-        this.disposeOldKernel(notebook);
+        if (existingKernelInfo) {
+            logger.trace(
+                `Kernel for ${getDisplayPath(notebook.uri)} with id ${
+                    existingKernelInfo.options.metadata.id
+                } is being replaced with ${options.metadata.id}`
+            );
+        }
+        this.disposeOldKernel(notebook, 'createNewKernel');
 
         const resourceUri = notebook?.notebookType === InteractiveWindowView ? options.resourceUri : notebook.uri;
         const settings = createKernelSettings(this.configService, resourceUri);
