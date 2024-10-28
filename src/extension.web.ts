@@ -85,7 +85,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     durations.startActivateTime = stopWatch.elapsedTime;
-    const standardOutputChannel = initializeLoggers(context, { addConsoleLogger: isTestExecution() });
+    const standardOutputChannel = await initializeLoggers(context, { addConsoleLogger: isTestExecution() });
 
     activateNotebookTelemetry(stopWatch);
     setDisposableTracker(context.subscriptions);

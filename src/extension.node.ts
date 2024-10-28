@@ -83,7 +83,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     durations.startActivateTime = stopWatch.elapsedTime;
-    const standardOutputChannel = initializeLoggers(context, {
+    const standardOutputChannel = await initializeLoggers(context, {
         addConsoleLogger: !!process.env.VSC_JUPYTER_FORCE_LOGGING,
         userNameRegEx: tryGetUsername(),
         homePathRegEx: tryGetHomePath(),
