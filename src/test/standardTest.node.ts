@@ -112,8 +112,6 @@ async function installExtension(extension: string, cliPath: string, extensionsDi
                   stdio: 'inherit'
               });
 
-
-
     if (output.error) {
         throw output.error;
     }
