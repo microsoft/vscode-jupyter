@@ -98,7 +98,6 @@ export interface IControllerRegistration {
      * Event fired when controllers are added or removed
      */
     onDidChange: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
-    isFiltered(metadata: KernelConnectionMetadata): boolean;
 }
 
 // Flag enum for the reason why a kernel was logged as an exact match
