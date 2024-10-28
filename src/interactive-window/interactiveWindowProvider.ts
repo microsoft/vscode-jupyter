@@ -50,7 +50,8 @@ import {
     IInteractiveWindow,
     IInteractiveWindowCache,
     IInteractiveWindowProvider,
-    INativeInteractiveWindow} from './types';
+    INativeInteractiveWindow
+} from './types';
 import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
@@ -138,13 +139,22 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
 
             const mode = this.configService.getSettings(tabInput.uri).interactiveWindowMode;
 
-            const result = new InteractiveWindow(
-                this.serviceContainer,
-                Uri.parse(iw.owner),
-                new InteractiveControllerFactory(this.controllerHelper, mode),
-                tabInput,
-                Uri.parse(iw.inputBoxUriString)
-            );
+            const result =
+                tabInput instanceof TabInputInteractiveWindow
+                    ? new InteractiveWindow(
+                          this.serviceContainer,
+                          Uri.parse(iw.owner),
+                          new InteractiveControllerFactory(this.controllerHelper, mode),
+                          tabInput,
+                          Uri.parse(iw.inputBoxUriString)
+                      )
+                    : new NotebookInteractiveWindow(
+                          this.serviceContainer,
+                          Uri.parse(iw.owner),
+                          new InteractiveControllerFactory(this.controllerHelper, mode),
+                          tabInput,
+                          Uri.parse(iw.inputBoxUriString)
+                      );
 
             result.notifyConnectionReset().catch(noop);
 
