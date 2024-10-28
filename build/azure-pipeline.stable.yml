@@ -58,8 +58,8 @@ extends:
         displayName: Install zmq dependencies
         condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'alpine'))
 
-      - script: npm i -g npm@9.5.0
-        displayName: npm 9.5.0
+      - script: npm i -g npm@10.8.2
+        displayName: npm 10.8.2
 
       - task: UsePythonVersion@0
         inputs:

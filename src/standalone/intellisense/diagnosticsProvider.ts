@@ -210,8 +210,10 @@ export class NotebookCellBangInstallDiagnosticsProvider
             return;
         }
         const cell = this.cellsToProcess.values().next().value;
-        this.cellsToProcess.delete(cell);
-        this.analyzeNotebookCell(cell);
+        if (cell) {
+            this.cellsToProcess.delete(cell);
+            this.analyzeNotebookCell(cell);
+        }
         // Schedule processing of next cell (this way we dont chew CPU and block the UI).
         setTimeout(() => this.analyzeNotebookCells(), 0);
     }

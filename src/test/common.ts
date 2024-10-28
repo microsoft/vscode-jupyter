@@ -74,13 +74,13 @@ export async function waitForCondition<T>(
                 // Start up a timer again, but don't do it until after
                 // the condition is false.
                 timer = setTimeout(timerFunc, intervalTimeoutMs);
-                disposables.push({ dispose: () => clearTimeout(timer) });
+                disposables.push({ dispose: () => clearTimeout(timer as any) });
             } else {
                 dispose(disposables);
                 resolve(success as NonNullable<T>);
             }
         };
-        disposables.push({ dispose: () => clearTimeout(timer) });
+        disposables.push({ dispose: () => clearTimeout(timer as any) });
         timer = setTimeout(timerFunc, 0);
         if (cancelToken) {
             cancelToken.onCancellationRequested(

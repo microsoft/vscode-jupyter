@@ -166,14 +166,16 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 let timeout: NodeJS.Timer | undefined;
                 provider.onDidChangeStatus(
                     () => {
-                        timeout && clearTimeout(timeout);
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        timeout && clearTimeout(timeout as any);
                         switch (provider.status) {
                             case 'discovering':
                                 quickPick.busy = true;
                                 break;
                             case 'idle':
                                 timeout = setTimeout(() => (quickPick.busy = false), 500);
-                                disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                disposables.push(new Disposable(() => timeout && clearTimeout(timeout as any)));
                                 break;
                         }
                     },
