@@ -39,11 +39,7 @@ import { INotebookExporter } from '../kernels/jupyter/types';
 import { ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
-import {
-    IInteractiveWindow,
-    IInteractiveWindowDebugger,
-    IInteractiveWindowDebuggingManager
-} from './types';
+import { IInteractiveWindow, IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager } from './types';
 import { generateInteractiveCode } from './helpers';
 import { getInteractiveCellMetadata } from './helpers';
 import { getFilePath } from '../platform/common/platform/fs-paths';
@@ -134,9 +130,11 @@ export class InteractiveWindow implements IInteractiveWindow {
         this.debuggingManager = this.serviceContainer.get<IInteractiveWindowDebuggingManager>(
             IInteractiveWindowDebuggingManager
         );
-        this.notebookUri = notebookEditorOrTabInput instanceof TabInputInteractiveWindow || notebookEditorOrTabInput instanceof TabInputNotebook
-            ? notebookEditorOrTabInput.uri
-            : notebookEditorOrTabInput.notebook.uri;
+        this.notebookUri =
+            notebookEditorOrTabInput instanceof TabInputInteractiveWindow ||
+            notebookEditorOrTabInput instanceof TabInputNotebook
+                ? notebookEditorOrTabInput.uri
+                : notebookEditorOrTabInput.notebook.uri;
 
         // Set our owner and first submitter
         if (this._owner) {
