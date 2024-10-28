@@ -154,11 +154,10 @@ jobs:
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
-      - name: Run Black on Python code
+      - name: Run Ruff on Python code
         run: |
-          python -m pip install click==8.0.4
-          python -m pip install -U black
-          python -m black . --check
+          python -m pip install -U ruff
+          python -m ruff check pythonFiles/*.py
         working-directory: pythonFiles
 
       - name: Run gulp prePublishNonBundle

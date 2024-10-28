@@ -5,7 +5,6 @@
     "src/platform/common/installer/productInstaller.ts",
     "src/platform/debugger/extension/hooks/childProcessAttachService.ts",
     "src/platform/formatters/baseFormatter.ts",
-    "src/platform/formatters/blackFormatter.ts",
     "src/platform/interpreter/configuration/pythonPathUpdaterService.ts",
     "src/platform/linters/errorHandlers/notInstalled.ts",
     "src/platform/linters/errorHandlers/standard.ts",

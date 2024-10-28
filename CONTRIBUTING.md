@@ -23,6 +23,7 @@
     - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
     - [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
     - [Python Extension for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+    - [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff)
 
 ### Setup
 
@@ -37,7 +38,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 # and in Windows cmd or PowerShell
 .venv\Scripts\activate
-# The Python code in the extension is formatted using Black.
+# The Python code in the extension is formatted using Ruff.
 python -m pip install black
 ```
 
