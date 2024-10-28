@@ -11,6 +11,8 @@ import {
     NotebookControllerAffinity,
     NotebookDocument,
     NotebookEditor,
+    TabInputInteractiveWindow,
+    TabInputNotebook,
     Uri,
     ViewColumn,
     commands,
@@ -48,14 +50,12 @@ import {
     IInteractiveWindow,
     IInteractiveWindowCache,
     IInteractiveWindowProvider,
-    INativeInteractiveWindow,
-    InteractiveTab
+    INativeInteractiveWindow
 } from './types';
 import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { isInteractiveInputTab } from './helpers';
 import { sendTelemetryEvent } from '../telemetry';
 import { InteractiveControllerFactory } from './InteractiveWindowController';
 import { NotebookInteractiveWindow } from './notebookInteractiveWindow';
@@ -116,11 +116,12 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
 
     private restoreWindows() {
         // VS Code controls if interactive windows are restored.
-        const interactiveWindowMapping = new Map<string, InteractiveTab>();
+        const interactiveWindowMapping = new Map<string, TabInputInteractiveWindow | TabInputNotebook>();
         window.tabGroups.all.forEach((group) => {
             group.tabs.forEach((tab) => {
-                if (isInteractiveInputTab(tab) && tab.input.uri) {
-                    interactiveWindowMapping.set(tab.input.uri.toString(), tab);
+                const input = tab.input;
+                if (input instanceof TabInputInteractiveWindow || input instanceof TabInputNotebook) {
+                    interactiveWindowMapping.set(input.uri.toString(), input);
                 }
             });
         });
@@ -130,21 +131,30 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
                 return;
             }
 
-            const tab = interactiveWindowMapping.get(iw.uriString);
+            const tabInput = interactiveWindowMapping.get(iw.uriString);
 
-            if (!tab) {
+            if (!tabInput) {
                 return;
             }
 
-            const mode = this.configService.getSettings(tab.input.uri).interactiveWindowMode;
+            const mode = this.configService.getSettings(tabInput.uri).interactiveWindowMode;
 
-            const result = new InteractiveWindow(
-                this.serviceContainer,
-                Uri.parse(iw.owner),
-                new InteractiveControllerFactory(this.controllerHelper, mode),
-                tab,
-                Uri.parse(iw.inputBoxUriString)
-            );
+            const result =
+                tabInput instanceof TabInputInteractiveWindow
+                    ? new InteractiveWindow(
+                          this.serviceContainer,
+                          Uri.parse(iw.owner),
+                          new InteractiveControllerFactory(this.controllerHelper, mode),
+                          tabInput,
+                          Uri.parse(iw.inputBoxUriString)
+                      )
+                    : new NotebookInteractiveWindow(
+                          this.serviceContainer,
+                          Uri.parse(iw.owner),
+                          new InteractiveControllerFactory(this.controllerHelper, mode),
+                          tabInput,
+                          Uri.parse(iw.inputBoxUriString)
+                      );
 
             result.notifyConnectionReset().catch(noop);
 
@@ -315,7 +325,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
 
         const editor = await window.showNotebookDocument(notebookDocument, {
             // currently, to set the controller, we need to focus the editor
-            preserveFocus: !!controller ? true : preserveFocus,
+            preserveFocus: !!controller ? false : preserveFocus,
             viewColumn,
             asRepl: title
         });
