@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { spawnSync } from 'child_process';
+import { spawnSync, type SpawnSyncOptionsWithBufferEncoding } from 'child_process';
 import * as path from '../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
@@ -97,17 +97,20 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
 }
 
 // Make sure renderers is there too as we'll use it for widget tests
-async function installExtension(extension: string, cliPath: string, extensionsDir: string, options: string[] = []) {
+async function installExtension(extension: string, cliPath: string, extensionsDir: string, args: string[] = []) {
     console.info(`Installing ${extension} Extension to ${extensionsDir}`);
-    const output = spawnSync(
-        cliPath,
-        ['--install-extension', extension, ...options, '--extensions-dir', extensionsDir, '--disable-telemetry'],
-        {
-            encoding: 'utf-8',
-            stdio: 'inherit',
-            shell: true // Without this, node 20 would fail to install the extensions on Windows. See https://github.com/nodejs/node/issues/52554
-        }
-    );
+    args = ['--install-extension', extension, ...args, '--extensions-dir', extensionsDir, '--disable-telemetry'];
+    const output =
+        process.platform === 'win32'
+            ? spawnSync(cliPath, args, {
+                  encoding: 'utf-8',
+                  stdio: 'inherit',
+                  shell: true // Without this, node 20 would fail to install the extensions on Windows. See https://github.com/nodejs/node/issues/52554
+              })
+            : spawnSync(cliPath, args, {
+                  encoding: 'utf-8',
+                  stdio: 'inherit'
+              });
 
     if (output.error) {
         throw output.error;
