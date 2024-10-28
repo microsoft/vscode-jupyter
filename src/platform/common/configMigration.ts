@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
-import { traceWarning } from '../logging';
+import { logger } from '../logging';
 import { noop } from './utils/misc';
 import { PYTHON_LANGUAGE } from './constants';
 
@@ -13,6 +13,7 @@ export class ConfigMigration {
         interactiveWindowMode: 'interactiveWindow.creationMode',
         interactiveWindowViewColumn: 'interactiveWindow.viewColumn',
         splitRunFileIntoCells: 'interactiveWindow.splitRunFileIntoCells',
+        interactiveReplNotebook: 'interactiveWindow.notebookRepl',
 
         sendSelectionToInteractiveWindow: 'interactiveWindow.textEditor.executeSelection',
         normalizeSelectionForInteractiveWindow: 'interactiveWindow.textEditor.normalizeSelection',
@@ -24,7 +25,8 @@ export class ConfigMigration {
         enableCellCodeLens: 'interactiveWindow.codeLens.enable',
         addGotoCodeLenses: 'interactiveWindow.codeLens.enableGotoCell',
         codeLenses: 'interactiveWindow.codeLens.commands',
-        debugCodeLenses: 'interactiveWindow.codeLes.debugCommands',
+        debugCodeLenses: 'interactiveWindow.codeLens.debugCommands',
+        'interactiveWindow.codeLes.debugCommands': 'interactiveWindow.codeLens.debugCommands',
 
         codeRegularExpression: 'interactiveWindow.cellMarker.codeRegex',
         markdownRegularExpression: 'interactiveWindow.cellMarker.markdownRegex',
@@ -138,5 +140,5 @@ export class ConfigMigration {
 }
 
 function handleSettingMigrationFailure(e: Error) {
-    traceWarning('Error migrating Jupyter configuration', e);
+    logger.warn('Error migrating Jupyter configuration', e);
 }

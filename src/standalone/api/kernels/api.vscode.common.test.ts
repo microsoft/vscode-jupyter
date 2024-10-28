@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import { CancellationTokenSource, NotebookCellOutputItem, NotebookDocument, commands, window, workspace } from 'vscode';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import {
     captureScreenShot,
@@ -22,7 +22,7 @@ import {
     waitForExecutionCompletedSuccessfully
 } from '../../../test/datascience/notebook/helper';
 import { getKernelsApi } from '.';
-import { raceTimeoutError } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeoutError } from '../../../platform/common/utils/async';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
@@ -31,6 +31,7 @@ import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../../test/constants';
 import { KernelError } from '../../../kernels/errors/kernelError';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { escapeStringToEmbedInPythonCode } from '../../../kernels/chat/generator';
+import { notebookCellExecutions } from '../../../platform/notebooks/cellExecutionStateService';
 
 suiteMandatory('Kernel API Tests @typescript', function () {
     const disposables: IDisposable[] = [];
@@ -43,7 +44,7 @@ suiteMandatory('Kernel API Tests @typescript', function () {
     let controllerRegistration: IControllerRegistration;
     suiteSetup(async function () {
         this.timeout(120_000);
-        traceInfo('Suite Setup, Step 1');
+        logger.info('Suite Setup, Step 1');
         const api = await initialize();
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
@@ -58,10 +59,10 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             'Deno kernel not found'
         );
         controller = controllerRegistration.get(connection, 'jupyter-notebook')!;
-        traceInfo('Suite Setup (completed)');
+        logger.info('Suite Setup (completed)');
     });
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         const uri = await createTemporaryNotebook(
             [],
             disposables,
@@ -82,17 +83,17 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             metadata: controller.connection,
             resourceUri: notebook.uri
         });
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
 
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     testMandatory('No kernel returned if no code has been executed', async function () {
         const kernel = await kernels.getKernel(notebook.uri);
@@ -110,7 +111,14 @@ suiteMandatory('Kernel API Tests @typescript', function () {
 
         // Ensure user has executed some code against this kernel.
         const cell = notebook.cellAt(0)!;
-        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
+        const executionOrderSet = createDeferred();
+        const eventHandler = notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+            if (e.cell === cell && e.cell.executionSummary?.executionOrder) {
+                executionOrderSet.resolve();
+            }
+        });
+        disposables.push(eventHandler);
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
 
         const kernel = await kernels.getKernel(notebook.uri);
         if (!kernel) {
@@ -119,11 +127,11 @@ suiteMandatory('Kernel API Tests @typescript', function () {
         const statusChange = createEventHandler(kernel, 'onDidChangeStatus', disposables);
 
         // Verify we can execute code using the kernel.
-        traceInfo(`Execute code silently`);
+        logger.info(`Execute code silently`);
         const expectedMime = NotebookCellOutputItem.stdout('').mime;
         const token = new CancellationTokenSource();
         await waitForOutput(kernel.executeCode('console.log(1234)', token.token), '1234', expectedMime);
-        traceInfo(`Execute code silently completed`);
+        logger.info(`Execute code silently completed`);
         // Wait for kernel to be idle.
         await waitForCondition(
             () => kernel.status === 'idle',
@@ -219,16 +227,16 @@ suiteMandatory('Kernel API Tests @typescript/@python', function () {
     let controllerRegistration: IControllerRegistration;
     suiteSetup(async function () {
         this.timeout(120_000);
-        traceInfo('Suite Setup, Step 1');
+        logger.info('Suite Setup, Step 1');
         const api = await initialize();
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         kernels = await Promise.resolve(getKernelsApi(JVSC_EXTENSION_ID_FOR_TESTS));
         const pythonMetadata = await getDefaultKernelConnection();
         controller = controllerRegistration.get(pythonMetadata, 'jupyter-notebook')!;
-        traceInfo('Suite Setup (completed)');
+        logger.info('Suite Setup (completed)');
     });
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         const uri = await createTemporaryNotebook([], disposables);
         notebook = await workspace.openNotebookDocument(uri);
         await window.showNotebookDocument(notebook);
@@ -237,17 +245,18 @@ suiteMandatory('Kernel API Tests @typescript/@python', function () {
             extension: JVSC_EXTENSION_ID
         });
         await insertCodeCell('print(1234)', { index: 0, language: 'python' });
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
 
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
+        console.error(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     testMandatory('Execute chat code', async function () {
         // Ensure user has executed some code against this kernel.
@@ -282,7 +291,7 @@ step1()
         // Verify we can execute code using the kernel.
         const callbacksInvoked: string[] = [];
         const callbackArgs: (string | undefined)[] = [];
-        traceInfo(`Execute code`);
+        logger.info(`Execute code`);
         const token = new CancellationTokenSource();
         const handlers = {
             callback1: async (data?: string) => {

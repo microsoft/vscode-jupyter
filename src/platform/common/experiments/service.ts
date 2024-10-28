@@ -6,7 +6,7 @@ import { Memento, workspace } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
 import { IApplicationEnvironment } from '../application/types';
 import { JVSC_EXTENSION_ID, isPreReleaseVersion } from '../constants';
-import { traceInfo, traceVerbose } from '../../logging';
+import { logger } from '../../logging';
 import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IJupyterSettings, IMemento } from '../types';
 import { Experiments } from '../utils/localize';
 import { Experiments as ExperimentGroups } from '../types';
@@ -78,7 +78,6 @@ export class ExperimentService implements IExperimentService {
 
     public async activate() {
         if (this.experimentationService && this.enabled) {
-            traceVerbose(`Experimentation service retrieved: ${this.experimentationService}`);
             await this.experimentationService.initializePromise;
             if (this.getFeatures().length === 0) {
                 // Only await on this if we don't have anything in cache.
@@ -157,17 +156,17 @@ export class ExperimentService implements IExperimentService {
         const telemetrySettings = workspace.getConfiguration('telemetry');
         let experimentsDisabled = false;
         if (telemetrySettings && telemetrySettings.get<boolean>('enableTelemetry') === false) {
-            traceInfo('Telemetry is disabled');
+            logger.info('Telemetry is disabled');
             experimentsDisabled = true;
         }
 
         if (telemetrySettings && telemetrySettings.get<string>('telemetryLevel') === 'off') {
-            traceInfo('Telemetry level is off');
+            logger.info('Telemetry level is off');
             experimentsDisabled = true;
         }
 
         if (experimentsDisabled) {
-            traceInfo('Experiments are disabled, only manually opted experiments are active.');
+            logger.info('Experiments are disabled, only manually opted experiments are active.');
         }
 
         if (this._optOutFrom.includes('All')) {
@@ -179,7 +178,7 @@ export class ExperimentService implements IExperimentService {
         }
         if (this._optInto.includes('All')) {
             // Only if 'All' is not in optOut then check if it is in Opt In.
-            traceInfo(Experiments.inGroup('All'));
+            logger.info(Experiments.inGroup('All'));
 
             // Similar to the opt out case. If user is opting into to all experiments we short
             // circuit the experiment checks. So, skip printing any additional details to the logs.
@@ -193,7 +192,7 @@ export class ExperimentService implements IExperimentService {
         this._optOutFrom
             .filter((exp) => exp !== 'All')
             .forEach((exp) => {
-                traceInfo(Experiments.notInGroup(exp));
+                logger.info(Experiments.notInGroup(exp));
             });
 
         // Log experiments that users manually opt into, these are experiments which are added using the exp framework.
@@ -201,7 +200,7 @@ export class ExperimentService implements IExperimentService {
             .filter((exp) => exp !== 'All')
             .forEach((exp) => {
                 enabledExperiments.add(exp);
-                traceInfo(Experiments.inGroup(exp));
+                logger.info(Experiments.inGroup(exp));
             });
 
         if (
@@ -209,7 +208,7 @@ export class ExperimentService implements IExperimentService {
             !enabledExperiments.has(ExperimentGroups.DoNotWaitForZmqPortsToBeUsed) &&
             (getVSCodeChannel() === 'insiders' || isPreReleaseVersion())
         ) {
-            traceInfo(Experiments.inGroup(ExperimentGroups.DoNotWaitForZmqPortsToBeUsed));
+            logger.info(Experiments.inGroup(ExperimentGroups.DoNotWaitForZmqPortsToBeUsed));
         }
 
         if (!experimentsDisabled) {
@@ -223,7 +222,7 @@ export class ExperimentService implements IExperimentService {
                     !this._optInto.includes(exp)
                 ) {
                     optedIntoExperiments.add(exp);
-                    traceInfo(Experiments.inGroup(exp));
+                    logger.info(Experiments.inGroup(exp));
                 }
             });
         }

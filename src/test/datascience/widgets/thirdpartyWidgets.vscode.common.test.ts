@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as sinon from 'sinon';
 import { commands, ConfigurationTarget, Memento, NotebookEditor, window, workspace } from 'vscode';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -51,7 +51,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
             if (isWeb()) {
                 return this.skip();
             }
-            traceInfo('Suite Setup VS Code Notebook - Execution');
+            logger.info('Suite Setup VS Code Notebook - Execution');
             this.timeout(120_000);
             api = await initialize();
             const config = workspace.getConfiguration('jupyter', undefined);
@@ -75,22 +75,22 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await commands.executeCommand('workbench.action.maximizeEditorHideSidebar');
             comms = await initializeWidgetComms(disposables);
 
-            traceInfo('Suite Setup (completed)');
+            logger.info('Suite Setup (completed)');
         });
         // Use same notebook without starting kernel in every single test (use one for whole suite).
         setup(async function () {
-            traceInfo(`Start Test ${this.currentTest?.title}`);
+            logger.info(`Start Test ${this.currentTest?.title}`);
             sinon.restore();
-            traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+            logger.info(`Start Test (completed) ${this.currentTest?.title}`);
             // With less real estate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
             await commands.executeCommand('workbench.action.closePanel');
         });
         teardown(async function () {
-            traceInfo(`Ended Test ${this.currentTest?.title}`);
+            logger.info(`Ended Test ${this.currentTest?.title}`);
             if (this.currentTest?.isFailed()) {
                 await captureScreenShot(this);
             }
-            traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+            logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
         });
         suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
         test('Slider Widget', async function () {

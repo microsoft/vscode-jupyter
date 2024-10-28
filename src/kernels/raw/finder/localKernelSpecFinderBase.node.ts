@@ -7,7 +7,7 @@ import { CancellationToken, Disposable, Event, EventEmitter, Memento, Uri } from
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceVerbose, traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable, IDisposableRegistry, ReadWrite } from '../../../platform/common/types';
@@ -57,7 +57,7 @@ export class LocalKernelSpecFinder implements IDisposable {
         private readonly jupyterPaths: JupyterPaths
     ) {
         if (this.oldKernelSpecsFolder) {
-            traceVerbose(
+            logger.trace(
                 `Old kernelSpecs (created by Jupyter Extension) stored in directory ${this.oldKernelSpecsFolder}`
             );
         }
@@ -131,7 +131,7 @@ export class LocalKernelSpecFinder implements IDisposable {
         await this.fs.createDirectory(Uri.file(path.dirname(destinationFile)));
         await this.fs.copy(Uri.file(kernelSpecFile), Uri.file(destinationFile)).catch(noop);
         await this.fs.delete(Uri.file(kernelSpecFile));
-        traceVerbose(`Old KernelSpec '${kernelSpecFile}' deleted and backup stored in ${destinationFolder}`);
+        logger.trace(`Old KernelSpec '${kernelSpecFile}' deleted and backup stored in ${destinationFolder}`);
     }
     /**
      * Load kernelspec json from disk
@@ -180,7 +180,7 @@ export class LocalKernelSpecFinder implements IDisposable {
             if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
                 this.findKernelSpecsInPathCache.delete(cacheKey);
             }
-            traceVerbose(`Failed to search for kernels in ${getDisplayPath(kernelSearchPath)} with an error`, ex);
+            logger.warn(`Failed to search for kernels in ${getDisplayPath(kernelSearchPath)} with an error`, ex);
         });
         return promise;
     }
@@ -330,14 +330,14 @@ export async function loadKernelSpec(
     }
     let kernelJson: ReadWrite<IJupyterKernelSpec>;
     try {
-        // traceVerbose(
+        // logger.debug(
         //     `Loading kernelspec from ${getDisplayPath(specPath)} ${
         //         interpreter?.uri ? `for ${getDisplayPath(interpreter.uri)}` : ''
         //     }`
         // );
         kernelJson = JSON.parse(await fs.readFile(specPath));
     } catch (ex) {
-        traceError(`Failed to parse kernelspec ${specPath}`, ex);
+        logger.error(`Failed to parse kernelspec ${specPath}`, ex);
         return;
     }
     if (cancelToken.isCancellationRequested) {
@@ -367,18 +367,22 @@ export async function loadKernelSpec(
             kernelJson.name = `${kernelJson.name}.${argv.join('#')}`;
         }
     }
-    kernelJson.metadata = kernelJson.metadata || {};
-    kernelJson.metadata.vscode = kernelJson.metadata.vscode || {};
-    if (!kernelJson.metadata.vscode.originalSpecFile) {
-        kernelJson.metadata.vscode.originalSpecFile = specPath.fsPath;
+    const metadata = (kernelJson.metadata as ReadWrite<typeof kernelJson.metadata>) || {};
+    metadata.vscode = metadata.vscode || {};
+    if (!metadata.vscode.originalSpecFile) {
+        metadata.vscode.originalSpecFile = specPath.fsPath;
     }
-    if (!kernelJson.metadata.vscode.originalDisplayName) {
-        kernelJson.metadata.vscode.originalDisplayName = kernelJson.display_name;
+    if (!metadata.vscode.originalDisplayName) {
+        metadata.vscode.originalDisplayName = kernelJson.display_name;
     }
-    if (kernelJson.metadata.originalSpecFile) {
-        kernelJson.metadata.vscode.originalSpecFile = kernelJson.metadata.originalSpecFile;
-        delete kernelJson.metadata.originalSpecFile;
+    if (metadata.originalSpecFile) {
+        metadata.vscode.originalSpecFile = metadata.originalSpecFile;
+        delete metadata.originalSpecFile;
     }
+    kernelJson.metadata = metadata;
+
+    // Some registered kernel specs do not have a name, in this case use the last part of the path
+    kernelJson.name = kernelJson?.name || path.basename(path.dirname(specPath.fsPath));
 
     const kernelSpec: IJupyterKernelSpec = new JupyterKernelSpec(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -388,9 +392,6 @@ export async function loadKernelSpec(
         interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path,
         getKernelRegistrationInfo(kernelJson)
     );
-
-    // Some registered kernel specs do not have a name, in this case use the last part of the path
-    kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath.fsPath));
 
     // Possible user deleted the underlying interpreter.
     const interpreterPath = interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path;

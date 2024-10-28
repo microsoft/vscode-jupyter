@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
 import { initialize, IExtensionTestApi, waitForCondition, startJupyterServer, captureScreenShot } from '../common';
@@ -60,7 +60,7 @@ export function sharedIWDebuggerTests(
             });
             suiteTeardown(() => vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints'));
             setup(async function () {
-                traceInfo(`Start Test ${this.currentTest?.title}`);
+                logger.info(`Start Test ${this.currentTest?.title}`);
                 api = await initialize();
                 if (isWeb() || (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger')) {
                     await startJupyterServer();
@@ -75,13 +75,13 @@ export function sharedIWDebuggerTests(
                 disposables.push(vscode.debug.registerDebugAdapterTrackerFactory('python', tracker));
                 disposables.push(vscode.debug.registerDebugAdapterTrackerFactory(pythonIWKernelDebugAdapter, tracker));
                 interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
-                traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+                logger.info(`Start Test (completed) ${this.currentTest?.title}`);
                 const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
             });
             teardown(async function () {
-                traceInfo(`Ended Test ${this.currentTest?.title}`);
+                logger.info(`Ended Test ${this.currentTest?.title}`);
                 if (this.currentTest?.isFailed()) {
                     await captureScreenShot(this);
                 }

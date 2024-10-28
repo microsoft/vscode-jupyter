@@ -25,14 +25,14 @@ import {
 } from '../platform/common/constants';
 import { WrappedError } from '../platform/errors/types';
 import { splitLines } from '../platform/common/helpers';
-import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
 import { createDeferred, raceTimeout, raceTimeoutError } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
-import { concatMultilineString, getResourceType } from '../platform/common/utils';
+import { concatMultilineString, disposeAsync, getResourceType } from '../platform/common/utils';
 import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import {
@@ -64,7 +64,7 @@ import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getKernelInfo } from './kernelInfo';
 import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 import { dispose } from '../platform/common/utils/lifecycle';
-import { getCachedVersion, getEnvironmentType, getPythonEnvDisplayName } from '../platform/interpreter/helpers';
+import { getCachedVersion, getEnvironmentType } from '../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker } from './telemetry/notebookTelemetry';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
@@ -256,16 +256,16 @@ abstract class BaseKernel implements IBaseKernel {
         const pendingExecutions = Promise.all(
             Array.from(this.hooks.get('willInterrupt') || new Set<Hook>()).map((h) => h())
         );
-        traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.uri)}`);
+        logger.info(`Interrupt requested ${getDisplayPath(this.resourceUri || this.uri)}`);
         let result: InterruptResult;
         try {
             const session = this._jupyterSessionPromise
                 ? await this._jupyterSessionPromise.catch(() => undefined)
                 : undefined;
-            traceInfo('Interrupt kernel execution');
+            logger.info('Interrupt kernel execution');
 
             if (!session) {
-                traceInfo('No kernel session to interrupt');
+                logger.info('No kernel session to interrupt');
                 this._interruptPromise = undefined;
                 result = InterruptResult.Success;
             } else {
@@ -283,7 +283,7 @@ abstract class BaseKernel implements IBaseKernel {
             ).catch(noop);
         }
 
-        traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
+        logger.info(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
         if (result === InterruptResult.TimedOut) {
             const message = DataScience.restartKernelAfterInterruptMessage(
                 getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
@@ -296,7 +296,9 @@ abstract class BaseKernel implements IBaseKernel {
         }
     }
     public async dispose(): Promise<void> {
-        traceInfo(`Dispose Kernel '${getDisplayPath(this.uri)}' associated with '${getDisplayPath(this.resourceUri)}'`);
+        logger.info(
+            `Dispose Kernel '${getDisplayPath(this.uri)}' associated with '${getDisplayPath(this.resourceUri)}'`
+        );
         this._disposing = true;
         if (this.disposingPromise) {
             return this.disposingPromise;
@@ -317,7 +319,7 @@ abstract class BaseKernel implements IBaseKernel {
                 : undefined;
             this._jupyterSessionPromise = undefined;
             if (this._session) {
-                promises.push(this._session.disposeAsync().catch(noop));
+                promises.push(disposeAsync(this._session, this.disposables));
                 this._session = undefined;
             }
             this._disposed = true;
@@ -336,7 +338,7 @@ abstract class BaseKernel implements IBaseKernel {
     public async restart(): Promise<void> {
         try {
             const resourceType = getResourceType(this.resourceUri);
-            traceInfo(`Restart requested ${getDisplayPath(this.uri)}`);
+            logger.info(`Restart requested ${getDisplayPath(this.uri)}`);
             await Promise.all(
                 Array.from(this.hooks.get('willRestart') || new Set<Hook>()).map((h) => h(this._jupyterSessionPromise))
             );
@@ -379,7 +381,7 @@ abstract class BaseKernel implements IBaseKernel {
                     { resourceType }
                 );
             } catch (ex) {
-                traceError(`Restart failed ${getDisplayPath(this.uri)}`, ex);
+                logger.error(`Restart failed ${getDisplayPath(this.uri)}`, ex);
                 this._ignoreJupyterSessionDisposedErrors = true;
                 // If restart fails, kill the associated session.
                 const session = this._session;
@@ -394,7 +396,10 @@ abstract class BaseKernel implements IBaseKernel {
                     undefined,
                     ex
                 );
-                await session?.disposeAsync().catch(noop);
+
+                if (session) {
+                    await disposeAsync(session, this.disposables);
+                }
                 this._ignoreJupyterSessionDisposedErrors = false;
                 throw ex;
             }
@@ -405,7 +410,7 @@ abstract class BaseKernel implements IBaseKernel {
             // Indicate a restart occurred if it succeeds
             this._onRestarted.fire();
         } catch (ex) {
-            traceError(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
+            logger.error(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
         } finally {
             Promise.all(Array.from(this.hooks.get('restartCompleted') || new Set<Hook>()).map((h) => h())).catch(noop);
@@ -420,8 +425,7 @@ abstract class BaseKernel implements IBaseKernel {
             if (!options.disableUI && this.startupUI.disableUI) {
                 this.startupUI.disableUI = false;
             }
-        });
-        const notebook = workspace.notebookDocuments.find((item) => item.uri.toString() === this.uri.toString());
+        }, this.disposables);
         if (this.startupUI.disableUI) {
             this.startupUI.onDidChangeDisableUI(
                 () => {
@@ -445,43 +449,21 @@ abstract class BaseKernel implements IBaseKernel {
 
         if (!this._jupyterSessionPromise) {
             const stopWatch = new StopWatch();
-
-            const initializeTelemetry = async () => {
-                const telemetryTracker = notebook
-                    ? getNotebookTelemetryTracker(notebook)?.jupyterSessionTelemetry()
-                    : undefined;
-                await trackKernelResourceInformation(this.resourceUri, {
-                    kernelConnection: this.kernelConnectionMetadata,
-                    actionSource: this.creator,
-                    // This means the user is actually running something against the kernel (deliberately).
-                    userExecutedCell: !this.startupUI.disableUI
+            this._jupyterSessionPromise = this.createJupyterSession();
+            try {
+                const session = await this._jupyterSessionPromise;
+                sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, {
+                    duration: stopWatch.elapsedTime
                 });
-                if (this.disposing) {
-                    throw new CancellationError();
-                }
-                telemetryTracker?.stop();
-                Cancellation.throwIfCanceled(this.startCancellation.token);
-            };
-
-            this._jupyterSessionPromise = initializeTelemetry()
-                .then(() => this.createJupyterSession())
-                .then((session) => {
-                    sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, {
-                        duration: stopWatch.elapsedTime
-                    });
-                    return session;
-                })
-                .catch((ex) => {
-                    traceInfoIfCI(
-                        `Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.uri)}`
-                    );
-                    // If we fail also clear the promise.
-                    this.startCancellation.cancel();
-                    this._jupyterSessionPromise = undefined;
-                    throw ex;
-                });
+                return session;
+            } catch (ex) {
+                logger.ci(`Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.uri)}`);
+                // If we fail also clear the promise.
+                this.startCancellation.cancel();
+                this._jupyterSessionPromise = undefined;
+                throw ex;
+            }
         }
-        this._jupyterSessionPromise.finally(() => this.sendKernelStartedTelemetry()).catch(noop);
         return this._jupyterSessionPromise;
     }
 
@@ -496,7 +478,7 @@ abstract class BaseKernel implements IBaseKernel {
         const restartHandler = (e: KernelMessage.Status) => {
             if (e === 'restarting' || e === 'autorestarting') {
                 // We restarted the kernel.
-                traceWarning('Kernel restarting during interrupt');
+                logger.warn('Kernel restarting during interrupt');
 
                 // Indicate we restarted the race below
                 restarted.resolve(true);
@@ -509,7 +491,7 @@ abstract class BaseKernel implements IBaseKernel {
         );
 
         if (session && session.kernel) {
-            traceInfo(`Interrupting kernel: ${session.kernel.name}`);
+            logger.info(`Interrupting kernel: ${session.kernel.name}`);
 
             // Start our interrupt. If it fails, indicate a restart
             await raceTimeoutError(
@@ -517,7 +499,7 @@ abstract class BaseKernel implements IBaseKernel {
                 new KernelInterruptTimeoutError(this.kernelConnectionMetadata),
                 session.kernel.interrupt()
             ).catch((exc) => {
-                traceWarning(`Error during interrupt: ${exc}`);
+                logger.warn(`Error during interrupt: ${exc}`);
                 restarted.resolve(true);
             });
         }
@@ -580,31 +562,24 @@ abstract class BaseKernel implements IBaseKernel {
     }
 
     private async createJupyterSession(): Promise<IKernelSession> {
+        const notebook = workspace.notebookDocuments.find((item) => item.uri.toString() === this.uri.toString());
+        const telemetryTracker = notebook
+            ? getNotebookTelemetryTracker(notebook)?.jupyterSessionTelemetry()
+            : undefined;
+        await trackKernelResourceInformation(this.resourceUri, {
+            kernelConnection: this.kernelConnectionMetadata,
+            actionSource: this.creator,
+            // This means the user is actually running something against the kernel (deliberately).
+            userExecutedCell: !this.startupUI.disableUI
+        });
+        telemetryTracker?.stop();
         if (this.disposing) {
             throw new CancellationError();
         }
         Cancellation.throwIfCanceled(this.startCancellation.token);
         let disposables: Disposable[] = [];
         try {
-            // No need to block kernel startup on UI updates.
-            let pythonInfo = '';
-            const interpreter = this.kernelConnectionMetadata.interpreter;
-            if (interpreter) {
-                const info: string[] = [];
-                info.push(`Python Path: ${getDisplayPath(interpreter.uri)}`);
-                info.push(interpreter ? getEnvironmentType(interpreter) : '');
-                info.push(getPythonEnvDisplayName(interpreter) || '');
-                const version = getCachedVersion(interpreter);
-                if (version) {
-                    info.push(`${version.major}.${version.minor}.${version.micro}`);
-                }
-                pythonInfo = ` (${info.filter((s) => s).join(', ')})`;
-            }
-            traceInfo(
-                `Starting Kernel ${this.kernelConnectionMetadata.kind}, ${
-                    this.kernelConnectionMetadata.id
-                } ${pythonInfo} for '${getDisplayPath(this.uri)}' (disableUI=${this.startupUI.disableUI})`
-            );
+            logger.info(`Starting Kernel ${getKernelStartupLogMessage(this, this.startupUI)}`);
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
             this._onStatusChanged.fire('starting');
@@ -626,17 +601,18 @@ abstract class BaseKernel implements IBaseKernel {
             this.sendKernelStartedTelemetry();
             this._session = session;
             this._onStarted.fire();
+            logger.info(`Kernel successfully started`);
             return session;
         } catch (ex) {
             // Don't log errors if UI is disabled (e.g. auto starting a kernel)
             // Else we just pollute the logs with lots of noise.
             if (this.startupUI.disableUI) {
-                traceVerbose(
+                logger.trace(
                     `failed to create IJupyterKernelConnectionSession in kernel, UI Disabled = ${this.startupUI.disableUI}`,
                     ex
                 );
             } else if (!this.startCancellation.token && !isCancellationError(ex)) {
-                traceError(
+                logger.error(
                     `failed to create IJupyterKernelConnectionSession in kernel, UI Disabled = ${this.startupUI.disableUI}`,
                     ex
                 );
@@ -708,7 +684,7 @@ abstract class BaseKernel implements IBaseKernel {
         }
     }
 
-    protected async initializeAfterStart(session: IKernelSession | undefined) {
+    private async initializeAfterStart(session: IKernelSession | undefined) {
         const nb = workspace.notebookDocuments.find((nb) => nb.uri.toString() === this.uri.toString());
         const tracker = getNotebookTelemetryTracker(nb);
         const postInitialization = nb ? tracker?.postKernelStartup() : undefined;
@@ -718,29 +694,28 @@ abstract class BaseKernel implements IBaseKernel {
                     h(session, this.startCancellation.token).catch(noop)
                 )
             );
-            traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
+            logger.trace(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
             if (!session) {
-                traceVerbose('Not running kernel initialization');
+                logger.trace('Not running kernel initialization');
                 return;
             }
             if (!this.hookedSessionForEvents.has(session)) {
                 this.hookedSessionForEvents.add(session);
                 session.onDidKernelSocketChange((e) => this._onDidKernelSocketChange.fire(e));
                 session.onDidDispose(() => {
-                    traceInfoIfCI(
+                    logger.ci(
                         `Kernel got disposed as a result of session.onDisposed (1) ${getDisplayPath(
                             this.resourceUri || this.uri
                         )}`
                     );
                     // Ignore when session is disposed as a result of failed restarts.
                     if (!this._ignoreJupyterSessionDisposedErrors) {
-                        traceInfo(
+                        logger.info(
                             `Kernel got disposed as a result of session.onDisposed ${getDisplayPath(
                                 this.resourceUri || this.uri
                             )} & _ignoreJupyterSessionDisposedErrors = false.`
                         );
                         const isActiveSessionDead = this._session === session;
-
                         this._jupyterSessionPromise = undefined;
                         this._session = undefined;
 
@@ -768,7 +743,7 @@ abstract class BaseKernel implements IBaseKernel {
                 // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
                 // And the longer we wait, the more data we need to hold onto in memory that later needs to be sent to the kernel in renderer.
                 this.determineVersionOfIPyWidgets(session).catch((ex) =>
-                    traceError(`Failed to determine IPyWidget version`, ex)
+                    logger.error(`Failed to determine IPyWidget version`, ex)
                 );
 
                 // Gather all of the startup code at one time and execute as one cell
@@ -779,7 +754,7 @@ abstract class BaseKernel implements IBaseKernel {
                             traceErrorsMessage: 'Error executing jupyter extension internal startup code'
                         })
                     )
-                    .catch((ex) => traceError(`Failed to execute internal startup code`, ex));
+                    .catch((ex) => logger.error(`Failed to execute internal startup code`, ex));
             } else {
                 // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
                 // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
@@ -800,17 +775,17 @@ abstract class BaseKernel implements IBaseKernel {
             // Then request our kernel info (indicates kernel is ready to go)
             const kernelInfo = tracker?.kernelInfo();
             try {
-                traceVerbose('Requesting Kernel info');
+                logger.debug('Requesting Kernel info');
                 this._info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento);
             } catch (ex) {
-                traceWarning('Failed to request KernelInfo', ex);
+                logger.warn('Failed to request KernelInfo', ex);
             }
             kernelInfo?.stop();
             const kernelIdle = tracker?.kernelIdle();
             if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
-                traceVerbose('End running kernel initialization, now waiting for idle');
+                logger.trace('End running kernel initialization, now waiting for idle');
                 await session.waitForIdle(this.kernelSettings.launchTimeout, this.startCancellation.token);
-                traceVerbose('End running kernel initialization, session is idle');
+                logger.trace('End running kernel initialization, session is idle');
             }
             kernelIdle?.stop();
         } finally {
@@ -842,7 +817,7 @@ abstract class BaseKernel implements IBaseKernel {
         `;
 
             const version = await this.executeSilently(session, [codeToDetermineIPyWidgetsVersion]).catch((ex) =>
-                traceError('Failed to determine version of IPyWidgets', ex)
+                logger.error('Failed to determine version of IPyWidgets', ex)
             );
             if (Array.isArray(version)) {
                 const isVersion8 = version.some(
@@ -853,12 +828,12 @@ abstract class BaseKernel implements IBaseKernel {
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
-                traceVerbose(`Determined IPyWidgets Version as ${newVersion}`);
+                logger.trace(`Determined IPyWidgets Version as ${newVersion}`);
                 // If user does not have ipywidgets installed, then this event will never get fired.
                 this._ipywidgetsVersion == newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);
             } else {
-                traceWarning('Failed to determine IPyKernel Version', JSON.stringify(version));
+                logger.warn('Failed to determine IPyKernel Version', JSON.stringify(version));
             }
         };
         await determineVersionImpl();
@@ -938,11 +913,11 @@ abstract class BaseKernel implements IBaseKernel {
 
         if (this.kernelSettings.themeMatplotlibPlots) {
             // We're theming matplotlibs, so we have to setup our default state.
-            traceInfoIfCI(`Initialize config for plots for ${getDisplayPath(this.resourceUri || this.uri)}`);
+            logger.ci(`Initialize config for plots for ${getDisplayPath(this.resourceUri || this.uri)}`);
 
             const matplotInit = CodeSnippets.MatplotLibInit;
 
-            traceVerbose(`Initialize matplotlib for ${getDisplayPath(this.resourceUri || this.uri)}`);
+            logger.trace(`Initialize matplotlib for ${getDisplayPath(this.resourceUri || this.uri)}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             results.push(...splitLines(matplotInit, { trim: false }));
@@ -986,7 +961,7 @@ abstract class BaseKernel implements IBaseKernel {
             return;
         }
         if (!session.kernel) {
-            traceVerbose(`Not executing startup as there is no session, code: ${code}`);
+            logger.trace(`Not executing startup as there is no session, code: ${code}`);
             return;
         }
         return executeSilently(session.kernel, code.join('\n'), errorOptions);
@@ -1086,4 +1061,26 @@ export function getPlainTextOrStreamOutput(outputs: nbformat.IOutput[]) {
         }
     }
     return;
+}
+
+function getKernelStartupLogMessage(kernel: IBaseKernel, displayOptions: DisplayOptions) {
+    // No need to block kernel startup on UI updates.
+    const interpreter = kernel.kernelConnectionMetadata.interpreter;
+    const info: string[] = [];
+    if (interpreter) {
+        info.push(`Python Path: ${getDisplayPath(interpreter.uri)}`);
+        info.push(interpreter ? getEnvironmentType(interpreter) : '');
+        const version = getCachedVersion(interpreter);
+        if (version) {
+            info.push(`${version.major}.${version.minor}.${version.micro}`);
+        }
+    } else if (kernel.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec') {
+        info.push(kernel.kernelConnectionMetadata.kernelSpec.display_name);
+    } else if (kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec') {
+        info.push(kernel.kernelConnectionMetadata.kernelSpec.display_name);
+    }
+
+    return `(${info.filter((s) => s).join(', ')}) for '${getDisplayPath(kernel.uri)}' (disableUI=${
+        displayOptions.disableUI
+    })`;
 }

@@ -3,7 +3,6 @@
 
 import {
     CancellationError,
-    CancellationTokenSource,
     commands,
     Disposable,
     EventEmitter,
@@ -24,7 +23,7 @@ import {
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
     IConfigurationService,
@@ -80,10 +79,10 @@ import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessa
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
 import { openInBrowser } from '../../platform/common/net/browser';
 import { KernelError } from '../../kernels/errors/kernelError';
-import { JupyterVariablesProvider } from '../../kernels/variables/JupyterVariablesProvider';
-import { IJupyterVariables } from '../../kernels/variables/types';
 import { getVersion } from '../../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker, trackControllerCreation } from '../../kernels/telemetry/notebookTelemetry';
+import { IJupyterVariablesProvider } from '../../kernels/variables/types';
+import type { INotebookMetadata } from '@jupyterlab/nbformat';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -159,9 +158,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         extensionChecker: IPythonExtensionChecker,
         serviceContainer: IServiceContainer,
         displayDataProvider: IConnectionDisplayDataProvider,
-        jupyterVariables: IJupyterVariables
+        jupyterVairablesProvider: IJupyterVariablesProvider
     ): IVSCodeNotebookController {
-        return new VSCodeNotebookController(
+        const controller = new VSCodeNotebookController(
             kernelConnection,
             id,
             _viewType,
@@ -172,10 +171,18 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             configuration,
             extensionChecker,
             serviceContainer,
-            displayDataProvider,
-            jupyterVariables
+            displayDataProvider
         );
+
+        try {
+            controller.controller.variableProvider = jupyterVairablesProvider;
+        } catch (ex) {
+            logger.warn('Failed to attach variable provider', ex);
+        }
+
+        return controller;
     }
+
     constructor(
         private kernelConnection: KernelConnectionMetadata,
         id: string,
@@ -187,8 +194,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly configuration: IConfigurationService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly displayDataProvider: IConnectionDisplayDataProvider,
-        jupyterVariables: IJupyterVariables
+        private readonly displayDataProvider: IConnectionDisplayDataProvider
     ) {
         trackControllerCreation(kernelConnection.id, kernelConnection.interpreter?.id);
         disposableRegistry.push(this);
@@ -212,14 +218,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
-        if (this.controller.supportedLanguages.includes('python')) {
-            this.controller.variableProvider = new JupyterVariablesProvider(
-                jupyterVariables,
-                this.kernelProvider,
-                this.controller.id,
-                this.disposables
-            );
-        }
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
         workspace.onDidCloseNotebookDocument(
@@ -230,7 +228,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this.disposables
         );
     }
+
     private readonly restoredConnections = new WeakSet<NotebookDocument>();
+
     public async restoreConnection(notebook: NotebookDocument) {
         if (this.restoredConnections.has(notebook)) {
             return;
@@ -256,6 +256,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         ) {
             return;
         }
+
+        void initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+            kernel.resourceUri,
+            kernel.kernelConnectionMetadata
+        );
 
         // If we're connected to the same kernel session and the same cell is still getting executed,
         // then ensure to mark the cell as busy and attach the outputs of the execution to the cell.
@@ -306,7 +311,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public postMessage(message: any, editor?: NotebookEditor): Thenable<boolean> {
         const messageType = message && 'message' in message ? message.message : '';
-        traceInfoIfCI(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
+        logger.ci(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
         return this.controller.postMessage(message, editor);
     }
     /**
@@ -329,12 +334,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         const nbDocumentUris = workspace.notebookDocuments
             .filter((item) => this.associatedDocuments.has(item))
             .map((item) => item.uri.toString());
-        traceVerbose(
+        logger.debug(
             `Disposing controller ${this.id} associated with connection ${this.connection.id} ${
                 nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
             }`
         );
-        traceInfoIfCI(
+        logger.ci(
             `Disposing controller ${this.id} associated with connection ${this.connection.id} ${
                 nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
             } called from ${new Error('').stack}`
@@ -377,7 +382,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // See here https://github.com/microsoft/vscode-jupyter/runs/5581627878?check_suite_focus=true
         cells = cells.filter((cell) => {
             if (cell.index < 0) {
-                traceWarning(
+                logger.warn(
                     `Attempting to run a cell with index ${cell.index}, kind ${
                         cell.kind
                     }, text = ${cell.document.getText()}`
@@ -391,14 +396,16 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!workspace.isTrusted) {
             return;
         }
-        traceInfo(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
+        logger.debug(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         telemetryTracker?.stop();
+        const queue = this.cellQueue.get(notebook) || [];
+        this.cellQueue.set(notebook, queue.concat(cells));
         // Notebook is trusted. Continue to execute cells
-        await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
+        await this.executeQueuedCells(notebook);
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
-        traceInfoIfCI(
+        logger.ci(
             `NotebookController selection event called for notebook ${event.notebook.uri.toString()} & controller ${
                 this.connection.kind
             }:${this.id}. Selected ${event.selected} `
@@ -413,7 +420,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             // Possible user selected a controller that's not contributed by us at all.
             const kernel = this.kernelProvider.get(event.notebook);
             if (kernel?.kernelConnectionMetadata.id === this.kernelConnection.id) {
-                traceInfo(
+                logger.info(
                     `Disposing kernel ${this.kernelConnection.id} for notebook ${getDisplayPath(
                         event.notebook.uri
                     )} due to selection of another kernel or closing of the notebook`
@@ -438,7 +445,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         );
         void warnWhenUsingOutdatedPython(this.kernelConnection);
         const deferred = createDeferred<void>();
-        traceInfoIfCI(
+        logger.ci(
             `Controller ${this.connection.kind}:${this.id} associated with nb ${getDisplayPath(event.notebook.uri)}`
         );
         this.associatedDocuments.set(event.notebook, deferred.promise);
@@ -448,7 +455,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // If this NotebookController was selected, fire off the event
         this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
         this._onNotebookControllerSelectionChanged.fire(event);
-        traceVerbose(`Controller selection change completed`);
+        logger.debug(`Controller selection change completed`);
         deferred.resolve();
     }
 
@@ -512,11 +519,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     private handleInterrupt(notebook: NotebookDocument) {
-        traceVerbose(`VS Code interrupted kernel for ${getDisplayPath(notebook.uri)}`);
+        logger.debug(`VS Code interrupted kernel for ${getDisplayPath(notebook.uri)}`);
         notebook.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         commands
             .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: notebook.uri } })
-            .then(noop, (ex) => traceError('Failed to interrupt', ex));
+            .then(noop, (ex) => logger.error('Failed to interrupt', ex));
     }
 
     private createCellExecutionIfNecessary(cell: NotebookCell, controller: IKernelController) {
@@ -537,86 +544,118 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         return currentExecution;
     }
 
-    public async executeCell(doc: NotebookDocument, cell: NotebookCell, codeOverride?: string) {
-        const disposables = new DisposableStore();
-        const token = disposables.add(new CancellationTokenSource());
-
-        disposables.add(workspace.onDidCloseNotebookDocument((e) => (e === doc ? token.cancel() : undefined)));
+    private cellQueue = new WeakMap<NotebookDocument, NotebookCell[]>();
+    private async executeQueuedCells(doc: NotebookDocument) {
+        if (!this.cellQueue.has(doc)) {
+            return;
+        }
         // Start execution now (from the user's point of view)
-        let exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));
+        type CellExec = { cell: NotebookCell; exec: NotebookCellExecution };
+        const cellExecs: CellExec[] = (this.cellQueue.get(doc) || []).map((cell) => {
+            const exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));
+            return { cell, exec };
+        });
+        this.cellQueue.delete(doc);
+        const firstCell = cellExecs.length ? cellExecs[0].cell : undefined;
+        if (!firstCell) {
+            return;
+        }
+
+        logger.trace(`Execute Notebook ${getDisplayPath(doc.uri)}. Step 1`);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         let currentContext: 'start' | 'execution' = 'start';
-        let kernel: IKernel | undefined;
         let controller: IKernelController = new KernelController(this.controller);
-        let kernelStarted = false;
         const lastCellExecutionTracker = this.serviceContainer.get<LastCellExecutionTracker>(LastCellExecutionTracker);
+        let kernel: IKernel | undefined;
         try {
+            logger.trace(`Connect to Kernel ${getDisplayPath(doc.uri)}. Step 2`);
             kernel = await this.connectToKernel(doc, new DisplayOptions(false));
+            logger.trace(`Connected to Kernel ${getDisplayPath(doc.uri)}. Step 3`);
             if (kernel.disposing) {
                 throw new CancellationError();
             }
-            const cellExecTracker = getNotebookTelemetryTracker(doc)?.executeCell();
-            if (cellExecTracker) {
-                disposables.add(new Disposable(() => cellExecTracker.stop()));
-            }
-            kernelStarted = true;
             // If the controller changed, then ensure to create a new cell execution object.
             if (kernel && kernel.controller.id !== controller.id) {
                 controller = kernel.controller;
-                exec = this.createCellExecutionIfNecessary(cell, kernel.controller);
+                cellExecs.forEach(
+                    (cellExec) => (cellExec.exec = this.createCellExecutionIfNecessary(cellExec.cell, controller))
+                );
             }
             currentContext = 'execution';
             if (kernel.controller.id === this.id) {
                 this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             }
-
-            // Track the information so we can restore execution upon reloading vs code or the like.
-            lastCellExecutionTracker.trackCellExecution(cell, kernel);
-            const kernelExecution = this.kernelProvider.getKernelExecution(kernel);
-            const promise = kernelExecution.executeCell(cell, codeOverride);
-
-            // If we complete execution, then there is nothing to be restored.
-            promise
-                .then(() => {
-                    if (!kernel) {
-                        return;
-                    }
-                    if (Exiting.isExiting) {
-                        // If we're exiting vs code, then no need to clear the last execution info, we need to preserve that.
-                        return;
-                    }
-                    return lastCellExecutionTracker.deleteTrackedCellExecution(cell, kernel);
-                })
-                .catch(noop);
-            return await promise;
         } catch (ex) {
             if (ex instanceof KernelError) {
                 // Kernel errors would have been handled and displayed
                 return;
             }
             if (!isCancellationError(ex)) {
-                traceError(`Error in execution`, ex);
+                logger.error(`Error in notebook cell execution`, ex);
             }
-            if (!kernelStarted) {
+            cellExecs.forEach(({ cell, exec }) => {
                 exec.start();
                 exec.clearOutput(cell).then(noop, noop);
-            }
+            });
+
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
             ex = WrappedError.unwrap(ex);
             const isCancelled = isCancellationError(ex) || ex instanceof KernelDeadError;
             // If there was a failure connecting or executing the kernel, stick it in this cell
             await endCellAndDisplayErrorsInCell(
-                cell,
+                firstCell,
                 controller,
                 await errorHandler.getErrorMessageForDisplayInCell(ex, currentContext, doc.uri),
                 isCancelled
             );
-        } finally {
-            disposables.dispose();
         }
 
-        // Execution should be ended elsewhere
+        if (!kernel) {
+            return;
+        }
+
+        const kernelExecution = this.kernelProvider.getKernelExecution(kernel);
+        const disposables = new DisposableStore();
+
+        await Promise.all(
+            cellExecs.map(async ({ cell }) => {
+                try {
+                    // Track the information so we can restore execution upon reloading vs code or the like.
+                    const cellExecTracker = getNotebookTelemetryTracker(doc)?.executeCell();
+                    if (cellExecTracker) {
+                        disposables.add(new Disposable(() => cellExecTracker.stop()));
+                    }
+                    lastCellExecutionTracker.trackCellExecution(cell, kernel);
+                    logger.trace(`executeCell ${cell.index}. Step 4`);
+                    await kernelExecution.executeCell(cell);
+
+                    // If we complete execution, then there is nothing to be restored.
+                    if (!Exiting.isExiting) {
+                        // If we're exiting vs code, then no need to clear the last execution info, we need to preserve that.
+                        lastCellExecutionTracker.deleteTrackedCellExecution(cell, kernel);
+                    }
+                } catch (ex) {
+                    if (ex instanceof KernelError) {
+                        // Kernel errors would have been handled and displayed
+                        return;
+                    }
+                    if (!isCancellationError(ex)) {
+                        logger.error(`Error in cell execution`, ex);
+                    }
+                    const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+                    ex = WrappedError.unwrap(ex);
+                    const isCancelled = isCancellationError(ex) || ex instanceof KernelDeadError;
+                    // If there was a failure connecting or executing the kernel, stick it in this cell
+                    await endCellAndDisplayErrorsInCell(
+                        cell,
+                        controller,
+                        await errorHandler.getErrorMessageForDisplayInCell(ex, currentContext, doc.uri),
+                        isCancelled
+                    );
+                }
+            })
+        ).catch(noop);
     }
 
     private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions): Promise<IKernel> {
@@ -673,7 +712,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             existingKernel &&
             areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
         ) {
-            traceInfo('Switch kernel did not change kernel.');
+            logger.info('Switch kernel did not change kernel.');
             return;
         }
 
@@ -709,7 +748,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             controller: this.controller,
             resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
         });
-        traceVerbose(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
+        logger.debug(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
 
         // If this is a Python notebook and Python isn't installed, then don't auto-start the kernel.
         if (isPythonKernelConnection(this.kernelConnection) && !this.extensionChecker.isPythonExtensionInstalled) {
@@ -734,7 +773,7 @@ async function updateNotebookDocumentMetadata(
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
-    const metadata = getNotebookMetadata(document) || {};
+    const metadata: INotebookMetadata = getNotebookMetadata(document) || {};
     const { changed } = await updateNotebookMetadataWithSelectedKernel(metadata, kernelConnection, kernelInfo);
     if (changed) {
         await updateNotebookMetadata(document, metadata);

@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, Disposable, NotebookEditor, Uri, EventEmitter, workspace, window } from 'vscode';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposableRegistry, IDisposable } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -142,7 +142,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         }
         const notebook = editor.notebook;
         if (!controller) {
-            traceVerbose(
+            logger.trace(
                 `No controller, hence notebook communications cannot be initialized for editor ${getDisplayPath(
                     editor.notebook.uri
                 )}`

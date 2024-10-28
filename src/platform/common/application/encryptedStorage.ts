@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { ExtensionMode } from 'vscode';
 import { isCI } from '../constants';
-import { traceError } from '../../logging';
+import { logger } from '../../logging';
 import { IExtensionContext } from '../types';
 import { IEncryptedStorage } from './types';
 
@@ -29,7 +29,7 @@ export class EncryptedStorage implements IEncryptedStorage {
             try {
                 await this.extensionContext.secrets.delete(`${service}.${key}`);
             } catch (e) {
-                traceError(e);
+                logger.error(e);
             }
         } else {
             await this.extensionContext.secrets.store(`${service}.${key}`, value);
@@ -50,7 +50,7 @@ export class EncryptedStorage implements IEncryptedStorage {
                 await this.extensionContext.secrets.delete(`${service}.${key}`);
                 return;
             } catch (e) {
-                traceError(e);
+                logger.error(e);
             }
         }
     }

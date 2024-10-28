@@ -33,8 +33,8 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
 import type { IFileSystem } from '../../../platform/common/platform/types';
 import { computeLocalWorkingDirectory } from './rawKernelSessionFactory.node';
-const nonSerializingKernel =
-    require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default');
+const jupyterLabKernel =
+    require('@jupyterlab/services/lib/kernel/default') as typeof import('@jupyterlab/services/lib/kernel/default');
 
 suite('Raw Session & Raw Kernel Connection', () => {
     let session: RawSessionConnection;
@@ -47,10 +47,11 @@ suite('Raw Session & Raw Kernel Connection', () => {
         reason?: string | undefined;
         stderr: string;
     }>;
+    let onDidDispose: EventEmitter<void>;
     const launchTimeout = 1_000;
     let disposables: IDisposable[] = [];
     let kernelConnectionMetadata: LocalKernelSpecConnectionMetadata;
-    const OldKernelConnectionClass = nonSerializingKernel.KernelConnection;
+    const OldKernelConnectionClass = jupyterLabKernel.KernelConnection;
     const kernelInfo: KernelMessage.IInfoReply = {
         banner: '',
         help_links: [],
@@ -93,7 +94,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         channel: 'iopub',
         content: {
             status: 'ok'
-        },
+        } as any,
         metadata: {},
         parent_header: {
             date: '',
@@ -106,6 +107,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
     };
     function createKernelProcess() {
         const kernelProcess = mock<IKernelProcess>();
+        let disposed = false;
         when(kernelProcess.canInterrupt).thenReturn(true);
         when(kernelProcess.connection).thenReturn({
             control_port: 1,
@@ -118,8 +120,13 @@ suite('Raw Session & Raw Kernel Connection', () => {
             stdin_port: 5,
             transport: 'tcp'
         });
-        when(kernelProcess.dispose()).thenResolve();
+        when(kernelProcess.isDisposed).thenCall(() => disposed);
+        when(kernelProcess.dispose()).thenCall(() => {
+            disposed = true;
+            onDidDispose.fire();
+        });
         when(kernelProcess.exited).thenReturn(exitedEvent.event);
+        when(kernelProcess.onDidDispose).thenReturn(onDidDispose.event);
         when(kernelProcess.canInterrupt).thenReturn(true);
         when(kernelProcess.interrupt()).thenResolve();
         when(kernelProcess.kernelConnectionMetadata).thenReturn(kernelConnectionMetadata);
@@ -145,6 +152,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             instance(mock<ISignal<Kernel.IKernelConnection, KernelMessage.IMessage<KernelMessage.MessageType>>>())
         );
         when(kernel.disposed).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, void>>()));
+        when(kernel.pendingInput).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, boolean>>()));
         when(kernel.connectionStatusChanged).thenReturn(
             instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
         );
@@ -159,7 +167,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         when(kernel.sendControlMessage(anything(), true, true)).thenReturn({ done: deferred.promise } as any);
         when(kernel.connectionStatus).thenReturn('connected');
 
-        nonSerializingKernel.KernelConnection = function (options: { serverSettings: ServerConnection.ISettings }) {
+        jupyterLabKernel.KernelConnection = function (options: { serverSettings: ServerConnection.ISettings }) {
             new options.serverSettings.WebSocket('http://1234');
             return instance(kernel);
         } as any;
@@ -181,7 +189,10 @@ suite('Raw Session & Raw Kernel Connection', () => {
             reason?: string | undefined;
             stderr: string;
         }>();
-        nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
+        disposables.push(exitedEvent);
+        onDidDispose = new EventEmitter<void>();
+        disposables.push(onDidDispose);
+        jupyterLabKernel.KernelConnection = OldKernelConnectionClass;
         const workspaceConfig = mock<WorkspaceConfiguration>();
         when(workspaceConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
         when(mockedVSCodeNamespaces.workspace.getConfiguration(anything())).thenReturn(instance(workspaceConfig));
@@ -206,7 +217,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
     });
 
     teardown(async () => {
-        nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
+        jupyterLabKernel.KernelConnection = OldKernelConnectionClass;
         sinon.reset();
         disposables = dispose(disposables);
         await session

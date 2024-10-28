@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { IDisposable } from '../types';
+import { noop } from './misc';
 import { MicrotaskDelay } from './symbols';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -375,6 +376,7 @@ export class Delayer<T> implements IDisposable {
                 }
                 return undefined;
             });
+            void this.completionPromise.catch(noop);
         }
 
         const fn = () => {

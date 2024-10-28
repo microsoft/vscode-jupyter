@@ -7,7 +7,7 @@ import { dispose } from '../../platform/common/utils/lifecycle';
 import { createDeferred, raceTimeout } from '../../platform/common/utils/async';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
-import { traceVerbose, traceError, traceInfoIfCI } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
@@ -31,13 +31,13 @@ export async function waitForIdleOnSession(
         disposables.push(progress);
     }
     try {
-        traceVerbose(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+        logger.trace(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
         // When our kernel connects and gets a status message it triggers the ready promise
         const kernelStatus = createDeferred<string>();
         token.onCancellationRequested(() => kernelStatus.reject(new CancellationError()), undefined, disposables);
         const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
-            traceVerbose(`Got status ${status} in waitForIdleOnSession`);
+            logger.trace(`Got status ${status} in waitForIdleOnSession`);
             if (status == 'idle') {
                 kernelStatus.resolve(status);
             }
@@ -62,21 +62,21 @@ export async function waitForIdleOnSession(
         kernelStatus.promise.catch(noop);
         const result = await raceTimeout(timeout, '', kernelStatus.promise, sessionDisposed.promise);
         if (session.isDisposed) {
-            traceError('Session disposed while waiting for session to be idle.');
+            logger.error('Session disposed while waiting for session to be idle.');
             throw new JupyterInvalidKernelError(kernelConnectionMetadata);
         }
 
-        traceVerbose(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+        logger.trace(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
         if (result == 'idle') {
             return;
         }
-        traceError(
+        logger.error(
             `Shutting down after failing to wait for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
         );
         throw new JupyterWaitForIdleError(kernelConnectionMetadata);
     } catch (ex) {
-        traceInfoIfCI(`Error waiting for idle`, ex);
+        logger.ci(`Error waiting for idle`, ex);
         throw ex;
     } finally {
         dispose(disposables);

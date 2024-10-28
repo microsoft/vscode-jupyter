@@ -5,7 +5,7 @@ import { NotebookCellData, NotebookCellKind, NotebookDocument, Range, TextDocume
 import { CellMatcher } from './cellMatcher';
 import { ICellRange, IJupyterSettings } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { parseForComments, generateMarkdownFromCodeLines, useCustomMetadata } from '../../platform/common/utils';
+import { parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
 import { splitLines } from '../../platform/common/helpers';
 import { isSysInfoCell } from '../systemInfoCell';
 import { getCellMetadata } from '../../platform/common/utils';
@@ -28,8 +28,9 @@ export function uncommentMagicCommands(line: string): string {
     }
 }
 
-function generateCodeCell(code: string[]) {
-    return new NotebookCellData(NotebookCellKind.Code, code.join('\n'), 'python');
+function generateCodeCell(code: string[], matcher: CellMatcher) {
+    const lines = matcher.isCell(code[0]) && code.length > 1 ? code.slice(1) : code;
+    return new NotebookCellData(NotebookCellKind.Code, lines.join('\n'), 'python');
 }
 
 function generateMarkdownCell(code: string[]) {
@@ -63,7 +64,7 @@ export function generateCells(
             // Make sure if we split, the second cell has a new id. It's a new submission.
             return [
                 generateMarkdownCell(split.slice(0, firstNonMarkdown)),
-                generateCodeCell(split.slice(firstNonMarkdown))
+                generateCodeCell(split.slice(firstNonMarkdown), matcher)
             ];
         } else {
             // Just a single markdown cell
@@ -71,20 +72,8 @@ export function generateCells(
         }
     } else {
         // Just code
-        return [generateCodeCell(split)];
+        return [generateCodeCell(split, matcher)];
     }
-}
-
-export function hasCells(document: TextDocument, settings?: IJupyterSettings): boolean {
-    const matcher = new CellMatcher(settings);
-    for (let index = 0; index < document.lineCount; index += 1) {
-        const line = document.lineAt(index);
-        if (matcher.isCell(line.text)) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 export function generateCellRangesFromDocument(document: TextDocument, settings?: IJupyterSettings): ICellRange[] {
@@ -145,7 +134,7 @@ export function generateCellsFromNotebookDocument(notebookDocument: NotebookDocu
             if (cell.kind === NotebookCellKind.Code) {
                 cellData.outputs = [...cell.outputs];
             }
-            cellData.metadata = useCustomMetadata() ? { custom: getCellMetadata(cell) } : getCellMetadata(cell);
+            cellData.metadata = getCellMetadata(cell);
             return cellData;
         });
 }

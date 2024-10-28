@@ -25,7 +25,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
 import { uriEquals } from '../../../test/datascience/helpers';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
@@ -78,7 +78,7 @@ suite(`Local Python and related kernels`, async () => {
     let environments: PythonExtension['environments'];
 
     setup(async function () {
-        traceInfo(`Start Test (started) ${this.currentTest?.title}`);
+        logger.info(`Start Test (started) ${this.currentTest?.title}`);
         interpreterService = mock<IInterpreterService>();
         fs = mock<IFileSystemNode>();
         jupyterPaths = mock<JupyterPaths>();
@@ -254,10 +254,10 @@ suite(`Local Python and related kernels`, async () => {
             );
         });
         disposables.push(new Disposable(() => loadKernelSpecStub.restore()));
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
         await dispose(disposables);
     });
 

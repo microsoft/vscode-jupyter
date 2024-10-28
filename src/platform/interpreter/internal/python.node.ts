@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceVerbose } from '../../logging';
+import { logger } from '../../logging';
 
 // "python" contains functions corresponding to the various ways that
 // the extension invokes a Python executable internally.  Each function
@@ -39,7 +39,7 @@ export function isModuleInstalled(name: string): [string[], (out: string) => boo
         if (out.includes('6af208d0-cb9c-427f-b937-ff563e17efdf')) {
             return true;
         } else {
-            traceVerbose(`Module ${name} is not installed. Output ${out}`);
+            logger.debug(`Module ${name} is not installed. Output ${out}`);
             return false;
         }
     }

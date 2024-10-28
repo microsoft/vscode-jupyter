@@ -35,17 +35,10 @@ import './platform/logging';
 //===============================================
 // loading starts here
 
-import { commands, env, ExtensionMode, UIKind, workspace } from 'vscode';
+import { commands, env, ExtensionMode, UIKind, workspace, type OutputChannel } from 'vscode';
 import { buildApi, IExtensionApi } from './standalone/api';
-import { setHomeDirectory, traceError } from './platform/logging';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IExperimentService,
-    IExtensionContext,
-    IFeaturesManager,
-    IsDevMode
-} from './platform/common/types';
+import { logger, setHomeDirectory } from './platform/logging';
+import { IAsyncDisposableRegistry, IExtensionContext, IsDevMode } from './platform/common/types';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
@@ -55,17 +48,7 @@ import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegis
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.node';
 import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.node';
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
-import { IExtensionActivationManager } from './platform/activation/types';
-import {
-    Exiting,
-    isCI,
-    isTestExecution,
-    setIsCodeSpace,
-    setIsWebExtension,
-    Telemetry
-} from './platform/common/constants';
-import { registerLogger, setLoggingLevel } from './platform/logging';
-import { ConsoleLogger } from './platform/logging/consoleLogger';
+import { Exiting, isTestExecution, setIsCodeSpace, setIsWebExtension } from './platform/common/constants';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { IInterpreterPackages } from './platform/interpreter/types';
 import { homedir, platform, arch, userInfo } from 'os';
@@ -77,10 +60,15 @@ import {
 } from './standalone/executionAnalysis/extension';
 import { activate as activateChat, deactivate as deactivateChat } from './standalone/chat/extesnion';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
-import { sendTelemetryEvent } from './telemetry';
-import { getVSCodeChannel } from './platform/common/application/applicationEnvironment';
-import { addOutputChannel, displayProgress, handleError, initializeGlobals } from './extension.common';
+import {
+    initializeLoggers,
+    displayProgress,
+    handleError,
+    initializeGlobals,
+    postActivateLegacy
+} from './extension.common';
 import { activateNotebookTelemetry } from './kernels/telemetry/notebookTelemetry';
+import { deleteOldTempDirs } from './platform/common/temp.node';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -95,25 +83,35 @@ let activatedServiceContainer: IServiceContainer | undefined;
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     durations.startActivateTime = stopWatch.elapsedTime;
+    const standardOutputChannel = initializeLoggers(context, {
+        addConsoleLogger: !!process.env.VSC_JUPYTER_FORCE_LOGGING,
+        userNameRegEx: tryGetUsername(),
+        homePathRegEx: tryGetHomePath(),
+        arch: arch(),
+        platform: platform(),
+        homePath: homePath.fsPath
+    });
+
     activateNotebookTelemetry(stopWatch);
     setDisposableTracker(context.subscriptions);
     setIsCodeSpace(env.uiKind == UIKind.Web);
     setIsWebExtension(false);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
-        const [api, ready] = activateUnsafe(context);
+        const [api, ready] = activateUnsafe(context, standardOutputChannel);
         await ready;
         // Send the "success" telemetry only if activation did not fail.
         // Otherwise Telemetry is send via the error handler.
         durations.endActivateTime = stopWatch.elapsedTime;
         sendStartupTelemetry(durations, stopWatch);
+        deleteOldTempDirs(context).catch(noop);
         return api;
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
         durations.endActivateTime = stopWatch.elapsedTime;
         handleError(ex, durations, stopWatch);
-        traceError('Failed to active the Jupyter Extension', ex);
+        logger.error('Failed to active the Jupyter Extension', ex);
         // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
         // Return a dummy object, to ensure other extension do not fall over.
         return {
@@ -151,18 +149,21 @@ export function deactivate(): Thenable<void> {
 // activation helpers
 
 // eslint-disable-next-line
-function activateUnsafe(context: IExtensionContext): [IExtensionApi, Promise<void>, IServiceContainer] {
+function activateUnsafe(
+    context: IExtensionContext,
+    standardOutputChannel: OutputChannel
+): [IExtensionApi, Promise<void>, IServiceContainer] {
     const progress = displayProgress();
     try {
         //===============================================
         // activation starts here
 
-        const [serviceManager, serviceContainer] = initializeGlobals(context);
+        const [serviceManager, serviceContainer] = initializeGlobals(context, standardOutputChannel);
         activatedServiceContainer = serviceContainer;
         initializeTelemetryGlobals((interpreter) =>
             serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
         );
-        const activationPromise = activateComponents(context, serviceManager, serviceContainer);
+        const activationPromise = activateLegacy(context, serviceManager, serviceContainer);
 
         //===============================================
         // activation ends here
@@ -176,30 +177,6 @@ function activateUnsafe(context: IExtensionContext): [IExtensionApi, Promise<voi
         return [api, activationPromise, serviceContainer];
     } finally {
         progress.dispose();
-    }
-}
-
-/////////////////////////////
-// error handling
-
-async function activateComponents(
-    context: IExtensionContext,
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer
-) {
-    // We will be pulling code over from activateLegacy().
-    return activateLegacy(context, serviceManager, serviceContainer);
-}
-
-function addConsoleLogger() {
-    if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
-        let label = undefined;
-        // In CI there's no need for the label.
-        if (!isCI) {
-            label = 'Jupyter Extension:';
-        }
-
-        registerLogger(new ConsoleLogger(label));
     }
 }
 
@@ -258,16 +235,6 @@ async function activateLegacy(
     // Set the logger home dir (we can compute this in a node app)
     setHomeDirectory(homedir());
 
-    // Setup the console logger if asked to
-    addOutputChannel(context, serviceManager, {
-        userNameRegEx: tryGetUsername(),
-        homePathRegEx: tryGetHomePath(),
-        arch: arch(),
-        platform: platform(),
-        homePath: homePath.fsPath
-    });
-    addConsoleLogger();
-
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
@@ -276,32 +243,5 @@ async function activateLegacy(
     registerStandaloneTypes(context, serviceManager, isDevMode);
     registerWebviewTypes(serviceManager);
 
-    // Load the two data science experiments that we need to register types
-    // Await here to keep the register method sync
-    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
-    // This must be done first, this guarantees all experiment information has loaded & all telemetry will contain experiment info.
-    const stopWatch = new StopWatch();
-    await experimentService.activate();
-    const duration = stopWatch.elapsedTime;
-    sendTelemetryEvent(Telemetry.ExperimentLoad, { duration });
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-
-    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
-    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
-    // XXX Move this *after* abExperiments is activated?
-    const settings = configuration.getSettings();
-    setLoggingLevel(settings.logging.level);
-    settings.onDidChange(() => {
-        setLoggingLevel(settings.logging.level);
-    });
-
-    // "initialize" "services"
-    commands.executeCommand('setContext', 'jupyter.vscode.channel', getVSCodeChannel()).then(noop, noop);
-
-    // "activate" everything else
-    serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager).activate();
-
-    const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
-    featureManager.initialize();
-    context.subscriptions.push(featureManager);
+    await postActivateLegacy(context, serviceContainer);
 }

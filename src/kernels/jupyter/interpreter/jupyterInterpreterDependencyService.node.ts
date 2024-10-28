@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Uri, env, window } from 'vscode';
 import { raceCancellation } from '../../../platform/common/cancellation';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -61,7 +61,6 @@ function sortProductsInOrderForInstallation(products: Product[]) {
  */
 export function getMessageForLibrariesNotInstalled(products: Product[], interpreter: PythonEnvironment): string {
     const interpreterName =
-        getPythonEnvDisplayName(interpreter) ||
         getPythonEnvDisplayName(interpreter) ||
         getCachedEnvironment(interpreter)?.environment?.folderUri?.fsPath ||
         interpreter.uri.fsPath;
@@ -299,7 +298,7 @@ export class JupyterInterpreterDependencyService {
             .exec(['--version'], { throwOnStdErr: true })
             .then(() => true)
             .catch((e) => {
-                traceError(`Kernel spec not found: `, e);
+                logger.error(`Kernel spec not found: `, e);
                 return false;
             });
     }

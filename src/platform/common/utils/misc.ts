@@ -5,7 +5,6 @@ import type { TextDocument, Uri } from 'vscode';
 import { NotebookCellScheme } from '../constants';
 import { InterpreterUri, Resource } from '../types';
 import { isPromise } from './async';
-import { StopWatch } from './stopWatch';
 import { Environment } from '@vscode/python-extension';
 
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
@@ -59,51 +58,6 @@ export type PickType<T, Value> = {
 export type ExcludeType<T, Value> = {
     [P in keyof T as T[P] extends Value ? never : P]: T[P];
 };
-
-// Information about a traced function/method call.
-export type TraceInfo =
-    | {
-          elapsed: number; // milliseconds
-          // Either returnValue or err will be set.
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          returnValue?: any;
-          err?: Error;
-      }
-    | undefined;
-
-// Call run(), call log() with the trace info, and return the result.
-export function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logBeforeCall?: boolean): T {
-    const timer = new StopWatch();
-    try {
-        if (logBeforeCall) {
-            log(undefined);
-        }
-        // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
-        const result = run();
-
-        // If method being wrapped returns a promise then wait for it.
-        if (isPromise(result)) {
-            // eslint-disable-next-line
-            (result as Promise<void>)
-                .then((data) => {
-                    log({ elapsed: timer.elapsedTime, returnValue: data });
-                    return data;
-                })
-                .catch((ex) => {
-                    log({ elapsed: timer.elapsedTime, err: ex });
-                    // eslint-disable-next-line
-                    // TODO(GH-11645) Re-throw the error like we do
-                    // in the non-Promise case.
-                });
-        } else {
-            log({ elapsed: timer.elapsedTime, returnValue: result });
-        }
-        return result;
-    } catch (ex) {
-        log({ elapsed: timer.elapsedTime, err: ex });
-        throw ex;
-    }
-}
 
 /**
  * Checking whether something is a Resource (Uri/undefined).

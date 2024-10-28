@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from '../../vscode-path/path';
-import { traceError } from '../../logging';
+import { logger } from '../../logging';
 import { getEnvironmentVariable } from '../../common/utils/platform.node';
 import { pathExists, readFile } from '../../common/platform/fileUtils.node';
 import { Uri } from 'vscode';
@@ -18,7 +18,7 @@ function getSearchHeight() {
     const maxDepth = parseInt(maxDepthStr, 10);
     // eslint-disable-next-line no-restricted-globals
     if (isNaN(maxDepth)) {
-        traceError(`PIPENV_MAX_DEPTH is incorrectly set. Converting value '${maxDepthStr}' to number results in NaN`);
+        logger.error(`PIPENV_MAX_DEPTH is incorrectly set. Converting value '${maxDepthStr}' to number results in NaN`);
         return 1;
     }
     return maxDepth;
@@ -65,7 +65,7 @@ async function getProjectDir(envFolder: string): Promise<string | undefined> {
     }
     const projectDir = await readFile(dotProjectFile);
     if (!(await pathExists(projectDir))) {
-        traceError(
+        logger.error(
             `The .project file inside environment folder: ${envFolder} doesn't contain a valid path to the project`
         );
         return undefined;

@@ -4,7 +4,7 @@
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { Signal } from '@lumino/signaling';
 import uuid from 'uuid/v4';
-import { traceInfoIfCI, traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { Telemetry } from '../../../telemetry';
 import { LocalKernelConnectionMetadata } from '../../types';
@@ -35,22 +35,10 @@ export class RawSessionConnection implements Session.ISessionConnection {
     public readonly anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
     public readonly disposed = new Signal<this, void>(this);
     public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
+    public readonly pendingInput = new Signal<this, boolean>(this);
     public readonly propertyChanged = new Signal<this, 'path' | 'name' | 'type'>(this);
-    private _jupyterLabServices?: typeof import('@jupyterlab/services');
-    private cellExecutedSuccessfully?: boolean;
     private _didShutDownOnce = false;
     private _isDisposing?: boolean;
-    public get atleastOneCellExecutedSuccessfully() {
-        return this.cellExecutedSuccessfully === true;
-    }
-    private get jupyterLabServices() {
-        if (!this._jupyterLabServices) {
-            // Lazy load jupyter lab for faster extension loading.
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            this._jupyterLabServices = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
-        }
-        return this._jupyterLabServices;
-    }
 
     public get connectionStatus() {
         return this._kernel?.connectionStatus || 'disconnected';
@@ -119,6 +107,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
         this._kernel.unhandledMessage.connect(this.onUnhandledMessage, this);
         this._kernel.anyMessage.connect(this.onAnyMessage, this);
         this._kernel.disposed.connect(this.onDisposed, this);
+        this._kernel.disposed.connect(this.onDisposed, this);
     }
     public async startKernel(options: { token: CancellationToken }): Promise<void> {
         await trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
@@ -162,7 +151,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
         this.statusChanged.emit('terminating');
         await this._kernel
             .shutdown()
-            .catch((ex) => traceWarning(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex));
+            .catch((ex) => logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex));
         this.isTerminating = false;
         // Before triggering any status events ensure this is marked as disposed.
         if (this._isDisposing) {
@@ -172,7 +161,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
         this.statusChanged.emit(this.status);
     }
     private onKernelStatus(_sender: Kernel.IKernelConnection, state: KernelMessage.Status) {
-        traceInfoIfCI(`RawSession status changed to ${state}`);
+        logger.ci(`RawSession status changed to ${state}`);
         this.statusChanged.emit(state);
     }
 
@@ -189,19 +178,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
         throw new Error('Not yet implemented');
     }
 
-    // Private
-    // Send out a message when our kernel changes state
     private onIOPubMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IIOPubMessage) {
-        if (
-            !this.cellExecutedSuccessfully &&
-            msg.header.msg_type === 'execute_result' &&
-            msg.content &&
-            (this.jupyterLabServices.KernelMessage.isExecuteResultMsg(msg) ||
-                this.jupyterLabServices.KernelMessage.isExecuteInputMsg(msg)) &&
-            msg.content.execution_count
-        ) {
-            this.cellExecutedSuccessfully = true;
-        }
         this.iopubMessage.emit(msg);
     }
     private onAnyMessage(_sender: Kernel.IKernelConnection, msg: Kernel.IAnyMessageArgs) {

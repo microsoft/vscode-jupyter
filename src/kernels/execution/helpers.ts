@@ -2,14 +2,7 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import {
-    NotebookCellOutput,
-    NotebookCellOutputItem,
-    NotebookCell,
-    NotebookCellExecutionState,
-    Position,
-    Range
-} from 'vscode';
+import { NotebookCellOutput, NotebookCellOutputItem, NotebookCell, Position, Range } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import type { KernelMessage } from '@jupyterlab/services';
 import fastDeepEqual from 'fast-deep-equal';
@@ -17,7 +10,7 @@ import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { concatMultilineString, splitMultilineString } from '../../platform/common/utils';
-import { traceInfoIfCI, traceError, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
@@ -29,9 +22,10 @@ import {
     getKernelRegistrationInfo
 } from '../helpers';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { getExtensionSpecifcStack } from '../../platform/errors/errors';
+import { getExtensionSpecificStack } from '../../platform/errors/errors';
 import { getCachedEnvironment, getVersion } from '../../platform/interpreter/helpers';
 import { base64ToUint8Array, uint8ArrayToBase64 } from '../../platform/common/utils/string';
+import type { NotebookCellExecutionState } from '../../platform/notebooks/cellExecutionStateService';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -112,12 +106,12 @@ export class NotebookCellStateTracker {
 
 export function traceCellMessage(cell: NotebookCell, message: string | (() => string)) {
     let messageToLog = typeof message === 'string' ? () => message : message;
-    traceInfoIfCI(
+    logger.ci(
         () =>
             `Cell Index:${cell.index}, of document ${uriPath.basename(
                 cell.notebook.uri
             )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${cell.executionSummary
-                ?.executionOrder}. ${messageToLog()}. called from ${getExtensionSpecifcStack()}`
+                ?.executionOrder}. ${messageToLog()}. called from ${getExtensionSpecificStack()}`
     );
 }
 
@@ -161,7 +155,7 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): NotebookCel
     if (fn) {
         result = fn(output);
     } else {
-        traceWarning(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
+        logger.warn(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result = translateDisplayDataOutput(output as any);
     }
@@ -363,7 +357,7 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
             return stringValue;
         }
     } catch (ex) {
-        traceError(`Failed to convert ${mime} output from a buffer ${typeof value}, ${value}`, ex);
+        logger.error(`Failed to convert ${mime} output from a buffer ${typeof value}, ${value}`, ex);
         return '';
     }
 }
@@ -390,7 +384,7 @@ function convertJupyterOutputToBuffer(mime: string, value: unknown): NotebookCel
             return NotebookCellOutputItem.text(value as string, mime);
         }
     } catch (ex) {
-        traceError(`Failed to convert ${mime} output to a buffer ${typeof value}, ${value}`, ex);
+        logger.error(`Failed to convert ${mime} output to a buffer ${typeof value}, ${value}`, ex);
         return NotebookCellOutputItem.text('');
     }
 }
@@ -687,7 +681,7 @@ export async function updateNotebookMetadataWithSelectedKernel(
                 break;
         }
 
-        if (metadata.kernelspec?.name !== name) {
+        if (metadata.kernelspec?.name !== name || metadata.kernelspec?.display_name !== displayName) {
             changed = true;
             metadata.kernelspec = {
                 name,
@@ -775,9 +769,10 @@ export async function endCellAndDisplayErrorsInCell(
 
     // Start execution if not already (Cell execution wrapper will ensure it won't start twice)
     const execution = CellExecutionCreator.getOrCreate(cell, controller);
+    const originalExecutionOrder = execution.executionOrder;
     if (!execution.started) {
-        execution.start(cell.executionSummary?.timing?.endTime);
-        execution.executionOrder = cell.executionSummary?.executionOrder;
+        execution.start(cell.executionSummary?.timing?.startTime);
+        execution.executionOrder = cell.executionSummary?.executionOrder || originalExecutionOrder;
     }
     await execution.appendOutput(output);
     execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);

@@ -42,10 +42,7 @@ import {
     IThirdPartyKernelProvider
 } from './types';
 import { JupyterVariables } from './variables/jupyterVariables';
-import { KernelVariables } from './variables/kernelVariables';
-import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
-import { PythonVariablesRequester } from './variables/pythonVariableRequester';
-import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
+import { IJupyterVariables } from './variables/types';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
 import { KernelChatStartupCodeProvider } from './chat/kernelStartupCodeProvider';
@@ -91,17 +88,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        PreWarmActivatedJupyterEnvironmentVariables
-    );
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
-    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
-    serviceManager.addSingleton<IKernelVariableRequester>(
-        IKernelVariableRequester,
-        PythonVariablesRequester,
-        Identifiers.PYTHON_VARIABLES_REQUESTER
-    );
+
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IExtensionSyncActivationService>(

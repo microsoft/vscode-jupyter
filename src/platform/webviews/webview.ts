@@ -10,7 +10,7 @@ import {
     WebviewView as vscodeWebviewView
 } from 'vscode';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../common/application/types';
-import { traceError } from '../logging';
+import { logger } from '../logging';
 import { Identifiers } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposableRegistry } from '../common/types';
@@ -136,7 +136,7 @@ export abstract class Webview implements IWebview {
         } catch (error) {
             // If our web panel failes to load, report that out so whatever
             // is hosting the panel can clean up
-            traceError(`Error Loading WebviewPanel: ${error}`);
+            logger.error(`Error Loading WebviewPanel: ${error}`);
             this.loadFailedEmitter.fire();
         }
     }

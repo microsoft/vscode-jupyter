@@ -3,7 +3,7 @@
 
 import type { KernelMessage, Session } from '@jupyterlab/services';
 import { CancellationError, CancellationToken, CancellationTokenSource, Uri } from 'vscode';
-import { traceVerbose, traceWarning, traceInfoIfCI } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { Resource, IDisposable } from '../../../platform/common/types';
 import { raceTimeout } from '../../../platform/common/utils/async';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
@@ -35,7 +35,7 @@ export class JupyterSessionWrapper
         if (this.session?.kernel) {
             return this.session.kernel.status;
         }
-        traceInfoIfCI(
+        logger.ci(
             `Kernel status not started because real session is ${
                 this.session ? 'defined' : 'undefined'
             } & real kernel is ${this.session?.kernel ? 'defined' : 'undefined'}`
@@ -58,18 +58,13 @@ export class JupyterSessionWrapper
     public override dispose() {
         this.restartToken?.cancel();
         this.restartToken?.dispose();
-        this.shutdownImplementation(false).catch(noop);
+        void this.shutdownImplementation(false).finally(() => super.dispose());
     }
-    public override async disposeAsync(): Promise<void> {
-        await this.shutdownImplementation(false).catch(noop);
-        await super.disposeAsync();
-    }
-
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         try {
             await waitForIdleOnSession(this.kernelConnectionMetadata, this.resource, this.session, timeout, token);
         } catch (ex) {
-            traceInfoIfCI(`Error waiting for idle`, ex);
+            logger.ci(`Error waiting for idle`, ex);
             await this.shutdown().catch(noop);
             throw ex;
         }
@@ -121,20 +116,21 @@ export class JupyterSessionWrapper
         return this.shutdownImplementation(true);
     }
 
+    private isShuttingDown = false;
     private async shutdownImplementation(shutdownEvenIfRemote?: boolean) {
-        if (this._isDisposed) {
+        if (this.isDisposed || this.isShuttingDown) {
             return;
         }
-        this._isDisposed = true;
+        this.isShuttingDown = true;
         // We are only interested in our stack, not in VS Code or others.
         const stack = (new Error().stack || '').split('\n').filter((l) => l.includes(JVSC_EXTENSION_ID));
-        traceVerbose(`Shutdown session - current session, called from \n ${stack.map((l) => `    ${l}`).join('\n')}`);
+        logger.trace(`Shutdown session - current session, called from \n ${stack.map((l) => `    ${l}`).join('\n')}`);
         const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata.id}`;
-        traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
+        logger.debug(`shutdownSession ${kernelIdForLogging} - start`);
         try {
             if (shutdownEvenIfRemote || this.canShutdownSession()) {
                 try {
-                    traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata.id}`);
+                    logger.debug(`Session can be shutdown ${this.kernelConnectionMetadata.id}`);
                     suppressShutdownErrors(this.session.kernel);
                     // Shutdown may fail if the process has been killed
                     if (!this.session.isDisposed) {
@@ -148,13 +144,13 @@ export class JupyterSessionWrapper
                             this.session.dispose();
                         }
                     } catch (e) {
-                        traceWarning('Failures in disposing the session', e);
+                        logger.warn('Failures in disposing the session', e);
                     }
                 } finally {
                     this.didShutdown.fire();
                 }
             } else {
-                traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
+                logger.debug(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
             }
             try {
                 // If session.shutdown didn't work, just dispose
@@ -162,14 +158,14 @@ export class JupyterSessionWrapper
                     this.session.dispose();
                 }
             } catch (e) {
-                traceWarning('Failures in disposing the session', e);
+                logger.warn('Failures in disposing the session', e);
             }
             super.dispose();
-            traceVerbose('Shutdown session -- complete');
+            logger.trace('Shutdown session -- complete');
         } catch (e) {
-            traceWarning('Failures in disposing the session', e);
+            logger.warn('Failures in disposing the session', e);
         }
-        traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
+        logger.debug(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
     }
     private canShutdownSession(): boolean {
         if (isLocalConnection(this.kernelConnectionMetadata)) {

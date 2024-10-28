@@ -11,7 +11,7 @@ import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, IDisposableRegistry, WORKSPACE_MEMENTO } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -102,11 +102,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     return;
                 }
 
-                traceVerbose(`Interpreter removed ${e.id}`);
+                logger.debug(`Interpreter removed ${e.id}`);
                 const deletedKernels: LocalKernelConnectionMetadata[] = [];
                 this._kernels.forEach((k) => {
                     if (k.interpreter?.id === e.id) {
-                        traceVerbose(
+                        logger.debug(
                             `Interpreter ${e.id} deleted, hence deleting corresponding kernel ${k.kind}:'${k.id}`
                         );
                         deletedKernels.push(k);
@@ -114,7 +114,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     }
                 });
                 if (deletedKernels.length) {
-                    traceVerbose(
+                    logger.debug(
                         `Local Python connection deleted ${deletedKernels.map(
                             (item) =>
                                 `${item.kind}:'${item.id}: (interpreter id=${getDisplayPath(item.interpreter?.id)})'`
@@ -197,7 +197,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const cancelToken = (this.refreshCancellation = new CancellationTokenSource());
         const promise = (async () => {
             await this.listKernelsImplementation(cancelToken.token, forcePythonInterpreterRefresh).catch((ex) =>
-                traceError('Failure in listKernelsImplementation', ex)
+                logger.error('Failure in listKernelsImplementation', ex)
             );
             if (cancelToken.token.isCancellationRequested) {
                 return;
@@ -211,7 +211,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 );
                 const deletedKernels: LocalKernelConnectionMetadata[] = [];
                 if (kernelConnectionsFoundOnlyInCache.length) {
-                    traceWarning(
+                    logger.warn(
                         `Kernels ${kernelConnectionsFoundOnlyInCache
                             .map((item) => `${item.kind}:'${item.id}'`)
                             .join(', ')} found in cache but not discovered in current session ${Array.from(
@@ -238,7 +238,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     return false;
                 });
                 if (kernelsThatPointToInvalidValidInterpreters.length) {
-                    traceWarning(
+                    logger.warn(
                         `The following kernels use interpreters that are no longer valid or not recognized by Python extension, Kernels ${kernelsThatPointToInvalidValidInterpreters
                             .map(
                                 (item) =>
@@ -255,7 +255,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 }
 
                 if (deletedKernels.length) {
-                    traceVerbose(
+                    logger.debug(
                         `Local Python connection deleted ${deletedKernels.map(
                             (item) =>
                                 `${item.kind}:'${item.id}: (interpreter id=${getDisplayPath(item.interpreter?.id)})'`
@@ -269,7 +269,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 this._kernelsFromCache = [];
             }
         })()
-            .catch((ex) => traceError(`Failed to discover kernels in interpreters`, ex))
+            .catch((ex) => logger.error(`Failed to discover kernels in interpreters`, ex))
             .finally(() => {
                 if (cancelToken === this.refreshCancellation) {
                     this.refreshCancellation?.cancel();
@@ -350,7 +350,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     this._kernels.set(kernel.id, kernel);
                 }
             } else {
-                traceWarning(`Found a kernel ${kernel.kind}:'${kernel.id}', but excluded as specFile is undefined`);
+                logger.warn(`Found a kernel ${kernel.kind}:'${kernel.id}', but excluded as specFile is undefined`);
             }
         });
 

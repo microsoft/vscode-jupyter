@@ -8,7 +8,7 @@ import { EnvironmentType } from '../pythonEnvironments/info';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { IProcessServiceFactory } from '../common/process/types.node';
-import { traceVerbose } from '../logging';
+import { logger } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { Environment } from '@vscode/python-extension';
 import { getEnvironmentType } from './helpers';
@@ -93,7 +93,7 @@ export class GlobalPythonExecutablePathService {
                     `USER_SITE ${sitePath.fsPath} dir does not exist for the interpreter ${getDisplayPath(executable)}`
                 );
             }
-            traceVerbose(`USER_SITE for ${getDisplayPath(executable)} is ${sitePath.fsPath}`);
+            logger.trace(`USER_SITE for ${getDisplayPath(executable)} is ${sitePath.fsPath}`);
             return sitePath;
         } else {
             throw new Error(`USER_SITE not found for the interpreter ${getDisplayPath(executable)}. Stdout: ${stdout}`);

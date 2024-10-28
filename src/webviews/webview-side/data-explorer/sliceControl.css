@@ -64,6 +64,7 @@
 .slice-control-row {
     display: flex;
     flex-direction: row;
+    margin-top: 10px;
 }
 
 .slice-form-container {
@@ -153,29 +154,31 @@ details[open] > summary::before {
     color: var(--vscode-settings-checkboxForeground);
 }
 
-/* Overrides for Fluent UI controls */
-[class*='ms-Dropdown-label'] {
+.slice-control-row label {
     color: var(--vscode-editor-foreground);
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
+    padding-right: 10px;
 }
 
 /* This needs to match VS Code settings dropdowns */
-.dropdownTitleOverrides .ms-Dropdown-title {
-    /* Usually want to avoid !important but in this case
-       it's necessary to ensure that when the dropdown
-       has focus, the default dropdown :focus color (black)
-       is not applied */
-    color: var(--vscode-dropdown-foreground) !important; 
+select.slice-control-dropdown {
+    color: var(--vscode-dropdown-foreground);
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
     background-color: var(--vscode-dropdown-background);
     border: 1px solid var(--vscode-dropdown-border) !important;
-    border-radius: 0px;
+    border-radius: 5px;
     height: 26px;
     line-height: 26px;
+}
+
+select.slice-control-dropdown:focus
+{
+    outline: none;
+    border-color: var(--vscode-focusBorder);
 }
 
 [class*='dropdown'] {

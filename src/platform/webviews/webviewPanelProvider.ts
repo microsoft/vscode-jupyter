@@ -6,7 +6,6 @@ import { Uri, ViewColumn, WebviewOptions, WebviewPanel as vscodeWebviewPanel, wi
 import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../common/types';
-import { noop } from '../common/utils/misc';
 import * as path from '../vscode-path/path';
 import { Webview } from './webview';
 
@@ -88,7 +87,7 @@ class WebviewPanel extends Webview implements IWebviewPanel {
         this.disposableRegistry.push(
             webviewHost.onDidDispose(() => {
                 this.webviewHost = undefined;
-                this.panelOptions.listener.dispose().catch(noop);
+                this.panelOptions.listener.dispose();
             })
         );
 
@@ -121,7 +120,7 @@ export class WebviewPanelProvider implements IWebviewPanelProvider {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async create(options: IWebviewPanelOptions): Promise<IWebviewPanel> {
-        // Allow loading resources from the `<extension folder>/tmp` folder when in webiviews.
+        // Allow loading resources from the `<extension folder>/temp` folder when in webiviews.
         // Used by widgets to place files that are not otherwise accessible.
         const additionalRootPaths = [Uri.file(path.join(this.context.extensionPath, 'temp'))];
         if (Array.isArray(options.additionalPaths)) {

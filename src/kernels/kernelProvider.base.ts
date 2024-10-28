@@ -3,7 +3,7 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri, workspace } from 'vscode';
-import { traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../platform/common/types';
 import { isUri, noop } from '../platform/common/utils/misc';
@@ -99,7 +99,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     }
 
     public async dispose() {
-        traceInfoIfCI(`Disposing all kernels from kernel provider`);
+        logger.ci(`Disposing all kernels from kernel provider`);
         const items = Array.from(this.pendingDisposables.values());
         this.pendingDisposables.clear();
         await Promise.all(items);
@@ -121,7 +121,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                 if (this.get(kernel.notebook) === kernel) {
                     this.kernelsByNotebook.delete(kernel.notebook);
                     this.kernelsById.delete(kernel.id);
-                    traceVerbose(
+                    logger.debug(
                         `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(
                             kernel.uri
                         )}`
@@ -136,14 +136,14 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     protected disposeOldKernel(notebook: NotebookDocument) {
         const kernelToDispose = this.kernelsByNotebook.get(notebook);
         if (kernelToDispose) {
-            traceVerbose(
+            logger.debug(
                 `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${notebook.isClosed}`
             );
             this.kernelsById.delete(kernelToDispose.kernel.id);
             this.pendingDisposables.add(kernelToDispose.kernel);
             kernelToDispose.kernel
                 .dispose()
-                .catch((ex) => traceWarning('Failed to dispose old kernel', ex))
+                .catch((ex) => logger.warn('Failed to dispose old kernel', ex))
                 .finally(() => this.pendingDisposables.delete(kernelToDispose.kernel))
                 .catch(noop);
         }
@@ -200,7 +200,7 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
         this.asyncDisposables.push(this);
         workspace.onDidCloseNotebookDocument(
             (e) => {
-                traceVerbose(`Notebook document ${getDisplayPath(e.uri)} got closed`);
+                logger.debug(`Notebook document ${getDisplayPath(e.uri)} got closed`);
                 this.disposeOldKernel(e.uri);
             },
             this,
@@ -239,7 +239,7 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
     }
 
     public async dispose() {
-        traceInfoIfCI(`Disposing all kernels from kernel provider`);
+        logger.ci(`Disposing all kernels from kernel provider`);
         const items = Array.from(this.pendingDisposables.values());
         this.pendingDisposables.clear();
         await Promise.all(items);
@@ -262,7 +262,7 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
                 if (this.get(uri) === kernel) {
                     this.kernelsByUri.delete(uri.toString());
                     this.kernelsById.delete(kernel.id);
-                    traceVerbose(
+                    logger.debug(
                         `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(uri)}`
                     );
                 }
@@ -275,12 +275,12 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
     protected disposeOldKernel(uri: Uri) {
         const kernelToDispose = this.kernelsByUri.get(uri.toString());
         if (kernelToDispose) {
-            traceInfoIfCI(`Disposing kernel associated with ${getDisplayPath(uri)}`);
+            logger.ci(`Disposing kernel associated with ${getDisplayPath(uri)}`);
             this.kernelsById.delete(kernelToDispose.kernel.id);
             this.pendingDisposables.add(kernelToDispose.kernel);
             kernelToDispose.kernel
                 .dispose()
-                .catch((ex) => traceWarning('Failed to dispose old kernel', ex))
+                .catch((ex) => logger.warn('Failed to dispose old kernel', ex))
                 .finally(() => this.pendingDisposables.delete(kernelToDispose.kernel))
                 .catch(noop);
         }

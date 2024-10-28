@@ -6,7 +6,7 @@ import { CodespacesJupyterServerSelector } from '../../../codespaces/codeSpacesS
 import { CodespaceExtensionId, JVSC_EXTENSION_ID, Telemetry } from '../../../platform/common/constants';
 import { IDisposable, IExtensions } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import {
     IControllerRegistration,
     ILocalPythonNotebookKernelSourceSelector
@@ -47,7 +47,7 @@ export function registerRemoteServerProvider(
     const extensionId = provider.id.startsWith('_builtin')
         ? JVSC_EXTENSION_ID
         : extensions.determineExtensionFromCallStack().extensionId;
-    traceError(
+    logger.error(
         `The API registerRemoteServerProvider has being deprecated and will be removed soon, please use createJupyterServerCollection (extension ${extensionId}).`
     );
     if (extensionId.toLowerCase() != CodespaceExtensionId.toLowerCase()) {
@@ -78,7 +78,7 @@ export function getReady(ready: Promise<unknown>): Promise<void> {
     return ready
         .then(() => noop())
         .catch((ex) => {
-            traceError('Failure during activation.', ex);
+            logger.error('Failure during activation.', ex);
             return Promise.reject(ex);
         });
 }
@@ -93,7 +93,7 @@ export function getKernelService(serviceContainer: IServiceContainer) {
 }
 export async function addRemoteJupyterServer(providerId: string, handle: string, serviceContainer: IServiceContainer) {
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
-    traceError(
+    logger.error(
         'The API addRemoteJupyterServer has being deprecated and will be removed soon, please use createJupyterServerCollection.'
     );
     const extensionId = extensions.determineExtensionFromCallStack().extensionId;

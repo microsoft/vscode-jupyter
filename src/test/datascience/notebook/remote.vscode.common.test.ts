@@ -11,7 +11,7 @@ import {
     workspace,
     WorkspaceEdit
 } from 'vscode';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, startJupyterServer, suiteMandatory, testMandatory, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
@@ -37,31 +37,31 @@ suiteMandatory('Remote Tests', function () {
         if (!isWeb()) {
             return this.skip();
         }
-        traceInfo('Suite Setup Remote Tests');
+        logger.info('Suite Setup Remote Tests');
         this.timeout(120_000);
         await initialize();
-        traceInfo('Suite Setup Remote Tests, Step 2');
+        logger.info('Suite Setup Remote Tests, Step 2');
         await startJupyterServer();
-        traceInfo('Suite Setup Remote Tests, Step 4');
+        logger.info('Suite Setup Remote Tests, Step 4');
         await prewarmNotebooks();
-        traceInfo('Suite Setup Remote Tests, Step 5');
+        logger.info('Suite Setup Remote Tests, Step 5');
         editor = (await createEmptyPythonNotebook(disposables, undefined, true)).editor;
         await selectDefaultController(editor);
-        traceInfo('Suite Setup (completed)');
+        logger.info('Suite Setup (completed)');
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         await startJupyterServer();
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
         // await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     testMandatory('Execute cell and print Hello World', async function () {

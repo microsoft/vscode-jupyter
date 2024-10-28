@@ -9,7 +9,7 @@ import { IPythonExecutionFactory } from '../../../platform/interpreter/types.nod
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
-import { traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { splitLines } from '../../../platform/common/helpers';
 
@@ -42,7 +42,7 @@ export class InterpreterDataViewerDependencyImplementation extends BaseDataViewe
         const output = result.stdout;
 
         if (!output?.includes(separator)) {
-            traceWarning(DataScience.failedToGetVersionOfPandas, `Output is ${output}`);
+            logger.warn(DataScience.failedToGetVersionOfPandas, `Output is ${output}`);
             return '';
         }
         const items = splitLines(output.trim());

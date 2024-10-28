@@ -8,8 +8,8 @@ import { CondaService } from '../../platform/interpreter/condaService.node';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
-import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService.node';
-import { IRawNotebookSupportedService } from '../raw/types';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
+import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 
 /**
  * Computes interpreter environment variables when starting up.

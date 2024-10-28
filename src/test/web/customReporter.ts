@@ -7,7 +7,7 @@
 
 import type * as mochaTypes from 'mocha';
 import { env, extensions, UIKind, Uri } from 'vscode';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../constants';
+import { JVSC_EXTENSION_ID_FOR_TESTS, PerformanceExtensionId } from '../constants';
 import { format } from 'util';
 import { registerLogger } from '../../platform/logging/index';
 import { Arguments, ILogger } from '../../platform/logging/types';
@@ -99,14 +99,17 @@ function writeReportProgress(message: Message) {
     if (env.uiKind === UIKind.Desktop) {
         messages.push(message);
         if (message.event === constants.EVENT_RUN_END) {
-            const ext = extensions.getExtension(JVSC_EXTENSION_ID_FOR_TESTS)!.extensionUri;
-            const logFile = Uri.joinPath(ext, 'logs', 'testresults.json');
+            const jupyterExtUri = extensions.getExtension(JVSC_EXTENSION_ID_FOR_TESTS)?.extensionUri;
+            const logDir = jupyterExtUri
+                ? Uri.joinPath(jupyterExtUri, 'logs')
+                : Uri.joinPath(extensions.getExtension(PerformanceExtensionId)!.extensionUri, '..', '..', '..', 'logs');
+            const logFile = Uri.joinPath(logDir, 'testresults.json');
             console.log(`Writing test results to ${logFile}`);
             const requireFunc: typeof require =
                 typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
             const fs: typeof import('fs-extra') = requireFunc('fs-extra');
             // eslint-disable-next-line local-rules/dont-use-fspath
-            fs.ensureDirSync(Uri.joinPath(ext, 'logs').fsPath);
+            fs.ensureDirSync(logDir.fsPath);
             // eslint-disable-next-line local-rules/dont-use-fspath
             fs.writeFileSync(logFile.fsPath, JSON.stringify(messages));
         }
@@ -168,23 +171,26 @@ class ConsoleHijacker implements ILogger {
         this._outputs = [];
         return capturedOutput;
     }
-    traceLog(message: string, ...data: Arguments): void {
-        this.logMessage(undefined, message, data);
-    }
-    traceError(message: string, ...data: Arguments): void {
+    error(message: string, ...data: Arguments): void {
         this.logMessage('error', message, data);
     }
-    traceWarn(message: string, ...data: Arguments): void {
+    warn(message: string, ...data: Arguments): void {
         this.logMessage('warn', message, data);
     }
-    traceInfo(message: string, ...data: Arguments): void {
+    info(message: string, ...data: Arguments): void {
         this.logMessage(undefined, message, data);
     }
     traceEverything(message: string, ...data: Arguments): void {
         this.logMessage(undefined, message, data);
     }
-    traceVerbose(message: string, ...data: Arguments): void {
+    debug(message: string, ...data: Arguments): void {
         this.logMessage(undefined, message, data);
+    }
+    trace(message: string, ...data: Arguments): void {
+        this.logMessage(undefined, message, data);
+    }
+    ci(_message: any, ..._data: Arguments): void {
+        //
     }
     logMessage(category: 'error' | 'warn' | undefined, message: string, ...data: Arguments) {
         if (!this.captureLogs) {

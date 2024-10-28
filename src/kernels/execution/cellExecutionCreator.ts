@@ -10,7 +10,7 @@ import {
     NotebookCellOutputItem,
     TextDocument
 } from 'vscode';
-import { traceInfo, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IKernelController } from '../types';
 import { noop } from '../../platform/common/utils/misc';
 import { getNotebookTelemetryTracker } from '../telemetry/notebookTelemetry';
@@ -21,7 +21,10 @@ import { getNotebookTelemetryTracker } from '../telemetry/notebookTelemetry';
  * - Do something when 'end' is called
  */
 export class NotebookCellExecutionWrapper implements NotebookCellExecution {
-    public started: boolean = false;
+    public _started: boolean = false;
+    public get started() {
+        return this._started;
+    }
     private _startTime?: number;
     public errorInfo: CellExecutionError;
     /**
@@ -56,7 +59,7 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     start(startTime?: number): void {
         // Allow this to be called more than once (so we can switch out a kernel during running a cell)
         if (!this.started) {
-            this.started = true;
+            this._started = true;
             this._impl.start(startTime);
             this._startTime = startTime;
             // We clear the output as soon as we start,
@@ -64,10 +67,10 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
             // indicating the fact that the kernel has started processing the output.
             // That's when we clear the output. (ideally it should be cleared as soon as its queued, but thats an upstream core issue).
             if (this.clearOutputOnStartWithTime) {
-                traceVerbose(`Start cell ${this.cell.index} execution @ ${startTime} (clear output)`);
+                logger.trace(`Start cell ${this.cell.index} execution @ ${startTime} (clear output)`);
                 this._impl.clearOutput().then(noop, noop);
             } else {
-                traceVerbose(`Start cell ${this.cell.index} execution @ ${startTime}`);
+                logger.trace(`Start cell ${this.cell.index} execution @ ${startTime}`);
             }
         }
     }
@@ -75,7 +78,7 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
         if (this._endCallback) {
             try {
                 this._impl.end(success, endTime, this.errorInfo);
-                traceInfo(
+                logger.trace(
                     `Cell ${this.cell.index} completed in ${
                         ((endTime || 0) - (this._startTime || 0)) / 1000
                     }s (start: ${this._startTime}, end: ${endTime})`

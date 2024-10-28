@@ -4,39 +4,18 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { traceError, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
 import { Telemetry } from '../../telemetry';
-import { executeSilently, SilentExecutionErrorOptions } from '../helpers';
-import { IKernel } from '../types';
-import { IKernelVariableRequester, IJupyterVariable, IVariableDescription } from './types';
+import { executeSilently, SilentExecutionErrorOptions } from '../../kernels/helpers';
+import { IKernel } from '../../kernels/types';
+import { IKernelVariableRequester, IJupyterVariable, IVariableDescription } from '../../kernels/variables/types';
 import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../../platform/common/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
-import { IBackgroundThreadService } from '../jupyter/types';
-
-type DataFrameSplitFormat = {
-    index: (number | string)[];
-    columns: string[];
-    data: Record<string, unknown>[];
-};
-
-export function parseDataFrame(df: DataFrameSplitFormat) {
-    const rowIndexValues = df.index;
-    const columns = df.columns;
-    const rowData = df.data;
-    const data = rowData.map((row, index) => {
-        const rowData: Record<string, unknown> = {
-            index: rowIndexValues[index]
-        };
-        columns.forEach((column, columnIndex) => {
-            rowData[column] = row[columnIndex];
-        });
-        return rowData;
-    });
-    return { data };
-}
+import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
+import { DataFrameSplitFormat, parseDataFrame } from '../../kernels/variables/helpers';
 
 async function safeExecuteSilently(
     kernel: IKernel,
@@ -76,8 +55,7 @@ async function safeExecuteSilently(
 export class PythonVariablesRequester implements IKernelVariableRequester {
     constructor(
         @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,
-        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator,
-        @inject(IBackgroundThreadService) private readonly backgroundThreadService: IBackgroundThreadService
+        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator
     ) {}
 
     public async getDataFrameInfo(
@@ -154,17 +132,11 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const code = await this.varScriptGenerator.generateCodeToGetVariableValueSummary(targetVariable.name);
 
         try {
-            const content = await this.backgroundThreadService.execCodeInBackgroundThread<{ summary: string }>(
-                kernel,
-                code.split(/\r?\n/),
-                token
-            );
+            const content = await execCodeInBackgroundThread<{ summary: string }>(kernel, code.split(/\r?\n/), token);
 
             return content?.summary;
         } catch (ex) {
-            traceWarning(
-                `Exception when getting variable summary for variable "${targetVariable.name}": ${ex.message}`
-            );
+            logger.warn(`Exception when getting variable summary for variable "${targetVariable.name}": ${ex.message}`);
             return undefined;
         }
     }
@@ -182,11 +154,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const options = parent ? { root: parent.root, propertyChain: parent.propertyChain, startIndex } : undefined;
         const code = await this.varScriptGenerator.generateCodeToGetAllVariableDescriptions(options);
 
-        const content = await this.backgroundThreadService.execCodeInBackgroundThread<IVariableDescription[]>(
-            kernel,
-            code.split(/\r?\n/),
-            token
-        );
+        const content = await execCodeInBackgroundThread<IVariableDescription[]>(kernel, code.split(/\r?\n/), token);
 
         if (kernel.disposed || kernel.disposing || token?.isCancellationRequested || !content) {
             return [];
@@ -195,7 +163,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         try {
             return content;
         } catch (ex) {
-            traceError(ex);
+            logger.error(ex);
             return [];
         }
     }
@@ -222,15 +190,18 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             if (kernel.disposed || kernel.disposing) {
                 return [];
             }
-            const varNameTypeMap = this.deserializeJupyterResult(results) as Map<String, String>;
+            const variables = this.deserializeJupyterResult(results) as {
+                name: string;
+                type: string;
+                fullType: string;
+            }[];
 
             const vars = [];
-            for (const [name, type] of Object.entries(varNameTypeMap)) {
+            for (const variable of variables) {
                 const v: IJupyterVariable = {
-                    name: name,
+                    ...variable,
                     value: undefined,
                     supportsDataExplorer: false,
-                    type: type || '',
                     size: 0,
                     shape: '',
                     count: 0,
@@ -286,7 +257,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                     throw new JupyterDataRateLimitError();
                 } else {
                     const error = DataScience.jupyterGetVariablesExecutionError(resultString);
-                    traceError(error);
+                    logger.error(error);
                     throw new Error(error);
                 }
             }
@@ -308,7 +279,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const traceback: string[] = codeCellOutput.traceback as string[];
                 const stripped = traceback.map(stripAnsi).join('\r\n');
                 const error = DataScience.jupyterGetVariablesExecutionError(stripped);
-                traceError(error);
+                logger.error(error);
                 throw new Error(error);
             }
         }

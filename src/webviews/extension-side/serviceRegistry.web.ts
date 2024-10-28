@@ -28,6 +28,7 @@ import { PlotViewHandler } from './plotView/plotViewHandler';
 import { RendererCommunication } from './plotView/rendererCommunication';
 import { IPlotSaveHandler } from './plotView/types';
 import { IPyWidgetRendererComms } from './ipywidgets/rendererComms';
+import { DataViewerDelegator } from './dataviewer/dataViewerDelegator';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
@@ -46,6 +47,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IDataViewerDependencyService,
         DataViewerDependencyService
     );
+    serviceManager.addSingleton<DataViewerDelegator>(DataViewerDelegator, DataViewerDelegator);
 
     // Plot Viewer
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);

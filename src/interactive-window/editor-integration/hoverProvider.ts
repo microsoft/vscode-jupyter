@@ -6,8 +6,8 @@ import { inject, injectable, named } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { raceCancellation } from '../../platform/common/cancellation';
-import { Identifiers, InteractiveWindowView, PYTHON, Telemetry } from '../../platform/common/constants';
-import { traceError } from '../../platform/logging';
+import { Identifiers, PYTHON, Telemetry } from '../../platform/common/constants';
+import { logger } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { Delayer, raceTimeout } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -16,6 +16,12 @@ import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { IInteractiveWindowProvider } from '../types';
 import { getInteractiveCellMetadata } from '../helpers';
+import {
+    notebookCellExecutions,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../platform/notebooks/cellExecutionStateService';
+import { noop } from '../../platform/common/utils/misc';
+import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 
 /**
  * Provides hover support in python files based on the state of a jupyter kernel. Files that are
@@ -32,13 +38,15 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService
     ) {}
     public activate() {
-        this.onDidChangeNotebookCellExecutionStateHandler = vscode.notebooks.onDidChangeNotebookCellExecutionState(
-            (e) => this.delayer.trigger(() => this.onDidChangeNotebookCellExecutionState(e)),
-            this
-        );
+        this.onDidChangeNotebookCellExecutionStateHandler =
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState(
+                (e) => this.delayer.trigger(() => this.onDidChangeNotebookCellExecutionState(e)).catch(noop),
+                this
+            );
         this.kernelProvider.onDidRestartKernel(() => this.runFiles.clear(), this, this.disposables);
     }
     public dispose() {
@@ -48,11 +56,9 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
             this.hoverProviderRegistration.dispose();
         }
     }
-    private async onDidChangeNotebookCellExecutionState(
-        e: vscode.NotebookCellExecutionStateChangeEvent
-    ): Promise<void> {
+    private async onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): Promise<void> {
         try {
-            if (e.cell.notebook.notebookType !== InteractiveWindowView) {
+            if (this.replTracker.isForReplEditor(e.cell.notebook)) {
                 return;
             }
             const size = this.runFiles.size;
@@ -68,7 +74,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
             }
         } catch (exc) {
             // Don't let exceptions in a preExecute mess up normal operation
-            traceError(exc);
+            logger.error(exc);
         }
     }
 

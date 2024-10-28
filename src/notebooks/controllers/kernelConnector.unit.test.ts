@@ -29,6 +29,7 @@ import { Disposable } from 'vscode';
 import { PythonExtension } from '@vscode/python-extension';
 import { setPythonApi } from '../../platform/interpreter/helpers';
 import { resolvableInstance } from '../../test/datascience/helpers';
+import { noop } from '../../test/core';
 
 suite('Kernel Connector', () => {
     const pythonConnection = PythonKernelConnectionMetadata.create({
@@ -163,7 +164,7 @@ suite('Kernel Connector', () => {
             new DisplayOptions(false),
             disposables,
             'jupyterExtension'
-        );
+        ).catch(noop);
 
         verify(kernel.restart()).once();
         verify(

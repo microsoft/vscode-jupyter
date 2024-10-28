@@ -7,7 +7,7 @@ import { IDisposableRegistry, IExtensions } from '../types';
 import { DataScience } from '../utils/localize';
 import { parseStack } from '../../errors';
 import { JVSC_EXTENSION_ID, unknownExtensionId } from '../constants';
-import { traceError } from '../../logging';
+import { logger } from '../../logging';
 
 /**
  * Provides functions for tracking the list of extensions that VS code has installed (besides our own)
@@ -102,13 +102,13 @@ export class Extensions implements IExtensions {
                     }
                 }
             }
-            traceError(`Unable to determine the caller of the extension API for trace stack`, stack);
-            traceError(`Jupyter Root`, jupyterExtRoot);
-            traceError(`Frames`, frames);
+            logger.error(`Unable to determine the caller of the extension API for trace stack`, stack);
+            logger.error(`Jupyter Root`, jupyterExtRoot);
+            logger.error(`Frames`, frames);
             return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
         } catch (ex) {
-            traceError(`Unable to determine the caller of the extension API for trace stack.`, stack);
-            traceError(`Failure error`, ex);
+            logger.error(`Unable to determine the caller of the extension API for trace stack.`, stack);
+            logger.error(`Failure error`, ex);
             return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
         }
     }

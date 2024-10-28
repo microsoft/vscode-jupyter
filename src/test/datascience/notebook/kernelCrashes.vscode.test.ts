@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
@@ -35,7 +35,6 @@ import { instance, mock, when } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ConnectionDisplayDataProvider } from '../../../notebooks/controllers/connectionDisplayData.node';
-import { IJupyterVariables } from '../../../kernels/variables/types';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -63,7 +62,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
     ) => void | Thenable<void>;
     let controller: NotebookController;
     suiteSetup(async function () {
-        traceInfo('Suite Setup');
+        logger.info('Suite Setup');
         this.timeout(120_000);
         try {
             api = await initialize();
@@ -78,7 +77,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
             const platform = api.serviceContainer.get<IPlatformService>(IPlatformService);
             const interpreters = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-            const jupyterVariables = mock<IJupyterVariables>();
             kernelConnectionMetadata = await getDefaultKernelConnection();
             const displayDataProvider = new ConnectionDisplayDataProvider(
                 platform,
@@ -124,12 +122,11 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 configuration,
                 extensionChecker,
                 api.serviceContainer,
-                displayDataProvider,
-                jupyterVariables
+                displayDataProvider
             );
             disposables.push(interpreterController);
 
-            traceInfo('Suite Setup (completed)');
+            logger.info('Suite Setup (completed)');
         } catch (e) {
             await captureScreenShot('execution-suite');
             throw e;
@@ -138,24 +135,24 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
         try {
-            traceInfo(`Start Test ${this.currentTest?.title}`);
+            logger.info(`Start Test ${this.currentTest?.title}`);
             sinon.restore();
             await startJupyterServer();
             notebook = new TestNotebookDocument();
-            traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+            logger.info(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
             await captureScreenShot(this);
             throw e;
         }
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         sinon.restore();
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => {
         sinon.restore();

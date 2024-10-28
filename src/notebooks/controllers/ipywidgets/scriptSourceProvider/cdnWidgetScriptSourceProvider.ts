@@ -8,7 +8,7 @@ import { GLOBAL_MEMENTO, IConfigurationService, IMemento, WidgetCDNs } from '../
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { noop } from '../../../../platform/common/utils/misc';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
+import { logger } from '../../../../platform/logging';
 import { ConsoleForegroundColors } from '../../../../platform/logging/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from '../types';
@@ -124,7 +124,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     ): Promise<WidgetScriptSource> {
         // If the webview is not online, then we cannot use the CDN.
         if (isWebViewOnline === false) {
-            traceInfoIfCI(`Webview is offline, cannot use CDN for ${moduleName}`);
+            logger.ci(`Webview is offline, cannot use CDN for ${moduleName}`);
             this.warnIfNoAccessToInternetFromWebView(moduleName).catch(noop);
             return {
                 moduleName
@@ -134,7 +134,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             this.cdnProviders.length === 0 &&
             this.globalMemento.get<boolean>(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, false)
         ) {
-            traceInfoIfCI(`No CDN providers and user configured CDN`);
+            logger.ci(`No CDN providers and user configured CDN`);
             return {
                 moduleName
             };
@@ -165,7 +165,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         moduleName: string,
         moduleVersion: string
     ): Promise<WidgetScriptSource> {
-        traceInfo(
+        logger.trace(
             `${
                 ConsoleForegroundColors.Green
             }Searching for Widget Script ${moduleName}#${moduleVersion} using cdns ${this.cdnProviders.join(' ')}`
@@ -180,13 +180,13 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         );
         const scriptUri = uris.find((u) => u);
         if (scriptUri) {
-            traceInfo(
+            logger.trace(
                 `${ConsoleForegroundColors.Green}Widget Script ${moduleName}#${moduleVersion} found at URI: ${scriptUri}`
             );
             return { moduleName, scriptUri, source: 'cdn' };
         }
 
-        traceError(`Widget Script ${moduleName}#${moduleVersion} was not found on on any cdn`);
+        logger.error(`Widget Script ${moduleName}#${moduleVersion} was not found on on any cdn`);
         this.handleWidgetSourceNotFound(moduleName, moduleVersion).catch(noop);
         return { moduleName };
     }
@@ -200,7 +200,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 return downloadUrl;
             }
         } catch (ex) {
-            traceVerbose(`Failed downloading ${moduleName}:${moduleVersion} from ${cdn}`);
+            logger.trace(`Failed downloading ${moduleName}:${moduleVersion} from ${cdn}`);
             return undefined;
         }
     }

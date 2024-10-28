@@ -5,7 +5,7 @@ import { NotebookCell, commands } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { INotebookKernelExecution } from '../../../kernels/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { DebuggingTelemetry } from '../constants';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../debuggingTypes';
@@ -32,7 +32,7 @@ export class DebugCellController implements IDebuggingDelegate {
     }
 
     private trace(tag: string, msg: string) {
-        traceVerbose(`[Debug-Cell] ${tag}: ${msg}`);
+        logger.debug(`[Debug-Cell] ${tag}: ${msg}`);
     }
 
     public async willSendEvent(msg: DebugProtocol.Event): Promise<boolean> {

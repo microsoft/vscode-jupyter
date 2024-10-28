@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { SemVer } from 'semver';
 import { Memento, Uri } from 'vscode';
 import { IPythonApiProvider } from '../api/types';
-import { traceVerbose } from '../logging';
+import { logger } from '../logging';
 import { IFileSystem } from '../common/platform/types';
 import { GLOBAL_MEMENTO, IMemento } from '../common/types';
 import { createDeferredFromPromise } from '../common/utils/async';
@@ -83,7 +83,7 @@ export class CondaService {
                 .then((api) => (api.getCondaFile ? api.getCondaFile() : undefined));
             latestInfo
                 .then((file) => {
-                    traceVerbose(`Conda file is ${file}`);
+                    logger.trace(`Conda file is ${file}`);
                     this._file = file ? Uri.file(file) : undefined;
                     this.updateCache().catch(noop);
                 })

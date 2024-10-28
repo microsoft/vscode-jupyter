@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../debuggingTypes';
 
 /**
@@ -12,7 +12,7 @@ export class ResetKernelController implements IDebuggingDelegate {
     constructor(private readonly debugAdapter: IKernelDebugAdapter) {}
 
     private trace(tag: string, msg: string) {
-        traceVerbose(`[Debug-Reset] ${tag}: ${msg}`);
+        logger.debug(`[Debug-Reset] ${tag}: ${msg}`);
     }
 
     public async willSendRequest(request: DebugProtocol.Request): Promise<undefined | DebugProtocol.Response> {

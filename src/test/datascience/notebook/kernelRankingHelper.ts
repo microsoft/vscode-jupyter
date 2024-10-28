@@ -17,7 +17,7 @@ import { IJupyterKernelSpec, KernelConnectionMetadata, PythonKernelConnectionMet
 import { InteractiveWindowView, isCI, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { NotebookMetadata } from '../../../platform/common/utils';
-import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import * as path from '../../../platform/vscode-path/path';
@@ -66,7 +66,7 @@ export async function findKernelSpecMatchingInterpreter(
 
     // if we have more than one match then something is wrong.
     if (result.length > 1) {
-        traceError(`More than one kernel spec matches the interpreter ${interpreter.uri}.`, result);
+        logger.error(`More than one kernel spec matches the interpreter ${interpreter.uri}.`, result);
         if (isCI) {
             throw new Error('More than one kernelspec matches the intererpreter');
         }
@@ -98,7 +98,7 @@ export async function rankKernels(
     preferredRemoteKernelId: string | undefined,
     cancelToken?: CancellationToken
 ): Promise<KernelConnectionMetadata[] | undefined> {
-    traceInfo(
+    logger.info(
         `Find preferred kernel for ${getDisplayPath(notebook.uri)} with metadata ${JSON.stringify(
             notebookMetadata || {}
         )} & preferred interpreter ${
@@ -129,7 +129,7 @@ export async function rankKernels(
         kernels.push(preferredInterpreterKernelSpec);
     }
 
-    traceInfoIfCI(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpec?.id}`);
+    logger.ci(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpec?.id}`);
 
     // Figure out our possible language from the metadata
     const actualNbMetadataLanguage: string | undefined =
@@ -999,7 +999,7 @@ export class KernelRankingHelper {
 
             return rankedKernels;
         } catch (ex) {
-            traceError(`RankKernels crashed`, ex);
+            logger.error(`RankKernels crashed`, ex);
             return undefined;
         }
     }

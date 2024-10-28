@@ -14,22 +14,29 @@ import {
     NotebookDocument,
     Event,
     EventEmitter,
-    NotebookCellOutput
+    NotebookCellOutput,
+    type NotebookExecution,
+    type NotebookController
 } from 'vscode';
 import { Kernel, KernelStatus, Output } from '../../../api';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../../kernels/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
-import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
+import { DisposableBase, ReferenceCollection, dispose } from '../../../platform/common/utils/lifecycle';
 import { noop } from '../../../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { once } from '../../../platform/common/utils/events';
-import { traceVerbose } from '../../../platform/logging';
-import { JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { logger } from '../../../platform/logging';
+import {
+    DATA_WRANGLER_EXTENSION_ID,
+    JVSC_EXTENSION_ID,
+    POWER_TOYS_EXTENSION_ID,
+    PYTHON_LANGUAGE
+} from '../../../platform/common/constants';
 import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/generator';
 import {
     isDisplayIdTrackedForExtension,
@@ -37,7 +44,39 @@ import {
 } from '../../../kernels/execution/extensionDisplayDataTracker';
 import { getNotebookCellOutputMetadata } from '../../../kernels/execution/helpers';
 import { registerChangeHandler, requestApiAccess } from './apiAccess';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
 
+class NotebookExecutionReferenceCollection extends ReferenceCollection<NotebookExecution> {
+    private existingExecutions?: NotebookExecution;
+    constructor(
+        private readonly controller: NotebookController,
+        private readonly notebook: NotebookDocument
+    ) {
+        super();
+    }
+    public dispose() {
+        this.disposeExistingExecution();
+    }
+
+    protected override createReferencedObject(_key: string, ..._args: any[]): NotebookExecution {
+        if (!this.existingExecutions) {
+            this.existingExecutions = this.controller.createNotebookExecution(this.notebook);
+            this.existingExecutions.start();
+        }
+        return this.existingExecutions;
+    }
+    protected override destroyReferencedObject(_key: string, _object: NotebookExecution): void {
+        this.disposeExistingExecution();
+    }
+    private disposeExistingExecution() {
+        try {
+            this.existingExecutions?.end();
+        } catch {
+            //
+        }
+        this.existingExecutions = undefined;
+    }
+}
 /**
  * Displays a progress indicator when 3rd party extensions execute code against a kernel.
  * The progress indicator is displayed only when the notebook is visible.
@@ -55,7 +94,16 @@ class KernelExecutionProgressIndicator {
     private readonly title: string;
     private displayInProgress?: boolean;
     private shouldDisplayProgress?: boolean;
-    constructor(extensionId: string, kernel: IKernel) {
+    private static notificationsPerExtension = new WeakMap<IKernel, Set<string>>();
+    private executionRefCountedDisposableFactory?: NotebookExecutionReferenceCollection;
+    constructor(
+        private readonly extensionId: string,
+        private readonly kernel: IKernel,
+        controller?: NotebookController
+    ) {
+        this.executionRefCountedDisposableFactory = controller
+            ? new NotebookExecutionReferenceCollection(controller, kernel.notebook)
+            : undefined;
         const extensionDisplayName = extensions.getExtension(extensionId)?.packageJSON?.displayName || extensionId;
         this.notebook = workspace.notebookDocuments.find((n) => n.uri.toString() === kernel.resourceUri?.toString());
         this.controllerDisplayName = getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata);
@@ -65,23 +113,29 @@ class KernelExecutionProgressIndicator {
     dispose() {
         this.eventHandler.dispose();
         this.disposable?.dispose();
+        this.executionRefCountedDisposableFactory?.dispose();
     }
 
     show() {
+        const execution = this.executionRefCountedDisposableFactory?.acquire('');
         if (this.deferred && !this.deferred.completed) {
             const oldDeferred = this.deferred;
             this.deferred = createDeferred<void>();
             oldDeferred.resolve();
-            return (this.disposable = new Disposable(() => this.deferred?.resolve()));
+        } else {
+            this.deferred = createDeferred<void>();
+            this.showProgress().catch(noop);
         }
-
-        this.deferred = createDeferred<void>();
-        this.showProgress().catch(noop);
-        return (this.disposable = new Disposable(() => this.deferred?.resolve()));
+        return (this.disposable = new Disposable(() => {
+            execution?.dispose();
+            this.deferred?.resolve();
+        }));
     }
     private async showProgress() {
-        // Give a grace period of 500ms to avoid displaying progress indicators too aggressively.
-        await sleep(500);
+        // Give a grace period of 1000ms to avoid displaying progress indicators too aggressively.
+        // Clearly some extensions can take a while, see here https://github.com/microsoft/vscode-jupyter/issues/15613
+        // More than 1s is too long,
+        await sleep(1_000);
         if (!this.deferred || this.deferred.completed || this.displayInProgress) {
             return;
         }
@@ -90,6 +144,13 @@ class KernelExecutionProgressIndicator {
         this.shouldDisplayProgress = false;
     }
     private async showProgressImpl() {
+        const notifiedExtensions =
+            KernelExecutionProgressIndicator.notificationsPerExtension.get(this.kernel) || new Set();
+        KernelExecutionProgressIndicator.notificationsPerExtension.set(this.kernel, notifiedExtensions);
+        if (notifiedExtensions.has(this.extensionId)) {
+            return;
+        }
+        notifiedExtensions.add(this.extensionId);
         if (!this.notebook || !this.shouldDisplayProgress) {
             return;
         }
@@ -106,8 +167,23 @@ class KernelExecutionProgressIndicator {
         let deferred = this.deferred;
         while (deferred && !deferred.completed) {
             await deferred.promise;
+            // Possible the deferred was replaced.
             deferred = this.deferred;
         }
+    }
+}
+
+/**
+ * Error to be throw to to notify calls of the API that access to the API has been revoked by the user.
+ */
+class KernelAPIAccessRevoked extends Error {
+    constructor() {
+        super(l10n.t('Access to Jupyter Kernel has been revoked'));
+        // WARNING: This name should never be changed as extensions can rely on this.
+        // Do not expose as a constant either, at least not yet
+        // Lets try this approach for now and see if there can be a better approach.
+        // Note: Same approach used in notebook renderer fallbacks.
+        this.name = 'vscode.jupyter.apiAccessRevoked';
     }
 }
 
@@ -136,7 +212,6 @@ class KernelExecutionProgressIndicator {
  */
 class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     private readonly progress: KernelExecutionProgressIndicator;
-    private previousProgress?: IDisposable;
     private readonly _api: Kernel;
     public readonly language: string;
     get status(): KernelStatus {
@@ -154,10 +229,11 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     constructor(
         private readonly extensionId: string,
         private readonly kernel: IKernel,
-        private readonly execution: INotebookKernelExecution
+        private readonly execution: INotebookKernelExecution,
+        controller?: NotebookController
     ) {
         super();
-        this.progress = this._register(new KernelExecutionProgressIndicator(extensionId, kernel));
+        this.progress = this._register(new KernelExecutionProgressIndicator(extensionId, kernel, controller));
         this._register(once(kernel.onDisposed)(() => this.progress.dispose()));
         this.language =
             kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
@@ -187,7 +263,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             },
             onDidChangeStatus: that.onDidChangeStatus.bind(this),
             get onDidReceiveDisplayUpdate() {
-                if (![JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID].includes(extensionId)) {
+                if (![JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID, DATA_WRANGLER_EXTENSION_ID].includes(extensionId)) {
                     throw new Error(`Proposed API is not supported for extension ${extensionId}`);
                 }
 
@@ -201,8 +277,13 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             ) => this.executeChatCode(code, handlers, token)
         });
     }
-    static createApiKernel(extensionId: string, kernel: IKernel, execution: INotebookKernelExecution) {
-        const wrapper = new WrappedKernelPerExtension(extensionId, kernel, execution);
+    static createApiKernel(
+        extensionId: string,
+        kernel: IKernel,
+        execution: INotebookKernelExecution,
+        controller?: NotebookController
+    ) {
+        const wrapper = new WrappedKernelPerExtension(extensionId, kernel, execution, controller);
         ServiceContainer.instance.get<IDisposableRegistry>(IDisposableRegistry).push(wrapper);
         return wrapper._api;
     }
@@ -217,7 +298,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         }
         const accessAllowed = await this.accessAllowed;
         if (!accessAllowed) {
-            throw new Error(l10n.t('Access to Jupyter Kernel has been revoked'));
+            throw new KernelAPIAccessRevoked();
         }
     }
 
@@ -262,7 +343,6 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         handlers: Record<string, (...data: any[]) => Promise<any>> = {},
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
-        this.previousProgress?.dispose();
         let completed = false;
         const measures = {
             executionCount: this.execution.executionCount,
@@ -323,8 +403,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 properties.requestSent = true;
                 measures.requestSentAfter = stopwatch.elapsedTime;
                 if (!token.isCancellationRequested && this.extensionId !== JVSC_EXTENSION_ID) {
-                    const progress = (this.previousProgress = this.progress.show());
-                    disposables.push(progress);
+                    disposables.push(this.progress.show());
                 }
             },
             this,
@@ -348,7 +427,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 measures.cancelledAfter = stopwatch.elapsedTime;
                 properties.cancelledBeforeRequestSent = !properties.requestSent;
                 properties.cancelledBeforeRequestAcknowledged = !properties.requestAcknowledged;
-                traceVerbose(`Code execution cancelled by extension ${this.extensionId}`);
+                logger.debug(`Code execution cancelled by extension ${this.extensionId}`);
             },
             this,
             disposables
@@ -464,5 +543,13 @@ async function sendApiExecTelemetry(
 
 export function createKernelApiForExtension(extensionId: string, kernel: IKernel) {
     const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
-    return WrappedKernelPerExtension.createApiKernel(extensionId, kernel, kernelProvider.getKernelExecution(kernel));
+    const controller = ServiceContainer.instance
+        .get<IControllerRegistration>(IControllerRegistration)
+        .getSelected(kernel.notebook)?.controller;
+    return WrappedKernelPerExtension.createApiKernel(
+        extensionId,
+        kernel,
+        kernelProvider.getKernelExecution(kernel),
+        controller
+    );
 }

@@ -5,7 +5,7 @@ import glob from 'glob';
 import * as path from '../../platform/vscode-path/path';
 import { parse, SemVer } from 'semver';
 import { promisify } from 'util';
-import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
 import { parseCondaEnvFileContents } from './condaHelper';
@@ -66,7 +66,7 @@ const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
 async function getCondaFileFromKnownLocations(): Promise<string> {
     const globPattern = getOSType() === OSType.Windows ? CondaLocationsGlobWin : CondaLocationsGlob;
     const condaFiles = await promisify(glob)(globPattern).catch<string[]>((failReason) => {
-        traceWarning(
+        logger.warn(
             'Default conda location search failed.',
             `Searching for default install locations for conda results in error: ${failReason}`
         );
@@ -134,7 +134,7 @@ async function getCondaVersion(): Promise<SemVer | undefined> {
         return version;
     }
     // Use a bogus version, at least to indicate the fact that a version was returned.
-    traceWarning(`Unable to parse Version of Conda, ${versionString}`);
+    logger.warn(`Unable to parse Version of Conda, ${versionString}`);
     return new SemVer('0.0.1');
 }
 
@@ -148,9 +148,9 @@ async function getCondaEnvironments(): Promise<CondaEnvironmentInfo[] | undefine
         const processService = new ProcessService();
         const condaFile = await getCondaFile();
         let envInfo = await processService.exec(condaFile, ['env', 'list']).then((output) => output.stdout);
-        traceVerbose(`Conda Env List ${envInfo}}`);
+        logger.debug(`Conda Env List ${envInfo}}`);
         if (!envInfo) {
-            traceVerbose('Conda env list failure, attempting path additions.');
+            logger.debug('Conda env list failure, attempting path additions.');
             // Try adding different folders to the path. Miniconda fails to run
             // without them.
             const baseFolder = path.dirname(path.dirname(condaFile));
@@ -159,7 +159,7 @@ async function getCondaEnvironments(): Promise<CondaEnvironmentInfo[] | undefine
             const libaryBinFolder = path.join(baseFolder, 'library', 'bin');
             const newEnv = process.env;
             newEnv.PATH = `${binFolder};${condaBinFolder};${libaryBinFolder};${newEnv.PATH}`;
-            traceVerbose(`Attempting new path for conda env list: ${newEnv.PATH}`);
+            logger.debug(`Attempting new path for conda env list: ${newEnv.PATH}`);
             envInfo = await processService
                 .exec(condaFile, ['env', 'list'], { env: newEnv })
                 .then((output) => output.stdout);
@@ -171,7 +171,7 @@ async function getCondaEnvironments(): Promise<CondaEnvironmentInfo[] | undefine
         // Failed because either:
         //   1. conda is not installed.
         //   2. `conda env list has changed signature.
-        traceError('Failed to get conda environment list from conda', ex);
+        logger.error('Failed to get conda environment list from conda', ex);
     }
 }
 

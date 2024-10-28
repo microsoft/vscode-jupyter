@@ -5,14 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import {
-    EventEmitter,
-    Memento,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookController,
-    NotebookDocument,
-    Uri
-} from 'vscode';
+import { EventEmitter, Memento, NotebookController, NotebookDocument, Uri } from 'vscode';
 import {
     IConfigurationService,
     IDisposable,
@@ -39,6 +32,7 @@ import { AsyncDisposableRegistry } from '../platform/common/asyncDisposableRegis
 import { JupyterNotebookView } from '../platform/common/constants';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 
 suite('Jupyter Session', () => {
     suite('Node Kernel Provider', function () {
@@ -51,6 +45,7 @@ suite('Jupyter Session', () => {
         let metadata: KernelConnectionMetadata;
         let controller: IKernelController;
         let workspaceMemento: Memento;
+        const replTracker: IReplNotebookTrackerService = mock<IReplNotebookTrackerService>();
         setup(() => {
             sessionCreator = mock<IKernelSessionFactory>();
             configService = mock<IConfigurationService>();
@@ -77,7 +72,8 @@ suite('Jupyter Session', () => {
                 instance(jupyterServerUriStorage),
                 [],
                 instance(registry),
-                instance(workspaceMemento)
+                instance(workspaceMemento),
+                instance(replTracker)
             );
         }
         function create3rdPartyKernelProvider() {
@@ -167,6 +163,7 @@ suite('Jupyter Session', () => {
         let jupyterServerUriStorage: IJupyterServerUriStorage;
         let context: IExtensionContext;
         let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
+        const replTracker: IReplNotebookTrackerService = mock<IReplNotebookTrackerService>();
         const sampleUri1 = Uri.file('sample1.ipynb');
         const sampleUri2 = Uri.file('sample2.ipynb');
         const sampleUri3 = Uri.file('sample3.ipynb');
@@ -197,16 +194,8 @@ suite('Jupyter Session', () => {
             jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
             context = mock<IExtensionContext>();
             const configSettings = mock<IWatchableJupyterSettings>();
-            const onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
-            disposables.push(onDidChangeNotebookCellExecutionState);
-            when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
-                onDidChangeNotebookCellExecutionState.event
-            );
             when(mockedVSCodeNamespaces.workspace.onDidCloseNotebookDocument).thenReturn(
                 onDidCloseNotebookDocument.event
-            );
-            when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
-                onDidChangeNotebookCellExecutionState.event
             );
             when(configService.getSettings(anything())).thenReturn(instance(configSettings));
             when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([
@@ -231,7 +220,8 @@ suite('Jupyter Session', () => {
                 instance(jupyterServerUriStorage),
                 [],
                 instance(registry),
-                instance(workspaceMemento)
+                instance(workspaceMemento),
+                instance(replTracker)
             );
             thirdPartyKernelProvider = new ThirdPartyKernelProvider(
                 asyncDisposables,

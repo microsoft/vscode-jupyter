@@ -128,6 +128,27 @@ suite(`UpdateNotebookMetadata`, () => {
         });
         assert.strictEqual(value.changed, true);
     });
+    test('New Display Name', async () => {
+        const notebookMetadata = {
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'JUNK DISPLAYNAME', language: 'python', name: 'python3' },
+            language_info: { name: 'python', version: '3.6.0' }
+        };
+        const kernelConnection = PythonKernelConnectionMetadata.create({
+            id: 'python36',
+            interpreter: python36Global,
+            kernelSpec: pythonDefaultKernelSpec
+        });
+        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
+
+        // Verify kernel_spec display_name updated JUNK DISPLAYNAME => Python Default
+        verifyMetadata(notebookMetadata, {
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+            language_info: { name: 'python', version: '3.6.0' }
+        });
+        assert.strictEqual(value.changed, true);
+    });
 
     test('No Change', async () => {
         let notebookMetadata: nbformat.INotebookMetadata = {

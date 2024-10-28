@@ -22,6 +22,7 @@ export const NOTEBOOK_SELECTOR = [
 
 export const CodespaceExtensionId = 'GitHub.codespaces';
 export const JVSC_EXTENSION_ID = 'ms-toolsai.jupyter';
+export const DATA_WRANGLER_EXTENSION_ID = 'ms-toolsai.datawrangler';
 export const POWER_TOYS_EXTENSION_ID = 'ms-toolsai.vscode-jupyter-powertoys';
 export const JUPYTER_HUB_EXTENSION_ID = 'ms-toolsai.jupyter-hub';
 export const AppinsightsKey = '0c6ae279ed8443289764825290e4f9e2-1a736e7c-1324-4338-be46-fc2a58ae4d14-7255';
@@ -224,9 +225,8 @@ export namespace Commands {
     export const NativeNotebookExport = 'jupyter.notebookeditor.export';
     export const LatestExtension = 'jupyter.latestExtension';
     export const EnableLoadingWidgetsFrom3rdPartySource = 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource';
-    export const EnableDebugLogging = 'jupyter.enableDebugLogging';
-    export const ResetLoggingLevel = 'jupyter.resetLoggingLevel';
     export const ShowDataViewer = 'jupyter.showDataViewer';
+    export const ShowJupyterDataViewer = 'jupyter.showJupyterDataViewer';
     export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
@@ -341,7 +341,6 @@ export enum Telemetry {
      * An export to a specific format failed
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
-    StartedRemoteJupyterSessionWithBackingFile = 'DS_INTERNAL.JUPYTER_STARTED_SESSION_WITH_BACKING_FILE',
     ZMQSupport = 'DS_INTERNAL.JUPYTER_ZMQ_SUPPORT',
     ZMQSupportFailure = 'DS_INTERNAL.JUPYTER_ZMQ_SUPPORT_FAILURE',
     SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',
@@ -417,7 +416,6 @@ export enum Telemetry {
     DiscoverIPyWidgetNamesPerf = 'DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS',
     IPyWidgetPromptToUseCDN = 'DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN',
     IPyWidgetPromptToUseCDNSelection = 'DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN_SELECTION',
-    IPyWidgetOverhead = 'DS_INTERNAL.IPYWIDGET_OVERHEAD',
     IPyWidgetRenderFailure = 'DS_INTERNAL.IPYWIDGET_RENDER_FAILURE',
     IPyWidgetUnhandledMessage = 'DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE',
     RawKernelInfoResponse = 'DS_INTERNAL.RAWKERNEL_INFO_RESPONSE',
@@ -433,7 +431,6 @@ export enum Telemetry {
     NotebookStart = 'DATASCIENCE.NOTEBOOK_START',
     NotebookFirstStartBreakDown = 'DATASCIENCE.NOTEBOOK_FIRST_START_BREAKDOWN',
     NotebookFirstKernelAutoSelectionBreakDown = 'DATASCIENCE.NOTEBOOK_FIRST_KERNEL_AUTO_SELECTION_BREAKDOWN',
-    KernelStartFailureDueToMissingEnv = 'DATASCIENCE.KERNEL_START_FAILURE_MISSING_ENV',
     NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
     NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
@@ -475,7 +472,10 @@ export enum Telemetry {
     DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL',
     DataViewerWebviewLoaded = 'DATAVIEWER.WEBVIEW_LOADED',
     PlotViewerWebviewLoaded = 'PLOTVIEWER.WEBVIEW_LOADED',
-    EnterRemoteJupyterUrl = 'DATASCIENCE.ENTER_REMOTE_JUPYTER_URL'
+    EnterRemoteJupyterUrl = 'DATASCIENCE.ENTER_REMOTE_JUPYTER_URL',
+    NativeNotebookExecutionPerformance = 'DATASCIENCE.JUPYTER_NOTEBOOK_EXEC_PERFORMANCE',
+    JupyterNotebookExecutionPerformance = 'DATASCIENCE.JUPYTER_JUPYTER_NOTEBOOK_EXEC_PERFORMANCE',
+    NativeNotebookEditPerformance = 'DATASCIENCE.JUPYTER_NOTEBOOK_EDIT_PERFORMANCE'
 }
 
 export enum JupyterCommands {

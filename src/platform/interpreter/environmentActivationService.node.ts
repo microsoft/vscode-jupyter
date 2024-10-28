@@ -16,7 +16,7 @@ import { IInterpreterService } from './contracts';
 import { DataScience } from '../common/utils/localize';
 import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 import { Telemetry } from '../common/constants';
-import { ignoreLogging, logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../logging';
+import { ignoreLogging, logValue, debugDecorator, logger } from '../logging';
 import { TraceOptions } from '../logging/types';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { noop } from '../common/utils/misc';
@@ -71,7 +71,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const env = await this.interpreterService.resolveEnvironment(interpreterId);
         if (!env) {
-            traceWarning(`Failed to resolve environment for ${interpreterId}`);
+            logger.warn(`Failed to resolve environment for ${interpreterId}`);
             return;
         }
         const key = `${resource?.toString() || ''}${interpreterId}`;
@@ -90,7 +90,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         return raceCancellation(token, promise);
     }
-    @traceDecoratorVerbose('Getting activated env variables', TraceOptions.Arguments)
+    @debugDecorator('Getting activated env variables', TraceOptions.Arguments)
     private async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         @logValue<Environment>('id') environment: Environment,
@@ -108,7 +108,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 return env;
             })
             .catch((ex) => {
-                traceError(
+                logger.error(
                     `Failed to get env vars with python ${getDisplayPath(environment.id)} in ${
                         stopWatch.elapsedTime
                     }ms`,
@@ -166,7 +166,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         let env = await this.apiProvider.getApi().then((api) =>
             api.getActivatedEnvironmentVariables(resource, environment, false).catch((ex) => {
-                traceError(
+                logger.error(
                     `Failed to get activated env variables from Python Extension for ${getDisplayPath(
                         environment.path
                     )}`,
@@ -193,22 +193,20 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         );
 
         if (env) {
-            traceVerbose(
+            logger.debug(
                 `Got env vars from Python Ext in ${stopWatch.elapsedTime}ms for ${getDisplayPath(
                     environment.path
-                )}, with env var count ${Object.keys(env || {}).length}. \n    PATH value is ${
-                    env.PATH
-                } and \n    Path value is ${env.Path}`
+                )}, with env var count ${Object.keys(env || {}).length}.`
             );
         } else if (envType === EnvironmentType.Conda) {
             // We must get activated env variables for Conda env, if not running stuff against conda will not work.
             // Hence we must log these as errors (so we can see them in jupyter logs).
-            traceError(
+            logger.error(
                 `Failed to get activated conda env vars for ${getDisplayPath(environment.path)}
                  in ${stopWatch.elapsedTime}ms`
             );
         } else {
-            traceWarning(
+            logger.warn(
                 `Failed to get activated env vars for ${getDisplayPath(environment.path)} in ${stopWatch.elapsedTime}ms`
             );
         }
@@ -224,7 +222,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 if (sysPrefix) {
                     env.CONDA_PREFIX = sysPrefix;
                 } else {
-                    traceWarning(
+                    logger.warn(
                         `Failed to get the SysPrefix for the Conda Environment ${getDisplayPath(environment.path)}}`
                     );
                 }
@@ -254,7 +252,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // First value in PATH is expected to be the directory of python executable.
             // Second value in PATH is expected to be the site packages directory.
             if (executablesPath && pathValues[1] !== executablesPath.fsPath) {
-                traceVerbose(
+                logger.trace(
                     `Prepend PATH with user site path for ${getDisplayPath(environment.path)}, user site ${
                         executablesPath.fsPath
                     }`
@@ -264,7 +262,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             } else if (isCondaEnvironmentWithoutPython(environment)) {
                 //
             } else {
-                traceError(
+                logger.error(
                     `Unable to determine site packages path for python ${getDisplayPath(
                         environment.path
                     )} (${getEnvironmentType(environment)})`
@@ -286,15 +284,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Also applies to `!java` where java could be an executable in the conda bin directory.
         // Also required for conda environments that do not have Python installed (in the conda env).
         if (environment.executable.uri) {
-            traceVerbose(`Prepend PATH with python bin for ${getDisplayPath(environment.path)}`);
+            logger.trace(`Prepend PATH with python bin for ${getDisplayPath(environment.path)}`);
             this.envVarsService.prependPath(env, path.dirname(environment.executable.uri.fsPath));
         }
 
-        traceVerbose(
-            `Activated Env Variables for ${getDisplayPath(environment.path)}, \n    PATH value is ${
-                env.PATH
-            } and \n    Path value is ${env.Path}`
-        );
         return env;
     }
 }

@@ -40,6 +40,6 @@ function tagWithKernelRestarterFailed(stdErrOrStackTrace: string, tags: string[]
     }
 }
 
-export function getExtensionSpecifcStack() {
+export function getExtensionSpecificStack() {
     return (new Error().stack || '').split('\n').filter((l) => l.includes(JVSC_EXTENSION_ID));
 }

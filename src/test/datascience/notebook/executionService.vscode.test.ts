@@ -22,7 +22,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
-import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition, testMandatory } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
@@ -88,7 +88,7 @@ suite('Kernel Execution @kernelCore', function () {
         if (getOSType() === OSType.Windows && isCI) {
             return this.skip();
         }
-        traceInfo('Suite Setup VS Code Notebook - Execution');
+        logger.info('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         try {
             api = await initialize();
@@ -103,39 +103,39 @@ suite('Kernel Execution @kernelCore', function () {
                     .getConfiguration('python', workspace.workspaceFolders![0].uri)
                     .update('envFile', '${workspaceFolder}/.env');
             }
-            traceVerbose('Before starting Jupyter');
+            logger.debug('Before starting Jupyter');
             await startJupyterServer();
-            traceVerbose('After starting Jupyter');
+            logger.debug('After starting Jupyter');
             sinon.restore();
             notebook = new TestNotebookDocument(templateNbPath);
             const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-            traceVerbose('Before creating kernel connection');
+            logger.debug('Before creating kernel connection');
             const metadata = await getDefaultKernelConnection();
-            traceVerbose('After creating kernel connection');
+            logger.debug('After creating kernel connection');
 
             const controller = createKernelController();
             kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
-            traceVerbose('Before starting kernel');
+            logger.debug('Before starting kernel');
             await kernel.start();
-            traceVerbose('After starting kernel');
+            logger.debug('After starting kernel');
             kernelExecution = kernelProvider.getKernelExecution(kernel);
-            traceInfo('Suite Setup (completed)');
+            logger.info('Suite Setup (completed)');
         } catch (e) {
-            traceError('Suite Setup (failed) - Execution', e);
+            logger.error('Suite Setup (failed) - Execution', e);
             await captureScreenShot('execution-suite');
             throw e;
         }
     });
     setup(function () {
         notebook.cells.length = 0;
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
             await captureScreenShot(this);
         }
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     testMandatory('Execute cell using VSCode Kernel', async () => {
@@ -593,8 +593,8 @@ suite('Kernel Execution @kernelCore', function () {
             sys.stderr.flush()
                         `
         );
-        traceInfo('1. Start execution for test of Stderr & stdout outputs');
-        traceInfo('2. Start execution for test of Stderr & stdout outputs');
+        logger.info('1. Start execution for test of Stderr & stdout outputs');
+        logger.info('2. Start execution for test of Stderr & stdout outputs');
         await Promise.all([
             kernelExecution.executeCell(cell),
             waitForTextOutput(cell, '1', 0, false),
@@ -602,7 +602,7 @@ suite('Kernel Execution @kernelCore', function () {
             waitForTextOutput(cell, '3', 2, false),
             waitForTextOutput(cell, 'c', 3, false)
         ]);
-        traceInfo('2. completed execution for test of Stderr & stdout outputs');
+        logger.info('2. completed execution for test of Stderr & stdout outputs');
 
         // In cell 1 we should have the output
         // 12

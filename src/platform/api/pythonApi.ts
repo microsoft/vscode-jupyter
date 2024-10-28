@@ -21,7 +21,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IDisposableRegistry, IExtensionContext } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
+import { logger } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironments/info/interpreter';
@@ -72,7 +72,7 @@ export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | und
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
                     : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
         } else {
-            traceWarning(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
+            logger.warn(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
             return;
         }
     } else {
@@ -199,7 +199,7 @@ export class OldPythonApiProvider implements IPythonApiProvider {
                 await promise;
                 activated = true;
             } catch (ex) {
-                traceError(`Failed activating the python extension: `, ex);
+                logger.error(`Failed activating the python extension: `, ex);
                 this.api.reject(new PythonExtensionActicationFailedError(ex));
                 return;
             }
@@ -212,7 +212,7 @@ export class OldPythonApiProvider implements IPythonApiProvider {
             this.didActivatePython.fire();
         }
         if (!pythonExtension.exports?.jupyter) {
-            traceError(`Python extension is not exporting the jupyter API`);
+            logger.error(`Python extension is not exporting the jupyter API`);
             this.api.reject(new PythonExtensionApiNotExportedError());
         } else {
             pythonExtension.exports.jupyter.registerHooks();
@@ -378,9 +378,9 @@ export class InterpreterService implements IInterpreterService {
             try {
                 await api.environments.refreshEnvironments({ forceRefresh });
                 this.hookupOnDidChangeInterpreterEvent();
-                traceVerbose(`Refreshed Environments`);
+                logger.debug(`Refreshed Environments`);
             } catch (ex) {
-                traceError(`Failed to refresh the list of interpreters`);
+                logger.error(`Failed to refresh the list of interpreters`);
             }
         })();
         this.refreshPromises.push(promise);
@@ -436,7 +436,7 @@ export class InterpreterService implements IInterpreterService {
                 }
             })
             .catch((ex) => {
-                traceWarning(`Failed to get active interpreter from Python for workspace ${workspaceId}`, ex);
+                logger.warn(`Failed to get active interpreter from Python for workspace ${workspaceId}`, ex);
             });
         if (isCI || [ExtensionMode.Development, ExtensionMode.Test].includes(this.context.extensionMode)) {
             promise
@@ -448,7 +448,7 @@ export class InterpreterService implements IInterpreterService {
                     }
                     this.lastLoggedResourceAndInterpreterId = key;
                     const version = getCachedVersion(item);
-                    traceInfo(
+                    logger.trace(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
                         )} (${item && getEnvironmentType(item)}, '${
@@ -496,7 +496,7 @@ export class InterpreterService implements IInterpreterService {
                 if (matchedPythonEnv) {
                     const env = await api.environments.resolveEnvironment(matchedPythonEnv);
                     const resolved = this.trackResolvedEnvironment(env);
-                    traceInfoIfCI(
+                    logger.ci(
                         `Interpreter details for ${pythonPathForLogging} from Python is ${JSON.stringify(
                             env
                         )} and our mapping is ${JSON.stringify(resolved)}`
@@ -507,7 +507,7 @@ export class InterpreterService implements IInterpreterService {
                 // Reduce excessive logging.
                 if (!this.loggedEnvsWithoutInterpreterPath.has(key)) {
                     this.loggedEnvsWithoutInterpreterPath.add(key);
-                    traceWarning(
+                    logger.warn(
                         `No interpreter with path ${pythonPathForLogging} found in Python API, will convert Uri path to string as Id ${pythonPathForLogging}`
                     );
                 }
@@ -521,7 +521,7 @@ export class InterpreterService implements IInterpreterService {
                 return this.trackResolvedEnvironment(env);
             });
         } catch (ex) {
-            traceWarning(
+            logger.warn(
                 `Failed to get Python interpreter details from Python Extension API for ${
                     typeof pythonPath === 'string'
                         ? pythonPath
@@ -600,7 +600,7 @@ export class InterpreterService implements IInterpreterService {
                     this.eventHandlerAdded = true;
                     api.environments.onDidEnvironmentVariablesChange(
                         (e) => {
-                            traceVerbose(`Detected changes to env file ${e.resource?.uri?.path} in PythonApi`);
+                            logger.debug(`Detected changes to env file ${e.resource?.uri?.path} in PythonApi`);
                             this._onDidEnvironmentVariablesChange.fire();
                         },
                         this,
@@ -608,7 +608,7 @@ export class InterpreterService implements IInterpreterService {
                     );
                     api.environments.onDidChangeActiveEnvironmentPath(
                         () => {
-                            traceVerbose(`Detected change in Active Python environment via Python API`);
+                            logger.trace(`Detected change in Active Python environment via Python API`);
                             this.workspaceCachedActiveInterpreter.clear();
                             this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
                         },
@@ -617,7 +617,7 @@ export class InterpreterService implements IInterpreterService {
                     );
                     api.environments.onDidChangeEnvironments(
                         async (e) => {
-                            traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}'`);
+                            logger.trace(`Python API env change detected, ${e.type} => '${e.env.id}'`);
                             // Remove items that are no longer valid.
                             if (e.type === 'remove') {
                                 this.triggerEventIfAllowed('interpreterChangeEvent', undefined);

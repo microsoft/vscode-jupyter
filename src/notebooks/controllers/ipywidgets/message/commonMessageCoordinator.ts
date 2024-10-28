@@ -4,7 +4,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri, commands, env, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL, WIDGET_VERSION_NON_PYTHON_KERNELS } from '../../../../platform/common/constants';
-import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../../../platform/logging';
+import { logger } from '../../../../platform/logging';
 import {
     IDisposableRegistry,
     IOutputChannel,
@@ -92,7 +92,7 @@ export class CommonMessageCoordinator {
         // Attach message requests to this webview (should dupe to all of them)
         this.postMessage(
             (e) => {
-                traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator sent ${e.message}`);
+                logger.ci(`${ConsoleForegroundColors.Green}Widget Coordinator sent ${e.message}`);
                 // Special case for webview URI translation
                 if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
                     this.onMessage(webview, InteractiveWindowMessages.ConvertUriForUseInWebViewResponse, {
@@ -167,7 +167,7 @@ export class CommonMessageCoordinator {
             }
             // IPyWidgets scripts will not be loaded if we're unable to determine the version of IPyWidgets.
             const version = await deferred.promise;
-            traceVerbose(`Version of IPyWidgets ${version} determined after ${stopWatch.elapsedTime / 1000}s`);
+            logger.trace(`Version of IPyWidgets ${version} determined after ${stopWatch.elapsedTime / 1000}s`);
             webview
                 .postMessage({
                     type: IPyWidgetMessages.IPyWidgets_Reply_Widget_Version,
@@ -177,7 +177,7 @@ export class CommonMessageCoordinator {
         };
         webview.onDidReceiveMessage(
             async (m) => {
-                traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
+                logger.ci(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
                 this.onMessage(webview, m.type, m.payload);
                 if (m.type === IPyWidgetMessages.IPyWidgets_Request_Widget_Version) {
                     await sendIPyWidgetsVersion();
@@ -189,7 +189,7 @@ export class CommonMessageCoordinator {
                     void env.openExternal(Uri.parse(m.url));
                 }
                 if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
-                    traceVerbose('Web view is ready to receive widget messages');
+                    logger.trace('Web view is ready to receive widget messages');
                     this.readyMessageReceived = true;
                     this.sendPendingWebViewMessages(webview);
                 }
@@ -280,7 +280,7 @@ export class CommonMessageCoordinator {
                         }
                     }, noop);
             }
-            traceError(`Widget load failure ${errorMessage}`, widgetScriptSources, payload);
+            logger.error(`Widget load failure ${errorMessage}`, widgetScriptSources, payload);
 
             sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
                 isOnline: payload.isOnline,
@@ -311,7 +311,7 @@ export class CommonMessageCoordinator {
     }
     private sendRenderFailureTelemetry(payload: Error) {
         try {
-            traceError('Error rendering a widget: ', payload);
+            logger.error('Error rendering a widget: ', payload);
             sendTelemetryEvent(Telemetry.IPyWidgetRenderFailure);
         } catch {
             // Do nothing on a failure
@@ -327,7 +327,7 @@ export class CommonMessageCoordinator {
                     const errorMsg = msg as KernelMessage.IErrorMsg;
                     errorMsg.content.traceback = errorMsg.content.traceback.map(stripAnsi);
                 }
-                traceInfo(`Unhandled widget kernel message: ${msg.header.msg_type} ${msg.content}`);
+                logger.trace(`Unhandled widget kernel message: ${msg.header.msg_type} ${msg.content}`);
                 this.jupyterOutput.appendLine(
                     DataScience.unhandledMessage(msg.header.msg_type, JSON.stringify(msg.content))
                 );
@@ -366,7 +366,7 @@ export class CommonMessageCoordinator {
         // If no one is listening to the messages, then cache these.
         // It means its too early to dispatch the messages, we need to wait for the event handlers to get bound.
         if (!this.listeningToPostMessageEvent) {
-            traceInfoIfCI(`${ConsoleForegroundColors.Green}Queuing messages (no listeners)`);
+            logger.ci(`${ConsoleForegroundColors.Green}Queuing messages (no listeners)`);
             this.cachedMessages.push(data);
             return;
         }

@@ -14,16 +14,7 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from './types';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import {
-    Disposable,
-    EventEmitter,
-    NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookDocument,
-    TextDocument,
-    Uri
-} from 'vscode';
+import { Disposable, EventEmitter, NotebookCell, NotebookDocument, TextDocument, Uri } from 'vscode';
 import { Signal } from '@lumino/signaling';
 import type { Kernel } from '@jupyterlab/services';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
@@ -33,6 +24,7 @@ import { JupyterNotebookView } from '../platform/common/constants';
 import { IJupyterServerProviderRegistry, IJupyterServerUriEntry, IJupyterServerUriStorage } from './jupyter/types';
 import { noop } from '../test/core';
 import { JupyterServer, JupyterServerCollection, JupyterServerProvider } from '../api';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../platform/notebooks/cellExecutionStateService';
 
 suite('Kernel ReConnect Progress Message', () => {
     let disposables: IDisposable[] = [];
@@ -78,8 +70,6 @@ suite('Kernel ReConnect Progress Message', () => {
     function createKernel() {
         const kernel = mock<IKernel>();
         const onRestarted = new EventEmitter<void>();
-        const onPreExecute = new EventEmitter<NotebookCell>();
-        disposables.push(onPreExecute);
         disposables.push(onRestarted);
         const session = mock<IKernelSession>();
         const kernelConnection = mock<Kernel.IKernelConnection>();
@@ -97,7 +87,6 @@ suite('Kernel ReConnect Progress Message', () => {
         when(kernel.resourceUri).thenReturn(Uri.file('test.ipynb'));
         when(session.kernel).thenReturn(instance(kernelConnection));
         when(kernel.kernelConnectionMetadata).thenReturn(connectionMetadata);
-        when(kernelExecution.onPreExecute).thenReturn(onPreExecute.event);
         when(kernel.onRestarted).thenReturn(onRestarted.event);
         when(kernel.dispose()).thenResolve();
         let onWillRestart: (e: 'willRestart') => Promise<void> = () => Promise.resolve();
@@ -151,7 +140,6 @@ suite('Kernel ReConnect Failed Monitor', () => {
     let onDidRestartKernel: EventEmitter<IKernel>;
     let clock: fakeTimers.InstalledClock;
     let cellExecution: NotebookCellExecutionWrapper;
-    let onDidChangeNotebookCellExecutionState: EventEmitter<NotebookCellExecutionStateChangeEvent>;
     let kernelExecution: INotebookKernelExecution;
     setup(() => {
         resetVSCodeMocks();
@@ -186,19 +174,12 @@ suite('Kernel ReConnect Failed Monitor', () => {
         const stub = sinon.stub(CellExecutionCreator, 'getOrCreate').callsFake(() => instance(cellExecution));
         disposables.push(new Disposable(() => stub.restore()));
         disposables.push(new Disposable(() => clock.uninstall()));
-        onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
-        disposables.push(onDidChangeNotebookCellExecutionState);
-        when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
-            onDidChangeNotebookCellExecutionState.event
-        );
         monitor.activate();
     });
     teardown(() => (disposables = dispose(disposables)));
     function createKernel(serverProviderHandle = { handle: '1234', id: '1234', extensionId: '' }) {
         const kernel = mock<IKernel>();
-        const onPreExecute = new EventEmitter<NotebookCell>();
         const onRestarted = new EventEmitter<void>();
-        disposables.push(onPreExecute);
         disposables.push(onRestarted);
         const session = mock<IKernelSession>();
         const kernelConnection = mock<Kernel.IKernelConnection>();
@@ -218,11 +199,12 @@ suite('Kernel ReConnect Failed Monitor', () => {
         when(kernel.resourceUri).thenReturn(Uri.file('test.ipynb'));
         when(session.kernel).thenReturn(instance(kernelConnection));
         when(kernel.kernelConnectionMetadata).thenReturn(connectionMetadata);
-        when(kernelExecution.onPreExecute).thenReturn(onPreExecute.event);
         when(kernel.onRestarted).thenReturn(onRestarted.event);
         when(kernel.dispose()).thenResolve();
+        when(kernel.notebook).thenReturn();
+        when(kernelProvider.get(anything())).thenReturn(instance(kernel));
 
-        return { kernel, onPreExecute, onRestarted, kernelConnectionStatusSignal };
+        return { kernel, onRestarted, kernelConnectionStatusSignal };
     }
     function createNotebook() {
         const nb = mock<NotebookDocument>();
@@ -284,10 +266,11 @@ suite('Kernel ReConnect Failed Monitor', () => {
         const kernel = createKernel();
 
         const nb = createNotebook();
+        when(kernel.kernel.notebook).thenReturn(instance(nb));
         const cell = createCell(instance(nb));
         when(kernelProvider.get(instance(nb))).thenReturn(instance(kernel.kernel));
         onDidStartKernel.fire(instance(kernel.kernel));
-        kernel.onPreExecute.fire(instance(cell));
+        notebookCellExecutions.changeCellState(instance(cell), NotebookCellExecutionState.Executing);
 
         // Send the kernel into connecting state & then disconnected.
         kernel.kernelConnectionStatusSignal.emit('connecting');
@@ -301,16 +284,17 @@ suite('Kernel ReConnect Failed Monitor', () => {
         const kernel = createKernel();
 
         const nb = createNotebook();
+        when(kernel.kernel.notebook).thenReturn(instance(nb));
         const cell = createCell(instance(nb));
         when(kernelProvider.get(instance(nb))).thenReturn(instance(kernel.kernel));
         onDidStartKernel.fire(instance(kernel.kernel));
-        kernel.onPreExecute.fire(instance(cell));
+        notebookCellExecutions.changeCellState(instance(cell), NotebookCellExecutionState.Executing);
 
         // Send the kernel into connecting state & then disconnected.
         kernel.kernelConnectionStatusSignal.emit('connecting');
 
         // Mark the cell as completed.
-        onDidChangeNotebookCellExecutionState.fire({ cell: instance(cell), state: NotebookCellExecutionState.Idle });
+        notebookCellExecutions.changeCellState(instance(cell), NotebookCellExecutionState.Idle);
         kernel.kernelConnectionStatusSignal.emit('disconnected');
         await clock.runAllAsync();
 

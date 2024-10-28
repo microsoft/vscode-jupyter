@@ -10,7 +10,7 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { createDeferred } from '../common/utils/async';
 import { getResourceType } from '../common/utils';
 import { getComparisonKey } from '../vscode-path/resources';
-import { traceError } from '../logging';
+import { logger } from '../logging';
 
 type Context = {
     previouslySelectedKernelConnectionId: string;
@@ -56,7 +56,7 @@ export function updatePythonPackages(
  */
 async function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment } | { interpreterHash: string }) {
     if (!_interpreterPackageProvider) {
-        traceError(`Python package provider is not initialized.`);
+        logger.error(`Python package provider is not initialized.`);
         return '{}';
     }
     let interpreter: PythonEnvironment | undefined;

@@ -2,17 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    Disposable,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    UIKind,
-    env,
-    notebooks,
-    window
-} from 'vscode';
+import { Disposable, UIKind, env, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import {
     BannerType,
     IDisposableRegistry,
@@ -27,6 +19,11 @@ import { noop } from '../../platform/common/utils/misc';
 import { openInBrowser } from '../../platform/common/net/browser';
 import { getVSCodeChannel } from '../../platform/common/application/applicationEnvironment';
 import type { IDisposable } from '@c4312/evt';
+import {
+    NotebookCellExecutionState,
+    notebookCellExecutions,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../platform/notebooks/cellExecutionStateService';
 
 export const ISurveyBanner = Symbol('ISurveyBanner');
 export interface ISurveyBanner extends IExtensionSyncActivationService, IJupyterExtensionBanner {}
@@ -79,7 +76,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                 }
                 break;
             default:
-                traceError('Invalid Banner Type');
+                logger.error('Invalid Banner Type');
                 return false;
         }
         return false;
@@ -122,11 +119,12 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     public activate() {
-        this.onDidChangeNotebookCellExecutionStateHandler = notebooks.onDidChangeNotebookCellExecutionState(
-            this.onDidChangeNotebookCellExecutionState,
-            this,
-            this.disposables
-        );
+        this.onDidChangeNotebookCellExecutionStateHandler =
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState(
+                this.onDidChangeNotebookCellExecutionState,
+                this,
+                this.disposables
+            );
     }
 
     public async showBanner(type: BannerType): Promise<void> {
@@ -197,7 +195,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case BannerType.ExperimentNotebookSurvey:
                 return this.getPersistentState(ExperimentNotebookSurveyStateKeys.ExecutionCount);
             default:
-                traceError('Invalid Banner type');
+                logger.error('Invalid Banner type');
                 return -1;
         }
     }
@@ -244,7 +242,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case BannerType.ExperimentNotebookSurvey:
                 return localize.InsidersNativeNotebooksSurveyBanner.bannerMessage;
             default:
-                traceError('Invalid Banner type');
+                logger.error('Invalid Banner type');
                 return '';
         }
     }
@@ -256,7 +254,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case BannerType.ExperimentNotebookSurvey:
                 return 'https://aka.ms/vscnbexp';
             default:
-                traceError('Invalid Banner type');
+                logger.error('Invalid Banner type');
                 return '';
         }
     }

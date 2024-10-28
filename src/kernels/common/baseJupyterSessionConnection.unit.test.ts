@@ -38,7 +38,7 @@ suite('Base Jupyter Session Connection', () => {
             super('remoteJupyter', session);
             this.initializeKernelSocket();
         }
-        override shutdown(): Promise<void> {
+        shutdown(): Promise<void> {
             throw new Error('Method not implemented.');
         }
     }
@@ -48,6 +48,7 @@ suite('Base Jupyter Session Connection', () => {
         when(kernel.status).thenReturn('idle');
         when(kernel.connectionStatus).thenReturn('connected');
         when(kernel.statusChanged).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()));
+        when(kernel.pendingInput).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, boolean>>()));
         when(kernel.iopubMessage).thenReturn(
             instance(
                 mock<ISignal<Kernel.IKernelConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>()
@@ -96,6 +97,7 @@ suite('Base Jupyter Session Connection', () => {
         when(session.statusChanged).thenReturn(
             new Signal<Session.ISessionConnection, Kernel.Status>(instance(session))
         );
+        when(session.pendingInput).thenReturn(instance(mock<ISignal<Session.ISessionConnection, boolean>>()));
         when(session.unhandledMessage).thenReturn(sessionUnhandledMessage);
         when(session.connectionStatusChanged).thenReturn(sessionConnectionStatusChanged);
         when(session.anyMessage).thenReturn(sessionAnyMessage);

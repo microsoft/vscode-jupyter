@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken } from 'vscode';
-import { traceError, traceVerbose, traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { SpawnOptions, ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { IOutputChannel } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -123,16 +123,16 @@ export class JupyterInterpreterSubCommandExecutionService
             ...envVars,
             JUPYTER_PATH: jupyterDataPaths.join(path.delimiter)
         };
-        traceVerbose(`Start Jupyter Notebook with JUPYTER_PATH=${jupyterDataPaths.join(path.delimiter)}`);
-        traceVerbose(`Start Jupyter Notebook with PYTHONPATH=${envVars['PYTHONPATH'] || ''}`);
+        logger.trace(`Start Jupyter Notebook with JUPYTER_PATH=${jupyterDataPaths.join(path.delimiter)}`);
+        logger.trace(`Start Jupyter Notebook with PYTHONPATH=${envVars['PYTHONPATH'] || ''}`);
         const pathVariables = Object.keys(envVars).filter((key) => key.toLowerCase() === 'path');
         if (pathVariables.length) {
             const pathValues = pathVariables
                 .map((pathVariable) => `${pathVariable}=${envVars[pathVariable]}`)
                 .join(',');
-            traceVerbose(`Start Jupyter Notebook with PATH variable. ${pathValues}`);
+            logger.trace(`Start Jupyter Notebook with PATH variable. ${pathValues}`);
         } else {
-            traceError(`Start Jupyter Notebook without a PATH variable`);
+            logger.error(`Start Jupyter Notebook without a PATH variable`);
         }
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), spawnOptions);
     }
@@ -153,7 +153,7 @@ export class JupyterInterpreterSubCommandExecutionService
             // Parse out our results, return undefined if we can't suss it out
             serverInfos = JSON.parse(serverInfoString.stdout.trim()) as JupyterServerInfo[];
         } catch (err) {
-            traceWarning('Failed to parse JSON when getting server info out from getServerInfo.py', err);
+            logger.warn('Failed to parse JSON when getting server info out from getServerInfo.py', err);
             return;
         }
         return serverInfos;

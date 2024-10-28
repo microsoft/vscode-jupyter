@@ -7,6 +7,7 @@ import {
     Event,
     EventEmitter,
     Memento,
+    NotebookController,
     NotebookControllerAffinity,
     NotebookDocument,
     NotebookEditor,
@@ -17,7 +18,7 @@ import {
     workspace
 } from 'vscode';
 
-import { traceInfo, traceVerbose } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 
 import {
@@ -35,7 +36,13 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from '../notebooks/types';
 import { InteractiveWindow } from './interactiveWindow';
-import { JVSC_EXTENSION_ID, NotebookCellScheme, Telemetry } from '../platform/common/constants';
+import {
+    InteractiveWindowView,
+    JupyterNotebookView,
+    JVSC_EXTENSION_ID,
+    NotebookCellScheme,
+    Telemetry
+} from '../platform/common/constants';
 import {
     IInteractiveControllerHelper,
     IInteractiveWindow,
@@ -51,10 +58,27 @@ import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isInteractiveInputTab } from './helpers';
 import { sendTelemetryEvent } from '../telemetry';
 import { InteractiveControllerFactory } from './InteractiveWindowController';
+import { NotebookInteractiveWindow } from './notebookInteractiveWindow';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
 export const InteractiveWindowCacheKey = 'ds_interactive_window_cache';
+
+@injectable()
+export class ReplNotebookTrackerService implements IReplNotebookTrackerService {
+    private interactiveWindowProvider: IInteractiveWindowProvider | undefined;
+
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
+
+    isForReplEditor(notebook: NotebookDocument): boolean {
+        if (!this.interactiveWindowProvider) {
+            this.interactiveWindowProvider =
+                this.serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+        }
+        return this.interactiveWindowProvider.getInteractiveWindowWithNotebook(notebook.uri) !== undefined;
+    }
+}
 
 /**
  * Factory for InteractiveWindow
@@ -121,7 +145,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
                 tab,
                 Uri.parse(iw.inputBoxUriString)
             );
-            result.notifyConnectionReset();
+
+            result.notifyConnectionReset().catch(noop);
 
             this._windows.push(result);
             sendTelemetryEvent(
@@ -185,32 +210,43 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
         this.pendingCreations = creationInProgress.promise;
         try {
-            let initialController = await this.controllerHelper.getInitialController(resource, connection);
+            const useNotebookModel = this.configService.getSettings(resource).interactiveReplNotebook;
 
-            traceInfo(
+            const viewType = useNotebookModel ? JupyterNotebookView : InteractiveWindowView;
+            let initialController = await this.controllerHelper.getInitialController(resource, viewType, connection);
+
+            logger.info(
                 `Starting interactive window for resource '${getDisplayPath(
                     resource
                 )}' with controller '${initialController?.id}'`
             );
 
-            const [inputUri, editor] = await this.createEditor(initialController, resource, mode);
+            const [inputUri, editor] = await this.createEditor(initialController, resource, mode, useNotebookModel);
             if (initialController) {
                 initialController.controller.updateNotebookAffinity(
                     editor.notebook,
                     NotebookControllerAffinity.Preferred
                 );
             }
-            traceVerbose(
+            logger.debug(
                 `Interactive Window Editor Created: ${editor.notebook.uri.toString()} with input box: ${inputUri.toString()}`
             );
 
-            const result = new InteractiveWindow(
-                this.serviceContainer,
-                resource,
-                new InteractiveControllerFactory(this.controllerHelper, mode, initialController),
-                editor,
-                inputUri
-            );
+            const result = useNotebookModel
+                ? new NotebookInteractiveWindow(
+                      this.serviceContainer,
+                      resource,
+                      new InteractiveControllerFactory(this.controllerHelper, mode, initialController),
+                      editor,
+                      inputUri
+                  )
+                : new InteractiveWindow(
+                      this.serviceContainer,
+                      resource,
+                      new InteractiveControllerFactory(this.controllerHelper, mode, initialController),
+                      editor,
+                      inputUri
+                  );
             this._windows.push(result);
             sendTelemetryEvent(
                 Telemetry.CreateInteractiveWindow,
@@ -241,18 +277,24 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
     private async createEditor(
         preferredController: IVSCodeNotebookController | undefined,
         resource: Resource,
-        mode: InteractiveWindowMode
+        mode: InteractiveWindowMode,
+        withNotebookModel: boolean
     ): Promise<[Uri, NotebookEditor]> {
-        const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
-        const hasOwningFile = resource !== undefined;
-        let viewColumn = this.getInteractiveViewColumn(resource);
+        const title = resource && mode === 'perFile' ? getInteractiveWindowTitle(resource) : undefined;
+        const preserveFocus = resource !== undefined;
+        const viewColumn = this.getInteractiveViewColumn(resource);
+
+        if (withNotebookModel) {
+            return this.createNotebookBackedEditor(viewColumn, preserveFocus, preferredController?.controller, title);
+        }
+
         const { inputUri, notebookEditor } = (await commands.executeCommand(
             'interactive.open',
             // Keep focus on the owning file if there is one
-            { viewColumn: viewColumn, preserveFocus: hasOwningFile },
+            { viewColumn, preserveFocus },
             undefined,
-            controllerId,
-            resource && mode === 'perFile' ? getInteractiveWindowTitle(resource) : undefined
+            preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined,
+            title
         )) as unknown as INativeInteractiveWindow;
         if (!notebookEditor) {
             // This means VS Code failed to create an interactive window.
@@ -260,6 +302,37 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
             throw new Error('Failed to request creation of interactive window from VS Code.');
         }
         return [inputUri, notebookEditor];
+    }
+
+    private async createNotebookBackedEditor(
+        viewColumn: number,
+        preserveFocus: boolean,
+        controller: NotebookController | undefined,
+        title?: string
+    ): Promise<[Uri, NotebookEditor]> {
+        title = title || 'Interactive-1';
+        const notebookDocument = await workspace.openNotebookDocument(JupyterNotebookView);
+
+        const editor = await window.showNotebookDocument(notebookDocument, {
+            // currently, to set the controller, we need to focus the editor
+            preserveFocus: !!controller ? true : preserveFocus,
+            viewColumn,
+            asRepl: title
+        });
+
+        if (!editor.replOptions) {
+            throw new Error('Wrong type of editor created');
+        }
+
+        if (controller) {
+            await commands.executeCommand('notebook.selectKernel', {
+                editor,
+                id: controller.id,
+                extension: JVSC_EXTENSION_ID
+            });
+        }
+        const inputUri = notebookDocument.cellAt(editor.replOptions.appendIndex).document.uri;
+        return [inputUri, editor];
     }
 
     private getInteractiveViewColumn(resource: Resource): ViewColumn {
@@ -364,7 +437,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
     }
 
     private onInteractiveWindowClosed(interactiveWindow: IInteractiveWindow) {
-        traceVerbose(`Closing interactive window: ${interactiveWindow.notebookUri?.toString()}`);
+        logger.debug(`Closing interactive window: ${interactiveWindow.notebookUri?.toString()}`);
         interactiveWindow.dispose();
         this._windows = this._windows.filter((w) => w !== interactiveWindow);
         this._updateWindowCache();

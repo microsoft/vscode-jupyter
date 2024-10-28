@@ -11,8 +11,8 @@ import {
     TextDocument,
     Uri,
     WorkspaceEdit,
-    extensions,
     workspace,
+    type Event,
     type NotebookCell
 } from 'vscode';
 import {
@@ -22,7 +22,8 @@ import {
     WIDGET_STATE_MIMETYPE
 } from './constants';
 import { splitLines } from './helpers';
-import { noop } from './utils/misc';
+import { toPromise } from './utils/events';
+import type { IDisposable } from './types';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -169,71 +170,35 @@ export type NotebookMetadata = nbformat.INotebookMetadata & {
 };
 
 export function getNotebookMetadata(document: NotebookDocument | NotebookData): NotebookMetadata | undefined {
-    if (useCustomMetadata()) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
-        // Create a clone.
-        return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
-    } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata as any;
-        // Create a clone.
-        return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata as any;
+    // Create a clone.
+    return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
 }
 
 export function getNotebookFormat(document: NotebookDocument): {
     nbformat: number | undefined;
     nbformat_minor: number | undefined;
 } {
-    if (useCustomMetadata()) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
-        // Create a clone.
-        return {
-            nbformat: notebookContent?.nbformat,
-            nbformat_minor: notebookContent?.nbformat_minor
-        };
-    } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata as any;
-        // Create a clone.
-        return {
-            nbformat: notebookContent?.nbformat,
-            nbformat_minor: notebookContent?.nbformat_minor
-        };
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata as any;
+    // Create a clone.
+    return {
+        nbformat: notebookContent?.nbformat,
+        nbformat_minor: notebookContent?.nbformat_minor
+    };
 }
 
 export async function updateNotebookMetadata(document: NotebookDocument, metadata: NotebookMetadata) {
     const edit = new WorkspaceEdit();
-    if (useCustomMetadata()) {
-        // Create a clone.
-        const docMetadata: {
-            custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
-        } = JSON.parse(JSON.stringify(document.metadata || { custom: {} }));
-
-        docMetadata.custom = docMetadata.custom || {};
-        docMetadata.custom.metadata = metadata;
-
-        edit.set(document.uri, [
-            NotebookEdit.updateNotebookMetadata(
-                sortObjectPropertiesRecursively({
-                    ...(document.metadata || {}),
-                    custom: docMetadata.custom
-                })
-            )
-        ]);
-    } else {
-        edit.set(document.uri, [
-            NotebookEdit.updateNotebookMetadata(
-                sortObjectPropertiesRecursively({
-                    ...(document.metadata || {}),
-                    metadata
-                })
-            )
-        ]);
-    }
+    edit.set(document.uri, [
+        NotebookEdit.updateNotebookMetadata(
+            sortObjectPropertiesRecursively({
+                ...(document.metadata || {}),
+                metadata
+            })
+        )
+    ]);
     await workspace.applyEdit(edit);
 }
 
@@ -456,46 +421,10 @@ type JupyterCellMetadata = Pick<nbformat.IRawCell, 'id' | 'metadata' | 'attachme
     Record<string, any>;
 
 export function getCellMetadata(cell: NotebookCell): JupyterCellMetadata {
-    if (useCustomMetadata()) {
-        const metadata: JupyterCellMetadata = JSON.parse(JSON.stringify(cell.metadata.custom || {})) || {};
-        const cellMetadata = metadata as nbformat.IRawCell;
-        // metadata property is never optional.
-        cellMetadata.metadata = cellMetadata.metadata || {};
-
-        return metadata;
-    } else {
-        const metadata: JupyterCellMetadata = JSON.parse(JSON.stringify(cell.metadata || {})) || { metadata: {} };
-        // metadata property is never optional.
-        metadata.metadata = metadata.metadata || {};
-        return metadata;
-    }
-}
-
-export function useCustomMetadata() {
-    try {
-        const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
-        if (ext && typeof ext.exports.dropCustomMetadata === 'boolean') {
-            return ext.exports.dropCustomMetadata ? false : true;
-        }
-    } catch {
-        // This happens in integration tests, in this case just return `true`.
-        return true;
-    }
-    try {
-        // Means ipynb extension has not yet been activated.
-        // Does not matter, we can just check the setting.
-        return !workspace.getConfiguration('jupyter', undefined).get<boolean>('experimental.dropCustomMetadata', false);
-    } catch {
-        // This happens in unit tests, in this case just return `true`.
-        return true;
-    }
-}
-
-export async function activateIPynbExtension() {
-    const ext = extensions.getExtension<{ dropCustomMetadata: boolean }>('vscode.ipynb');
-    if (ext && ext.isActive === false) {
-        await ext.activate().then(noop, noop);
-    }
+    const metadata: JupyterCellMetadata = JSON.parse(JSON.stringify(cell.metadata || {})) || { metadata: {} };
+    // metadata property is never optional.
+    metadata.metadata = metadata.metadata || {};
+    return metadata;
 }
 
 /**
@@ -524,4 +453,13 @@ function doSortObjectPropertiesRecursively(obj: any): any {
         );
     }
     return obj;
+}
+
+export async function disposeAsync(
+    disposable: { dispose: () => void; onDidDispose: Event<void> },
+    disposables: IDisposable[] = []
+): Promise<void> {
+    const promise = toPromise(disposable.onDidDispose, undefined, disposables);
+    disposable.dispose();
+    await promise;
 }

@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 
-import { traceError } from '../../logging';
+import { logger } from '../../logging';
 import * as internalScripts from '../../interpreter/internal/scripts/index.node';
 import { getFilePath } from '../../common/platform/fs-paths';
 import { CodeExecutionHelperBase } from './codeExecutionHelper';
@@ -93,7 +93,7 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
             }
             return normalizedLines;
         } catch (ex) {
-            traceError(ex, 'Python: Failed to normalize code for execution in Interactive Window');
+            logger.error(ex, 'Python: Failed to normalize code for execution in Interactive Window');
             return code;
         } finally {
             dispose(disposables);

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
@@ -42,18 +42,18 @@ export class JupyterServerProvider implements IJupyterServerProvider {
 
         // Check to see if we support ipykernel or not
         try {
-            traceVerbose(`Checking for server usability.`);
+            logger.trace(`Checking for server usability.`);
 
             const usable = await this.checkUsable();
             if (!usable) {
-                traceVerbose('Server not usable (should ask for install now)');
+                logger.trace('Server not usable (should ask for install now)');
                 // Indicate failing.
                 throw new JupyterInstallError(
                     DataScience.jupyterNotSupported(await jupyterServerHelper.getJupyterServerError())
                 );
             }
             // Then actually start the server
-            traceVerbose(`Starting notebook server.`);
+            logger.debug(`Starting notebook server.`);
             const result = await jupyterServerHelper.startServer(options.resource, options.token);
             Cancellation.throwIfCanceled(options.token);
             return result;

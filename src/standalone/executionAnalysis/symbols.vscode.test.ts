@@ -7,7 +7,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { CellAnalysis, ICellExecution, ILocationWithReferenceKind, NotebookDocumentSymbolTracker } from './symbols';
 import { PylanceExtension } from './common';
 import { activatePylance } from './pylance';
-import { useCustomMetadata } from '../../platform/common/utils';
 
 function withNotebookCells(data: [string, string][], fileName: string) {
     const cells: vscode.NotebookCell[] = data.map((cellDto) => {
@@ -504,15 +503,13 @@ function closeAllEditors(): Thenable<any> {
         ]);
 
         // Temporary, until Pylance is fixed
-        if (!useCustomMetadata()) {
-            nb.metadata = {
-                custom: {
-                    metadata: {
-                        cellLanguage: 'python'
-                    }
+        nb.metadata = {
+            custom: {
+                metadata: {
+                    cellLanguage: 'python'
                 }
-            };
-        }
+            }
+        };
         const document = await vscode.workspace.openNotebookDocument('jupyter-notebook', nb);
 
         const editor = await await vscode.window.showNotebookDocument(document);
@@ -557,15 +554,13 @@ function closeAllEditors(): Thenable<any> {
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(arr)', 'python')
         ]);
         // Temporary, until Pylance is fixed
-        if (!useCustomMetadata()) {
-            nb.metadata = {
-                custom: {
-                    metadata: {
-                        cellLanguage: 'python'
-                    }
+        nb.metadata = {
+            custom: {
+                metadata: {
+                    cellLanguage: 'python'
                 }
-            };
-        }
+            }
+        };
         const document = await vscode.workspace.openNotebookDocument('jupyter-notebook', nb);
         const editor = await vscode.window.showNotebookDocument(document);
         const referencesProvider = await activatePylance();
@@ -609,15 +604,13 @@ function closeAllEditors(): Thenable<any> {
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'plt.plot(x, y)', 'python')
         ]);
         // Temporary, until Pylance is fixed
-        if (!useCustomMetadata()) {
-            nb.metadata = {
-                custom: {
-                    metadata: {
-                        cellLanguage: 'python'
-                    }
+        nb.metadata = {
+            custom: {
+                metadata: {
+                    cellLanguage: 'python'
                 }
-            };
-        }
+            }
+        };
         const document = await vscode.workspace.openNotebookDocument('jupyter-notebook', nb);
         const editor = await vscode.window.showNotebookDocument(document);
         const referencesProvider = await activatePylance();

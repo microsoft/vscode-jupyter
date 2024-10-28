@@ -13,12 +13,13 @@ import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import {
     CodeLensCommands,
     EditorContexts,
     InteractiveInputScheme,
     NotebookCellScheme,
+    PYTHON_LANGUAGE,
     Telemetry
 } from '../../platform/common/constants';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
@@ -36,6 +37,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private totalGetCodeLensCalls: number = 0;
     private activeCodeWatchers: ICodeWatcher[] = [];
     private didChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+    private cachedOwnsSetting: boolean;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -56,6 +58,51 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         if (this.debugLocationTracker) {
             disposableRegistry.push(this.debugLocationTracker.updated(this.onDebugLocationUpdated.bind(this)));
         }
+
+        disposableRegistry.push(vscode.window.onDidChangeActiveTextEditor(() => this.onChangedActiveTextEditor()));
+        const settings = this.configuration.getSettings(undefined);
+        this.cachedOwnsSetting = settings.sendSelectionToInteractiveWindow;
+        this.updateOwnerContextKey();
+        disposableRegistry.push(vscode.workspace.onDidChangeConfiguration((e) => this.onSettingChanged(e)));
+        this.onChangedActiveTextEditor();
+    }
+
+    private onChangedActiveTextEditor() {
+        const activeEditor = vscode.window.activeTextEditor;
+
+        if (
+            !activeEditor ||
+            activeEditor.document.languageId != PYTHON_LANGUAGE ||
+            [NotebookCellScheme, InteractiveInputScheme].includes(activeEditor.document.uri.scheme)
+        ) {
+            // set the context to false so our command doesn't run for other files
+            const hasCellsContext = new ContextKey(EditorContexts.HasCodeCells);
+            hasCellsContext.set(false).catch((ex) => logger.warn('Failed to set jupyter.HasCodeCells context', ex));
+            this.updateOwnerContextKey(false);
+        }
+    }
+
+    private onSettingChanged(e: vscode.ConfigurationChangeEvent) {
+        if (e.affectsConfiguration('jupyter.interactiveWindow.textEditor.executeSelection')) {
+            const settings = this.configuration.getSettings(undefined);
+            this.cachedOwnsSetting = settings.sendSelectionToInteractiveWindow;
+            this.updateOwnerContextKey();
+        }
+    }
+
+    private updateOwnerContextKey(hasCodeCells?: boolean) {
+        const editorContext = new ContextKey(EditorContexts.OwnsSelection);
+        if (this.cachedOwnsSetting) {
+            editorContext.set(true).catch(noop);
+            return;
+        }
+
+        if (hasCodeCells === undefined) {
+            const hasCellsContext = new ContextKey(EditorContexts.HasCodeCells);
+            hasCodeCells = hasCellsContext.value ?? false;
+        }
+
+        editorContext.set(hasCodeCells).catch(noop);
     }
 
     public dispose() {
@@ -65,6 +112,10 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
                 duration: this.totalExecutionTimeInMs / this.totalGetCodeLensCalls
             });
         }
+
+        const editorContext = new ContextKey(EditorContexts.HasCodeCells);
+        editorContext.set(false).catch(noop);
+
         dispose(this.activeCodeWatchers);
     }
 
@@ -112,8 +163,10 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // Update the hasCodeCells context at the same time we are asked for codelens as VS code will
         // ask whenever a change occurs. Do this regardless of if we have code lens turned on or not as
         // shift+enter relies on this code context.
-        const editorContext = new ContextKey(EditorContexts.HasCodeCells);
-        editorContext.set(codeLenses && codeLenses.length > 0).catch(noop);
+        const hasCellsContext = new ContextKey(EditorContexts.HasCodeCells);
+        const hasCodeCells = codeLenses && codeLenses.length > 0;
+        hasCellsContext.set(hasCodeCells).catch((ex) => logger.debug('Failed to set jupyter.HasCodeCells context', ex));
+        this.updateOwnerContextKey(hasCodeCells);
 
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings(document.uri);
@@ -158,7 +211,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
                     return false;
                 });
             } else {
-                traceInfoIfCI(
+                logger.ci(
                     `Detected debugging context because activeDebugSession is name:"${this.debugService.activeDebugSession.name}", type: "${this.debugService.activeDebugSession.type}", ` +
                         `but fell through with debugLocation: ${JSON.stringify(
                             debugLocation
@@ -185,7 +238,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             return codeWatcher.getCodeLenses();
         }
 
-        traceVerbose(`Creating a new watcher for document ${document.uri}`);
+        logger.debug(`Creating a new watcher for document ${document.uri}`);
         const newCodeWatcher = this.createNewCodeWatcher(document);
         return newCodeWatcher.getCodeLenses();
     }
@@ -199,7 +252,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // Create a new watcher for this file if we can find a matching document
         const possibleDocuments = vscode.workspace.textDocuments.filter((d) => d.uri.toString() === uri.toString());
         if (possibleDocuments && possibleDocuments.length > 0) {
-            traceVerbose(`creating new code watcher with matching document ${uri}`);
+            logger.debug(`creating new code watcher with matching document ${uri}`);
             return this.createNewCodeWatcher(possibleDocuments[0]);
         }
 

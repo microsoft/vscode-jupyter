@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceInfo } from '../../logging';
+import { logger } from '../../logging';
 import { Logging } from '../utils/localize';
 import { SpawnOptions } from './types.node';
 import { getDisplayPath } from '../platform/fs-paths.node';
@@ -27,5 +27,5 @@ export function logProcess(file: string, args: string[], options?: SpawnOptions)
     if (options && options.cwd) {
         message.push(`    > ${Logging.currentWorkingDirectory} ${getDisplayPath(options.cwd.toString())}`);
     }
-    traceInfo(message.join('\n'));
+    logger.info(message.join('\n'));
 }

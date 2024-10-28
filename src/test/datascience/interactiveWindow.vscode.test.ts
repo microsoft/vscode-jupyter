@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
@@ -52,17 +52,17 @@ suite(`Interactive window Execution @iw`, async function () {
     let pythonApiProvider: IPythonApiProvider;
     let originalActiveInterpreter: PythonEnvironment | undefined;
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         if (IS_REMOTE_NATIVE_TEST()) {
             await startJupyterServer();
         }
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
         pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         await vscode.commands.executeCommand('python.clearWorkspaceInterpreter');
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.

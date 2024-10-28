@@ -10,7 +10,7 @@ import { CancellationToken, Uri } from 'vscode';
 import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/utils/lifecycle';
-import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
 import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -65,7 +65,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         workingDirectory: Uri,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
-        traceInfo('Starting Notebook');
+        logger.info('Starting Jupyter Server');
         // Now actually launch it
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
@@ -87,7 +87,6 @@ export class JupyterServerStarter implements IJupyterServerStarter {
             Cancellation.throwIfCanceled(cancelToken);
 
             // Then use this to launch our notebook process.
-            traceVerbose('Starting Jupyter Notebook');
             const [launchResult, tempDir, interpreter] = await Promise.all([
                 this.jupyterInterpreterService.startNotebook(args || [], {
                     throwOnStdErr: false,
@@ -116,7 +115,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
             }
 
             // Wait for the connection information on this result
-            traceVerbose('Waiting for Jupyter Notebook');
+            logger.debug('Waiting for Jupyter Notebook');
             starter = new JupyterConnectionWaiter(
                 launchResult,
                 Uri.file(tempDir.path),
@@ -142,7 +141,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
                     UsedPorts.add(port);
                 }
             } catch (ex) {
-                traceError(`Parsing failed ${connection.baseUrl}`, ex);
+                logger.error(`Parsing failed ${connection.baseUrl}`, ex);
             }
             dispose(disposables);
             return connection;
@@ -256,7 +255,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         // as starting jupyter with all of the defaults.
         const configFile = path.join(tempDir.path, 'jupyter_notebook_config.py');
         await this.fs.writeFile(Uri.file(configFile), '');
-        traceInfo(`Generating custom default config at ${configFile}`);
+        logger.debug(`Generating custom default config at ${configFile}`);
 
         // Create extra args based on if we have a config or not
         return `--config=${configFile}`;

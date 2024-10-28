@@ -5,7 +5,7 @@ import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IExtensions } from '../../../platform/common/types';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IExtensionTestApi, waitForCondition } from '../../../test/common';
 import { noop } from '../../../test/core';
 import { initialize } from '../../../test/initialize';
@@ -61,7 +61,7 @@ suite('Jupyter Provider Tests', function () {
         return closeNotebooksAndCleanUpAfterTests(disposables);
     });
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         sinon
             .stub(api.serviceContainer.get<IExtensions>(IExtensions), 'determineExtensionFromCallStack')
             .returns({ extensionId: 'GitHub', displayName: 'Sample Extension' });
@@ -72,14 +72,14 @@ suite('Jupyter Provider Tests', function () {
                 nbProviders.push({ provider, disposable });
                 return disposable;
             });
-        traceInfo(`Start Test Completed ${this.currentTest?.title}`);
+        logger.info(`Start Test Completed ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
-        traceInfo(`End Test ${this.currentTest?.title}`);
+        logger.info(`End Test ${this.currentTest?.title}`);
         sinon.restore();
         dispose(disposables);
-        traceInfo(`End Test Completed ${this.currentTest?.title}`);
+        logger.info(`End Test Completed ${this.currentTest?.title}`);
     });
     test('Verify Kernel Source Action is registered & unregistered for the 3rd party extension', async () => {
         const serverProvider1 = {

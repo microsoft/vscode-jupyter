@@ -23,7 +23,7 @@ import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { ILocalPythonNotebookKernelSourceSelector } from '../types';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectionMetadata> = {
@@ -127,11 +127,11 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         const jupyterPaths = ServiceContainer.instance.get<JupyterPaths>(JupyterPaths);
         const interpreter = await interpreters.getInterpreterDetails(env.path);
         if (!interpreter) {
-            traceWarning(`Python Env ${getDisplayPath(env.id)} not found}`);
+            logger.warn(`Python Env ${getDisplayPath(env.id)} not found}`);
             return;
         }
         if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
-            traceWarning(`Python Env hidden via filter: ${getDisplayPath(interpreter.id)}`);
+            logger.warn(`Python Env hidden via filter: ${getDisplayPath(interpreter.id)}`);
             return;
         }
 

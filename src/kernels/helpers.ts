@@ -15,7 +15,7 @@ import {
 } from './types';
 import { NotebookCellOutput, Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
@@ -385,7 +385,7 @@ export function getRemoteKernelSessionInformation(
             try {
                 date = new Date(kernelConnection.kernelModel.lastActivityTime);
             } catch (ex) {
-                traceVerbose(`Error parsing date ${ex}`);
+                logger.debug(`Error parsing date ${ex}`);
             }
         } else {
             date = kernelConnection.kernelModel.lastActivityTime;
@@ -613,7 +613,7 @@ export async function executeSilently(
     code: string,
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {
-    traceVerbose(
+    logger.trace(
         `Executing silently Code (${kernelConnection.status}) = ${splitLines(code.substring(0, 100)).join('\\n')}`
     );
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -632,7 +632,7 @@ export async function executeSilently(
     const outputs: nbformat.IOutput[] = [];
     request.onIOPub = (msg) => {
         if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-            traceInfoIfCI(`Got io pub message (stream), ${splitLines(msg.content.text.substr(0, 100)).join('\\n')}`);
+            logger.ci(`Got io pub message (stream), ${splitLines(msg.content.text.substr(0, 100)).join('\\n')}`);
             if (
                 outputs.length > 0 &&
                 outputs[outputs.length - 1].output_type === 'stream' &&
@@ -649,7 +649,7 @@ export async function executeSilently(
                 outputs.push(streamOutput);
             }
         } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-            traceInfoIfCI(`Got io pub message (execresult)}`);
+            logger.ci(`Got io pub message (execresult)}`);
             const output: nbformat.IExecuteResult = {
                 data: msg.content.data,
                 execution_count: msg.content.execution_count,
@@ -658,7 +658,7 @@ export async function executeSilently(
             };
             outputs.push(output);
         } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-            traceInfoIfCI(`Got io pub message (displaydata)}`);
+            logger.ci(`Got io pub message (displaydata)}`);
             const output: nbformat.IDisplayData = {
                 data: msg.content.data,
                 metadata: msg.content.metadata,
@@ -666,7 +666,7 @@ export async function executeSilently(
             };
             outputs.push(output);
         } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-            traceInfoIfCI(
+            logger.ci(
                 `Got io pub message (error), ${msg.content.ename},${msg.content.evalue}, ${msg.content.traceback
                     .join()
                     .substring(0, 100)}}`
@@ -675,7 +675,7 @@ export async function executeSilently(
                 const errorMessage = `${
                     errorOptions.traceErrorsMessage || 'Failed to execute (silent) code against the kernel'
                 }, \nCode = ${code}\nError details: `;
-                traceError(
+                logger.error(
                     `${errorMessage} ${msg.content.ename},${msg.content.evalue}, ${msg.content.traceback.join()}`
                 );
             }
@@ -687,7 +687,7 @@ export async function executeSilently(
             };
             outputs.push(output);
         } else {
-            traceInfoIfCI(`Got io pub message (${msg.header.msg_type})`);
+            logger.ci(`Got io pub message (${msg.header.msg_type})`);
         }
     };
     await request.done;
@@ -699,7 +699,7 @@ export async function executeSilently(
         handleExecuteSilentErrors(outputs, errorOptions, codeForLogging);
     }
 
-    traceVerbose(`Executing silently Code (completed) = ${codeForLogging} with ${outputs.length} output(s)`);
+    logger.trace(`Executing silently Code (completed) = ${codeForLogging} with ${outputs.length} output(s)`);
 
     return outputs;
 }
@@ -776,7 +776,7 @@ export function executeSilentlyAndEmitOutput(
         } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg) || jupyterLab.KernelMessage.isStatusMsg(msg)) {
             //
         } else {
-            traceWarning(`Got unexpected io pub message when executing code sillenty (${msg.header.msg_type})`);
+            logger.warn(`Got unexpected io pub message when executing code sillenty (${msg.header.msg_type})`);
         }
     };
     return request;
@@ -798,9 +798,9 @@ function handleExecuteSilentErrors(
                 .join('\n')}`;
             const fullMessage = `${errorOptions.traceErrorsMessage || ''} ${codeForLogging} ${outputMessage}`;
             if (errorOptions.traceErrors) {
-                traceError(fullMessage);
+                logger.error(fullMessage);
             } else {
-                traceWarning(fullMessage);
+                logger.warn(fullMessage);
             }
 
             // Send telemetry if requested, no traceback for PII

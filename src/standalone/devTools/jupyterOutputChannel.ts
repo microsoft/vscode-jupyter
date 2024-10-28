@@ -4,7 +4,7 @@
 import { window } from 'vscode';
 import { IDisposableRegistry, IOutputChannel } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
-import { traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { splitLines } from '../../platform/common/helpers';
 
 /**
@@ -41,12 +41,12 @@ export function getJupyterOutputChannel(disposables: IDisposableRegistry): IOutp
 
 function formatMessageAndLog(...args: Parameters<IOutputChannel['append']>) {
     if (args.length === 1) {
-        traceVerbose(
+        logger.debug(
             splitLines(args[0])
                 .map((line, i) => (i === 0 ? line : `    ${line}`))
                 .join('\n')
         );
     } else {
-        traceVerbose(...args);
+        logger.debug(...args);
     }
 }

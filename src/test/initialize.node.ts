@@ -21,7 +21,10 @@ export async function initializePython() {
     initializeCommonNodeApi();
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);
     // Make sure the python extension can load if this test allows it
-    if (!process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
+    if (
+        !process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT &&
+        process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT !== 'false'
+    ) {
         const extension = vscode.extensions.getExtension(PythonExtension);
         if (!extension) {
             console.error('Python extension not found');

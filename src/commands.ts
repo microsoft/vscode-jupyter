@@ -64,8 +64,6 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
     [DSCommands.CreateNewNotebook]: [];
-    [DSCommands.EnableDebugLogging]: [];
-    [DSCommands.ResetLoggingLevel]: [];
     [DSCommands.OpenVariableView]: [];
     [DSCommands.OpenOutlineView]: [];
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri } }];
@@ -178,6 +176,7 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.ShowDataViewer]: [IJupyterVariable | IShowDataViewerFromVariablePanel];
+    [DSCommands.ShowJupyterDataViewer]: [IJupyterVariable];
     [DSCommands.RefreshDataViewer]: [];
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.RunByLine]: [NotebookCell];

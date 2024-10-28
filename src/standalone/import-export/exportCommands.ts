@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
@@ -118,7 +118,7 @@ export class ExportCommands implements IDisposable {
                 window.activeNotebookEditor?.notebook ||
                 this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookDocument;
             if (!sourceDocument) {
-                traceInfo('Export called without a valid exportable document active');
+                logger.info('Export called without a valid exportable document active');
                 return;
             }
 

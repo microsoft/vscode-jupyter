@@ -4,7 +4,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { IKernelSession, KernelConnectionMetadata, isRemoteConnection } from './types';
 import { Memento } from 'vscode';
-import { traceVerbose, traceWarning } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { noop } from '../platform/common/utils/misc';
 import { sleep } from '../platform/common/utils/async';
 
@@ -67,9 +67,9 @@ export async function getKernelInfo(
     }
     const content = await Promise.race(promises);
     if (content === defaultResponse) {
-        traceWarning('Failed to Kernel info in a timely manner, defaulting to empty info!');
+        logger.warn('Failed to Kernel info in a timely manner, defaulting to empty info!');
     } else {
-        traceVerbose('Got Kernel info');
+        logger.trace('Got Kernel info');
     }
     return content;
 }

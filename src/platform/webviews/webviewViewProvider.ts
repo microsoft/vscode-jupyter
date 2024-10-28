@@ -6,7 +6,6 @@ import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewV
 import { IWebviewView, IWebviewViewOptions, IWebviewViewProvider } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposableRegistry } from '../common/types';
-import { noop } from '../common/utils/misc';
 import { Webview } from './webview';
 
 class WebviewView extends Webview implements IWebviewView {
@@ -39,7 +38,7 @@ class WebviewView extends Webview implements IWebviewView {
         this.disposableRegistry.push(
             webviewHost.onDidDispose(() => {
                 this.webviewHost = undefined;
-                this.panelOptions.listener.dispose().catch(noop);
+                this.panelOptions.listener.dispose();
             })
         );
 

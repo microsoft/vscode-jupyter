@@ -7,7 +7,7 @@ import { isLocalConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IControllerRegistration } from './types';
 import { JupyterServerCollection, JupyterServerProvider } from '../../api';
 import { CancellationTokenSource } from 'vscode';
@@ -100,7 +100,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
             }
             if (!validServerIds.includes(connection.serverProviderHandle.handle)) {
                 // Looks like the 3rd party provider has updated its handles and this server is no longer available.
-                traceWarning(
+                logger.warn(
                     `Deleting controller ${controller.id} as it is associated with a server Id that has been removed`
                 );
                 controller.dispose();
@@ -118,7 +118,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 return;
             }
             // Looks like the 3rd party provider has updated its handles and this server is no longer available.
-            traceWarning(
+            logger.warn(
                 `Deleting controller ${controller.id} as it is associated with a Provider Id that has been removed`
             );
             controller.dispose();

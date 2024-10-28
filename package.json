@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2024.5.0",
+    "version": "2024.11.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.89.0"
+        "vscode": "^1.95.0"
     },
     "l10n": "./l10n",
     "extensionKind": [
@@ -127,17 +127,17 @@
             {
                 "command": "jupyter.execSelectionInteractive",
                 "key": "shift+enter",
-                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && jupyter.ownsSelection && !notebookEditorFocused"
+                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
             },
             {
                 "command": "jupyter.runcurrentcelladvance",
                 "key": "shift+enter",
-                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused"
+                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused && !isCompositeNotebook"
             },
             {
                 "command": "jupyter.runcurrentcell",
                 "key": "ctrl+enter",
-                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused && !jupyter.havenativecells"
+                "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused && !isCompositeNotebook"
             },
             {
                 "command": "jupyter.runcurrentcellandaddbelow",
@@ -145,13 +145,8 @@
                 "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused"
             },
             {
-                "key": "shift+enter",
-                "when": "activeEditor == 'workbench.editor.interactive' && notebookKernel =~ /^ms-toolsai.jupyter\\// || activeEditor == 'workbench.editor.interactive' && !notebookKernel",
-                "command": "interactive.execute"
-            },
-            {
                 "key": "escape",
-                "when": "activeEditor == 'workbench.editor.interactive' && !editorHoverVisible && !suggestWidgetVisible && !isComposing && !inSnippetMode && !exceptionWidgetVisible && !selectionAnchorSet && !LinkedEditingInputVisible && !renameInputVisible && !editorHasSelection && !accessibilityHelpWidgetVisible && !breakpointWidgetVisible && !findWidgetVisible && !markersNavigationVisible && !parameterHintsVisible && !editorHasMultipleSelections && !notificationToastsVisible",
+                "when": "isCompositeNotebook && !editorHoverVisible && !suggestWidgetVisible && !isComposing && !inSnippetMode && !exceptionWidgetVisible && !selectionAnchorSet && !LinkedEditingInputVisible && !renameInputVisible && !editorHasSelection && !accessibilityHelpWidgetVisible && !breakpointWidgetVisible && !findWidgetVisible && !markersNavigationVisible && !parameterHintsVisible && !editorHasMultipleSelections && !notificationToastsVisible && !notebookEditorFocused && !inlineChatVisible",
                 "command": "interactive.input.clear"
             },
             {
@@ -283,7 +278,7 @@
                 "command": "jupyter.filterKernels",
                 "title": "%jupyter.command.jupyter.filterKernels.title%",
                 "category": "Jupyter",
-                "enablement": "!jupyter.webExtension && config.notebook.kernelPicker.type != mru"
+                "enablement": "!jupyter.webExtension"
             },
             {
                 "command": "jupyter.runByLine",
@@ -675,18 +670,6 @@
                 "enablement": "!jupyter.webExtension"
             },
             {
-                "command": "jupyter.enableDebugLogging",
-                "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
-                "category": "Jupyter",
-                "enablement": "!jupyter.webExtension"
-            },
-            {
-                "command": "jupyter.resetLoggingLevel",
-                "title": "%jupyter.command.jupyter.resetLoggingLevel.title%",
-                "enablement": "!jupyter.webExtension",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.showDataViewer",
                 "title": "%jupyter.command.jupyter.showDataViewer.title%",
                 "enablement": "!jupyter.webExtension",
@@ -703,7 +686,7 @@
                 "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                 "icon": "$(variable-group)",
                 "category": "Jupyter",
-                "enablement": "notebookType == jupyter-notebook && isWorkspaceTrusted || notebookType == interactive && isWorkspaceTrusted"
+                "enablement": "notebookType == jupyter-notebook && isWorkspaceTrusted || isCompositeNotebook && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.openOutlineView",
@@ -1376,18 +1359,6 @@
                     "when": "false"
                 },
                 {
-                    "command": "jupyter.resetLoggingLevel",
-                    "title": "%jupyter.command.jupyter.resetLoggingLevel.title%",
-                    "category": "Jupyter",
-                    "when": "config.jupyter.logging.level != error"
-                },
-                {
-                    "command": "jupyter.enableDebugLogging",
-                    "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
-                    "category": "Jupyter",
-                    "when": "config.jupyter.logging.level != debug"
-                },
-                {
                     "command": "jupyter.showDataViewer",
                     "category": "Jupyter",
                     "when": "false"
@@ -1479,14 +1450,22 @@
                 },
                 "jupyter.logging.level": {
                     "type": "string",
-                    "default": "debug",
+                    "default": "info",
                     "enum": [
                         "off",
                         "error",
                         "warn",
                         "info",
                         "debug",
-                        "verbose"
+                        "trace"
+                    ],
+                    "enumDescriptions": [
+                        "%jupyter.configuration.jupyter.logging.level.off%",
+                        "%jupyter.configuration.jupyter.logging.level.error%",
+                        "%jupyter.configuration.jupyter.logging.level.warn%",
+                        "%jupyter.configuration.jupyter.logging.level.info%",
+                        "%jupyter.configuration.jupyter.logging.level.debug%",
+                        "%jupyter.configuration.jupyter.logging.level.trace%"
                     ],
                     "description": "%jupyter.configuration.jupyter.logging.level.description%"
                 },
@@ -1660,7 +1639,7 @@
                     "description": "%jupyter.configuration.jupyter.codeLenses.description%",
                     "scope": "resource"
                 },
-                "jupyter.interactiveWindow.codeLes.debugCommands": {
+                "jupyter.interactiveWindow.codeLens.debugCommands": {
                     "type": "string",
                     "default": "jupyter.debugcontinue, jupyter.debugstop, jupyter.debugstepover",
                     "description": "%jupyter.configuration.jupyter.debugCodeLenses.description%",
@@ -1723,6 +1702,15 @@
                     "scope": "resource",
                     "description": "%jupyter.configuration.jupyter.interactiveWindowMode.description%",
                     "default": "multiple"
+                },
+                "jupyter.interactiveWindow.notebookRepl": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%jupyter.configuration.jupyter.interactiveWindowNotebookRepl.description%",
+                    "tags": [
+                        "experimental",
+                        "onExP"
+                    ]
                 },
                 "jupyter.interactiveWindow.textEditor.cellFolding": {
                     "type": "boolean",
@@ -1815,16 +1803,16 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Experimental feature to enable execution analysis in notebooks",
-                    "scope": "application"
+                    "scope": "application",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "jupyter.enableKernelCompletions": {
                     "type": "boolean",
                     "default": true,
                     "markdownDescription": "%jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription%",
-                    "scope": "application",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "scope": "application"
                 },
                 "jupyter.formatStackTraces": {
                     "type": "boolean",
@@ -2049,7 +2037,7 @@
         ],
         "jupyterVariableViewers": [
             {
-                "command": "jupyter.showDataViewer",
+                "command": "jupyter.showJupyterDataViewer",
                 "title": "%jupyter.command.jupyter.showDataViewer.title%",
                 "dataTypes": [
                     "DataFrame",
@@ -2068,7 +2056,6 @@
         "notebookDeprecated",
         "notebookMessaging",
         "notebookMime",
-        "notebookCellExecutionState",
         "contribNotebookStaticPreloads",
         "portsAttributes",
         "quickPickSortByLabel",
@@ -2077,7 +2064,8 @@
         "quickPickItemTooltip",
         "notebookExecution",
         "notebookCellExecution",
-        "notebookVariableProvider"
+        "notebookVariableProvider",
+        "notebookReplDocument"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
@@ -2109,6 +2097,10 @@
         "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_JUPYTER_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js && node ./out/test/languageServers/jedi/lspTeardown.node.js",
         "pretestNativeNotebooksInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
         "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
+        "pretestPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@notebookPerformance VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true VSC_JUPYTER_PERF_TEST=1 VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
+        "testPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@notebookPerformance VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true VSC_JUPYTER_NOTEBOOK_PERF_TEST=true VSC_JUPYTER_PERF_TEST=1 CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
+        "pretestExecPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@executionPerformance VSC_JUPYTER_PERF_TEST=1 VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
+        "testExecPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@executionPerformance VSC_JUPYTER_PERF_TEST=1 CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING= node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
         "testNativeNotebooksInVSCodeWithoutTestSuffix": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_FORCE_LOGGING=1 node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
         "pretestNativeNotebooksWithoutPythonInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
         "testNativeNotebooksWithoutPythonInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_CI_TEST_GREP=@nonPython VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
@@ -2137,14 +2129,13 @@
     "dependencies": {
         "@c4312/evt": "^0.1.1",
         "@enonic/fnv-plus": "^1.3.0",
-        "@fluentui/react": "^7.160.1",
-        "@jupyter-widgets/base": "4.0.0",
-        "@jupyter-widgets/controls": "3.0.0",
-        "@jupyter-widgets/schema": "0.4.0",
-        "@jupyterlab/coreutils": "5.1.17",
-        "@jupyterlab/nbformat": "3.1.17",
-        "@jupyterlab/services": "6.1.17",
-        "@lumino/widgets": "^1.28.0",
+        "@jupyter-widgets/base": "^6.0.8",
+        "@jupyter-widgets/controls": "^5.0.9",
+        "@jupyter-widgets/schema": "^0.5.5",
+        "@jupyterlab/coreutils": "^6.2.4",
+        "@jupyterlab/nbformat": "^4.2.4",
+        "@jupyterlab/services": "^7.2.4",
+        "@lumino/widgets": "^2.4.0",
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.7.7",
         "@vscode/python-extension": "^1.0.4",
@@ -2201,8 +2192,8 @@
         "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.41.0",
         "vscode-languageclient": "8.0.2-next.5",
-        "vscode-tas-client": "^0.1.75",
-        "ws": "^6.2.2",
+        "vscode-tas-client": "^0.1.84",
+        "ws": "^6.2.3",
         "zeromq": "^6.0.0-beta.16",
         "zeromqold": "npm:zeromq@^6.0.0-beta.6"
     },
@@ -2226,7 +2217,6 @@
         "@types/fs-extra": "^5.0.1",
         "@types/get-port": "^3.2.0",
         "@types/glob": "^5.0.35",
-        "@types/jsdom": "^21.1.1",
         "@types/json2csv": "^5.0.3",
         "@types/loadable__component": "^5.10.0",
         "@types/loader-utils": "^1.1.3",
@@ -2266,8 +2256,8 @@
         "@vscode/dts": "^0.4.0",
         "@vscode/test-cli": "^0.0.8",
         "@vscode/test-electron": "^2.3.9",
-        "@vscode/test-web": "^0.0.50",
-        "@vscode/zeromq": "^0.2.1",
+        "@vscode/test-web": "^0.0.61",
+        "@vscode/zeromq": "^0.2.3",
         "acorn": "^8.9.0",
         "babel-polyfill": "^6.26.0",
         "buffer": "^6.0.3",
@@ -2306,12 +2296,10 @@
         "flat": "^5.0.1",
         "get-port": "^3.2.0",
         "glob-parent": "^6.0.2",
-        "gulp": "^4.0.2",
+        "gulp": "^5.0.0",
         "gulp-filter": "^7.0.0",
         "gulp-rename": "^2.0.0",
-        "gulp-typescript": "^6.0.0-alpha.1",
         "husky": "^8.0.3",
-        "jsdom": "^22.1.0",
         "json2csv": "^5.0.7",
         "jsonschema": "^1.4.1",
         "keyv": "^4.1.0",
@@ -2325,8 +2313,9 @@
         "mocha-multi-reporters": "^1.5.1",
         "nock": "^13.3.1",
         "node-has-native-dependencies": "^1.0.2",
+        "node-html-parser": "^6.1.13",
+        "node-polyfill-webpack-plugin": "^4.0.0",
         "nyc": "^15.1.0",
-        "path-browserify": "^1.0.1",
         "popper.js": "^1.16.1",
         "postcss": "^8.4.31",
         "postcss-import": "^15.1.0",
@@ -2334,7 +2323,6 @@
         "postcss-preset-env": "^8.5.1",
         "prettier": "^3.0.0",
         "relative": "^3.0.2",
-        "rewiremock": "^3.14.5",
         "rimraf": "^5.0.1",
         "screenshot-desktop": "^1.14.0",
         "sinon": "^15.2.0",
@@ -2350,16 +2338,15 @@
         "tsconfig-paths-webpack-plugin": "^3.2.0",
         "tsx": "^3.13.0",
         "typemoq": "^2.1.0",
-        "typescript": "^5.3.3",
+        "typescript": "^5.5.4",
         "unicode-properties": "^1.3.1",
         "utf-8-validate": "^5.0.8",
         "util": "^0.12.4",
         "uuid-to-hex": "^1.1.1",
-        "webpack": "^5.88.1",
+        "webpack": "^5.94.0",
         "webpack-cli": "^5.1.4"
     },
     "optionalDependencies": {
-        "canvas": "^2.7.0",
         "fsevents": "^2.3.2"
     },
     "overrides": {
@@ -2377,6 +2364,9 @@
         "jquery-ui@<1.13.2": "1.13.2",
         "@jupyterlab/coreutils": {
             "url-parse": "$url-parse"
+        },
+        "@jupyterlab/services": {
+            "ws": "7.5.10"
         },
         "d3-color": "3.1.0"
     }

@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
 import { untildify } from '../../../platform/common/platform/fileUtils.node';
 import { injectable, inject } from 'inversify';
-import { traceVerbose, traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../../platform/common/platform/fs-paths';
 import { IConfigurationService, type Resource } from '../../../platform/common/types';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
@@ -34,7 +34,7 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
     ) {}
 
     public async create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession> {
-        traceVerbose(`Creating raw notebook for resource '${getDisplayPath(options.resource)}'`);
+        logger.trace(`Creating raw notebook for resource '${getDisplayPath(options.resource)}'`);
         let session: RawSessionConnection | undefined;
         const cwdTracker = getNotebookTelemetryTracker(options.resource)?.computeCwd();
         const [workingDirectory, localWorkingDirectory] = await Promise.all([
@@ -69,14 +69,14 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
             await raceCancellationError(options.token, session.startKernel(options));
         } catch (error) {
             if (isCancellationError(error) || options.token.isCancellationRequested) {
-                traceVerbose('Starting of raw session cancelled by user');
+                logger.debug('Starting of raw session cancelled by user');
             } else {
-                traceError(`Failed to connect raw kernel session: ${error}`);
+                logger.error(`Failed to connect raw kernel session: ${error}`);
             }
             // Make sure we shut down our session in case we started a process
             session
                 ?.shutdown()
-                .catch((error) => traceError(`Failed to dispose of raw session on launch error: ${error} `))
+                .catch((error) => logger.error(`Failed to dispose of raw session on launch error: ${error} `))
                 .finally(() => session?.dispose())
                 .catch(noop);
             throw error;

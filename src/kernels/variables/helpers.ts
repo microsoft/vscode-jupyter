@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { IJupyterVariable } from './types';
 
 export const DataViewableTypes: Set<string> = new Set<string>([
     'DataFrame',
@@ -14,7 +15,7 @@ export const DataViewableTypes: Set<string> = new Set<string>([
     'DataArray'
 ]);
 
-export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugProtocol.Variable) {
+export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugProtocol.Variable): IJupyterVariable {
     return {
         // If `evaluateName` is available use that. That is the name that we can eval in the debugger
         // but it's an optional property so fallback to `variable.name`
@@ -28,4 +29,26 @@ export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugPr
         truncated: true,
         frameId: variable.variablesReference
     };
+}
+
+export type DataFrameSplitFormat = {
+    index: (number | string)[];
+    columns: string[];
+    data: Record<string, unknown>[];
+};
+
+export function parseDataFrame(df: DataFrameSplitFormat) {
+    const rowIndexValues = df.index;
+    const columns = df.columns;
+    const rowData = df.data;
+    const data = rowData.map((row, index) => {
+        const rowData: Record<string, unknown> = {
+            index: rowIndexValues[index]
+        };
+        columns.forEach((column, columnIndex) => {
+            rowData[column] = row[columnIndex];
+        });
+        return rowData;
+    });
+    return { data };
 }

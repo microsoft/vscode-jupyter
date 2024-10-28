@@ -5,9 +5,8 @@ import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { Signal } from '@lumino/signaling';
 import { CancellationToken, EventEmitter } from 'vscode';
 import type { IChangedArgs } from '@jupyterlab/coreutils';
-import { IDisposable } from '../../platform/common/types';
-import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
+import { ObservableDisposable } from '../../platform/common/utils/lifecycle';
+import { logger } from '../../platform/logging';
 import { IBaseKernelSession, IKernelSocket } from '../types';
 import { KernelSocketMap } from '../kernelSocket';
 
@@ -15,6 +14,7 @@ export abstract class BaseJupyterSessionConnection<
         S extends Session.ISessionConnection,
         T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'
     >
+    extends ObservableDisposable
     implements Session.ISessionConnection, IBaseKernelSession<T>
 {
     public get id() {
@@ -58,31 +58,35 @@ export abstract class BaseJupyterSessionConnection<
      * The kernel anyMessage signal, proxied from the current kernel.
      */
     anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
-    protected readonly disposables: IDisposable[] = [];
+    /**
+     * The kernel pendingInput signal, proxied from the current
+     * kernel.
+     */
+    pendingInput = new Signal<this, boolean>(this);
 
     constructor(
         public readonly kind: T,
         protected readonly session: S
     ) {
+        super();
         session.propertyChanged.connect(this.onPropertyChanged, this);
         session.kernelChanged.connect(this.onKernelChanged, this);
         session.statusChanged.connect(this.onStatusChanged, this);
         session.connectionStatusChanged.connect(this.onConnectionStatusChanged, this);
         session.iopubMessage.connect(this.onIOPubMessage, this);
         session.unhandledMessage.connect(this.onUnhandledMessage, this);
+        session.pendingInput.connect(this.onPendingInput, this);
         session.anyMessage.connect(this.onAnyMessage, this);
 
-        this.disposables.push({
+        this._register({
             dispose: () => {
-                this.didShutdown.dispose();
-                this._disposed.dispose();
-
                 this.session.propertyChanged.disconnect(this.onPropertyChanged, this);
                 this.session.kernelChanged.disconnect(this.onKernelChanged, this);
                 this.session.statusChanged.disconnect(this.onStatusChanged, this);
                 this.session.connectionStatusChanged.disconnect(this.onConnectionStatusChanged, this);
                 this.session.iopubMessage.disconnect(this.onIOPubMessage, this);
                 this.session.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+                this.session.pendingInput.disconnect(this.onPendingInput, this);
                 this.session.anyMessage.disconnect(this.onAnyMessage, this);
             }
         });
@@ -95,42 +99,26 @@ export abstract class BaseJupyterSessionConnection<
     }
 
     public disposed = new Signal<this, void>(this);
-    public get isDisposed(): boolean {
-        return this._isDisposed === true;
-    }
-    protected _isDisposed: boolean;
-    protected readonly _disposed = new EventEmitter<void>();
-    protected readonly didShutdown = new EventEmitter<void>();
-    public get onDidDispose() {
-        return this._disposed.event;
-    }
+    protected readonly didShutdown = this._register(new EventEmitter<void>());
     public get onDidShutdown() {
         return this.didShutdown.event;
     }
     public get kernelId(): string | undefined {
         return this.session?.kernel?.id || '';
     }
-    protected _onDidKernelSocketChange = new EventEmitter<void>();
+    protected _onDidKernelSocketChange = this._register(new EventEmitter<void>());
 
     public get onDidKernelSocketChange() {
         return this._onDidKernelSocketChange.event;
     }
     public abstract readonly status: KernelMessage.Status;
-    protected previousAnyMessageHandler?: IDisposable;
-    private disposeInvoked?: boolean;
-    public async disposeAsync(): Promise<void> {
-        this.dispose();
-    }
-    public dispose() {
-        if (this.disposeInvoked) {
+    public override dispose() {
+        if (this.isDisposed) {
             return;
         }
+        super.dispose();
         this.statusChanged.emit('dead');
-        this._disposed.fire();
         this.disposed.emit();
-        this.previousAnyMessageHandler?.dispose();
-
-        dispose(this.disposables);
         Signal.disconnectAll(this);
     }
     abstract shutdown(): Promise<void>;
@@ -138,7 +126,7 @@ export abstract class BaseJupyterSessionConnection<
     public async restart(): Promise<void> {
         await this.session.kernel?.restart();
         this.initializeKernelSocket();
-        traceInfo(`Restarted ${this.session?.kernel?.id}`);
+        logger.info(`Restarted ${this.session?.kernel?.id}`);
     }
     private previousKernelSocketInformation?: {
         kernel: Kernel.IKernelConnection;
@@ -172,7 +160,6 @@ export abstract class BaseJupyterSessionConnection<
         }
 
         this.previousKernelSocketInformation = newKernelSocketInformation;
-        this.previousAnyMessageHandler?.dispose();
         this.session.kernel?.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
 
         // Listen for session status changes
@@ -192,7 +179,7 @@ export abstract class BaseJupyterSessionConnection<
     private onStatusChanged(_: unknown, value: Kernel.Status) {
         this.statusChanged.emit(value);
         const status = this.status;
-        traceInfoIfCI(`Server Status = ${status}`);
+        logger.ci(`Server Status = ${status}`);
     }
     private onConnectionStatusChanged(_: unknown, value: Kernel.ConnectionStatus) {
         this.connectionStatusChanged.emit(value);
@@ -201,11 +188,14 @@ export abstract class BaseJupyterSessionConnection<
         this.iopubMessage.emit(value);
     }
     private onUnhandledMessage(_: unknown, value: KernelMessage.IMessage) {
-        traceWarning(`Unhandled message found: ${value.header.msg_type}`);
+        logger.warn(`Unhandled message found: ${value.header.msg_type}`);
         this.unhandledMessage.emit(value);
     }
     private onAnyMessage(_: unknown, value: Kernel.IAnyMessageArgs) {
         this.anyMessage.emit(value);
+    }
+    private onPendingInput(_: unknown, value: boolean) {
+        this.pendingInput.emit(value);
     }
     public setPath(value: string) {
         return this.session.setPath(value);
@@ -220,6 +210,6 @@ export abstract class BaseJupyterSessionConnection<
         return this.session.changeKernel(options);
     }
     private onKernelConnectionStatusHandler(_: unknown, kernelConnection: Kernel.ConnectionStatus) {
-        traceInfoIfCI(`Server Kernel Status = ${kernelConnection}`);
+        logger.ci(`Server Kernel Status = ${kernelConnection}`);
     }
 }

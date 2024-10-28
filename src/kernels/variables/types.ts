@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, Uri, Variable } from 'vscode';
+import { CancellationToken, Event, NotebookVariableProvider, Uri, Variable } from 'vscode';
 import { IKernel } from '../types';
 import type { JSONObject } from '@lumino/coreutils';
 
@@ -14,6 +14,7 @@ export interface IJupyterVariable {
     executionCount?: number;
     supportsDataExplorer: boolean;
     type: string;
+    fullType?: string;
     size: number;
     shape: string;
     dataDimensionality?: number;
@@ -24,6 +25,7 @@ export interface IJupyterVariable {
     indexColumn?: string;
     maximumRowChunkSize?: number;
     fileName?: Uri;
+    frameId?: number;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
@@ -143,3 +145,6 @@ export interface IKernelVariableRequester {
     ): Promise<string | undefined>;
     getDataFrameInfo(targetVariable: IJupyterVariable, kernel: IKernel, expression: string): Promise<IJupyterVariable>;
 }
+
+export const IJupyterVariablesProvider = Symbol('IJupyterVariablesProvider');
+export interface IJupyterVariablesProvider extends NotebookVariableProvider {}

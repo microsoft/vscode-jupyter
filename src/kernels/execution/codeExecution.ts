@@ -5,7 +5,7 @@ import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
 
 import type { Kernel } from '@jupyterlab/services';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
@@ -21,7 +21,7 @@ function traceExecMessage(extensionId: string, executionId: string, message: str
     if (extensionId === JVSC_EXTENSION_ID) {
         return;
     }
-    traceVerbose(`Execution Id:${executionId}. ${message}.`);
+    logger.trace(`Execution Id:${executionId}. ${message}.`);
 }
 
 const extensionIdsPerExtension = new Map<string, number>();
@@ -80,7 +80,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             return;
         }
         traceExecMessage(this.extensionId, this.executionId, 'Start Code execution');
-        traceInfoIfCI(`Code Exec contents ${this.code.substring(0, 50)}...`);
+        logger.ci(`Code Exec contents ${this.code.substring(0, 50)}...`);
         if (!session.kernel || session.kernel.isDisposed || session.isDisposed) {
             this._done.reject(new SessionDisposedError());
             return;
@@ -92,7 +92,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
                 this.executionId,
                 'Code has already been started yet CodeExecution.Start invoked again'
             );
-            traceError(`Code has already been started yet CodeExecution.Start invoked again ${this.executionId}`);
+            logger.error(`Code has already been started yet CodeExecution.Start invoked again ${this.executionId}`);
             // TODO: Send telemetry this should never happen, if it does we have problems.
             return this.done;
         }
@@ -180,7 +180,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             // Don't want dangling promises.
             this.request.done.then(noop, noop);
         } catch (ex) {
-            traceError(`Code execution failed without request, for exec ${this.executionId}`, ex);
+            logger.error(`Code execution failed without request, for exec ${this.executionId}`, ex);
             this._completed = true;
             this._done.reject(ex);
             return;
@@ -211,7 +211,7 @@ export class CodeExecution implements ICodeExecution, IDisposable {
             if (!this.disposed && !this.cancelRequested) {
                 // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
                 // Or even when the kernel dies when running a cell with the code `os.kill(os.getpid(), 9)`
-                traceError(`Error in waiting for code ${this.executionId} to complete`, ex);
+                logger.error(`Error in waiting for code ${this.executionId} to complete`, ex);
             }
             this._done.reject(ex);
         }

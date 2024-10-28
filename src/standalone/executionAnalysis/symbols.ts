@@ -11,6 +11,7 @@ import {
     Range,
     cellRangesToIndexes
 } from './common';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../../platform/notebooks/cellExecutionStateService';
 
 const writeDecorationType = vscode.window.createTextEditorDecorationType({
     after: {
@@ -269,15 +270,12 @@ export class NotebookDocumentSymbolTracker {
         );
 
         this._disposables.push(
-            vscode.notebooks.onDidChangeNotebookCellExecutionState((e) => {
-                if (
-                    e.state === vscode.NotebookCellExecutionState.Executing &&
-                    e.cell.document.languageId === 'python'
-                ) {
+            notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+                if (e.state === NotebookCellExecutionState.Executing && e.cell.document.languageId === 'python') {
                     this._updateCellStatus(e.cell, CellExecutionStatus.Executing);
                 }
 
-                if (e.state === vscode.NotebookCellExecutionState.Idle && e.cell.document.languageId === 'python') {
+                if (e.state === NotebookCellExecutionState.Idle && e.cell.document.languageId === 'python') {
                     // just finished execution
                     this._cellExecution.push({
                         cell: e.cell,

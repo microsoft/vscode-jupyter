@@ -9,10 +9,11 @@ import { InteractiveWindowMode, Resource } from '../platform/common/types';
 import { IInteractiveControllerHelper } from './types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { SystemInfoCell, getFinishConnectMessage, getStartConnectMessage } from './systemInfoCell';
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import { SysInfoReason } from '../messageTypes';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
+import { InteractiveWindow } from './interactiveWindow';
 
 export class InteractiveWindowController {
     public kernel: Deferred<IKernel> | undefined;
@@ -26,7 +27,7 @@ export class InteractiveWindowController {
     constructor(
         private readonly controllerService: IInteractiveControllerHelper,
         private mode: InteractiveWindowMode,
-        private readonly notebook: NotebookDocument,
+        private readonly interactiveWindow: InteractiveWindow,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly kernelProvider: IKernelProvider,
         private owner: Resource,
@@ -57,7 +58,7 @@ export class InteractiveWindowController {
         try {
             const kernel = await this.createKernel();
             const kernelEventHookForRestart = async () => {
-                if (this.notebook && this.metadata) {
+                if (this.interactiveWindow.notebookDocument && this.metadata) {
                     this.systemInfoCell = undefined;
                     // If we're about to restart, insert a 'restarting' message as it happens
                     this.setInfoMessage(this.metadata, SysInfoReason.Restart);
@@ -68,12 +69,12 @@ export class InteractiveWindowController {
             // When restart finishes, rerun our initialization code
             kernel.onRestarted(
                 async () => {
-                    traceVerbose('Restart event handled in IW');
+                    logger.debug('Restart event handled in IW');
                     this.fileInKernel = undefined;
                     try {
                         await this.setFileInKernel(kernel);
                     } catch (ex) {
-                        traceError(`Failed to run initialization after restarting`);
+                        logger.error(`Failed to run initialization after restarting`);
                     } finally {
                         this.finishSysInfoMessage(kernel, SysInfoReason.Restart);
                     }
@@ -117,7 +118,7 @@ export class InteractiveWindowController {
                 this.metadata,
                 this.controller,
                 this.owner,
-                this.notebook!,
+                this.interactiveWindow.notebookDocument!,
                 this.disposables
             );
             this.metadata = kernel.kernelConnectionMetadata;
@@ -136,42 +137,45 @@ export class InteractiveWindowController {
     private async setFileInKernel(kernel: IKernel): Promise<void> {
         const file = this.owner;
         if (!file) {
-            traceInfoIfCI('Unable to run initialization for IW');
+            logger.ci('Unable to run initialization for IW');
             return;
         }
         // If in perFile mode, set only once
         const path = getFilePath(file);
         const execution = this.kernelProvider.getKernelExecution(kernel!);
         if (this.mode === 'perFile' && !this.fileInKernel) {
-            traceVerbose(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
+            logger.debug(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             this.fileInKernel = file;
             await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else if (
             (!this.fileInKernel || this.fileInKernel.toString() !== file.toString()) &&
             this.mode !== 'perFile'
         ) {
-            traceVerbose(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
+            logger.debug(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
             await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else {
-            traceVerbose(
+            logger.debug(
                 `Not Initializing __file__ in setFileInKernel with ${path} for mode ${this.mode} currently ${this.fileInKernel}`
             );
         }
     }
 
     public setPendingCellAdd(cellAddedPromise: Promise<void>) {
-        if (this.metadata && this.notebook) {
+        if (this.metadata && this.interactiveWindow.notebookDocument) {
             const controller = this.controllerService.getRegisteredController(this.metadata);
-            controller?.setPendingCellAddition(this.notebook, cellAddedPromise);
+            controller?.setPendingCellAddition(this.interactiveWindow.notebookDocument, cellAddedPromise);
         }
     }
 
     public listenForControllerSelection() {
         return this.controllerService.onControllerSelected(
             (e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) => {
-                if (!this.notebook || e.notebook.uri.toString() !== this.notebook?.uri?.toString()) {
+                if (
+                    !this.interactiveWindow.notebookDocument ||
+                    e.notebook.uri.toString() !== this.interactiveWindow.notebookDocument?.uri?.toString()
+                ) {
                     return;
                 }
 
@@ -197,15 +201,27 @@ export class InteractiveWindowController {
     }
 
     public setInfoMessageCell(message: string) {
+        if (!this.interactiveWindow.notebookDocument) {
+            logger.warn(`Could not set info cell: no notebook document`);
+            return;
+        }
         if (!this.systemInfoCell) {
-            this.systemInfoCell = new SystemInfoCell(this.notebook, message);
+            this.systemInfoCell = new SystemInfoCell(
+                this.interactiveWindow,
+                this.interactiveWindow.notebookDocument,
+                message
+            );
         } else {
             this.systemInfoCell
                 .updateMessage(message)
                 .catch((error) =>
-                    traceWarning(`could not update info cell with message: "${message}", error: ${error}`)
+                    logger.warn(`could not update info cell with message: "${message}", error: ${error}`)
                 );
         }
+    }
+
+    public async resolveSysInfoCell() {
+        await this.systemInfoCell?.resolveCell();
     }
 
     private setInfoMessage(metadata: KernelConnectionMetadata, reason: SysInfoReason) {
@@ -218,7 +234,7 @@ export class InteractiveWindowController {
         this.systemInfoCell
             ?.updateMessage(message)
             .catch((error) =>
-                traceWarning(`System info message was not updated: "${message}" because of error: ${error}`)
+                logger.warn(`System info message was not updated: "${message}" because of error: ${error}`)
             );
         this.systemInfoCell = undefined;
     }
@@ -230,7 +246,7 @@ export class InteractiveWindowController {
         this.systemInfoCell
             ?.updateMessage(message)
             .catch((error) =>
-                traceWarning(`System info message was not updated: "${message}" because of error: ${error}`)
+                logger.warn(`System info message was not updated: "${message}" because of error: ${error}`)
             );
         this.systemInfoCell = undefined;
     }
@@ -255,13 +271,16 @@ export class InteractiveControllerFactory {
     ) {}
 
     public create(
-        notebook: NotebookDocument,
+        interactiveWindow: InteractiveWindow,
         errorHandler: IDataScienceErrorHandler,
         kernelProvider: IKernelProvider,
         owner: Resource
     ) {
+        if (!interactiveWindow.notebookDocument) {
+            throw Error('could not create controller: no notebook document');
+        }
         let controller = this.initialController;
-        const selected = this.controllerService.getSelectedController(notebook);
+        const selected = this.controllerService.getSelectedController(interactiveWindow.notebookDocument);
         if (selected) {
             controller = selected;
         }
@@ -269,7 +288,7 @@ export class InteractiveControllerFactory {
         return new InteractiveWindowController(
             this.controllerService,
             this.mode,
-            notebook,
+            interactiveWindow,
             errorHandler,
             kernelProvider,
             owner,

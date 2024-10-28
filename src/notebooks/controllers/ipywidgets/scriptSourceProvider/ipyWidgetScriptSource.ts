@@ -3,7 +3,7 @@
 
 import type * as jupyterlabService from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
-import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../../platform/logging';
+import { logger } from '../../../../platform/logging';
 import { IDisposableRegistry, IConfigurationService, IDisposable } from '../../../../platform/common/types';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../../../messageTypes';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
@@ -132,7 +132,7 @@ export class IPyWidgetScriptSource {
         this.kernel.onDisposed(() => this.dispose());
         this.handlePendingRequests();
         this.sendBaseUrl();
-        traceVerbose('IPyWidgetScriptSource.initialize');
+        logger.trace('IPyWidgetScriptSource.initialize');
     }
     /**
      * Sends the base url of the remote Jupyter server to the webview.
@@ -153,7 +153,7 @@ export class IPyWidgetScriptSource {
                     });
                 }
             })
-            .catch((ex) => traceError(`Failed to get baseUrl`, ex));
+            .catch((ex) => logger.error(`Failed to get baseUrl`, ex));
     }
     /**
      * Outputs like HTML and JavaScript can have references to widget scripts as well,
@@ -181,7 +181,7 @@ export class IPyWidgetScriptSource {
                 });
             });
         } catch (ex) {
-            traceWarning(`Failed to fetch script sources`, ex);
+            logger.warn(`Failed to fetch script sources`, ex);
         } finally {
             this.allWidgetScriptsSent = true;
         }
@@ -189,9 +189,9 @@ export class IPyWidgetScriptSource {
     private async onRequestWidgetScript(payload: { moduleName: string; moduleVersion: string; requestId: string }) {
         const { moduleName, moduleVersion, requestId } = payload;
 
-        traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
+        logger.trace(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
         await this.sendWidgetSource(moduleName, moduleVersion, requestId).catch((ex) =>
-            traceError('Failed to send widget sources upon ready', ex)
+            logger.error('Failed to send widget sources upon ready', ex)
         );
 
         // Ensure we send all of the widget script sources found in the `<python env>/share/jupyter/nbextensions` folder.
@@ -199,8 +199,8 @@ export class IPyWidgetScriptSource {
             try {
                 await this.sendWidgetScriptSources();
             } finally {
-                this.sendWidgetSource(moduleName, moduleVersion, requestId).catch(
-                    traceError.bind(undefined, 'Failed to send widget sources upon ready')
+                this.sendWidgetSource(moduleName, moduleVersion, requestId).catch((ex) =>
+                    logger.error('Failed to send widget sources upon ready', ex)
                 );
             }
         }
@@ -221,17 +221,17 @@ export class IPyWidgetScriptSource {
 
         let widgetSource: WidgetScriptSource = { moduleName, requestId };
         try {
-            traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${moduleName}`);
+            logger.trace(`${ConsoleForegroundColors.Green}Fetch Script for ${moduleName}`);
             widgetSource = await this.scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
             // If we have a widget source from CDN, never overwrite that.
             if (this.widgetSources.get(widgetSource.moduleName)?.source !== 'cdn') {
                 this.widgetSources.set(widgetSource.moduleName, widgetSource);
             }
         } catch (ex) {
-            traceError('Failed to get widget source due to an error', ex);
+            logger.error('Failed to get widget source due to an error', ex);
             sendTelemetryEvent(Telemetry.HashedIPyWidgetScriptDiscoveryError);
         } finally {
-            traceInfo(
+            logger.trace(
                 `${ConsoleForegroundColors.Green}Script for ${moduleName}, is ${widgetSource.scriptUri} from ${widgetSource.source}`
             );
             // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.
@@ -248,8 +248,8 @@ export class IPyWidgetScriptSource {
             if (moduleName) {
                 const { moduleVersion, requestId } = this.pendingModuleRequests.get(moduleName)!;
                 this.pendingModuleRequests.delete(moduleName);
-                this.sendWidgetSource(moduleName, moduleVersion, requestId).catch(
-                    traceError.bind(`Failed to send WidgetScript for ${moduleName}`)
+                this.sendWidgetSource(moduleName, moduleVersion, requestId).catch((ex) =>
+                    logger.error(`Failed to send WidgetScript for ${moduleName}`, ex)
                 );
             }
         }

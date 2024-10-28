@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { waitForCondition } from '../../common.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
@@ -28,17 +28,17 @@ suite('VSCode Notebook PlotViewer integration - VSCode Notebook @webview', funct
     });
 
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
-        traceInfo(`Start Test Completed ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test Completed ${this.currentTest?.title}`);
     });
 
     teardown(async function () {
-        traceInfo(`End Test ${this.currentTest?.title}`);
+        logger.info(`End Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`End Test Completed ${this.currentTest?.title}`);
+        logger.info(`End Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
@@ -68,7 +68,7 @@ plt.show()`,
         await waitForCondition(async () => plotCell?.outputs.length >= 1, 10000, 'Plot output not generated');
         // Sometimes on CI we end up with >1 output, and the test fails, but we're expecting just one.
         if (plotCell.outputs.length === 0) {
-            traceInfo(`Plot cell has ${plotCell.outputs.length} outputs`);
+            logger.info(`Plot cell has ${plotCell.outputs.length} outputs`);
         }
         assert.isAtLeast(plotCell.outputs.length, 1, 'Plot cell output incorrect count');
 

@@ -12,7 +12,7 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { GeneratedCodeStorageFactory } from './editor-integration/generatedCodeStorageFactory';
 import { HoverProvider } from './editor-integration/hoverProvider';
-import { InteractiveWindowProvider } from './interactiveWindowProvider';
+import { InteractiveWindowProvider, ReplNotebookTrackerService } from './interactiveWindowProvider';
 import {
     ICodeWatcher,
     ICodeLensFactory,
@@ -36,9 +36,11 @@ import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldin
 import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveControllerHelper } from './InteractiveControllerHelper';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+    serviceManager.addSingleton<IReplNotebookTrackerService>(IReplNotebookTrackerService, ReplNotebookTrackerService);
     serviceManager.addSingleton<IInteractiveControllerHelper>(
         IInteractiveControllerHelper,
         InteractiveControllerHelper

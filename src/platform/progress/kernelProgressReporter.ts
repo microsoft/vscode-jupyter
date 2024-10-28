@@ -9,7 +9,7 @@ import { dispose } from '../common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
-import { traceError } from '../logging';
+import { logger } from '../logging';
 import { getComparisonKey } from '../vscode-path/resources';
 import { getUserMessageForAction } from './messages';
 import { ReportableAction } from './types';
@@ -163,7 +163,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                         progressInfo.dispose();
                     }
                 } catch (ex) {
-                    traceError(`Failed to dispose Progress reporter for ${key}`, ex);
+                    logger.error(`Failed to dispose Progress reporter for ${key}`, ex);
                 }
             }
         };

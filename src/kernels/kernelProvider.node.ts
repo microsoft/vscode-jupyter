@@ -26,6 +26,7 @@ import {
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
 import { NotebookKernelExecution } from './kernelExecution';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 
 /**
  * Node version of a kernel provider. Needed in order to create the node version of a kernel.
@@ -42,7 +43,8 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @multiInject(ITracebackFormatter)
         private readonly formatters: ITracebackFormatter[],
         @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento,
+        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService
     ) {
         super(asyncDisposables, disposables);
         disposables.push(jupyterServerUriStorage.onDidRemove(this.handleServerRemoval.bind(this)));
@@ -55,12 +57,12 @@ export class KernelProvider extends BaseCoreKernelProvider {
         }
         this.disposeOldKernel(notebook);
 
-        const resourceUri = notebook.notebookType === InteractiveWindowView ? options.resourceUri : notebook.uri;
+        const replKernel = this.replTracker.isForReplEditor(notebook);
+        const resourceUri = replKernel ? options.resourceUri : notebook.uri;
         const settings = createKernelSettings(this.configService, resourceUri);
-        const notebookType =
-            notebook.uri.path.endsWith('.interactive') || options.resourceUri?.path.endsWith('.interactive')
-                ? InteractiveWindowView
-                : JupyterNotebookView;
+        const startupCodeProviders = this.startupCodeProviders.getProviders(
+            replKernel ? InteractiveWindowView : JupyterNotebookView
+        );
 
         const kernel: IKernel = new Kernel(
             resourceUri,
@@ -69,7 +71,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
             this.sessionCreator,
             settings,
             options.controller,
-            this.startupCodeProviders.getProviders(notebookType),
+            startupCodeProviders,
             this.workspaceStorage
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);

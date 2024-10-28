@@ -6,7 +6,7 @@ import { IExtensionActivationManager, IExtensionSyncActivationService } from '..
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { GlobalActivation } from './activation/globalActivation';
-import { IBackgroundThreadService, INotebookExporter } from '../kernels/jupyter/types';
+import { INotebookExporter } from '../kernels/jupyter/types';
 import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterKernelServiceFactory } from './api/unstable/kernelApi';
 import { ApiAccessService } from './api/unstable/apiAccessService';
@@ -23,7 +23,11 @@ import { EagerlyActivateJupyterUriProviders } from './api/unstable/activateJupyt
 import { ExposeUsedAzMLServerHandles } from './api/unstable/usedAzMLServerHandles.deprecated';
 import { IExportedKernelServiceFactory } from './api/unstable/types';
 import { KernelApi } from './api/kernels/accessManagement';
-import { BackgroundThreadService } from './api/kernels/backgroundExecution';
+import { JupyterVariablesProvider } from './variables/JupyterVariablesProvider';
+import { IJupyterVariables, IJupyterVariablesProvider, IKernelVariableRequester } from '../kernels/variables/types';
+import { Identifiers } from '../platform/common/constants';
+import { KernelVariables } from './variables/kernelVariables';
+import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -87,5 +91,12 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelApi);
 
-    serviceManager.addSingleton<IBackgroundThreadService>(IBackgroundThreadService, BackgroundThreadService);
+    // Variables
+    serviceManager.addSingleton<IJupyterVariablesProvider>(IJupyterVariablesProvider, JupyterVariablesProvider);
+    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
+    serviceManager.addSingleton<IKernelVariableRequester>(
+        IKernelVariableRequester,
+        PythonVariablesRequester,
+        Identifiers.PYTHON_VARIABLES_REQUESTER
+    );
 }

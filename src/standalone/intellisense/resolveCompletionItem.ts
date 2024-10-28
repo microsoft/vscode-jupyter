@@ -8,14 +8,13 @@ import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { raceTimeoutError } from '../../platform/common/utils/async';
 import { raceCancellation, wrapCancellationTokens } from '../../platform/common/cancellation';
-import { dispose } from '../../platform/common/utils/lifecycle';
+import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
 import { stripAnsi } from '../../platform/common/utils/regexp';
-import { traceInfo, traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { Settings } from '../../platform/common/constants';
 import { convertDocumentationToMarkdown } from './completionDocumentationFormatter';
 import { once } from '../../platform/common/utils/events';
-import { IDisposable } from '../../platform/common/types';
 import { splitLines } from '../../platform/common/helpers';
 import { escapeStringToEmbedInPythonCode } from '../../kernels/chat/generator';
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
@@ -109,7 +108,7 @@ function handleKernelRequestTimeout(kernel: IKernel, monacoLanguage: string, ker
         return;
     }
     kernelsThatDoNotSupportCompletionResolveOrAreTooSlowToReply.add(kernel);
-    traceWarning(
+    logger.warn(
         `Failed to inspect code in kernel ${getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)}`
     );
     if (!telemetrySentForUnableToResolveCompletion.has(kernel)) {
@@ -202,7 +201,7 @@ function shoudlSendInspectRequest(kernel: IKernel) {
         !isPythonKernelConnection(kernel.kernelConnectionMetadata) &&
         times.maxTime > maxTimeWaitingForResolveCompletion
     ) {
-        traceWarning(
+        logger.warn(
             `Not sending inspect request as previous requests took over ${maxTimeWaitingForResolveCompletion}s.`
         );
         return false;
@@ -212,7 +211,7 @@ function shoudlSendInspectRequest(kernel: IKernel) {
         // Ok we know that at least 5 requests took more than ?s.
         // Do not send another request at all.
         // No point in causing unnecessary load on the kernel.
-        traceWarning(
+        logger.warn(
             `Not sending inspect request as there have been at least ${maxNumberOfTimesAllowedToExceedTimeoutBeforeIgnoringAllRequests} requests that took over ${maxTimeWaitingForResolveCompletion}s.`
         );
         return false;
@@ -220,7 +219,7 @@ function shoudlSendInspectRequest(kernel: IKernel) {
     if (times.maxTime > maxTimeWaitingForResolveCompletion && Date.now() - times.lastRequestTime < 30_000) {
         // Ok we know that at least one request took more than 1s.
         // Do not send another request, lets wait for at least 30s before we send another request.
-        traceWarning(
+        logger.warn(
             `Not sending inspect request as previous requests took over ${maxTimeWaitingForResolveCompletion}s.`
         );
         return false;
@@ -235,35 +234,37 @@ async function waitForKernelToBeReady(kernel: IKernel, token: CancellationToken)
     if (!doesKernelHaveTooManyPendingRequests(kernel)) {
         return;
     }
-    traceInfo(
+    logger.info(
         `Too many pending requests ${getPendingRequestCount(kernel)} for kernel ${
             kernel.id
         }, waiting for it to be ready.`
     );
     const kernelConnection = kernel.session.kernel;
-    const disposables: IDisposable[] = [];
+    const disposables = new DisposableStore();
     await raceCancellation(
         token,
         new Promise<void>((resolve) => {
             const statusChangeHandler = () => {
+                if (token.isCancellationRequested) {
+                    return;
+                }
                 if (!doesKernelHaveTooManyPendingRequests(kernel)) {
                     resolve();
                     dispose(disposables);
                     return;
                 }
                 // Perhaps we have some async code.
-                setInterval(statusChangeHandler, 100);
+                const timeout = setTimeout(statusChangeHandler, 100);
+                disposables.add({ dispose: () => clearTimeout(timeout) });
             };
-            once(token.onCancellationRequested)(
-                () => {
+            disposables.add(
+                once(token.onCancellationRequested)(() => {
                     resolve();
                     kernelConnection.statusChanged.disconnect(statusChangeHandler);
-                },
-                undefined,
-                disposables
+                })
             );
             kernelConnection.statusChanged.connect(statusChangeHandler);
-            disposables.push({
+            disposables.add({
                 dispose: () => {
                     kernelConnection.statusChanged.disconnect(statusChangeHandler);
                 }
@@ -322,7 +323,7 @@ async function sendInspectRequest(
     const stopWatch = new StopWatch();
 
     const codeForLogging = splitLines(message.code).reverse()[0].slice(-50);
-    traceVerbose(`Inspecting code ${codeForLogging}`);
+    logger.trace(`Inspecting code ${codeForLogging}`);
     const request = isPythonKernelConnection(kernel.kernelConnectionMetadata)
         ? sendPythonInspectRequest(kernel, message, token)
         : kernel.session.kernel.requestInspect(message);
@@ -337,11 +338,11 @@ async function sendInspectRequest(
         cachedResult(kernel, message, content);
         trackCompletionTime(kernel, stopWatch.elapsedTime);
 
-        const logger = stopWatch.elapsedTime > maxTimeWaitingForResolveCompletion ? traceWarning : traceVerbose;
+        const log = stopWatch.elapsedTime > maxTimeWaitingForResolveCompletion ? logger.warn : logger.debug;
         if (token.isCancellationRequested) {
-            logger(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms (but cancelled)`);
+            log(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms (but cancelled)`);
         } else {
-            logger(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms`);
+            log(`Inspected code ${codeForLogging} in ${stopWatch.elapsedTime}ms`);
         }
         return content;
     });

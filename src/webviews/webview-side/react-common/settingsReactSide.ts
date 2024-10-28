@@ -8,9 +8,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
     // eslint-disable-next-line
     const result: Partial<IJupyterExtraSettings> = {
         experiments: { enabled: true, optInto: [], optOutFrom: [] },
-        logging: {
-            level: 'off'
-        },
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         // eslint-disable-next-line no-template-curly-in-string

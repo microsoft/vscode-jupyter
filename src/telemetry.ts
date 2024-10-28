@@ -1785,53 +1785,31 @@ export class IEventNamePropertyMapping {
     /**
      * Failed to show the data viewer via the variable view.
      */
-    [Telemetry.FailedShowDataViewer]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff',
-        feature: ['DataFrameViewer', 'VariableViewer'],
-        source: 'N/A'
-    };
-    /**
-     * Sent when the jupyter.refreshDataViewer command is invoked
-     */
-    [Telemetry.RefreshDataViewer]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff',
-        feature: ['DataFrameViewer'],
-        source: 'User Action'
-    };
-    /**
-     * Whether we managed to start a remote kernel successfully without a backing file.
-     */
-    [Telemetry.StartedRemoteJupyterSessionWithBackingFile]: TelemetryEventInfo<{
-        /**
-         * Failed to start the session without the backing file.
-         */
-        failedWithoutBackingFile: boolean;
-        /**
-         * Failed to start the session without the backing file.
-         */
-        failedWithBackingFile: boolean;
-        /**
-         * Whether this is a local host connection or remote.
-         */
-        localHost: boolean;
+    [Telemetry.FailedShowDataViewer]: TelemetryEventInfo<{
+        reason: string;
+        fromVariableView: boolean;
     }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
+        owner: 'amunger',
+        feature: ['DataFrameViewer', 'VariableViewer'],
         source: 'N/A',
         properties: {
-            failedWithoutBackingFile: {
+            reason: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             },
-            failedWithBackingFile: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            localHost: {
+            fromVariableView: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
         }
+    };
+    /**
+     * Sent when the jupyter.refreshDataViewer command is invoked
+     */
+    [Telemetry.RefreshDataViewer]: TelemetryEventInfo<undefined | never> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'User Action'
     };
     /**
      * Information used to determine the zmq binary support.
@@ -2450,54 +2428,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
-     */
-    [Telemetry.IPyWidgetOverhead]: TelemetryEventInfo<{
-        /**
-         * Total time in ms
-         */
-        totalOverheadInMs: number;
-        /**
-         * Number of messages
-         */
-        numberOfMessagesWaitedOn: number;
-        /**
-         * Average wait timne.
-         */
-        averageWaitTime: number;
-        /**
-         * Number of registered hook.
-         */
-        numberOfRegisteredHooks: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        tags: ['Widgets'],
-        source: 'N/A',
-        measures: {
-            totalOverheadInMs: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            numberOfMessagesWaitedOn: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            averageWaitTime: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            numberOfRegisteredHooks: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight',
-                isMeasurement: true
-            }
-        }
-    };
-    /**
      * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
      */
     [Telemetry.IPyWidgetRenderFailure]: TelemetryEventInfo<never | undefined> = {
@@ -2708,43 +2638,6 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties
         },
         measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Telemetry sent when user Kernel startup fails due to a missing python env.
-     */
-    [Telemetry.KernelStartFailureDueToMissingEnv]: TelemetryEventInfo<
-        ResourceTypeTelemetryProperty &
-            TelemetryErrorProperties & {
-                envMissingReason: 'Unknown' | 'EmptyEnvDetailsFromPython' | 'FailedToGetEnvDetailsFromPython';
-                isEmptyCondaEnv: boolean;
-                pythonEnvType: string;
-                fileExists: boolean;
-            }
-    > = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        source: 'User Action',
-        properties: {
-            ...commonClassificationForResourceType(),
-            ...commonClassificationForErrorProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
-            envMissingReason: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            isEmptyCondaEnv: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            pythonEnvType: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            fileExists: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
     };
     /**
      * Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
@@ -4324,5 +4217,162 @@ export class IEventNamePropertyMapping {
         owner: 'IanMatthewHuff',
         feature: ['DataFrameViewer'],
         source: 'N/A'
+    };
+    /**
+     * Telemetry sent during test on CI to measure performance of execution of large notebooks.
+     */
+    [Telemetry.NativeNotebookExecutionPerformance]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * The kind of outputs generated in the notebook
+             */
+            outputType: 'text' | 'html' | 'image';
+            /**
+             * Code cell count
+             */
+            codeCellCount: number;
+            /**
+             * Code cell count
+             */
+            markdownCellCount: number;
+            /**
+             * Total time spent in VS Code before extension starts execution.
+             */
+            preExecuteDuration: number;
+            /**
+             * Total time spent executing cells
+             */
+            executeDuration: number;
+            /**
+             * Total time spent in VS Code after executing cells
+             */
+            postExecuteDuration: number;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of code cells.',
+                isMeasurement: true
+            },
+            markdownCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of markdown cells.',
+                isMeasurement: true
+            },
+            preExecuteDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total time spent in VS Code before starting execution.',
+                isMeasurement: true
+            },
+            executeDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total time spent executing cells.',
+                isMeasurement: true
+            },
+            postExecuteDuration: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total time spent in VS Code after executing cells.',
+                isMeasurement: true
+            }
+        },
+        properties: {
+            outputType: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight',
+                comment: 'The kind of outputs generated in the notebook, text, html or images.'
+            }
+        }
+    };
+    /**
+     * Telemetry sent during test on CI to measure performance of execution of large notebooks.
+     */
+    [Telemetry.JupyterNotebookExecutionPerformance]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * The kind of outputs generated in the notebook
+             */
+            outputType: 'text' | 'html' | 'image';
+            /**
+             * Code cell count
+             */
+            codeCellCount: number;
+            /**
+             * Code cell count
+             */
+            markdownCellCount: number;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of code cells.',
+                isMeasurement: true
+            },
+            markdownCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of markdown cells.',
+                isMeasurement: true
+            }
+        },
+        properties: {
+            outputType: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight',
+                comment: 'The kind of outputs generated in the notebook, text, html or images.'
+            }
+        }
+    };
+    /**
+     * Telemetry sent during test on CI to measure performance of execution of large notebooks.
+     */
+    [Telemetry.NativeNotebookEditPerformance]: TelemetryEventInfo<
+        DurationMeasurement & {
+            /**
+             * Code cell count
+             */
+            codeCellCount: number;
+            /**
+             * Code cell count
+             */
+            markdownCellCount: number;
+        }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            codeCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of code cells.',
+                isMeasurement: true
+            },
+            markdownCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Total number of markdown cells.',
+                isMeasurement: true
+            }
+        }
     };
 }

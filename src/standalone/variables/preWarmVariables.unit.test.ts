@@ -10,10 +10,10 @@ import { CondaService } from '../../platform/interpreter/condaService.node';
 import { createDeferred } from '../../platform/common/utils/async';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService.node';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables.node';
 import { sleep } from '../../test/core';
-import { IRawNotebookSupportedService } from '../raw/types';
+import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 
 suite('PreWarm Env Vars', () => {
     let activationService: IExtensionSyncActivationService;

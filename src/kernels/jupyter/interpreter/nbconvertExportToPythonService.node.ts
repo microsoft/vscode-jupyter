@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { reportAction } from '../../../platform/progress/decorator';
 import { ReportableAction } from '../../../platform/progress/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -40,7 +40,7 @@ export class NbConvertExportToPythonService {
                 // We can't check stderr (as nbconvert puts diag output there) but we need to verify here that we actually
                 // converted something. If it's zero size then just raise an error
                 if (output.stdout === '') {
-                    traceError('nbconvert zero size output');
+                    logger.error('nbconvert zero size output');
                     throw new Error(output.stderr);
                 } else {
                     return output.stdout;

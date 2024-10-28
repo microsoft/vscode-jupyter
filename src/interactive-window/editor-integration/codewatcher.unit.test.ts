@@ -5,17 +5,7 @@
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import {
-    CancellationTokenSource,
-    CodeLens,
-    Disposable,
-    EventEmitter,
-    NotebookCellExecutionStateChangeEvent,
-    Range,
-    Selection,
-    TextEditor,
-    Uri
-} from 'vscode';
+import { CancellationTokenSource, CodeLens, Disposable, EventEmitter, Range, Selection, TextEditor, Uri } from 'vscode';
 
 import { anything, instance, mock, when } from 'ts-mockito';
 import { IDebugService } from '../../platform/common/application/types';
@@ -41,6 +31,7 @@ import { MockJupyterSettings } from '../../test/datascience/mockJupyterSettings'
 import { MockEditor } from '../../test/datascience/mockTextEditor';
 import { noop } from '../../test/core';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -121,22 +112,19 @@ suite('Code Watcher Unit Tests', () => {
         when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);
         const trustedEvent = new EventEmitter<void>();
         when(mockedVSCodeNamespaces.workspace.onDidGrantWorkspaceTrust).thenReturn(trustedEvent.event);
-        const execStateChangeEvent = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
-        when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
-            execStateChangeEvent.event
-        );
         const storageFactory = mock<IGeneratedCodeStorageFactory>();
         const kernelProvider = mock<IKernelProvider>();
         const kernelDisposedEvent = new EventEmitter<IKernel>();
+        const replTracker = mock<IReplNotebookTrackerService>();
         when(kernelProvider.onDidDisposeKernel).thenReturn(kernelDisposedEvent.event);
         disposables.push(trustedEvent);
-        disposables.push(execStateChangeEvent);
         disposables.push(kernelDisposedEvent);
         const codeLensFactory = new CodeLensFactory(
             configService.object,
             disposables,
             instance(storageFactory),
-            instance(kernelProvider)
+            instance(kernelProvider),
+            instance(replTracker)
         );
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
@@ -147,7 +135,8 @@ suite('Code Watcher Unit Tests', () => {
                         configService.object,
                         helper.object,
                         dataScienceErrorHandler.object,
-                        codeLensFactory
+                        codeLensFactory,
+                        instance(replTracker)
                     )
             );
 
@@ -174,7 +163,8 @@ suite('Code Watcher Unit Tests', () => {
             configService.object,
             helper.object,
             dataScienceErrorHandler.object,
-            codeLensFactory
+            codeLensFactory,
+            instance(replTracker)
         );
     });
     teardown(() => (disposables = dispose(disposables)));

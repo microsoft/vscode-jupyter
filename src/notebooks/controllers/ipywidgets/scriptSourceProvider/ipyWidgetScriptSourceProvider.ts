@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceError, traceVerbose, traceWarning } from '../../../../platform/logging';
+import { logger } from '../../../../platform/logging';
 import { WidgetCDNs, IConfigurationService } from '../../../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
@@ -89,20 +89,20 @@ export class IPyWidgetScriptSourceProvider extends DisposableBase implements IWi
                 found = source;
                 break;
             } else {
-                traceWarning(
+                logger.warn(
                     `Widget Script Source not found for ${moduleName}@${moduleVersion} from ${scriptProvider.id}`
                 );
             }
         }
         this.sendTelemetryForWidgetModule(moduleName, moduleVersion, '', found.source).catch(noop);
         if (!found.scriptUri) {
-            traceError(
+            logger.error(
                 `Script source for Widget ${moduleName}@${moduleVersion} not found in ${this.scriptProviders
                     .map((item) => item.id)
                     .join(', ')}`
             );
         } else {
-            traceVerbose(
+            logger.trace(
                 `Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source} and ${found.scriptUri}`
             );
         }

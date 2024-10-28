@@ -6,7 +6,7 @@ import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../p
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { InputFlowAction } from '../../platform/common/utils/multiStepInput';
-import { traceError, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import {
     IJupyterRequestAgentCreator,
@@ -19,8 +19,6 @@ import { dispose } from '../../platform/common/utils/lifecycle';
 export interface IJupyterPasswordConnectInfo {
     requiresPassword: boolean;
     requestHeaders?: Record<string, string>;
-    remappedBaseUrl?: string;
-    remappedToken?: string;
 }
 
 /**
@@ -65,7 +63,7 @@ export class JupyterPasswordConnect {
             }).then((value) => {
                 if (!value || (value.requiresPassword && Object.keys(value).length === 1)) {
                     // If we fail to get a valid password connect info, don't save the value
-                    traceWarning(`Password for ${newUrl} was invalid.`);
+                    logger.warn(`Password for ${newUrl} was invalid.`);
                     this.savedConnectInfo.delete(options.handle);
                 }
 
@@ -253,7 +251,7 @@ export class JupyterPasswordConnect {
             headers: { Connection: 'keep-alive' }
         });
         if (response.status === 404) {
-            traceError(`Jupyter Server not found at ${url}, got 404 for ${treeUrl}`);
+            logger.error(`Jupyter Server not found at ${url}, got 404 for ${treeUrl}`);
             return false;
         }
         return response.status !== 200;

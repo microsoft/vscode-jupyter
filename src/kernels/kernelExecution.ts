@@ -6,8 +6,6 @@ import {
     NotebookCell,
     NotebookCellKind,
     EventEmitter,
-    notebooks,
-    NotebookCellExecutionState,
     NotebookDocument,
     workspace,
     CancellationToken,
@@ -15,7 +13,7 @@ import {
 } from 'vscode';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IDisposable, IExtensionContext } from '../platform/common/types';
-import { traceInfo, traceVerbose } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { Telemetry } from '../telemetry';
 import { DisplayOptions } from './displayOptions';
 import { CellExecutionFactory } from './execution/cellExecution';
@@ -23,7 +21,6 @@ import { CellExecutionMessageHandlerService } from './execution/cellExecutionMes
 import { CellExecutionQueue } from './execution/cellExecutionQueue';
 import { cellOutputToVSCCellOutput, traceCellMessage } from './execution/helpers';
 import { executeSilently } from './helpers';
-import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from './telemetry/helper';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import {
     IKernel,
@@ -47,6 +44,7 @@ import {
 } from './execution/extensionDisplayDataTracker';
 import { CodeExecution } from './execution/codeExecution';
 import type { ICodeExecution } from './execution/types';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../platform/notebooks/cellExecutionStateService';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -57,10 +55,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         return this._visibleExecutionCount;
     }
     private _visibleExecutionCount = 0;
-    private readonly _onPreExecute = new EventEmitter<NotebookCell>();
-    public readonly onPreExecute = this._onPreExecute.event;
-    private readonly _onPostExecute = new EventEmitter<NotebookCell>();
-    public readonly onPostExecute = this._onPostExecute.event;
     private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionQueue>();
     private readonly executionFactory: CellExecutionFactory;
     private readonly _onDidReceiveDisplayUpdate = new EventEmitter<NotebookCellOutput>();
@@ -81,15 +75,16 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         );
         this.disposables.push(requestListener);
         this.executionFactory = new CellExecutionFactory(kernel.controller, requestListener);
-
-        notebooks.onDidChangeNotebookCellExecutionState((e) => {
-            if (e.cell.notebook === kernel.notebook) {
-                if (e.state === NotebookCellExecutionState.Idle && e.cell.executionSummary?.executionOrder) {
-                    this._visibleExecutionCount = Math.max(
-                        this._visibleExecutionCount,
-                        e.cell.executionSummary.executionOrder
-                    );
-                }
+        notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+            if (
+                e.cell.notebook === kernel.notebook &&
+                e.state === NotebookCellExecutionState.Idle &&
+                e.cell.executionSummary?.executionOrder
+            ) {
+                this._visibleExecutionCount = Math.max(
+                    this._visibleExecutionCount,
+                    e.cell.executionSummary.executionOrder
+                );
             }
         });
         kernel.onRestarted(() => (this._visibleExecutionCount = 0), this, this.disposables);
@@ -100,7 +95,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         kernel.onStatusChanged(this.hookupIOPubHandler, this, this.disposables);
         kernel.onRestarted(this.hookupIOPubHandler, this, this.disposables);
         this.hookupIOPubHandler();
-        this.disposables.push(this._onPreExecute);
     }
     private hookupIOPubHandler() {
         const session = this.kernel.session;
@@ -145,10 +139,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             return;
         }
 
-        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
-            this.kernel.resourceUri,
-            this.kernel.kernelConnectionMetadata
-        );
         sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ResumeCellExecution);
         const sessionPromise = this.kernel.start(new DisplayOptions(false));
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
@@ -162,7 +152,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             cell,
             `NotebookKernelExecution.resumeCellExecution (completed), ${getDisplayPath(cell.notebook.uri)}`
         );
-        traceVerbose(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
+        logger.trace(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
     }
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<void> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
@@ -171,21 +161,16 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             return;
         }
 
-        traceCellMessage(cell, `NotebookKernelExecution.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
-        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
-            this.kernel.resourceUri,
-            this.kernel.kernelConnectionMetadata
-        );
-        const sessionPromise = this.kernel.start(new DisplayOptions(false));
-
-        // If we're restarting, wait for it to finish
-        await this.kernel.restarting;
-
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (2), ${getDisplayPath(cell.notebook.uri)}`);
+        // If we're restarting, wait for it to finish
+        const sessionPromise = this.kernel.restarting.then(() => this.kernel.start(new DisplayOptions(false)));
+
+        traceCellMessage(cell, `NotebookKernelExecution.executeCell (3), ${getDisplayPath(cell.notebook.uri)}`);
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
         executionQueue.queueCell(cell, codeOverride);
         let success = true;
         try {
+            traceCellMessage(cell, `NotebookKernelExecution.executeCell (4), ${getDisplayPath(cell.notebook.uri)}`);
             await executionQueue.waitForCompletion(cell);
         } catch (ex) {
             success = false;
@@ -193,9 +178,9 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         } finally {
             traceCellMessage(
                 cell,
-                `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
+                `NotebookKernelExecution.executeCell completed (5), ${getDisplayPath(cell.notebook.uri)}`
             );
-            traceVerbose(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
+            logger.trace(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
             sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell, {
                 duration: stopWatch.elapsedTime
             });
@@ -211,14 +196,8 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         token: CancellationToken
     ): AsyncGenerator<NotebookCellOutput, void, unknown> {
         const stopWatch = new StopWatch();
-        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
-            this.kernel.resourceUri,
-            this.kernel.kernelConnectionMetadata
-        );
-        const sessionPromise = this.kernel.start(new DisplayOptions(false));
-
         // If we're restarting, wait for it to finish
-        await this.kernel.restarting;
+        const sessionPromise = this.kernel.restarting.then(() => this.kernel.start(new DisplayOptions(false)));
 
         const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
 
@@ -232,7 +211,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             result = executionQueue.queueCode(code, extensionId, token);
         }
         if (extensionId !== JVSC_EXTENSION_ID) {
-            traceVerbose(
+            logger.trace(
                 `Queue code ${result.executionId} from ${extensionId} after ${stopWatch.elapsedTime}ms:\n${code}`
             );
         }
@@ -242,7 +221,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             .finally(() => {
                 completed = true;
                 !token.isCancellationRequested &&
-                    traceInfo(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`);
+                    logger.debug(`Execution of code ${result.executionId} completed in ${stopWatch.elapsedTime}ms`);
                 if (extensionId !== JVSC_EXTENSION_ID) {
                     sendKernelTelemetryEvent(
                         this.kernel.resourceUri,
@@ -273,7 +252,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
                 if (completed) {
                     return;
                 }
-                traceVerbose(`Code execution cancelled by extension ${extensionId}`);
+                logger.debug(`Code execution cancelled by extension ${extensionId}`);
             },
             this,
             disposables
@@ -307,7 +286,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         if (!executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             return;
         }
-        traceInfo('Interrupt kernel execution');
+        logger.info('Interrupt kernel execution');
         // First cancel all the cells & then wait for them to complete.
         // Both must happen together, we cannot just wait for cells to complete, as its possible
         // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
@@ -340,7 +319,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             : Promise.resolve();
 
         if (!session) {
-            traceInfo('No kernel session to interrupt');
+            logger.info('No kernel session to interrupt');
             await pendingCells;
         }
     }
@@ -363,7 +342,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         workspace.onDidCloseNotebookDocument(
             async (e: NotebookDocument) => {
                 if (e === document) {
-                    traceVerbose(`Cancel executions after closing notebook ${getDisplayPath(e.uri)}`);
+                    logger.debug(`Cancel executions after closing notebook ${getDisplayPath(e.uri)}`);
                     if (!newCellExecutionQueue.failed || !newCellExecutionQueue.isEmpty) {
                         await newCellExecutionQueue.cancel(true);
                     }
@@ -372,8 +351,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             this,
             this.disposables
         );
-        newCellExecutionQueue.onPreExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
-        newCellExecutionQueue.onPostExecute((c) => this._onPostExecute.fire(c), this, this.disposables);
         this.documentExecutions.set(document, newCellExecutionQueue);
         return newCellExecutionQueue;
     }

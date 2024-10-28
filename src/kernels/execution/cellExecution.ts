@@ -2,22 +2,14 @@
 // Licensed under the MIT License.
 
 import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
-import {
-    NotebookCell,
-    NotebookCellExecution,
-    workspace,
-    NotebookCellOutput,
-    NotebookCellExecutionState,
-    Event,
-    EventEmitter
-} from 'vscode';
+import { NotebookCell, NotebookCellExecution, workspace, NotebookCellOutput } from 'vscode';
 
 import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
@@ -39,6 +31,7 @@ import { ICellExecution } from './types';
 import { KernelError } from '../errors/kernelError';
 import { getCachedSysPrefix } from '../../platform/interpreter/helpers';
 import { getCellMetadata } from '../../platform/common/utils';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../../platform/notebooks/cellExecutionStateService';
 
 /**
  * Factory for CellExecution objects.
@@ -74,9 +67,6 @@ export class CellExecution implements ICellExecution, IDisposable {
     public get result(): Promise<void> {
         return this._result.promise;
     }
-    public get preExecute(): Event<NotebookCell> {
-        return this._preExecuteEmitter.event;
-    }
     private readonly _result = createDeferred<void>();
 
     private started?: boolean;
@@ -94,10 +84,13 @@ export class CellExecution implements ICellExecution, IDisposable {
     private disposed?: boolean;
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private readonly disposables: IDisposable[] = [];
-    private _preExecuteEmitter = new EventEmitter<NotebookCell>();
     private cellExecutionHandler?: CellExecutionMessageHandler;
     private session?: IKernelSession;
     private cancelRequested?: boolean;
+    private _executionOrder?: number;
+    public get executionOrder() {
+        return this._executionOrder;
+    }
     private constructor(
         public readonly cell: NotebookCell,
         private readonly codeOverride: string | undefined,
@@ -111,7 +104,7 @@ export class CellExecution implements ICellExecution, IDisposable {
                 // If the cell is deleted, then dispose the request object.
                 // No point keeping it alive, just chewing resources.
                 if (e === this.cell.document) {
-                    traceInfo(
+                    logger.info(
                         `Disposing request as the cell (${this.cell.index}) was deleted ${getDisplayPath(
                             this.cell.notebook.uri
                         )}`
@@ -119,7 +112,7 @@ export class CellExecution implements ICellExecution, IDisposable {
                     try {
                         this.request?.dispose(); // NOSONAR
                     } catch (e) {
-                        traceError(`Error during cell execution dispose: ${e}`);
+                        logger.error(`Error during cell execution dispose: ${e}`);
                     }
                     if (this.started && !this._completed) {
                         this.completedDueToCancellation();
@@ -129,7 +122,6 @@ export class CellExecution implements ICellExecution, IDisposable {
             this,
             this.disposables
         );
-        NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Idle);
         if (this.canExecuteCell()) {
             this.execution = CellExecutionCreator.getOrCreate(
                 cell,
@@ -167,7 +159,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             return;
         }
         traceCellMessage(this.cell, 'Start execution');
-        traceInfoIfCI(`Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`);
+        logger.ci(`Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`);
         if (!this.canExecuteCell()) {
             // End state is bool | undefined not optional. Undefined == not success or failure
             this.execution?.end(undefined);
@@ -186,7 +178,7 @@ export class CellExecution implements ICellExecution, IDisposable {
 
         if (this.started) {
             traceCellMessage(this.cell, 'Cell has already been started yet CellExecution.Start invoked again');
-            traceError(`Cell has already been started yet CellExecution.Start invoked again ${this.cell.index}`);
+            logger.error(`Cell has already been started yet CellExecution.Start invoked again ${this.cell.index}`);
             // TODO: Send telemetry this should never happen, if it does we have problems.
             return this.result;
         }
@@ -209,7 +201,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             throw new Error('Kernel not available to resume execution');
         }
         traceCellMessage(this.cell, 'Start resuming execution');
-        traceInfoIfCI(`Cell Exec (resuming) contents ${this.cell.document.getText().substring(0, 50)}...`);
+        logger.ci(`Cell Exec (resuming) contents ${this.cell.document.getText().substring(0, 50)}...`);
         if (!this.canExecuteCell()) {
             this.execution?.end(undefined);
             this.execution = undefined;
@@ -217,7 +209,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             return;
         }
         if (this.started) {
-            traceError(`Cell has already been started yet CellExecution.resume invoked again ${this.cell.index}`);
+            logger.error(`Cell has already been started yet CellExecution.resume invoked again ${this.cell.index}`);
             return this.result;
         }
         this.started = true;
@@ -235,7 +227,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         });
         this.cellExecutionHandler.onErrorHandlingExecuteRequestIOPubMessage(
             (error) => {
-                traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, error);
+                logger.error(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, error);
                 // If not a restart error, then tell the subscriber
                 this.completedWithErrors(error.error);
             },
@@ -297,9 +289,9 @@ export class CellExecution implements ICellExecution, IDisposable {
             return;
         }
         if (!this.disposed && !this.cancelRequested) {
-            traceWarning(`Cell completed with errors`, error);
+            logger.warn(`Cell completed with errors`, error);
         } else {
-            traceWarning(`Cell completed with errors (${this.disposed ? 'disposed' : 'cancelled'})`);
+            logger.warn(`Cell completed with errors (${this.disposed ? 'disposed' : 'cancelled'})`);
         }
         traceCellMessage(this.cell, 'Completed with errors');
 
@@ -378,6 +370,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         if (activeNotebookCellExecution.get(this.cell.notebook) === this.execution) {
             activeNotebookCellExecution.set(this.cell.notebook, undefined);
         }
+        this._executionOrder = this.execution?.executionOrder;
         NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Idle);
         this.execution = undefined;
     }
@@ -423,8 +416,8 @@ export class CellExecution implements ICellExecution, IDisposable {
         const kernelConnection = session.kernel;
         try {
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
-            this._preExecuteEmitter.fire(this.cell);
-            traceVerbose(`Cell Index:${this.cell.index} sent to kernel`);
+            notebookCellExecutions.changeCellState(this.cell, NotebookCellExecutionState.Executing);
+            logger.trace(`Cell Index:${this.cell.index} sent to kernel`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
             this.request = kernelConnection.requestExecute(
@@ -441,7 +434,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             // Don't want dangling promises.
             this.request.done.then(noop, noop);
         } catch (ex) {
-            traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
+            logger.error(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
             return this.completedWithErrors(ex);
         }
         this.cellExecutionHandler = this.requestListener.registerListenerForExecution(this.cell, {
@@ -451,7 +444,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         });
         this.cellExecutionHandler.onErrorHandlingExecuteRequestIOPubMessage(
             (error) => {
-                traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, error);
+                logger.error(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, error);
                 // If not a restart error, then tell the subscriber
                 this.completedWithErrors(error.error);
             },
@@ -493,7 +486,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             if (!this.disposed && !this.cancelRequested) {
                 // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
                 // Or even when the kernel dies when running a cell with the code `os.kill(os.getpid(), 9)`
-                traceError('Error in waiting for cell to complete', ex);
+                logger.error('Error in waiting for cell to complete', ex);
             }
             traceCellMessage(this.cell, 'Some other execution error');
             if (ex && ex instanceof Error && isCancellationError(ex, true)) {

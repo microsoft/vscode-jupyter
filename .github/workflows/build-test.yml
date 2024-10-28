@@ -40,7 +40,6 @@ env:
   VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 'true'
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-  COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
@@ -174,6 +173,13 @@ jobs:
       - name: Validate TELEMETRY files
         run: npm run validateTelemetry
 
+      - name: Verify usage of new Proposed API
+        if: github.event_name == 'pull_request'
+        run: npx tsx ./build/verifyProposedApiUsage.ts
+        env:
+          PULL_REQUEST_SHA: ${{ github.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+
   ts_tests:
     name: Type Script Tests
     runs-on: ${{ matrix.os }}
@@ -246,18 +252,6 @@ jobs:
       - name: Verify there are no unhandled errors
         run: npm run verifyUnhandledErrors
 
-      - name: Create coverage folder (if not created)
-        run: npm run createNycFolder
-
-      # Upload unit test coverage reports for later use in the "reports" job.
-      - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v3
-        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
-        with:
-          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
-          path: .nyc_output
-          retention-days: 1
-
   vscodeTests:
     name: Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
@@ -275,21 +269,29 @@ jobs:
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
         packageVersion: ['']
-        tags:
-          [
+        tags: [
             '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter',
             '@widgets',
             '@iw',
             '@webview|@export|@lsp|@variableViewer',
-            '@debugger'
+            '@debugger',
+            '@notebookPerformance', # Disabled for now, separate PR this will be enabled via cron (want to make PR smaller)
+            '@executionPerformance'
           ]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
         ipywidgetsVersion: ['']
+        isScheduled:
+          - ${{ github.event_name == 'schedule' && 'true' || '' }} # We need an empty value to preserve the matrix name (as we enforce mandatory tests based on names).
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
+        exclude:
+          - tags: '@notebookPerformance' # Run only as part of scheduled CI runs
+            isScheduled: ''
+          - tags: '@executionPerformance' # Run only as part of scheduled CI runs
+            isScheduled: ''
         include:
           # Mandatory tests
           - jupyterConnection: remote
@@ -298,13 +300,13 @@ jobs:
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            packageVersion: 'prerelease'
-            tags: '^[^@]+$|@mandatory'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
+          #   - jupyterConnection: remote
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     packageVersion: 'prerelease'
+          #     tags: '^[^@]+$|@mandatory'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: ''
           - jupyterConnection: web
             python: python
             pythonVersion: '3.10'
@@ -338,13 +340,13 @@ jobs:
             os: ubuntu-latest
             ipywidgetsVersion: ''
           # Pre-Release Versions
-          - jupyterConnection: raw
-            python: python
-            pythonVersion: '3.10'
-            packageVersion: 'prerelease'
-            tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
+          #   - jupyterConnection: raw
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     packageVersion: 'prerelease'
+          #     tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: ''
           # Without Python
           - jupyterConnection: raw
             python: noPython
@@ -379,13 +381,13 @@ jobs:
           python-version: ${{matrix.pythonVersion}}
 
       - name: Install Conda environment from environment.yml
-        uses: mamba-org/provision-with-micromamba@3c96c0c27676490c63c18bc81f5c51895ac3e0e6
+        uses: mamba-org/setup-micromamba@v2
         if: matrix.python == 'conda'
         with:
           cache-downloads: true
           environment-name: functional_test_env
           environment-file: ./build/conda-test-requirements.yml
-          extra-specs: |
+          create-args: |
             python=${{matrix.pythonVersion}}
 
       - name: Set CI Path
@@ -506,7 +508,7 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8' && matrix.tags != '@notebookPerformance'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
@@ -521,7 +523,7 @@ jobs:
           python -m pip install jupyterlab notebook
 
       - name: Install Python Libs (IPyWidget 8)
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8' && matrix.tags != '@notebookPerformance'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
@@ -542,7 +544,7 @@ jobs:
 
       - name: Install matplotlib widgets into user and system paths
         if:
-          matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory'
+          matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@notebookPerformance'
           # This test will ensure widgets work when installed in 3 places
           # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
           # 2. In user's home folder (ipympl will be installed in there)
@@ -585,23 +587,30 @@ jobs:
           VSC_JUPYTER_CI_SKIP_WEB_BUNDLE: 1
           VSC_JUPYTER_CI_FAST_COMPILATION: 1
 
+      - name: Compile Performance Test Extension
+        if: matrix.tags == '@notebookPerformance'
+        run: npm run compile
+        working-directory: src/test/vscode-notebook-perf
+
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Deno
-        uses: denoland/setup-deno@v1
+        uses: denoland/setup-deno@v2
+        if: matrix.tags != '@notebookPerformance'
         with:
           deno-version: ${{ env.DENO_VERSION}}
 
       - name: Install Deno Kernel
+        if: matrix.tags != '@notebookPerformance'
         run: npx tsx ./build/installDenoKernel.ts
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@notebookPerformance'
 
       - name: Create Virtual Env for Tests (ipywidgets 8)
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@notebookPerformance'
         with:
           IPyWidgetVersion: '8'
 
@@ -646,7 +655,45 @@ jobs:
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_ubuntu
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web' && matrix.tags != '@notebookPerformance'
+
+      - name: Run Notebook Perf Test Without Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: ${{ env.xvfbCommand }} npm run testPerfInVSCode
+        env:
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_PERF_TEST: ${{ matrix.matrix == '@notebookPerformance' }}
+          VSC_JUPYTER_NOTEBOOK_PERF_TEST: ${{ matrix.matrix == '@notebookPerformance' }}
+          VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT: ${{ matrix.matrix == '@notebookPerformance' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
+        id: test_notebook_perf_vscode_ubuntu
+        if: matrix.tags == '@notebookPerformance'
+
+      - name: Run Execution Perf Test With Jupyter
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: ${{ env.xvfbCommand }} npm run testExecPerfInVSCode
+        env:
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_PERF_TEST: ${{ matrix.matrix == '@executionPerformance' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
+        id: test_exec_perf_vscode_ubuntu
+        if: matrix.tags == '@executionPerformance'
 
       - name: Build web bundle for testing
         run: npm run compile-web-test
@@ -699,18 +746,6 @@ jobs:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
-
-      - name: Create coverage folder (if not created)
-        run: npm run createNycFolder
-
-      # Upload unit test coverage reports for later use in the "reports" job.
-      - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v3
-        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
-        with:
-          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
-          path: .nyc_output
-          retention-days: 1
 
       - name: Upload VS code logs
         uses: actions/upload-artifact@v3
@@ -805,70 +840,3 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSmokeLogged
-
-  coverage:
-    name: Coverage reports upload
-    runs-on: ubuntu-latest
-    if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'"
-    needs: [ts_tests, vscodeTests]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{env.NODE_VERSION}}
-
-      - name: npm ci
-        uses: ./.github/actions/npm-ci
-
-      - name: Cache compiled TS files
-        id: out-cache
-        uses: actions/cache@v4
-        with:
-          path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
-
-      - name: Compile if not cached
-        run: npm run prePublishNonBundle
-        if: steps.out-cache.outputs.cache-hit != 'true'
-
-      # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
-      # The name pattern is ${{env.COVERAGE_REPORTS}}-${{runner.os}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
-      # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
-      - name: Download Ubuntu test coverage artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
-          path: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
-
-      - name: Extract Ubuntu coverage artifacts to ./nyc_output
-        run: |
-          pwd
-          mkdir .nyc_output
-          mv ${{env.COVERAGE_REPORTS}}-${{runner.os}}/* .nyc_output
-          rm -r ${{env.COVERAGE_REPORTS}}-${{runner.os}}
-
-      - name: Merge coverage reports
-        run: |
-          pwd
-          npx nyc merge ./.nyc_output
-          rm -r .nyc_output
-          mkdir .nyc_output
-          mv coverage.json ./.nyc_output
-        continue-on-error: true
-
-      - name: Generate coverage reports
-        run: npm run test:cover:report
-        continue-on-error: true
-
-      - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/cobertura-coverage.xml
-          path_to_write_report: ./coverage/codecov_report.txt
-      # Alternative method for uploading
-      # - name: Upload coverage to codecov
-      #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v

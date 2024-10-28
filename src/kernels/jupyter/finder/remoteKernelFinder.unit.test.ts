@@ -8,7 +8,7 @@ import type { Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { getDisplayNameOrNameOfKernelConnection } from '../../helpers';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, EventEmitter, Uri } from 'vscode';
 import { CryptoUtils } from '../../../platform/common/crypto';
 import { noop, sleep } from '../../../test/core';
 import {
@@ -124,7 +124,12 @@ suite(`Remote Kernel Finder`, () => {
             return Promise.resolve(d.toLowerCase());
         });
         jupyterSessionManager = mock<JupyterLabHelper>();
-        when(jupyterSessionManager.dispose()).thenResolve();
+        const onDidDispose = new EventEmitter<void>();
+        disposables.push(onDidDispose);
+        when(jupyterSessionManager.onDidDispose).thenReturn(onDidDispose.event);
+        when(jupyterSessionManager.dispose()).thenCall(() => {
+            onDidDispose.fire();
+        });
         sinon.stub(JupyterLabHelper, 'create').callsFake(() => resolvableInstance(jupyterSessionManager));
         when(fs.delete(anything())).thenResolve();
         when(fs.createDirectory(uriEquals(globalStorageUri))).thenResolve();

@@ -9,7 +9,7 @@ import { SemVer } from 'semver';
 import { getFilePath } from '../common/platform/fs-paths';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
-import { traceWarning } from '../logging';
+import { logger } from '../logging';
 import { Environment } from '@vscode/python-extension';
 class PythonEnvironment {
     private readonly executable: Uri;
@@ -63,7 +63,7 @@ class PythonEnvironment {
             const output = await this.deps.exec(info.command, info.args, { throwOnStdErr: false });
             return parse(output.stdout);
         } catch (ex) {
-            traceWarning(`Module ${moduleName} not installed in environment ${this.pythonEnvId}`, ex);
+            logger.warn(`Module ${moduleName} not installed in environment ${this.pythonEnvId}`, ex);
             return false;
         }
     }

@@ -20,7 +20,6 @@ import * as v8 from 'v8';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';
 import {
     IS_MULTI_ROOT_TEST,
-    IS_SMOKE_TEST,
     IS_PERF_TEST,
     MAX_EXTENSION_ACTIVATION_TIME,
     TEST_RETRYCOUNT,
@@ -172,13 +171,6 @@ export async function run(): Promise<void> {
     const testsRoot = path.join(__dirname, '..');
     // Enable source map support.
     require('source-map-support').install();
-
-    // nteract/transforms-full expects to run in the browser so we have to fake
-    // parts of the browser here.
-    if (!IS_SMOKE_TEST()) {
-        const reactHelpers = require('./datascience/reactHelpers') as typeof import('./datascience/reactHelpers');
-        reactHelpers.setUpDomEnvironment();
-    }
 
     const ignoreGlob: string[] = [];
     switch (options.testFilesSuffix.toLowerCase()) {
