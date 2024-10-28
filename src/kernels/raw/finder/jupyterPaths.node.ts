@@ -76,7 +76,7 @@ export class JupyterPaths {
      * This path needs to be writable, as we store the kernelspecs here when we spawn kernels using Jupyter Server.
      */
     public async getKernelSpecTempRegistrationFolder() {
-        const dir = uriPath.joinPath(getExtensionTempDir(this.context), 'jupyter', 'kernels');
+        const dir = uriPath.joinPath(await getExtensionTempDir(this.context), 'jupyter', 'kernels');
         await this.fs.createDirectory(dir);
         return dir;
     }
@@ -123,7 +123,7 @@ export class JupyterPaths {
         }
 
         // Run time directory doesn't exist or no permissions.
-        const extensionRuntimeDir = Uri.joinPath(getExtensionTempDir(this.context), 'jupyter', 'runtime');
+        const extensionRuntimeDir = Uri.joinPath(await getExtensionTempDir(this.context), 'jupyter', 'runtime');
         await fs.ensureDir(extensionRuntimeDir.fsPath);
         logger.trace(`Using extension runtime directory ${extensionRuntimeDir.fsPath}`);
         return extensionRuntimeDir;
