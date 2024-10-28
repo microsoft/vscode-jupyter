@@ -42,10 +42,9 @@ import { CellMatcher } from './editor-integration/cellMatcher';
 import {
     IInteractiveWindow,
     IInteractiveWindowDebugger,
-    IInteractiveWindowDebuggingManager,
-    InteractiveTab
+    IInteractiveWindowDebuggingManager
 } from './types';
-import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
+import { generateInteractiveCode } from './helpers';
 import { getInteractiveCellMetadata } from './helpers';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import {
@@ -120,7 +119,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         private readonly serviceContainer: IServiceContainer,
         private _owner: Resource,
         private readonly controllerFactory: InteractiveControllerFactory,
-        notebookEditorOrTab: NotebookEditor | InteractiveTab,
+        notebookEditorOrTabInput: NotebookEditor | TabInputNotebook | TabInputInteractiveWindow,
         public readonly inputUri: Uri
     ) {
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
@@ -135,9 +134,9 @@ export class InteractiveWindow implements IInteractiveWindow {
         this.debuggingManager = this.serviceContainer.get<IInteractiveWindowDebuggingManager>(
             IInteractiveWindowDebuggingManager
         );
-        this.notebookUri = isInteractiveInputTab(notebookEditorOrTab)
-            ? notebookEditorOrTab.input.uri
-            : notebookEditorOrTab.notebook.uri;
+        this.notebookUri = notebookEditorOrTabInput instanceof TabInputInteractiveWindow || notebookEditorOrTabInput instanceof TabInputNotebook
+            ? notebookEditorOrTabInput.uri
+            : notebookEditorOrTabInput.notebook.uri;
 
         // Set our owner and first submitter
         if (this._owner) {
