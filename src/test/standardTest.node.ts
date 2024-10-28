@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { spawnSync, type SpawnSyncOptionsWithBufferEncoding } from 'child_process';
+import { spawnSync } from 'child_process';
 import * as path from '../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
@@ -111,6 +111,8 @@ async function installExtension(extension: string, cliPath: string, extensionsDi
                   encoding: 'utf-8',
                   stdio: 'inherit'
               });
+
+
 
     if (output.error) {
         throw output.error;
