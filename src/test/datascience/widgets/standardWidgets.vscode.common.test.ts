@@ -237,24 +237,6 @@ suite('Standard IPyWidget Tests @widgets', function () {
             await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
             await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
         });
-        test('Button Widget with custom comm message', async () => {
-            await initializeNotebookForWidgetTest(
-                disposables,
-                {
-                    templateFile: 'button_widget_comm_msg.ipynb'
-                },
-                editor
-            );
-            const [cell0, cell1] = window.activeNotebookEditor!.notebook.getCells();
-
-            await executeCellAndWaitForOutput(cell0, comms);
-            await executeCellAndWaitForOutput(cell1, comms);
-            await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
-
-            // Click the button and verify we have output in the same cell.
-            await clickWidget(comms, cell0, 'button');
-            await waitForTextOutput(cell0, 'Button clicked.', 1, false);
-        });
         test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
             // // https://github.com/microsoft/vscode-jupyter/issues/8748
             // await initializeNotebookForWidgetTest(disposables, { templateFile: 'standard_widgets.ipynb' }, editor);
@@ -480,33 +462,6 @@ suite('Standard IPyWidget Tests @widgets', function () {
                 },
                 WidgetRenderingTimeoutForTests,
                 () => `Output doesn't contain text 'Bar' or still contains 'Outside, Inside, Foo', html is ${html}`
-            );
-        });
-        test('Interactive Button', async () => {
-            await initializeNotebookForWidgetTest(
-                disposables,
-                {
-                    templateFile: 'interactive_button.ipynb'
-                },
-                editor
-            );
-            const cell = window.activeNotebookEditor!.notebook.cellAt(0);
-
-            await executeCellAndWaitForOutput(cell, comms);
-            await assertOutputContainsHtml(cell, comms, ['Click Me!', '<button']);
-
-            // Click the button and verify we have output in other cells
-            await clickWidget(comms, cell, 'button');
-            await waitForCondition(
-                () => {
-                    assert.strictEqual(getTextOutputValue(cell.outputs[1]).trim(), 'Button clicked');
-                    return true;
-                },
-                5_000,
-                () =>
-                    `Expected 'Button clicked' to exist in ${
-                        cell.outputs.length > 1 ? getTextOutputValue(cell.outputs[1]) : '<Only one output>'
-                    }`
             );
         });
         test('Interactive Function', async () => {

@@ -112,10 +112,10 @@ import { isWeb } from '../../../platform/common/utils/misc';
 
             await executeCellAndWaitForOutput(cell0, comms);
             await executeCellAndWaitForOutput(cell1, comms);
-            await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
+            await assertOutputContainsHtml(cell1, comms, ['Click Me!', '<button']);
 
             // Click the button and verify we have output in the same cell.
-            await clickWidget(comms, cell0, 'button');
+            await clickWidget(comms, cell1, 'button');
             await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
         test('Render AnyWidget (test js<-->kernel comms with binary data)', async function () {
