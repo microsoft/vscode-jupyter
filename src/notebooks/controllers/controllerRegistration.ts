@@ -323,8 +323,11 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
                     added.push(controller);
-                    controller.onNotebookControllerSelected(
+                    controller.onNotebookControllerSelectionChanged(
                         (e) => {
+                            if (!e.selected) {
+                                return;
+                            }
                             logger.ci(`Controller ${e.controller?.id} selected for ${e.notebook.uri.toString()}`);
                             this.selectedControllers.set(e.notebook, e.controller);
                             // Now notify out that we have updated a notebooks controller
