@@ -31,8 +31,7 @@ import {
     runCell,
     selectDefaultController,
     waitForCellExecutionToComplete,
-    waitForExecutionCompletedSuccessfully,
-    waitForTextOutput
+    waitForExecutionCompletedSuccessfully
 } from '../notebook/helper';
 import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
