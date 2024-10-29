@@ -89,13 +89,10 @@ import type { INotebookMetadata } from '@jupyterlab/nbformat';
  * in the kernel picker by VS code.
  */
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
-    private readonly _onNotebookControllerSelected: EventEmitter<{
-        notebook: NotebookDocument;
-        controller: VSCodeNotebookController;
-    }>;
     private readonly _onNotebookControllerSelectionChanged = new EventEmitter<{
         selected: boolean;
         notebook: NotebookDocument;
+        controller: VSCodeNotebookController;
     }>();
     private readonly _onConnecting = new EventEmitter<void>();
     private pendingCellAdditions = new WeakMap<NotebookDocument, Promise<void>>();
@@ -125,9 +122,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         return this._viewType as typeof InteractiveWindowView | typeof JupyterNotebookView;
     }
 
-    get onNotebookControllerSelected() {
-        return this._onNotebookControllerSelected.event;
-    }
     get onNotebookControllerSelectionChanged() {
         return this._onNotebookControllerSelectionChanged.event;
     }
@@ -198,11 +192,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     ) {
         trackControllerCreation(kernelConnection.id, kernelConnection.interpreter?.id);
         disposableRegistry.push(this);
-        this._onNotebookControllerSelected = new EventEmitter<{
-            notebook: NotebookDocument;
-            controller: VSCodeNotebookController;
-        }>();
-
         this.displayData = this.displayDataProvider.getDisplayData(this.connection);
         this.controller = notebooks.createNotebookController(
             id,
@@ -345,7 +334,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             } called from ${new Error('').stack}`
         );
         this.isDisposed = true;
-        this._onNotebookControllerSelected.dispose();
         this._onNotebookControllerSelectionChanged.dispose();
         this._onConnecting.dispose();
         this.controller.dispose();
@@ -453,8 +441,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         await this.updateCellLanguages(event.notebook);
 
         // If this NotebookController was selected, fire off the event
-        this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
-        this._onNotebookControllerSelectionChanged.fire(event);
+        this._onNotebookControllerSelectionChanged.fire({
+            controller: this,
+            notebook: event.notebook,
+            selected: event.selected
+        });
         logger.debug(`Controller selection change completed`);
         deferred.resolve();
     }

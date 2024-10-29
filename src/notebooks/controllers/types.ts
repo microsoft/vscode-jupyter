@@ -14,6 +14,7 @@ import { JupyterNotebookView, InteractiveWindowView } from '../../platform/commo
 import { IDisposable } from '../../platform/common/types';
 import { JupyterServerCollection } from '../../api';
 import { EnvironmentPath } from '@vscode/python-extension';
+import type { VSCodeNotebookController } from './vscodeNotebookController';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
 
@@ -23,13 +24,10 @@ export interface IVSCodeNotebookController extends IDisposable {
     readonly id: string;
     readonly label: string;
     readonly viewType: typeof JupyterNotebookView | typeof InteractiveWindowView;
-    readonly onNotebookControllerSelected: vscode.Event<{
-        notebook: vscode.NotebookDocument;
-        controller: IVSCodeNotebookController;
-    }>;
     readonly onNotebookControllerSelectionChanged: vscode.Event<{
         selected: boolean;
         notebook: vscode.NotebookDocument;
+        controller: VSCodeNotebookController;
     }>;
     readonly onConnecting: vscode.Event<void>;
     readonly onDidDispose: vscode.Event<void>;
