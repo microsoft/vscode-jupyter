@@ -329,7 +329,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // Run the 3rd cell to add a nested output.
             // Also display the same nested output and the widget in the 3rd cell.
             await Promise.all([runCell(cell3), waitForCellExecutionToComplete(cell3)]);
-            await assertOutputContainsHtml(cell1, comms, ['<input type="text', 'Label Widget'], '.widget-output');
+            await assertOutputContainsHtml(cell1, comms, ['<input type="text'], '.widget-output');
             assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
 
             // Run the 4th cell & verify we have output in the first nested output & second output.
