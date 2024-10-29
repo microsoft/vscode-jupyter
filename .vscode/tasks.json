@@ -8,33 +8,44 @@
     },
     "tasks": [
         {
-            "label": "Compile",
-            "type": "npm",
-            "script": "compile",
-            "isBackground": true,
-            "problemMatcher": [
-                {
-                    "applyTo": "closedDocuments",
-                    "fileLocation": "relative",
-                    "source": "esbuild + tsc",
-                    "pattern": [
-                        {
-                            "regexp": ": ([A-Za-z0-9]*) ([A-Za-z0-9]*): (.*)",
-                            "severity": 1,
-                            "message": 3
-                        },
-                        {
-                            "regexp": "\\[[0-9]*\\] (.*)\\(([0-9]*),([0-9]*)\\)",
-                            "file": 1,
-                            "line": 2,
-                            "column": 3
-                        }
-                    ]
-                }
+            "label": "watch",
+            "dependsOn": [
+                "npm: compile-esbuild-watch",
+				"npm: compile-tsc-watch"
             ],
+            "presentation": {
+                "reveal": "never",
+            },
             "group": {
                 "kind": "build",
                 "isDefault": true
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "type": "npm",
+            "script": "compile-esbuild-watch",
+            "group": "build",
+            "problemMatcher": "$esbuild-watch",
+            "isBackground": true,
+            "label": "npm: compile-esbuild-watch",
+            "presentation": {
+                "group": "watch",
+                "reveal": "never"
+            }
+        },
+        {
+            "type": "npm",
+            "script": "compile-tsc-watch",
+            "group": "build",
+            "problemMatcher": "$tsc-watch",
+            "isBackground": true,
+            "label": "npm: compile-tsc-watch",
+            "presentation": {
+                "group": "watch",
+                "reveal": "never"
             }
         },
         {
