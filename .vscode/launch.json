@@ -17,7 +17,7 @@
                 "${workspaceFolder}/dist/**/*",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "Compile",
+            "preLaunchTask": "watch",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -49,58 +49,7 @@
                 "${workspaceFolder}/dist/**/*",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "Compile",
-            "presentation": {
-                "group": "1_extension",
-                "order": 1
-            }
-        },
-        {
-            "name": "Extension (web with daemon compilation)",
-            "type": "extensionHost",
-            "debugWebWorkerHost": true,
-            "request": "launch",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionDevelopmentKind=web"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/dist/**/*",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
-            "presentation": {
-                "group": "1_extension",
-                "order": 1
-            }
-        },
-        {
-            "name": "Extension (with daemon compilation)",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--enable-proposed-api"
-            ],
-            "smartStep": true,
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/dist/**/*",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "env": {
-                // Disable this to turoff on redux & console logging during debugging
-                "VSC_JUPYTER_FORCE_LOGGING": "1",
-                // Enable this to log telemetry to the output during debugging
-                "XVSC_JUPYTER_LOG_TELEMETRY": "1",
-                // Enable this to log IPYWIDGET messages
-                "XVSC_JUPYTER_LOG_IPYWIDGETS": "1",
-                // Enable this to log debugger output. Directory must exist ahead of time
-                "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output_Ex"
-            },
+            "preLaunchTask": "watch",
             "presentation": {
                 "group": "1_extension",
                 "order": 1
@@ -121,7 +70,7 @@
                 "${workspaceFolder}/dist/**/*",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "Compile",
+            "preLaunchTask": "watch",
             "presentation": {
                 "group": "1_extension",
                 "order": 3
@@ -191,7 +140,7 @@
                 "${workspaceFolder}/out/**/*.js",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "Compile",
+            "preLaunchTask": "watch",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -261,7 +210,7 @@
                 "${workspaceFolder}/out/**/*.js",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "Compile",
+            "preLaunchTask": "watch",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -465,7 +414,7 @@
         },
         {
             "name": "Python: Current File with iPython",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "IPython",
             "console": "integratedTerminal",
@@ -479,7 +428,7 @@
         },
         {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
