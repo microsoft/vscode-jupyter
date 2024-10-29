@@ -416,7 +416,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 kernel.dispose().catch(noop);
             }
             this.associatedDocuments.delete(event.notebook);
-            this._onNotebookControllerSelectionChanged.fire(event);
+            this._onNotebookControllerSelectionChanged.fire({
+                controller: this,
+                notebook: event.notebook,
+                selected: event.selected
+            });
 
             return;
         }
