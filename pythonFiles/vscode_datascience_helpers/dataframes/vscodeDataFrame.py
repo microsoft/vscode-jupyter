@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+
 def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
     import pandas as _VSCODE_pd
     import builtins as _VSCODE_builtins
@@ -9,51 +13,51 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
     _VSCODE_allowedTensorTypes = ["Tensor", "EagerTensor"]
 
     def _VSCODE_stringifyElement(element):
-        if _VSCODE_builtins.isinstance(element, _VSCODE_np.ndarray):
+        if _VSCODE_builtins.isinstance(element, _VSCODE_np.ndarray):  # noqa: F821
             # Ensure no rjust or ljust padding is applied to stringified elements
-            stringified = _VSCODE_np.array2string(
+            stringified = _VSCODE_np.array2string(  # noqa: F821
                 element,
                 separator=", ",
-                formatter={"all": lambda x: _VSCODE_builtins.str(x)},
+                formatter={"all": lambda x: _VSCODE_builtins.str(x)},  # noqa: F821
             )
-        elif _VSCODE_builtins.isinstance(
-            element, (_VSCODE_builtins.list, _VSCODE_builtins.tuple)
+        elif _VSCODE_builtins.isinstance(  # noqa: F821
+            element, (_VSCODE_builtins.list, _VSCODE_builtins.tuple)  # noqa: F821
         ):
             # We can't pass lists and tuples to array2string because it expects
             # the size attribute to be defined
-            stringified = _VSCODE_builtins.str(element)
+            stringified = _VSCODE_builtins.str(element)  # noqa: F821
         else:
             stringified = element
         return stringified
 
     def _VSCODE_convertNumpyArrayToDataFrame(ndarray, start=None, end=None):
         # Save the user's current setting
-        current_options = _VSCODE_np.get_printoptions()
+        current_options = _VSCODE_np.get_printoptions()  # noqa: F821
         # Ask for the full string. Without this numpy truncates to 3 leading and 3 trailing by default
-        _VSCODE_np.set_printoptions(threshold=99999)
+        _VSCODE_np.set_printoptions(threshold=99999)  # noqa: F821
 
         flattened = None
         try:
             if start is not None and end is not None:
                 ndarray = ndarray[start:end]
-            if ndarray.ndim < 3 and _VSCODE_builtins.str(ndarray.dtype) != "object":
+            if ndarray.ndim < 3 and _VSCODE_builtins.str(ndarray.dtype) != "object":  # noqa: F821
                 pass
-            elif ndarray.ndim == 1 and _VSCODE_builtins.str(ndarray.dtype) == "object":
-                flattened = _VSCODE_np.empty(ndarray.shape[:2], dtype="object")
-                for i in _VSCODE_builtins.range(_VSCODE_builtins.len(flattened)):
+            elif ndarray.ndim == 1 and _VSCODE_builtins.str(ndarray.dtype) == "object":  # noqa: F821
+                flattened = _VSCODE_np.empty(ndarray.shape[:2], dtype="object")  # noqa: F821
+                for i in _VSCODE_builtins.range(_VSCODE_builtins.len(flattened)):  # noqa: F821
                     flattened[i] = _VSCODE_stringifyElement(ndarray[i])
                 ndarray = flattened
             else:
-                flattened = _VSCODE_np.empty(ndarray.shape[:2], dtype="object")
-                for i in _VSCODE_builtins.range(_VSCODE_builtins.len(flattened)):
-                    for j in _VSCODE_builtins.range(_VSCODE_builtins.len(flattened[i])):
+                flattened = _VSCODE_np.empty(ndarray.shape[:2], dtype="object")  # noqa: F821
+                for i in _VSCODE_builtins.range(_VSCODE_builtins.len(flattened)):  # noqa: F821
+                    for j in _VSCODE_builtins.range(_VSCODE_builtins.len(flattened[i])):  # noqa: F821
                         flattened[i][j] = _VSCODE_stringifyElement(ndarray[i][j])
                 ndarray = flattened
         finally:
             # Restore the user's printoptions
-            _VSCODE_np.set_printoptions(threshold=current_options["threshold"])
+            _VSCODE_np.set_printoptions(threshold=current_options["threshold"])  # noqa: F821
             del flattened
-            return _VSCODE_pd.DataFrame(ndarray)
+            return _VSCODE_pd.DataFrame(ndarray)  # noqa: F821
 
     # Function that converts tensors to DataFrames
     def _VSCODE_convertTensorToDataFrame(tensor, start=None, end=None):
@@ -65,12 +69,12 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
                 temp = temp[start:end]
             # Can't directly convert sparse tensors to numpy arrays
             # so first convert them to dense tensors
-            if _VSCODE_builtins.hasattr(temp, "is_sparse") and temp.is_sparse:
+            if _VSCODE_builtins.hasattr(temp, "is_sparse") and temp.is_sparse:  # noqa: F821
                 # This guard is needed because to_dense exists on all PyTorch
                 # tensors and throws an error if the tensor is already strided
                 temp = temp.to_dense()
             # See https://discuss.pytorch.org/t/should-it-really-be-necessary-to-do-var-detach-cpu-numpy/35489
-            if _VSCODE_builtins.hasattr(temp, "data"):
+            if _VSCODE_builtins.hasattr(temp, "data"):  # noqa: F821
                 # PyTorch tensors need to be explicitly detached
                 # from the computation graph and copied to CPU
                 temp = temp.data.detach().cpu()
@@ -82,7 +86,7 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
             temp = _VSCODE_convertNumpyArrayToDataFrame(temp)
             tensor = temp
             del temp
-        except _VSCODE_builtins.AttributeError:
+        except _VSCODE_builtins.AttributeError:  # noqa: F821
             # TensorFlow EagerTensors and PyTorch Tensors support numpy()
             # but avoid a crash just in case the current variable doesn't
             pass
@@ -90,31 +94,31 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
 
     # Function that converts the var passed in into a pandas data frame if possible
     def _VSCODE_convertToDataFrame(df, start=None, end=None):
-        vartype = _VSCODE_builtins.type(df)
-        if _VSCODE_builtins.isinstance(df, _VSCODE_builtins.list):
-            df = _VSCODE_pd.DataFrame(df).iloc[start:end]
-        elif _VSCODE_builtins.isinstance(df, _VSCODE_pd.Series):
-            df = _VSCODE_pd.Series.to_frame(df).iloc[start:end]
-        elif _VSCODE_builtins.isinstance(df, _VSCODE_builtins.dict):
-            df = _VSCODE_pd.Series(df)
-            df = _VSCODE_pd.Series.to_frame(df).iloc[start:end]
-        elif _VSCODE_builtins.hasattr(df, "toPandas"):
+        vartype = _VSCODE_builtins.type(df)  # noqa: F821
+        if _VSCODE_builtins.isinstance(df, _VSCODE_builtins.list):  # noqa: F821
+            df = _VSCODE_pd.DataFrame(df).iloc[start:end]  # noqa: F821
+        elif _VSCODE_builtins.isinstance(df, _VSCODE_pd.Series):  # noqa: F821
+            df = _VSCODE_pd.Series.to_frame(df).iloc[start:end]  # noqa: F821
+        elif _VSCODE_builtins.isinstance(df, _VSCODE_builtins.dict):  # noqa: F821
+            df = _VSCODE_pd.Series(df)  # noqa: F821
+            df = _VSCODE_pd.Series.to_frame(df).iloc[start:end]  # noqa: F821
+        elif _VSCODE_builtins.hasattr(df, "toPandas"):  # noqa: F821
             df = df.toPandas().iloc[start:end]
-        elif _VSCODE_builtins.hasattr(df, "to_pandas"):
+        elif _VSCODE_builtins.hasattr(df, "to_pandas"):  # noqa: F821
             df = df.to_pandas().iloc[start:end]
         elif (
-            _VSCODE_builtins.hasattr(vartype, "__name__")
+            _VSCODE_builtins.hasattr(vartype, "__name__")  # noqa: F821
             and vartype.__name__ in _VSCODE_allowedTensorTypes
         ):
             df = _VSCODE_convertTensorToDataFrame(df, start, end)
         elif (
-            _VSCODE_builtins.hasattr(vartype, "__name__")
+            _VSCODE_builtins.hasattr(vartype, "__name__")  # noqa: F821
             and vartype.__name__ == "ndarray"
         ):
             df = _VSCODE_convertNumpyArrayToDataFrame(df, start, end)
         elif (
-            _VSCODE_builtins.hasattr(df, "__array__")
-            and _VSCODE_builtins.hasattr(vartype, "__name__")
+            _VSCODE_builtins.hasattr(df, "__array__")  # noqa: F821
+            and _VSCODE_builtins.hasattr(vartype, "__name__")  # noqa: F821
             and vartype.__name__ == "DataArray"
         ):
             df = _VSCODE_convertNumpyArrayToDataFrame(
@@ -124,26 +128,26 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
             """Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
             variable fetching"""
             try:
-                temp = _VSCODE_pd.DataFrame(df).iloc[start:end]
+                temp = _VSCODE_pd.DataFrame(df).iloc[start:end]  # noqa: F821
                 df = temp
-            except:  # nosec
+            except:  # nosec  # noqa: E722
                 pass
         del vartype
         return df
 
     # Function to compute row count for a value
     def _VSCODE_getRowCount(var):
-        if _VSCODE_builtins.hasattr(var, "shape"):
+        if _VSCODE_builtins.hasattr(var, "shape"):  # noqa: F821
             try:
                 # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
-                if _VSCODE_builtins.isinstance(var.shape, _VSCODE_builtins.tuple):
+                if _VSCODE_builtins.isinstance(var.shape, _VSCODE_builtins.tuple):  # noqa: F821
                     return var.shape[0]
-            except _VSCODE_builtins.TypeError:
+            except _VSCODE_builtins.TypeError:  # noqa: F821
                 return 0
-        elif _VSCODE_builtins.hasattr(var, "__len__"):
+        elif _VSCODE_builtins.hasattr(var, "__len__"):  # noqa: F821
             try:
-                return _VSCODE_builtins.len(var)
-            except _VSCODE_builtins.TypeError:
+                return _VSCODE_builtins.len(var)  # noqa: F821
+            except _VSCODE_builtins.TypeError:  # noqa: F821
                 return 0
 
     # Function to retrieve a set of rows for a data frame
@@ -153,19 +157,19 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
         try:
             df = df.replace(
                 {
-                    _VSCODE_np.inf: "inf",
-                    -_VSCODE_np.inf: "-inf",
-                    _VSCODE_np.nan: "nan",
+                    _VSCODE_np.inf: "inf",  # noqa: F821
+                    -_VSCODE_np.inf: "-inf",  # noqa: F821
+                    _VSCODE_np.nan: "nan",  # noqa: F821
                 }
             )
-        except:
+        except:  # noqa: E722
             pass
 
         if is_debugging:
-            return _VSCODE_pd_json.to_json(None, df, orient="split", date_format="iso")
+            return _VSCODE_pd_json.to_json(None, df, orient="split", date_format="iso")  # noqa: F821
         else:
-            return _VSCODE_builtins.print(
-                _VSCODE_pd_json.to_json(None, df, orient="split", date_format="iso")
+            return _VSCODE_builtins.print(  # noqa: F821
+                _VSCODE_pd_json.to_json(None, df, orient="split", date_format="iso")  # noqa: F821
             )
 
     # Function to get info on the passed in data frame
@@ -179,19 +183,19 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
         if rowCount:
             try:
                 row = df.iloc[0:1]
-                json_row = _VSCODE_pd_json.to_json(None, row, date_format="iso")
-                columnNames = _VSCODE_builtins.list(_VSCODE_json.loads(json_row))
-            except:
-                columnNames = _VSCODE_builtins.list(df)
+                json_row = _VSCODE_pd_json.to_json(None, row, date_format="iso")  # noqa: F821
+                columnNames = _VSCODE_builtins.list(_VSCODE_json.loads(json_row))  # noqa: F821
+            except:  # noqa: E722
+                columnNames = _VSCODE_builtins.list(df)  # noqa: F821
         else:
-            columnNames = _VSCODE_builtins.list(df)
+            columnNames = _VSCODE_builtins.list(df)  # noqa: F821
 
-        columnTypes = _VSCODE_builtins.list(df.dtypes)
+        columnTypes = _VSCODE_builtins.list(df.dtypes)  # noqa: F821
 
         # Compute the index column. It may have been renamed
         try:
             indexColumn = df.index.name if df.index.name else "index"
-        except _VSCODE_builtins.AttributeError:
+        except _VSCODE_builtins.AttributeError:  # noqa: F821
             indexColumn = "index"
 
         # Make sure the index column exists
@@ -201,13 +205,13 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
 
         # Then loop and generate our output json
         columns = []
-        for n in _VSCODE_builtins.range(0, _VSCODE_builtins.len(columnNames)):
+        for n in _VSCODE_builtins.range(0, _VSCODE_builtins.len(columnNames)):  # noqa: F821
             column_type = columnTypes[n]
-            column_name = _VSCODE_builtins.str(columnNames[n])
+            column_name = _VSCODE_builtins.str(columnNames[n])  # noqa: F821
             colobj = {}
             colobj["key"] = column_name
             colobj["name"] = column_name
-            colobj["type"] = _VSCODE_builtins.str(column_type)
+            colobj["type"] = _VSCODE_builtins.str(column_type)  # noqa: F821
             columns.append(colobj)
 
         # Save this in our target
@@ -218,16 +222,16 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
 
         # return our json object as a string
         if is_debugging:
-            return _VSCODE_json.dumps(target)
+            return _VSCODE_json.dumps(target)  # noqa: F821
         else:
-            return _VSCODE_builtins.print(_VSCODE_json.dumps(target))
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(target))  # noqa: F821
 
     try:
         if what_to_get == "rows":
             return _VSCODE_getDataFrameRows(*args)
         else:
             return _VSCODE_getDataFrameInfo(*args)
-    except:
+    except:  # noqa: E722
         del _VSCODE_pd
         del _VSCODE_json
         del _VSCODE_pd_json

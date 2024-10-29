@@ -9,7 +9,7 @@ try:
         from notebook.notebookapp import list_running_servers
 
         server_list = list_running_servers()
-    except:
+    except:  # noqa: E722
         from jupyter_server import serverapp
 
         server_list = serverapp.list_running_servers()
@@ -38,7 +38,7 @@ except Exception:
     """
     import subprocess  # nosec
     from subprocess import PIPE  # nosec
-    import sys
+    import os
 
     result = subprocess.run(  # nosec
         ["jupyter", "notebook", "list", "--jsonlist"], stdout=PIPE, stderr=PIPE

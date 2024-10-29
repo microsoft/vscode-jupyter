@@ -336,7 +336,7 @@ def main():
             if command == "INITIALIZE_INTERRUPT":
                 try:
                     handle = interrupter.initialize_interrupt()
-                except:
+                except:  # noqa: E722
                     # If we fail to initilize the interrupt, then try again.
                     handle = interrupter.initialize_interrupt()
 
@@ -349,7 +349,7 @@ def main():
                 print(f"DISPOSE_INTERRUPT_HANDLE:{id}")
             else:
                 logging.warning("Unknown command: '%s' for line '%s'", command, line)
-        except:
+        except:  # noqa: E722
             # Do not change the format of this message (used in parent process).
             logging.exception(f"ERROR: handling command :{command}:{id}")
 
@@ -357,7 +357,7 @@ def main():
         try:
             line = line.strip()
             handle_command(line.split(":")[0], int(line.split(":")[1]), line)
-        except:
+        except:  # noqa: E722
             logging.exception(f"Error in line {line}")
 
 

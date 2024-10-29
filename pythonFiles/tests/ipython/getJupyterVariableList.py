@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+
 # Query Jupyter server for defined variables list
 # Tested on 2.7 and 3.6
 from sys import getsizeof as _VSCODE_getsizeof
@@ -35,7 +39,7 @@ for _VSCode_var in _VSCode_JupyterVars:
         )
         del _VSCode_type
         del _VSCode_var
-    except:
+    except:  # noqa: E722
         pass
 
 builtins.print(_VSCODE_json.dumps(_VSCode_output))

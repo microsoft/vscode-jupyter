@@ -10,11 +10,11 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     arrayPageSize = 50
 
     def truncateString(variable):
-        string = _VSCODE_builtins.repr(variable)
-        if _VSCODE_builtins.len(string) > maxStringLength:
+        string = _VSCODE_builtins.repr(variable)  # noqa: F821
+        if _VSCODE_builtins.len(string) > maxStringLength:  # noqa: F821
             sizeInfo = (
-                "\n\nLength: " + str(_VSCODE_builtins.len(variable))
-                if _VSCODE_builtins.type(variable) == _VSCODE_builtins.str
+                "\n\nLength: " + str(_VSCODE_builtins.len(variable))  # noqa: F821
+                if _VSCODE_builtins.type(variable) == _VSCODE_builtins.str  # noqa: F821
                 else ""
             )
             return string[: maxStringLength - 1] + "..." + sizeInfo
@@ -24,7 +24,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     DisplayOptions = _VSCODE_namedtuple("DisplayOptions", ["width", "max_columns"])
 
     def set_pandas_display_options(display_options=None):
-        if _VSCODE_importlib_util.find_spec("pandas") is not None:
+        if _VSCODE_importlib_util.find_spec("pandas") is not None:  # noqa: F821
             try:
                 import pandas as _VSCODE_PD
 
@@ -49,8 +49,8 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     def getValue(variable):
         original_display = None
         if (
-            _VSCODE_builtins.type(variable).__name__ == "DataFrame"
-            and _VSCODE_importlib_util.find_spec("pandas") is not None
+            _VSCODE_builtins.type(variable).__name__ == "DataFrame"  # noqa: F821
+            and _VSCODE_importlib_util.find_spec("pandas") is not None  # noqa: F821
         ):
             original_display = set_pandas_display_options()
 
@@ -62,7 +62,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
     def getPropertyNames(variable):
         props = []
-        for prop in _VSCODE_builtins.dir(variable):
+        for prop in _VSCODE_builtins.dir(variable):  # noqa: F821
             if not prop.startswith("_"):
                 props.append(prop)
         return props
@@ -70,32 +70,32 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
     def getFullType(varType):
         module = ""
         if (
-            _VSCODE_builtins.hasattr(varType, "__module__")
+            _VSCODE_builtins.hasattr(varType, "__module__")  # noqa: F821
             and varType.__module__ != "builtins"
         ):
             module = varType.__module__ + "."
-        if _VSCODE_builtins.hasattr(varType, "__qualname__"):
+        if _VSCODE_builtins.hasattr(varType, "__qualname__"):  # noqa: F821
             return module + varType.__qualname__
-        elif _VSCODE_builtins.hasattr(varType, "__name__"):
+        elif _VSCODE_builtins.hasattr(varType, "__name__"):  # noqa: F821
             return module + varType.__name__
 
     def getVariableDescription(variable):
         result = {}
 
-        varType = _VSCODE_builtins.type(variable)
+        varType = _VSCODE_builtins.type(variable)  # noqa: F821
         result["type"] = getFullType(varType)
         if hasattr(varType, "__mro__"):
             result["interfaces"] = [getFullType(t) for t in varType.__mro__]
 
         if (
-            _VSCODE_builtins.hasattr(variable, "__len__")
+            _VSCODE_builtins.hasattr(variable, "__len__")  # noqa: F821
             and result["type"] in collectionTypes
         ):
-            result["count"] = _VSCODE_builtins.len(variable)
+            result["count"] = _VSCODE_builtins.len(variable)  # noqa: F821
 
         result["hasNamedChildren"] = (
-            _VSCODE_builtins.hasattr(variable, "__dict__")
-            or _VSCODE_builtins.type(variable) == dict
+            _VSCODE_builtins.hasattr(variable, "__dict__")  # noqa: F821
+            or _VSCODE_builtins.type(variable) == dict  # noqa: E721, F821
         )
 
         result["value"] = getValue(variable)
@@ -105,17 +105,17 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         try:
             variable = root
             for property in propertyChain:
-                if _VSCODE_builtins.type(property) == _VSCODE_builtins.int:
-                    if _VSCODE_builtins.hasattr(variable, "__getitem__"):
+                if _VSCODE_builtins.type(property) == _VSCODE_builtins.int:  # noqa: F821
+                    if _VSCODE_builtins.hasattr(variable, "__getitem__"):  # noqa: F821
                         variable = variable[property]
-                    elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.set:
-                        variable = _VSCODE_builtins.list(variable)[property]
+                    elif _VSCODE_builtins.type(variable) == _VSCODE_builtins.set:  # noqa: F821
+                        variable = _VSCODE_builtins.list(variable)[property]  # noqa: F821
                     else:
                         return None
-                elif _VSCODE_builtins.hasattr(variable, property):
+                elif _VSCODE_builtins.hasattr(variable, property):  # noqa: F821
                     variable = getattr(variable, property)
                 elif (
-                    _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict
+                    _VSCODE_builtins.type(variable) == _VSCODE_builtins.dict  # noqa: F821
                     and property in variable
                 ):
                     variable = variable[property]
@@ -141,9 +141,9 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         ]
 
         if is_debugging:
-            return _VSCODE_json.dumps(variables)
+            return _VSCODE_json.dumps(variables)  # noqa: F821
         else:
-            return _VSCODE_builtins.print(_VSCODE_json.dumps(variables))
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(variables))  # noqa: F821
 
     ### Get info on children of a variable reached through the given property chain
     def _VSCODE_getAllChildrenDescriptions(rootVarName, propertyChain, startIndex):
@@ -152,17 +152,17 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
             return []
 
         parent = root
-        if _VSCODE_builtins.len(propertyChain) > 0:
+        if _VSCODE_builtins.len(propertyChain) > 0:  # noqa: F821
             parent = getChildProperty(root, propertyChain)
 
         children = []
         parentInfo = getVariableDescription(parent)
         if "count" in parentInfo:
             if parentInfo["count"] > 0:
-                lastItem = _VSCODE_builtins.min(
+                lastItem = _VSCODE_builtins.min(  # noqa: F821
                     parentInfo["count"], startIndex + arrayPageSize
                 )
-                range = _VSCODE_builtins.range(startIndex, lastItem)
+                range = _VSCODE_builtins.range(startIndex, lastItem)  # noqa: F821
                 children = [
                     {
                         **getVariableDescription(getChildProperty(parent, [i])),
@@ -175,17 +175,17 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                 ]
         elif parentInfo["hasNamedChildren"]:
             childrenNames = []
-            if _VSCODE_builtins.hasattr(parent, "__dict__"):
+            if _VSCODE_builtins.hasattr(parent, "__dict__"):  # noqa: F821
                 childrenNames = getPropertyNames(parent)
-            elif _VSCODE_builtins.type(parent) == _VSCODE_builtins.dict:
-                childrenNames = _VSCODE_builtins.list(parent.keys())
+            elif _VSCODE_builtins.type(parent) == _VSCODE_builtins.dict:  # noqa: F821
+                childrenNames = _VSCODE_builtins.list(parent.keys())  # noqa: F821
 
             children = []
             for prop in childrenNames:
                 child_property = getChildProperty(parent, [prop])
                 if (
                     child_property is not None
-                    and _VSCODE_builtins.type(child_property).__name__ != "method"
+                    and _VSCODE_builtins.type(child_property).__name__ != "method"  # noqa: F821
                 ):
                     child = {
                         **getVariableDescription(child_property),
@@ -196,9 +196,9 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                     children.append(child)
 
         if is_debugging:
-            return _VSCODE_json.dumps(children)
+            return _VSCODE_json.dumps(children)  # noqa: F821
         else:
-            return _VSCODE_builtins.print(_VSCODE_json.dumps(children))
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(children))  # noqa: F821
 
     # Function to do our work. It will return the object
     def _VSCODE_getVariableInfo(var):
@@ -210,25 +210,25 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
         typeName = None
         try:
-            vartype = _VSCODE_builtins.type(var)
-            if _VSCODE_builtins.hasattr(vartype, "__name__"):
+            vartype = _VSCODE_builtins.type(var)  # noqa: F821
+            if _VSCODE_builtins.hasattr(vartype, "__name__"):  # noqa: F821
                 result["type"] = typeName = vartype.__name__
                 result["fullType"] = getFullType(vartype)
         except TypeError:
             pass
 
         # Find shape and count if available
-        if _VSCODE_builtins.hasattr(var, "shape"):
+        if _VSCODE_builtins.hasattr(var, "shape"):  # noqa: F821
             try:
                 # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
                 if (
-                    _VSCODE_builtins.isinstance(var.shape, _VSCODE_builtins.tuple)
+                    _VSCODE_builtins.isinstance(var.shape, _VSCODE_builtins.tuple)  # noqa: F821
                     or typeName is not None
                     and typeName == "EagerTensor"
                 ):
-                    _VSCODE_shapeStr = _VSCODE_builtins.str(var.shape)
+                    _VSCODE_shapeStr = _VSCODE_builtins.str(var.shape)  # noqa: F821
                     if (
-                        _VSCODE_builtins.len(_VSCODE_shapeStr) >= 3
+                        _VSCODE_builtins.len(_VSCODE_shapeStr) >= 3  # noqa: F821
                         and _VSCODE_shapeStr[0] == "("
                         and _VSCODE_shapeStr[-1] == ")"
                         and "," in _VSCODE_shapeStr
@@ -237,39 +237,39 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                     elif _VSCODE_shapeStr.startswith("torch.Size(["):
                         result["shape"] = "(" + _VSCODE_shapeStr[12:-2] + ")"
                     del _VSCODE_shapeStr
-            except _VSCODE_builtins.TypeError:
+            except _VSCODE_builtins.TypeError:  # noqa: F821
                 pass
 
-        if _VSCODE_builtins.hasattr(var, "__len__"):
+        if _VSCODE_builtins.hasattr(var, "__len__"):  # noqa: F821
             try:
-                result["count"] = _VSCODE_builtins.len(var)
-            except _VSCODE_builtins.TypeError:
+                result["count"] = _VSCODE_builtins.len(var)  # noqa: F821
+            except _VSCODE_builtins.TypeError:  # noqa: F821
                 pass
 
         # return our json object as a string
         if is_debugging:
-            return _VSCODE_json.dumps(result)
+            return _VSCODE_json.dumps(result)  # noqa: F821
         else:
-            return _VSCODE_builtins.print(_VSCODE_json.dumps(result))
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(result))  # noqa: F821
 
     def _VSCODE_getVariableProperties(var, listOfAttributes):
         result = {
-            attr: _VSCODE_builtins.repr(_VSCODE_builtins.getattr(var, attr))
+            attr: _VSCODE_builtins.repr(_VSCODE_builtins.getattr(var, attr))  # noqa: F821
             for attr in listOfAttributes
-            if _VSCODE_builtins.hasattr(var, attr)
+            if _VSCODE_builtins.hasattr(var, attr)  # noqa: F821
         }
         if is_debugging:
-            return _VSCODE_json.dumps(result)
+            return _VSCODE_json.dumps(result)  # noqa: F821
         else:
-            return _VSCODE_builtins.print(_VSCODE_json.dumps(result))
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(result))  # noqa: F821
 
     def _VSCODE_getVariableTypes(varnames):
         # Map with key: varname and value: vartype
         result = []
         for name in varnames:
             try:
-                vartype = _VSCODE_builtins.type(globals()[name])
-                if _VSCODE_builtins.hasattr(vartype, "__name__"):
+                vartype = _VSCODE_builtins.type(globals()[name])  # noqa: F821
+                if _VSCODE_builtins.hasattr(vartype, "__name__"):  # noqa: F821
                     result.append(
                         {
                             "name": name,
@@ -277,22 +277,22 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                             "fullType": getFullType(vartype),
                         }
                     )
-            except _VSCODE_builtins.TypeError:
+            except _VSCODE_builtins.TypeError:  # noqa: F821
                 pass
         if is_debugging:
-            return _VSCODE_json.dumps(result)
+            return _VSCODE_json.dumps(result)  # noqa: F821
         else:
-            return _VSCODE_builtins.print(_VSCODE_json.dumps(result))
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(result))  # noqa: F821
 
     def _VSCODE_getVariableSummary(variable):
         if variable is None:
             return None
         # check if the variable is a dataframe
         if (
-            _VSCODE_builtins.type(variable).__name__ == "DataFrame"
-            and _VSCODE_importlib_util.find_spec("pandas") is not None
+            _VSCODE_builtins.type(variable).__name__ == "DataFrame"  # noqa: F821
+            and _VSCODE_importlib_util.find_spec("pandas") is not None  # noqa: F821
         ):
-            return _VSCODE_builtins.print(variable.info())
+            return _VSCODE_builtins.print(variable.info())  # noqa: F821
 
         return None
 

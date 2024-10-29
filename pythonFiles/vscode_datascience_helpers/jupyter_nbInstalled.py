@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 try:
-    from notebook import notebookapp as app
+    from notebook import notebookapp as app  # noqa: F401
 
     print("Available")
 except Exception:
