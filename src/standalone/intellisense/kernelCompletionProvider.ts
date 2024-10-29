@@ -134,7 +134,11 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             }
 
             const existingCompletionItems = new Set(
-                (otherCompletions || []).map((item) => (typeof item.label === 'string' ? item.label : item.label.label))
+                (otherCompletions || [])
+                    .map((item) => (typeof item.label === 'string' ? item.label : item.label.label))
+                    // Jupyter kernel might return items prefixed with the `.` character.
+                    .map((item) => [item, `.${item}`])
+                    .flat()
             );
             return completions.filter(
                 (item) => !existingCompletionItems.has(typeof item.label === 'string' ? item.label : item.label.label)
