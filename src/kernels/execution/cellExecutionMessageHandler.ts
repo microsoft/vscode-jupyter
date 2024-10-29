@@ -627,6 +627,12 @@ export class CellExecutionMessageHandler implements IDisposable {
                 CellExecutionMessageHandler.modelIdsOwnedByCells.set(this.cell, modelIds);
             }
         }
+        if (originalMessage.parent_header.msg_type === 'comm_msg') {
+            // Outputs generated as part of a comm message are not displayed in the cell output.
+            // See https://github.com/microsoft/vscode-jupyter/issues/15996
+            return;
+        }
+
         const cellOutput = cellOutputToVSCCellOutput(output);
         const displayId =
             'transient' in output &&
@@ -944,6 +950,11 @@ export class CellExecutionMessageHandler implements IDisposable {
                 getParentHeaderMsgId(msg)
         ) {
             // Stream messages will be handled by the Output Widget.
+            return;
+        }
+        if (msg.parent_header.msg_type === 'comm_msg') {
+            // Outputs generated as part of a comm message are not displayed in the cell output.
+            // See https://github.com/microsoft/vscode-jupyter/issues/15996
             return;
         }
 
