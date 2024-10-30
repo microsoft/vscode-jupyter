@@ -4,8 +4,8 @@
 import { inject, injectable } from 'inversify';
 import { EventEmitter, NotebookDocument, Uri, type NotebookController } from 'vscode';
 import * as fs from 'fs-extra';
-import { IControllerRegistration } from './controllers/types';
-import { IKernelProvider, isRemoteConnection } from '../kernels/types';
+import { IControllerRegistration, type IVSCodeNotebookController } from './controllers/types';
+import { IKernelProvider, isRemoteConnection, type IKernel } from '../kernels/types';
 import { DisposableBase } from '../platform/common/utils/lifecycle';
 import { isPythonKernelConnection } from '../kernels/helpers';
 import { logger } from '../platform/logging';
@@ -14,6 +14,7 @@ import { noop } from '../platform/common/utils/misc';
 import { INotebookEditorProvider, INotebookPythonEnvironmentService } from './types';
 import { getCachedEnvironment, getInterpreterInfo } from '../platform/interpreter/helpers';
 import type { Environment } from '@vscode/python-extension';
+import type { PythonEnvironment } from '../platform/pythonEnvironments/info';
 
 @injectable()
 export class NotebookPythonEnvironmentService extends DisposableBase implements INotebookPythonEnvironmentService {
@@ -44,7 +45,7 @@ export class NotebookPythonEnvironmentService extends DisposableBase implements 
                     this.notebookWithRemoteKernelsToMonitor.add(e.notebook);
                 } else {
                     this.notebookWithRemoteKernelsToMonitor.delete(e.notebook);
-                    void this.resolveAndNotifyLocalPythonEnvironment(e.notebook, e.controller.controller);
+                    this.notifyLocalPythonEnvironment(e.notebook, e.controller);
                 }
             })
         );
@@ -56,83 +57,83 @@ export class NotebookPythonEnvironmentService extends DisposableBase implements 
     }
 
     private monitorRemoteKernelStart() {
-        this._register(
-            this.kernelProvider.onDidStartKernel(async (e) => {
-                if (
-                    !this.notebookWithRemoteKernelsToMonitor.has(e.notebook) ||
-                    !isRemoteConnection(e.kernelConnectionMetadata) ||
-                    !isPythonKernelConnection(e.kernelConnectionMetadata)
-                ) {
+        const trackKernel = async (e: IKernel) => {
+            if (
+                !this.notebookWithRemoteKernelsToMonitor.has(e.notebook) ||
+                !isRemoteConnection(e.kernelConnectionMetadata) ||
+                !isPythonKernelConnection(e.kernelConnectionMetadata)
+            ) {
+                return;
+            }
+
+            try {
+                const env = await this.resolveRemotePythonEnvironment(e.notebook);
+                if (this.controllerRegistration.getSelected(e.notebook)?.controller !== e.controller) {
+                    logger.trace(
+                        `Remote Python Env for ${getDisplayPath(e.notebook.uri)} not determined as controller changed`
+                    );
                     return;
                 }
 
-                try {
-                    const env = await this.resolveRemotePythonEnvironment(e.notebook);
-                    if (this.controllerRegistration.getSelected(e.notebook)?.controller !== e.controller) {
-                        logger.trace(
-                            `Remote Python Env for ${getDisplayPath(
-                                e.notebook.uri
-                            )} not determined as controller changed`
-                        );
-                        return;
-                    }
-
-                    if (!env) {
-                        logger.trace(
-                            `Remote Python Env for ${getDisplayPath(e.notebook.uri)} not determined as exe is empty`
-                        );
-                        return;
-                    }
-
-                    this.notebookPythonEnvironments.set(e.notebook, env);
-                    this._onDidChangeEnvironment.fire(e.notebook.uri);
-                } catch (ex) {
-                    logger.error(`Failed to get Remote Python Env for ${getDisplayPath(e.notebook.uri)}`, ex);
+                if (!env) {
+                    logger.trace(
+                        `Remote Python Env for ${getDisplayPath(e.notebook.uri)} not determined as exe is empty`
+                    );
+                    return;
                 }
-            })
-        );
+
+                this.notebookPythonEnvironments.set(e.notebook, env);
+                this._onDidChangeEnvironment.fire(e.notebook.uri);
+            } catch (ex) {
+                logger.error(`Failed to get Remote Python Env for ${getDisplayPath(e.notebook.uri)}`, ex);
+            }
+        };
+        this._register(this.kernelProvider.onDidCreateKernel(trackKernel));
+        this._register(this.kernelProvider.onDidStartKernel(trackKernel));
     }
 
-    private async resolveAndNotifyLocalPythonEnvironment(notebook: NotebookDocument, controller: NotebookController) {
-        const env = await this.resolveLocalPythonEnv(notebook);
-        if (this.controllerRegistration.getSelected(notebook)?.controller !== controller) {
-            logger.trace(`Remote Python Env for ${getDisplayPath(notebook.uri)} not determined as controller changed`);
-            return;
-        }
-
-        if (!env) {
-            logger.trace(`Remote Python Env for ${getDisplayPath(notebook.uri)} not determined as exe is empty`);
-            return;
-        }
-
-        this.notebookPythonEnvironments.set(notebook, env);
-        this._onDidChangeEnvironment.fire(notebook.uri);
-    }
-
-    private async resolveLocalPythonEnv(notebook: NotebookDocument): Promise<Environment | undefined> {
+    private notifyLocalPythonEnvironment(notebook: NotebookDocument, controller: IVSCodeNotebookController) {
         // Empty string is special, means do not use any interpreter at all.
         // Could be a server started for local machine, github codespaces, azml, 3rd party api, etc
-        const kernel = this.kernelProvider.get(notebook);
-        const interpreter = kernel?.kernelConnectionMetadata.interpreter;
-        if (
-            !kernel ||
-            !isPythonKernelConnection(kernel.kernelConnectionMetadata) ||
-            isRemoteConnection(kernel.kernelConnectionMetadata) ||
-            !interpreter
-        ) {
+        const connection = this.kernelProvider.get(notebook)?.kernelConnectionMetadata || controller.connection;
+        const interpreter = connection.interpreter;
+        if (!isPythonKernelConnection(connection) || isRemoteConnection(connection) || !interpreter) {
             return;
         }
-        const env = getCachedEnvironment(interpreter) || (await getInterpreterInfo(interpreter));
 
+        const env = getCachedEnvironment(interpreter);
         if (env) {
-            return env;
-        } else {
+            this.notebookPythonEnvironments.set(notebook, env);
+            this._onDidChangeEnvironment.fire(notebook.uri);
+            return;
+        }
+
+        void this.resolveAndNotifyLocalPythonEnvironment(notebook, controller, interpreter);
+    }
+
+    private async resolveAndNotifyLocalPythonEnvironment(
+        notebook: NotebookDocument,
+        controller: IVSCodeNotebookController,
+        interpreter: PythonEnvironment | Readonly<PythonEnvironment>
+    ) {
+        const env = await getInterpreterInfo(interpreter);
+
+        if (!env) {
             logger.error(
                 `Failed to get interpreter information for ${getDisplayPath(notebook.uri)} && ${getDisplayPath(
                     interpreter.uri
                 )}`
             );
+            return;
         }
+
+        if (this.controllerRegistration.getSelected(notebook)?.controller !== controller.controller) {
+            logger.trace(`Python Env for ${getDisplayPath(notebook.uri)} not determined as controller changed`);
+            return;
+        }
+
+        this.notebookPythonEnvironments.set(notebook, env);
+        this._onDidChangeEnvironment.fire(notebook.uri);
     }
 
     private async resolveRemotePythonEnvironment(notebook: NotebookDocument): Promise<Environment | undefined> {
