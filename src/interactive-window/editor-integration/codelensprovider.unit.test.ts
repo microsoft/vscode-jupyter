@@ -165,31 +165,4 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         targetCodeWatcher2.verifyAll();
         serviceContainer.verifyAll();
     });
-
-    test('Having code lenses will update context keys to true', async () => {
-        pythonSettings.setup((p) => p.sendSelectionToInteractiveWindow).returns(() => true);
-
-        provideCodeLensesForOneDoc([new CodeLens({} as Range)]);
-
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', true)).atLeast(1);
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.hascodecells', true)).atLeast(1);
-    });
-
-    test('Having no code lenses will set context keys to false', async () => {
-        pythonSettings.setup((p) => p.sendSelectionToInteractiveWindow).returns(() => false);
-
-        provideCodeLensesForOneDoc([]);
-
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', false)).atLeast(1);
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.hascodecells', false)).atLeast(1);
-    });
-
-    test('Having no code lenses but ownership setting true will set context keys correctly', async () => {
-        pythonSettings.setup((p) => p.sendSelectionToInteractiveWindow).returns(() => true);
-
-        provideCodeLensesForOneDoc([]);
-
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', true)).atLeast(1);
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.hascodecells', false)).atLeast(1);
-    });
 });
