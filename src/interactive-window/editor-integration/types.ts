@@ -65,6 +65,7 @@ export interface ICodeLensFactory {
 
 export const ICellRangeCache = Symbol('ICellRangeCache');
 export interface ICellRangeCache extends IDisposable {
+    clear(): void;
     getCellRanges(document: TextDocument): ICellRange[];
 }
 

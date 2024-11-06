@@ -47,6 +47,10 @@ export class CellRangeCache implements ICellRangeCache {
         return ranges;
     }
 
+    public clear(): void {
+        this.cache.clear();
+    }
+
     private onChangedActiveTextEditor() {
         const activeEditor = vscode.window.activeTextEditor;
 
@@ -65,6 +69,8 @@ export class CellRangeCache implements ICellRangeCache {
     }
 
     private onSettingChanged(e: ConfigurationChangeEvent) {
+        this.cache.clear();
+
         if (e.affectsConfiguration('jupyter.interactiveWindow.textEditor.executeSelection')) {
             const settings = this.configService.getSettings(undefined);
             this.cachedOwnsSetting = settings.sendSelectionToInteractiveWindow;

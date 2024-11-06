@@ -252,6 +252,7 @@ export class CodeLensFactory implements ICodeLensFactory {
     private onChangedSettings() {
         // When config settings change, refresh our code lenses.
         this.codeLensCache.clear();
+        this.cellRangeCache.clear();
 
         // Force an update so that code lenses are recomputed now and not during execution.
         this.updateEvent.fire();
