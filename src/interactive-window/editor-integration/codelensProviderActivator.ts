@@ -3,7 +3,7 @@
 
 import { injectable, inject } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IDataScienceCodeLensProvider } from './types';
+import { ICellRangeCache, IDataScienceCodeLensProvider } from './types';
 import { languages } from 'vscode';
 import { PYTHON_FILE_ANY_SCHEME } from '../../platform/common/constants';
 import { IExtensionContext } from '../../platform/common/types';
@@ -12,8 +12,13 @@ import { IExtensionContext } from '../../platform/common/types';
 export class CodeLensProviderActivator implements IExtensionSyncActivationService {
     constructor(
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
-        @inject(IExtensionContext) private extensionContext: IExtensionContext
-    ) {}
+        @inject(IExtensionContext) private extensionContext: IExtensionContext,
+        @inject(ICellRangeCache) cellRangeCache: ICellRangeCache
+    ) {
+        // make sure this is tracking the cell ranges and updating context keys to be used for shift+enter,
+        // even when code lenses and decorations are disabled
+        cellRangeCache;
+    }
 
     public activate() {
         this.extensionContext.subscriptions.push(

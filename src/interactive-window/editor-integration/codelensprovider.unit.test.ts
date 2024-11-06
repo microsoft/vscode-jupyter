@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { anything, verify, when } from 'ts-mockito';
+import { anything, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, CodeLens, Disposable, EventEmitter, TextDocument, Uri, Range } from 'vscode';
+import { CancellationTokenSource, CodeLens, Disposable, EventEmitter, TextDocument, Uri } from 'vscode';
 
 import { IDebugService } from '../../platform/common/application/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
@@ -164,32 +164,5 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         targetCodeWatcher1.verifyAll();
         targetCodeWatcher2.verifyAll();
         serviceContainer.verifyAll();
-    });
-
-    test('Having code lenses will update context keys to true', async () => {
-        pythonSettings.setup((p) => p.sendSelectionToInteractiveWindow).returns(() => true);
-
-        provideCodeLensesForOneDoc([new CodeLens({} as Range)]);
-
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', true)).atLeast(1);
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.hascodecells', true)).atLeast(1);
-    });
-
-    test('Having no code lenses will set context keys to false', async () => {
-        pythonSettings.setup((p) => p.sendSelectionToInteractiveWindow).returns(() => false);
-
-        provideCodeLensesForOneDoc([]);
-
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', false)).atLeast(1);
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.hascodecells', false)).atLeast(1);
-    });
-
-    test('Having no code lenses but ownership setting true will set context keys correctly', async () => {
-        pythonSettings.setup((p) => p.sendSelectionToInteractiveWindow).returns(() => true);
-
-        provideCodeLensesForOneDoc([]);
-
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', true)).atLeast(1);
-        verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.hascodecells', false)).atLeast(1);
     });
 });
