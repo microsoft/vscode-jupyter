@@ -18,7 +18,8 @@ import {
     ICodeLensFactory,
     IDataScienceCodeLensProvider,
     IGeneratedCodeStorageFactory,
-    ICodeGeneratorFactory
+    ICodeGeneratorFactory,
+    ICellRangeCache
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
@@ -37,6 +38,7 @@ import { CodeLensProviderActivator } from './editor-integration/codelensProvider
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveControllerHelper } from './InteractiveControllerHelper';
 import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
+import { CellRangeCache } from './editor-integration/cellRangeCache';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -47,6 +49,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, HoverProvider);
+    serviceManager.addSingleton<ICellRangeCache>(ICellRangeCache, CellRangeCache);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(

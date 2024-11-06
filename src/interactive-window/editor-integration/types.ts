@@ -63,6 +63,11 @@ export interface ICodeLensFactory {
     getPerfMeasures(): CodeLensPerfMeasures;
 }
 
+export const ICellRangeCache = Symbol('ICellRangeCache');
+export interface ICellRangeCache extends IDisposable {
+    getCellRanges(document: TextDocument): ICellRange[];
+}
+
 export interface IGeneratedCode {
     /**
      * 1 based, excluding the cell marker.
