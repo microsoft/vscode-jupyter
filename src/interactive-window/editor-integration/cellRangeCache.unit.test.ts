@@ -12,10 +12,12 @@ import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 import { IGeneratedCodeStorageFactory } from './types';
 import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 import { when, anything, verify } from 'ts-mockito';
+import { MockJupyterSettings } from '../../test/datascience/mockJupyterSettings';
+import { SystemVariables } from '../../platform/common/variables/systemVariables.node';
 
 suite('DataScienceCodeLensProvider Unit Tests', () => {
-    let codeLensFactory: CodeLensFactory;
     let configService: TypeMoq.IMock<IConfigurationService>;
+    let jupyterSettings: MockJupyterSettings;
 
     const storageFactory = TypeMoq.Mock.ofType<IGeneratedCodeStorageFactory>();
     const kernelProvider = TypeMoq.Mock.ofType<IKernelProvider>();
@@ -24,8 +26,13 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
 
     setup(() => {
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        jupyterSettings = new MockJupyterSettings(undefined, SystemVariables, 'node');
+        configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => jupyterSettings);
+        when(mockedVSCodeNamespaces.commands.executeCommand(anything(), anything(), anything())).thenResolve();
+    });
 
-        codeLensFactory = new CodeLensFactory(
+    function createCodeLensFactory() {
+        return new CodeLensFactory(
             configService.object,
             disposables,
             storageFactory.object,
@@ -33,21 +40,17 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             replTracker.object,
             new CellRangeCache(configService.object)
         );
-
-        when(mockedVSCodeNamespaces.commands.executeCommand(anything(), anything(), anything())).thenResolve();
-    });
+    }
 
     test('Having code lenses will update context keys to true', async () => {
-        when(configService.object.getSettings(anything())).thenReturn({
-            sendSelectionToInteractiveWindow: false
-        } as any);
+        jupyterSettings.sendSelectionToInteractiveWindow = false;
 
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText = `# %%\nprint(1)`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
 
-        codeLensFactory.getCellRanges(document.object);
+        createCodeLensFactory().getCellRanges(document.object);
 
         // verify context keys set
         verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', true)).atLeast(1);
@@ -55,16 +58,14 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     });
 
     test('Having no code lenses will set context keys to false', async () => {
-        when(configService.object.getSettings(anything())).thenReturn({
-            sendSelectionToInteractiveWindow: false
-        } as any);
+        jupyterSettings.sendSelectionToInteractiveWindow = false;
 
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText = `print(1)`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
 
-        codeLensFactory.getCellRanges(document.object);
+        createCodeLensFactory().getCellRanges(document.object);
 
         // verify context keys set
         verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', true)).atLeast(1);
@@ -72,16 +73,14 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     });
 
     test('Having no code lenses but ownership setting true will set context keys correctly', async () => {
-        when(configService.object.getSettings(anything())).thenReturn({
-            sendSelectionToInteractiveWindow: true
-        } as any);
+        jupyterSettings.sendSelectionToInteractiveWindow = true;
 
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText = `print(1)`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
 
-        codeLensFactory.getCellRanges(document.object);
+        createCodeLensFactory().getCellRanges(document.object);
 
         // verify context keys set
         verify(mockedVSCodeNamespaces.commands.executeCommand('setContext', 'jupyter.ownsSelection', true)).atLeast(1);

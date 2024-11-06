@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { anything, verify, when } from 'ts-mockito';
+import { anything, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, CodeLens, Disposable, EventEmitter, TextDocument, Uri, Range } from 'vscode';
+import { CancellationTokenSource, CodeLens, Disposable, EventEmitter, TextDocument, Uri } from 'vscode';
 
 import { IDebugService } from '../../platform/common/application/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
