@@ -153,14 +153,16 @@ export class BaseKernelSelector extends DisposableBase implements IDisposable {
         let timeout: NodeJS.Timer | undefined;
         this._register(
             this.provider.onDidChangeStatus(() => {
-                timeout && clearTimeout(timeout);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                timeout && clearTimeout(timeout as any);
                 switch (this.provider.status) {
                     case 'discovering':
                         quickPick.busy = true;
                         break;
                     case 'idle':
                         timeout = setTimeout(() => (quickPick.busy = false), 500);
-                        this._register(new Disposable(() => timeout && clearTimeout(timeout)));
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        this._register(new Disposable(() => timeout && clearTimeout(timeout as any)));
                         break;
                 }
             }, this)

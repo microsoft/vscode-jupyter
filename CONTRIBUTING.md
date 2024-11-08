@@ -13,8 +13,8 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 18.15.0
-2. [npm](https://www.npmjs.com/) 9.5.0
+1. [Node.js](https://nodejs.org/) 20.17.0
+2. [npm](https://www.npmjs.com/) 10.8.2
 3. [Python](https://www.python.org/) 3.6 or later
 4. Windows, macOS, or Linux
 5. [Visual Studio Code](https://code.visualstudio.com/)
@@ -43,7 +43,7 @@ python -m pip install black
 
 ### Incremental Build
 
-Run the `Compile` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
+Run the `watch` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
 
 You can also compile from the command-line. For a full compile you can use:
 
@@ -51,10 +51,12 @@ You can also compile from the command-line. For a full compile you can use:
 npx gulp prePublishNonBundle
 ```
 
-For incremental builds you can use the following commands depending on your needs:
+For incremental builds it is recommended you use the `watch` build task (for better integration with VS Code).
+Optionally you can use the following commands depending on your needs:
 
 ```shell
-# This will compile everthing, but only watch for changes to the desktop bundle.
+# This will compile everything, but only watch for changes to the desktop bundle.
+# Note: Its advisable to use the `watch` task instead of this one (for integration with VS Code, e.g. view errors in problems window).
 npm run compile
 # This watches changes to all files, webviews, web version of extension, node version of extension, etc
 # This can be resource intensive, as there are a number of bundles created, thus requiring monitoring of files for each of these numerous bundles.
@@ -230,7 +232,7 @@ Here's an example of a typical workflow:
 1. `npm ci`
 1. `npm run clean`
 1. Start VS code Insiders root
-1. CTRL+SHIFT+B and build `Compile Web Views` and `Compile`
+1. CTRL+SHIFT+B (run the task `compile`)
 1. Make code changes
 1. Write and [run](https://github.com/microsoft/vscode-jupyter/blob/29c4be79f64df1858692321b43c3079bb77bdd69/.vscode/launch.json#L252) unit tests if appropriate
 1. Test with [`Extension`](https://github.com/microsoft/vscode-jupyter/blob/29c4be79f64df1858692321b43c3079bb77bdd69/.vscode/launch.json#L6) launch task

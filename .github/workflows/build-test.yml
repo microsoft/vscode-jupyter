@@ -27,8 +27,8 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: 18.15.0
-  NPM_VERSION: 9.5.0
+  NODE_VERSION: 20.17.0
+  NPM_VERSION: 10.8.2
   PYTHON_VERSION: 3.8
   DENO_VERSION: '~1.37'
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.0
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
 
@@ -300,13 +300,13 @@ jobs:
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            packageVersion: 'prerelease'
-            tags: '^[^@]+$|@mandatory'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
+          #   - jupyterConnection: remote
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     packageVersion: 'prerelease'
+          #     tags: '^[^@]+$|@mandatory'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: ''
           - jupyterConnection: web
             python: python
             pythonVersion: '3.10'
@@ -340,13 +340,13 @@ jobs:
             os: ubuntu-latest
             ipywidgetsVersion: ''
           # Pre-Release Versions
-          - jupyterConnection: raw
-            python: python
-            pythonVersion: '3.10'
-            packageVersion: 'prerelease'
-            tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
+          #   - jupyterConnection: raw
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     packageVersion: 'prerelease'
+          #     tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: ''
           # Without Python
           - jupyterConnection: raw
             python: noPython
@@ -381,7 +381,7 @@ jobs:
           python-version: ${{matrix.pythonVersion}}
 
       - name: Install Conda environment from environment.yml
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         if: matrix.python == 'conda'
         with:
           cache-downloads: true

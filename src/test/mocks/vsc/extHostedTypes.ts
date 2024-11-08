@@ -2067,7 +2067,7 @@ export namespace vscMockExtHostedTypes {
     export class TreeItem {
         label?: string;
         resourceUri?: vscUri.URI;
-        iconPath?: string | vscUri.URI | { light: string | vscUri.URI; dark: string | vscUri.URI };
+        iconPath?: IconPath;
         command?: vscode.Command;
         contextValue?: string;
         tooltip?: string;
@@ -2103,6 +2103,24 @@ export namespace vscMockExtHostedTypes {
             this.id = id;
         }
     }
+
+    /**
+     * Represents an icon in the UI. This is either an uri, separate uris for the light- and dark-themes,
+     * or a {@link ThemeIcon theme icon}.
+     */
+    export type IconPath =
+        | vscode.Uri
+        | {
+              /**
+               * The icon path for the light theme.
+               */
+              light: vscode.Uri;
+              /**
+               * The icon path for the dark theme.
+               */
+              dark: vscode.Uri;
+          }
+        | ThemeIcon;
 
     export class ThemeColor {
         id: string;

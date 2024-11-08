@@ -53,7 +53,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
         protected disposables: IDisposableRegistry
     ) {
         this.asyncDisposables.push(this);
-        workspace.onDidCloseNotebookDocument((e) => this.disposeOldKernel(e), this, disposables);
+        workspace.onDidCloseNotebookDocument((e) => this.disposeOldKernel(e, 'notebookClosed'), this, disposables);
         disposables.push(this._onDidDisposeKernel);
         disposables.push(this._onDidRestartKernel);
         disposables.push(this._onKernelStatusChanged);
@@ -138,11 +138,13 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
             this.disposables
         );
     }
-    protected disposeOldKernel(notebook: NotebookDocument) {
+    protected disposeOldKernel(notebook: NotebookDocument, reason: 'notebookClosed' | 'createNewKernel') {
         const kernelToDispose = this.kernelsByNotebook.get(notebook);
         if (kernelToDispose) {
             logger.debug(
-                `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${notebook.isClosed}`
+                `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${
+                    notebook.isClosed
+                }, reason = ${reason}`
             );
             this.kernelsById.delete(kernelToDispose.kernel.id);
             this.pendingDisposables.add(kernelToDispose.kernel);

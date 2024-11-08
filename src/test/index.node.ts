@@ -152,7 +152,7 @@ function activateExtensionScript() {
     const initializationPromise = initialize();
     const promise = Promise.race([initializationPromise, failed]);
     // eslint-disable-next-line no-console
-    promise.finally(() => clearTimeout(timer!)).catch((e) => console.error(e));
+    promise.finally(() => clearTimeout(timer! as any)).catch((e) => console.error(e));
     return initializationPromise;
 }
 

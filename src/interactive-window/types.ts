@@ -1,16 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {
-    Disposable,
-    Event,
-    NotebookCell,
-    NotebookController,
-    NotebookDocument,
-    NotebookEditor,
-    Tab,
-    Uri
-} from 'vscode';
+import { Disposable, Event, NotebookCell, NotebookController, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IDebuggingManager } from '../notebooks/debugger/debuggingTypes';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
 import { Resource, InteractiveWindowMode } from '../platform/common/types';
@@ -115,15 +106,6 @@ export interface IInteractiveWindowCache {
     mode: InteractiveWindowMode;
     uriString: string;
     inputBoxUriString: string;
-}
-
-export interface TabInputInteractiveWindow {
-    readonly uri: Uri;
-    readonly inputBoxUri: Uri;
-}
-
-export interface InteractiveTab extends Tab {
-    readonly input: TabInputInteractiveWindow;
 }
 
 export const IInteractiveWindowDebuggingManager = Symbol('IInteractiveWindowDebuggingManager');

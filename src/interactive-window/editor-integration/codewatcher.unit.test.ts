@@ -32,6 +32,7 @@ import { MockEditor } from '../../test/datascience/mockTextEditor';
 import { noop } from '../../test/core';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
+import { CellRangeCache } from './cellRangeCache';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -124,7 +125,8 @@ suite('Code Watcher Unit Tests', () => {
             disposables,
             instance(storageFactory),
             instance(kernelProvider),
-            instance(replTracker)
+            instance(replTracker),
+            new CellRangeCache(configService.object)
         );
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
