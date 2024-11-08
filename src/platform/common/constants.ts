@@ -433,7 +433,6 @@ export enum Telemetry {
     NotebookFirstKernelAutoSelectionBreakDown = 'DATASCIENCE.NOTEBOOK_FIRST_KERNEL_AUTO_SELECTION_BREAKDOWN',
     NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
     NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',
-    NotebookPostInitializationFailed = 'DATASCIENCE.NOTEBOOK_POST_INITIALIZATION_FAILED',
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
     KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
     ExecuteCell = 'DATASCIENCE.EXECUTE_CELL',
