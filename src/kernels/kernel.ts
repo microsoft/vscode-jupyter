@@ -792,6 +792,8 @@ abstract class BaseKernel implements IBaseKernel {
                 logger.trace('End running kernel initialization, session is idle');
             }
             kernelIdle?.stop();
+
+            // Post initialization event is only emitted on successful initialization
             this._onPostInitialized.fire();
         } finally {
             postInitialization?.stop();

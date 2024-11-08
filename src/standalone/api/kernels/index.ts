@@ -12,35 +12,10 @@ import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../..
 import { IDisposableRegistry } from '../../../platform/common/types';
 
 const kernelCache = new WeakMap<IKernel, Kernel>();
-const _onDidInitialize = new EventEmitter<{ uri: Uri }>();
-let isKernelProviderHookRegistered = false;
+let _onDidInitialize: EventEmitter<{ uri: Uri }> | undefined = undefined;
 
 export function getKernelsApi(extensionId: string): Kernels {
     return {
-        get onDidInitialize() {
-            let accessAllowed: boolean | undefined = undefined;
-
-            if (!isKernelProviderHookRegistered) {
-                const disposableRegistry = ServiceContainer.instance.get<IDisposableRegistry>(IDisposableRegistry);
-                const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
-                disposableRegistry.push(
-                    kernelProvider.onDidPostInitializeKernel((e) => {
-                        _onDidInitialize.fire({
-                            uri: e.uri
-                        });
-                    })
-                );
-                isKernelProviderHookRegistered = true;
-            }
-
-            sendTelemetryEvent(Telemetry.NewJupyterKernelsApiUsage, undefined, {
-                extensionId,
-                pemUsed: 'onDidInitialize',
-                accessAllowed
-            });
-
-            return _onDidInitialize.event;
-        },
         async getKernel(uri: Uri) {
             let accessAllowed: boolean | undefined = undefined;
 
@@ -65,6 +40,24 @@ export function getKernelsApi(extensionId: string): Kernels {
             let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
             kernelCache.set(kernel, wrappedKernel);
             return wrappedKernel;
+        },
+        get onDidInitialize() {
+            // We can cache the event emitter for subsequent calls.
+            if (!_onDidInitialize) {
+                const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
+                const disposableRegistry = ServiceContainer.instance.get<IDisposableRegistry>(IDisposableRegistry);
+                _onDidInitialize = new EventEmitter<{ uri: Uri }>();
+
+                disposableRegistry.push(
+                    kernelProvider.onDidPostInitializeKernel((e) => {
+                        _onDidInitialize?.fire({ uri: e.uri });
+                    }),
+                    _onDidInitialize,
+                    { dispose: () => (_onDidInitialize = undefined) }
+                );
+            }
+
+            return _onDidInitialize.event;
         }
     };
 }

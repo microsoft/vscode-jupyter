@@ -508,6 +508,7 @@ export interface IBaseKernelProvider<T extends IBaseKernel> extends IAsyncDispos
     onDidDisposeKernel: Event<T>;
     onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: T }>;
     onDidPostInitializeKernel: Event<T>;
+    onDidDispose: Event<void>;
 }
 
 /**
