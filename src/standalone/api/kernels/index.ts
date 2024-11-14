@@ -7,7 +7,7 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { createKernelApiForExtension as createKernelApiForExtension } from './kernel';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
-import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { DATA_WRANGLER_EXTENSION_ID, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
 import { IDisposableRegistry } from '../../../platform/common/types';
 
@@ -42,6 +42,10 @@ export function getKernelsApi(extensionId: string): Kernels {
             return wrappedKernel;
         },
         get onDidInitialize() {
+            if (![JVSC_EXTENSION_ID, DATA_WRANGLER_EXTENSION_ID].includes(extensionId)) {
+                throw new Error(`Proposed API is not supported for extension ${extensionId}`);
+            }
+
             // We can cache the event emitter for subsequent calls.
             if (!_onDidInitialize) {
                 const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);

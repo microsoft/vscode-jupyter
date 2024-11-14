@@ -175,6 +175,7 @@ abstract class BaseKernel implements IBaseKernel {
     private _disposed?: boolean;
     private _disposing?: boolean;
     private _ignoreJupyterSessionDisposedErrors?: boolean;
+    private _postInitializedOnStart?: boolean;
     private readonly _onDidKernelSocketChange = new EventEmitter<void>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
@@ -250,7 +251,15 @@ abstract class BaseKernel implements IBaseKernel {
             this.startCancellation.dispose();
             this.startCancellation = new CancellationTokenSource();
         }
-        return this.startJupyterSession(options);
+        return this.startJupyterSession(options).then((result) => {
+            // If we started and the UI is no longer disabled (ie., a user executed a cell)
+            // then we can signal that the kernel was created and can be used by third-party extensions.
+            // We also only want to fire off a single event here.
+            if (!options?.disableUI && !this._postInitializedOnStart) {
+                this._onPostInitialized.fire();
+            }
+            return result;
+        });
     }
     /**
      * Interrupts the execution of cells.
@@ -413,6 +422,9 @@ abstract class BaseKernel implements IBaseKernel {
 
             // Indicate a restart occurred if it succeeds
             this._onRestarted.fire();
+
+            // Also signal that the kernel post initialization completed.
+            this._onPostInitialized.fire();
         } catch (ex) {
             logger.error(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
@@ -792,9 +804,6 @@ abstract class BaseKernel implements IBaseKernel {
                 logger.trace('End running kernel initialization, session is idle');
             }
             kernelIdle?.stop();
-
-            // Post initialization event is only emitted on successful initialization
-            this._onPostInitialized.fire();
         } finally {
             postInitialization?.stop();
         }
