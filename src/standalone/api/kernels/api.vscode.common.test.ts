@@ -216,7 +216,7 @@ suiteMandatory('Kernel API Tests @typescript', function () {
         });
         assert.equal(startEventCounter, 0, 'Kernel start event was triggered for a non-user kernel start');
     });
-    testMandatory('Kernel start event is triggered when user executes code', async function () {
+    testMandatory('Kernel start event is triggered when started with UI enabled', async function () {
         let startEventCounter = 0;
         // Register event listener to track invocations
         disposables.push(
@@ -253,73 +253,81 @@ suiteMandatory('Kernel API Tests @typescript', function () {
         await realKernel.restart();
         assert.equal(startEventCounter, 2, 'Kernel start event should be fired more than once for restarts');
     });
-    testMandatory('Kernel start event is triggered before first user execution', async function () {
-        // Register event listener to track invocations
-        const source = new CancellationTokenSource();
-        let startEventCounter = 0;
-        disposables.push(
-            kernels.onDidStart(({ kernel }) => {
-                const codeToRun =
-                    startEventCounter === 0 ? `let foo = ${startEventCounter}` : `foo = ${startEventCounter}`;
-                startEventCounter++;
-                kernel.executeCode(codeToRun, source.token);
-            })
-        );
-        await insertCodeCell('console.log(foo)', { index: 0, language: 'typescript' });
+    testMandatory(
+        'Kernel start event is triggered when user executes code and the event execution runs first',
+        async function () {
+            // Register event listener to track invocations
+            const source = new CancellationTokenSource();
+            let startEventCounter = 0;
+            disposables.push(
+                kernels.onDidStart(async ({ kernel }) => {
+                    const codeToRun =
+                        startEventCounter === 0 ? `let foo = ${startEventCounter}` : `foo = ${startEventCounter}`;
+                    startEventCounter++;
 
-        await realKernel.start({
-            disableUI: true,
-            onDidChangeDisableUI: () => ({
-                dispose: noop
-            })
-        });
-        assert.equal(startEventCounter, 0, 'Kernel start event was triggered for a non-user kernel start');
+                    // This is needed for the async generator to get executed.
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    for await (const _out of kernel.executeCode(codeToRun, source.token)) {
+                    }
+                })
+            );
+            await insertCodeCell('console.log(foo)', { index: 0, language: 'typescript' });
 
-        const cell = notebook.cellAt(0)!;
-        const executionOrderSet = createDeferred();
-        const eventHandler = notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
-            if (e.cell === cell && e.cell.executionSummary?.executionOrder) {
-                executionOrderSet.resolve();
+            await realKernel.start({
+                disableUI: true,
+                onDidChangeDisableUI: () => ({
+                    dispose: noop
+                })
+            });
+            assert.equal(startEventCounter, 0, 'Kernel start event was triggered for a non-user kernel start');
+            const cell = notebook.cellAt(0)!;
+            const executionOrderSet = createDeferred();
+            const eventHandler = notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+                if (e.cell === cell && e.cell.executionSummary?.executionOrder) {
+                    executionOrderSet.resolve();
+                }
+            });
+            disposables.push(eventHandler);
+            await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
+
+            // Validate the cell execution output is equal to the expected value of "foo = 0"
+            const expectedMime = NotebookCellOutputItem.stdout('').mime;
+            assert.equal(
+                await decodeFirstOutput(cell, expectedMime),
+                '0',
+                'Invalid output, kernel start hook should execute code first'
+            );
+
+            const kernel = await kernels.getKernel(notebook.uri);
+            if (!kernel) {
+                throw new Error('Kernel not found');
             }
-        });
-        disposables.push(eventHandler);
-        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
 
-        // Validate the cell execution output is equal to the expected value of "foo = 0"
-        const expectedMime = NotebookCellOutputItem.stdout('').mime;
-        assert.isTrue(
-            await cellHasOutput(cell, '0', expectedMime),
-            'Invalid output, kernel start hook should execute code first'
-        );
+            // Start event counter should only be 1 after the initial user cell execution
+            assert.equal(startEventCounter, 1, 'Kernel start event was not triggered for a user kernel start');
 
-        const kernel = await kernels.getKernel(notebook.uri);
-        if (!kernel) {
-            throw new Error('Kernel not found');
+            // Running the same cell again should not fire additional events
+            await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
+            assert.equal(
+                await decodeFirstOutput(cell, expectedMime),
+                '0',
+                'Invalid output, kernel start hook should only execute once'
+            );
+            assert.equal(startEventCounter, 1, 'Start event should not be triggered more than once');
         }
+    );
 
-        // Start event counter should only be 1 after the initial user cell execution
-        assert.equal(startEventCounter, 1, 'Kernel start event was not triggered for a user kernel start');
-
-        // Running the same cell again should not fire additional events
-        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
-        assert.isTrue(
-            await cellHasOutput(cell, '0', expectedMime),
-            'Invalid output, kernel start hook should only execute once'
-        );
-        assert.equal(startEventCounter, 1, 'Start event should not be triggered more than once');
-    });
-
-    async function cellHasOutput(cell: NotebookCell, expectedOutput: string, expectedMimetype: string) {
-        return Boolean(
-            cell.outputs.find((output) =>
-                output.items.some((item) => {
+    async function decodeFirstOutput(cell: NotebookCell, expectedMimetype: string) {
+        return (
+            cell.outputs
+                .flatMap((output) => output.items)
+                .map((item) => {
                     if (item.mime === expectedMimetype) {
                         const output = new TextDecoder().decode(item.data).trim();
-                        return output === expectedOutput;
+                        return output;
                     }
-                    return false;
                 })
-            )
+                .find((item) => item !== undefined) ?? ''
         );
     }
 
