@@ -17,7 +17,7 @@ import { ThirdPartyKernelProvider } from './kernelProvider.node';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { noop } from '../test/core';
 
-suite.only('Jupyter Session', () => {
+suite('Jupyter Session', () => {
     suite('Web Kernel Provider', function () {
         let disposables: IDisposable[] = [];
         const asyncDisposables: { dispose: () => Promise<unknown> }[] = [];
