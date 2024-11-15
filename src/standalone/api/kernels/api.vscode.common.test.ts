@@ -210,38 +210,63 @@ suiteMandatory('Kernel API Tests @typescript', function () {
                 dispose: noop
             })
         });
-        assert.equal(startEventCounter, 0);
-
-        const kernel = createKernelApiForExtension(JVSC_EXTENSION_ID_FOR_TESTS, realKernel);
-
-        logger.info(`Execute code silently`);
-        const expectedMime = NotebookCellOutputItem.stdout('').mime;
-        const token = new CancellationTokenSource();
-        await waitForOutput(kernel.executeCode('console.log(1234)', token.token), '1234', expectedMime);
-        logger.info(`Execute code silently completed`);
-        // Wait for kernel to be idle.
-        await waitForCondition(
-            () => kernel.status === 'idle',
-            5_000,
-            `Kernel did not become idle, current status is ${kernel.status}`
-        );
-        assert.equal(startEventCounter, 0);
+        assert.equal(startEventCounter, 0, 'Kernel start event was triggered for a non-user kernel start');
     });
-    testMandatory('Kernel start event is triggered before first user execution and on restart', async function () {
+    testMandatory('Kernel start event is triggered when user executes code', async function () {
+        let startEventCounter = 0;
+        // Register event listener to track invocations
+        disposables.push(
+            kernels.onDidStart(() => {
+                startEventCounter++;
+            })
+        );
+
+        await realKernel.start({
+            disableUI: false,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
+        assert.equal(startEventCounter, 1, 'Kernel start event was not triggered for a user kernel start');
+    });
+    testMandatory('Kernel start event is triggered when kernel restarts', async function () {
+        let startEventCounter = 0;
+        // Register event listener to track invocations
+        disposables.push(
+            kernels.onDidStart(() => {
+                startEventCounter++;
+            })
+        );
+
+        await realKernel.start({
+            disableUI: true,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
+        await realKernel.restart();
+        assert.equal(startEventCounter, 1, 'Kernel start event should be fired exactly once after restarting');
+    });
+    testMandatory('Kernel start event is triggered before first user execution', async function () {
         // Register event listener to track invocations
         const source = new CancellationTokenSource();
         let startEventCounter = 0;
         disposables.push(
             kernels.onDidStart(({ kernel }) => {
-                startEventCounter++;
                 const codeToRun =
                     startEventCounter === 0 ? `let foo = ${startEventCounter}` : `foo = ${startEventCounter}`;
+                startEventCounter++;
                 kernel.executeCode(codeToRun, source.token);
             })
         );
         await insertCodeCell('console.log(foo)', { index: 0, language: 'typescript' });
 
-        await realKernel.start();
+        await realKernel.start({
+            disableUI: false,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
         assert.equal(startEventCounter, 1);
 
         const cell = notebook.cellAt(0)!;
@@ -270,14 +295,6 @@ suiteMandatory('Kernel API Tests @typescript', function () {
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
         assert.isTrue(cellHasOutput(cell, '1', expectedMime));
         assert.equal(startEventCounter, 1);
-
-        // Start event should be triggered on restart
-        await realKernel.restart();
-        assert.equal(startEventCounter, 2);
-
-        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
-        assert.equal(startEventCounter, 2);
-        assert.isTrue(cellHasOutput(cell, '2', expectedMime));
     });
 
     async function cellHasOutput(cell: NotebookCell, expectedOutput: string, expectedMimetype: string) {

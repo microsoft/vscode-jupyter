@@ -29,7 +29,8 @@ export function getKernelsApi(extensionId: string): Kernels {
             const notebook = workspace.notebookDocuments.find((item) => item.uri.toString() === uri.toString());
             const kernel = kernelProvider.get(notebook || uri);
             // We are only interested in returning kernels that have been started by the user.
-            if (!kernel || !kernel.startedAtLeastOnce) {
+            // Returning started kernels is not sufficient as we also pre-warm kernels (i.e. we start kernels even though the user may not have executed any code).
+            if (!kernel || !kernel.startedAtLeastOnce || !kernel.userStartedKernel) {
                 sendTelemetryEvent(Telemetry.NewJupyterKernelsApiUsage, undefined, {
                     extensionId,
                     pemUsed: 'getKernel',
