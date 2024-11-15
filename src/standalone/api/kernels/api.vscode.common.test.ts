@@ -258,7 +258,7 @@ suiteMandatory('Kernel API Tests @typescript', function () {
         const source = new CancellationTokenSource();
         let startEventCounter = 0;
         disposables.push(
-            kernels.onDidStart(async ({ kernel }) => {
+            kernels.onDidStart(({ kernel }) => {
                 const codeToRun =
                     startEventCounter === 0 ? `let foo = ${startEventCounter}` : `foo = ${startEventCounter}`;
                 startEventCounter++;
