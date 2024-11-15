@@ -41,6 +41,7 @@ import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { escapeStringToEmbedInPythonCode } from '../../../kernels/chat/generator';
 import { notebookCellExecutions } from '../../../platform/notebooks/cellExecutionStateService';
 import { createKernelApiForExtension } from './kernel';
+import { noop } from '../../../test/core';
 
 suiteMandatory('Kernel API Tests @typescript', function () {
     const disposables: IDisposable[] = [];
@@ -203,7 +204,14 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             })
         );
 
-        await realKernel.start();
+        await realKernel.start({
+            disableUI: true,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
+        assert.equal(startEventCounter, 0);
+
         const kernel = createKernelApiForExtension(JVSC_EXTENSION_ID_FOR_TESTS, realKernel);
 
         logger.info(`Execute code silently`);
@@ -226,12 +234,16 @@ suiteMandatory('Kernel API Tests @typescript', function () {
         disposables.push(
             kernels.onDidStart(({ kernel }) => {
                 startEventCounter++;
-                kernel.executeCode(`foo = ${startEventCounter}`, source.token);
+                const codeToRun =
+                    startEventCounter === 0 ? `let foo = ${startEventCounter}` : `foo = ${startEventCounter}`;
+                kernel.executeCode(codeToRun, source.token);
             })
         );
         await insertCodeCell('console.log(foo)', { index: 0, language: 'typescript' });
 
         await realKernel.start();
+        assert.equal(startEventCounter, 1);
+
         const cell = notebook.cellAt(0)!;
         const executionOrderSet = createDeferred();
         const eventHandler = notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
