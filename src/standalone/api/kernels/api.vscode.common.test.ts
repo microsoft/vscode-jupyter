@@ -115,7 +115,12 @@ suiteMandatory('Kernel API Tests @typescript', function () {
 
         // Even after starting a kernel the API should not return anything,
         // as no code has been executed against this kernel.
-        await realKernel.start();
+        await realKernel.start({
+            disableUI: true,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
         assert.isUndefined(await kernels.getKernel(notebook.uri));
 
         // Ensure user has executed some code against this kernel.
@@ -253,7 +258,7 @@ suiteMandatory('Kernel API Tests @typescript', function () {
         const source = new CancellationTokenSource();
         let startEventCounter = 0;
         disposables.push(
-            kernels.onDidStart(({ kernel }) => {
+            kernels.onDidStart(async ({ kernel }) => {
                 const codeToRun =
                     startEventCounter === 0 ? `let foo = ${startEventCounter}` : `foo = ${startEventCounter}`;
                 startEventCounter++;
@@ -280,10 +285,10 @@ suiteMandatory('Kernel API Tests @typescript', function () {
         disposables.push(eventHandler);
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
 
-        // Validate the cell execution output is equal to the expected value of "foo = 1"
+        // Validate the cell execution output is equal to the expected value of "foo = 0"
         const expectedMime = NotebookCellOutputItem.stdout('').mime;
         assert.isTrue(
-            cellHasOutput(cell, '1', expectedMime),
+            await cellHasOutput(cell, '0', expectedMime),
             'Invalid output, kernel start hook should execute code first'
         );
 
@@ -297,7 +302,10 @@ suiteMandatory('Kernel API Tests @typescript', function () {
 
         // Running the same cell again should not fire additional events
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
-        assert.isTrue(cellHasOutput(cell, '1', expectedMime));
+        assert.isTrue(
+            await cellHasOutput(cell, '0', expectedMime),
+            'Invalid output, kernel start hook should only execute once'
+        );
         assert.equal(startEventCounter, 1, 'Start event should not be triggered more than once');
     });
 

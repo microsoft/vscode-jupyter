@@ -142,7 +142,7 @@ abstract class BaseKernel implements IBaseKernel {
         return this._startedAtLeastOnce;
     }
     get userStartedKernel() {
-        return this.startupUI.disableUI;
+        return !this.startupUI.disableUI;
     }
     private _info?: KernelMessage.IInfoReplyMsg['content'];
     private _startedAtLeastOnce?: boolean;
