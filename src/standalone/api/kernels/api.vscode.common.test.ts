@@ -246,6 +246,8 @@ suiteMandatory('Kernel API Tests @typescript', function () {
         });
         await realKernel.restart();
         assert.equal(startEventCounter, 1, 'Kernel start event should be fired exactly once after restarting');
+        await realKernel.restart();
+        assert.equal(startEventCounter, 2, 'Kernel start event should be fired more than once for restarts');
     });
     testMandatory('Kernel start event is triggered before first user execution', async function () {
         // Register event listener to track invocations
