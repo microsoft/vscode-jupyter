@@ -2,7 +2,15 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { CancellationTokenSource, NotebookCellOutputItem, NotebookDocument, commands, window, workspace } from 'vscode';
+import {
+    CancellationTokenSource,
+    NotebookCell,
+    NotebookCellOutputItem,
+    NotebookDocument,
+    commands,
+    window,
+    workspace
+} from 'vscode';
 import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import {
@@ -32,6 +40,7 @@ import { KernelError } from '../../../kernels/errors/kernelError';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { escapeStringToEmbedInPythonCode } from '../../../kernels/chat/generator';
 import { notebookCellExecutions } from '../../../platform/notebooks/cellExecutionStateService';
+import { createKernelApiForExtension } from './kernel';
 
 suiteMandatory('Kernel API Tests @typescript', function () {
     const disposables: IDisposable[] = [];
@@ -185,6 +194,93 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             'Traceback does not contain original error'
         );
     });
+    testMandatory('Kernel start event is not triggered by silent executions', async function () {
+        let startEventCounter = 0;
+        // Register event listener to track invocations
+        disposables.push(
+            kernels.onDidStart(() => {
+                startEventCounter++;
+            })
+        );
+
+        await realKernel.start();
+        const kernel = createKernelApiForExtension(JVSC_EXTENSION_ID_FOR_TESTS, realKernel);
+
+        logger.info(`Execute code silently`);
+        const expectedMime = NotebookCellOutputItem.stdout('').mime;
+        const token = new CancellationTokenSource();
+        await waitForOutput(kernel.executeCode('console.log(1234)', token.token), '1234', expectedMime);
+        logger.info(`Execute code silently completed`);
+        // Wait for kernel to be idle.
+        await waitForCondition(
+            () => kernel.status === 'idle',
+            5_000,
+            `Kernel did not become idle, current status is ${kernel.status}`
+        );
+        assert.equal(startEventCounter, 0);
+    });
+    testMandatory('Kernel start event is triggered before first user execution and on restart', async function () {
+        // Register event listener to track invocations
+        const source = new CancellationTokenSource();
+        let startEventCounter = 0;
+        disposables.push(
+            kernels.onDidStart(({ kernel }) => {
+                startEventCounter++;
+                kernel.executeCode(`foo = ${startEventCounter}`, source.token);
+            })
+        );
+        await insertCodeCell('console.log(foo)', { index: 0, language: 'typescript' });
+
+        await realKernel.start();
+        const cell = notebook.cellAt(0)!;
+        const executionOrderSet = createDeferred();
+        const eventHandler = notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+            if (e.cell === cell && e.cell.executionSummary?.executionOrder) {
+                executionOrderSet.resolve();
+            }
+        });
+        disposables.push(eventHandler);
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
+
+        // Validate the cell execution output is equal to the expected value of "foo = 1"
+        const expectedMime = NotebookCellOutputItem.stdout('').mime;
+        assert.isTrue(cellHasOutput(cell, '1', expectedMime));
+
+        const kernel = await kernels.getKernel(notebook.uri);
+        if (!kernel) {
+            throw new Error('Kernel not found');
+        }
+
+        // Start event counter should only be 1 after the initial user cell execution
+        assert.equal(startEventCounter, 1);
+
+        // Running the same cell again should not fire additional events
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
+        assert.isTrue(cellHasOutput(cell, '1', expectedMime));
+        assert.equal(startEventCounter, 1);
+
+        // Start event should be triggered on restart
+        await realKernel.restart();
+        assert.equal(startEventCounter, 2);
+
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
+        assert.equal(startEventCounter, 2);
+        assert.isTrue(cellHasOutput(cell, '2', expectedMime));
+    });
+
+    async function cellHasOutput(cell: NotebookCell, expectedOutput: string, expectedMimetype: string) {
+        return Boolean(
+            cell.outputs.find((output) =>
+                output.items.some((item) => {
+                    if (item.mime === expectedMimetype) {
+                        const output = new TextDecoder().decode(item.data).trim();
+                        return output === expectedOutput;
+                    }
+                    return false;
+                })
+            )
+        );
+    }
 
     async function waitForOutput(
         executionResult: AsyncIterable<Output>,

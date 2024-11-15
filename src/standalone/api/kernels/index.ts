@@ -12,7 +12,13 @@ import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../..
 import { IDisposableRegistry } from '../../../platform/common/types';
 
 const kernelCache = new WeakMap<IKernel, Kernel>();
-let _onDidInitialize: EventEmitter<{ uri: Uri }> | undefined = undefined;
+let _onDidStart: EventEmitter<{ uri: Uri; kernel: Kernel }> | undefined = undefined;
+
+function getWrappedKernel(kernel: IKernel, extensionId: string) {
+    let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
+    kernelCache.set(kernel, wrappedKernel);
+    return wrappedKernel;
+}
 
 export function getKernelsApi(extensionId: string): Kernels {
     return {
@@ -37,31 +43,29 @@ export function getKernelsApi(extensionId: string): Kernels {
                     kernel.kernelConnectionMetadata
                 );
             }
-            let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
-            kernelCache.set(kernel, wrappedKernel);
-            return wrappedKernel;
+            return getWrappedKernel(kernel, extensionId);
         },
-        get onDidInitialize() {
+        get onDidStart() {
             if (![JVSC_EXTENSION_ID, DATA_WRANGLER_EXTENSION_ID].includes(extensionId)) {
                 throw new Error(`Proposed API is not supported for extension ${extensionId}`);
             }
 
             // We can cache the event emitter for subsequent calls.
-            if (!_onDidInitialize) {
+            if (!_onDidStart) {
                 const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
                 const disposableRegistry = ServiceContainer.instance.get<IDisposableRegistry>(IDisposableRegistry);
-                _onDidInitialize = new EventEmitter<{ uri: Uri }>();
+                _onDidStart = new EventEmitter<{ uri: Uri; kernel: Kernel }>();
 
                 disposableRegistry.push(
-                    kernelProvider.onDidPostInitializeKernel((e) => {
-                        _onDidInitialize?.fire({ uri: e.uri });
+                    kernelProvider.onDidPostInitializeKernel(async (kernel) => {
+                        _onDidStart?.fire({ uri: kernel.uri, kernel: getWrappedKernel(kernel, extensionId) });
                     }),
-                    _onDidInitialize,
-                    { dispose: () => (_onDidInitialize = undefined) }
+                    _onDidStart,
+                    { dispose: () => (_onDidStart = undefined) }
                 );
             }
 
-            return _onDidInitialize.event;
+            return _onDidStart.event;
         }
     };
 }

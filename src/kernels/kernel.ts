@@ -257,6 +257,7 @@ abstract class BaseKernel implements IBaseKernel {
             // We also only want to fire off a single event here.
             if (!options?.disableUI && !this._postInitializedOnStart) {
                 this._onPostInitialized.fire();
+                this._postInitializedOnStart = true;
             }
             return result;
         });
