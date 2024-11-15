@@ -40,7 +40,6 @@ import { KernelError } from '../../../kernels/errors/kernelError';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { escapeStringToEmbedInPythonCode } from '../../../kernels/chat/generator';
 import { notebookCellExecutions } from '../../../platform/notebooks/cellExecutionStateService';
-import { createKernelApiForExtension } from './kernel';
 import { noop } from '../../../test/core';
 
 suiteMandatory('Kernel API Tests @typescript', function () {
