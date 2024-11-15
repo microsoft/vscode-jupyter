@@ -232,6 +232,15 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             })
         });
         assert.equal(startEventCounter, 1, 'Kernel start event was not triggered for a user kernel start');
+
+        // If we call start again with UI enabled, we shouldn't fire additional events
+        await realKernel.start({
+            disableUI: false,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
+        assert.equal(startEventCounter, 1, 'Multiple start calls should not fire more events');
     });
     testMandatory('Kernel start event is triggered when kernel restarts', async function () {
         let startEventCounter = 0;
