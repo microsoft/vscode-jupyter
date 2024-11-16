@@ -2020,7 +2020,7 @@
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",
-                    "name": "Variables",
+                    "name": "Jupyter Variables",
                     "when": "jupyter.hasNativeNotebookOrInteractiveWindowOpen"
                 }
             ]

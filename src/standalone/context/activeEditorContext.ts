@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { NotebookEditor, TextEditor, window, workspace } from 'vscode';
+import { NotebookDocument, NotebookEditor, TextEditor, window, workspace } from 'vscode';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { EditorContexts, PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -98,16 +98,6 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         if (window.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
             this.onDidChangeActiveTextEditor(window.activeTextEditor);
         }
-        window.onDidChangeNotebookEditorSelection(
-            this.updateNativeNotebookInteractiveWindowOpenContext,
-            this,
-            this.disposables
-        );
-        workspace.onDidOpenNotebookDocument(
-            this.updateNativeNotebookInteractiveWindowOpenContext,
-            this,
-            this.disposables
-        );
         workspace.onDidCloseNotebookDocument(
             this.updateNativeNotebookInteractiveWindowOpenContext,
             this,
@@ -124,7 +114,6 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
     }
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
         this.interactiveContext.set(!!e).catch(noop);
-        this.updateNativeNotebookInteractiveWindowOpenContext();
         this.updateMergedContexts();
         this.updateContextOfActiveInteractiveWindowKernel();
     }
@@ -137,19 +126,20 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
             .catch(noop);
         this.updateContextOfActiveNotebookKernel(e);
         this.updateContextOfActiveInteractiveWindowKernel();
-        this.updateNativeNotebookInteractiveWindowOpenContext();
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
     }
-    private updateNativeNotebookInteractiveWindowOpenContext() {
-        this.hasNativeNotebookOrInteractiveWindowOpen
-            .set(
-                workspace.notebookDocuments.some(
-                    (nb) => nb.notebookType === JupyterNotebookView || nb.notebookType === InteractiveWindowView
-                )
-            )
-            .catch(noop);
+
+    private ownedOpenNotebooks = new Set<NotebookDocument>();
+    private updateNativeNotebookInteractiveWindowOpenContext(e: NotebookDocument, jupyterKernelSelected?: boolean) {
+        if (jupyterKernelSelected) {
+            this.ownedOpenNotebooks.add(e);
+        } else {
+            this.ownedOpenNotebooks.delete(e);
+        }
+        this.hasNativeNotebookOrInteractiveWindowOpen.set(this.ownedOpenNotebooks.size > 0).catch(noop);
     }
+
     private updateContextOfActiveNotebookKernel(activeEditor?: NotebookEditor) {
         const kernel =
             activeEditor && activeEditor.notebook.notebookType === JupyterNotebookView
@@ -195,6 +185,7 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
             this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookDocument;
         if (document && isJupyterNotebook(document) && this.controllers.getSelected(document)) {
             this.isJupyterKernelSelected.set(true).catch(noop);
+            this.updateNativeNotebookInteractiveWindowOpenContext(document, true);
         } else {
             this.isJupyterKernelSelected.set(false).catch(noop);
         }
