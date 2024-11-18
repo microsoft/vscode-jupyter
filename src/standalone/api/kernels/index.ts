@@ -58,7 +58,7 @@ export function getKernelsApi(extensionId: string): Kernels {
                 _onDidStart = new EventEmitter<{ uri: Uri; kernel: Kernel }>();
 
                 disposableRegistry.push(
-                    kernelProvider.onDidPostInitializeKernel(async (kernel) => {
+                    kernelProvider.onDidPostInitializeKernel((kernel) => {
                         _onDidStart?.fire({ uri: kernel.uri, kernel: getWrappedKernel(kernel, extensionId) });
                     }),
                     _onDidStart,
