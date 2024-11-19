@@ -97,6 +97,13 @@ export class KernelProvider extends BaseCoreKernelProvider {
             this,
             this.disposables
         );
+        kernel.onPostInitialized(
+            () => {
+                this._onDidPostInitializeKernel.fire(kernel);
+            },
+            this,
+            this.disposables
+        );
 
         this.executions.set(kernel, new NotebookKernelExecution(kernel, this.context, this.formatters, notebook));
         this.asyncDisposables.push(kernel);
@@ -149,6 +156,13 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
             (status) => this._onKernelStatusChanged.fire({ kernel, status }),
+            this,
+            this.disposables
+        );
+        kernel.onPostInitialized(
+            () => {
+                this._onDidPostInitializeKernel.fire(kernel);
+            },
             this,
             this.disposables
         );
