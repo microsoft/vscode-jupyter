@@ -11,7 +11,7 @@ def check_for_ipython():
         try:
             from IPython import get_ipython
 
-            return not get_ipython() == None
+            return not get_ipython() == None  # noqa: E711
         except ImportError:
             pass
     return False
@@ -33,7 +33,7 @@ def execute_script(file, replace_dict=dict([])):
             # Replace the key value pairs
             contents += (
                 line
-                if regex == None
+                if regex is None
                 else regex.sub(lambda m: replace_dict[m.group()], line)
             )
 
@@ -44,7 +44,7 @@ def execute_script(file, replace_dict=dict([])):
 
 def execute_code(code):
     # Execute this script as a cell
-    result = get_ipython().run_cell(code)
+    result = get_ipython().run_cell(code)  # type: ignore # noqa: F821
     return result
 
 

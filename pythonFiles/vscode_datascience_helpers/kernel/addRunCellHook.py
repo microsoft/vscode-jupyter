@@ -30,7 +30,7 @@ def __VSCODE_wrap_run_cell(wrapped_func):
             if store_history:
                 del os.environ["IPYKERNEL_CELL_NAME"]
             return result
-        except:
+        except:  # noqa: E722
             return old_func(*args, **kwargs)
 
     return _VSCODE_types.MethodType(wrapper, wrapped_func.__self__)

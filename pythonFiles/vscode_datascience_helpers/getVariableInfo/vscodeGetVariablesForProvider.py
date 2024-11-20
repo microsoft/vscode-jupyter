@@ -325,7 +325,7 @@ class SafeRepr(object):
             yield part1
             yield "..."
             yield part2
-        except:
+        except:  # noqa: E722
             # This shouldn't really happen, but let's play it safe.
             # exception('Error getting string representation to show.')
             for part in self._repr_obj(

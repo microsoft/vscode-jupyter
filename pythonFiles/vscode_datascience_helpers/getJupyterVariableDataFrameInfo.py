@@ -77,7 +77,7 @@ else:
             _VSCODE_columnNames = list(_VSCODE_json.loads(_VSCODE_json_row))
             del _VSCODE_row
             del _VSCODE_json_row
-        except:
+        except:  # noqa: E722
             _VSCODE_columnNames = list(_VSCODE_df)
     else:
         _VSCODE_columnNames = list(_VSCODE_df)

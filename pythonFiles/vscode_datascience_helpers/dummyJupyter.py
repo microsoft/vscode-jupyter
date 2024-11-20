@@ -1,6 +1,5 @@
 # This file can mimic juypter running. Useful for testing jupyter crash handling
 
-import sys
 import argparse
 import time
 

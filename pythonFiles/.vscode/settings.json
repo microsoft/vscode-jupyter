@@ -3,5 +3,13 @@
         "**/__pycache__/**": true,
         "**/**/*.pyc": true
     },
-    "python.formatting.provider": "black"
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit"
+        },
+        "notebook.codeActionsOnSave": {
+            "notebook.source.fixAll": "explicit"
+        }
+    }
 }

@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+
 import sys as VC_sys
 import locale as VC_locale
 
@@ -9,11 +13,11 @@ VC_IS_PY2 = VC_sys.version_info < (3,)
 class VC_SafeRepr(object):
     # Py3 compat - alias unicode to str, and xrange to range
     try:
-        unicode  # noqa
+        unicode  # type: ignore # noqa
     except NameError:
         unicode = str
     try:
-        xrange  # noqa
+        xrange  # type: ignore # noqa
     except NameError:
         xrange = range
 
@@ -38,7 +42,7 @@ class VC_SafeRepr(object):
         string_types = (str, unicode)
         set_info = (set, "set([", "])", False)
         frozenset_info = (frozenset, "frozenset([", "])", False)
-        int_types = (int, long)  # noqa
+        int_types = (int, long)  # type: ignore # noqa
         long_iter_types = (
             list,
             tuple,
@@ -47,7 +51,7 @@ class VC_SafeRepr(object):
             dict,
             set,
             frozenset,
-            buffer,
+            buffer, # type: ignore  # noqa: F821
         )  # noqa
 
     # Collection types are recursively iterated for each limit in
@@ -90,9 +94,9 @@ class VC_SafeRepr(object):
 
     def __call__(self, obj):
         try:
-            if VC_IS_PY2:
+            if VC_IS_PY2:  # noqa: F821
                 return "".join(
-                    (x.encode("utf-8") if isinstance(x, unicode) else x)
+                    (x.encode("utf-8") if isinstance(x, unicode) else x)  # noqa: F821 # type: ignore
                     for x in self._repr(obj, 0)
                 )
             else:
@@ -172,7 +176,7 @@ class VC_SafeRepr(object):
                 return False
 
             # xrange reprs fine regardless of length.
-            if isinstance(obj, xrange):
+            if isinstance(obj, xrange):  # type: ignore # noqa: F821
                 return False
 
             # numpy and scipy collections (ndarray etc) have
@@ -345,17 +349,17 @@ class VC_SafeRepr(object):
             max(1, int(limit / 3)),
         )  # noqa
 
-        if VC_IS_PY2 and isinstance(obj_repr, bytes):
+        if VC_IS_PY2 and isinstance(obj_repr, bytes):  # noqa: F821
             # If we can convert to unicode before slicing, that's better (but don't do
             # it if it's not possible as we may be dealing with actual binary data).
 
             obj_repr = self._bytes_as_unicode_if_possible(obj_repr)
-            if isinstance(obj_repr, unicode):
+            if isinstance(obj_repr, unicode):  # type: ignore # noqa: F821
                 # Deal with high-surrogate leftovers on Python 2.
                 try:
-                    if left_count > 0 and unichr(0xD800) <= obj_repr[
+                    if left_count > 0 and unichr(0xD800) <= obj_repr[  # noqa: F821 # type: ignore
                         left_count - 1
-                    ] <= unichr(0xDBFF):
+                    ] <= unichr(0xDBFF):  # type: ignore # noqa: F821
                         left_count -= 1
                 except ValueError:
                     # On Jython unichr(0xD800) will throw an error:
@@ -371,9 +375,9 @@ class VC_SafeRepr(object):
 
                 # Deal with high-surrogate leftovers on Python 2.
                 try:
-                    if right_count > 0 and unichr(0xD800) <= obj_repr[
+                    if right_count > 0 and unichr(0xD800) <= obj_repr[  # noqa: F821 # type: ignore
                         -right_count - 1
-                    ] <= unichr(0xDBFF):
+                    ] <= unichr(0xDBFF):  # type: ignore # noqa: F821
                         right_count -= 1
                 except ValueError:
                     # On Jython unichr(0xD800) will throw an error:
@@ -392,7 +396,7 @@ class VC_SafeRepr(object):
         yield obj_repr[-right_count:]
 
     def _convert_to_unicode_or_bytes_repr(self, obj_repr):
-        if VC_IS_PY2 and isinstance(obj_repr, bytes):
+        if VC_IS_PY2 and isinstance(obj_repr, bytes):  # noqa: F821
             obj_repr = self._bytes_as_unicode_if_possible(obj_repr)
             if isinstance(obj_repr, bytes):
                 # If we haven't been able to decode it this means it's some binary data
@@ -406,12 +410,12 @@ class VC_SafeRepr(object):
         # locale.getpreferredencoding() and 'utf-8). If no encoding can decode
         # the input, we return the original bytes.
         try_encodings = []
-        encoding = self.sys_stdout_encoding or getattr(VC_sys.stdout, "encoding", "")
+        encoding = self.sys_stdout_encoding or getattr(VC_sys.stdout, "encoding", "")  # noqa: F821
         if encoding:
             try_encodings.append(encoding.lower())
 
         preferred_encoding = (
-            self.locale_preferred_encoding or VC_locale.getpreferredencoding()
+            self.locale_preferred_encoding or VC_locale.getpreferredencoding()  # noqa: F821
         )
         if preferred_encoding:
             preferred_encoding = preferred_encoding.lower()
@@ -431,7 +435,7 @@ class VC_SafeRepr(object):
 
 
 # Query Jupyter server for the value of a variable
-import json as _VSCODE_json
+import json as _VSCODE_json  # noqa: E402
 
 _VSCODE_max_len = 200
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable
