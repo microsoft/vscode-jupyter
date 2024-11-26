@@ -2257,7 +2257,7 @@
         "@vscode/test-cli": "^0.0.8",
         "@vscode/test-electron": "^2.3.9",
         "@vscode/test-web": "^0.0.61",
-        "@vscode/zeromq": "^0.2.4",
+        "@vscode/zeromq": "^0.2.5",
         "acorn": "^8.9.0",
         "babel-polyfill": "^6.26.0",
         "buffer": "^6.0.3",
