@@ -166,8 +166,13 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         const sessionPromise = this.kernel.restarting.then(() => this.kernel.start(new DisplayOptions(false)));
 
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (3), ${getDisplayPath(cell.notebook.uri)}`);
+
+        // Wait for the kernel to complete post initialization before queueing the cell in case
+        // we need to allow extensions to run code before the initial user-triggered execution
+        await this.kernel.postInitializing;
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
         executionQueue.queueCell(cell, codeOverride);
+
         let success = true;
         try {
             traceCellMessage(cell, `NotebookKernelExecution.executeCell (4), ${getDisplayPath(cell.notebook.uri)}`);

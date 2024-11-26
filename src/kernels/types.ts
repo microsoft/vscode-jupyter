@@ -357,6 +357,7 @@ export interface IBaseKernel extends IAsyncDisposable {
     readonly onRestarted: Event<void>;
     readonly onPostInitialized: Event<void>;
     readonly restarting: Promise<void>;
+    readonly postInitializing: Promise<void>;
     readonly status: KernelMessage.Status;
     readonly disposed: boolean;
     readonly disposing: boolean;
