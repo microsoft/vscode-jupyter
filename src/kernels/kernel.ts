@@ -269,7 +269,7 @@ abstract class BaseKernel implements IBaseKernel {
                 // to queue code executions.
                 setTimeout(() => {
                     this._postInitializingDeferred.resolve();
-                }, 50);
+                }, 30);
             }
             return result;
         });
