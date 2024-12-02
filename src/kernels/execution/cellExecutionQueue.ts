@@ -65,8 +65,13 @@ export class CellExecutionQueue implements Disposable {
     /**
      * Queue the code for execution & start processing it immediately.
      */
-    public queueCode(code: string, extensionId: string, token: CancellationToken): ICodeExecution {
-        const item = this.enqueue({ code, extensionId, token });
+    public queueCode(
+        code: string,
+        extensionId: string,
+        token: CancellationToken,
+        validate?: () => Promise<boolean>
+    ): ICodeExecution {
+        const item = this.enqueue({ code, extensionId, token, validate });
         return item as ICodeExecution;
     }
     private enqueue(
@@ -79,7 +84,7 @@ export class CellExecutionQueue implements Disposable {
                   };
                   codeOverride?: string;
               }
-            | { code: string; extensionId: string; token: CancellationToken }
+            | { code: string; extensionId: string; token: CancellationToken; validate?: () => Promise<boolean> }
     ) {
         let executionItem: ICellExecution | ICodeExecution;
         if ('cell' in options) {
@@ -96,8 +101,8 @@ export class CellExecutionQueue implements Disposable {
 
             traceCellMessage(cell, 'User queued cell for execution');
         } else {
-            const { code, extensionId, token } = options;
-            const codeExecution = CodeExecution.fromCode(code, extensionId);
+            const { code, extensionId, token, validate } = options;
+            const codeExecution = CodeExecution.fromCode(code, extensionId, validate);
             executionItem = codeExecution;
             this.disposables.push(codeExecution);
             this.queueOfItemsToExecute.push(codeExecution);
@@ -205,6 +210,17 @@ export class CellExecutionQueue implements Disposable {
             // This way we don't accidentally end up queueing the same cell again (we know its in the queue).
             const itemToExecute = this.queueOfItemsToExecute[0];
             this.lastCellExecution = itemToExecute;
+
+            // Perform any async validations here to check if the code should be executed.
+            // We want to respect the order in which executes are called, but in some cases
+            // async validations need to be processed so we defer them until the queue is being run.
+            if (itemToExecute.type === 'code' && itemToExecute.validate) {
+                const isValid = await itemToExecute.validate();
+                if (!isValid) {
+                    continue;
+                }
+            }
+
             if (itemToExecute.type === 'cell') {
                 traceCellMessage(itemToExecute.cell, 'Before Execute individual cell');
             }

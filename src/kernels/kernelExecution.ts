@@ -166,6 +166,10 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         const sessionPromise = this.kernel.restarting.then(() => this.kernel.start(new DisplayOptions(false)));
 
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (3), ${getDisplayPath(cell.notebook.uri)}`);
+
+        // Wait for the kernel to complete post initialization before queueing the cell in case
+        // we need to allow extensions to run code before the initial user-triggered execution
+        await this.kernel.postInitializing;
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
         executionQueue.queueCell(cell, codeOverride);
         let success = true;
@@ -193,7 +197,8 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             started: EventEmitter<void>;
             executionAcknowledged: EventEmitter<void>;
         },
-        token: CancellationToken
+        token: CancellationToken,
+        validate?: () => Promise<boolean>
     ): AsyncGenerator<NotebookCellOutput, void, unknown> {
         const stopWatch = new StopWatch();
         // If we're restarting, wait for it to finish
@@ -208,7 +213,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             result = CodeExecution.fromCode(code, extensionId);
             void sessionPromise.then((session) => result.start(session));
         } else {
-            result = executionQueue.queueCode(code, extensionId, token);
+            result = executionQueue.queueCode(code, extensionId, token, validate);
         }
         if (extensionId !== JVSC_EXTENSION_ID) {
             logger.trace(

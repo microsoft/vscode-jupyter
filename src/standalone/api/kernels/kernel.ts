@@ -315,7 +315,6 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     }
 
     async *executeCode(code: string, token: CancellationToken): AsyncGenerator<Output, void, unknown> {
-        await this.checkAccess();
         for await (const output of this.executeCodeInternal(code, undefined, token)) {
             yield output;
         }
@@ -325,7 +324,6 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         handlers: Record<string, (data?: string) => Promise<string | undefined>>,
         token: CancellationToken
     ): AsyncGenerator<Output, void, unknown> {
-        await this.checkAccess();
         const allowedList = ['ms-vscode.dscopilot-agent', JVSC_EXTENSION_ID];
         if (!allowedList.includes(this.extensionId.toLowerCase())) {
             throw new Error(`Proposed API is not supported for extension ${this.extensionId}`);
@@ -434,7 +432,15 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         );
 
         try {
-            for await (const output of kernelExecution.executeCode(code, this.extensionId, events, token)) {
+            for await (const output of kernelExecution.executeCode(code, this.extensionId, events, token, async () => {
+                try {
+                    // Validate access before execution
+                    await this.checkAccess();
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            })) {
                 trackDisplayDataForExtension(this.extensionId, this.kernel.session, output);
                 output.items.forEach((output) => mimeTypes.add(output.mime));
                 if (handlers && hasChatOutput(output)) {

@@ -357,6 +357,7 @@ export interface IBaseKernel extends IAsyncDisposable {
     readonly onRestarted: Event<void>;
     readonly onPostInitialized: Event<void>;
     readonly restarting: Promise<void>;
+    readonly postInitializing: Promise<void>;
     readonly status: KernelMessage.Status;
     readonly disposed: boolean;
     readonly disposing: boolean;
@@ -459,7 +460,8 @@ export interface INotebookKernelExecution {
             started: EventEmitter<void>;
             executionAcknowledged: EventEmitter<void>;
         },
-        token: CancellationToken
+        token: CancellationToken,
+        validate?: () => Promise<boolean>
     ): AsyncGenerator<NotebookCellOutput, void, unknown>;
     /**
      * Given the cell execution message Id and the like , this will resume the execution of a cell from a detached state.

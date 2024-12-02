@@ -196,6 +196,10 @@ abstract class BaseKernel implements IBaseKernel {
     public get restarting() {
         return this._restartPromise || Promise.resolve();
     }
+    private _postInitializingDeferred = createDeferred<void>();
+    public get postInitializing() {
+        return this._postInitializingDeferred.promise;
+    }
     constructor(
         public readonly id: string,
         public readonly uri: Uri,
@@ -258,9 +262,10 @@ abstract class BaseKernel implements IBaseKernel {
             // If we started and the UI is no longer disabled (ie., a user executed a cell)
             // then we can signal that the kernel was created and can be used by third-party extensions.
             // We also only want to fire off a single event here.
-            if (!options?.disableUI && !this._postInitializedOnStart) {
+            if (!this.startupUI.disableUI && !this._postInitializedOnStart) {
                 this._onPostInitialized.fire();
                 this._postInitializedOnStart = true;
+                this._postInitializingDeferred.resolve();
             }
             return result;
         });

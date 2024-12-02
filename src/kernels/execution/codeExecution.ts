@@ -61,7 +61,8 @@ export class CodeExecution implements ICodeExecution, IDisposable {
     public readonly executionId: string;
     private constructor(
         public readonly code: string,
-        public readonly extensionId: string
+        public readonly extensionId: string,
+        public readonly validate?: () => Promise<boolean>
     ) {
         let executionId = extensionIdsPerExtension.get(extensionId) || 0;
         executionId += 1;
@@ -70,8 +71,8 @@ export class CodeExecution implements ICodeExecution, IDisposable {
         this.disposables.push(this._onDidEmitOutput);
     }
 
-    public static fromCode(code: string, extensionId: string) {
-        return new CodeExecution(code, extensionId);
+    public static fromCode(code: string, extensionId: string, validate?: () => Promise<boolean>) {
+        return new CodeExecution(code, extensionId, validate);
     }
     public async start(session: IKernelSession) {
         this.session = session;

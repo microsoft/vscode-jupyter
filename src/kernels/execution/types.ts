@@ -29,6 +29,7 @@ export interface ICodeExecution {
     executionId: string;
     code: string;
     result: Promise<void>;
+    validate?: () => Promise<boolean>;
     onRequestSent: Event<void>;
     onRequestAcknowledged: Event<void>;
     onDidEmitOutput: Event<NotebookCellOutput>;
