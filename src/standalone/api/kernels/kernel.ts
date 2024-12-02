@@ -432,12 +432,15 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         );
 
         try {
+            let hasAccess: boolean = false;
             for await (const output of kernelExecution.executeCode(code, this.extensionId, events, token, async () => {
                 try {
                     // Validate access before execution
                     await this.checkAccess();
+                    hasAccess = true;
                     return true;
                 } catch (e) {
+                    hasAccess = false;
                     return false;
                 }
             })) {
@@ -457,6 +460,9 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 } else {
                     yield output;
                 }
+            }
+            if (!hasAccess) {
+                throw new KernelAPIAccessRevoked();
             }
         } finally {
             dispose(disposables);
