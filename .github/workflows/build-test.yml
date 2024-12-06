@@ -641,7 +641,7 @@ jobs:
         run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
 
       - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
         env:
@@ -658,7 +658,7 @@ jobs:
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web' && matrix.tags != '@notebookPerformance'
 
       - name: Run Notebook Perf Test Without Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testPerfInVSCode
         env:
@@ -678,7 +678,7 @@ jobs:
         if: matrix.tags == '@notebookPerformance'
 
       - name: Run Execution Perf Test With Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testExecPerfInVSCode
         env:
@@ -702,7 +702,7 @@ jobs:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
       - name: Run Native Notebook with VSCode & Jupyter (web)
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: npm run testWebExtension
         env:
@@ -736,7 +736,7 @@ jobs:
         if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.jupyterConnection != 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
@@ -837,6 +837,6 @@ jobs:
           DISPLAY: 10
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: npm run testSmokeLogged
