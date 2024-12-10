@@ -48,10 +48,10 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
     // when this command is installed, user will have to manually install python and rerun the cell
     private async installPythonViaKernelPicker(): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
-        const buttons = this.installedOnceBefore ? [Common.install, Common.reload] : [Common.install];
+        const buttons = this.installedOnceBefore ? [Common.downloadAndInstall, Common.reload] : [Common.downloadAndInstall];
         const selection = await window.showErrorMessage(DataScience.pythonNotInstalled, { modal: true }, ...buttons);
 
-        if (selection === Common.install) {
+        if (selection === Common.downloadAndInstall) {
             this.installedOnceBefore = true;
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
             // Activate the python extension command to show how to install python
