@@ -207,7 +207,7 @@
         "comment": ["{Locked=\"'direct'\"}", "{Locked=\"'commentMagics'\"}", "{Locked=\"'nbconvert'\"}"]
     },
     "jupyter.configuration.jupyter.runStartupCommands.description": {
-        "message": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
+        "message": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever a Jupyter kernel is started or restarted. For instance, set this to '%load_ext autoreload\n%autoreload 2' to automatically reload changes made to imported files without having to restart the Jupyter Kernel.",
         "comment": ["{Locked='%load_ext autoreload\\n%autoreload 2'}"]
     },
     "jupyter.configuration.jupyter.debugJustMyCode.description": "When debugging, only step through user-written code. Disable this to allow stepping into library code.",
