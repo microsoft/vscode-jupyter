@@ -63,7 +63,7 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
                     }
                 } catch (ex) {
                     logger.error(ex);
-                    window.showErrorMessage(DataScience.exportImageFailed(ex)).then(noop, noop);
+                    window.showErrorMessage(DataScience.exportImageFailed(ex.message)).then(noop, noop);
                 }
             },
             this,
