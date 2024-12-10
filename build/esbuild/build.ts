@@ -328,11 +328,15 @@ async function buildAll() {
 
                 .map(async (module) => {
                     const fullPath = require.resolve(module);
-                    return build(fullPath, path.join(extensionFolder, 'dist', 'node_modules', `${module}.js`), {
-                        target: 'desktop',
-                        // These almost never change, easier to re-run copmilation if packges change.
-                        watch: false
-                    });
+                    return build(
+                        fullPath,
+                        path.join(extensionFolder, 'dist', 'node_modules', `${path.join(module, 'index.js')}`),
+                        {
+                            target: 'desktop',
+                            // These almost never change, easier to re-run copmilation if packges change.
+                            watch: false
+                        }
+                    );
                 })
         );
         builders.push(
