@@ -10,6 +10,8 @@ import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { PlotViewHandler } from './plotViewHandler';
 import { IPlotSaveHandler } from './types';
+import { logger } from '../../../platform/logging';
+import { DataScience } from '../../../platform/common/utils/localize';
 
 export type OpenImageInPlotViewer = {
     type: 'openImageInPlotViewer';
@@ -48,15 +50,20 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
             onDidReceiveMessage: Event<{ editor: NotebookEditor; message: OpenImageInPlotViewer | SaveImageAs }>;
         };
         api.onDidReceiveMessage(
-            ({ editor, message }) => {
+            async ({ editor, message }) => {
                 const document = editor.notebook || window.activeNotebookEditor?.notebook;
                 if (!document) {
                     return;
                 }
-                if (message.type === 'saveImageAs') {
-                    this.plotSaveHandler.savePlot(document, message.outputId, message.mimeType).catch(noop);
-                } else if (message.type === 'openImageInPlotViewer') {
-                    this.plotViewHandler.openPlot(document, message.outputId).catch(noop);
+                try {
+                    if (message.type === 'saveImageAs') {
+                        await this.plotSaveHandler.savePlot(document, message.outputId, message.mimeType);
+                    } else if (message.type === 'openImageInPlotViewer') {
+                        await this.plotViewHandler.openPlot(document, message.outputId);
+                    }
+                } catch (ex) {
+                    logger.error(ex);
+                    window.showErrorMessage(DataScience.exportImageFailed(ex)).then(noop, noop);
                 }
             },
             this,
