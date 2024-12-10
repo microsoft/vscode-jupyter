@@ -1,4 +1,4 @@
-FROM amd64/ubuntu
+FROM --platform=linux/amd64 ubuntu
 
 # Setup Python
 RUN apt-get update && apt-get install -y python3 python3-pip
