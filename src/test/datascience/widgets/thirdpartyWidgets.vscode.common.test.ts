@@ -32,7 +32,7 @@ import {
     initializeNotebookForWidgetTest
 } from './standardWidgets.vscode.common.test';
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
-import { initializeWidgetComms, Utils } from './commUtils';
+import { hideOutputPanel, initializeWidgetComms, Utils } from './commUtils';
 import { isWeb } from '../../../platform/common/utils/misc';
 
 [true, false].forEach((useCDN) => {
@@ -71,7 +71,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
             // Widgets get rendered only when the output is in view. If we have a very large notebook
             // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
             // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
-            await commands.executeCommand('workbench.action.closePanel');
+            await hideOutputPanel();
             await commands.executeCommand('workbench.action.maximizeEditorHideSidebar');
             comms = await initializeWidgetComms(disposables);
 
@@ -83,7 +83,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
             sinon.restore();
             logger.info(`Start Test (completed) ${this.currentTest?.title}`);
             // With less real estate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
-            await commands.executeCommand('workbench.action.closePanel');
+            await hideOutputPanel();
         });
         teardown(async function () {
             logger.info(`Ended Test ${this.currentTest?.title}`);
