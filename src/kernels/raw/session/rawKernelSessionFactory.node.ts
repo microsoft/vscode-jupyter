@@ -92,15 +92,19 @@ export async function computeLocalWorkingDirectory(
     fs: IFileSystem
 ): Promise<string | undefined> {
     let suggestedDir = await doComputeLocalWorkingDirectory(resource, configService, fs);
-    if (suggestedDir && (await fs.exists(suggestedDir))) {
-        return suggestedDir.fsPath;
+    if (suggestedDir && (await fs.exists(vscode.Uri.file(suggestedDir)))) {
+        return suggestedDir;
     } else if (resource && resource.scheme !== 'untitled' && (await fs.exists(resource))) {
         // Combine the working directory with this file if possible.
-        suggestedDir = vscode.Uri.file(
-            expandWorkingDir(getFilePath(suggestedDir), resource, configService.getSettings(resource))
-        );
-        if (suggestedDir && (await fs.exists(suggestedDir))) {
-            return suggestedDir.fsPath;
+        const workingDir =
+            suggestedDir && suggestedDir.includes('${')
+                ? suggestedDir
+                : suggestedDir
+                ? getFilePath(vscode.Uri.file(suggestedDir))
+                : undefined;
+        const expandedWorkingDir = expandWorkingDir(workingDir, resource, configService.getSettings(resource));
+        if (await fs.exists(vscode.Uri.file(expandedWorkingDir))) {
+            return expandedWorkingDir;
         }
     }
 }
@@ -109,8 +113,8 @@ async function doComputeLocalWorkingDirectory(
     resource: Resource,
     configService: IConfigurationService,
     fs: IFileSystem
-): Promise<vscode.Uri | undefined> {
-    let workingDir: vscode.Uri | undefined;
+): Promise<string | undefined> {
+    let workingDir: string | undefined;
     // For a local launch calculate the working directory that we should switch into
     const settings = configService.getSettings(resource);
     const fileRootStr = untildify(settings.notebookFileRoot);
@@ -123,24 +127,24 @@ async function doComputeLocalWorkingDirectory(
         if (path.isAbsolute(fileRootStr)) {
             if (await fs.exists(fileRoot)) {
                 // User setting is absolute and exists, use it
-                workingDir = fileRoot;
+                workingDir = fileRoot.fsPath;
             } else {
                 // User setting is absolute and doesn't exist, use workspace
-                workingDir = workspaceFolderPath;
+                workingDir = workspaceFolderPath.fsPath;
             }
         } else if (!fileRootStr.includes('${')) {
             // fileRoot is a relative path, combine it with the workspace folder
             const combinedPath = vscode.Uri.joinPath(workspaceFolderPath, fileRootStr);
             if (await fs.exists(combinedPath)) {
                 // combined path exists, use it
-                workingDir = combinedPath;
+                workingDir = combinedPath.fsPath;
             } else {
                 // Combined path doesn't exist, use workspace
-                workingDir = workspaceFolderPath;
+                workingDir = workspaceFolderPath.fsPath;
             }
         } else {
             // fileRoot is a variable that hasn't been expanded
-            workingDir = fileRoot;
+            workingDir = fileRootStr;
         }
     }
     return workingDir;
