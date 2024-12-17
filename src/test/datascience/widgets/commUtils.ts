@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookCell, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
+import { commands, NotebookCell, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
@@ -123,4 +123,11 @@ export class Utils {
             this.disposables.push(disposable);
         });
     }
+}
+
+export async function hideOutputPanel() {
+    // Work around for the removal of the command `workbench.action.closePanel`.
+    // await commands.executeCommand('workbench.action.terminal.killAll');
+    await commands.executeCommand('workbench.action.problems.focus');
+    await commands.executeCommand('workbench.action.togglePanel');
 }
