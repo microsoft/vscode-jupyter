@@ -6,6 +6,7 @@
 import * as path from '../../vscode-path/path';
 import { Uri, Range, workspace, window } from 'vscode';
 import { AbstractSystemVariables } from './systemVariables';
+import { getUserHomeDir } from '../utils/platform.node';
 
 /**
  * System variables for node.js. Node specific is necessary because of using the current process environment.
@@ -13,6 +14,7 @@ import { AbstractSystemVariables } from './systemVariables';
 export class SystemVariables extends AbstractSystemVariables {
     private _workspaceFolder: string;
     private _workspaceFolderName: string;
+    private _fileWorkspaceFolder: string;
     private _filePath: string | undefined;
     private _lineNumber: number | undefined;
     private _selectedText: string | undefined;
@@ -23,6 +25,7 @@ export class SystemVariables extends AbstractSystemVariables {
         const workspaceFolder = file ? workspace.getWorkspaceFolder(file) : undefined;
         this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder?.fsPath || __dirname;
         this._workspaceFolderName = path.basename(this._workspaceFolder);
+        this._fileWorkspaceFolder = this._workspaceFolder;
         this._filePath = file ? file.fsPath : undefined;
         if (window && window.activeTextEditor) {
             this._lineNumber = window.activeTextEditor.selection.anchor.line + 1;
@@ -38,6 +41,10 @@ export class SystemVariables extends AbstractSystemVariables {
         });
     }
 
+    public get userHome(): string {
+        return getUserHomeDir().fsPath;
+    }
+
     public get cwd(): string {
         return this.workspaceFolder;
     }
@@ -48,6 +55,10 @@ export class SystemVariables extends AbstractSystemVariables {
 
     public get workspaceFolder(): string {
         return this._workspaceFolder;
+    }
+
+    public get fileWorkspaceFolder(): string {
+        return this._fileWorkspaceFolder;
     }
 
     public get workspaceRootFolderName(): string {
@@ -80,6 +91,14 @@ export class SystemVariables extends AbstractSystemVariables {
 
     public get fileDirname(): string | undefined {
         return this.file ? path.dirname(this.file) : undefined;
+    }
+
+    public get fileDirnameBasename(): string | undefined {
+        return this.fileDirname ? path.basename(this.fileDirname) : undefined;
+    }
+
+    public get pathSeparator(): string | undefined {
+        return path.sep;
     }
 
     public get fileExtname(): string | undefined {
