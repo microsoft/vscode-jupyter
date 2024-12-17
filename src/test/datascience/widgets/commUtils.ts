@@ -125,7 +125,7 @@ export class Utils {
     }
 }
 
-export async function hideOutputPanel(){
+export async function hideOutputPanel() {
     // Work around for the removal of the command `workbench.action.closePanel`.
     await commands.executeCommand('workbench.action.terminal.killAll');
     // await commands.executeCommand('workbench.action.terminal.new');
