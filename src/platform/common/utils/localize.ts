@@ -18,6 +18,7 @@ export namespace Common {
     export const refresh = l10n.t('Refresh');
     export const refreshing = l10n.t('Refreshing...');
     export const install = l10n.t('Install');
+    export const downloadAndInstall = l10n.t('Download and Install');
     export const loadingExtension = l10n.t('Jupyter Extension loading...');
     export const handleExtensionActivationError = l10n.t(
         "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
