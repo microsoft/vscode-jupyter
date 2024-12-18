@@ -188,7 +188,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         }
         logger.debug(`Kernel process ${proc?.pid}.`);
         let stderr = '';
-        let providedExitCode: number | null;
+        let providedExitCode: number | null = null;
         const deferred = createDeferred();
         deferred.promise.catch(noop);
 
