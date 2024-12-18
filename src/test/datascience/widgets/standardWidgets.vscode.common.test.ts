@@ -330,7 +330,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // Also display the same nested output and the widget in the 3rd cell.
             await Promise.all([runCell(cell3), waitForCellExecutionToComplete(cell3)]);
             await assertOutputContainsHtml(cell1, comms, ['<input type="text'], '.widget-output');
-            // await assertOutputContainsHtml(cell1, comms, ['<input type="text', 'Label Widget'], '.widget-output');
+            await assertOutputContainsHtml(cell1, comms, ['<input type="text', 'Label Widget'], '.widget-output');
             assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
 
             // Run the 4th cell & verify we have output in the first nested output & second output.
@@ -343,11 +343,11 @@ suite('Standard IPyWidget Tests @widgets', function () {
             );
             assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
 
-            // // Verify both textbox widgets are linked.
-            // // I.e. updating one textbox will result in the other getting updated with the same value.
-            // await comms.setValue(cell1, '.widget-text input', 'Widgets are linked an get updated');
-            // await assertOutputContainsHtml(cell1, comms, ['>Widgets are linked an get updated<'], '.widget-output');
-            // assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
+            // Verify both textbox widgets are linked.
+            // I.e. updating one textbox will result in the other getting updated with the same value.
+            await comms.setValue(cell1, '.widget-text input', 'Widgets are linked an get updated');
+            await assertOutputContainsHtml(cell1, comms, ['>Widgets are linked an get updated<'], '.widget-output');
+            assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
         });
         test('More Nested Output Widgets', async () => {
             await initializeNotebookForWidgetTest(
