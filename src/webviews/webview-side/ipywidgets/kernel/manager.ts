@@ -93,6 +93,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     public async clear(): Promise<void> {
         await this.manager?.clear_state();
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage(message: string, payload?: any) {
         if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
             logMessage('Received IPyWidgetMessages.IPyWidgets_kernelOptions');
@@ -336,6 +337,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleUnhandledIOPubMessage(_manager: any, msg: KernelMessage.IIOPubMessage) {
         // Send this to the other side
         this.postOffice.sendMessage<IInteractiveWindowMapping>(
