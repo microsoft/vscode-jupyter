@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import '@jupyter-widgets/controls/css/labvariables.css';
-import { IRenderMime, RenderedCommon, RenderMimeRegistry, standardRendererFactories } from '@jupyterlab/rendermime';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { Widget } from '@lumino/widgets';
@@ -241,56 +240,6 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
                         return;
                     }
                     registeredMimeTypes.add(mime);
-                    // // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    // (manager as any).rendermime.addFactory({
-                    //     safe: true,
-                    //     mimeTypes: [mime],
-                    //     createRenderer: (options: IRenderMime.IRendererOptions) => {
-                    //         debugger;
-                    //         return new (class MimeRenderer extends RenderedCommon {
-                    //             override async render(model: IRenderMime.IMimeModel): Promise<void> {
-                    //                 debugger;
-                    //                 const data = model.data;
-                    //                 const metadata = model.metadata;
-                    //                 const context = // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    //                 (globalThis as any).jupyter_vscode_rendererContext as RendererContext<any>;
-                    //                 const renderer = await context.getRenderer(rendererId);
-                    //                 const isImage =
-                    //                     mime.toLowerCase().startsWith('image/') && !mime.toLowerCase().includes('svg');
-                    //                 renderer?.renderOutputItem(
-                    //                     {
-                    //                         id: new Date().getTime().toString(), // Not used except when saving plots, but with nested outputs, thats not possible.
-                    //                         metadata,
-                    //                         text: () => {
-                    //                             return JSON.stringify(data[mime]);
-                    //                         },
-                    //                         json: () => {
-                    //                             return data[mime];
-                    //                         },
-                    //                         blob() {
-                    //                             if (isImage) {
-                    //                                 const bytes = base64ToUint8Array(data[mime] as string);
-                    //                                 return new Blob([bytes], { type: mime });
-                    //                             } else {
-                    //                                 throw new Error(`Not able to get blob for ${mime}.`);
-                    //                             }
-                    //                         },
-                    //                         data() {
-                    //                             if (isImage) {
-                    //                                 return base64ToUint8Array(data[mime] as string);
-                    //                             } else {
-                    //                                 throw new Error(`Not able to get blob for ${mime}.`);
-                    //                             }
-                    //                         },
-                    //                         mime
-                    //                     },
-                    //                     this.node
-                    //                 );
-                    //             }
-                    //         })(options);
-                    //     }
-                    // });
-
                     manager.registerMimeRenderer(mime, async ({ data, metadata }, node) => {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const context = (globalThis as any).jupyter_vscode_rendererContext as RendererContext<any>;
