@@ -402,7 +402,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             data.includes('comm_close') ||
             data.includes('comm_msg');
         if (mustDeserialize) {
-            const message = deserializedMessage || this.deserialize(data as any, protocol) as any;
+            const message = deserializedMessage || (this.deserialize(data as any, protocol) as any);
             if (!shouldMessageBeMirroredWithRenderer(message)) {
                 return;
             }
