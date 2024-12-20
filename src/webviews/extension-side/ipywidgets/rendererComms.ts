@@ -14,6 +14,7 @@ import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { logger } from '../../../platform/logging';
+import { IPyWidgetMessageDispatcherFactory } from '../../../notebooks/controllers/ipywidgets/message/ipyWidgetMessageDispatcherFactory';
 
 type WidgetData = {
     model_id: string;
@@ -27,7 +28,9 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration
+        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration,
+        @inject(IPyWidgetMessageDispatcherFactory)
+        private readonly ipywidgetMessageDispatcher: IPyWidgetMessageDispatcherFactory
     ) {}
     private readonly widgetOutputsPerNotebook = new WeakMap<NotebookDocument, Set<string>>();
     public dispose() {
@@ -50,6 +53,21 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         if (!iopubMessage) {
             return;
         }
+
+        // If we have an output widget nested within another output widget.
+        // Then the output output widget will be displayed by us.
+        // However nested outputs (any) widgets will be displayed by widget manager.
+        // And in this case, its possible the display_data message is sent to the webview,
+        // Sooner than we get the messages from the IKernel above.
+        // Hence we need to hook into the lower level kernel socket messages to see if that happens.
+        // Else what happens is the display_data is sent to the webview, but the widget manager doesn't know about it.
+        // Thats because we have not tracked this model and we don't know about it.
+        const ipyWidgetMessageDispatcher = this.ipywidgetMessageDispatcher.create(kernel.notebook);
+        this.disposables.push(
+            ipyWidgetMessageDispatcher.onDisplayMessage((msg) => {
+                this.trackModelId(kernel.notebook, msg);
+            })
+        );
 
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
