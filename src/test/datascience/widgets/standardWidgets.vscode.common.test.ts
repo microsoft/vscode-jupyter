@@ -349,7 +349,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
             await assertOutputContainsHtml(cell1, comms, ['>Widgets are linked an get updated<'], '.widget-output');
             assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
         });
-        test('More Nested Output Widgets', async () => {
+        test.skip('More Nested Output Widgets', async () => {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {

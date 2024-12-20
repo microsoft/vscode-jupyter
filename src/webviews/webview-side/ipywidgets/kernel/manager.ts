@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import '@jupyter-widgets/controls/css/labvariables.css';
-
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { Widget } from '@lumino/widgets';
@@ -24,8 +23,9 @@ import { IInteractiveWindowMapping, IPyWidgetMessages, InteractiveWindowMessages
 import { WIDGET_MIMETYPE, WIDGET_STATE_MIMETYPE } from '../../../../platform/common/constants';
 import { NotebookMetadata } from '../../../../platform/common/utils';
 import { noop } from '../../../../platform/common/utils/misc';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { RendererContext } from 'vscode-notebook-renderer';
+import { renderersAndMimetypes } from './mimeTypes';
+import { base64ToUint8Array } from '../../../../platform/common/utils/string';
 
 export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     public static get onDidChangeInstance(): Event<WidgetManager | undefined> {
@@ -36,6 +36,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     private manager?: IJupyterLabWidgetManager;
     private proxyKernel?: Kernel.IKernelConnection;
     private options?: KernelSocketOptions;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private pendingMessages: { message: string; payload: any }[] = [];
     /**
      * Contains promises related to model_ids that need to be displayed.
@@ -92,6 +93,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     public async clear(): Promise<void> {
         await this.manager?.clear_state();
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage(message: string, payload?: any) {
         if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
             logMessage('Received IPyWidgetMessages.IPyWidgets_kernelOptions');
@@ -224,13 +226,58 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         this.manager?.dispose(); // NOSONAR
         try {
             // Create the real manager and point it at our proxy kernel.
-            this.manager = new this.JupyterLabWidgetManager(
+            const manager = (this.manager = new this.JupyterLabWidgetManager(
                 this.proxyKernel,
                 this.widgetContainer,
                 this.scriptLoader,
                 logMessage,
                 widgetState
-            );
+            ));
+
+            const registeredMimeTypes = new Set<string>();
+            renderersAndMimetypes.forEach((mimeTypes, rendererId) => {
+                mimeTypes.forEach((mime) => {
+                    if (registeredMimeTypes.has(mime) || !manager.registerMimeRenderer) {
+                        return;
+                    }
+                    registeredMimeTypes.add(mime);
+                    manager.registerMimeRenderer(mime, async ({ data, metadata }, node) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const context = (globalThis as any).jupyter_vscode_rendererContext as RendererContext<any>;
+                        const renderer = await context.getRenderer(rendererId);
+                        const isImage = mime.toLowerCase().startsWith('image/') && !mime.toLowerCase().includes('svg');
+                        renderer?.renderOutputItem(
+                            {
+                                id: new Date().getTime().toString(), // Not used except when saving plots, but with nested outputs, thats not possible.
+                                metadata,
+                                text: () => {
+                                    return JSON.stringify(data[mime]);
+                                },
+                                json: () => {
+                                    return data[mime];
+                                },
+                                blob() {
+                                    if (isImage) {
+                                        const bytes = base64ToUint8Array(data[mime] as string);
+                                        return new Blob([bytes], { type: mime });
+                                    } else {
+                                        throw new Error(`Not able to get blob for ${mime}.`);
+                                    }
+                                },
+                                data() {
+                                    if (isImage) {
+                                        return base64ToUint8Array(data[mime] as string);
+                                    } else {
+                                        throw new Error(`Not able to get blob for ${mime}.`);
+                                    }
+                                },
+                                mime
+                            },
+                            node
+                        );
+                    });
+                });
+            });
 
             // Listen for display data messages so we can prime the model for a display data
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
@@ -249,7 +296,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     /**
      * Ensure we create the model for the display data.
      */
-    private handleDisplayDataMessage(_sender: any, payload: KernelMessage.IIOPubMessage) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private async handleDisplayDataMessage(_sender: any, payload: KernelMessage.IIOPubMessage) {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
 
@@ -276,13 +324,20 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             }
             const modelPromise = this.manager.get_model(data.model_id);
             if (modelPromise) {
-                modelPromise.then((_m) => deferred?.resolve()).catch((e) => deferred?.reject(e));
+                try {
+                    const m = await modelPromise;
+                    console.log(m);
+                    deferred.resolve();
+                } catch (ex) {
+                    deferred.reject(ex);
+                }
             } else {
                 deferred.resolve();
             }
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleUnhandledIOPubMessage(_manager: any, msg: KernelMessage.IIOPubMessage) {
         // Send this to the other side
         this.postOffice.sendMessage<IInteractiveWindowMapping>(
