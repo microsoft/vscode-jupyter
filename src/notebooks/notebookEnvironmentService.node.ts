@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, NotebookDocument, Uri, type NotebookController } from 'vscode';
+import { EventEmitter, NotebookDocument, Uri } from 'vscode';
 import * as fs from 'fs-extra';
 import { IControllerRegistration, type IVSCodeNotebookController } from './controllers/types';
 import { IKernelProvider, isRemoteConnection, type IKernel } from '../kernels/types';
