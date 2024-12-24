@@ -117,10 +117,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             createJupyterServerCollection: () => {
                 throw new Error('Not Implemented');
             },
-            kernels: {
-                getKernel: () => Promise.resolve(undefined),
-                onDidStart: () => ({ dispose: noop })
-            },
+            kernels: { getKernel: () => Promise.resolve(undefined) },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onDidChangePythonEnvironment: undefined as any,
             getPythonEnvironment: () => undefined
