@@ -951,6 +951,12 @@ export class CellExecutionMessageHandler implements IDisposable {
             return;
         }
 
+        if (msg.parent_header.msg_id === 'comm_msg' && msg.header.msg_type === 'stream') {
+            // Fix for https://github.com/microsoft/vscode-jupyter/issues/15996
+            // We're not interested in stream messages that are part of comm messages.
+            return;
+        }
+
         // eslint-disable-next-line complexity
         traceCellMessage(this.cell, `Update streamed output, new output '${msg.content.text.substring(0, 100)}'`);
         // Possible execution of cell has completed (the task would have been disposed).
