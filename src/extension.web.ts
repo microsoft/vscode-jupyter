@@ -123,7 +123,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onDidChangePythonEnvironment: undefined as any,
-            getPythonEnvironment: () => undefined,
+            getPythonEnvironment: () => undefined
         };
     }
 }
