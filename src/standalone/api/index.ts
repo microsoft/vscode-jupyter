@@ -64,11 +64,12 @@ export function buildApi(
         onDidChangePythonEnvironment: envApi.onDidChangeEnvironment,
         // Only for use By Python, hence this is proposed API and can change anytime.
         // Do not add this to Kernels or other namespaces, as this is only for Python.
-        getPythonEnvironment(uri: Uri): EnvironmentPath | undefined {
+        getPythonEnvironment(uri: Uri): string | undefined {
             // This is a proposed API that is only used by the Python extension.
             // Hence the reason to keep this separate.
             // This way we can keep the API stable for other extensions (which would be the majority case).
-            return envApi.getPythonEnvironment(uri);
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            return envApi.getPythonEnvironment(uri)?.executable?.uri?.fsPath;
         }
     };
 

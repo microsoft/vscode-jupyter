@@ -20,18 +20,11 @@ declare module './api' {
          * @param uri
          */
         getPythonEnvironment(uri: Uri):
-            | undefined
-            | {
-                  /**
-                   * The ID of the environment.
-                   */
-                  readonly id: string;
-                  /**
-                   * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
-                   * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
-                   * using python executable path.
-                   */
-                  readonly path: string;
-              };
+            | undefined /**
+             * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
+             * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
+             * using python executable path.
+             */
+            | string;
     }
 }
