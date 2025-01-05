@@ -822,6 +822,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
 
+      - name: Install screen capture dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install imagemagick x11-xserver-utils
+
       - name: pip install system test requirements
         run: |
           python -m pip install --upgrade -r build/venv-smoke-test-requirements.txt
