@@ -146,12 +146,16 @@ export function createJupyterConnectionInfo(
     const serializer: import('@jupyterlab/services').ServerConnection.ISettings['serializer'] = {
         deserialize: (data: ArrayBuffer, protocol?: string) => {
             try {
+                if (typeof data === 'string') {
+                    return deserialize(data, '');
+                }
                 return deserialize(data, protocol);
             } catch (ex) {
+                logger.warn(`Failed to deserialize message protocol = ${protocol}`, ex);
                 if (protocol) {
-                    return deserialize(data, '');
-                } else {
                     return deserialize(data, supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg);
+                } else {
+                    return deserialize(data, '');
                 }
             }
         },
@@ -159,10 +163,11 @@ export function createJupyterConnectionInfo(
             try {
                 return serialize(msg, protocol);
             } catch (ex) {
+                logger.warn(`Failed to serialize message protocol = ${protocol}`, ex);
                 if (protocol) {
-                    return serialize(msg, '');
-                } else {
                     return serialize(msg, supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg);
+                } else {
+                    return serialize(msg, '');
                 }
             }
         }
