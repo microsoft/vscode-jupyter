@@ -90,7 +90,7 @@ suite('Smoke Tests', function () {
             throw new Error(`Python environment not found ${PYTHON_PATH}`);
         }
         await jupyterExt.exports.openNotebook(notebook.uri, pythonEnv);
-        traceInfo(`1. Notebook Opened`);
+        logger.trace(`1. Notebook Opened`);
         await Promise.all([
             vscode.commands.executeCommand<void>('notebook.execute'),
             waitForTextOutputV2(notebook.cellAt(0), 'Hello World', 0, false, disposableStore),
