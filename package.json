@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2024.11.0",
+    "version": "2025.1.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.95.0"
+        "vscode": "^1.97.0"
     },
     "l10n": "./l10n",
     "extensionKind": [
@@ -2020,7 +2020,7 @@
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",
-                    "name": "Variables",
+                    "name": "Jupyter Variables",
                     "when": "jupyter.hasNativeNotebookOrInteractiveWindowOpen"
                 }
             ]
@@ -2078,17 +2078,17 @@
         "prePublishBundle": "concurrently npm:compile-release npm:updatePackageJsonForBundle",
         "preprePublishNonBundle": "gulp clean",
         "updatePackageJsonForBundle": "gulp updatePackageJsonForBundle",
-        "prePublishNonBundle": "npm run compile-no-watch",
+        "prePublishNonBundle": "concurrently npm:compile-out npm:esbuild-all",
         "compile": "concurrently \"tsc -watch -p ./\" \"npx tsx build/esbuild/build.ts --watch\"",
+        "compile-esbuild-watch": "npx tsx build/esbuild/build.ts --watch",
+        "compile-tsc-watch": "tsc -p . -watch",
         "compile-watch-all": "concurrently \"tsc -watch -p ./\" \"npx tsx build/esbuild/build.ts --watch-all\"",
-        "compile-no-watch": "concurrently npm:compile-out npm:esbuild-all",
         "compile-out": "tsc -p ./",
         "compile-web-test": "webpack --mode development --config ./build/webpack/webpack.extension.web.config.js",
         "compile-web-test-watch": "webpack --mode development --config ./build/webpack/webpack.extension.web.config.js --stats-error-details --watch --progress",
-        "esbuild-all": "npx tsx build/esbuild/build.ts",
         "compile-release": "concurrently npm:compile-out npm:esbuild-release",
+        "esbuild-all": "npx tsx build/esbuild/build.ts",
         "esbuild-release": "npx tsx build/esbuild/build.ts --production",
-        "esbuild-watch": "npx tsx build/esbuild/build.ts --watch",
         "checkDependencies": "gulp checkDependencies",
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js",
         "test:unittests": "mocha --config ./build/.mocha.unittests.js.json ./out/**/*.unit.test.js",
@@ -2141,7 +2141,7 @@
         "@vscode/python-extension": "^1.0.4",
         "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",
-        "bootstrap": "^4.3.1",
+        "bootstrap": "^5.0.0",
         "bootstrap-less": "^3.3.8",
         "cross-fetch": "^3.1.5",
         "decompress-response": "^4.2.0",
@@ -2222,9 +2222,9 @@
         "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
         "@types/memoize-one": "^4.1.1",
-        "@types/mocha": "^9.1.0",
+        "@types/mocha": "^10.0.10",
         "@types/nock": "^10.0.3",
-        "@types/node": "^18.15.0",
+        "@types/node": "^20.17.0",
         "@types/node-fetch": "^2.5.7",
         "@types/pdfkit": "^0.11.0",
         "@types/promisify-node": "^0.4.0",
@@ -2257,7 +2257,7 @@
         "@vscode/test-cli": "^0.0.8",
         "@vscode/test-electron": "^2.3.9",
         "@vscode/test-web": "^0.0.61",
-        "@vscode/zeromq": "^0.2.3",
+        "@vscode/zeromq": "^0.2.5",
         "acorn": "^8.9.0",
         "babel-polyfill": "^6.26.0",
         "buffer": "^6.0.3",
@@ -2270,7 +2270,6 @@
         "colors": "^1.4.0",
         "concurrently": "^8.2.2",
         "cross-env": "^7.0.3",
-        "cross-spawn": "^7.0.3",
         "css-loader": "^6.8.1",
         "dedent": "^0.7.0",
         "del": "^3.0.0",
@@ -2308,7 +2307,7 @@
         "less-plugin-inline-urls": "^1.2.0",
         "lolex": "^6.0.0",
         "lru-cache": "^10.0.0",
-        "mocha": "^10.2.0",
+        "mocha": "^11.0.1",
         "mocha-junit-reporter": "^2.2.0",
         "mocha-multi-reporters": "^1.5.1",
         "nock": "^13.3.1",
@@ -2317,7 +2316,7 @@
         "node-polyfill-webpack-plugin": "^4.0.0",
         "nyc": "^15.1.0",
         "popper.js": "^1.16.1",
-        "postcss": "^8.4.31",
+        "postcss": "^8.4.49",
         "postcss-import": "^15.1.0",
         "postcss-loader": "^7.3.3",
         "postcss-preset-env": "^8.5.1",
@@ -2338,7 +2337,7 @@
         "tsconfig-paths-webpack-plugin": "^3.2.0",
         "tsx": "^3.13.0",
         "typemoq": "^2.1.0",
-        "typescript": "^5.5.4",
+        "typescript": "^5.7.2",
         "unicode-properties": "^1.3.1",
         "utf-8-validate": "^5.0.8",
         "util": "^0.12.4",

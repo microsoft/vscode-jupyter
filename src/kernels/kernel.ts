@@ -129,6 +129,9 @@ abstract class BaseKernel implements IBaseKernel {
     get onStarted(): Event<void> {
         return this._onStarted.event;
     }
+    get onPostInitialized(): Event<void> {
+        return this._onPostInitialized.event;
+    }
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
@@ -137,6 +140,9 @@ abstract class BaseKernel implements IBaseKernel {
     }
     get startedAtLeastOnce() {
         return this._startedAtLeastOnce;
+    }
+    get userStartedKernel() {
+        return !this.startupUI.disableUI;
     }
     private _info?: KernelMessage.IInfoReplyMsg['content'];
     private _startedAtLeastOnce?: boolean;
@@ -172,10 +178,12 @@ abstract class BaseKernel implements IBaseKernel {
     private _disposed?: boolean;
     private _disposing?: boolean;
     private _ignoreJupyterSessionDisposedErrors?: boolean;
+    private _postInitializedOnStart?: boolean;
     private readonly _onDidKernelSocketChange = new EventEmitter<void>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
+    private readonly _onPostInitialized = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
     private _jupyterSessionPromise?: Promise<IKernelSession>;
     private readonly hookedSessionForEvents = new WeakSet<IKernelSession>();
@@ -246,7 +254,16 @@ abstract class BaseKernel implements IBaseKernel {
             this.startCancellation.dispose();
             this.startCancellation = new CancellationTokenSource();
         }
-        return this.startJupyterSession(options);
+        return this.startJupyterSession(options).then((result) => {
+            // If we started and the UI is no longer disabled (ie., a user executed a cell)
+            // then we can signal that the kernel was created and can be used by third-party extensions.
+            // We also only want to fire off a single event here.
+            if (!options?.disableUI && !this._postInitializedOnStart) {
+                this._onPostInitialized.fire();
+                this._postInitializedOnStart = true;
+            }
+            return result;
+        });
     }
     /**
      * Interrupts the execution of cells.
@@ -409,6 +426,9 @@ abstract class BaseKernel implements IBaseKernel {
 
             // Indicate a restart occurred if it succeeds
             this._onRestarted.fire();
+
+            // Also signal that the kernel post initialization completed.
+            this._onPostInitialized.fire();
         } catch (ex) {
             logger.error(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;

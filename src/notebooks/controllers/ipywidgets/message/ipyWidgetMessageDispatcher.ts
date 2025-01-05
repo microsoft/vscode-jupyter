@@ -16,6 +16,7 @@ import { IKernel, IKernelProvider, type IKernelSocket } from '../../../../kernel
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from '../types';
 import { shouldMessageBeMirroredWithRenderer } from '../../../../kernels/kernel';
 import { KernelSocketMap } from '../../../../kernels/kernelSocket';
+import type { IDisplayDataMsg } from '@jupyterlab/services/lib/kernel/messages';
 
 type PendingMessage = {
     resultPromise: Deferred<void>;
@@ -52,6 +53,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private pendingTargetNames = new Set<string>();
     private kernel?: IKernel;
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
+    private _onDisplayMessage = new EventEmitter<IDisplayDataMsg>();
+    public readonly onDisplayMessage = this._onDisplayMessage.event;
     private messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
     private pendingHookRemovals = new Map<string, string>();
     private messageHookRequests = new Map<string, Deferred<boolean>>();
@@ -367,10 +370,17 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         const msgUuid = uuid();
         const promise = createDeferred<void>();
         this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
-
+        let deserializedMessage: KernelMessage.IMessage | undefined = undefined;
         if (typeof data === 'string') {
             if (shouldMessageBeMirroredWithRenderer(data)) {
                 this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, { id: msgUuid, data });
+                if (data.includes('display_data')) {
+                    deserializedMessage = this.deserialize(data as any, protocol);
+                    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+                    if (jupyterLab.KernelMessage.isDisplayDataMsg(deserializedMessage)) {
+                        this._onDisplayMessage.fire(deserializedMessage);
+                    }
+                }
             }
         } else {
             const dataToSend = serializeDataViews([data as any]);
@@ -392,7 +402,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             data.includes('comm_close') ||
             data.includes('comm_msg');
         if (mustDeserialize) {
-            const message = this.deserialize(data as any, protocol) as any;
+            const message = deserializedMessage || (this.deserialize(data as any, protocol) as any);
             if (!shouldMessageBeMirroredWithRenderer(message)) {
                 return;
             }

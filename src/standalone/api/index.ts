@@ -18,6 +18,7 @@ import {
     openNotebook,
     registerRemoteServerProvider
 } from './unstable';
+import { INotebookPythonEnvironmentService } from '../../notebooks/types';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -34,6 +35,7 @@ export function buildApi(
     context: IExtensionContext
 ): IExtensionApi {
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
+    const envApi = serviceContainer.get<INotebookPythonEnvironmentService>(INotebookPythonEnvironmentService);
     const api: IExtensionApi = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: getReady(ready),
@@ -56,6 +58,17 @@ export function buildApi(
         },
         get kernels() {
             return getKernelsApi(extensions.determineExtensionFromCallStack().extensionId);
+        },
+        // Only for use By Python, hence this is proposed API and can change anytime.
+        // Do not add this to Kernels or other namespaces, as this is only for Python.
+        onDidChangePythonEnvironment: envApi.onDidChangeEnvironment,
+        // Only for use By Python, hence this is proposed API and can change anytime.
+        // Do not add this to Kernels or other namespaces, as this is only for Python.
+        getPythonEnvironment(uri: Uri): EnvironmentPath | undefined {
+            // This is a proposed API that is only used by the Python extension.
+            // Hence the reason to keep this separate.
+            // This way we can keep the API stable for other extensions (which would be the majority case).
+            return envApi.getPythonEnvironment(uri);
         }
     };
 

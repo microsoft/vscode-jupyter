@@ -58,8 +58,8 @@ extends:
         displayName: Install zmq dependencies
         condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'alpine'))
 
-      - script: npm i -g npm@9.5.0
-        displayName: npm 9.5.0
+      - script: npm i -g npm@10.8.2
+        displayName: npm 10.8.2
 
       - task: UsePythonVersion@0
         inputs:
@@ -87,11 +87,9 @@ extends:
         serviceTreeID: '14f24efd-b502-422a-9f40-09ea7ce9cf14'
       enabled: true
 
+    apiScanDependentPipelineId: '466' # zeromq-prebuilt
     apiScanSoftwareVersion: '2024'
 
-    # Exclude win32-x64/node.napi.glibc.node, which is already scanned
-    # by the zeromq-prebuilt pipeline, until we have symbol publishing.
     # Exclude win32-arm64/*.* because APIScan cannot process them.
     apiScanExcludes: |
-      extension/dist/node_modules/zeromq/prebuilds/win32-x64/node.napi.glibc.node
       extension/dist/node_modules/zeromq/prebuilds/win32-arm64/*.*

@@ -2,7 +2,15 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { CancellationTokenSource, NotebookCellOutputItem, NotebookDocument, commands, window, workspace } from 'vscode';
+import {
+    CancellationTokenSource,
+    NotebookCell,
+    NotebookCellOutputItem,
+    NotebookDocument,
+    commands,
+    window,
+    workspace
+} from 'vscode';
 import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import {
@@ -32,6 +40,7 @@ import { KernelError } from '../../../kernels/errors/kernelError';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { escapeStringToEmbedInPythonCode } from '../../../kernels/chat/generator';
 import { notebookCellExecutions } from '../../../platform/notebooks/cellExecutionStateService';
+import { noop } from '../../../test/core';
 
 suiteMandatory('Kernel API Tests @typescript', function () {
     const disposables: IDisposable[] = [];
@@ -106,7 +115,12 @@ suiteMandatory('Kernel API Tests @typescript', function () {
 
         // Even after starting a kernel the API should not return anything,
         // as no code has been executed against this kernel.
-        await realKernel.start();
+        await realKernel.start({
+            disableUI: true,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
         assert.isUndefined(await kernels.getKernel(notebook.uri));
 
         // Ensure user has executed some code against this kernel.
@@ -185,6 +199,146 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             'Traceback does not contain original error'
         );
     });
+    testMandatory('Kernel start event is not triggered by silent executions', async function () {
+        let startEventCounter = 0;
+        // Register event listener to track invocations
+        disposables.push(
+            kernels.onDidStart(() => {
+                startEventCounter++;
+            })
+        );
+
+        await realKernel.start({
+            disableUI: true,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
+        assert.equal(startEventCounter, 0, 'Kernel start event was triggered for a non-user kernel start');
+    });
+    testMandatory('Kernel start event is triggered when started with UI enabled', async function () {
+        let startEventCounter = 0;
+        // Register event listener to track invocations
+        disposables.push(
+            kernels.onDidStart(() => {
+                startEventCounter++;
+            })
+        );
+
+        await realKernel.start({
+            disableUI: false,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
+        assert.equal(startEventCounter, 1, 'Kernel start event was not triggered for a user kernel start');
+
+        // If we call start again with UI enabled, we shouldn't fire additional events
+        await realKernel.start({
+            disableUI: false,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
+        assert.equal(startEventCounter, 1, 'Multiple start calls should not fire more events');
+    });
+    testMandatory('Kernel start event is triggered when kernel restarts', async function () {
+        let startEventCounter = 0;
+        // Register event listener to track invocations
+        disposables.push(
+            kernels.onDidStart(() => {
+                startEventCounter++;
+            })
+        );
+
+        await realKernel.start({
+            disableUI: true,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
+        await realKernel.restart();
+        assert.equal(startEventCounter, 1, 'Kernel start event should be fired exactly once after restarting');
+        await realKernel.restart();
+        assert.equal(startEventCounter, 2, 'Kernel start event should be fired more than once for restarts');
+    });
+    testMandatory(
+        'Kernel start event is triggered when user executes code and the event execution runs first',
+        async function () {
+            // Register event listener to track invocations
+            const source = new CancellationTokenSource();
+            let startEventCounter = 0;
+            disposables.push(
+                kernels.onDidStart(async ({ kernel }) => {
+                    const codeToRun =
+                        startEventCounter === 0 ? `let foo = ${startEventCounter}` : `foo = ${startEventCounter}`;
+                    startEventCounter++;
+
+                    // This is needed for the async generator to get executed.
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    for await (const _out of kernel.executeCode(codeToRun, source.token)) {
+                    }
+                })
+            );
+            await insertCodeCell('console.log(foo)', { index: 0, language: 'typescript' });
+
+            await realKernel.start({
+                disableUI: true,
+                onDidChangeDisableUI: () => ({
+                    dispose: noop
+                })
+            });
+            assert.equal(startEventCounter, 0, 'Kernel start event was triggered for a non-user kernel start');
+            const cell = notebook.cellAt(0)!;
+            const executionOrderSet = createDeferred();
+            const eventHandler = notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
+                if (e.cell === cell && e.cell.executionSummary?.executionOrder) {
+                    executionOrderSet.resolve();
+                }
+            });
+            disposables.push(eventHandler);
+            await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
+
+            // Validate the cell execution output is equal to the expected value of "foo = 0"
+            const expectedMime = NotebookCellOutputItem.stdout('').mime;
+            assert.equal(
+                await decodeFirstOutput(cell, expectedMime),
+                '0',
+                'Invalid output, kernel start hook should execute code first'
+            );
+
+            const kernel = await kernels.getKernel(notebook.uri);
+            if (!kernel) {
+                throw new Error('Kernel not found');
+            }
+
+            // Start event counter should only be 1 after the initial user cell execution
+            assert.equal(startEventCounter, 1, 'Kernel start event was not triggered for a user kernel start');
+
+            // Running the same cell again should not fire additional events
+            await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
+            assert.equal(
+                await decodeFirstOutput(cell, expectedMime),
+                '0',
+                'Invalid output, kernel start hook should only execute once'
+            );
+            assert.equal(startEventCounter, 1, 'Start event should not be triggered more than once');
+        }
+    );
+
+    async function decodeFirstOutput(cell: NotebookCell, expectedMimetype: string) {
+        return (
+            cell.outputs
+                .flatMap((output) => output.items)
+                .map((item) => {
+                    if (item.mime === expectedMimetype) {
+                        const output = new TextDecoder().decode(item.data).trim();
+                        return output;
+                    }
+                })
+                .find((item) => item !== undefined) ?? ''
+        );
+    }
 
     async function waitForOutput(
         executionResult: AsyncIterable<Output>,

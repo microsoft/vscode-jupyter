@@ -27,6 +27,8 @@ import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
 import { NotebookKernelExecution } from './kernelExecution';
 import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
+import { logger } from '../platform/logging';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 
 /**
  * Node version of a kernel provider. Needed in order to create the node version of a kernel.
@@ -55,7 +57,14 @@ export class KernelProvider extends BaseCoreKernelProvider {
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;
         }
-        this.disposeOldKernel(notebook);
+        if (existingKernelInfo) {
+            logger.trace(
+                `Kernel for ${getDisplayPath(notebook.uri)} with id ${
+                    existingKernelInfo.options.metadata.id
+                } is being replaced with ${options.metadata.id}`
+            );
+        }
+        this.disposeOldKernel(notebook, 'createNewKernel');
 
         const replKernel = this.replTracker.isForReplEditor(notebook);
         const resourceUri = replKernel ? options.resourceUri : notebook.uri;
@@ -85,6 +94,13 @@ export class KernelProvider extends BaseCoreKernelProvider {
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
             (status) => this._onKernelStatusChanged.fire({ kernel, status }),
+            this,
+            this.disposables
+        );
+        kernel.onPostInitialized(
+            () => {
+                this._onDidPostInitializeKernel.fire(kernel);
+            },
             this,
             this.disposables
         );
@@ -140,6 +156,13 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
             (status) => this._onKernelStatusChanged.fire({ kernel, status }),
+            this,
+            this.disposables
+        );
+        kernel.onPostInitialized(
+            () => {
+                this._onDidPostInitializeKernel.fire(kernel);
+            },
             this,
             this.disposables
         );

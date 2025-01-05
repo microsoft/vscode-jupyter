@@ -67,7 +67,7 @@ export async function run(): Promise<void> {
             timer = setTimeout(() => reject(ex), MAX_EXTENSION_ACTIVATION_TIME);
         });
         const promise = Promise.race([initialize(), failed]);
-        promise.then(() => clearTimeout(timer!)).catch(() => clearTimeout(timer!));
+        promise.then(() => clearTimeout(timer! as any)).catch(() => clearTimeout(timer! as any));
         return promise;
     }
     // Run the tests.

@@ -9,8 +9,8 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IJupyterSettings } from '../../platform/common/types';
 import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
-import { generateCellRangesFromDocument } from './cellFactory';
 import { window } from 'vscode';
+import { ICellRangeCache } from './types';
 
 /**
  * Provides the lines that show up between cells in the editor.
@@ -26,7 +26,8 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
+        @inject(ICellRangeCache) private cellRangeCache: ICellRangeCache
     ) {
         this.computeDecorations();
         disposables.push(this);
@@ -138,7 +139,7 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
                 const settings = this.configuration.getSettings(editor.document.uri);
                 if (this.cellDecorationEnabled(settings)) {
                     // Find all of the cells
-                    const cells = generateCellRangesFromDocument(editor.document, settings);
+                    const cells = this.cellRangeCache.getCellRanges(editor.document);
                     // Find the range for our active cell.
                     const currentRange = cells.map((c) => c.range).filter((r) => r.contains(editor.selection.anchor));
                     const rangeTop =

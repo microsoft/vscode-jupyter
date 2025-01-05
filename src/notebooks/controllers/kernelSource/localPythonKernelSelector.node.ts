@@ -103,7 +103,7 @@ export class LocalPythonKernelSelector extends DisposableBase {
             if (!this.pythonApi || token.isCancellationRequested) {
                 return;
             }
-            this.pythonEnvPicker.recommended = findPreferredPythonEnvironment(this.notebook, this.pythonApi);
+            this.pythonEnvPicker.recommended = findPreferredPythonEnvironment(this.notebook, this.pythonApi, filter);
         };
         const setupApi = (api?: PythonExtension) => {
             if (!api) {

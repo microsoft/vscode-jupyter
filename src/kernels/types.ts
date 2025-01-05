@@ -355,6 +355,7 @@ export interface IBaseKernel extends IAsyncDisposable {
     readonly onDisposed: Event<void>;
     readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
+    readonly onPostInitialized: Event<void>;
     readonly restarting: Promise<void>;
     readonly status: KernelMessage.Status;
     readonly disposed: boolean;
@@ -381,6 +382,12 @@ export interface IBaseKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
+    /**
+     * A kernel might be started (e.g., for pre-warming or other internal reasons) but this does not
+     * necessarily correlate with whether it was started by a user.
+     * This flag will tell us whether the kernel has been started explicitly through user action from the UI.
+     */
+    readonly userStartedKernel: boolean;
     start(options?: IDisplayOptions): Promise<IKernelSession>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
@@ -506,6 +513,7 @@ export interface IBaseKernelProvider<T extends IBaseKernel> extends IAsyncDispos
     onDidRestartKernel: Event<T>;
     onDidDisposeKernel: Event<T>;
     onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: T }>;
+    onDidPostInitializeKernel: Event<T>;
 }
 
 /**

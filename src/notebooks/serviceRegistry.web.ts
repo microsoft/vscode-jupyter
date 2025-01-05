@@ -32,9 +32,10 @@ import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
+import { NotebookPythonEnvironmentService } from './notebookEnvironmentService.web';
 import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
-import { INotebookEditorProvider } from './types';
+import { INotebookEditorProvider, INotebookPythonEnvironmentService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
@@ -87,4 +88,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
     serviceManager.addSingleton<IExportUtil>(IExportUtil, ExportUtil);
+    serviceManager.addSingleton<NotebookPythonEnvironmentService>(
+        INotebookPythonEnvironmentService,
+        NotebookPythonEnvironmentService
+    );
 }

@@ -173,7 +173,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         this.registerCommand(Commands.ScrollToCell, (file: Uri, id: string) => this.scrollToCell(file, id));
         this.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow);
         this.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow);
-        commands.registerCommand(Commands.InteractiveCopyCell, this.copyCellInInteractiveWindow);
+        this.registerCommand(Commands.InteractiveCopyCell, this.copyCellInInteractiveWindow);
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());

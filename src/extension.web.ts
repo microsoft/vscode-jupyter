@@ -85,7 +85,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     durations.startActivateTime = stopWatch.elapsedTime;
-    const standardOutputChannel = initializeLoggers(context, { addConsoleLogger: isTestExecution() });
+    const standardOutputChannel = await initializeLoggers(context, { addConsoleLogger: isTestExecution() });
 
     activateNotebookTelemetry(stopWatch);
     setDisposableTracker(context.subscriptions);
@@ -117,7 +117,10 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             createJupyterServerCollection: () => {
                 throw new Error('Not Implemented');
             },
-            kernels: { getKernel: () => Promise.resolve(undefined) }
+            kernels: { getKernel: () => Promise.resolve(undefined), onDidStart: () => ({ dispose: noop }) },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onDidChangePythonEnvironment: undefined as any,
+            getPythonEnvironment: () => undefined
         };
     }
 }

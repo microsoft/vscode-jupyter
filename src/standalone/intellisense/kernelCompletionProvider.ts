@@ -134,11 +134,25 @@ class NotebookCellSpecificKernelCompletionProvider implements CompletionItemProv
             }
 
             const existingCompletionItems = new Set(
-                (otherCompletions || []).map((item) => (typeof item.label === 'string' ? item.label : item.label.label))
+                (otherCompletions || [])
+                    .map((item) => {
+                        const label = typeof item.label === 'string' ? item.label : item.label.label;
+                        const insertText = item.insertText;
+                        // Jupyter kernel might return items prefixed with the `.` character.
+                        const items = [label, `.${label}`];
+                        if (typeof insertText === 'string') {
+                            // Sometimes the labels returned by pylance can contain text like `* abspath`.
+                            // I.e. containing a prefix `*` followed by a space and then the text.
+                            items.push(insertText);
+                        }
+                        return items;
+                    })
+                    .flat()
             );
-            return completions.filter(
-                (item) => !existingCompletionItems.has(typeof item.label === 'string' ? item.label : item.label.label)
-            );
+            return completions.filter((item) => {
+                const label = typeof item.label === 'string' ? item.label : item.label.label;
+                return !existingCompletionItems.has(label) && !existingCompletionItems.has(`* ${label}`);
+            });
         } catch (ex) {
             if (ex instanceof RequestTimedoutError) {
                 return [];

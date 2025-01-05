@@ -7,6 +7,7 @@
         "esbenp.prettier-vscode",
         "hbenl.vscode-mocha-test-adapter",
         "ms-python.black",
-        "ms-vscode.extension-test-runner"
+        "ms-vscode.extension-test-runner",
+        "connor4312.esbuild-problem-matchers"
     ]
 }
