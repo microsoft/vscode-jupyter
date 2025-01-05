@@ -844,3 +844,23 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSmokeLogged
+
+      - name: Upload VS code logs
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: VSCodeLogs-Smoke-${{matrix.os}}
+          path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
+          retention-days: 1
+
+      - name: Log test results
+        if: always()
+        run: npm run printTestResults
+
+      - name: Upload test result, screenshots files
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: TestLogs-Smoke-${{matrix.os}}
+          path: './logs/*'
+          retention-days: 60
