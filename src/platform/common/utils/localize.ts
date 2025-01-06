@@ -349,9 +349,9 @@ export namespace DataScience {
     export const noKernelConnected = l10n.t('No kernel connected');
     export const jupyterSelectUriCommandLabel = l10n.t('Enter the URL of the running Jupyter Server...');
     export const jupyterSelectUriInputTitle = l10n.t('Enter the URL of the running Jupyter Server');
-    export const jupyterSelectUriInputPlaceholder = l10n.t('Enter the url of the running Jupyter Server');
+    export const jupyterSelectUriInputPlaceholder = l10n.t('Enter the URL of the running Jupyter Server');
     export const connectToToTheJupyterServer = (url: string) => l10n.t('Connect to the Jupyter Server {0}', url);
-    export const enterOrSelectRemoteJupyterPlaceholder = l10n.t('Enter a remote url, or select a remote server');
+    export const enterOrSelectRemoteJupyterPlaceholder = l10n.t('Enter a remote URL, or select a remote server');
     export const selectRemoteJupyterPlaceholder = l10n.t('Select a remote server');
     export const jupyterServerLastConnectionForQuickPickDescription = (date: Date) =>
         l10n.t('Last connected {0}', fromNow(date, true, false, false));
