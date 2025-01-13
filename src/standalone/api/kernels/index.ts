@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Uri, workspace, EventEmitter } from 'vscode';
+import { Uri, workspace, EventEmitter, CancellationToken } from 'vscode';
 import { Kernel, Kernels } from '../../../api';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
@@ -12,7 +12,9 @@ import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../..
 import { IDisposableRegistry } from '../../../platform/common/types';
 
 const kernelCache = new WeakMap<IKernel, Kernel>();
-let _onDidStart: EventEmitter<{ uri: Uri; kernel: Kernel }> | undefined = undefined;
+let _onDidStart:
+    | EventEmitter<{ uri: Uri; kernel: Kernel; token: CancellationToken; waitUntil(thenable: Thenable<unknown>): void }>
+    | undefined = undefined;
 
 function getWrappedKernel(kernel: IKernel, extensionId: string) {
     let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
@@ -55,11 +57,21 @@ export function getKernelsApi(extensionId: string): Kernels {
             if (!_onDidStart) {
                 const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
                 const disposableRegistry = ServiceContainer.instance.get<IDisposableRegistry>(IDisposableRegistry);
-                _onDidStart = new EventEmitter<{ uri: Uri; kernel: Kernel }>();
+                _onDidStart = new EventEmitter<{
+                    uri: Uri;
+                    kernel: Kernel;
+                    token: CancellationToken;
+                    waitUntil(thenable: Thenable<unknown>): void;
+                }>();
 
                 disposableRegistry.push(
-                    kernelProvider.onDidPostInitializeKernel((kernel) => {
-                        _onDidStart?.fire({ uri: kernel.uri, kernel: getWrappedKernel(kernel, extensionId) });
+                    kernelProvider.onDidPostInitializeKernel(({ kernel, token, waitUntil }) => {
+                        _onDidStart?.fire({
+                            uri: kernel.uri,
+                            kernel: getWrappedKernel(kernel, extensionId),
+                            token,
+                            waitUntil
+                        });
                     }),
                     _onDidStart,
                     { dispose: () => (_onDidStart = undefined) }

@@ -355,8 +355,9 @@ export interface IBaseKernel extends IAsyncDisposable {
     readonly onDisposed: Event<void>;
     readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
-    readonly onPostInitialized: Event<void>;
+    readonly onPostInitialized: Event<{ token: CancellationToken; waitUntil(thenable: Thenable<unknown>): void }>;
     readonly restarting: Promise<void>;
+    readonly postInitializing: Promise<void>;
     readonly status: KernelMessage.Status;
     readonly disposed: boolean;
     readonly disposing: boolean;
@@ -513,7 +514,11 @@ export interface IBaseKernelProvider<T extends IBaseKernel> extends IAsyncDispos
     onDidRestartKernel: Event<T>;
     onDidDisposeKernel: Event<T>;
     onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: T }>;
-    onDidPostInitializeKernel: Event<T>;
+    onDidPostInitializeKernel: Event<{
+        kernel: T;
+        token: CancellationToken;
+        waitUntil(thenable: Thenable<unknown>): void;
+    }>;
 }
 
 /**

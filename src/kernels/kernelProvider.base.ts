@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { Event, EventEmitter, NotebookDocument, Uri, workspace } from 'vscode';
+import { CancellationToken, Event, EventEmitter, NotebookDocument, Uri, workspace } from 'vscode';
 import { logger } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../platform/common/types';
@@ -36,7 +36,11 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     protected readonly _onDidCreateKernel = new EventEmitter<IKernel>();
     protected readonly _onDidDisposeKernel = new EventEmitter<IKernel>();
     protected readonly _onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
-    protected readonly _onDidPostInitializeKernel = new EventEmitter<IKernel>();
+    protected readonly _onDidPostInitializeKernel = new EventEmitter<{
+        kernel: IKernel;
+        token: CancellationToken;
+        waitUntil(thenable: Thenable<unknown>): void;
+    }>();
     public readonly onKernelStatusChanged = this._onKernelStatusChanged.event;
     public get kernels() {
         const kernels = new Set<IKernel>();
@@ -75,7 +79,11 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     public get onDidCreateKernel(): Event<IKernel> {
         return this._onDidCreateKernel.event;
     }
-    public get onDidPostInitializeKernel(): Event<IKernel> {
+    public get onDidPostInitializeKernel(): Event<{
+        kernel: IKernel;
+        token: CancellationToken;
+        waitUntil(thenable: Thenable<unknown>): void;
+    }> {
         return this._onDidPostInitializeKernel.event;
     }
     public get(uriOrNotebook: Uri | NotebookDocument | string): IKernel | undefined {
@@ -192,7 +200,11 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
     protected readonly _onDidStartKernel = new EventEmitter<IThirdPartyKernel>();
     protected readonly _onDidCreateKernel = new EventEmitter<IThirdPartyKernel>();
     protected readonly _onDidDisposeKernel = new EventEmitter<IThirdPartyKernel>();
-    protected readonly _onDidPostInitializeKernel = new EventEmitter<IThirdPartyKernel>();
+    protected readonly _onDidPostInitializeKernel = new EventEmitter<{
+        kernel: IThirdPartyKernel;
+        token: CancellationToken;
+        waitUntil(thenable: Thenable<unknown>): void;
+    }>();
     protected readonly _onKernelStatusChanged = new EventEmitter<{
         status: KernelMessage.Status;
         kernel: IThirdPartyKernel;
@@ -234,7 +246,11 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
     public get onDidCreateKernel(): Event<IThirdPartyKernel> {
         return this._onDidCreateKernel.event;
     }
-    public get onDidPostInitializeKernel(): Event<IThirdPartyKernel> {
+    public get onDidPostInitializeKernel(): Event<{
+        kernel: IThirdPartyKernel;
+        token: CancellationToken;
+        waitUntil(thenable: Thenable<unknown>): void;
+    }> {
         return this._onDidPostInitializeKernel.event;
     }
     public get(uri: Uri | string): IThirdPartyKernel | undefined {

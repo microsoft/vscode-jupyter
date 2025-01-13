@@ -15,7 +15,8 @@ import {
     Memento,
     CancellationError,
     window,
-    workspace
+    workspace,
+    CancellationToken
 } from 'vscode';
 import {
     CodeSnippets,
@@ -66,6 +67,7 @@ import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutErro
 import { dispose } from '../platform/common/utils/lifecycle';
 import { getCachedVersion, getEnvironmentType } from '../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker } from './telemetry/notebookTelemetry';
+import { AsyncEmitter } from '../platform/common/event';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**
@@ -129,7 +131,7 @@ abstract class BaseKernel implements IBaseKernel {
     get onStarted(): Event<void> {
         return this._onStarted.event;
     }
-    get onPostInitialized(): Event<void> {
+    get onPostInitialized(): Event<{ token: CancellationToken; waitUntil(thenable: Thenable<unknown>): void }> {
         return this._onPostInitialized.event;
     }
     get onDisposed(): Event<void> {
@@ -183,7 +185,10 @@ abstract class BaseKernel implements IBaseKernel {
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
-    private readonly _onPostInitialized = new EventEmitter<void>();
+    private readonly _onPostInitialized = new AsyncEmitter<{
+        waitUntil: (thenable: Thenable<unknown>) => void;
+        token: CancellationToken;
+    }>();
     private readonly _onDisposed = new EventEmitter<void>();
     private _jupyterSessionPromise?: Promise<IKernelSession>;
     private readonly hookedSessionForEvents = new WeakSet<IKernelSession>();
@@ -195,6 +200,10 @@ abstract class BaseKernel implements IBaseKernel {
     private _restartPromise?: Promise<void>;
     public get restarting() {
         return this._restartPromise || Promise.resolve();
+    }
+    private _postInitializingDeferred = createDeferred<void>();
+    public get postInitializing() {
+        return this._postInitializingDeferred.promise;
     }
     constructor(
         public readonly id: string,
@@ -257,10 +266,12 @@ abstract class BaseKernel implements IBaseKernel {
         return this.startJupyterSession(options).then((result) => {
             // If we started and the UI is no longer disabled (ie., a user executed a cell)
             // then we can signal that the kernel was created and can be used by third-party extensions.
-            // We also only want to fire off a single event here.
+            // We also only want to fire off a single. event here.
             if (!options?.disableUI && !this._postInitializedOnStart) {
-                this._onPostInitialized.fire();
                 this._postInitializedOnStart = true;
+                void this._onPostInitialized.fireAsync({}, this.startCancellation.token).then(() => {
+                    this._postInitializingDeferred.resolve();
+                });
             }
             return result;
         });
@@ -428,7 +439,9 @@ abstract class BaseKernel implements IBaseKernel {
             this._onRestarted.fire();
 
             // Also signal that the kernel post initialization completed.
-            this._onPostInitialized.fire();
+            void this._onPostInitialized.fireAsync({}, this.startCancellation.token).then(() => {
+                this._postInitializingDeferred.resolve();
+            });
         } catch (ex) {
             logger.error(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
