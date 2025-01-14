@@ -10,8 +10,13 @@ import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { DATA_WRANGLER_EXTENSION_ID, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
 import { IDisposableRegistry } from '../../../platform/common/types';
+import { createDeferredFromPromise } from '../../../platform/common/utils/async';
+import { logger } from '../../../platform/logging';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { sendKernelTelemetryEvent } from '../../../kernels/telemetry/sendKernelTelemetryEvent';
+import { KernelExecutionProgressIndicator } from './kernelProgressIndicator';
 
-const kernelCache = new WeakMap<IKernel, Kernel>();
+const kernelCache = new WeakMap<IKernel, { api: Kernel; progress: KernelExecutionProgressIndicator }>();
 let _onDidStart:
     | EventEmitter<{ uri: Uri; kernel: Kernel; token: CancellationToken; waitUntil(thenable: Thenable<unknown>): void }>
     | undefined = undefined;
@@ -20,6 +25,30 @@ function getWrappedKernel(kernel: IKernel, extensionId: string) {
     let wrappedKernel = kernelCache.get(kernel) || createKernelApiForExtension(extensionId, kernel);
     kernelCache.set(kernel, wrappedKernel);
     return wrappedKernel;
+}
+
+function wrapWaitUntilWithProgress(
+    waitUntil: (thenable: Thenable<unknown>) => void,
+    extensionId: string,
+    kernel: IKernel,
+    progress: KernelExecutionProgressIndicator
+): (thenable: Thenable<unknown>) => void {
+    return (thenable) => {
+        const deferrable = createDeferredFromPromise(Promise.resolve(thenable));
+        waitUntil(thenable);
+        const disposable = progress.show();
+        const stopWatch = new StopWatch();
+        void deferrable.promise.finally(() => {
+            logger.trace(`${extensionId} took ${stopWatch.elapsedTime}ms during kernel startup`);
+            sendKernelTelemetryEvent(
+                kernel.resourceUri,
+                Telemetry.NewJupyterKernelApiKernelStartupWaitUntil,
+                { duration: stopWatch.elapsedTime },
+                { extensionId }
+            );
+            disposable.dispose();
+        });
+    };
 }
 
 export function getKernelsApi(extensionId: string): Kernels {
@@ -46,7 +75,8 @@ export function getKernelsApi(extensionId: string): Kernels {
                     kernel.kernelConnectionMetadata
                 );
             }
-            return getWrappedKernel(kernel, extensionId);
+            const { api } = getWrappedKernel(kernel, extensionId);
+            return api;
         },
         get onDidStart() {
             if (![JVSC_EXTENSION_ID, DATA_WRANGLER_EXTENSION_ID].includes(extensionId)) {
@@ -66,11 +96,12 @@ export function getKernelsApi(extensionId: string): Kernels {
 
                 disposableRegistry.push(
                     kernelProvider.onDidPostInitializeKernel(({ kernel, token, waitUntil }) => {
+                        const { api, progress } = getWrappedKernel(kernel, extensionId);
                         _onDidStart?.fire({
                             uri: kernel.uri,
-                            kernel: getWrappedKernel(kernel, extensionId),
+                            kernel: api,
                             token,
-                            waitUntil
+                            waitUntil: wrapWaitUntilWithProgress(waitUntil, extensionId, kernel, progress)
                         });
                     }),
                     _onDidStart,

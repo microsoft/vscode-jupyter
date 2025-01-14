@@ -381,6 +381,7 @@ export enum Telemetry {
     NewJupyterKernelApiUsage = 'DATASCIENCE.JUPYTER_NEW_KERNEL_API_USAGE',
     NewJupyterKernelsApiUsage = 'DATASCIENCE.JUPYTER_NEW_KERNELS_API_USAGE',
     NewJupyterKernelApiExecution = 'DATASCIENCE.JUPYTER_NEW_KERNEL_API_EXEC',
+    NewJupyterKernelApiKernelStartupWaitUntil = 'DATASCIENCE.JUPYTER_NEW_KERNEL_API_KERNEL_STARTUP_WAIT_UNTIL',
     JupyterKernelApiAccess = 'DATASCIENCE.JUPYTER_KERNEL_API_ACCESS',
     JupyterKernelStartupHook = 'DATASCIENCE.JUPYTER_KERNEL_STARTUP_HOOK',
     JupyterKernelSpecEnumeration = 'DATASCIENCE.JUPYTER_KERNEL_SPEC_FETCH_FAILURE',
