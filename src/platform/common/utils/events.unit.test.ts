@@ -3,11 +3,11 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { AsyncEmitter, IWaitUntil } from './event';
+import { AsyncEmitter, IWaitUntil } from './events';
 import * as fakeTimers from '@sinonjs/fake-timers';
-import { IDisposable } from './types';
-import { dispose } from './utils/lifecycle';
 import { Disposable, CancellationTokenSource } from 'vscode';
+import { IDisposable } from '../types';
+import { dispose } from './lifecycle';
 
 suite('AsyncEmitter', async () => {
     let clock: fakeTimers.InstalledClock;

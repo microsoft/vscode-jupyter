@@ -67,7 +67,7 @@ import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutErro
 import { dispose } from '../platform/common/utils/lifecycle';
 import { getCachedVersion, getEnvironmentType } from '../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker } from './telemetry/notebookTelemetry';
-import { AsyncEmitter } from '../platform/common/event';
+import { AsyncEmitter } from '../platform/common/utils/events';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**

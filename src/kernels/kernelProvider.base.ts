@@ -17,6 +17,7 @@ import {
     INotebookKernelExecution
 } from './types';
 import { JupyterServerProviderHandle } from './jupyter/types';
+import { AsyncEmitter } from '../platform/common/utils/events';
 
 /**
  * Provides kernels to the system. Generally backed by a URI or a notebook object.
@@ -36,7 +37,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     protected readonly _onDidCreateKernel = new EventEmitter<IKernel>();
     protected readonly _onDidDisposeKernel = new EventEmitter<IKernel>();
     protected readonly _onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
-    protected readonly _onDidPostInitializeKernel = new EventEmitter<{
+    protected readonly _onDidPostInitializeKernel = new AsyncEmitter<{
         kernel: IKernel;
         token: CancellationToken;
         waitUntil(thenable: Thenable<unknown>): void;
@@ -200,7 +201,7 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
     protected readonly _onDidStartKernel = new EventEmitter<IThirdPartyKernel>();
     protected readonly _onDidCreateKernel = new EventEmitter<IThirdPartyKernel>();
     protected readonly _onDidDisposeKernel = new EventEmitter<IThirdPartyKernel>();
-    protected readonly _onDidPostInitializeKernel = new EventEmitter<{
+    protected readonly _onDidPostInitializeKernel = new AsyncEmitter<{
         kernel: IThirdPartyKernel;
         token: CancellationToken;
         waitUntil(thenable: Thenable<unknown>): void;
