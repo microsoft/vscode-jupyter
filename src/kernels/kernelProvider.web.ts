@@ -80,11 +80,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
             this.workspaceStorage
         ) as IKernel;
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
-        kernel.onPostInitialized(
-            ({ token, waitUntil }) => this._onDidPostInitializeKernel.fire({ kernel, token, waitUntil }),
-            this,
-            this.disposables
-        );
+        kernel.onPostInitialized((e) => this._onDidPostInitializeKernel.fire({ kernel, ...e }), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
@@ -137,11 +133,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             this.workspaceStorage
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
-        kernel.onPostInitialized(
-            ({ token, waitUntil }) => this._onDidPostInitializeKernel.fire({ kernel, token, waitUntil }),
-            this,
-            this.disposables
-        );
+        kernel.onPostInitialized((e) => this._onDidPostInitializeKernel.fire({ kernel, ...e }), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
