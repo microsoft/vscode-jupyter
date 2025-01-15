@@ -266,7 +266,7 @@ abstract class BaseKernel implements IBaseKernel {
         return this.startJupyterSession(options).then((result) => {
             // If we started and the UI is no longer disabled (ie., a user executed a cell)
             // then we can signal that the kernel was created and can be used by third-party extensions.
-            // We also only want to fire off a single. event here.
+            // We also only want to fire off a single event here.
             if (!options?.disableUI && !this._postInitializedOnStart) {
                 this._postInitializedOnStart = true;
                 void this._onPostInitialized.fireAsync({}, this.startCancellation.token).then(() => {
