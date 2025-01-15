@@ -30,7 +30,7 @@ import {
     waitForExecutionCompletedSuccessfully
 } from '../../../test/datascience/notebook/helper';
 import { getKernelsApi } from '.';
-import { createDeferred, raceTimeoutError } from '../../../platform/common/utils/async';
+import { createDeferred, createDeferredFromPromise, raceTimeoutError } from '../../../platform/common/utils/async';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
@@ -268,16 +268,32 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             // Register event listener to track invocations
             const source = new CancellationTokenSource();
             let startEventCounter = 0;
-            disposables.push(
-                kernels.onDidStart(async ({ kernel }) => {
-                    const codeToRun =
-                        startEventCounter === 0 ? `let foo = ${startEventCounter}` : `foo = ${startEventCounter}`;
-                    startEventCounter++;
 
-                    // This is needed for the async generator to get executed.
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    for await (const _out of kernel.executeCode(codeToRun, source.token)) {
-                    }
+            const startDeferrable = createDeferred();
+            disposables.push(
+                kernels.onDidStart(async ({ kernel, waitUntil }) => {
+                    waitUntil(
+                        (async () => {
+                            const codeToRun =
+                                startEventCounter === 0
+                                    ? `let foo = ${startEventCounter}`
+                                    : `foo = ${startEventCounter}`;
+                            startEventCounter++;
+
+                            // This is needed for the async generator to get executed.
+                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                            for await (const _out of kernel.executeCode(codeToRun, source.token)) {
+                            }
+
+                            // Inject artificial timeout to ensure that cell execution is blocked.
+                            setTimeout(() => {
+                                // resolve the start deferrable 3s later, which should be ample
+                                // time to make sure that no cell was executed during this time.
+                                startDeferrable.resolve();
+                            }, 3_000);
+                            return startDeferrable.promise;
+                        })()
+                    );
                 })
             );
             await insertCodeCell('console.log(foo)', { index: 0, language: 'typescript' });
@@ -297,7 +313,15 @@ suiteMandatory('Kernel API Tests @typescript', function () {
                 }
             });
             disposables.push(eventHandler);
-            await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
+            const cellExecutedDeferrable = createDeferredFromPromise(
+                Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise])
+            );
+
+            // When the start deferrable resolves, we should not have queued the user execution yet.
+            await startDeferrable.promise;
+            assert.strictEqual(executionOrderSet.resolved, false);
+
+            await cellExecutedDeferrable.promise;
 
             // Validate the cell execution output is equal to the expected value of "foo = 0"
             const expectedMime = NotebookCellOutputItem.stdout('').mime;
