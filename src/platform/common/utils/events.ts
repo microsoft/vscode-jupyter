@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { CancellationToken, Disposable, Event } from 'vscode';
+import { CancellationToken, Disposable, Event } from 'vscode';
 import { IDisposable } from '../types';
 import { EmptyDisposable } from './lifecycle';
 
@@ -62,11 +62,11 @@ export class AsyncEmitter<T extends IWaitUntil> {
 
     public get event(): Event<T> {
         if (!this._event) {
-            this._event = (listener: (e: T) => unknown): Disposable => {
-                this._listeners.add(listener);
-                return {
-                    dispose: () => this._listeners.delete(listener)
-                };
+            this._event = (listener: (e: T) => unknown, thisArg?: unknown, disposables?: Disposable[]): Disposable => {
+                this._listeners.add(thisArg ? listener.bind(thisArg) : listener);
+                const disposable = new Disposable(() => this._listeners.delete(listener));
+                disposables?.push(disposable);
+                return disposable;
             };
         }
         return this._event;
