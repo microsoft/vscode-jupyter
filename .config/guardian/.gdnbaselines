@@ -1,0 +1,60 @@
+{
+  "properties": {
+    "helpUri": "https://eng.ms/docs/microsoft-security/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/microsoft-guardian/general/baselines"
+  },
+  "version": "1.0.0",
+  "baselines": {
+    "default": {
+      "name": "default",
+      "createdDate": "2025-01-17 04:41:19Z",
+      "lastUpdatedDate": "2025-01-17 04:41:19Z"
+    }
+  },
+  "results": {
+    "a9a26db9cf5576a981f215e31276cb1e9b2282ba20405012ab6e2ef8ef3f63e3": {
+      "signature": "a9a26db9cf5576a981f215e31276cb1e9b2282ba20405012ab6e2ef8ef3f63e3",
+      "alternativeSignatures": [
+        "f00f389d656911ea829191aaf821ed82eba2a8d286f42e22c2051abbc2d953a5"
+      ],
+      "target": "extension/dist/node_modules/zeromq/prebuilds/win32-x64/node.napi.glibc.node",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2025-01-17 04:41:19Z",
+      "expirationDate": "2025-07-06 05:12:23Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2025-01-17 05:12:23Z"
+    },
+    "06af5765959b21563d8bc882eabe149fc954cf9a938e7021bdaf699534b4b332": {
+      "signature": "06af5765959b21563d8bc882eabe149fc954cf9a938e7021bdaf699534b4b332",
+      "alternativeSignatures": [
+        "0723d8544c9fd931e2cfc558d272597cd8af50ced6a0e4989d9b521bb2ed37e6"
+      ],
+      "target": "extension/dist/node_modules/zeromqold/prebuilds/win32-x64/node.napi.node",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2025-01-17 04:41:19Z",
+      "expirationDate": "2025-07-06 05:12:23Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2025-01-17 05:12:23Z"
+    },
+    "940397e69305bc75896a63901390e27b24ae08eb09120e6e1c1676f846aec8ff": {
+      "signature": "940397e69305bc75896a63901390e27b24ae08eb09120e6e1c1676f846aec8ff",
+      "alternativeSignatures": [
+        "f220512395816898b8730bebd27e0e20bced816bc2dc12bd1cb4f97203371222"
+      ],
+      "target": "extension/dist/node_modules/zeromq/prebuilds/win32-arm64/node.napi.glibc.node",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2025-01-17 04:41:51Z",
+      "expirationDate": "2025-07-06 05:12:23Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2025-01-17 05:12:23Z"
+    }
+  }
+}
