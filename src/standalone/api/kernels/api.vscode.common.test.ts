@@ -30,7 +30,7 @@ import {
     waitForExecutionCompletedSuccessfully
 } from '../../../test/datascience/notebook/helper';
 import { getKernelsApi } from '.';
-import { createDeferred, createDeferredFromPromise, raceTimeoutError } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeoutError } from '../../../platform/common/utils/async';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
@@ -302,7 +302,7 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             });
             disposables.push(eventHandler);
 
-            // Do not explicitly start the kernel here, let it be triggered by the cell execution.
+            // Do not explicitly start the kernel here, let it be triggered by the cell execution.s
             await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
 
             // Validate the cell execution output is equal to the expected value of "foo = 0"
