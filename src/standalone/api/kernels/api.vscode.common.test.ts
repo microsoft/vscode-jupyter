@@ -269,6 +269,7 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             const source = new CancellationTokenSource();
             let startEventCounter = 0;
 
+            const executionOrderSet = createDeferred();
             disposables.push(
                 kernels.onDidStart(async ({ kernel, waitUntil }) => {
                     waitUntil(
@@ -283,32 +284,26 @@ suiteMandatory('Kernel API Tests @typescript', function () {
                             // eslint-disable-next-line @typescript-eslint/no-unused-vars
                             for await (const _out of kernel.executeCode(codeToRun, source.token)) {
                             }
+
+                            // Cell should not have executed at this point.
+                            assert.strictEqual(executionOrderSet.resolved, false);
                         })()
                     );
                 })
             );
             await insertCodeCell('console.log(foo)', { index: 0, language: 'typescript' });
 
-            await realKernel.start({
-                disableUI: true,
-                onDidChangeDisableUI: () => ({
-                    dispose: noop
-                })
-            });
             assert.equal(startEventCounter, 0, 'Kernel start event was triggered for a non-user kernel start');
             const cell = notebook.cellAt(0)!;
-            const executionOrderSet = createDeferred();
             const eventHandler = notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
                 if (e.cell === cell && e.cell.executionSummary?.executionOrder) {
                     executionOrderSet.resolve();
                 }
             });
             disposables.push(eventHandler);
-            const cellExecutedDeferrable = createDeferredFromPromise(
-                Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise])
-            );
 
-            await cellExecutedDeferrable.promise;
+            // Do not explicitly start the kernel here, let it be triggered by the cell execution.
+            await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
 
             // Validate the cell execution output is equal to the expected value of "foo = 0"
             const expectedMime = NotebookCellOutputItem.stdout('').mime;
