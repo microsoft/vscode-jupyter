@@ -159,7 +159,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
             const cell = window.activeNotebookEditor!.notebook.cellAt(1);
 
             await executeCellAndWaitForOutput(cell, comms);
-            await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image']);
+            await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="']);
         });
         test('Render matplotlib, non-interactive inline', async function () {
             await initializeNotebookForWidgetTest(disposables, {

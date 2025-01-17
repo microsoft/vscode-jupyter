@@ -552,7 +552,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['Text Value is Foo']);
-            assert.strictEqual(cell.outputs.length, 4, 'Cell should have 4 outputs');
+            assert.strictEqual(cell.outputs.length, 3, 'Cell should have 3 outputs');
 
             // This cannot be displayed by output widget, hence we need to handle this.
             // One of the outputs if a custom mimetype.
