@@ -302,7 +302,7 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             });
             disposables.push(eventHandler);
 
-            // Do not explicitly start the kernel here, let it be triggered by the cell execution.s
+            // Do not explicitly start the kernel here, let it be triggered by the cell execution.
             await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise]);
 
             // Validate the cell execution output is equal to the expected value of "foo = 0"
