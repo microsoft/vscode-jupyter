@@ -34,7 +34,7 @@ import { StopWatch } from '../platform/common/utils/stopWatch';
 import { noop } from '../platform/common/utils/misc';
 import { createDeferred, createDeferredFromPromise } from '../platform/common/utils/async';
 import { dispose } from '../platform/common/utils/lifecycle';
-import { JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { POWER_TOYS_EXTENSION_ID, JVSC_EXTENSION_ID } from '../platform/common/constants';
 import type { IMessage } from '@jupyterlab/services/lib/kernel/messages';
 import type { KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
@@ -202,7 +202,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
 
         let result: ICodeExecution;
-        if (extensionId === JVSC_EXTENSION_ID) {
+        if (extensionId === JVSC_EXTENSION_ID || extensionId === POWER_TOYS_EXTENSION_ID) {
             // No need to queue code execution for JVSC, as it will be executed immediately.
             // Only 3rd party code needs to be queued (as we need to give user code preference over 3rd party ext code)
             result = CodeExecution.fromCode(code, extensionId);

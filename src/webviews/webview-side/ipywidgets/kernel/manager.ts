@@ -23,7 +23,7 @@ import { IInteractiveWindowMapping, IPyWidgetMessages, InteractiveWindowMessages
 import { WIDGET_MIMETYPE, WIDGET_STATE_MIMETYPE } from '../../../../platform/common/constants';
 import { NotebookMetadata } from '../../../../platform/common/utils';
 import { noop } from '../../../../platform/common/utils/misc';
-import type { RendererContext } from 'vscode-notebook-renderer';
+import type { OutputItem, RendererContext } from 'vscode-notebook-renderer';
 import { renderersAndMimetypes } from './mimeTypes';
 import { base64ToUint8Array } from '../../../../platform/common/utils/string';
 
@@ -246,35 +246,47 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
                         const context = (globalThis as any).jupyter_vscode_rendererContext as RendererContext<any>;
                         const renderer = await context.getRenderer(rendererId);
                         const isImage = mime.toLowerCase().startsWith('image/') && !mime.toLowerCase().includes('svg');
-                        renderer?.renderOutputItem(
-                            {
-                                id: new Date().getTime().toString(), // Not used except when saving plots, but with nested outputs, thats not possible.
-                                metadata,
-                                text: () => {
-                                    return JSON.stringify(data[mime]);
+                        const renderOutputItem = renderer?.renderOutputItem as
+                            | undefined
+                            | ((outputItem: OutputItem, element: HTMLElement, signal: AbortSignal) => void);
+                        if (renderOutputItem) {
+                            renderOutputItem(
+                                {
+                                    id: new Date().getTime().toString(), // Not used except when saving plots, but with nested outputs, thats not possible.
+                                    metadata,
+                                    text: () => {
+                                        if (
+                                            (mime.startsWith('text/') || mime.startsWith('image/svg+xml')) &&
+                                            typeof data[mime] === 'string'
+                                        ) {
+                                            return data[mime] as string;
+                                        }
+                                        return JSON.stringify(data[mime]);
+                                    },
+                                    json: () => {
+                                        return data[mime];
+                                    },
+                                    blob() {
+                                        if (isImage) {
+                                            const bytes = base64ToUint8Array(data[mime] as string);
+                                            return new Blob([bytes], { type: mime });
+                                        } else {
+                                            throw new Error(`Not able to get blob for ${mime}.`);
+                                        }
+                                    },
+                                    data() {
+                                        if (isImage) {
+                                            return base64ToUint8Array(data[mime] as string);
+                                        } else {
+                                            throw new Error(`Not able to get blob for ${mime}.`);
+                                        }
+                                    },
+                                    mime
                                 },
-                                json: () => {
-                                    return data[mime];
-                                },
-                                blob() {
-                                    if (isImage) {
-                                        const bytes = base64ToUint8Array(data[mime] as string);
-                                        return new Blob([bytes], { type: mime });
-                                    } else {
-                                        throw new Error(`Not able to get blob for ${mime}.`);
-                                    }
-                                },
-                                data() {
-                                    if (isImage) {
-                                        return base64ToUint8Array(data[mime] as string);
-                                    } else {
-                                        throw new Error(`Not able to get blob for ${mime}.`);
-                                    }
-                                },
-                                mime
-                            },
-                            node
-                        );
+                                node,
+                                new AbortController().signal
+                            );
+                        }
                     });
                 });
             });
