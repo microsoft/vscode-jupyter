@@ -169,7 +169,8 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
 
         // Wait for the kernel to complete post initialization before queueing the cell in case
         // we need to allow extensions to run code before the initial user-triggered execution
-        await this.kernel.postInitializing;
+        // (because of this, we intentionally do not need the same await in `executeCode`).
+        await sessionPromise;
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
         executionQueue.queueCell(cell, codeOverride);
         let success = true;

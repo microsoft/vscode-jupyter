@@ -201,10 +201,6 @@ abstract class BaseKernel implements IBaseKernel {
     public get restarting() {
         return this._restartPromise || Promise.resolve();
     }
-    private _postInitializingDeferred = createDeferred<void>();
-    public get postInitializing() {
-        return this._postInitializingDeferred.promise;
-    }
     constructor(
         public readonly id: string,
         public readonly uri: Uri,
@@ -263,18 +259,15 @@ abstract class BaseKernel implements IBaseKernel {
             this.startCancellation.dispose();
             this.startCancellation = new CancellationTokenSource();
         }
-        return this.startJupyterSession(options).then((result) => {
-            // If we started and the UI is no longer disabled (ie., a user executed a cell)
-            // then we can signal that the kernel was created and can be used by third-party extensions.
-            // We also only want to fire off a single event here.
-            if (!options?.disableUI && !this._postInitializedOnStart) {
-                this._postInitializedOnStart = true;
-                void this._onPostInitialized.fireAsync({}, this.startCancellation.token).then(() => {
-                    this._postInitializingDeferred.resolve();
-                });
-            }
-            return result;
-        });
+        const result = await this.startJupyterSession(options);
+        // If we started and the UI is no longer disabled (ie., a user executed a cell)
+        // then we can signal that the kernel was created and can be used by third-party extensions.
+        // We also only want to fire off a single event here.
+        if (!options?.disableUI && !this._postInitializedOnStart) {
+            this._postInitializedOnStart = true;
+            await this._onPostInitialized.fireAsync({}, this.startCancellation.token);
+        }
+        return result;
     }
     /**
      * Interrupts the execution of cells.
@@ -439,9 +432,7 @@ abstract class BaseKernel implements IBaseKernel {
             this._onRestarted.fire();
 
             // Also signal that the kernel post initialization completed.
-            void this._onPostInitialized.fireAsync({}, this.startCancellation.token).then(() => {
-                this._postInitializingDeferred.resolve();
-            });
+            await this._onPostInitialized.fireAsync({}, this.startCancellation.token);
         } catch (ex) {
             logger.error(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;

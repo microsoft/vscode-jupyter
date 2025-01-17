@@ -95,6 +95,7 @@ export function getKernelsApi(extensionId: string): Kernels {
                 }>();
 
                 disposableRegistry.push(
+                    extensionAPI.onDidStart,
                     kernelProvider.onDidPostInitializeKernel(({ kernel, token, waitUntil }) => {
                         const { api, progress } = getWrappedKernel(kernel, extensionId);
                         extensionAPI.onDidStart?.fire({

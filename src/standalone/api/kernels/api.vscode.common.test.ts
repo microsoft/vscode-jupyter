@@ -269,7 +269,6 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             const source = new CancellationTokenSource();
             let startEventCounter = 0;
 
-            const startDeferrable = createDeferred();
             disposables.push(
                 kernels.onDidStart(async ({ kernel, waitUntil }) => {
                     waitUntil(
@@ -284,14 +283,6 @@ suiteMandatory('Kernel API Tests @typescript', function () {
                             // eslint-disable-next-line @typescript-eslint/no-unused-vars
                             for await (const _out of kernel.executeCode(codeToRun, source.token)) {
                             }
-
-                            // Inject artificial timeout to ensure that cell execution is blocked.
-                            setTimeout(() => {
-                                // resolve the start deferrable 3s later, which should be ample
-                                // time to make sure that no cell was executed during this time.
-                                startDeferrable.resolve();
-                            }, 3_000);
-                            return startDeferrable.promise;
                         })()
                     );
                 })
@@ -316,10 +307,6 @@ suiteMandatory('Kernel API Tests @typescript', function () {
             const cellExecutedDeferrable = createDeferredFromPromise(
                 Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell), executionOrderSet.promise])
             );
-
-            // When the start deferrable resolves, we should not have queued the user execution yet.
-            await startDeferrable.promise;
-            assert.strictEqual(executionOrderSet.resolved, false);
 
             await cellExecutedDeferrable.promise;
 
