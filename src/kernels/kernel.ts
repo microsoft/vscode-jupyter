@@ -260,7 +260,7 @@ abstract class BaseKernel implements IBaseKernel {
             this.startCancellation = new CancellationTokenSource();
         }
         const result = await this.startJupyterSession(options);
-        await this.triggerOnDidStartKernel(options?.disableUI);
+        await this.triggerOnDidStartKernel(options?.disableUI === true, false);
         return result;
     }
     /**
@@ -428,7 +428,7 @@ abstract class BaseKernel implements IBaseKernel {
             this._onRestarted.fire();
 
             // Also signal that the kernel post initialization completed.
-            await this.triggerOnDidStartKernel(false);
+            await this.triggerOnDidStartKernel(false, true);
         } catch (ex) {
             logger.error(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
@@ -487,7 +487,7 @@ abstract class BaseKernel implements IBaseKernel {
         return this._jupyterSessionPromise;
     }
 
-    private async triggerOnDidStartKernel(disableUI?: boolean) {
+    private async triggerOnDidStartKernel(disableUI: boolean, isRestarting = false) {
         if (disableUI) {
             return;
         }
@@ -495,7 +495,7 @@ abstract class BaseKernel implements IBaseKernel {
         // If we started and the UI is no longer disabled (ie., a user executed a cell)
         // then we can signal that the kernel was created and can be used by third-party extensions.
         // We also only want to fire off a single event here.
-        if (!this._postInitializedOnStartPromise) {
+        if (!this._postInitializedOnStartPromise || isRestarting) {
             this._postInitializedOnStartPromise = this._onPostInitialized.fireAsync({}, this.startCancellation.token);
             await this._postInitializedOnStartPromise;
         }
