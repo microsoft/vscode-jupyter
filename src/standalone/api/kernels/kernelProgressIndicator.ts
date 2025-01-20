@@ -89,9 +89,9 @@ export class KernelExecutionProgressIndicator {
         try {
             execution = this.executionRefCountedDisposableFactory?.acquire('');
         } catch {
-            // It's okay to not acquire an execution ref here as there may not always be
-            // an actual execution. For example, this can happen if we are showing this
-            // progress message from the kernels.onDidStart hook with `waitUntil`.
+            // It's okay to not acquire an execution ref here as there may already be one.
+            // E.g. when user is executing a cell, then an execution is already in progress & a progress will be displayed.
+            // Hence no need to acquire another execution ref.
         }
 
         if (this.deferred && !this.deferred.completed) {

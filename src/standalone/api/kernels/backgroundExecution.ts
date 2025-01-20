@@ -19,7 +19,7 @@ export async function execCodeInBackgroundThread<T>(
 ) {
     const counter = executionCounters.get(kernel) || 0;
     executionCounters.set(kernel, counter + 1);
-    const { api } = createKernelApiForExtension(JVSC_EXTENSION_ID, kernel);
+    const api = createKernelApiForExtension(JVSC_EXTENSION_ID, kernel);
     const mime = `application/vnd.vscode.bg.execution.${counter}`;
     const mimeFinalResult = `application/vnd.vscode.bg.execution.${counter}.result`;
     const mimeErrorResult = `application/vnd.vscode.bg.execution.${counter}.error`;
