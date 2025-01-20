@@ -7,7 +7,11 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { createKernelApiForExtension as createKernelApiForExtension } from './kernel';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
-import { DATA_WRANGLER_EXTENSION_ID, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import {
+    DATA_WRANGLER_EXTENSION_ID,
+    JVSC_EXTENSION_ID,
+    PROPOSED_API_ALLOWED_PUBLISHERS
+} from '../../../platform/common/constants';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
 import { IDisposableRegistry } from '../../../platform/common/types';
 
@@ -47,7 +51,10 @@ export function getKernelsApi(extensionId: string): Kernels {
             return getWrappedKernel(kernel, extensionId);
         },
         get onDidStart() {
-            if (![JVSC_EXTENSION_ID, DATA_WRANGLER_EXTENSION_ID].includes(extensionId)) {
+            if (
+                ![JVSC_EXTENSION_ID, DATA_WRANGLER_EXTENSION_ID].includes(extensionId) &&
+                !PROPOSED_API_ALLOWED_PUBLISHERS.includes(extensionId.split('.')[0])
+            ) {
                 throw new Error(`Proposed API is not supported for extension ${extensionId}`);
             }
 

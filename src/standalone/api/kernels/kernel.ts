@@ -35,6 +35,7 @@ import {
     DATA_WRANGLER_EXTENSION_ID,
     JVSC_EXTENSION_ID,
     POWER_TOYS_EXTENSION_ID,
+    PROPOSED_API_ALLOWED_PUBLISHERS,
     PYTHON_LANGUAGE
 } from '../../../platform/common/constants';
 import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/generator';
@@ -263,7 +264,10 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             },
             onDidChangeStatus: that.onDidChangeStatus.bind(this),
             get onDidReceiveDisplayUpdate() {
-                if (![JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID, DATA_WRANGLER_EXTENSION_ID].includes(extensionId)) {
+                if (
+                    ![JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID, DATA_WRANGLER_EXTENSION_ID].includes(extensionId) &&
+                    !PROPOSED_API_ALLOWED_PUBLISHERS.includes(extensionId.split('.')[0])
+                ) {
                     throw new Error(`Proposed API is not supported for extension ${extensionId}`);
                 }
 
