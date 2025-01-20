@@ -16,7 +16,7 @@ declare module './api' {
          * The signature of this method matches the `fetch` method in the browser.
          * https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch
          * fetch(input: RequestInfo, init?: RequestInit) =>Promise<Response>;
-        */
+         */
         readonly fetch?: (input: any, init?: any) => Promise<any>;
         /**
          * The `WebSocket` object constructor.
