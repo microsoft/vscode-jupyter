@@ -144,7 +144,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     ) {
         const wrapper = new WrappedKernelPerExtension(extensionId, kernel, execution, controller);
         ServiceContainer.instance.get<IDisposableRegistry>(IDisposableRegistry).push(wrapper);
-        return wrapper._api;
+        return { api: wrapper._api, progress: wrapper.progress };
     }
 
     private async checkAccess() {

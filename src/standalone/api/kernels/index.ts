@@ -14,6 +14,7 @@ import { createDeferredFromPromise } from '../../../platform/common/utils/async'
 import { logger } from '../../../platform/logging';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent } from '../../../kernels/telemetry/sendKernelTelemetryEvent';
+import { KernelExecutionProgressIndicator } from './kernelProgressIndicator';
 
 const extensionAPICache = new Map<
     string,
@@ -26,8 +27,9 @@ const extensionAPICache = new Map<
                   waitUntil(thenable: Thenable<unknown>): void;
               }>
             | undefined;
-        // Kernel cache needs to be scoped per extension
-        kernels: WeakMap<IKernel, Kernel>;
+        // Kernel cache needs to be scoped per extension to make sure that the progress messages
+        // show accurately which extension is actually using it.
+        kernels: WeakMap<IKernel, { api: Kernel; progress: KernelExecutionProgressIndicator }>;
     }
 >();
 
@@ -35,7 +37,7 @@ function getOrCreateExtensionAPI(extensionId: string) {
     if (!extensionAPICache.has(extensionId)) {
         extensionAPICache.set(extensionId, {
             onDidStart: undefined,
-            kernels: new WeakMap<IKernel, Kernel>()
+            kernels: new WeakMap<IKernel, { api: Kernel; progress: KernelExecutionProgressIndicator }>()
         });
     }
     return extensionAPICache.get(extensionId)!;
@@ -72,7 +74,8 @@ export function getKernelsApi(extensionId: string): Kernels {
                     kernel.kernelConnectionMetadata
                 );
             }
-            return getWrappedKernel(kernel, extensionId);
+            const { api } = getWrappedKernel(kernel, extensionId);
+            return api;
         },
         get onDidStart() {
             if (![JVSC_EXTENSION_ID, DATA_WRANGLER_EXTENSION_ID].includes(extensionId)) {
@@ -94,7 +97,7 @@ export function getKernelsApi(extensionId: string): Kernels {
                 disposableRegistry.push(
                     extensionAPI.onDidStart,
                     kernelProvider.onDidPostInitializeKernel(({ kernel, token, waitUntil }) => {
-                        const api = getWrappedKernel(kernel, extensionId);
+                        const { api, progress } = getWrappedKernel(kernel, extensionId);
                         extensionAPI.onDidStart?.fire({
                             uri: kernel.uri,
                             kernel: api,
@@ -106,6 +109,7 @@ export function getKernelsApi(extensionId: string): Kernels {
                                 // it is effectively preventing access to it.
                                 const deferrable = createDeferredFromPromise(Promise.resolve(thenable));
                                 waitUntil(thenable);
+                                const disposable = progress.show();
                                 const stopWatch = new StopWatch();
                                 void deferrable.promise.finally(() => {
                                     logger.trace(
@@ -117,6 +121,7 @@ export function getKernelsApi(extensionId: string): Kernels {
                                         { duration: stopWatch.elapsedTime },
                                         { extensionId }
                                     );
+                                    disposable.dispose();
                                 });
                             }
                         });
