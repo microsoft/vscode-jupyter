@@ -3,32 +3,17 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {
-    l10n,
-    CancellationToken,
-    ProgressLocation,
-    extensions,
-    window,
-    Disposable,
-    workspace,
-    NotebookDocument,
-    Event,
-    EventEmitter,
-    NotebookCellOutput,
-    type NotebookExecution,
-    type NotebookController
-} from 'vscode';
+import { l10n, CancellationToken, Event, EventEmitter, NotebookCellOutput, type NotebookController } from 'vscode';
 import { Kernel, KernelStatus, Output } from '../../../api';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
-import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../../kernels/helpers';
+import { isPythonKernelConnection } from '../../../kernels/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
-import { DisposableBase, ReferenceCollection, dispose } from '../../../platform/common/utils/lifecycle';
+import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
 import { noop } from '../../../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { Deferred, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { once } from '../../../platform/common/utils/events';
 import { logger } from '../../../platform/logging';
 import {
@@ -46,133 +31,7 @@ import {
 import { getNotebookCellOutputMetadata } from '../../../kernels/execution/helpers';
 import { registerChangeHandler, requestApiAccess } from './apiAccess';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
-
-class NotebookExecutionReferenceCollection extends ReferenceCollection<NotebookExecution> {
-    private existingExecutions?: NotebookExecution;
-    constructor(
-        private readonly controller: NotebookController,
-        private readonly notebook: NotebookDocument
-    ) {
-        super();
-    }
-    public dispose() {
-        this.disposeExistingExecution();
-    }
-
-    protected override createReferencedObject(_key: string, ..._args: any[]): NotebookExecution {
-        if (!this.existingExecutions) {
-            this.existingExecutions = this.controller.createNotebookExecution(this.notebook);
-            this.existingExecutions.start();
-        }
-        return this.existingExecutions;
-    }
-    protected override destroyReferencedObject(_key: string, _object: NotebookExecution): void {
-        this.disposeExistingExecution();
-    }
-    private disposeExistingExecution() {
-        try {
-            this.existingExecutions?.end();
-        } catch {
-            //
-        }
-        this.existingExecutions = undefined;
-    }
-}
-/**
- * Displays a progress indicator when 3rd party extensions execute code against a kernel.
- * The progress indicator is displayed only when the notebook is visible.
- *
- * We need this to notify users when execution takes place for:
- * 1. Transparency (they might not know that some code is being executed in a kernel)
- * 2. If users experience delays in kernel execution within notebooks, then they have an idea why this might be the case.
- */
-class KernelExecutionProgressIndicator {
-    private readonly controllerDisplayName: string;
-    private readonly notebook?: NotebookDocument;
-    private deferred?: Deferred<void>;
-    private disposable?: IDisposable;
-    private eventHandler: IDisposable;
-    private readonly title: string;
-    private displayInProgress?: boolean;
-    private shouldDisplayProgress?: boolean;
-    private static notificationsPerExtension = new WeakMap<IKernel, Set<string>>();
-    private executionRefCountedDisposableFactory?: NotebookExecutionReferenceCollection;
-    constructor(
-        private readonly extensionId: string,
-        private readonly kernel: IKernel,
-        controller?: NotebookController
-    ) {
-        this.executionRefCountedDisposableFactory = controller
-            ? new NotebookExecutionReferenceCollection(controller, kernel.notebook)
-            : undefined;
-        const extensionDisplayName = extensions.getExtension(extensionId)?.packageJSON?.displayName || extensionId;
-        this.notebook = workspace.notebookDocuments.find((n) => n.uri.toString() === kernel.resourceUri?.toString());
-        this.controllerDisplayName = getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata);
-        this.title = l10n.t(`Executing code in {0} from {1}`, this.controllerDisplayName, extensionDisplayName);
-        this.eventHandler = window.onDidChangeVisibleNotebookEditors(this.showProgressImpl, this);
-    }
-    dispose() {
-        this.eventHandler.dispose();
-        this.disposable?.dispose();
-        this.executionRefCountedDisposableFactory?.dispose();
-    }
-
-    show() {
-        const execution = this.executionRefCountedDisposableFactory?.acquire('');
-        if (this.deferred && !this.deferred.completed) {
-            const oldDeferred = this.deferred;
-            this.deferred = createDeferred<void>();
-            oldDeferred.resolve();
-        } else {
-            this.deferred = createDeferred<void>();
-            this.showProgress().catch(noop);
-        }
-        return (this.disposable = new Disposable(() => {
-            execution?.dispose();
-            this.deferred?.resolve();
-        }));
-    }
-    private async showProgress() {
-        // Give a grace period of 1000ms to avoid displaying progress indicators too aggressively.
-        // Clearly some extensions can take a while, see here https://github.com/microsoft/vscode-jupyter/issues/15613
-        // More than 1s is too long,
-        await sleep(1_000);
-        if (!this.deferred || this.deferred.completed || this.displayInProgress) {
-            return;
-        }
-        this.shouldDisplayProgress = true;
-        await Promise.all([this.showProgressImpl(), this.waitUntilCompleted()]);
-        this.shouldDisplayProgress = false;
-    }
-    private async showProgressImpl() {
-        const notifiedExtensions =
-            KernelExecutionProgressIndicator.notificationsPerExtension.get(this.kernel) || new Set();
-        KernelExecutionProgressIndicator.notificationsPerExtension.set(this.kernel, notifiedExtensions);
-        if (notifiedExtensions.has(this.extensionId)) {
-            return;
-        }
-        notifiedExtensions.add(this.extensionId);
-        if (!this.notebook || !this.shouldDisplayProgress) {
-            return;
-        }
-        if (!window.visibleNotebookEditors.some((e) => e.notebook === this.notebook)) {
-            return;
-        }
-        this.displayInProgress = true;
-        await window.withProgress({ location: ProgressLocation.Notification, title: this.title }, async () =>
-            this.waitUntilCompleted()
-        );
-        this.displayInProgress = false;
-    }
-    private async waitUntilCompleted() {
-        let deferred = this.deferred;
-        while (deferred && !deferred.completed) {
-            await deferred.promise;
-            // Possible the deferred was replaced.
-            deferred = this.deferred;
-        }
-    }
-}
+import { KernelExecutionProgressIndicator } from './kernelProgressIndicator';
 
 /**
  * Error to be throw to to notify calls of the API that access to the API has been revoked by the user.
@@ -289,7 +148,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     ) {
         const wrapper = new WrappedKernelPerExtension(extensionId, kernel, execution, controller);
         ServiceContainer.instance.get<IDisposableRegistry>(IDisposableRegistry).push(wrapper);
-        return wrapper._api;
+        return { api: wrapper._api, progress: wrapper.progress };
     }
 
     private async checkAccess() {

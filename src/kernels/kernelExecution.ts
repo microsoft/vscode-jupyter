@@ -166,6 +166,11 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         const sessionPromise = this.kernel.restarting.then(() => this.kernel.start(new DisplayOptions(false)));
 
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (3), ${getDisplayPath(cell.notebook.uri)}`);
+
+        // Wait for the kernel to complete post initialization before queueing the cell in case
+        // we need to allow extensions to run code before the initial user-triggered execution
+        // (because of this, we intentionally do not need the same await in `executeCode`).
+        await sessionPromise;
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
         executionQueue.queueCell(cell, codeOverride);
         let success = true;
@@ -196,18 +201,28 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         token: CancellationToken
     ): AsyncGenerator<NotebookCellOutput, void, unknown> {
         const stopWatch = new StopWatch();
-        // If we're restarting, wait for it to finish
-        const sessionPromise = this.kernel.restarting.then(() => this.kernel.start(new DisplayOptions(false)));
-
-        const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
 
         let result: ICodeExecution;
         if (extensionId === JVSC_EXTENSION_ID || extensionId === POWER_TOYS_EXTENSION_ID) {
+            // If we're restarting, wait for it to finish
+            // For internal extension we do not care about the UI being displayed.
+            // This is also a way to bypass the queue.
+            // If disable UI is true, then we end up triggering post execution code that results in 3rd party extensions
+            // Getting the event for kernel starting, when in fact users didn't run any code against the kernel at all.
+            // Also in those cases its possible 3rd party extensions would handle that event and then run some initialization code
+            // which in turn comes back into this and ther's a new item in the queue, but that is blocked on the previous execution.
+            // As a result we end up in a deadlock.
+            const sessionPromise = this.kernel.restarting.then(() => this.kernel.start(new DisplayOptions(true)));
+
             // No need to queue code execution for JVSC, as it will be executed immediately.
             // Only 3rd party code needs to be queued (as we need to give user code preference over 3rd party ext code)
             result = CodeExecution.fromCode(code, extensionId);
             void sessionPromise.then((session) => result.start(session));
         } else {
+            // If we're restarting, wait for it to finish
+            const sessionPromise = this.kernel.restarting.then(() => this.kernel.start(new DisplayOptions(false)));
+
+            const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
             result = executionQueue.queueCode(code, extensionId, token);
         }
         if (extensionId !== JVSC_EXTENSION_ID) {
