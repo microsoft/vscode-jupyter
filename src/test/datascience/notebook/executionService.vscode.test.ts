@@ -1077,7 +1077,7 @@ root.debug('debug test')`
 
         await Promise.all([waitForTextOutput(cell, 'debug test', 1, false)]);
 
-        assert.strictEqual(cell2.outputs.length, 0)
+        assert.strictEqual(cell2.outputs.length, 0);
         await kernel.dispose().catch(noop);
     });
 
