@@ -1042,6 +1042,45 @@ suite('Kernel Execution @kernelCore', function () {
         await kernel.dispose().catch(noop);
     });
 
+    test('Streamed output is added into the right cell (#16381)', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/16381#issuecomment-2603496123
+        const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
+        const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
+        stub.get(() => onDidChangeNbEventHandler.event);
+        disposables.push(onDidChangeNbEventHandler);
+        const cell = await notebook.appendCodeCell(
+            dedent`
+import logging.handlers
+import queue, logging
+import sys
+que=queue.Queue()
+handler = logging.StreamHandler(sys.stdout)
+listener = logging.handlers.QueueListener(que,  handler)
+queue_handler = logging.handlers.QueueHandler(que)
+root = logging.getLogger()
+root.addHandler(queue_handler)
+logging.lastResort=None
+listener.start()
+
+root.warning("Look out!")`
+        );
+        kernelExecution.executeCell(cell).catch(noop);
+
+        await Promise.all([waitForTextOutput(cell, 'Look out!', 0, false)]);
+
+        const cell2 = await notebook.appendCodeCell(
+            dedent`
+root.setLevel(logging.DEBUG)
+root.debug('debug test')`
+        );
+        kernelExecution.executeCell(cell2).catch(noop);
+
+        await Promise.all([waitForTextOutput(cell, 'debug test', 1, false)]);
+
+        assert.strictEqual(cell2.outputs.length, 0)
+        await kernel.dispose().catch(noop);
+    });
+
     /**
      * Verify the fact that cells provided were executed in the order they appear in the list.
      * (the execution order of each subsequent cell in the list is expected to have an execution order greater than the previous cell).

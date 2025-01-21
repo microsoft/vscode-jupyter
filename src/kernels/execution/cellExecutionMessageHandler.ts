@@ -437,14 +437,19 @@ export class CellExecutionMessageHandler implements IDisposable {
      * Creating one results in side effects such as execution order getting reset and timers starting.
      * Hence where possible re-use an existing cell execution task associated with this document.
      */
-    private createTemporaryTask() {
+    private createTemporaryTask(executionMustBelongToCurrentCell: boolean) {
         if (this.cell.document.isClosed) {
             return;
         }
         // If we have an active task, use that instead of creating a new task.
         const existingTask = activeNotebookCellExecution.get(this.cell.notebook);
         if (existingTask) {
-            return existingTask;
+            if (
+                !executionMustBelongToCurrentCell ||
+                (executionMustBelongToCurrentCell && existingTask.cell.index === this.cell.index)
+            ) {
+                return existingTask;
+            }
         }
 
         // Create a temporary task.
@@ -649,7 +654,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         // Possible execution of cell has completed (the task would have been disposed).
         // This message could have come from a background thread.
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-        const task = this.execution || this.createTemporaryTask();
+        const task = this.getOrCreateExecutionTask(true);
         // Clear if necessary
         this.clearOutputIfNecessary(task);
         // Keep track of the display_id against the output item, we might need this to update this later.
@@ -940,6 +945,21 @@ export class CellExecutionMessageHandler implements IDisposable {
     private handleStatusMessage(msg: KernelMessage.IStatusMsg) {
         traceCellMessage(this.cell, `Kernel switching to ${msg.content.execution_state}`);
     }
+
+    /**
+     * Possible execution of cell has completed (the task would have been disposed).
+     * This message could have come from a background thread.
+     * In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
+     */
+    private getOrCreateExecutionTask(executionMustBelongToCurrentCell: boolean) {
+        if (!executionMustBelongToCurrentCell && this.execution) {
+            return this.execution;
+        }
+        return this.execution?.cell === this.cell
+            ? this.execution
+            : this.createTemporaryTask(executionMustBelongToCurrentCell);
+    }
+
     private handleStreamMessage(msg: KernelMessage.IStreamMsg) {
         if (
             getParentHeaderMsgId(msg) &&
@@ -959,10 +979,7 @@ export class CellExecutionMessageHandler implements IDisposable {
 
         // eslint-disable-next-line complexity
         traceCellMessage(this.cell, `Update streamed output, new output '${msg.content.text.substring(0, 100)}'`);
-        // Possible execution of cell has completed (the task would have been disposed).
-        // This message could have come from a background thread.
-        // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-        const task = this.execution || this.createTemporaryTask();
+        const task = this.getOrCreateExecutionTask(true);
 
         const outputName =
             msg.content.name === 'stdout'
@@ -987,7 +1004,7 @@ export class CellExecutionMessageHandler implements IDisposable {
 
         // Clear output if waiting for a clear
         const { previousValueOfClearOutputOnNextUpdateToOutput } = this.clearOutputIfNecessary(task);
-        // Ensure we append to previous output, only if the streams as the same &
+        // Ensure we append to previous output, only if the streams are the same &
         // If the last output is the desired stream type.
         if (this.lastUsedStreamOutput?.stream === msg.content.name) {
             const output = cellOutputToVSCCellOutput({
@@ -1048,7 +1065,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                     ].clearOutputOnNextUpdateToOutput = true;
                 }
             } else {
-                const task = this.execution || this.createTemporaryTask();
+                const task = this.getOrCreateExecutionTask(true);
                 this.updateJupyterOutputWidgetWithOutput({ clearOutput: true }, task);
                 this.endTemporaryTask();
             }
@@ -1063,7 +1080,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             // This message could have come from a background thread.
             // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
             // Clear all outputs and start over again.
-            const task = this.execution || this.createTemporaryTask();
+            const task = this.getOrCreateExecutionTask(true);
             this.clearLastUsedStreamOutput();
             task?.clearOutput().then(noop, noop);
             this.endTemporaryTask();
@@ -1173,10 +1190,6 @@ export class CellExecutionMessageHandler implements IDisposable {
                 return;
             }
         }
-        // Possible execution of cell has completed (the task would have been disposed).
-        // This message could have come from a background thread.
-        // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-        const task = this.execution || this.createTemporaryTask();
         traceCellMessage(this.cell, `Replace output items in display data ${newOutput.items.length}`);
         if (outputMetadataHasChanged) {
             // https://github.com/microsoft/vscode/issues/181369
@@ -1199,6 +1212,10 @@ export class CellExecutionMessageHandler implements IDisposable {
                 }
                 return o;
             });
+            // Possible execution of cell has completed (the task would have been disposed).
+            // This message could have come from a background thread.
+            // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
+            const task = this.getOrCreateExecutionTask(false);
             task?.replaceOutput(newOutputs, outputToBeUpdated.cell).then(noop, noop);
             CellOutputDisplayIdTracker.trackOutputByDisplayId(
                 outputToBeUpdated.cell,
@@ -1207,6 +1224,10 @@ export class CellExecutionMessageHandler implements IDisposable {
                 newOutput.items
             );
         } else {
+            // Possible execution of cell has completed (the task would have been disposed).
+            // This message could have come from a background thread.
+            // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
+            const task = this.getOrCreateExecutionTask(false);
             task?.replaceOutputItems(newOutput.items, outputToBeUpdated.outputContainer).then(noop, noop);
             CellOutputDisplayIdTracker.trackOutputByDisplayId(
                 outputToBeUpdated.cell,
