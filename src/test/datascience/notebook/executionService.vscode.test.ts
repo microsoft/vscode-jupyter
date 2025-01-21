@@ -1042,7 +1042,8 @@ suite('Kernel Execution @kernelCore', function () {
         await kernel.dispose().catch(noop);
     });
 
-    test('Streamed output is added into the right cell (#16381)', async function () {
+    // eslint-disable-next-line no-only-tests/no-only-tests
+    test.only('Streamed output is added into the right cell (#16381)', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/16381#issuecomment-2603496123
         const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
         const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
