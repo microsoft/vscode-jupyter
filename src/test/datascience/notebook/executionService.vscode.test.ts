@@ -997,6 +997,49 @@ suite('Kernel Execution @kernelCore', function () {
         await waitForTextOutput(cell2, 'HI Y', 0, false);
         await waitForTextOutput(cell2, 'HI Z', 1, false);
     });
+
+    test('Streamed output is added into the right cell (#16381)', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/16381#issuecomment-2603496123
+        const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
+        const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
+        stub.get(() => onDidChangeNbEventHandler.event);
+        disposables.push(onDidChangeNbEventHandler);
+        const cell = await notebook.appendCodeCell(
+            dedent`
+import logging.handlers
+import queue, logging
+import sys
+que=queue.Queue()
+handler = logging.StreamHandler(sys.stdout)
+listener = logging.handlers.QueueListener(que,  handler)
+queue_handler = logging.handlers.QueueHandler(que)
+root = logging.getLogger()
+root.addHandler(queue_handler)
+logging.lastResort=None
+listener.start()
+
+root.warning("Look out!")`
+        );
+        kernelExecution.executeCell(cell).catch(noop);
+
+        await Promise.all([waitForTextOutput(cell, 'Look out!', 0, false)]);
+
+        const cell2 = await notebook.appendCodeCell(
+            dedent`
+root.setLevel(logging.DEBUG)
+root.debug('debug test')`
+        );
+        kernelExecution.executeCell(cell2).catch(noop);
+
+        await Promise.all([waitForTextOutput(cell, 'debug test', 1, false)]);
+
+        assert.strictEqual(cell2.outputs.length, 0);
+
+        // Clear the loggers, else rest of the tests can fail..
+        const cell3 = await notebook.appendCodeCell(`root.loggers.clear()`);
+        await kernelExecution.executeCell(cell3).catch(noop);
+    });
+
     test('Clearing output while executing will ensure output is cleared', async function () {
         let onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
         const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
@@ -1039,46 +1082,6 @@ suite('Kernel Execution @kernelCore', function () {
             5_000,
             'Cell did not get cleared'
         );
-        await kernel.dispose().catch(noop);
-    });
-
-    // eslint-disable-next-line no-only-tests/no-only-tests
-    test.only('Streamed output is added into the right cell (#16381)', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/16381#issuecomment-2603496123
-        const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
-        const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
-        stub.get(() => onDidChangeNbEventHandler.event);
-        disposables.push(onDidChangeNbEventHandler);
-        const cell = await notebook.appendCodeCell(
-            dedent`
-import logging.handlers
-import queue, logging
-import sys
-que=queue.Queue()
-handler = logging.StreamHandler(sys.stdout)
-listener = logging.handlers.QueueListener(que,  handler)
-queue_handler = logging.handlers.QueueHandler(que)
-root = logging.getLogger()
-root.addHandler(queue_handler)
-logging.lastResort=None
-listener.start()
-
-root.warning("Look out!")`
-        );
-        kernelExecution.executeCell(cell).catch(noop);
-
-        await Promise.all([waitForTextOutput(cell, 'Look out!', 0, false)]);
-
-        const cell2 = await notebook.appendCodeCell(
-            dedent`
-root.setLevel(logging.DEBUG)
-root.debug('debug test')`
-        );
-        kernelExecution.executeCell(cell2).catch(noop);
-
-        await Promise.all([waitForTextOutput(cell, 'debug test', 1, false)]);
-
-        assert.strictEqual(cell2.outputs.length, 0);
         await kernel.dispose().catch(noop);
     });
 
