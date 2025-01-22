@@ -83,13 +83,12 @@ export async function initializeLoggers(
     if (options?.platform) {
         standardOutputChannel.appendLine(`Platform: ${options.platform} (${options.arch}).`);
     }
+    standardOutputChannel.appendLine(`Home = ${options?.homePath}`);
     standardOutputChannel.appendLine(`Temp Storage folder ${getDisplayPath(await getExtensionTempDir(context))}`);
     if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
         standardOutputChannel.appendLine(`No workspace folder opened.`);
     } else if (workspace.workspaceFolders.length === 1) {
-        standardOutputChannel.appendLine(
-            `Workspace folder ${getDisplayPath(workspace.workspaceFolders[0].uri)}, Home = ${options?.homePath}`
-        );
+        standardOutputChannel.appendLine(`Workspace folder ${getDisplayPath(workspace.workspaceFolders[0].uri)}`);
     } else {
         standardOutputChannel.appendLine(
             `Multiple Workspace folders opened ${workspace.workspaceFolders
