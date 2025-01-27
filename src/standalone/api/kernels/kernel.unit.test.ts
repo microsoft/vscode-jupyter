@@ -101,7 +101,7 @@ suite('Kernel Api', () => {
 
     test('Verify Access Denied error message has expected value for the property `name`', async () => {
         try {
-            const api = createKernelApiForExtension('xyz', instance(kernel));
+            const { api } = createKernelApiForExtension('xyz', instance(kernel));
             for await (const x of api.executeCode('bogus', token)) {
                 assert.fail(`Should have failed without producing any value such as ${x}`);
             }

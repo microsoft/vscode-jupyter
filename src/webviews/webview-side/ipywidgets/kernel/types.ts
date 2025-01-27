@@ -7,6 +7,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { ISignal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { NotebookMetadata } from '../../../../platform/common/utils';
+import type { ReadonlyPartialJSONObject } from '@lumino/coreutils';
 
 export type ScriptLoader = {
     readonly widgetsRegisteredInRequireJs: Readonly<Set<string>>;
@@ -74,6 +75,35 @@ export interface IJupyterLabWidgetManager {
             loadNotebook: boolean;
         }
     ): Promise<void>;
+
+    /**
+     * Registers a mime type to be rendered by Widget Manager.
+     * This is useful when widgets have nested outputs.
+     * E.g. output widget has a plotly output as a child.
+     * In this case we'd like the widget manager to render the plotly output using our renderers.
+     *
+     * This is optional, as only the later versions of the vscode-jupyter-ipywidgets support this.
+     * I.e. only later versions of notebook renderers.
+     */
+    registerMimeRenderer?(
+        mimeType: string,
+        render: (
+            model: {
+                /**
+                 * The data associated with the model.
+                 */
+                readonly data: ReadonlyPartialJSONObject;
+                /**
+                 * The metadata associated with the model.
+                 *
+                 * Among others, it can include an attribute named `fragment`
+                 * that stores a URI fragment identifier for the MIME resource.
+                 */
+                readonly metadata: ReadonlyPartialJSONObject;
+            },
+            node: HTMLElement
+        ) => Promise<void>
+    ): void;
 }
 
 // export interface IIPyWidgetManager extends IMessageHandler {

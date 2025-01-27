@@ -144,12 +144,18 @@ export function isCondaEnvironmentWithoutPython(interpreter?: { id: string }) {
     return env && getEnvironmentType(env) === EnvironmentType.Conda && !env.executable.uri;
 }
 
-export function getCachedEnvironment(interpreter?: { id: string }) {
+export function getCachedEnvironment(interpreter?: { id: string } | string) {
     if (!interpreter) {
         return;
     }
     if (!pythonApi) {
         throw new Error('Python API not initialized');
+    }
+    if (typeof interpreter === 'string') {
+        return pythonApi.environments.known.find(
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            (i) => i.id === interpreter || i.path === interpreter || i.executable.uri?.fsPath === interpreter
+        );
     }
     return pythonApi.environments.known.find((i) => i.id === interpreter.id);
 }
