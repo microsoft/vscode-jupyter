@@ -967,7 +967,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             return;
         }
 
-        if (msg.parent_header.msg_id === 'comm_msg' && msg.header.msg_type === 'stream') {
+        if (msg.parent_header.msg_type === 'comm_msg' && msg.header.msg_type === 'stream') {
             // Fix for https://github.com/microsoft/vscode-jupyter/issues/15996
             // We're not interested in stream messages that are part of comm messages.
             return;
