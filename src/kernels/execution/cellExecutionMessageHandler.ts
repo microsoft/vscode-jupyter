@@ -1237,5 +1237,5 @@ function doesNotebookRendererSupportRenderingNestedOutputsInWidgets() {
     if (!version) {
         return false;
     }
-    return version.compare(new SemVer('1.0.23')) >= 0;
+    return version.compare(new SemVer('1.1.0')) >= 0;
 }
