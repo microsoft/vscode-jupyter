@@ -4,24 +4,17 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export enum LogLevel {
-    // Larger numbers are higher priority.
-    Error = 40,
-    Warn = 30,
-    Info = 20,
-    Debug = 10,
-    Trace = 5,
-    Off = 100
-}
-
 export type Arguments = unknown[];
 
 export interface ILogger {
-    traceLog(message: string, ...data: Arguments): void;
-    traceError(message: string, ...data: Arguments): void;
-    traceWarn(message: string, ...data: Arguments): void;
-    traceInfo(message: string, ...data: Arguments): void;
-    traceVerbose(message: string, ...data: Arguments): void;
+    error(message: string, ...data: Arguments): void;
+    warn(message: string, ...data: Arguments): void;
+    info(message: string, ...data: Arguments): void;
+    debug(message: string, ...data: Arguments): void;
+    trace(message: string, ...data: Arguments): void;
+    ci(msg: () => [message: string, ...args: string[]] | string): void;
+    ci(message: string, ...args: string[]): void;
+    ci(arg1: any, ...args: Arguments): void;
 }
 
 export type TraceDecoratorType = (

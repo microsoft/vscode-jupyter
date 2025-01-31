@@ -24,7 +24,7 @@ import { IConfigurationService } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IControllerRegistration } from '../controllers/types';
@@ -108,12 +108,12 @@ export class DebuggingManager
     }
 
     public async tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell, skipIpykernelCheck = false) {
-        traceInfo(`Starting debugging with mode ${mode}`);
+        logger.info(`Starting debugging with mode ${mode}`);
 
         if (!skipIpykernelCheck) {
             const ipykernelResult = await this.checkIpykernelAndPrompt(cell);
             if (ipykernelResult !== IpykernelCheckResult.Ok) {
-                traceInfo(`Ipykernel check failed: ${IpykernelCheckResult[ipykernelResult]}`);
+                logger.info(`Ipykernel check failed: ${IpykernelCheckResult[ipykernelResult]}`);
                 return;
             }
         }
@@ -173,17 +173,17 @@ export class DebuggingManager
         const notebook = workspace.notebookDocuments.find((doc) => doc.uri.toString() === notebookUri);
 
         if (!notebook) {
-            traceInfo(`Cannot start debugging. Notebook ${notebookUri} not found.`);
+            logger.info(`Cannot start debugging. Notebook ${notebookUri} not found.`);
             return;
         }
 
         if (this.notebookInProgress.has(notebook)) {
-            traceInfo(`Cannot start debugging. Already debugging this notebook`);
+            logger.info(`Cannot start debugging. Already debugging this notebook`);
             return;
         }
 
         if (this.isDebugging(notebook)) {
-            traceInfo(`Cannot start debugging. Already debugging this notebook document.`);
+            logger.info(`Cannot start debugging. Already debugging this notebook document.`);
             return;
         }
 

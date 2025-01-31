@@ -8,7 +8,7 @@ import { Uri } from 'vscode';
 import { IKernelProvider } from '../../../kernels/types';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IDisposable } from '../../../platform/common/types';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import * as path from '../../../platform/vscode-path/path';
 import { IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
@@ -59,13 +59,13 @@ suite('Non-Python Kernel @nonPython ', async function () {
         );
     }
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await closeNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testDenoNb = await createTemporaryNotebookFromFile(denoNb, disposables);
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async () => {
         verifyPromptWasNotDisplayed();

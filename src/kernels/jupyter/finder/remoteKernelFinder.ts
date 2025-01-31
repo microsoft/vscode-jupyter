@@ -16,13 +16,13 @@ import {
 import { IAsyncDisposable, IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { IJupyterRemoteCachedKernelValidator, IRemoteKernelFinder, JupyterServerProviderHandle } from '../types';
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
-import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { raceCancellation } from '../../../platform/common/cancellation';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
-import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
+import { ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
@@ -31,6 +31,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { computeServerId, generateIdFromRemoteProvider } from '../jupyterUtils';
 import { RemoteKernelSpecCacheFileName } from '../constants';
 import { JupyterLabHelper } from '../session/jupyterLabHelper';
+import { disposeAsync } from '../../../platform/common/utils';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -42,7 +43,7 @@ export type CacheDataFormat = {
 };
 
 // This class watches a single jupyter server URI and returns kernels from it
-export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelFinder {
+export class RemoteKernelFinder extends ObservableDisposable implements IRemoteKernelFinder {
     private _status: 'discovering' | 'idle' = 'idle';
     public get status() {
         return this._status;
@@ -170,32 +171,27 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
         await this.loadCache(true, true);
     }
 
-    private numberOfFailures = 0;
     private getListOfKernelsWithCachedConnection(
         displayProgress: boolean,
         ignoreCache: boolean = false
     ): Promise<RemoteKernelConnectionMetadata[]> {
-        const usingCache = !!this.cachedConnection;
-        this.cachedConnection = this.cachedConnection || this.getRemoteConnectionInfo(displayProgress);
+        if (!this.cachedConnection || ignoreCache) {
+            this.cachedConnection = this.getRemoteConnectionInfo(displayProgress);
+        }
         return this.cachedConnection
             .then((connInfo) => {
-                this.numberOfFailures = 0;
-                if (connInfo && !usingCache) {
+                if (connInfo) {
                     this.cachedConnection = Promise.resolve(connInfo);
+                    return this.listKernelsFromConnection(connInfo);
                 }
-                return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
+                return Promise.resolve([]);
             })
             .catch((ex) => {
-                this.numberOfFailures += 1;
                 if (this.isDisposed) {
                     return Promise.reject(ex);
                 }
-                if (this.numberOfFailures > 9) {
-                    traceWarning(`Remote Kernel Finder: ${this.id} has failed to connect 10 times in a row.`, ex);
-                    return Promise.reject(ex);
-                }
-                if (usingCache) {
-                    return this.getListOfKernelsWithCachedConnection(displayProgress, ignoreCache);
+                if (!ignoreCache) {
+                    return this.getListOfKernelsWithCachedConnection(displayProgress, true);
                 }
                 this.cachedConnection = undefined;
                 return Promise.reject(ex);
@@ -203,7 +199,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
     }
 
     public async loadCache(ignoreCache: boolean = false, displayProgress: boolean = false): Promise<void> {
-        traceInfoIfCI(`Remote Kernel Finder load cache Server: ${this.id}`);
+        logger.ci(`Remote Kernel Finder load cache Server: ${this.id}`);
         const promise = (async () => {
             const kernelsFromCache = ignoreCache ? [] : await this.getFromCache();
 
@@ -226,7 +222,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
                 } catch (ex) {
                     // CancellationError is when user cancels the request, no need to log errors related to that.
                     if (!(ex instanceof CancellationError)) {
-                        traceError('UniversalRemoteKernelFinder: Failed to get kernels without cache', ex);
+                        logger.error('UniversalRemoteKernelFinder: Failed to get kernels without cache', ex);
                         this._lastError = ex;
                         this._onDidChange.fire();
                     }
@@ -249,7 +245,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
             try {
                 kernels = await this.getListOfKernelsWithCachedConnection(false);
             } catch (ex) {
-                traceWarning(`Could not fetch kernels from the ${this.kind} server, falling back to cache: ${ex}`);
+                logger.warn(`Could not fetch kernels from the ${this.kind} server, falling back to cache: ${ex}`);
                 // Since fetching the remote kernels failed, we fall back to the cache,
                 // at this point no need to display all of the kernel specs,
                 // Its possible the connection is dead, just display the live kernels we had.
@@ -302,7 +298,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
             await raceCancellation(cancelToken, promise);
             return validValues;
         } catch (ex) {
-            traceError('UniversalRemoteKernelFinder: Failed to get from cache', ex);
+            logger.error('UniversalRemoteKernelFinder: Failed to get from cache', ex);
         }
 
         return [];
@@ -332,7 +328,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
         const disposables: IAsyncDisposable[] = [];
         try {
             const sessionManager = JupyterLabHelper.create(connInfo.settings);
-            disposables.push(sessionManager);
+            disposables.push({ dispose: () => disposeAsync(sessionManager) });
 
             // Get running and specs at the same time
             const [running, specs, sessions, serverId] = await Promise.all([
@@ -386,7 +382,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
             const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
             return [...filtered, ...mappedSpecs];
         } catch (ex) {
-            traceError(`Error fetching kernels from ${connInfo.baseUrl} (${connInfo.displayName}):`, ex);
+            logger.error(`Error fetching kernels from ${connInfo.baseUrl} (${connInfo.displayName}):`, ex);
             throw ex;
         } finally {
             await Promise.all(disposables.map((d) => d.dispose().catch(noop)));
@@ -395,7 +391,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
 
     private async writeToCache(values: RemoteKernelConnectionMetadata[]) {
         try {
-            traceVerbose(
+            logger.trace(
                 `UniversalRemoteKernelFinder: Writing ${values.length} remote kernel connection metadata to cache`
             );
 
@@ -442,7 +438,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
                 .createDirectory(this.context.globalStorageUri)
                 .then(() => this.fs.writeFile(this.cacheFile, JSON.stringify(currentData)))
                 .catch((ex) => {
-                    traceError(`Failed to cache the remote kernels.`, ex);
+                    logger.error(`Failed to cache the remote kernels.`, ex);
                 });
 
             if (added.length || updated.length || removed.length) {
@@ -450,7 +446,7 @@ export class RemoteKernelFinder extends DisposableBase implements IRemoteKernelF
                 // this._onDidChangeKernels.fire({ added, updated, removed });
             }
         } catch (ex) {
-            traceError('UniversalRemoteKernelFinder: Failed to write to cache', ex);
+            logger.error('UniversalRemoteKernelFinder: Failed to write to cache', ex);
         }
     }
 

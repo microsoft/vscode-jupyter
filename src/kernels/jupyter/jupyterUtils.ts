@@ -10,10 +10,16 @@ import { IConfigurationService, IDisposable, IWatchableJupyterSettings, Resource
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, JVSC_EXTENSION_ID, Telemetry, isBuiltInJupyterProvider } from '../../platform/common/constants';
+import {
+    Identifiers,
+    JVSC_EXTENSION_ID,
+    Telemetry,
+    UserJupyterServerPickerProviderId,
+    isBuiltInJupyterProvider
+} from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
 import { IJupyterServerUri } from '../../api';
-import { traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IJupyterRequestAgentCreator, IJupyterRequestCreator, JupyterServerProviderHandle } from './types';
 
 export function expandWorkingDir(
@@ -86,10 +92,23 @@ export function createJupyterConnectionInfo(
     const baseUrl = serverUri.baseUrl;
     const token = serverUri.token;
     const hostName = new URL(serverUri.baseUrl).hostname;
-    const authHeader =
+    let authHeader =
         serverUri.authorizationHeader && Object.keys(serverUri?.authorizationHeader ?? {}).length > 0
             ? serverUri.authorizationHeader
             : undefined;
+
+    // When using built in Jupyter Server providers, & we have a token
+    // Then we need to ensure the same token information is setup as a header for websockets as well.
+    // This same change had to be made for JuptyerHub extension, see https://github.com/microsoft/vscode-jupyter-hub/pull/65
+    if (
+        token &&
+        jupyterHandle.extensionId === JVSC_EXTENSION_ID &&
+        jupyterHandle.id === UserJupyterServerPickerProviderId
+    ) {
+        authHeader = authHeader || {};
+        // Do not overwrite the token if its already set.
+        authHeader.Authorization = authHeader.Authorization || `token ${token}`;
+    }
     const getAuthHeader = authHeader ? () => authHeader : undefined;
 
     let serverSettings: Partial<ServerConnection.ISettings> = {
@@ -244,5 +263,5 @@ export function getOwnerExtensionOfProviderHandle(id: string) {
     if (id === 'github-codespaces') {
         return 'GitHub.codespaces';
     }
-    traceWarning(`Extension Id not found for server Id ${id}`);
+    logger.warn(`Extension Id not found for server Id ${id}`);
 }

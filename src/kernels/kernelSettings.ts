@@ -6,14 +6,8 @@ import { IKernelSettings } from './types';
 
 export function createKernelSettings(configService: IConfigurationService, resource: Resource): IKernelSettings {
     return {
-        get enableExtendedKernelCompletions() {
-            return configService.getSettings(resource).enableExtendedKernelCompletions;
-        },
-        get generateSVGPlots() {
-            return configService.getSettings(resource).generateSVGPlots;
-        },
-        get ignoreVscodeTheme() {
-            return configService.getSettings(resource).ignoreVscodeTheme;
+        get enableExtendedPythonKernelCompletions() {
+            return configService.getSettings(resource).enableExtendedPythonKernelCompletions;
         },
         get interruptTimeout() {
             return configService.getSettings(resource).jupyterInterruptTimeout;

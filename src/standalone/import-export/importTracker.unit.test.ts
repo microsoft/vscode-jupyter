@@ -3,15 +3,10 @@
 
 /* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
 import * as sinon from 'sinon';
+import * as fakeTimers from '@sinonjs/fake-timers';
 import { assert, expect } from 'chai';
 import { when } from 'ts-mockito';
-import {
-    EventEmitter,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookCellKind,
-    NotebookDocument
-} from 'vscode';
+import { Disposable, EventEmitter, NotebookCellKind, NotebookDocument } from 'vscode';
 
 import {
     InteractiveWindowView,
@@ -30,12 +25,13 @@ import { ResourceTypeTelemetryProperty, getTelemetryReporter } from '../../telem
 import { waitForCondition } from '../../test/common';
 import { createMockedNotebookDocument } from '../../test/datascience/editor-integration/helpers';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
+import { EmptyEvent } from '../../platform/common/utils/events';
+import { notebookCellExecutions, NotebookCellExecutionState } from '../../platform/notebooks/cellExecutionStateService';
 
-suite('Import Tracker', async () => {
+suite(`Import Tracker`, async () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
     const oldValueOfVSC_JUPYTER_CI_TEST = isTestExecution();
     let importTracker: ImportTracker;
-    let onDidChangeNotebookCellExecutionState: EventEmitter<NotebookCellExecutionStateChangeEvent>;
     let onDidOpenNbEvent: EventEmitter<NotebookDocument>;
     let onDidCloseNbEvent: EventEmitter<NotebookDocument>;
     let onDidSaveNbEvent: EventEmitter<NotebookDocument>;
@@ -49,6 +45,8 @@ suite('Import Tracker', async () => {
     let sklearnHash: string;
     let randomHash: string;
     let disposables: IDisposable[] = [];
+    let clock: fakeTimers.InstalledClock;
+
     class Reporter {
         public static eventNames: string[] = [];
         public static properties: Record<string, string>[] = [];
@@ -59,6 +57,8 @@ suite('Import Tracker', async () => {
             resourceType: ResourceTypeTelemetryProperty['resourceType'] = undefined,
             ...hashes: string[]
         ) {
+            clock.tick(1);
+            void clock.runAllAsync();
             if (hashes.length > 0) {
                 await waitForCondition(
                     async () => {
@@ -124,17 +124,14 @@ suite('Import Tracker', async () => {
         onDidOpenNbEvent = new EventEmitter<NotebookDocument>();
         onDidCloseNbEvent = new EventEmitter<NotebookDocument>();
         onDidSaveNbEvent = new EventEmitter<NotebookDocument>();
-        onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
         disposables.push(onDidOpenNbEvent);
         disposables.push(onDidCloseNbEvent);
         disposables.push(onDidSaveNbEvent);
         when(mockedVSCodeNamespaces.workspace.onDidOpenNotebookDocument).thenReturn(onDidOpenNbEvent.event);
         when(mockedVSCodeNamespaces.workspace.onDidCloseNotebookDocument).thenReturn(onDidCloseNbEvent.event);
         when(mockedVSCodeNamespaces.workspace.onDidSaveNotebookDocument).thenReturn(onDidSaveNbEvent.event);
-        when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
-            onDidChangeNotebookCellExecutionState.event
-        );
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
+        when(mockedVSCodeNamespaces.workspace.onDidChangeConfiguration).thenReturn(EmptyEvent);
         when(mockedVSCodeNamespaces.workspace.getConfiguration('telemetry')).thenReturn({
             inspect: () => {
                 return {
@@ -143,7 +140,9 @@ suite('Import Tracker', async () => {
                 };
             }
         } as any);
-        importTracker = new ImportTracker(disposables);
+        importTracker = new ImportTracker(disposables, 0);
+        clock = fakeTimers.install();
+        disposables.push(new Disposable(() => clock.uninstall()));
     });
     teardown(() => {
         sinon.restore();
@@ -327,17 +326,17 @@ suite('Import Tracker', async () => {
     test('Track packages when a cell is executed', async () => {
         const code = `import numpy`;
         const nb = createMockedNotebookDocument([{ kind: NotebookCellKind.Code, languageId: 'python', value: code }]);
-        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
+        notebookCellExecutions.changeCellState(nb.cellAt(0), NotebookCellExecutionState.Pending);
 
         await Reporter.expectHashes('onExecution', 'notebook', numpyHash);
 
         // Executing the cell multiple will have no effect, the telemetry is only sent once.
-        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
-        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Executing });
-        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Idle });
-        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
-        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Executing });
-        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Idle });
+        notebookCellExecutions.changeCellState(nb.cellAt(0), NotebookCellExecutionState.Pending);
+        notebookCellExecutions.changeCellState(nb.cellAt(0), NotebookCellExecutionState.Executing);
+        notebookCellExecutions.changeCellState(nb.cellAt(0), NotebookCellExecutionState.Idle);
+        notebookCellExecutions.changeCellState(nb.cellAt(0), NotebookCellExecutionState.Pending);
+        notebookCellExecutions.changeCellState(nb.cellAt(0), NotebookCellExecutionState.Executing);
+        notebookCellExecutions.changeCellState(nb.cellAt(0), NotebookCellExecutionState.Idle);
 
         await Reporter.expectHashes('onExecution', 'notebook', numpyHash);
     });

@@ -10,11 +10,12 @@ import { IInterpreterService } from './contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { getComparisonKey } from '../vscode-path/resources';
 import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../telemetry/helpers';
-import { traceError, traceWarning } from '../logging';
+import { logger } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths.node';
 import { IInterpreterPackages } from './types';
 import { IPythonExecutionFactory } from './types.node';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
+import { isCondaEnvironmentWithoutPython } from './helpers';
 
 const interestedPackages = new Set(
     [
@@ -110,7 +111,7 @@ export class InterpreterPackages implements IInterpreterPackages {
                 if (this.interpreterPackages.get(workspaceKey) === promise) {
                     this.interpreterPackages.delete(workspaceKey)!;
                 }
-                traceWarning(`Failed to get list of installed packages for ${workspaceKey}`, ex);
+                logger.warn(`Failed to get list of installed packages for ${workspaceKey}`, ex);
             });
         }
         return this.interpreterPackages.get(workspaceKey)!.then((items) => Array.from(items));
@@ -128,7 +129,7 @@ export class InterpreterPackages implements IInterpreterPackages {
             const modules = JSON.parse(modulesOutput.stdout.split(separator)[1].trim()) as string[];
             return new Set(modules.concat(modules.map((item) => item.toLowerCase())));
         } else {
-            traceError(
+            logger.error(
                 `Failed to get list of installed packages for ${getDisplayPath(interpreter.uri)}`,
                 modulesOutput.stderr
             );
@@ -178,7 +179,7 @@ export class InterpreterPackages implements IInterpreterPackages {
     }
 
     private async getPackageInformation({ interpreter }: { interpreter: PythonEnvironment }) {
-        if (interpreter.isCondaEnvWithoutPython) {
+        if (isCondaEnvironmentWithoutPython(interpreter)) {
             return;
         }
         const service = await this.executionFactory.createActivatedEnvironment({

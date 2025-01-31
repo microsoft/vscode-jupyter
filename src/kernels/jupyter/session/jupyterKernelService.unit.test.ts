@@ -13,7 +13,6 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../types';
-import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import * as path from '../../../platform/vscode-path/path';
 import { CancellationTokenSource, Uri } from 'vscode';
@@ -66,10 +65,7 @@ suite('JupyterKernelService', () => {
             },
             interpreter: {
                 id: '/usr/bin/python3',
-                displayName: 'Python 3 Environment',
-                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3')
             },
             id: '0'
         }),
@@ -91,10 +87,7 @@ suite('JupyterKernelService', () => {
             },
             interpreter: {
                 id: '/usr/bin/conda/python3',
-                displayName: 'Conda Environment',
-                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/conda/python3.exe' : '/usr/bin/conda/python3'),
-                sysPrefix: 'conda',
-                envType: EnvironmentType.Conda
+                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/conda/python3.exe' : '/usr/bin/conda/python3')
             },
             id: '1'
         }),
@@ -114,19 +107,14 @@ suite('JupyterKernelService', () => {
                 display_name: 'Python 3 on Disk',
                 metadata: {
                     interpreter: {
-                        displayName: 'Python 3 Environment',
                         path: os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3',
-                        sysPrefix: 'python',
                         version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 }
             },
             interpreter: {
                 id: '/usr/bin/python3',
-                displayName: 'Python 3 Environment',
-                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3')
             },
             id: '2'
         }),
@@ -158,10 +146,7 @@ suite('JupyterKernelService', () => {
             },
             interpreter: {
                 id: '/usr/bin/python',
-                displayName: 'Python 2 Environment',
-                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python'),
-                sysPrefix: 'python',
-                version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
+                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python')
             },
             id: '4'
         }),
@@ -181,19 +166,14 @@ suite('JupyterKernelService', () => {
                 display_name: 'Python 3 on Disk',
                 metadata: {
                     interpreter: {
-                        displayName: 'Python 3 Environment',
                         path: os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3',
-                        sysPrefix: 'python',
                         version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 }
             },
             interpreter: {
                 id: '/usr/bin/python3',
-                displayName: 'Python 3 Environment',
-                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3')
             },
             id: '5'
         }),
@@ -225,10 +205,7 @@ suite('JupyterKernelService', () => {
             },
             interpreter: {
                 id: '/usr/bin/python',
-                displayName: 'Python 2 Environment',
-                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python'),
-                sysPrefix: 'python',
-                version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
+                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python')
             },
             id: '7'
         }),
@@ -248,19 +225,14 @@ suite('JupyterKernelService', () => {
                 display_name: 'Python 3 on Disk',
                 metadata: {
                     interpreter: {
-                        displayName: 'Python 3 Environment',
                         path: os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3',
-                        sysPrefix: 'python',
                         version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 }
             },
             interpreter: {
                 id: '/usr/bin/python3',
-                displayName: 'Python 3 Environment',
-                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3')
             },
             id: '8'
         }),
@@ -292,10 +264,7 @@ suite('JupyterKernelService', () => {
             },
             interpreter: {
                 id: '/usr/bin/python',
-                displayName: 'Python 2 Environment',
-                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python'),
-                sysPrefix: 'python',
-                version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
+                uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python')
             },
             id: '10'
         }),
@@ -316,9 +285,7 @@ suite('JupyterKernelService', () => {
                 metadata: {
                     interpreter: {
                         displayName: 'Conda base environment',
-                        path: '/usr/conda/envs/base/python',
-                        sysPrefix: 'conda',
-                        envType: EnvironmentType.Conda
+                        path: '/usr/conda/envs/base/python'
                     }
                 },
                 env: {},
@@ -327,12 +294,9 @@ suite('JupyterKernelService', () => {
             },
             interpreter: {
                 id: '/usr/conda/envs/base/python',
-                displayName: 'Conda base environment',
                 uri: Uri.file(
                     os.platform() === 'win32' ? '/usr/conda/envs/base/python.exe' : '/usr/conda/envs/base/python'
-                ),
-                sysPrefix: 'conda',
-                envType: EnvironmentType.Conda
+                )
             },
             id: '11'
         }),
@@ -357,12 +321,10 @@ suite('JupyterKernelService', () => {
                 display_name: 'Kernel with custom env Variable',
                 metadata: {
                     interpreter: {
-                        displayName: 'Python 3 Environment',
                         path:
                             os.platform() === 'win32'
                                 ? '/usr/don/home/envs/sample/bin/python.exe'
                                 : '/usr/don/home/envs/sample/bin/python',
-                        sysPrefix: 'python',
                         version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 },
@@ -372,14 +334,11 @@ suite('JupyterKernelService', () => {
             },
             interpreter: {
                 id: '/usr/don/home/envs/sample/bin/python',
-                displayName: 'Python 3 Environment',
                 uri: Uri.file(
                     os.platform() === 'win32'
                         ? '/usr/don/home/envs/sample/bin/python.exe'
                         : '/usr/don/home/envs/sample/bin/python'
-                ),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                )
             },
             id: '12'
         }),
@@ -396,12 +355,10 @@ suite('JupyterKernelService', () => {
                 display_name: 'Julia Kernel with custom env Variable',
                 metadata: {
                     interpreter: {
-                        displayName: 'Python 3 Environment',
                         path:
                             os.platform() === 'win32'
                                 ? '/usr/don/home/envs/sample/bin/python.exe'
                                 : '/usr/don/home/envs/sample/bin/python',
-                        sysPrefix: 'python',
                         version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 },
@@ -411,14 +368,11 @@ suite('JupyterKernelService', () => {
             },
             interpreter: {
                 id: '/usr/don/home/envs/sample/bin/python',
-                displayName: 'Python 3 Environment',
                 uri: Uri.file(
                     os.platform() === 'win32'
                         ? '/usr/don/home/envs/sample/bin/python.exe'
                         : '/usr/don/home/envs/sample/bin/python'
-                ),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                )
             },
             id: '13'
         }),
@@ -432,12 +386,10 @@ suite('JupyterKernelService', () => {
                 display_name: 'Julia Kernel with custom env Variable',
                 metadata: {
                     interpreter: {
-                        displayName: 'Python 3 Environment',
                         path:
                             os.platform() === 'win32'
                                 ? '/usr/don/home/envs/sample/bin/python.exe'
                                 : '/usr/don/home/envs/sample/bin/python',
-                        sysPrefix: 'python',
                         version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 },
@@ -447,14 +399,11 @@ suite('JupyterKernelService', () => {
             },
             interpreter: {
                 id: '/usr/don/home/envs/sample/bin/python',
-                displayName: 'Python 3 Environment',
                 uri: Uri.file(
                     os.platform() === 'win32'
                         ? '/usr/don/home/envs/sample/bin/python.exe'
                         : '/usr/don/home/envs/sample/bin/python'
-                ),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                )
             },
             id: '14'
         })

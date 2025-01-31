@@ -178,7 +178,7 @@ export function createMockedNotebookDocument(
     };
     when(notebook.notebookType).thenReturn(notebookType);
     when(notebook.uri).thenReturn(uri);
-    when(notebook.metadata).thenReturn({ custom: notebookContent } as never);
+    when(notebook.metadata).thenReturn(notebookContent);
 
     const nbCells = cells.map((data, index) => {
         const cell = mock<NotebookCell>();

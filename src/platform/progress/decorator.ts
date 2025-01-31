@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceError } from '../logging';
+import { logger } from '../logging';
 import { PromiseFunction } from '../common/utils/async';
 import { IProgressReporter, Progress, ReportableAction } from './types';
 
@@ -19,7 +19,7 @@ function report(progress: Progress) {
     try {
         _reporters.forEach((item) => item.report(progress));
     } catch (ex) {
-        traceError('Failed to report progress', ex);
+        logger.error('Failed to report progress', ex);
     }
 }
 

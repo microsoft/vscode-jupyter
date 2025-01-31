@@ -12,8 +12,8 @@ import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/c
 import { IDisposableRegistry, IMemento, Resource, WORKSPACE_MEMENTO } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { IServiceContainer } from '../platform/ioc/types';
-import { traceInfoIfCI, traceWarning } from '../platform/logging';
-import { IInteractiveControllerHelper } from './types';
+import { logger } from '../platform/logging';
+import { IInteractiveControllerHelper, IwViewType } from './types';
 import { createInterpreterKernelSpec, getKernelId } from '../kernels/helpers';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 
@@ -36,10 +36,14 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         controller: IVSCodeNotebookController;
     }>;
 
-    public async getInitialController(resource: Resource, preferredConnection?: KernelConnectionMetadata) {
+    public async getInitialController(
+        resource: Resource,
+        viewType: IwViewType,
+        preferredConnection?: KernelConnectionMetadata
+    ) {
         // If given a preferred connection, use that if it exists
         if (preferredConnection) {
-            const controller = this.controllerRegistration.get(preferredConnection, InteractiveWindowView);
+            const controller = this.controllerRegistration.get(preferredConnection, viewType);
             if (controller) {
                 return controller;
             }
@@ -48,7 +52,7 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         // If a kernel was previously selected for an IW, use that again if it still exists
         if (this.workspaceMemento.get(MostRecentKernelSelectedKey)) {
             const metadata = this.workspaceMemento.get<KernelConnectionMetadata>(MostRecentKernelSelectedKey);
-            const controller = metadata ? this.controllerRegistration.get(metadata, InteractiveWindowView) : undefined;
+            const controller = metadata ? this.controllerRegistration.get(metadata, viewType) : undefined;
             if (controller) {
                 return controller;
             }
@@ -58,7 +62,7 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         }
         // Just use the active interpreter
         return await createActiveInterpreterController(
-            InteractiveWindowView,
+            viewType,
             resource,
             this.interpreterService,
             this.controllerRegistration
@@ -87,7 +91,7 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
                 return;
             }
             // Id may be different if the user switched controllers
-            traceInfoIfCI(
+            logger.ci(
                 `(onStart) Looking for controller ${k.controller.id} in ${this.controllerRegistration.all
                     .map((item) => `${item.kind}:${item.id}`)
                     .join(', ')}`
@@ -120,7 +124,7 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
                     );
                 })
                 .catch((reason) => {
-                    traceWarning('Failed to store kernel connection metadata', reason);
+                    logger.warn('Failed to store kernel connection metadata', reason);
                 });
         }
 
@@ -149,7 +153,7 @@ async function createActiveInterpreterController(
         const controllers = registration.addOrUpdate(metadata, [viewType]);
         const controller = controllers[0]; // Should only create one because only one view type
         registration.trackActiveInterpreterControllers(controllers);
-        traceInfoIfCI(
+        logger.ci(
             `Active Interpreter Controller ${controller.connection.kind}:${
                 controller.id
             } created for View ${viewType} with resource ${getDisplayPath(resource)}`

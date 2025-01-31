@@ -11,16 +11,12 @@ import {
     WorkspaceConfiguration,
     workspace
 } from 'vscode';
-import { LogLevel } from '../logging/types';
 import { isTestExecution } from './constants';
 import {
     IExperiments,
-    ILoggingSettings,
     InteractiveWindowMode,
     InteractiveWindowViewColumn,
-    IVariableQuery,
     IWatchableJupyterSettings,
-    LoggingLevelSettingType,
     Resource,
     WidgetCDNs
 } from './types';
@@ -42,28 +38,24 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
     private static jupyterSettings: Map<string, JupyterSettings> = new Map<string, JupyterSettings>();
     public experiments!: IExperiments;
-    public logging: ILoggingSettings = { level: 'error' };
     public allowUnauthorizedRemoteConnection: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
     public jupyterLaunchRetries: number = 3;
     public notebookFileRoot: string = '';
     public useDefaultConfigForJupyter: boolean = false;
-    public searchForJupyter: boolean = false;
     public sendSelectionToInteractiveWindow: boolean = false;
     public normalizeSelectionForInteractiveWindow: boolean = true;
     public splitRunFileIntoCells: boolean = true;
     public markdownRegularExpression: string = '';
     public codeRegularExpression: string = '';
     public errorBackgroundColor: string = '';
-    public ignoreVscodeTheme: boolean = false;
     public variableExplorerExclude: string = '';
     public decorateCells: 'currentCell' | 'allCells' | 'disabled' = 'currentCell';
     public enableCellCodeLens: boolean = false;
     public askForLargeDataFrames: boolean = false;
     public enableAutoMoveToNextCell: boolean = false;
     public askForKernelRestart: boolean = false;
-    public generateSVGPlots: boolean = false;
     public codeLenses: string = '';
     public debugCodeLenses: string = '';
     public debugpyDistPath: string = '';
@@ -71,13 +63,11 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public magicCommandsAsComments: boolean = false;
     public pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert' = 'direct';
     public stopOnError: boolean = false;
-    public remoteDebuggerPort: number = 0;
     public addGotoCodeLenses: boolean = false;
     public runStartupCommands: string | string[] = [];
     public debugJustMyCode: boolean = false;
     public defaultCellMarker: string = '';
     public themeMatplotlibPlots: boolean = false;
-    public variableQueries: IVariableQuery[] = [];
     public disableJupyterAutoStart: boolean = false;
     public enablePythonKernelLogging: boolean = false;
     public jupyterCommandLineArguments: string[] = [];
@@ -92,14 +82,13 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;
-    public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
     public development: boolean = false;
     public poetryPath: string = '';
     public excludeUserSitePackages: boolean = false;
-    public enableExtendedKernelCompletions: boolean = false;
-    public useOldKernelResolve: boolean = false;
+    public enableExtendedPythonKernelCompletions: boolean = false;
     public formatStackTraces: boolean = false;
+    public interactiveReplNotebook: boolean = false;
     // Privates should start with _ so that they are not read from the settings.json
     private _changeEmitter = new EventEmitter<void>();
     private _workspaceRoot: Resource;
@@ -183,17 +172,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
     private update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
         const systemVariables = this.createSystemVariables(undefined);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const loggingSettings = systemVariables.resolveAny(jupyterConfig.get<any>('logging'))!;
-        if (loggingSettings) {
-            loggingSettings.level = convertSettingTypeToLogLevel(loggingSettings.level);
-            if (this.logging) {
-                Object.assign<ILoggingSettings, ILoggingSettings>(this.logging, loggingSettings);
-            } else {
-                this.logging = loggingSettings;
-            }
-        }
 
         const experiments = systemVariables.resolveAny(jupyterConfig.get<IExperiments>('experiments'))!;
         if (this.experiments) {
@@ -290,28 +268,5 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     private getSerializableKeys() {
         // Get the keys that are allowed.
         return Object.getOwnPropertyNames(this).filter((f) => !f.startsWith('_'));
-    }
-}
-
-function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefined): LogLevel | 'off' {
-    switch (setting) {
-        case 'info': {
-            return LogLevel.Info;
-        }
-        case 'warn': {
-            return LogLevel.Warn;
-        }
-        case 'off': {
-            return 'off';
-        }
-        case 'debug': {
-            return LogLevel.Debug;
-        }
-        case 'verbose': {
-            return LogLevel.Trace;
-        }
-        default: {
-            return LogLevel.Error;
-        }
     }
 }

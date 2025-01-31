@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { noop } from '../../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../../platform/errors/types';
 import { createJupyterConnectionInfo, handleExpiredCertsError, handleSelfCertsError } from '../jupyterUtils';
@@ -127,7 +126,7 @@ export class JupyterConnection {
         } finally {
             connection.dispose();
             if (sessionManager) {
-                sessionManager.dispose().catch(noop);
+                sessionManager.dispose();
             }
         }
     }
@@ -147,7 +146,21 @@ export class JupyterConnection {
                 return;
             }
             const servers = await Promise.resolve(collection.serverProvider.provideJupyterServers(token.token));
-            const server = servers?.find((c) => c.id === provider.handle);
+            let server: JupyterServer | null | undefined = servers?.find((c) => c.id === provider.handle);
+            if (!server && servers?.length === 0) {
+                try {
+                    // Perhaps a server was returned as part of resolving a default command.
+                    // Try asking the API to resolve that server and see if that works.
+                    // This can happen when 3rd party APIs return a server as part of resolving a default command.
+                    // but do not want them listed as servers.
+                    server = await collection.serverProvider.resolveJupyterServer(
+                        { id: provider.handle, label: '' },
+                        token.token
+                    );
+                } catch {
+                    //
+                }
+            }
             if (!server) {
                 return;
             }

@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationError, CancellationTokenSource, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { IKernelFinder, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { dispose } from '../../../platform/common/utils/lifecycle';
+import { ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -14,14 +14,17 @@ import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { pythonEnvToJupyterEnv } from '../../../platform/api/pythonApi';
 import { createInterpreterKernelSpec, getKernelId } from '../../../kernels/helpers';
-import { Environment } from '@vscode/python-extension';
+import { Environment, EnvironmentPath } from '@vscode/python-extension';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { KernelFinder } from '../../../kernels/kernelFinder';
 import { LocalPythonKernelSelector } from './localPythonKernelSelector.node';
 import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { ILocalPythonNotebookKernelSourceSelector } from '../types';
-import { DisposableBase } from '../../../platform/common/utils/lifecycle';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { logger } from '../../../platform/logging';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectionMetadata> = {
     notebook: NotebookDocument;
@@ -32,7 +35,7 @@ export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectio
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
 export class LocalPythonEnvNotebookKernelSourceSelector
-    extends DisposableBase
+    extends ObservableDisposable
     implements
         ILocalPythonNotebookKernelSourceSelector,
         IContributedKernelFinder<PythonKernelConnectionMetadata>,
@@ -119,6 +122,35 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             dispose(disposables);
         }
     }
+    public async getKernelConnection(env: EnvironmentPath): Promise<PythonKernelConnectionMetadata | undefined> {
+        const interpreters = ServiceContainer.instance.get<IInterpreterService>(IInterpreterService);
+        const jupyterPaths = ServiceContainer.instance.get<JupyterPaths>(JupyterPaths);
+        const interpreter = await interpreters.getInterpreterDetails(env.path);
+        if (!interpreter) {
+            logger.warn(`Python Env ${getDisplayPath(env.id)} not found}`);
+            return;
+        }
+        if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
+            logger.warn(`Python Env hidden via filter: ${getDisplayPath(interpreter.id)}`);
+            return;
+        }
+
+        const spec = await createInterpreterKernelSpec(
+            interpreter,
+            await jupyterPaths.getKernelSpecTempRegistrationFolder()
+        );
+        const kernelConnection = PythonKernelConnectionMetadata.create({
+            kernelSpec: spec,
+            interpreter: interpreter,
+            id: getKernelId(spec, interpreter)
+        });
+        const existingConnection = this._kernels.get(kernelConnection.id);
+        if (existingConnection) {
+            return existingConnection;
+        }
+        this.addUpdateKernel(kernelConnection);
+        return kernelConnection;
+    }
     private addUpdateKernel(kernel: PythonKernelConnectionMetadata) {
         const existing = this._kernels.get(kernel.id);
         if (existing) {
@@ -148,7 +180,10 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             .catch(noop);
     }
     private getKernelSpecsDir() {
-        return this.tempDirForKernelSpecs || this.jupyterPaths.getKernelSpecTempRegistrationFolder();
+        if (!this.tempDirForKernelSpecs) {
+            this.tempDirForKernelSpecs = this.jupyterPaths.getKernelSpecTempRegistrationFolder();
+        }
+        return this.tempDirForKernelSpecs;
     }
     private apiHooked = false;
     private async hookupPythonApi() {
@@ -176,10 +211,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         );
     }
     private async buildDummyEnvironment(e: Environment) {
-        const displayEmptyCondaEnv =
-            this.pythonApi.pythonExtensionVersion &&
-            this.pythonApi.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
-        const interpreter = pythonEnvToJupyterEnv(e, displayEmptyCondaEnv === true);
+        const interpreter = pythonEnvToJupyterEnv(e);
         if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
             return;
         }
@@ -191,11 +223,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         });
 
         const existingInterpreterInfo = this._kernels.get(e.id);
-        if (existingInterpreterInfo) {
-            existingInterpreterInfo.updateInterpreter(result.interpreter);
-            this._kernels.set(e.id, Object.assign(existingInterpreterInfo, result));
-            this._onDidChangeKernels.fire({});
-        } else {
+        if (!existingInterpreterInfo) {
             this._kernels.set(e.id, result);
             this._onDidChangeKernels.fire({});
         }

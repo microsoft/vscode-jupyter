@@ -22,7 +22,7 @@ import { DisplayOptions } from '../kernels/displayOptions';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
-import { traceInfo, traceVerbose } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { INotebookEditorProvider } from './types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
@@ -58,12 +58,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         );
         this.disposableRegistry.push(
             commands.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
-        );
-        this.disposableRegistry.push(
-            commands.registerCommand(Commands.NotebookEditorCollapseAllCells, () => this.collapseAll())
-        );
-        this.disposableRegistry.push(
-            commands.registerCommand(Commands.NotebookEditorExpandAllCells, () => this.expandAll())
         );
         this.disposableRegistry.push(
             // TODO: if contributed anywhere, add context support
@@ -128,34 +122,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             edit.set(document.uri, [nbEdit]);
         }).then(noop, noop);
     }
-    private collapseAll() {
-        const document = window.activeNotebookEditor?.notebook;
-        if (!document) {
-            return;
-        }
-
-        chainWithPendingUpdates(document, (edit) => {
-            document.getCells().forEach((cell, index) => {
-                const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: true };
-                edit.set(document.uri, [NotebookEdit.updateCellMetadata(index, metadata)]);
-            });
-        }).then(noop, noop);
-    }
-
-    private expandAll() {
-        const document = window.activeNotebookEditor?.notebook;
-        if (!document) {
-            return;
-        }
-
-        chainWithPendingUpdates(document, (edit) => {
-            document.getCells().forEach((cell, index) => {
-                const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: true };
-                edit.set(document.uri, [NotebookEdit.updateCellMetadata(index, metadata)]);
-            });
-        }).then(noop, noop);
-    }
-
     private async interruptKernel(notebookUri: Uri | undefined): Promise<void> {
         const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
@@ -163,11 +129,11 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         if (document === undefined) {
             return;
         }
-        traceVerbose(`Command interrupted kernel for ${getDisplayPath(document.uri)}`);
+        logger.debug(`Command interrupted kernel for ${getDisplayPath(document.uri)}`);
 
         const kernel = this.kernelProvider.get(document);
         if (!kernel) {
-            traceInfo(`Interrupt requested & no kernel.`);
+            logger.info(`Interrupt requested & no kernel.`);
             return;
         }
         await this.wrapKernelMethod('interrupt', kernel);
@@ -203,7 +169,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
-            traceVerbose(`Restart kernel command handler for ${getDisplayPath(document.uri)}`);
+            logger.debug(`Restart kernel command handler for ${getDisplayPath(document.uri)}`);
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage;

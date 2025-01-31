@@ -5,6 +5,7 @@ import { injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IKernel } from '../../../../kernels/types';
 import { INbExtensionsPathProvider } from '../types';
+import { getSysPrefix } from '../../../../platform/interpreter/helpers';
 
 /**
  * Returns the path to the nbExtensions folder for a given kernel (node)
@@ -18,11 +19,11 @@ export class NbExtensionsPathProvider implements INbExtensionsPathProvider {
                 return Uri.parse(kernel.kernelConnectionMetadata.baseUrl);
             }
             case 'startUsingPythonInterpreter': {
-                return Uri.joinPath(
-                    Uri.file(kernel.kernelConnectionMetadata.interpreter.sysPrefix),
-                    'share',
-                    'jupyter'
-                );
+                const sysPrefix = await getSysPrefix(kernel.kernelConnectionMetadata.interpreter);
+                if (!sysPrefix) {
+                    return;
+                }
+                return Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter');
             }
             default: {
                 // We haven't come across scenarios with non-python kernels that use widgets

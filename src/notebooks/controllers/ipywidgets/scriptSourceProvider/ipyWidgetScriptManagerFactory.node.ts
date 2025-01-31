@@ -9,6 +9,7 @@ import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory, INbExtensionsP
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
 import { LocalIPyWidgetScriptManager } from './localIPyWidgetScriptManager.node';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
+import { JupyterConnection } from '../../../../kernels/jupyter/connection/jupyterConnection';
 
 /**
  * Determines the IPyWidgetScriptManager for use in a node environment
@@ -21,7 +22,8 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(JupyterConnection) private readonly connection: JupyterConnection
     ) {}
     getOrCreate(kernel: IKernel): IIPyWidgetScriptManager {
         if (!this.managers.has(kernel)) {
@@ -29,7 +31,7 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
                 kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
                 kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
             ) {
-                const scriptManager = new RemoteIPyWidgetScriptManager(kernel, this.context, this.fs);
+                const scriptManager = new RemoteIPyWidgetScriptManager(kernel, this.context, this.fs, this.connection);
                 this.managers.set(kernel, scriptManager);
                 kernel.onDisposed(() => scriptManager.dispose(), this, this.disposables);
             } else {

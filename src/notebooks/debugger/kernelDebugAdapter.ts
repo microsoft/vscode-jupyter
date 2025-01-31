@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
 import { IDumpCellResponse } from './debuggingTypes';
 import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
@@ -24,7 +24,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             this.fileToCell.set(norm, cell.document.uri);
             this.cellToFile.set(cell.document.uri.toString(), norm);
         } catch (err) {
-            traceError(err);
+            logger.error(err);
         }
     }
     protected translateRealLocationToDebuggerLocation(location: {

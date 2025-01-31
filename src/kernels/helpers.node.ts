@@ -5,7 +5,7 @@ import * as path from '../platform/vscode-path/path';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { IJupyterKernelSpec, IKernelSession, isLocalConnection, KernelConnectionMetadata } from './types';
 import { Uri } from 'vscode';
-import { traceError, traceVerbose } from '../platform/logging';
+import { logger } from '../platform/logging';
 import { Resource } from '../platform/common/types';
 import { concatMultilineString } from '../platform/common/utils';
 import { trackKernelResourceInformation } from './telemetry/helper';
@@ -52,9 +52,8 @@ export async function sendTelemetryForPythonKernelExecutable(
         const match = areInterpreterPathsSame(kernelConnection.interpreter.uri, Uri.file(sysExecutable));
         await trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
     } catch (ex) {
-        traceError(`Failed to compare interpreters after ${stopWatch.elapsedTime}ms`, ex);
+        logger.error(`Failed to compare interpreters after ${stopWatch.elapsedTime}ms`, ex);
     }
-    traceVerbose(`End sendTelemetryForPythonKernelExecutable after ${stopWatch.elapsedTime}ms`);
 }
 
 /**

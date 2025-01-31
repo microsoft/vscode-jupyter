@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, workspace } from 'vscode';
-import { traceDecoratorVerbose } from '../../logging';
+import { debugDecorator } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { Resource } from '../types';
 import { ICustomEnvironmentVariablesProvider } from '../variables/types';
@@ -20,7 +20,7 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         @inject(ICustomEnvironmentVariablesProvider)
         private readonly envVarsService: ICustomEnvironmentVariablesProvider
     ) {}
-    @traceDecoratorVerbose('Create ProcessService', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @debugDecorator('Create ProcessService', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async create(resource: Resource, cancelToken?: CancellationToken): Promise<IProcessService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
         if (!workspace.isTrusted) {

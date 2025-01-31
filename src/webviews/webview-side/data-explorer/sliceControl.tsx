@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
 import { SliceOperationSource } from '../../../platform/telemetry/constants';
 import { IGetSliceRequest } from '../../extension-side/dataviewer/types';
@@ -17,20 +16,6 @@ import {
 } from './helpers';
 
 import './sliceControl.css';
-
-// These styles are passed to the FluentUI dropdown controls
-const dropdownStyles = {
-    dropdownItems: {
-        selectors: {
-            '@media(min-width: 300px)': {
-                maxHeight: 100
-            }
-        }
-    },
-    caretDown: {
-        visibility: 'hidden' // Override the FluentUI caret and use ::after selector on the caretDownWrapper in order to match VS Code. See sliceControl.css
-    }
-};
 
 interface ISliceControlProps {
     loadingData: boolean;
@@ -118,18 +103,18 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     }
 
     private generateIndexHandler = (index: number) => {
-        return (_data: React.FormEvent, option: IDropdownOption | undefined) => {
+        return (event: React.ChangeEvent<HTMLSelectElement>) => {
             const state: { [key: string]: number } = {};
-            state[`selectedIndex${index}`] = option?.key as number;
+            state[`selectedIndex${index}`] = parseInt(event.target.value, 10);
             this.setState(state);
             this.applyDropdownsToInputBox();
         };
     };
 
     private generateAxisHandler = (index: number) => {
-        return (_data: React.FormEvent, option: IDropdownOption | undefined) => {
+        return (event: React.ChangeEvent<HTMLSelectElement>) => {
             const state: { [key: string]: number } = {};
-            state[`selectedAxis${index}`] = option?.key as number;
+            state[`selectedAxis${index}`] = parseInt(event.target.value, 10);
             this.setState(state);
             this.applyDropdownsToInputBox();
         };
@@ -139,12 +124,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         const ndim = this.props.originalVariableShape.length;
         const numDropdowns = Math.max(ndim - 2, 1); // Ensure at least 1 set of dropdowns for 2D data
         const dropdowns = [];
-        const styles = {
-            ...dropdownStyles,
-            dropdown: {
-                width: measureText(Math.max(...this.props.originalVariableShape).toString(), null) + 40
-            }
-        };
+        const width = measureText(Math.max(...this.props.originalVariableShape).toString(), null) + 40;
 
         for (let i = 0; i < numDropdowns; i++) {
             const updateIndexHandler = this.generateIndexHandler(i);
@@ -156,34 +136,39 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
 
             dropdowns.push(
                 <div className="slice-control-row slice-form-container">
-                    <Dropdown
-                        responsiveMode={ResponsiveMode.xxxLarge}
-                        label={getLocString('sliceDropdownAxisLabel', 'Axis')}
-                        style={{ marginRight: '10px' }}
-                        styles={styles}
+                    <label>{getLocString('sliceDropdownAxisLabel', 'Axis:')}</label>
+                    <select
+                        className="slice-control-dropdown"
+                        style={{ marginRight: '10px', width: `${width}px` }}
                         disabled={!this.state.isEnabled || this.props.loadingData}
-                        selectedKey={axisKey}
-                        key={`axis${i}`}
-                        options={axisOptions}
-                        className="dropdownTitleOverrides"
+                        value={axisKey}
                         onChange={updateAxisHandler}
-                    />
-                    <Dropdown
-                        responsiveMode={ResponsiveMode.xxxLarge}
-                        label={getLocString('sliceDropdownIndexLabel', 'Index')}
-                        styles={styles}
+                    >
+                        {axisOptions.map((option) => (
+                            <option key={option.key} value={option.key}>
+                                {option.text}
+                            </option>
+                        ))}
+                    </select>
+                    <label>{getLocString('sliceDropdownIndexLabel', 'Index:')}</label>
+                    <select
+                        className="slice-control-dropdown"
+                        style={{ marginRight: '10px', width: `${width}px` }}
                         disabled={
                             !this.state.isEnabled ||
                             this.state[`selectedAxis${i}`] === undefined ||
                             this.state[`selectedAxis${i}`] === null ||
                             this.props.loadingData
                         }
-                        selectedKey={indexKey}
-                        key={`index${i}`}
-                        options={indexOptions}
-                        className="dropdownTitleOverrides"
+                        value={indexKey}
                         onChange={updateIndexHandler}
-                    />
+                    >
+                        {indexOptions.map((option) => (
+                            <option key={option.key} value={option.key}>
+                                {option.text}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             );
         }

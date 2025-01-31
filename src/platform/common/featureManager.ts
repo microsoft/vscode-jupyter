@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, EventEmitter, WorkspaceConfiguration, commands, window, workspace } from 'vscode';
-import { traceVerbose } from '../logging';
+import { logger } from '../logging';
 import { openInBrowser } from './net/browser';
 import { Deprecated } from './utils/localize';
 import {
@@ -140,7 +140,7 @@ export class FeatureManager implements IFeaturesManager {
 
         if (notify) {
             this.notifyDeprecation(deprecatedInfo).catch((ex) =>
-                traceVerbose('Jupyter Extension: notifyDeprecation', ex)
+                logger.debug('Jupyter Extension: notifyDeprecation', ex)
             );
         }
     }

@@ -2,15 +2,17 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, Disposable, EventEmitter, NotebookCell } from 'vscode';
-import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
-import { createJupyterCellFromVSCNotebookCell, traceCellMessage } from './helpers';
+import { traceCellMessage } from './helpers';
 import { CellExecutionFactory } from './cellExecution';
 import { IKernelSession, KernelConnectionMetadata, ResumeCellExecutionInformation } from '../../kernels/types';
 import { Resource } from '../../platform/common/types';
 import { ICellExecution, ICodeExecution } from './types';
 import { CodeExecution } from './codeExecution';
 import { once } from '../../platform/common/utils/events';
+import { getCellMetadata } from '../../platform/common/utils';
+import { NotebookCellExecutionState, notebookCellExecutions } from '../../platform/notebooks/cellExecutionStateService';
 
 /**
  * A queue responsible for execution of cells.
@@ -24,8 +26,6 @@ export class CellExecutionQueue implements Disposable {
     }
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
-    private readonly _onPreExecute = new EventEmitter<NotebookCell>();
-    private readonly _onPostExecute = new EventEmitter<NotebookCell>();
     private disposables: Disposable[] = [];
     private lastCellExecution?: ICellExecution | ICodeExecution;
     /**
@@ -54,14 +54,6 @@ export class CellExecutionQueue implements Disposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
         this.lastCellExecution?.dispose();
-    }
-
-    public get onPreExecute() {
-        return this._onPreExecute.event;
-    }
-
-    public get onPostExecute() {
-        return this._onPostExecute.event;
     }
 
     /**
@@ -100,7 +92,6 @@ export class CellExecutionQueue implements Disposable {
             const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
             executionItem = cellExecution;
             this.disposables.push(cellExecution);
-            cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
             this.queueOfItemsToExecute.push(cellExecution);
 
             traceCellMessage(cell, 'User queued cell for execution');
@@ -145,7 +136,7 @@ export class CellExecutionQueue implements Disposable {
      */
     public async cancel(forced?: boolean): Promise<void> {
         this.cancelledOrCompletedWithErrors = true;
-        traceVerbose('Cancel pending cells');
+        logger.debug('Cancel pending cells');
         await Promise.all(this.queueOfItemsToExecute.map((item) => item.cancel(forced)));
         this.lastCellExecution?.dispose();
         this.queueOfItemsToExecute.splice(0, this.queueOfItemsToExecute.length);
@@ -155,7 +146,7 @@ export class CellExecutionQueue implements Disposable {
      */
     private async cancelQueuedCells(): Promise<void> {
         this.cancelledOrCompletedWithErrors = true;
-        traceVerbose('Cancel pending cells');
+        logger.debug('Cancel pending cells');
         await Promise.all(this.queueOfCellsToExecute.map((item) => item.cancel()));
         if (this.lastCellExecution?.type === 'cell') {
             this.lastCellExecution?.dispose();
@@ -184,7 +175,7 @@ export class CellExecutionQueue implements Disposable {
         try {
             await this.executeQueuedCells();
         } catch (ex) {
-            traceError('Failed to execute cells in CellExecutionQueue', ex);
+            logger.error('Failed to execute cells in CellExecutionQueue', ex);
             // Initialize this property first, so that external users of this class know whether it has completed.
             // Else its possible there was an error & then we wait (see next line) & in the mean time
             // user attempts to run another cell, then `this.completion` has not completed and we end up queuing a cell
@@ -244,7 +235,11 @@ export class CellExecutionQueue implements Disposable {
                 }
 
                 if (itemToExecute.type === 'cell') {
-                    this._onPostExecute.fire(itemToExecute.cell);
+                    notebookCellExecutions.changeCellState(
+                        itemToExecute.cell,
+                        NotebookCellExecutionState.Idle,
+                        itemToExecute.executionOrder
+                    );
                 }
             }
 
@@ -253,7 +248,7 @@ export class CellExecutionQueue implements Disposable {
             // I.e. if the cell has the tag `raises-exception`, then ignore exceptions
             if (
                 itemToExecute.type === 'cell' &&
-                createJupyterCellFromVSCNotebookCell(itemToExecute.cell).metadata?.tags?.includes('raises-exception')
+                getCellMetadata(itemToExecute.cell).metadata?.tags?.includes('raises-exception')
             ) {
                 cellErrorsAllowed = true;
             }
@@ -284,7 +279,7 @@ export class CellExecutionQueue implements Disposable {
                 ) {
                     // Only dealing with cells
                     // Cancel everything and stop execution.
-                    traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
+                    logger.warn(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
                     await this.cancel();
                     break;
                 } else if (
@@ -294,13 +289,13 @@ export class CellExecutionQueue implements Disposable {
                     // Dealing with some cells and some code
                     // Cancel execution of cells and
                     // Continue with the execution of code.
-                    traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
+                    logger.warn(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
                     await this.cancelQueuedCells();
                 } else if (notebookClosed) {
                     // Code execution failed, as its not related to a cell
                     // there's no need to cancel anything.
                     // Unless the notebook was closed.
-                    traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
+                    logger.warn(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
                     await this.cancel();
                     break;
                 }
@@ -308,7 +303,7 @@ export class CellExecutionQueue implements Disposable {
             // If the kernel is dead, then no point trying the rest.
             if (kernelConnection.status === 'dead' || kernelConnection.status === 'terminating') {
                 this.cancelledOrCompletedWithErrors = true;
-                traceWarning(`Cancel all remaining cells due to dead kernel`);
+                logger.warn(`Cancel all remaining cells due to dead kernel`);
                 await this.cancel();
                 break;
             }

@@ -4,12 +4,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';
 import { OutputItem } from 'vscode-notebook-renderer';
-import {
-    SharedMessages,
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages,
-    IPyWidgetMessages
-} from '../../../../messageTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages, IPyWidgetMessages } from '../../../../messageTypes';
 import { logErrorMessage, logMessage } from '../../react-common/logger';
 import { WidgetManager } from './manager';
 import { ScriptManager } from './scriptManager';
@@ -19,7 +14,6 @@ import { NotebookMetadata } from '../../../../platform/common/utils';
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
     private readonly scriptManager: ScriptManager;
-    private widgetsCanLoadFromCDN: boolean = false;
     constructor(
         private postOffice: PostOffice,
         JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor,
@@ -39,12 +33,7 @@ class WidgetManagerComponent {
         );
 
         postOffice.addHandler({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            handleMessage: (type: string, payload?: any) => {
-                if (type === SharedMessages.UpdateSettings) {
-                    const settings = JSON.parse(payload);
-                    this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
-                }
+            handleMessage: (_type: string, _payload?: unknown) => {
                 return true;
             }
         });
@@ -65,7 +54,6 @@ class WidgetManagerComponent {
             className: data.className,
             moduleName: data.moduleName,
             moduleVersion: data.moduleVersion,
-            cdnsUsed: this.widgetsCanLoadFromCDN,
             isOnline: data.isOnline,
             timedout: data.timedout,
             error: JSON.stringify(data.error)

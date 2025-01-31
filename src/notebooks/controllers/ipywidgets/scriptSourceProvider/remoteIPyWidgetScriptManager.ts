@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import * as path from '../../../../platform/vscode-path/path';
 import { ExtensionMode, Uri } from 'vscode';
 import { IExtensionContext } from '../../../../platform/common/types';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
+import { logger } from '../../../../platform/logging';
 import { executeSilently, isPythonKernelConnection } from '../../../../kernels/helpers';
 import { IKernel, RemoteKernelConnectionMetadata } from '../../../../kernels/types';
 import { IIPyWidgetScriptManager } from '../types';
@@ -16,6 +16,7 @@ import { noop } from '../../../../platform/common/utils/misc';
 import { IFileSystem } from '../../../../platform/common/platform/types';
 import { trimQuotes } from '../../../../platform/common/helpers';
 import { HttpClient } from '../../../../platform/common/net/httpClient';
+import { JupyterConnection } from '../../../../kernels/jupyter/connection/jupyterConnection';
 
 /**
  * IPyWidgetScriptManager for remote kernels
@@ -27,7 +28,8 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
     constructor(
         kernel: IKernel,
         private readonly context: IExtensionContext,
-        private readonly fs: IFileSystem
+        private readonly fs: IFileSystem,
+        private readonly connection: JupyterConnection
     ) {
         super(kernel);
         if (
@@ -72,7 +74,7 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
 
         const code = await this.getCodeToExecute();
         if (!this.kernel.session?.kernel) {
-            traceInfoIfCI('No Kernel session to get list of widget entry points');
+            logger.ci('No Kernel session to get list of widget entry points');
             return [];
         }
         const promises: Promise<nbformat.IOutput[]>[] = [];
@@ -100,16 +102,16 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
 
         const outputs = await Promise.race(promises);
         if (outputs.length === 0) {
-            traceInfoIfCI('Unable to get widget entry points, no outputs after running the code');
+            logger.ci('Unable to get widget entry points, no outputs after running the code');
             return [];
         }
         const output = outputs[0] as nbformat.IStream;
         if (output.output_type !== 'stream' || output.name !== 'stdout') {
-            traceInfoIfCI('Unable to get widget entry points, no stream/stdout outputs after running the code');
+            logger.ci('Unable to get widget entry points, no stream/stdout outputs after running the code');
             return [];
         }
         try {
-            traceVerbose(`Widget Outputs include, ${output.text}`);
+            logger.trace(`Widget Outputs include, ${output.text}`);
             // Value will be an array of the form `['xyz', 'abc']`
             const items = (output.text as string)
                 .trim()
@@ -123,19 +125,43 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
                 widgetFolderName: path.dirname(item)
             }));
         } catch (ex) {
-            traceError(`Failed to parse output to get list of IPyWidgets, output is ${output.text}`, ex);
+            logger.error(`Failed to parse output to get list of IPyWidgets, output is ${output.text}`, ex);
             return [];
         }
     }
     protected async getWidgetScriptSource(script: Uri): Promise<string> {
+        const httpClientResponse = this.getWidgetScriptSourceUsingHttpClient(script);
+        const fetchResponse = this.getWidgetScriptSourceUsingFetch(script);
+        const promise = httpClientResponse.catch(() => fetchResponse);
+        // If we fail to download using both mechanisms, then log an error.
+        promise.catch((ex) => {
+            httpClientResponse.catch((ex) =>
+                logger.error(`Failed to download widget script source from ${script.toString(true)}`, ex)
+            );
+            logger.error(`Failed to download widget script source from ${script.toString(true)}`, ex);
+        });
+        return promise;
+    }
+    private async getWidgetScriptSourceUsingHttpClient(script: Uri): Promise<string> {
         const uri = script.toString(true);
         const httpClient = new HttpClient();
         const response = await httpClient.downloadFile(uri);
         if (response.status === 200) {
             return response.text();
         } else {
-            traceError(`Error downloading from ${uri}: ${response.statusText}`);
             throw new Error(`Error downloading from ${uri}: ${response.statusText}`);
+        }
+    }
+    private async getWidgetScriptSourceUsingFetch(script: Uri): Promise<string> {
+        const connection = await this.connection.createConnectionInfo(this.kernelConnection.serverProviderHandle);
+        const uri = script.toString(true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const httpClient = new HttpClient(connection.settings.fetch as any);
+        const response = await httpClient.downloadFile(uri);
+        if (response.status === 200) {
+            return response.text();
+        } else {
+            throw new Error(`Error downloading from ${uri} using custom fetch: ${response.statusText}`);
         }
     }
 }

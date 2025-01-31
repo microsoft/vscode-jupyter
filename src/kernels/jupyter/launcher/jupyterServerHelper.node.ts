@@ -4,7 +4,7 @@
 import uuid from 'uuid/v4';
 import { CancellationToken, Uri, workspace } from 'vscode';
 import { inject, injectable, optional } from 'inversify';
-import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,
@@ -24,16 +24,17 @@ import { expandWorkingDir } from '../jupyterUtils';
 import { noop } from '../../../platform/common/utils/misc';
 import { getRootFolder } from '../../../platform/common/application/workspace.base';
 import { computeWorkingDirectory } from '../../../platform/common/application/workspace.node';
+import { disposeAsync } from '../../../platform/common/utils';
+import { ObservableDisposable } from '../../../platform/common/utils/lifecycle';
 
 /**
  * Jupyter server implementation that uses the JupyterExecutionBase class to launch Jupyter.
  */
 @injectable()
-export class JupyterServerHelper implements IJupyterServerHelper {
+export class JupyterServerHelper extends ObservableDisposable implements IJupyterServerHelper {
     private usablePythonInterpreter: PythonEnvironment | undefined;
     private cache?: Promise<IJupyterConnection>;
-    private disposed: boolean = false;
-    private _disposed = false;
+    private _isDisposing = false;
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
@@ -44,6 +45,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
         @optional()
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined
     ) {
+        super();
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
@@ -57,31 +59,33 @@ export class JupyterServerHelper implements IJupyterServerHelper {
             this,
             this.disposableRegistry
         );
-        asyncRegistry.push(this);
+        asyncRegistry.push({ dispose: () => disposeAsync(this) });
     }
 
-    public async dispose(): Promise<void> {
-        traceInfo(`Disposing HostJupyterExecution`);
-        if (!this._disposed) {
-            this._disposed = true;
-            traceVerbose(`Disposing super HostJupyterExecution`);
-            this.disposed = true;
+    public override dispose() {
+        if (!this._isDisposing) {
+            this._isDisposing = true;
 
-            // Cleanup on dispose. We are going away permanently
-            traceVerbose(`Cleaning up server cache`);
-            await this.cache?.then((s) => s.dispose()).catch(noop);
+            if (this.cache) {
+                // Cleanup on dispose. We are going away permanently
+                this.cache
+                    .then((s) => s.dispose())
+                    .catch(noop)
+                    .finally(() => super.dispose());
+            } else {
+                super.dispose();
+            }
         }
-        traceVerbose(`Finished disposing HostJupyterExecution`);
     }
 
     public async startServer(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
-        if (this._disposed) {
+        if (this.isDisposed || this._isDisposing) {
             throw new Error('Notebook server is disposed');
         }
         if (!this.cache) {
             const promise = (this.cache = this.startJupyterWithRetry(resource, cancelToken));
             promise.catch((ex) => {
-                traceError(`Failed to start the Jupyter Server`, ex);
+                logger.error(`Failed to start the Jupyter Server`, ex);
                 if (this.cache === promise) {
                     this.cache = undefined;
                 }
@@ -107,7 +111,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
 
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
         // Only try to compute this once.
-        if (!this.usablePythonInterpreter && !this.disposed && this.jupyterInterpreterService) {
+        if (!this.usablePythonInterpreter && !this.isDisposed && !this._isDisposing && this.jupyterInterpreterService) {
             this.usablePythonInterpreter = await raceCancellationError(
                 cancelToken,
                 this.jupyterInterpreterService!.getSelectedInterpreter(cancelToken)
@@ -125,26 +129,26 @@ export class JupyterServerHelper implements IJupyterServerHelper {
             let tryCount = 1;
             const maxTries = Math.max(1, this.configuration.getSettings(undefined).jupyterLaunchRetries);
             let lastTryError: Error;
-            while (tryCount <= maxTries && !this.disposed) {
+            while (tryCount <= maxTries && !this.isDisposed && !this._isDisposing) {
                 try {
                     // Start or connect to the process
                     connection = await this.startImpl(resource, cancelToken);
 
-                    traceVerbose(`Connection complete server`);
+                    logger.trace(`Connection complete server`);
                     return connection;
                 } catch (err) {
                     lastTryError = err;
                     if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
                         // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
                         // ourselves and propagate the failure outwards.
-                        traceInfo('Retry because of wait for idle problem.');
+                        logger.info('Retry because of wait for idle problem.');
 
                         // Close existing connection.
                         connection?.dispose();
                         tryCount += 1;
                     } else if (connection) {
                         // If this is occurring during shutdown, don't worry about it.
-                        if (this.disposed) {
+                        if (this.isDisposed || this._isDisposing) {
                             throw err;
                         }
                         throw err;
@@ -162,7 +166,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
     private async startImpl(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         // If that works, then attempt to start the server
-        traceInfo(`Launching server`);
+        logger.debug(`Launching server`);
         const settings = this.configuration.getSettings(resource);
         const useDefaultConfig = settings.useDefaultConfigForJupyter;
         const workingDir = await computeWorkingDirectory(resource);

@@ -24,8 +24,10 @@ import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { JupyterServerCollection, JupyterServerProvider } from '../../../api';
 import { CancellationTokenSource } from 'vscode';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from './types';
+import { CodespaceExtensionId } from '../../../platform/common/constants';
+import { trackRemoteServerDisplayName } from '../connection/jupyterServerProviderRegistry';
 
 @injectable()
 export class RemoteKernelFinderController implements IRemoteKernelFinderController, IExtensionSyncActivationService {
@@ -43,8 +45,6 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterServerProviderRegistry)
-        private readonly jupyterPickerRegistration: IJupyterServerProviderRegistry,
-        @inject(IJupyterServerProviderRegistry)
         private readonly jupyterServerProviderRegistry: IJupyterServerProviderRegistry
     ) {}
     private readonly handledProviders = new WeakSet<JupyterServerCollection>();
@@ -56,7 +56,11 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         // Possible some extensions register their providers later.
         // And also possible they load their old server later, hence we need to go through the
         // MRU list again and try to build the finders, as the servers might now exist.
-        this.jupyterPickerRegistration.onDidChangeCollections(this.handleProviderHandleChanges, this, this.disposables);
+        this.jupyterServerProviderRegistry.onDidChangeCollections(
+            this.handleProviderHandleChanges,
+            this,
+            this.disposables
+        );
 
         // Also check for when a URI is removed
         this.serverUriStorage.onDidRemove(this.urisRemoved, this, this.disposables);
@@ -70,7 +74,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         this.serverUriStorage.all.map((server) => this.validateAndCreateFinder(server).catch(noop));
     }
     private handleProviderHandleChanges() {
-        this.jupyterPickerRegistration.jupyterCollections.forEach((collection) => {
+        this.jupyterServerProviderRegistry.jupyterCollections.forEach((collection) => {
             if (!this.handledProviders.has(collection)) {
                 this.handledProviders.add(collection);
                 if (collection.serverProvider.onDidChangeServers) {
@@ -137,6 +141,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
                 };
                 const serverId = generateIdFromRemoteProvider(serverProviderHandle);
                 currentServerIds.add(serverId);
+                trackRemoteServerDisplayName(serverProviderHandle, server.label);
                 // If this sever was never used in the past, then no need to create a finder for this.
                 if (this.mappedServers.has(serverId) || !usedServers.has(serverId)) {
                     return;
@@ -156,7 +161,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
                 }
             });
         } catch (ex) {
-            traceError(`Failed to get servers for Collection ${collection.id} in ${collection.extensionId}`, ex);
+            logger.error(`Failed to get servers for Collection ${collection.id} in ${collection.extensionId}`, ex);
         } finally {
             token.dispose();
         }
@@ -183,8 +188,11 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
             }
         };
         const getDisplayNameFromOldApi = async () => {
-            const displayName = await this.jupyterPickerRegistration.jupyterCollections.find(
-                (c) => c.extensionId === serverUri.provider.extensionId && c.id === serverUri.provider.id
+            const displayName = await this.jupyterServerProviderRegistry.jupyterCollections.find(
+                (c) =>
+                    c.extensionId === serverUri.provider.extensionId &&
+                    c.extensionId === CodespaceExtensionId &&
+                    c.id === serverUri.provider.id
             )?.label;
             if (displayName) {
                 // If display name is empty/undefined, then the extension has not yet loaded or provider not yet registered.

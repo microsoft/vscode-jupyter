@@ -58,8 +58,8 @@ extends:
         displayName: Install zmq dependencies
         condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'alpine'))
 
-      - script: npm i -g npm@9.5.0
-        displayName: npm 9.5.0
+      - script: npm i -g npm@10.8.2
+        displayName: npm 10.8.2
 
       - task: UsePythonVersion@0
         inputs:
@@ -82,14 +82,14 @@ extends:
           VSC_VSCE_TARGET: $(vsceTarget)
 
     tsa:
-      enabled: true
-      options:
-        codebaseName: 'devdiv_$(Build.Repository.Name)'
+      config:
+        areaPath: 'Visual Studio Code Jupyter Extensions'
         serviceTreeID: '14f24efd-b502-422a-9f40-09ea7ce9cf14'
-        instanceUrl: 'https://devdiv.visualstudio.com/defaultcollection'
-        projectName: 'DevDiv'
-        areaPath: "DevDiv\\VS Code (compliance tracking only)\\Visual Studio Code Jupyter Extensions"
-        notificationAliases:
-          - 'stbatt@microsoft.com'
-          - 'lszomoru@microsoft.com'
-          - 'dojayama@microsoft.com'
+      enabled: true
+
+    apiScanDependentPipelineId: '466' # zeromq-prebuilt
+    apiScanSoftwareVersion: '2024'
+
+    # Exclude win32-arm64/*.* because APIScan cannot process them.
+    apiScanExcludes: |
+      extension/dist/node_modules/zeromq/prebuilds/win32-arm64/*.*

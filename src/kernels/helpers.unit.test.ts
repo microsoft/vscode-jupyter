@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { when, instance, mock } from 'ts-mockito';
+import { when, instance, mock, anything } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import {
@@ -12,8 +13,63 @@ import {
     PythonKernelConnectionMetadata
 } from './types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
+import { PythonExtension, type Environment } from '@vscode/python-extension';
+import { resolvableInstance } from '../test/datascience/helpers';
+import { DisposableStore, dispose } from '../platform/common/utils/lifecycle';
+import { setPythonApi } from '../platform/interpreter/helpers';
+import type { IDisposable } from '@c4312/evt';
+import type { DeepPartial } from '../platform/common/utils/misc';
+
+export function crateMockedPythonApi(disposables: IDisposable[] | DisposableStore) {
+    const disposableStore = new DisposableStore();
+    const mockedApi = mock<PythonExtension>();
+    sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+    disposableStore.add({ dispose: () => sinon.restore() });
+    const environments = mock<PythonExtension['environments']>();
+    when(mockedApi.environments).thenReturn(instance(environments));
+    when(environments.known).thenReturn([]);
+    setPythonApi(instance(mockedApi));
+    disposableStore.add({ dispose: () => setPythonApi(undefined as any) });
+    if (Array.isArray(disposables)) {
+        disposables.push(disposableStore);
+    } else {
+        disposables.add(disposableStore);
+    }
+    return { dispose: () => disposableStore.dispose(), environments };
+}
+export function whenKnownEnvironments(environments: PythonExtension['environments']) {
+    return {
+        thenReturn: (items: DeepPartial<Environment>[]) => {
+            items.forEach((item) => {
+                if (!Array.isArray(item.tools)) {
+                    item.tools = [];
+                }
+            });
+            when(environments.known).thenReturn(items as any);
+        }
+    };
+}
+export function whenResolveEnvironment(
+    environments: PythonExtension['environments'],
+    environment: Parameters<PythonExtension['environments']['resolveEnvironment']>[0] = anything()
+) {
+    return {
+        thenResolve: (items: DeepPartial<Environment>) => {
+            when(environments.resolveEnvironment(environment)).thenResolve(items as any);
+        }
+    };
+}
 
 suite('Kernel Connection Helpers', () => {
+    let environments: PythonExtension['environments'];
+    let disposables: { dispose: () => void }[] = [];
+    setup(() => {
+        environments = crateMockedPythonApi(disposables).environments;
+        whenKnownEnvironments(environments).thenReturn([]);
+    });
+    teardown(() => {
+        disposables = dispose(disposables);
+    });
     test('Live kernels should display the name`', () => {
         const name = getDisplayNameOrNameOfKernelConnection(
             LiveRemoteKernelConnectionMetadata.create({
@@ -76,8 +132,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -95,9 +150,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envType: EnvironmentType.Unknown
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -115,11 +168,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '',
-                        displayName: 'Something',
-                        envType: EnvironmentType.Pipenv
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -137,17 +186,29 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '',
-                        displayName: 'Something 64-bit',
-                        envType: EnvironmentType.Pipenv
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
             assert.strictEqual(name, 'kspecname');
         });
         test('Prefixed with `<env name>` kernel is inside a non-global Python environment', () => {
+            whenKnownEnvironments(environments).thenReturn([
+                {
+                    id: Uri.file('pyPath').fsPath,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7'
+                    },
+                    environment: {
+                        name: '.env'
+                    },
+                    tools: [EnvironmentType.Conda]
+                }
+            ]);
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
                     id: '',
@@ -159,17 +220,29 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '.env',
-                        displayName: 'Something',
-                        envType: EnvironmentType.Conda
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
             assert.strictEqual(name, 'kspecname (.env)');
         });
         test('Prefixed with `<env name>` kernel is inside a non-global 64-bit Python environment', () => {
+            whenKnownEnvironments(environments).thenReturn([
+                {
+                    id: Uri.file('pyPath').fsPath,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7'
+                    },
+                    environment: {
+                        name: '.env'
+                    },
+                    tools: [EnvironmentType.Conda]
+                }
+            ]);
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
                     id: '',
@@ -181,11 +254,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '.env',
-                        displayName: 'Something 64-bit',
-                        envType: EnvironmentType.Conda
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -222,10 +291,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '.env',
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -244,11 +310,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '.env',
-                        displayName: 'Something 64-bit',
-                        envType: EnvironmentType.Unknown
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -257,7 +319,7 @@ suite('Kernel Connection Helpers', () => {
         test('Display name if kernel is associated with a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
+                    id: '1',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -267,12 +329,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '',
-                        version: undefined,
-                        displayName: 'Something',
-                        envType: EnvironmentType.Pipenv
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -291,11 +348,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '',
-                        displayName: 'Something 64-bit',
-                        envType: EnvironmentType.Pipenv
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -314,23 +367,29 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '',
-                        displayName: 'Something 64-bit',
-                        version: {
-                            major: 9,
-                            minor: 8,
-                            patch: 1,
-                            raw: '9.8.7.6-pre'
-                        },
-                        envType: EnvironmentType.Conda
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
             assert.strictEqual(name, 'kspecname');
         });
         test('Prefixed with `<env name>` kernel is associated with a non-global Python environment', () => {
+            whenKnownEnvironments(environments).thenReturn([
+                {
+                    id: Uri.file('pyPath').fsPath,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7.6-pre'
+                    },
+                    environment: {
+                        name: '.env'
+                    },
+                    tools: [EnvironmentType.Conda]
+                }
+            ]);
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
                     id: '',
@@ -343,23 +402,29 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '.env',
-                        displayName: 'Something 64-bit',
-                        version: {
-                            major: 9,
-                            minor: 8,
-                            patch: 1,
-                            raw: '9.8.7.6-pre'
-                        },
-                        envType: EnvironmentType.Conda
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
             assert.strictEqual(name, 'kspecname (Python 9.8.7)');
         });
         test('Prefixed with `<env name>` kernel is associated with a non-global 64-bit Python environment', () => {
+            whenKnownEnvironments(environments).thenReturn([
+                {
+                    id: Uri.file('pyPath').fsPath,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7'
+                    },
+                    environment: {
+                        name: '.env'
+                    },
+                    tools: [EnvironmentType.Conda]
+                }
+            ]);
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
                     id: '',
@@ -372,17 +437,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '.env',
-                        displayName: 'Something 64-bit',
-                        version: {
-                            major: 9,
-                            minor: 8,
-                            patch: 1,
-                            raw: '9.8.7.6-pre'
-                        },
-                        envType: EnvironmentType.Conda
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -403,10 +458,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '',
-                        displayName: 'Something 64-bit'
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -425,17 +477,26 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '',
-                        displayName: 'Something 64-bit',
-                        envType: EnvironmentType.Unknown
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
             assert.strictEqual(name, 'Python');
         });
         test('Return Python Version for global python environment with a version', () => {
+            whenKnownEnvironments(environments).thenReturn([
+                {
+                    id: Uri.file('pyPath').fsPath,
+                    version: {
+                        major: 1,
+                        minor: 2,
+                        micro: 3,
+                        release: undefined,
+                        sysVersion: '1.2.3'
+                    },
+                    tools: [EnvironmentType.Unknown]
+                }
+            ]);
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
                     id: '',
@@ -448,12 +509,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '',
-                        version: { major: 1, minor: 2, patch: 3, raw: '1.2.3' },
-                        displayName: 'Something 64-bit',
-                        envType: EnvironmentType.Unknown
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -472,11 +528,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '',
-                        displayName: 'Something',
-                        envType: EnvironmentType.Pipenv
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -495,11 +547,7 @@ suite('Kernel Connection Helpers', () => {
                     },
                     interpreter: {
                         uri: Uri.file('pyPath'),
-                        id: Uri.file('pyPath').fsPath,
-                        sysPrefix: 'sysPrefix',
-                        envName: '',
-                        displayName: 'Something 64-bit',
-                        envType: EnvironmentType.Pipenv
+                        id: Uri.file('pyPath').fsPath
                     }
                 })
             );
@@ -509,15 +557,20 @@ suite('Kernel Connection Helpers', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
-            when(interpreter.envName).thenReturn('');
-            when(interpreter.version).thenReturn({
-                major: 9,
-                minor: 8,
-                patch: 1,
-                raw: '9.8.7.6-pre'
-            });
-            when(interpreter.displayName).thenReturn('Something 64-bit');
-            when(interpreter.envType).thenReturn(EnvironmentType.Pipenv);
+            when(interpreter.id).thenReturn('xyz');
+            whenKnownEnvironments(environments).thenReturn([
+                {
+                    id: instance(interpreter).id,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7.6-pre'
+                    },
+                    tools: []
+                }
+            ]);
 
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
@@ -532,15 +585,24 @@ suite('Kernel Connection Helpers', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
-            when(interpreter.envName).thenReturn('.env');
-            when(interpreter.version).thenReturn({
-                major: 9,
-                minor: 8,
-                patch: 1,
-                raw: '9.8.7.6-pre'
-            });
-            when(interpreter.displayName).thenReturn('Something');
-            when(interpreter.envType).thenReturn(EnvironmentType.Conda);
+            when(interpreter.id).thenReturn('xyz');
+            whenKnownEnvironments(environments).thenReturn([
+                {
+                    id: instance(interpreter).id,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7.6-pre'
+                    },
+                    environment: {
+                        name: '.env',
+                        folderUri: Uri.file('some')
+                    },
+                    tools: [EnvironmentType.Venv]
+                }
+            ]);
 
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
@@ -555,15 +617,24 @@ suite('Kernel Connection Helpers', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
-            when(interpreter.envName).thenReturn('.env');
-            when(interpreter.version).thenReturn({
-                major: 9,
-                minor: 8,
-                patch: 1,
-                raw: '9.8.7.6-pre'
-            });
-            when(interpreter.displayName).thenReturn('Something 64-bit');
-            when(interpreter.envType).thenReturn(EnvironmentType.Conda);
+            when(interpreter.id).thenReturn('xyz');
+            whenKnownEnvironments(environments).thenReturn([
+                {
+                    id: instance(interpreter).id,
+                    version: {
+                        major: 9,
+                        minor: 8,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '9.8.7.6-pre'
+                    },
+                    environment: {
+                        name: '.env',
+                        folderUri: Uri.file('some')
+                    },
+                    tools: [EnvironmentType.Venv]
+                }
+            ]);
 
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({

@@ -2,21 +2,24 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    NotebookCell,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookCellKind,
-    NotebookDocument,
-    notebooks,
-    workspace
-} from 'vscode';
+import { NotebookCell, NotebookCellKind, NotebookDocument, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
-import { ResourceTypeTelemetryProperty, sendTelemetryEvent, Telemetry } from '../../telemetry';
+import {
+    onDidChangeTelemetryEnablement,
+    ResourceTypeTelemetryProperty,
+    sendTelemetryEvent,
+    Telemetry
+} from '../../telemetry';
 import { isTelemetryDisabled } from '../../telemetry';
+import {
+    NotebookCellExecutionState,
+    notebookCellExecutions,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../platform/notebooks/cellExecutionStateService';
 
 /**
  * Sends telemetry about cell output mime types
@@ -25,29 +28,33 @@ import { isTelemetryDisabled } from '../../telemetry';
 export class CellOutputMimeTypeTracker implements IExtensionSyncActivationService, IDisposable {
     private sentMimeTypes: Set<string> = new Set<string>();
     private readonly disposables: IDisposable[] = [];
-    private get isTelemetryDisabled() {
-        return isTelemetryDisabled();
-    }
+    private isTelemetryDisabled: boolean;
 
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         disposables.push(this);
     }
     public activate() {
+        this.isTelemetryDisabled = isTelemetryDisabled();
         workspace.onDidOpenNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
         workspace.onDidCloseNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
         workspace.onDidSaveNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
-        notebooks.onDidChangeNotebookCellExecutionState(
+        notebookCellExecutions.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables
         );
+        this.disposables.push(onDidChangeTelemetryEnablement((enabled) => (this.isTelemetryDisabled = enabled)));
     }
 
     public dispose() {
         dispose(this.disposables);
     }
     public async onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): Promise<void> {
-        if (!isJupyterNotebook(e.cell.notebook) || this.isTelemetryDisabled) {
+        if (
+            !isJupyterNotebook(e.cell.notebook) ||
+            this.isTelemetryDisabled ||
+            e.state !== NotebookCellExecutionState.Idle
+        ) {
             return;
         }
         this.checkCell(e.cell, 'onExecution');

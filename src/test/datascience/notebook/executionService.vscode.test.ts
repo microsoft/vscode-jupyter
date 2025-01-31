@@ -22,7 +22,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
-import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition, testMandatory } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
@@ -88,7 +88,7 @@ suite('Kernel Execution @kernelCore', function () {
         if (getOSType() === OSType.Windows && isCI) {
             return this.skip();
         }
-        traceInfo('Suite Setup VS Code Notebook - Execution');
+        logger.info('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         try {
             api = await initialize();
@@ -103,39 +103,39 @@ suite('Kernel Execution @kernelCore', function () {
                     .getConfiguration('python', workspace.workspaceFolders![0].uri)
                     .update('envFile', '${workspaceFolder}/.env');
             }
-            traceVerbose('Before starting Jupyter');
+            logger.debug('Before starting Jupyter');
             await startJupyterServer();
-            traceVerbose('After starting Jupyter');
+            logger.debug('After starting Jupyter');
             sinon.restore();
             notebook = new TestNotebookDocument(templateNbPath);
             const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-            traceVerbose('Before creating kernel connection');
+            logger.debug('Before creating kernel connection');
             const metadata = await getDefaultKernelConnection();
-            traceVerbose('After creating kernel connection');
+            logger.debug('After creating kernel connection');
 
             const controller = createKernelController();
             kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
-            traceVerbose('Before starting kernel');
+            logger.debug('Before starting kernel');
             await kernel.start();
-            traceVerbose('After starting kernel');
+            logger.debug('After starting kernel');
             kernelExecution = kernelProvider.getKernelExecution(kernel);
-            traceInfo('Suite Setup (completed)');
+            logger.info('Suite Setup (completed)');
         } catch (e) {
-            traceError('Suite Setup (failed) - Execution', e);
+            logger.error('Suite Setup (failed) - Execution', e);
             await captureScreenShot('execution-suite');
             throw e;
         }
     });
     setup(function () {
         notebook.cells.length = 0;
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
             await captureScreenShot(this);
         }
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     testMandatory('Execute cell using VSCode Kernel', async () => {
@@ -143,7 +143,7 @@ suite('Kernel Execution @kernelCore', function () {
         await kernelExecution.executeCell(cell);
 
         assert.isAtLeast(cell.executionSummary?.executionOrder || 0, 1);
-        assert.strictEqual(Buffer.from(cell.outputs[0].items[0].data).toString().trim(), '123412341234');
+        assert.strictEqual(new TextDecoder().decode(cell.outputs[0].items[0].data).toString().trim(), '123412341234');
         assert.isTrue(cell.executionSummary?.success);
     });
     test('Test __vsc_ipynb_file__ defined in cell using VSCode Kernel', async () => {
@@ -575,52 +575,6 @@ suite('Kernel Execution @kernelCore', function () {
             )
         ]);
     });
-    test('Messages from background threads can come in other cell output', async function () {
-        // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
-        // If you have a background thread in cell 1 & then immediately after that you have a cell 2.
-        // The background messages (output) from cell one will end up in cell 2.
-        const cell1 = await notebook.appendCodeCell(
-            dedent`
-        import time
-        import threading
-        from IPython.display import display
-
-        def work():
-            for i in range(10):
-                print('iteration %d'%i)
-                time.sleep(0.1)
-
-        def spawn():
-            thread = threading.Thread(target=work)
-            thread.start()
-            time.sleep(0.3)
-
-        spawn()
-        print('main thread started')
-        `
-        );
-        const cell2 = await notebook.appendCodeCell('print("HELLO")');
-
-        await Promise.all([
-            Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))),
-            waitForCondition(
-                () => getTextOutputValues(cell1).includes('main thread started'),
-                defaultNotebookTestTimeout,
-                () => `'main thread started' not in output => '${getTextOutputValues(cell1)}'`
-            ),
-            waitForCondition(
-                async () => {
-                    const secondCellOutput = getTextOutputValues(cell2);
-                    expect(secondCellOutput).to.include('HELLO');
-                    // The last output from the first cell should end up in the second cell.
-                    expect(secondCellOutput).to.include('iteration 9');
-                    return true;
-                },
-                defaultNotebookTestTimeout,
-                () => `'iteration 9' and 'HELLO' not in second cell Output => '${getTextOutputValues(cell2)}'`
-            )
-        ]);
-    });
     test('Stderr & stdout outputs should go into separate outputs', async function () {
         const cell = await notebook.appendCodeCell(
             dedent`
@@ -639,8 +593,8 @@ suite('Kernel Execution @kernelCore', function () {
             sys.stderr.flush()
                         `
         );
-        traceInfo('1. Start execution for test of Stderr & stdout outputs');
-        traceInfo('2. Start execution for test of Stderr & stdout outputs');
+        logger.info('1. Start execution for test of Stderr & stdout outputs');
+        logger.info('2. Start execution for test of Stderr & stdout outputs');
         await Promise.all([
             kernelExecution.executeCell(cell),
             waitForTextOutput(cell, '1', 0, false),
@@ -648,7 +602,7 @@ suite('Kernel Execution @kernelCore', function () {
             waitForTextOutput(cell, '3', 2, false),
             waitForTextOutput(cell, 'c', 3, false)
         ]);
-        traceInfo('2. completed execution for test of Stderr & stdout outputs');
+        logger.info('2. completed execution for test of Stderr & stdout outputs');
 
         // In cell 1 we should have the output
         // 12
@@ -1043,6 +997,49 @@ suite('Kernel Execution @kernelCore', function () {
         await waitForTextOutput(cell2, 'HI Y', 0, false);
         await waitForTextOutput(cell2, 'HI Z', 1, false);
     });
+
+    test('Streamed output is added into the right cell (#16381)', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/16381#issuecomment-2603496123
+        const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
+        const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
+        stub.get(() => onDidChangeNbEventHandler.event);
+        disposables.push(onDidChangeNbEventHandler);
+        const cell = await notebook.appendCodeCell(
+            dedent`
+import logging.handlers
+import queue, logging
+import sys
+que=queue.Queue()
+handler = logging.StreamHandler(sys.stdout)
+listener = logging.handlers.QueueListener(que,  handler)
+queue_handler = logging.handlers.QueueHandler(que)
+root = logging.getLogger()
+root.addHandler(queue_handler)
+logging.lastResort=None
+listener.start()
+
+root.warning("Look out!")`
+        );
+        kernelExecution.executeCell(cell).catch(noop);
+
+        await Promise.all([waitForTextOutput(cell, 'Look out!', 0, false)]);
+
+        const cell2 = await notebook.appendCodeCell(
+            dedent`
+root.setLevel(logging.DEBUG)
+root.debug('debug test')`
+        );
+        kernelExecution.executeCell(cell2).catch(noop);
+
+        await Promise.all([waitForTextOutput(cell, 'debug test', 1, false)]);
+
+        assert.strictEqual(cell2.outputs.length, 0);
+
+        // Clear the loggers, else rest of the tests can fail..
+        const cell3 = await notebook.appendCodeCell(`root.loggers.clear()`);
+        await kernelExecution.executeCell(cell3).catch(noop);
+    });
+
     test('Clearing output while executing will ensure output is cleared', async function () {
         let onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
         const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');

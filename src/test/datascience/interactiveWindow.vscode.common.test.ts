@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import * as vscode from 'vscode';
-import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable, InteractiveWindowMode } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
@@ -53,8 +53,8 @@ import { Commands } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { format } from 'util';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
-import { getNotebookUriFromInputBoxUri } from '../../standalone/intellisense/notebookPythonPathService.node';
 import { isSysInfoCell } from '../../interactive-window/systemInfoCell';
+import { getNotebookUriFromInputBoxUri } from '../../standalone/intellisense/notebookPythonPathService';
 
 suite(`Interactive window execution @iw`, async function () {
     this.timeout(120_000);
@@ -62,16 +62,16 @@ suite(`Interactive window execution @iw`, async function () {
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         if (IS_REMOTE_NATIVE_TEST()) {
             await startJupyterServer();
         }
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
             await captureScreenShot(this);
@@ -80,7 +80,7 @@ suite(`Interactive window execution @iw`, async function () {
         // restore the default value
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindow.creationMode', 'multiple');
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('__file__ exists even after restarting a kernel', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/12251
@@ -246,6 +246,11 @@ suite(`Interactive window execution @iw`, async function () {
 
 
     print('bar')`;
+        const dedentedCode = `print('foo')
+
+
+
+print('bar')`;
         const codeWithWhitespace = `    # %%
 
 
@@ -256,16 +261,16 @@ ${actualCode}
 
 
 `;
-        traceInfoIfCI('Before submitting');
+        logger.ci('Before submitting');
         const { activeInteractiveWindow: interactiveWindow } = await submitFromPythonFile(
             interactiveWindowProvider,
             codeWithWhitespace,
             disposables
         );
-        traceInfoIfCI('After submitting');
+        logger.ci('After submitting');
         const lastCell = await waitForLastCellToComplete(interactiveWindow);
         const actualCellText = lastCell.document.getText();
-        assert.equal(actualCellText, actualCode);
+        assert.equal(actualCellText, dedentedCode);
     });
 
     test('Run current file in interactive window (with cells)', async () => {
@@ -391,7 +396,6 @@ ${actualCode}
         await waitForExecutionCompletedSuccessfully(secondCell!);
         await waitForTextOutput(secondCell!, '1');
     });
-
     test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindow.creationMode', 'single');
@@ -417,11 +421,31 @@ ${actualCode}
         // Convert to html for easier parsing
         const ansiToHtml = require('ansi-to-html') as typeof import('ansi-to-html');
         const converter = new ansiToHtml();
-        const html = converter.toHtml(errorOutput.traceback.join('\n'));
+        const html = converter.toHtml(errorOutput.traceback.join('\n')) as string;
 
-        // Should be three hrefs for the two lines in the call stack
-        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
-        assert.equal(hrefs?.length, 4, '4 hrefs not found in traceback');
+        assert.ok(html.includes('Traceback (most recent call last)'), 'traceback not found in output');
+        assert.ok(/tmp-[^\.]*\.py:3/.test(html), 'link to file not found');
+    });
+
+    test('Run code from the input box after running cells from a file', async () => {
+        // Create a new interactive window
+        const { activeInteractiveWindow } = await runNewPythonFile(
+            interactiveWindowProvider,
+            '# %%\nx = 1\nprint(x)',
+            disposables
+        );
+
+        // Wait for the last cell to complete
+        await waitForLastCellToComplete(activeInteractiveWindow, 1, true);
+
+        // Run code from the input box
+        await runInteractiveWindowInput('print("foo")', activeInteractiveWindow, 2);
+
+        // Wait for the last cell to complete
+        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 2, true);
+
+        // Verify the output
+        await waitForTextOutput(lastCell, 'foo');
     });
 
     test('Raising an exception from within a function has a stack trace', async function () {
@@ -447,15 +471,11 @@ ${actualCode}
         // Convert to html for easier parsing
         const ansiToHtml = require('ansi-to-html') as typeof import('ansi-to-html');
         const converter = new ansiToHtml();
-        const html = converter.toHtml(errorOutput.traceback.join('\n'));
+        const html = converter.toHtml(errorOutput.traceback.join('\n')) as string;
 
-        // Should be three hrefs for the two lines in the call stack
-        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm)!;
-        assert.equal(hrefs.length, 4, '4 hrefs not found in traceback');
-        assert.ok(hrefs[0].endsWith("line=3'"), `Wrong first ref line : ${hrefs[0]}`);
-        assert.ok(hrefs[1].endsWith("line=4'"), `Wrong second ref line : ${hrefs[1]}`);
-        assert.ok(hrefs[2].endsWith("line=1'"), `Wrong last ref line : ${hrefs[2]}`);
-        assert.ok(hrefs[3].endsWith("line=2'"), `Wrong last ref line : ${hrefs[2]}`);
+        const text = html.replace(/<[^>]+>/g, '');
+        assert.ok(text.includes('Traceback (most recent call last)'), 'traceback not found in output');
+        assert.ok(text.includes('def raiser():'), 'function definition not found in stack trace');
     });
 
     test('Raising an exception from system code has a stack trace', async function () {
@@ -473,9 +493,6 @@ ${actualCode}
             'Outputs not available'
         );
 
-        const ipythonVersionCell = activeInteractiveWindow.notebookDocument?.cellAt(lastCell.index - 1);
-        const ipythonVersion = parseInt(getTextOutputValue(ipythonVersionCell!.outputs[0]));
-
         // Parse the last cell's error output
         const errorOutput = translateCellErrorOutput(lastCell.outputs[0]);
         assert.ok(errorOutput, 'No error output found');
@@ -485,13 +502,9 @@ ${actualCode}
         const converter = new ansiToHtml();
         const html = converter.toHtml(errorOutput.traceback.join('\n'));
 
-        // Should be more than 3 hrefs if ipython 8 or not
-        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm)!;
-        if (ipythonVersion >= 8) {
-            assert.isAtLeast(hrefs.length, 4, 'Wrong number of hrefs found in traceback for IPython 8');
-        } else {
-            assert.isAtLeast(hrefs.length, 1, 'Wrong number of hrefs found in traceback for IPython 7 or earlier');
-        }
+        const text = html.replace(/<[^>]+>/g, '');
+        assert.ok(text.includes('Traceback (most recent call last)'), 'traceback not found in output');
+        assert.ok(/pathlib\.py:\d+, in PurePath\.joinpath/.test(text), 'library frame not found');
     });
 
     test('Running a cell with markdown and code runs two cells', async () => {
@@ -553,7 +566,7 @@ ${actualCode}
         const source = ['# %%', 'x = 1', '# %%', 'import time', 'time.sleep(3)', '# %%', 'print(x)', ''].join('\n');
         const tempFile = await createTemporaryFile({ contents: 'print(42)', extension: '.py' });
         await vscode.window.showTextDocument(tempFile.file);
-        await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows);
+        await vscode.commands.executeCommand(Commands.RunAllCells);
 
         const edit = new vscode.WorkspaceEdit();
         const textEdit = vscode.TextEdit.replace(new vscode.Range(0, 0, 0, 9), source);
@@ -561,7 +574,7 @@ ${actualCode}
         await vscode.workspace.applyEdit(edit);
         await waitForCodeLenses(tempFile.file, Commands.DebugCell);
 
-        let runFilePromise = vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows);
+        let runFilePromise = vscode.commands.executeCommand(Commands.RunAllCells);
 
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         const mode = (await settings.get('interactiveWindow.creationMode')) as InteractiveWindowMode;

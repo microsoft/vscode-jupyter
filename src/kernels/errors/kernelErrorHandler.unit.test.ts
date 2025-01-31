@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import dedent from 'dedent';
+import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
@@ -43,6 +44,9 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { JupyterServer, JupyterServerCollection, JupyterServerProvider } from '../../api';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 import { dispose } from '../../platform/common/utils/lifecycle';
+import { PythonExtension } from '@vscode/python-extension';
+import { resolvableInstance } from '../../test/datascience/helpers';
+import { setPythonApi } from '../../platform/interpreter/helpers';
 
 suite('Error Handler Unit Tests', () => {
     let dataScienceErrorHandler: DataScienceErrorHandler;
@@ -56,12 +60,11 @@ suite('Error Handler Unit Tests', () => {
     let fs: IFileSystem;
     let interpreterService: IInterpreterService;
     const jupyterInterpreter: PythonEnvironment = {
-        displayName: 'Hello',
         uri: Uri.file('Some Path'),
-        id: Uri.file('Some Path').fsPath,
-        sysPrefix: ''
+        id: Uri.file('Some Path').fsPath
     };
     let disposables: IDisposable[] = [];
+    let environments: PythonExtension['environments'];
     setup(() => {
         resetVSCodeMocks();
         disposables.push(new Disposable(() => resetVSCodeMocks()));
@@ -98,6 +101,18 @@ suite('Error Handler Unit Tests', () => {
         when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything())).thenResolve();
         // reset(mockedVSCodeNamespaces.env);
         when(mockedVSCodeNamespaces.env.openExternal(anything())).thenReturn(Promise.resolve(true));
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
+        when(environments.resolveEnvironment(jupyterInterpreter.id)).thenResolve({
+            executable: { sysPrefix: '' }
+        } as any);
     });
     teardown(() => {
         disposables = dispose(disposables);
@@ -163,9 +178,7 @@ suite('Error Handler Unit Tests', () => {
                 id: '',
                 interpreter: {
                     uri: Uri.file('Hello There'),
-                    id: Uri.file('Hello There').fsPath,
-                    sysPrefix: 'Something else',
-                    displayName: 'Hello (Some Path)'
+                    id: Uri.file('Hello There').fsPath
                 },
                 kernelSpec: {
                     argv: [],
@@ -174,6 +187,9 @@ suite('Error Handler Unit Tests', () => {
                     executable: ''
                 }
             });
+            when(environments.resolveEnvironment(kernelConnection.interpreter.id)).thenResolve({
+                executable: { sysPrefix: 'Something else' }
+            } as any);
         });
         const stdErrorMessages = {
             userOverridingRandomPyFile_Unix: dedent`
@@ -687,13 +703,32 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(dependencyManager.installMissingDependencies(anything())).thenResolve(
                 JupyterInterpreterDependencyResponse.cancel
             );
+            when(environments.known).thenReturn([
+                {
+                    id: kernelConnection.interpreter!.id,
+                    version: {
+                        major: 3,
+                        minor: 12,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '3.12.7'
+                    },
+                    executable: {
+                        uri: kernelConnection.interpreter!.uri
+                    },
+                    environment: {
+                        name: 'condaEnv1',
+                        folderUri: Uri.file('Some Path')
+                    },
+                    tools: [EnvironmentType.Conda]
+                } as any
+            ]);
+
             const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
                 new KernelDiedError('Kaboom', 'hello word does not have attribute named abc', undefined, {
                     ...kernelConnection,
                     interpreter: {
-                        ...kernelConnection.interpreter!,
-                        envType: EnvironmentType.Conda,
-                        envName: 'condaEnv1'
+                        ...kernelConnection.interpreter!
                     }
                 }),
                 'start',
@@ -702,7 +737,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             assert.strictEqual(
                 result,
                 [
-                    "Running cells with 'Hello (Some Path)' requires the ipykernel package.",
+                    "Running cells with 'condaEnv1 (Python 3.12.7)' requires the ipykernel package.",
                     "Run the following command to install 'ipykernel' into the Python environment. ",
                     `Command: 'conda install -n condaEnv1 ipykernel --update-deps --force-reinstall'`
                 ].join('\n')
@@ -715,6 +750,27 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(dependencyManager.installMissingDependencies(anything())).thenResolve(
                 JupyterInterpreterDependencyResponse.cancel
             );
+            when(environments.known).thenReturn([
+                {
+                    id: kernelConnection.interpreter!.id,
+                    version: {
+                        major: 3,
+                        minor: 12,
+                        micro: 7,
+                        release: undefined,
+                        sysVersion: '3.12.7'
+                    },
+                    environment: {
+                        name: 'Hello',
+                        folderUri: Uri.file('Some Path')
+                    },
+                    executable: {
+                        uri: kernelConnection.interpreter!.uri
+                    },
+                    tools: [EnvironmentType.Venv]
+                } as any
+            ]);
+
             const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
                 new KernelDiedError(
                     'Kaboom',
@@ -733,7 +789,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             assert.strictEqual(
                 result,
                 [
-                    "Running cells with 'Hello (Some Path)' requires the ipykernel package.",
+                    "Running cells with 'Hello (Python 3.12.7)' requires the ipykernel package.",
                     "Run the following command to install 'ipykernel' into the Python environment. ",
                     command
                 ].join('\n')

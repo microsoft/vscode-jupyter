@@ -32,22 +32,21 @@ import { ExportInterpreterFinder } from './export/exportInterpreterFinder.node';
 import { ExportUtil } from './export/exportUtil.node';
 import { FileConverter } from './export/fileConverter.node';
 import { IExportBase, IExportUtil, IFileConverter } from './export/types';
-import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
+import { NotebookPythonEnvironmentService } from './notebookEnvironmentService.node';
 import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker.node';
-import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
+import { INotebookEditorProvider, INotebookPythonEnvironmentService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LiveKernelSwitcher);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NotebookCommandListener);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
-    serviceManager.addBinding(INotebookCompletionProvider, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RemoteKernelControllerWatcher
@@ -109,10 +108,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         CellOutputMimeTypeTracker
     );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        KernelStartupCodeProvider
-    );
 
     // File export/import
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
@@ -120,4 +115,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
 
     serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);
     serviceManager.addSingleton<IExportUtil>(IExportUtil, ExportUtil);
+    serviceManager.addSingleton<NotebookPythonEnvironmentService>(
+        INotebookPythonEnvironmentService,
+        NotebookPythonEnvironmentService
+    );
 }

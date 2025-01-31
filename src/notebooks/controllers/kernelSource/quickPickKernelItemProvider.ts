@@ -9,7 +9,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../platform/common/types';
 import { isPromise } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { IQuickPickKernelItemProvider } from './types';
@@ -50,7 +50,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         if (isPromise(finderPromise)) {
             finderPromise
                 .then((finder) => this.setupFinder(finder))
-                .catch((ex) => traceError(`Failed to setup finder for ${this.title}`, ex));
+                .catch((ex) => logger.error(`Failed to setup finder for ${this.title}`, ex));
         } else {
             this.setupFinder(finderPromise);
         }
@@ -65,7 +65,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
             this._onDidChangeStatus.fire();
         }
         if (this.refreshInvoked) {
-            finder.refresh().catch((ex) => traceError(`Failed to refresh finder for ${this.title}`, ex));
+            finder.refresh().catch((ex) => logger.error(`Failed to refresh finder for ${this.title}`, ex));
         } else if (
             // If we're dealing with remote and we are idle and there are no kernels,
             // then trigger a refresh.
@@ -73,7 +73,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
             finder.status === 'idle' &&
             this.filteredKernels(finder.kernels).length === 0
         ) {
-            finder.refresh().catch((ex) => traceError(`Failed to refresh finder for ${this.title}`, ex));
+            finder.refresh().catch((ex) => logger.error(`Failed to refresh finder for ${this.title}`, ex));
         }
         switch (finder.kind) {
             case ContributedKernelFinderKind.LocalKernelSpec:
@@ -144,7 +144,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
                 this.recommended = kernel;
                 this._onDidChangeRecommended.fire();
             })
-            .catch((ex) => traceError(`Preferred connection failure ${getDisplayPath(this.notebook.uri)}`, ex));
+            .catch((ex) => logger.error(`Preferred connection failure ${getDisplayPath(this.notebook.uri)}`, ex));
     }
     private computePreferredLocalKernel(
         finder: IContributedKernelFinder,
@@ -169,7 +169,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
                     this.recommended = kernel;
                     this._onDidChangeRecommended.fire();
                 })
-                .catch((ex) => traceError(`Preferred connection failure ${getDisplayPath(this.notebook?.uri)}`, ex));
+                .catch((ex) => logger.error(`Preferred connection failure ${getDisplayPath(this.notebook?.uri)}`, ex));
         };
         computePreferred();
         finder.onDidChangeKernels(computePreferred, this, this.disposables);

@@ -12,6 +12,7 @@ import { IKernel } from '../../../../kernels/types';
 import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, INbExtensionsPathProvider } from '../types';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
+import { logger } from '../../../../platform/logging';
 
 type KernelConnectionId = string;
 /**
@@ -69,6 +70,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
             const stopWatch = new StopWatch();
             this.sourceNbExtensionsPath = await this.nbExtensionsPathProvider.getNbExtensionsParentPath(this.kernel);
             if (!this.sourceNbExtensionsPath) {
+                logger.warn(`No nbextensions folder found for kernel ${this.kernel.kernelConnectionMetadata.id}`);
                 return;
             }
             const kernelHash = await getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
@@ -112,7 +114,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
 
         // Get all of the widget entry points, which would be of the form `nbextensions/<widget folder>/extension.js`
         const nbExtensionsFolder = Uri.joinPath(nbExtensionsParentPath, 'nbextensions');
-        const extensions = await this.fs.searchLocal('*/extension.js', nbExtensionsFolder.fsPath, true);
+        const extensions = await this.fs.searchLocal('**/extension.js', nbExtensionsFolder.fsPath, true);
         return extensions.map((entry) => ({
             uri: Uri.joinPath(nbExtensionsFolder, entry),
             widgetFolderName: path.dirname(entry)

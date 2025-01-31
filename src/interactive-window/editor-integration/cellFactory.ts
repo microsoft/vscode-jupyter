@@ -1,48 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type * as nbformat from '@jupyterlab/nbformat';
-import { NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
+import { NotebookCellData, NotebookCellKind, NotebookDocument, Range, TextDocument } from 'vscode';
 import { CellMatcher } from './cellMatcher';
-import { ICell, ICellRange, IJupyterSettings } from '../../platform/common/types';
+import { ICellRange, IJupyterSettings } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { createJupyterCellFromVSCNotebookCell } from '../../kernels/execution/helpers';
-import { appendLineFeed, parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
+import { parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
 import { splitLines } from '../../platform/common/helpers';
 import { isSysInfoCell } from '../systemInfoCell';
-
-export function createCodeCell(): nbformat.ICodeCell;
-// eslint-disable-next-line @typescript-eslint/unified-signatures
-export function createCodeCell(code: string): nbformat.ICodeCell;
-export function createCodeCell(code: string[], outputs: nbformat.IOutput[]): nbformat.ICodeCell;
-// eslint-disable-next-line @typescript-eslint/unified-signatures
-export function createCodeCell(code: string[], magicCommandsAsComments: boolean): nbformat.ICodeCell;
-export function createCodeCell(code?: string | string[], options?: boolean | nbformat.IOutput[]): nbformat.ICodeCell {
-    const magicCommandsAsComments = typeof options === 'boolean' ? options : false;
-    const outputs = typeof options === 'boolean' ? [] : options || [];
-    code = code || '';
-    // If we get a string, then no need to append line feeds. Leave as is (to preserve existing functionality).
-    // If we get an array, the append a linefeed.
-    const source = Array.isArray(code)
-        ? appendLineFeed(code, '\n', magicCommandsAsComments ? uncommentMagicCommands : undefined)
-        : code;
-    return {
-        cell_type: 'code',
-        execution_count: null,
-        metadata: {},
-        outputs,
-        source
-    };
-}
-
-export function createMarkdownCell(code: string | string[], useSourceAsIs: boolean = false): nbformat.IMarkdownCell {
-    code = Array.isArray(code) ? code : [code];
-    return {
-        cell_type: 'markdown',
-        metadata: {},
-        source: useSourceAsIs ? code : generateMarkdownFromCodeLines(code)
-    };
-}
+import { getCellMetadata } from '../../platform/common/utils';
 
 export function uncommentMagicCommands(line: string): string {
     // Uncomment lines that are shell assignments (starting with #!),
@@ -62,32 +28,24 @@ export function uncommentMagicCommands(line: string): string {
     }
 }
 
-function generateCodeCell(code: string[], uri: Uri | undefined, magicCommandsAsComments: boolean): ICell {
-    // Code cells start out with just source and no outputs.
-    return {
-        data: createCodeCell(code, magicCommandsAsComments),
-        uri
-    };
+function generateCodeCell(code: string[], matcher: CellMatcher) {
+    const lines = matcher.isCell(code[0]) && code.length > 1 ? code.slice(1) : code;
+    return new NotebookCellData(NotebookCellKind.Code, lines.join('\n'), 'python');
 }
 
-function generateMarkdownCell(code: string[], uri: Uri | undefined, useSourceAsIs = false): ICell {
-    return {
-        uri,
-        data: createMarkdownCell(code, useSourceAsIs)
-    };
+function generateMarkdownCell(code: string[]) {
+    return new NotebookCellData(NotebookCellKind.Markup, generateMarkdownFromCodeLines(code).join('\n'), 'markdown');
 }
 
 export function generateCells(
     settings: IJupyterSettings | undefined,
     code: string,
-    uri: Uri | undefined,
     splitMarkdown: boolean
-): ICell[] {
+): NotebookCellData[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
     const split = splitLines(code, { trim: false });
     const firstLine = split[0];
     const matcher = new CellMatcher(settings);
-    const { magicCommandsAsComments = false } = settings || {};
     if (matcher.isMarkdown(firstLine)) {
         // We have at least one markdown. We might have to split it if there any lines that don't begin
         // with # or are inside a multiline comment
@@ -105,29 +63,17 @@ export function generateCells(
         if (firstNonMarkdown >= 0) {
             // Make sure if we split, the second cell has a new id. It's a new submission.
             return [
-                generateMarkdownCell(split.slice(0, firstNonMarkdown), uri),
-                generateCodeCell(split.slice(firstNonMarkdown), uri, magicCommandsAsComments)
+                generateMarkdownCell(split.slice(0, firstNonMarkdown)),
+                generateCodeCell(split.slice(firstNonMarkdown), matcher)
             ];
         } else {
             // Just a single markdown cell
-            return [generateMarkdownCell(split, uri)];
+            return [generateMarkdownCell(split)];
         }
     } else {
         // Just code
-        return [generateCodeCell(split, uri, magicCommandsAsComments)];
+        return [generateCodeCell(split, matcher)];
     }
-}
-
-export function hasCells(document: TextDocument, settings?: IJupyterSettings): boolean {
-    const matcher = new CellMatcher(settings);
-    for (let index = 0; index < document.lineCount; index += 1) {
-        const line = document.lineAt(index);
-        if (matcher.isCell(line.text)) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 export function generateCellRangesFromDocument(document: TextDocument, settings?: IJupyterSettings): ICellRange[] {
@@ -158,22 +104,19 @@ export function generateCellRangesFromDocument(document: TextDocument, settings?
     return cells;
 }
 
-export function generateCellsFromDocument(document: TextDocument, settings?: IJupyterSettings): ICell[] {
+export function generateCellsFromDocument(document: TextDocument, settings?: IJupyterSettings): NotebookCellData[] {
     const ranges = generateCellRangesFromDocument(document, settings);
 
     // For each one, get its text and turn it into a cell
     return Array.prototype.concat(
         ...ranges.map((cr) => {
             const code = document.getText(cr.range);
-            return generateCells(settings, code, document.uri, false);
+            return generateCells(settings, code, false);
         })
     );
 }
 
-export function generateCellsFromNotebookDocument(
-    notebookDocument: NotebookDocument,
-    magicCommandsAsComments: boolean
-): ICell[] {
+export function generateCellsFromNotebookDocument(notebookDocument: NotebookDocument): NotebookCellData[] {
     return notebookDocument
         .getCells()
         .filter((cell) => !isSysInfoCell(cell))
@@ -183,14 +126,15 @@ export function generateCellsFromNotebookDocument(
             if (cell.metadata.interactiveWindowCellMarker !== undefined) {
                 code.unshift(cell.metadata.interactiveWindowCellMarker + '\n');
             }
-            const data = createJupyterCellFromVSCNotebookCell(cell);
-            data.source =
-                cell.kind === NotebookCellKind.Code
-                    ? appendLineFeed(code, '\n', magicCommandsAsComments ? uncommentMagicCommands : undefined)
-                    : appendLineFeed(code);
-            return {
-                data,
-                file: ''
-            };
+            const cellData = new NotebookCellData(
+                cell.kind,
+                code.join('\n'),
+                cell.kind === NotebookCellKind.Code ? cell.document.languageId : 'markdown'
+            );
+            if (cell.kind === NotebookCellKind.Code) {
+                cellData.outputs = [...cell.outputs];
+            }
+            cellData.metadata = getCellMetadata(cell);
+            return cellData;
         });
 }

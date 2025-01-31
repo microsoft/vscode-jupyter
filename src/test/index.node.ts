@@ -20,7 +20,6 @@ import * as v8 from 'v8';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';
 import {
     IS_MULTI_ROOT_TEST,
-    IS_SMOKE_TEST,
     IS_PERF_TEST,
     MAX_EXTENSION_ACTIVATION_TIME,
     TEST_RETRYCOUNT,
@@ -61,12 +60,14 @@ process.on('unhandledRejection', (ex: Error, _a) => {
 
     if (
         (msg.includes('Canceled future for') && msg.includes('message before replies were done')) ||
+        (msg.includes('The kernel died. Error') &&
+            msg.includes('No module named ipykernel_launcher') &&
+            msg.includes('View Jupyter [log](command:jupyter.viewOutput)')) ||
         msg.includes('Channel has been closed') ||
         msg.includes('Error: custom request failed') ||
         msg.includes('ms-python.python') || // We don't care about unhanded promise rejections from the Python extension.
         msg.includes('ms-python.isort') || // We don't care about unhanded promise rejections from the Python related extensions.
-        msg.includes('extensions/git/dist/main.js') || // git extension often throws errors from calling extension APIs after EH has been disconnected
-        msg.includes('@vscode/lsp-notebook-concat/dist/index.js') // Flaky LSP issues.
+        msg.includes('extensions/git/dist/main.js') // git extension often throws errors from calling extension APIs after EH has been disconnected
     ) {
         // Some error from VS Code, we can ignore this.
         return;
@@ -151,7 +152,7 @@ function activateExtensionScript() {
     const initializationPromise = initialize();
     const promise = Promise.race([initializationPromise, failed]);
     // eslint-disable-next-line no-console
-    promise.finally(() => clearTimeout(timer!)).catch((e) => console.error(e));
+    promise.finally(() => clearTimeout(timer! as any)).catch((e) => console.error(e));
     return initializationPromise;
 }
 
@@ -170,13 +171,6 @@ export async function run(): Promise<void> {
     const testsRoot = path.join(__dirname, '..');
     // Enable source map support.
     require('source-map-support').install();
-
-    // nteract/transforms-full expects to run in the browser so we have to fake
-    // parts of the browser here.
-    if (!IS_SMOKE_TEST()) {
-        const reactHelpers = require('./datascience/reactHelpers') as typeof import('./datascience/reactHelpers');
-        reactHelpers.setUpDomEnvironment();
-    }
 
     const ignoreGlob: string[] = [];
     switch (options.testFilesSuffix.toLowerCase()) {

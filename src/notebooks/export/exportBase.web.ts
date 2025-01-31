@@ -14,7 +14,7 @@ import { concatMultilineString } from '../../platform/common/utils';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportFormat, IExportBase, IExportUtil } from './types';
-import { traceError, traceLog } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
@@ -138,7 +138,7 @@ export class ExportBase implements IExportBase {
                 throw new Error(text || `Failed to export to ${format}`);
             } else if (text) {
                 // trace the output in case we didn't identify all errors
-                traceLog(text);
+                logger.debug(text);
             }
 
             if (format === ExportFormat.pdf) {
@@ -149,7 +149,7 @@ export class ExportBase implements IExportBase {
                 });
                 const bytes = this.b64toBlob(content.content, 'application/pdf');
                 const buffer = await bytes.arrayBuffer();
-                await this.fs.writeFile(target!, Buffer.from(buffer));
+                await this.fs.writeFile(target!, new Uint8Array(buffer));
             } else {
                 const content = await contentsManager.get(tempTarget, {
                     type: 'file',
@@ -188,7 +188,7 @@ export class ExportBase implements IExportBase {
                 backingFileDir.length && backingFileDir !== '.' ? `${backingFileDir}/${newName}` : newName // Note, the docs say the path uses UNIX delimiters.
             );
         } catch (exc) {
-            traceError(`Backing file not supported: ${exc}`);
+            logger.error(`Backing file not supported: ${exc}`);
         }
 
         if (backingFile) {

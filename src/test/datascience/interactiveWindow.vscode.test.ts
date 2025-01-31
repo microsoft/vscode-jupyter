@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
@@ -40,6 +40,7 @@ import { isEqual } from '../../platform/vscode-path/resources';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { Commands } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { getCachedEnvironments } from '../../platform/interpreter/helpers';
 
 suite(`Interactive window Execution @iw`, async function () {
     this.timeout(120_000);
@@ -51,17 +52,17 @@ suite(`Interactive window Execution @iw`, async function () {
     let pythonApiProvider: IPythonApiProvider;
     let originalActiveInterpreter: PythonEnvironment | undefined;
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         if (IS_REMOTE_NATIVE_TEST()) {
             await startJupyterServer();
         }
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
         pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         await vscode.commands.executeCommand('python.clearWorkspaceInterpreter');
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
@@ -74,28 +75,35 @@ suite(`Interactive window Execution @iw`, async function () {
         const pythonApi = await pythonApiProvider.getNewApi();
         await pythonApi?.environments.refreshEnvironments({ forceRefresh: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreters = interpreterService.resolvedEnvironments;
         await waitForCondition(
             () => {
-                const venvNoKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvnokernel'));
-                const venvKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvkernel'));
+                const venvNoKernelInterpreter = getCachedEnvironments().find((i) =>
+                    getFilePath(i.executable.uri).includes('.venvnokernel')
+                );
+                const venvKernelInterpreter = getCachedEnvironments().find((i) =>
+                    getFilePath(i.executable.uri).includes('.venvkernel')
+                );
                 return venvNoKernelInterpreter && venvKernelInterpreter ? true : false;
             },
             defaultNotebookTestTimeout,
             'Waiting for interpreters to be discovered'
         );
-        const venvNoKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvnokernel'));
-        const venvKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvkernel'));
+        const venvNoKernelInterpreter = getCachedEnvironments().find((i) =>
+            getFilePath(i.executable.uri).includes('.venvnokernel')
+        );
+        const venvKernelInterpreter = getCachedEnvironments().find((i) =>
+            getFilePath(i.executable.uri).includes('.venvkernel')
+        );
 
         if (!venvNoKernelInterpreter || !venvKernelInterpreter) {
             throw new Error(
-                `Unable to find matching kernels. List of kernels is ${interpreters
-                    .map((i) => getFilePath(i.uri))
+                `Unable to find matching kernels. List of kernels is ${getCachedEnvironments()
+                    .map((i) => getFilePath(i.executable.uri))
                     .join('\n')}`
             );
         }
-        venNoKernelPath = venvNoKernelInterpreter.uri;
-        venvKernelPath = venvKernelInterpreter.uri;
+        venNoKernelPath = venvNoKernelInterpreter.executable.uri!;
+        venvKernelPath = venvKernelInterpreter.executable.uri!;
         originalActiveInterpreter = await interpreterService.getActiveInterpreter();
 
         // No kernel should not have ipykernel in it yet, but we need two, so install it.

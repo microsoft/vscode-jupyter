@@ -9,7 +9,7 @@ import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
-import { traceError, traceVerbose, traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
 import { sendKernelSpecTelemetry } from './helper';
@@ -75,7 +75,7 @@ export class LocalKnownPathKernelSpecFinder
     }
     @debounce(100)
     private writeKernelsToMemento() {
-        this.writeToMementoCache(Array.from(this._kernels.values()), localKernelSpecsCacheKey()).catch(noop);
+        this.writeToMementoCache(Array.from(this._kernels.values()), localKernelSpecsCacheKey());
     }
     private async listKernelSpecs(cancelToken: CancellationToken): Promise<LocalKernelSpecConnectionMetadata[]> {
         const fn = async () => {
@@ -90,7 +90,7 @@ export class LocalKnownPathKernelSpecFinder
 
             newKernelSpecs.forEach((k) => this._kernels.set(k.id, k));
             if (deletedKernels.length) {
-                traceVerbose(
+                logger.debug(
                     `Local kernel spec connection deleted ${deletedKernels.map((item) => `${item.kind}:'${item.id}'`)}`
                 );
                 deletedKernels.forEach((k) => this._kernels.delete(k.id));
@@ -177,12 +177,12 @@ export class LocalKnownPathKernelSpecFinder
                             this.writeKernelsToMemento();
                         }
                     } else {
-                        traceWarning(
+                        logger.warn(
                             `Duplicate kernel found ${kernelSpec.display_name} ${kernelSpec.executable} in ${kernelSpec.specFile}`
                         );
                     }
                 } catch (ex) {
-                    traceError(`Failed to load kernelSpec for ${kernelSpecFile}`, ex);
+                    logger.error(`Failed to load kernelSpec for ${kernelSpecFile}`, ex);
                     return;
                 }
             })

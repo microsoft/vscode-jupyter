@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type * as nbformat from '@jupyterlab/nbformat';
 import { ConfigurationTarget, Disposable, Event, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandIds } from '../../commands';
@@ -46,14 +45,12 @@ export interface IRandom {
 
 export interface IJupyterSettings {
     readonly experiments: IExperiments;
-    readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection: boolean;
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;
     readonly notebookFileRoot: string;
     readonly useDefaultConfigForJupyter: boolean;
-    readonly searchForJupyter: boolean;
     readonly enablePythonKernelLogging: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly normalizeSelectionForInteractiveWindow: boolean;
@@ -61,14 +58,12 @@ export interface IJupyterSettings {
     readonly markdownRegularExpression: string;
     readonly codeRegularExpression: string;
     readonly errorBackgroundColor: string;
-    readonly ignoreVscodeTheme: boolean;
     readonly variableExplorerExclude: string;
     readonly decorateCells: 'currentCell' | 'allCells' | 'disabled';
     readonly enableCellCodeLens: boolean;
     askForLargeDataFrames: boolean;
     readonly enableAutoMoveToNextCell: boolean;
     readonly askForKernelRestart: boolean;
-    readonly generateSVGPlots: boolean;
     readonly codeLenses: string;
     readonly debugCodeLenses: string;
     readonly debugpyDistPath: string;
@@ -76,14 +71,12 @@ export interface IJupyterSettings {
     readonly magicCommandsAsComments: boolean;
     readonly pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert';
     readonly stopOnError: boolean;
-    readonly remoteDebuggerPort: number;
     readonly addGotoCodeLenses: boolean;
     readonly runStartupCommands: string | string[];
     readonly debugJustMyCode: boolean;
     readonly defaultCellMarker: string;
     readonly verboseLogging: boolean;
     readonly themeMatplotlibPlots: boolean;
-    readonly variableQueries: IVariableQuery[];
     readonly disableJupyterAutoStart: boolean;
     readonly development: boolean;
     readonly jupyterCommandLineArguments: string[];
@@ -95,16 +88,10 @@ export interface IJupyterSettings {
     readonly forceIPyKernelDebugger?: boolean;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
-    readonly pythonCompletionTriggerCharacters?: string;
     readonly logKernelOutputSeparately: boolean;
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
-    readonly enableExtendedKernelCompletions: boolean;
-    /**
-     * To be removed in the future (remove around April 2023)
-     * Added as a fallback in case the new approach of resolving Python env variables for Kernels fails or does not work as expected.
-     */
-    readonly useOldKernelResolve: boolean;
+    readonly enableExtendedPythonKernelCompletions: boolean;
     readonly formatStackTraces: boolean;
     /**
      * Trigger characters for Jupyter completion, per language.
@@ -112,17 +99,12 @@ export interface IJupyterSettings {
      * TODO: in debt to merge the two settings.
      */
     readonly completionTriggerCharacters?: Record<string, string[]>;
+    readonly interactiveReplNotebook: boolean;
 }
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {
     readonly onDidChange: Event<void>;
     createSystemVariables(resource: Resource): ISystemVariables;
-}
-
-export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
-
-export interface ILoggingSettings {
-    readonly level: LoggingLevelSettingType | 'off';
 }
 
 export interface IExperiments {
@@ -138,12 +120,6 @@ export interface IExperiments {
      * Experiments user requested to opt out from manually
      */
     readonly optOutFrom: string[];
-}
-
-export interface IVariableQuery {
-    language: string;
-    query: string;
-    parseExpr: string;
 }
 
 export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
@@ -260,8 +236,8 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
 
 export enum Experiments {
     DataViewerContribution = 'DataViewerContribution',
-    KernelCompletions = 'KernelCompletions',
-    DoNotWaitForZmqPortsToBeUsed = 'DoNotWaitForZmqPortsToBeUsed'
+    DoNotWaitForZmqPortsToBeUsed = 'DoNotWaitForZmqPortsToBeUsed',
+    DataViewerDeprecation = 'DataViewerDeprecation'
 }
 
 /**
@@ -287,11 +263,6 @@ export interface IDisplayOptions {
 }
 
 // Basic structure for a cell from a notebook
-export interface ICell {
-    uri?: Uri;
-    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
-}
-
 // CellRange is used as the basis for creating new ICells.
 // Was only intended to aggregate together ranges to create an ICell
 // However the "range" aspect is useful when working with plain text document
@@ -319,6 +290,11 @@ type ScriptCode = {
      */
     cleanupCode?: string;
 };
+export type ParentOptions = {
+    root: string;
+    propertyChain: (string | number)[];
+    startIndex: number;
+};
 export interface IVariableScriptGenerator {
     generateCodeToGetVariableInfo(options: { isDebugging: boolean; variableName: string }): Promise<ScriptCode>;
     generateCodeToGetVariableProperties(options: {
@@ -327,6 +303,8 @@ export interface IVariableScriptGenerator {
         stringifiedAttributeNameList: string;
     }): Promise<ScriptCode>;
     generateCodeToGetVariableTypes(options: { isDebugging: boolean }): Promise<ScriptCode>;
+    generateCodeToGetAllVariableDescriptions(parentOptions: ParentOptions | undefined): Promise<string>;
+    generateCodeToGetVariableValueSummary(variableName: string): Promise<string>;
 }
 export const IDataFrameScriptGenerator = Symbol('IDataFrameScriptGenerator');
 export interface IDataFrameScriptGenerator {

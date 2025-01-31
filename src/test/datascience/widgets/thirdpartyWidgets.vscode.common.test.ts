@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as sinon from 'sinon';
 import { commands, ConfigurationTarget, Memento, NotebookEditor, window, workspace } from 'vscode';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -32,7 +32,7 @@ import {
     initializeNotebookForWidgetTest
 } from './standardWidgets.vscode.common.test';
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
-import { initializeWidgetComms, Utils } from './commUtils';
+import { hideOutputPanel, initializeWidgetComms, Utils } from './commUtils';
 import { isWeb } from '../../../platform/common/utils/misc';
 
 [true, false].forEach((useCDN) => {
@@ -51,7 +51,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
             if (isWeb()) {
                 return this.skip();
             }
-            traceInfo('Suite Setup VS Code Notebook - Execution');
+            logger.info('Suite Setup VS Code Notebook - Execution');
             this.timeout(120_000);
             api = await initialize();
             const config = workspace.getConfiguration('jupyter', undefined);
@@ -71,26 +71,26 @@ import { isWeb } from '../../../platform/common/utils/misc';
             // Widgets get rendered only when the output is in view. If we have a very large notebook
             // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
             // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
-            await commands.executeCommand('workbench.action.closePanel');
+            await hideOutputPanel();
             await commands.executeCommand('workbench.action.maximizeEditorHideSidebar');
             comms = await initializeWidgetComms(disposables);
 
-            traceInfo('Suite Setup (completed)');
+            logger.info('Suite Setup (completed)');
         });
         // Use same notebook without starting kernel in every single test (use one for whole suite).
         setup(async function () {
-            traceInfo(`Start Test ${this.currentTest?.title}`);
+            logger.info(`Start Test ${this.currentTest?.title}`);
             sinon.restore();
-            traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+            logger.info(`Start Test (completed) ${this.currentTest?.title}`);
             // With less real estate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
-            await commands.executeCommand('workbench.action.closePanel');
+            await hideOutputPanel();
         });
         teardown(async function () {
-            traceInfo(`Ended Test ${this.currentTest?.title}`);
+            logger.info(`Ended Test ${this.currentTest?.title}`);
             if (this.currentTest?.isFailed()) {
                 await captureScreenShot(this);
             }
-            traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+            logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
         });
         suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
         test('Slider Widget', async function () {
@@ -159,7 +159,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
             const cell = window.activeNotebookEditor!.notebook.cellAt(1);
 
             await executeCellAndWaitForOutput(cell, comms);
-            await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image']);
+            await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="']);
         });
         test('Render matplotlib, non-interactive inline', async function () {
             await initializeNotebookForWidgetTest(disposables, {

@@ -44,9 +44,23 @@ export function getDisplayPath(
         fileUri = filename;
     }
     const relativeToHome = getDisplayPathImpl(fileUri, undefined, homePathUri);
-    const relativeToWorkspaceFolders = workspaceFolders.map((folder) =>
-        getDisplayPathImpl(fileUri, folder.uri, homePathUri)
+    const workspaceFolderThatOwnsTheFile = workspaceFolders.find(
+        (w) => fileUri && uriPath.isEqualOrParent(fileUri, w.uri, true)
     );
+    // If there is more than one workspace folder, then we need to display the workspace folder name.
+    // This is because we can have two files with the same name in different workspace folders.
+    // E.g. .venv/bin/python can exist in multiple workspace folders.
+    if (workspaceFolders.length > 1 && workspaceFolderThatOwnsTheFile) {
+        return `${workspaceFolderThatOwnsTheFile.name}${path.sep}${getDisplayPathImpl(
+            fileUri,
+            workspaceFolderThatOwnsTheFile.uri,
+            homePathUri
+        )}`;
+    }
+
+    const relativeToWorkspaceFolders = workspaceFolderThatOwnsTheFile
+        ? [getDisplayPathImpl(fileUri, workspaceFolderThatOwnsTheFile.uri, homePathUri)]
+        : [];
     // Pick the shortest path for display purposes.
     // As those are most likely relative to some workspace folder.
     let bestDisplayPath = relativeToHome;

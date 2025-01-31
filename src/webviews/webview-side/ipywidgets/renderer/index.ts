@@ -66,7 +66,8 @@ export const activate: ActivationFunction = (context) => {
             console.error(message);
         }
     };
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).jupyter_vscode_rendererContext = context;
     logger('Jupyter IPyWidget Renderer Activated');
     hookupTestScripts(context);
     const modelAvailabilityResponse = new Map<string, Deferred<{ hasWidgetState: boolean; kernelSelected: boolean }>>();

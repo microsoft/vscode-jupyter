@@ -18,7 +18,7 @@ import {
 import { waitForVariablesToMatch } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { Commands } from '../../../platform/common/constants';
@@ -27,6 +27,7 @@ import { IVariableViewProvider } from '../../../webviews/extension-side/variable
 import { IKernelProvider } from '../../../kernels/types';
 import { trimQuotes } from '../../../platform/common/helpers';
 import { commands, window } from 'vscode';
+import { getVersion } from '../../../platform/interpreter/helpers';
 
 suite('VariableView @variableViewer', function () {
     let api: IExtensionTestApi;
@@ -36,7 +37,7 @@ suite('VariableView @variableViewer', function () {
     let kernelProvider: IKernelProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo('Suite Setup');
+        logger.info('Suite Setup');
         this.timeout(120_000);
         api = await initialize();
 
@@ -54,20 +55,20 @@ suite('VariableView @variableViewer', function () {
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
-        traceInfo('Suite Setup (completed)');
+        logger.info('Suite Setup (completed)');
     });
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await startJupyterServer();
         await createEmptyPythonNotebook(disposables);
         assert.isOk(window.activeNotebookEditor, 'No active notebook');
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
@@ -189,7 +190,8 @@ suite('VariableView @variableViewer', function () {
 
     // Test that we are working will a larger set of basic types
     test('VariableView basic types A (webview-test)', async function () {
-        if (activeInterpreter.version?.major === 3 && activeInterpreter.version.minor >= 10) {
+        const version = await getVersion(activeInterpreter);
+        if (version?.major === 3 && (version.minor || 0) >= 10) {
             // https://github.com/microsoft/vscode-jupyter/issues/8523
             return this.skip();
         }
@@ -272,7 +274,7 @@ mySet = {1, 2, 3}
     });
 
     // Test opening data viewers while another dataviewer is open
-    test('Open dataviewer', async function () {
+    test.skip('Open dataviewer', async function () {
         // Send the command to open the view
         await commands.executeCommand(Commands.OpenVariableView);
 

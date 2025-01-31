@@ -3,13 +3,11 @@
 
 import { l10n } from 'vscode';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { getDisplayPath } from '../platform/fs-paths';
 import { fromNow } from './date';
+import { getPythonEnvDisplayName } from '../../interpreter/helpers';
 
 function getInterpreterDisplayName(interpreter: PythonEnvironment) {
-    const interpreterDisplayName = interpreter.displayName || interpreter.envName || '';
-    const displayPath = getDisplayPath(interpreter.uri);
-    return interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
+    return getPythonEnvDisplayName(interpreter);
 }
 export namespace Common {
     export const bannerLabelYes = l10n.t('Yes');
@@ -20,6 +18,7 @@ export namespace Common {
     export const refresh = l10n.t('Refresh');
     export const refreshing = l10n.t('Refreshing...');
     export const install = l10n.t('Install');
+    export const downloadAndInstall = l10n.t('Download and Install');
     export const loadingExtension = l10n.t('Jupyter Extension loading...');
     export const handleExtensionActivationError = l10n.t(
         "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
@@ -283,11 +282,11 @@ export namespace DataScience {
             'Do not translate the text "command:jupyter.viewOutput", that is a command Id that will be used by VS Code to open the output panel'
         ]
     });
-    export const kernelDied = (kernelName: string) =>
+    export const kernelDied = (message: string) =>
         l10n.t({
             message:
                 'The kernel died. Error: {0}... View Jupyter [log](command:jupyter.viewOutput) for further details.',
-            args: [kernelName],
+            args: [message],
             comment: [
                 'Do not translate the text "command:jupyter.viewOutput", that is a command Id that will be used by VS Code to open the output panel'
             ]
@@ -350,9 +349,9 @@ export namespace DataScience {
     export const noKernelConnected = l10n.t('No kernel connected');
     export const jupyterSelectUriCommandLabel = l10n.t('Enter the URL of the running Jupyter Server...');
     export const jupyterSelectUriInputTitle = l10n.t('Enter the URL of the running Jupyter Server');
-    export const jupyterSelectUriInputPlaceholder = l10n.t('Enter the url of the running Jupyter Server');
+    export const jupyterSelectUriInputPlaceholder = l10n.t('Enter the URL of the running Jupyter Server');
     export const connectToToTheJupyterServer = (url: string) => l10n.t('Connect to the Jupyter Server {0}', url);
-    export const enterOrSelectRemoteJupyterPlaceholder = l10n.t('Enter a remote url, or select a remote server');
+    export const enterOrSelectRemoteJupyterPlaceholder = l10n.t('Enter a remote URL, or select a remote server');
     export const selectRemoteJupyterPlaceholder = l10n.t('Select a remote server');
     export const jupyterServerLastConnectionForQuickPickDescription = (date: Date) =>
         l10n.t('Last connected {0}', fromNow(date, true, false, false));
@@ -746,6 +745,14 @@ export namespace DataScience {
     export const failedToFetchKernelSpecsRemoteErrorMessageForQuickPickDetail = l10n.t(
         'Ensure the server is running and reachable.'
     );
+    export const dataViewerDeprecationMessage = l10n.t(
+        'The built-in data viewer will be deprecated soon. Please install other data viewing extensions to keep the ability to inspect data.'
+    );
+    export const dataViewerDeprecationRecommendationActionMessage = l10n.t('See Recommended Extensions');
+    export const dataViewerExtensionRequired = l10n.t(
+        'A Data Viewer Extension is required to view data frames. Click Yes to see recommended extensions.'
+    );
+    export const selectExternalDataViewer = l10n.t('Select DataFrame Viewer');
 }
 export namespace WebViews {
     export const collapseSingle = l10n.t('Collapse');
@@ -793,6 +800,9 @@ export namespace WebViews {
             'Do not translate the the Hyperlink text "<a href={0}>size limit</a>" and "<a href={1}>in a text editor</a>". However the text inside those tags can be translated'
         ]
     });
+    export const dvDeprecationWarning = l10n.t(
+        'The built-in data viewer will be deprecated and no longer usable starting with Visual Studio Code 1.92. Please <a href="command:workbench.extensions.search?%22@tag:jupyterVariableViewers%22">install other data viewing extensions</a> to continue inspecting data'
+    );
 }
 
 export namespace Deprecated {

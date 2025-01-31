@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IHttpClient } from '../types';
-import { traceVerbose } from '../../logging';
+import { logger } from '../../logging';
 import * as fetch from 'cross-fetch';
 import { workspace } from 'vscode';
 
@@ -11,7 +11,7 @@ import { workspace } from 'vscode';
  */
 export class HttpClient implements IHttpClient {
     private readonly requestOptions: RequestInit = {};
-    constructor() {
+    constructor(private readonly fetchImplementation: typeof fetch.fetch = fetch.fetch) {
         const proxy = workspace.getConfiguration('http').get('proxy', '');
         if (proxy) {
             this.requestOptions = { headers: { proxy } };
@@ -20,7 +20,7 @@ export class HttpClient implements IHttpClient {
 
     public async downloadFile(uri: string): Promise<Response> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return fetch.fetch(uri, this.requestOptions);
+        return this.fetchImplementation(uri, this.requestOptions);
     }
 
     public async exists(uri: string): Promise<boolean> {
@@ -29,7 +29,7 @@ export class HttpClient implements IHttpClient {
             const response = await this.downloadFile(uri);
             return response.status === 200;
         } catch (ex) {
-            traceVerbose(`HttpClient - Failure checking for file ${uri}: ${ex}`);
+            logger.debug(`HttpClient - Failure checking for file ${uri}: ${ex}`);
             return false;
         }
     }

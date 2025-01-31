@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
@@ -11,6 +11,7 @@ import { IJupyterServerHelper, IJupyterServerProvider } from '../types';
 import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { Cancellation, isCancellationError } from '../../../platform/common/cancellation';
+import { getPythonEnvDisplayName } from '../../../platform/interpreter/helpers';
 
 @injectable()
 export class JupyterServerProvider implements IJupyterServerProvider {
@@ -41,18 +42,18 @@ export class JupyterServerProvider implements IJupyterServerProvider {
 
         // Check to see if we support ipykernel or not
         try {
-            traceVerbose(`Checking for server usability.`);
+            logger.trace(`Checking for server usability.`);
 
             const usable = await this.checkUsable();
             if (!usable) {
-                traceVerbose('Server not usable (should ask for install now)');
+                logger.trace('Server not usable (should ask for install now)');
                 // Indicate failing.
                 throw new JupyterInstallError(
                     DataScience.jupyterNotSupported(await jupyterServerHelper.getJupyterServerError())
                 );
             }
             // Then actually start the server
-            traceVerbose(`Starting notebook server.`);
+            logger.debug(`Starting notebook server.`);
             const result = await jupyterServerHelper.startServer(options.resource, options.token);
             Cancellation.throwIfCanceled(options.token);
             return result;
@@ -82,9 +83,7 @@ export class JupyterServerProvider implements IJupyterServerProvider {
             const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
             // Can't find a usable interpreter, show the error.
             if (activeInterpreter) {
-                const displayName = activeInterpreter.displayName
-                    ? activeInterpreter.displayName
-                    : getFilePath(activeInterpreter.uri);
+                const displayName = getPythonEnvDisplayName(activeInterpreter) || getFilePath(activeInterpreter.uri);
                 throw new Error(DataScience.jupyterNotSupportedBecauseOfEnvironment(displayName, e.toString()));
             } else {
                 throw new JupyterInstallError(

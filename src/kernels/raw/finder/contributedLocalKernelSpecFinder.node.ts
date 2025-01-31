@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { EventEmitter, extensions } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { traceDecoratorError, traceError } from '../../../platform/logging';
+import { errorDecorator, logger } from '../../../platform/logging';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { areObjectsWithUrisTheSame } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
@@ -20,12 +20,14 @@ import { getKernelRegistrationInfo, isUserRegisteredKernelSpecConnection } from 
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { ObservableDisposable } from '../../../platform/common/utils/lifecycle';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
 export class ContributedLocalKernelSpecFinder
+    extends ObservableDisposable
     implements IContributedKernelFinder<LocalKernelConnectionMetadata>, IExtensionSyncActivationService
 {
     private _status: 'discovering' | 'idle' = 'idle';
@@ -64,6 +66,8 @@ export class ContributedLocalKernelSpecFinder
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService
     ) {
+        super();
+        this.disposables.push(this);
         kernelFinder.registerKernelFinder(this);
         this.disposables.push(this._onDidChangeStatus);
         this.disposables.push(this._onDidChangeKernels);
@@ -133,7 +137,7 @@ export class ContributedLocalKernelSpecFinder
         await promise;
     }
 
-    @traceDecoratorError('List kernels failed')
+    @errorDecorator('List kernels failed')
     private updateCache() {
         try {
             let kernels: LocalKernelConnectionMetadata[] = [];
@@ -152,7 +156,7 @@ export class ContributedLocalKernelSpecFinder
             kernels = kernels.concat(kernelSpecs).concat(kernelSpecsFromPythonKernelFinder);
             this.writeToCache(kernels);
         } catch (ex) {
-            traceError('Exception Saving loaded kernels', ex);
+            logger.error('Exception Saving loaded kernels', ex);
         }
     }
     public get kernels(): LocalKernelConnectionMetadata[] {

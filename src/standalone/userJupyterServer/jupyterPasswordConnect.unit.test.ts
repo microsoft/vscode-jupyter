@@ -127,6 +127,17 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
+                    rootUrl,
+                    typemoq.It.isObjectWith({
+                        method: 'get',
+                        headers: { Connection: 'keep-alive' }
+                    })
+                )
+            )
+            .returns(() => Promise.resolve(mockXsrfResponse.object));
+        fetchMock
+            .setup((fm) =>
+                fm(
                     new URL('hub/api?', rootUrl).toString(),
                     typemoq.It.isObjectWith({
                         method: 'get',
@@ -305,7 +316,6 @@ suite('JupyterServer Password Connect', () => {
         if (result) {
             // eslint-disable-next-line
             assert.isUndefined(result.requestHeaders);
-            assert.isUndefined(result.remappedToken);
             assert.isUndefined(result.requestHeaders);
             assert.isTrue(result.requiresPassword);
         }
@@ -380,8 +390,6 @@ suite('JupyterServer Password Connect', () => {
             isTokenEmpty: true,
             handle: '1234'
         });
-        assert(!result.remappedBaseUrl);
-        assert(!result.requestHeaders);
         assert(!result.requestHeaders);
 
         // Verfiy calls
@@ -437,8 +445,6 @@ suite('JupyterServer Password Connect', () => {
             isTokenEmpty: true,
             handle: '1234'
         });
-        assert(!result.remappedBaseUrl, 'First call to get password should have failed');
-        assert(!result.remappedToken, 'First call to get password should have failed');
         assert(!result.requestHeaders, 'First call to get password should have failed');
 
         // Now set our input for the correct password

@@ -5,8 +5,9 @@ import { Uri, commands, workspace } from 'vscode';
 import { IExtensionContext } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { Commands } from '../../platform/common/constants';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
+import { deleteTempDirs } from '../../platform/common/temp';
 
 export function addClearCacheCommand(context: IExtensionContext, isDevMode: boolean) {
     if (!isDevMode) {
@@ -28,8 +29,9 @@ export function addClearCacheCommand(context: IExtensionContext, isDevMode: bool
         await Promise.all([
             workspace.fs.delete(Uri.joinPath(context.globalStorageUri, 'lastExecutedRemoteCell.json')).then(noop, noop),
             workspace.fs.delete(Uri.joinPath(context.globalStorageUri, 'remoteServersMRUList.json')).then(noop, noop),
-            workspace.fs.delete(Uri.joinPath(context.globalStorageUri, RemoteKernelSpecCacheFileName)).then(noop, noop)
+            workspace.fs.delete(Uri.joinPath(context.globalStorageUri, RemoteKernelSpecCacheFileName)).then(noop, noop),
+            deleteTempDirs(context).then(noop, noop)
         ]);
-        traceInfo('Cache cleared');
+        logger.info('Cache cleared');
     });
 }

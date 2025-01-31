@@ -9,11 +9,10 @@ import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ExtensionRecommendationService } from './recommendation/extensionRecommendation.node';
 import { ActiveEditorContextService } from './context/activeEditorContext';
-import { IImportTracker, ImportTracker } from './import-export/importTracker';
+import { ImportTracker } from './import-export/importTracker';
 import { GlobalActivation } from './activation/globalActivation';
-import { JupyterKernelServiceFactory } from './api/kernelApi';
-import { IExportedKernelServiceFactory } from './api/api';
-import { ApiAccessService } from './api/apiAccessService';
+import { JupyterKernelServiceFactory } from './api/unstable/kernelApi';
+import { ApiAccessService } from './api/unstable/apiAccessService';
 import { WorkspaceActivation } from './activation/workspaceActivation.node';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurveyBanner.node';
@@ -24,8 +23,16 @@ import { PythonExtensionRestartNotification } from './notification/pythonExtensi
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
 import { CommandRegistry as CodespaceCommandRegistry } from './codespace/commandRegistry';
-import { EagerlyActivateJupyterUriProviders } from './api/activateJupyterProviderExtensions';
-import { ExposeUsedAzMLServerHandles } from './api/usedAzMLServerHandles';
+import { EagerlyActivateJupyterUriProviders } from './api/unstable/activateJupyterProviderExtensions';
+import { ExposeUsedAzMLServerHandles } from './api/unstable/usedAzMLServerHandles.deprecated';
+import { IExportedKernelServiceFactory } from './api/unstable/types';
+import { KernelApi } from './api/kernels/accessManagement';
+import { JupyterVariablesProvider } from './variables/JupyterVariablesProvider';
+import { IJupyterVariables, IJupyterVariablesProvider, IKernelVariableRequester } from '../kernels/variables/types';
+import { KernelVariables } from './variables/kernelVariables';
+import { Identifiers } from '../platform/common/constants';
+import { PythonVariablesRequester } from './variables/pythonVariableRequester';
+import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -38,7 +45,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         ActiveEditorContextService
     );
-    serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ImportTracker);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
@@ -81,7 +87,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     );
 
     // Intellisense
-    registerIntellisenseTypes(serviceManager, isDevMode);
+    registerIntellisenseTypes(serviceManager);
 
     // Dev Tools
     registerDevToolTypes(context, isDevMode);
@@ -94,5 +100,20 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ExposeUsedAzMLServerHandles
+    );
+
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelApi);
+
+    // Variables
+    serviceManager.addSingleton<IJupyterVariablesProvider>(IJupyterVariablesProvider, JupyterVariablesProvider);
+    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
+    serviceManager.addSingleton<IKernelVariableRequester>(
+        IKernelVariableRequester,
+        PythonVariablesRequester,
+        Identifiers.PYTHON_VARIABLES_REQUESTER
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PreWarmActivatedJupyterEnvironmentVariables
     );
 }

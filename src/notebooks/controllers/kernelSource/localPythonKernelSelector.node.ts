@@ -24,7 +24,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { findPreferredPythonEnvironment } from '../preferredKernelConnectionService.node';
 import { Commands } from '../../../platform/common/constants';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { DisposableBase } from '../../../platform/common/utils/lifecycle';
 
 export class LocalPythonKernelSelector extends DisposableBase {
@@ -103,7 +103,7 @@ export class LocalPythonKernelSelector extends DisposableBase {
             if (!this.pythonApi || token.isCancellationRequested) {
                 return;
             }
-            this.pythonEnvPicker.recommended = findPreferredPythonEnvironment(this.notebook, this.pythonApi);
+            this.pythonEnvPicker.recommended = findPreferredPythonEnvironment(this.notebook, this.pythonApi, filter);
         };
         const setupApi = (api?: PythonExtension) => {
             if (!api) {
@@ -142,7 +142,7 @@ export class LocalPythonKernelSelector extends DisposableBase {
                     }
                 },
                 (ex) => {
-                    traceError(`Failed to install the Python extension`, ex);
+                    logger.error(`Failed to install the Python extension`, ex);
                     pythonExtensionNotInstalled.resolve();
                 }
             );

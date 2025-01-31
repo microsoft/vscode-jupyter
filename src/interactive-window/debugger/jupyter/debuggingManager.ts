@@ -31,7 +31,7 @@ import { IConfigurationService } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import * as path from '../../../platform/vscode-path/path';
 import { IFileGeneratedCodes } from '../../editor-integration/types';
 import { IInteractiveWindowDebuggingManager } from '../../types';
@@ -77,7 +77,7 @@ export class InteractiveWindowDebuggingManager
     }
 
     public async start(notebook: NotebookDocument, cell: NotebookCell) {
-        traceInfoIfCI(`Starting debugging IW`);
+        logger.ci(`Starting debugging IW`);
 
         const ipykernelResult = await this.checkIpykernelAndPrompt(cell);
         if (ipykernelResult === IpykernelCheckResult.Ok) {
@@ -101,7 +101,7 @@ export class InteractiveWindowDebuggingManager
         await this.startDebuggingConfig(config, opts);
         const dbgr = this.notebookToDebugger.get(doc);
         if (!dbgr) {
-            traceError('Debugger not found, could not start debugging.');
+            logger.error('Debugger not found, could not start debugging.');
             return;
         }
         await (dbgr as IWDebugger).ready;
@@ -113,17 +113,17 @@ export class InteractiveWindowDebuggingManager
 
         const notebook = workspace.notebookDocuments.find((doc) => doc.uri.toString() === config.__notebookUri);
         if (!notebook || typeof config.__cellIndex !== 'number') {
-            traceError('Invalid debug session for debugging of IW using Jupyter Protocol');
+            logger.error('Invalid debug session for debugging of IW using Jupyter Protocol');
             return;
         }
 
         if (this.notebookInProgress.has(notebook)) {
-            traceInfo(`Cannot start debugging. Already debugging this notebook`);
+            logger.info(`Cannot start debugging. Already debugging this notebook`);
             return;
         }
 
         if (this.isDebugging(notebook)) {
-            traceInfo(`Cannot start debugging. Already debugging this notebook document. Toolbar should update`);
+            logger.info(`Cannot start debugging. Already debugging this notebook document. Toolbar should update`);
             return;
         }
 
@@ -176,7 +176,7 @@ export class InteractiveWindowDebuggingManager
         // Make sure that we have an active debugging session at this point
         let debugSession = this.getDebugSession(notebookEditor.notebook);
         if (debugSession) {
-            traceInfoIfCI(`Sending debug request for source map`);
+            logger.ci(`Sending debug request for source map`);
             await Promise.all(
                 hashes.map(async (fileHash) => {
                     if (debugSession) {

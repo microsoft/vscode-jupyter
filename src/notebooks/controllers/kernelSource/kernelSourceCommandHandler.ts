@@ -38,7 +38,7 @@ import { IDisposable, IDisposableRegistry } from '../../../platform/common/types
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { traceError, traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { INotebookEditorProvider } from '../../types';
 import {
     IControllerRegistration,
@@ -48,6 +48,8 @@ import {
     IVSCodeNotebookController
 } from '../types';
 import { JupyterServerCollection } from '../../../api';
+import { isCondaEnvironmentWithoutPython } from '../../../platform/interpreter/helpers';
+import { onDidManuallySelectKernel } from '../../../kernels/telemetry/notebookTelemetry';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
@@ -274,7 +276,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
             notebook.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
         ]);
         if (!Array.isArray(controllers) || controllers.length === 0) {
-            traceWarning(`No controller created for selected kernel connection ${kernel.kind}:${kernel.id}`);
+            logger.warn(`No controller created for selected kernel connection ${kernel.kind}:${kernel.id}`);
             return;
         }
         initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, kernel)
@@ -291,10 +293,11 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         return controller.controller.id;
     }
     private async onControllerSelected(notebook: NotebookDocument, controller: IVSCodeNotebookController) {
+        onDidManuallySelectKernel(notebook);
         if (
             isLocalConnection(controller.connection) &&
             isPythonKernelConnection(controller.connection) &&
-            controller.connection.interpreter?.isCondaEnvWithoutPython &&
+            isCondaEnvironmentWithoutPython(controller.connection.interpreter) &&
             !isWebExtension()
         ) {
             const disposables: IDisposable[] = [];
@@ -313,7 +316,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     installWithoutPrompting: true
                 });
             } catch (ex) {
-                traceError(`Failed to install missing dependencies for Conda kernel ${controller.connection.id}`, ex);
+                logger.error(`Failed to install missing dependencies for Conda kernel ${controller.connection.id}`, ex);
             } finally {
                 dispose(disposables);
             }

@@ -9,12 +9,12 @@ import { IPythonExecutionFactory } from '../../../platform/interpreter/types.nod
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
-import { traceWarning } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { splitLines } from '../../../platform/common/helpers';
 
 const separator = '5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d';
-export const kernelGetPandasVersion = `import pandas;print(pandas.__version__);print("${separator}")`;
+export const interpreterGetPandasVersion = `import pandas;print(pandas.__version__);print("${separator}")`;
 
 /**
  * Uses the Python interpreter to manage dependencies of a Data Viewer.
@@ -36,14 +36,13 @@ export class InterpreterDataViewerDependencyImplementation extends BaseDataViewe
             resource: undefined,
             interpreter
         });
-        const result = await launcher.exec(['-c', kernelGetPandasVersion], {
-            throwOnStdErr: true,
+        const result = await launcher.exec(['-c', interpreterGetPandasVersion], {
             token
         });
         const output = result.stdout;
 
         if (!output?.includes(separator)) {
-            traceWarning(DataScience.failedToGetVersionOfPandas, `Output is ${output}`);
+            logger.warn(DataScience.failedToGetVersionOfPandas, `Output is ${output}`);
             return '';
         }
         const items = splitLines(output.trim());

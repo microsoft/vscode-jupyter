@@ -8,6 +8,7 @@ import { IPyWidgetMessages } from '../../../../messageTypes';
 import { IKernel, IKernelProvider } from '../../../../kernels/types';
 import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from '../types';
+import type { IDisplayDataMsg } from '@jupyterlab/services/lib/kernel/messages';
 
 /**
  * This just wraps the iPyWidgetMessageDispatcher class.
@@ -19,12 +20,21 @@ class IPyWidgetMessageDispatcherWithOldMessages implements IIPyWidgetMessageDisp
         return this._postMessageEmitter.event;
     }
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
+    private _onDisplayMessage = new EventEmitter<IDisplayDataMsg>();
+    public readonly onDisplayMessage = this._onDisplayMessage.event;
     private readonly disposables: IDisposable[] = [];
     constructor(
         private readonly baseMulticaster: IPyWidgetMessageDispatcher,
         private oldMessages: ReadonlyArray<IPyWidgetMessage>
     ) {
         baseMulticaster.postMessage(this.raisePostMessage, this, this.disposables);
+        baseMulticaster.onDisplayMessage(
+            (e) => {
+                this._onDisplayMessage.fire(e);
+            },
+            this,
+            this.disposables
+        );
     }
 
     public dispose() {

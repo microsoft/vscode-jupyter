@@ -2,29 +2,29 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    CodeLens,
-    Command,
-    Event,
-    EventEmitter,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    Range,
-    TextDocument,
-    workspace
-} from 'vscode';
+import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, workspace } from 'vscode';
 
-import { traceWarning, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 
 import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
 import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
-import { CodeLensCommands, Commands, InteractiveWindowView } from '../../platform/common/constants';
-import { generateCellRangesFromDocument } from './cellFactory';
-import { CodeLensPerfMeasures, ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
+import { CodeLensCommands, Commands } from '../../platform/common/constants';
+import {
+    CodeLensPerfMeasures,
+    ICellRangeCache,
+    ICodeLensFactory,
+    IGeneratedCode,
+    IGeneratedCodeStorageFactory
+} from './types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { notebooks } from 'vscode';
+import {
+    NotebookCellExecutionState,
+    notebookCellExecutions,
+    type NotebookCellExecutionStateChangeEvent
+} from '../../platform/notebooks/cellExecutionStateService';
+import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
@@ -71,12 +71,18 @@ export class CodeLensFactory implements ICodeLensFactory {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IGeneratedCodeStorageFactory)
         private readonly generatedCodeStorageFactory: IGeneratedCodeStorageFactory,
-        @inject(IKernelProvider) kernelProvider: IKernelProvider
+        @inject(IKernelProvider) kernelProvider: IKernelProvider,
+        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService,
+        @inject(ICellRangeCache) private readonly cellRangeCache: ICellRangeCache
     ) {
         workspace.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
         workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
-        notebooks.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
+        notebookCellExecutions.onDidChangeNotebookCellExecutionState(
+            this.onDidChangeNotebookCellExecutionState,
+            this,
+            disposables
+        );
         kernelProvider.onDidDisposeKernel(
             (kernel) => {
                 this.notebookData.delete(kernel.notebook.uri.toString());
@@ -132,7 +138,7 @@ export class CodeLensFactory implements ICodeLensFactory {
 
         // If the document version doesn't match, our cell ranges are out of date
         if (cache.cachedDocumentVersion !== document.version) {
-            cache.cellRanges = generateCellRangesFromDocument(document, this.configService.getSettings(document.uri));
+            cache.cellRanges = this.cellRangeCache.getCellRanges(document);
 
             // Because we have all new ranges, we need to recompute ALL of our code lenses.
             cache.documentLenses = [];
@@ -157,7 +163,7 @@ export class CodeLensFactory implements ICodeLensFactory {
             updated = true;
             // Enumerate the possible commands for the document based code lenses
             const commands = this.enumerateCommands(document.uri);
-            traceVerbose(
+            logger.debug(
                 `CodeLensFactory: Generating new code lenses for version ${document.version} of document ${
                     document.uri
                 } for commands ${commands.join(', ')}`
@@ -175,7 +181,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                 firstCell = false;
             });
         } else {
-            traceInfoIfCI(
+            logger.ci(
                 `NOT Generating new code lenses for version ${document.version} of document ${document.uri} - needUpdate: ${needUpdate}, cellRanges.length: ${cache.cellRanges.length}`
             );
         }
@@ -215,7 +221,7 @@ export class CodeLensFactory implements ICodeLensFactory {
             .filter((n) => n !== undefined) as number[];
     }
     private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
-        if (e.cell.notebook.notebookType !== InteractiveWindowView) {
+        if (this.replTracker.isForReplEditor(e.cell.notebook)) {
             return;
         }
         if (e.state !== NotebookCellExecutionState.Idle || !e.cell.executionSummary?.executionOrder) {
@@ -246,6 +252,7 @@ export class CodeLensFactory implements ICodeLensFactory {
     private onChangedSettings() {
         // When config settings change, refresh our code lenses.
         this.codeLensCache.clear();
+        this.cellRangeCache.clear();
 
         // Force an update so that code lenses are recomputed now and not during execution.
         this.updateEvent.fire();
@@ -387,7 +394,6 @@ export class CodeLensFactory implements ICodeLensFactory {
                         range.start.character
                     ]);
                 }
-                break;
             case Commands.RunCellAndAllBelowPalette:
             case Commands.RunCellAndAllBelow:
                 return this.generateCodeLens(range, Commands.RunCellAndAllBelow, runAllBelowTitle, [
@@ -397,7 +403,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                 ]);
 
             default:
-                traceWarning(`Invalid command for code lens ${commandName}`);
+                logger.warn(`Invalid command for code lens ${commandName}`);
                 break;
         }
 

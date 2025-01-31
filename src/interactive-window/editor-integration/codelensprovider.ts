@@ -3,20 +3,15 @@
 
 import { inject, injectable, optional } from 'inversify';
 import * as vscode from 'vscode';
-
 import { IDebugService } from '../../platform/common/application/types';
-import { ContextKey } from '../../platform/common/contextKey';
 import { dispose } from '../../platform/common/utils/lifecycle';
-
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import {
     CodeLensCommands,
-    EditorContexts,
     InteractiveInputScheme,
     NotebookCellScheme,
     Telemetry
@@ -65,6 +60,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
                 duration: this.totalExecutionTimeInMs / this.totalGetCodeLensCalls
             });
         }
+
         dispose(this.activeCodeWatchers);
     }
 
@@ -109,12 +105,6 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         this.totalExecutionTimeInMs += stopWatch.elapsedTime;
         this.totalGetCodeLensCalls += 1;
 
-        // Update the hasCodeCells context at the same time we are asked for codelens as VS code will
-        // ask whenever a change occurs. Do this regardless of if we have code lens turned on or not as
-        // shift+enter relies on this code context.
-        const editorContext = new ContextKey(EditorContexts.HasCodeCells);
-        editorContext.set(codeLenses && codeLenses.length > 0).catch(noop);
-
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings(document.uri);
         if (!settings.enableCellCodeLens) {
@@ -158,7 +148,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
                     return false;
                 });
             } else {
-                traceInfoIfCI(
+                logger.ci(
                     `Detected debugging context because activeDebugSession is name:"${this.debugService.activeDebugSession.name}", type: "${this.debugService.activeDebugSession.type}", ` +
                         `but fell through with debugLocation: ${JSON.stringify(
                             debugLocation
@@ -185,7 +175,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             return codeWatcher.getCodeLenses();
         }
 
-        traceVerbose(`Creating a new watcher for document ${document.uri}`);
+        logger.debug(`Creating a new watcher for document ${document.uri}`);
         const newCodeWatcher = this.createNewCodeWatcher(document);
         return newCodeWatcher.getCodeLenses();
     }
@@ -199,7 +189,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // Create a new watcher for this file if we can find a matching document
         const possibleDocuments = vscode.workspace.textDocuments.filter((d) => d.uri.toString() === uri.toString());
         if (possibleDocuments && possibleDocuments.length > 0) {
-            traceVerbose(`creating new code watcher with matching document ${uri}`);
+            logger.debug(`creating new code watcher with matching document ${uri}`);
             return this.createNewCodeWatcher(possibleDocuments[0]);
         }
 

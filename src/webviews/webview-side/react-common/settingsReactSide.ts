@@ -8,22 +8,17 @@ export function getDefaultSettings(): IJupyterExtraSettings {
     // eslint-disable-next-line
     const result: Partial<IJupyterExtraSettings> = {
         experiments: { enabled: true, optInto: [], optOutFrom: [] },
-        logging: {
-            level: 'off'
-        },
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         // eslint-disable-next-line no-template-curly-in-string
         notebookFileRoot: '${fileDirname}',
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,
-        searchForJupyter: true,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         variableExplorerExclude: 'module;function;builtin_function_or_method',
-        generateSVGPlots: false,
         interactiveWindowMode: 'multiple',
         extraSettings: {
             editor: {
@@ -47,7 +42,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         },
         runStartupCommands: '',
         debugJustMyCode: true,
-        variableQueries: [],
         widgetScriptSources: []
     };
 

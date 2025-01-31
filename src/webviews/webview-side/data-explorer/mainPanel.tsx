@@ -20,7 +20,6 @@ import { SliceControl } from './sliceControl';
 import debounce from 'lodash/debounce';
 import uuid from 'uuid/v4';
 
-import { initializeIcons } from '@fluentui/react';
 import { SharedMessages } from '../../../messageTypes';
 import {
     IDataViewerMapping,
@@ -35,7 +34,6 @@ import {
     IGetSliceRequest
 } from '../../extension-side/dataviewer/types';
 import { IJupyterExtraSettings } from '../../../platform/webviews/types';
-initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);
 const RowNumberColumnName = uuid(); // Unique key for our column containing row numbers
@@ -63,6 +61,7 @@ interface IMainPanelState {
     variableName?: string;
     fileName?: string;
     sliceExpression?: string;
+    deprecationBannerDismissed?: boolean;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -152,11 +151,39 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return (
             <div className="main-panel" ref={this.container}>
                 {progressBar}
+                {!this.state.deprecationBannerDismissed && this.renderDeprecationWarning()}
                 {this.renderBreadcrumb()}
                 {this.renderSliceControls()}
                 {this.state.totalRowCount > 0 && this.renderGrid()}
             </div>
         );
+    };
+
+    public renderDeprecationWarning() {
+        return (
+            <div className="custom-editor-banner">
+                <div
+                    dangerouslySetInnerHTML={{
+                        __html: getLocString(
+                            'dvDeprecationWarning',
+                            'The built-in data viewer will be deprecated and no longer usable after the 1.92 build of Visual Studio Code. Please <a href="command:workbench.extensions.search?%22@tag:jupyterVariableViewers%22">install other data viewing extensions</a> to keep the ability to inspect data'
+                        )
+                    }}
+                    onClick={this.handleDeprecationWarningClick}
+                ></div>
+                <div
+                    className="codicon codicon-close"
+                    onClick={() => this.setState({ deprecationBannerDismissed: true })}
+                    style={{ cursor: 'pointer' }}
+                />
+            </div>
+        );
+    }
+
+    private handleDeprecationWarningClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        if (event.target instanceof HTMLAnchorElement) {
+            this.sendMessage(DataViewerMessages.DeprecationWarningClicked);
+        }
     };
 
     public renderSliceControls = () => {

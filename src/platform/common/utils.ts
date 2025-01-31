@@ -4,17 +4,26 @@
 import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
-import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
+import {
+    NotebookData,
+    NotebookDocument,
+    NotebookEdit,
+    TextDocument,
+    Uri,
+    WorkspaceEdit,
+    workspace,
+    type Event,
+    type NotebookCell
+} from 'vscode';
 import {
     InteractiveWindowView,
     jupyterLanguageToMonacoLanguageMapping,
     JupyterNotebookView,
     WIDGET_STATE_MIMETYPE
 } from './constants';
-import { traceError, traceInfo } from '../logging';
-
-import { ICell } from './types';
 import { splitLines } from './helpers';
+import { toPromise } from './utils/events';
+import type { IDisposable } from './types';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -101,28 +110,6 @@ export function pruneCell(cell: nbformat.ICell): nbformat.ICell {
     return result;
 }
 
-export function traceCellResults(prefix: string, results: ICell[]) {
-    if (results.length > 0 && results[0].data.cell_type === 'code') {
-        const cell = results[0].data as nbformat.ICodeCell;
-        const error = cell.outputs && cell.outputs[0] ? 'evalue' in cell.outputs[0] : undefined;
-        if (error) {
-            traceError(`${prefix} Error : ${error}`);
-        } else if (cell.outputs && cell.outputs[0]) {
-            if (cell.outputs[0].output_type.includes('image')) {
-                traceInfo(`${prefix} Output: image`);
-            } else {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const data = (cell.outputs[0] as any).data;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const text = (cell.outputs[0] as any).text;
-                traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
-            }
-        }
-    } else {
-        traceInfo(`${prefix} no output.`);
-    }
-}
-
 export function translateKernelLanguageToMonaco(language: string): string {
     language = language.toLowerCase();
     if (language.length === 2 && language.endsWith('#')) {
@@ -184,7 +171,7 @@ export type NotebookMetadata = nbformat.INotebookMetadata & {
 
 export function getNotebookMetadata(document: NotebookDocument | NotebookData): NotebookMetadata | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata as any;
     // Create a clone.
     return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
 }
@@ -194,12 +181,25 @@ export function getNotebookFormat(document: NotebookDocument): {
     nbformat_minor: number | undefined;
 } {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata as any;
     // Create a clone.
     return {
         nbformat: notebookContent?.nbformat,
         nbformat_minor: notebookContent?.nbformat_minor
     };
+}
+
+export async function updateNotebookMetadata(document: NotebookDocument, metadata: NotebookMetadata) {
+    const edit = new WorkspaceEdit();
+    edit.set(document.uri, [
+        NotebookEdit.updateNotebookMetadata(
+            sortObjectPropertiesRecursively({
+                ...(document.metadata || {}),
+                metadata
+            })
+        )
+    ]);
+    await workspace.applyEdit(edit);
 }
 
 export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {
@@ -412,4 +412,54 @@ export function parseSemVer(versionString: string): SemVer | undefined {
         const build = parseInt(versionMatch[3], 10);
         return parse(`${major}.${minor}.${build}`, true) ?? undefined;
     }
+}
+
+type JupyterCellMetadata = Pick<nbformat.IRawCell, 'id' | 'metadata' | 'attachments'> &
+    Pick<nbformat.IMarkdownCell, 'id' | 'attachments'> &
+    Pick<nbformat.ICodeCell, 'id' | 'metadata' | 'attachments'> &
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Record<string, any>;
+
+export function getCellMetadata(cell: NotebookCell): JupyterCellMetadata {
+    const metadata: JupyterCellMetadata = JSON.parse(JSON.stringify(cell.metadata || {})) || { metadata: {} };
+    // metadata property is never optional.
+    metadata.metadata = metadata.metadata || {};
+    return metadata;
+}
+
+/**
+ * Sort the JSON to minimize unnecessary SCM changes.
+ * Jupyter notbeooks/labs sorts the JSON keys in alphabetical order.
+ * https://github.com/microsoft/vscode/issues/208137
+ */
+export function sortObjectPropertiesRecursively<T>(obj: T): T {
+    return doSortObjectPropertiesRecursively(obj) as T;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function doSortObjectPropertiesRecursively(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(sortObjectPropertiesRecursively);
+    }
+    if (obj !== undefined && obj !== null && typeof obj === 'object' && Object.keys(obj).length > 0) {
+        return (
+            Object.keys(obj)
+                .sort()
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .reduce<Record<string, any>>((sortedObj, prop) => {
+                    sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
+                    return sortedObj;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                }, {}) as any
+        );
+    }
+    return obj;
+}
+
+export async function disposeAsync(
+    disposable: { dispose: () => void; onDidDispose: Event<void> },
+    disposables: IDisposable[] = []
+): Promise<void> {
+    const promise = toPromise(disposable.onDidDispose, undefined, disposables);
+    disposable.dispose();
+    await promise;
 }

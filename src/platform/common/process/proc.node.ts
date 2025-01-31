@@ -3,7 +3,7 @@
 
 import { exec, execSync, spawn } from 'child_process';
 import { CancellationError, Disposable, EventEmitter } from 'vscode';
-import { ignoreLogging, traceDecoratorVerbose, traceInfoIfCI } from '../../logging';
+import { ignoreLogging, debugDecorator, logger } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
@@ -82,7 +82,7 @@ export class ProcessService implements IProcessService {
         const spawnOptions = this.getDefaultOptions(options);
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
-        traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
+        logger.ci(`Exec observable ${file}, ${args.join(' ')}`);
         const disposables: IDisposable[] = [];
         const disposable: IDisposable = {
             // eslint-disable-next-line
@@ -212,7 +212,7 @@ export class ProcessService implements IProcessService {
         return deferred.promise;
     }
 
-    @traceDecoratorVerbose('Execing shell command', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @debugDecorator('Execing shell command', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public shellExec(command: string, @ignoreLogging() options: ShellOptions = {}): Promise<ExecutionResult<string>> {
         const shellOptions = this.getDefaultOptions(options);
         return new Promise((resolve, reject) => {
@@ -271,6 +271,11 @@ export class ProcessService implements IProcessService {
         defaultOptions.env.PYTHONUNBUFFERED = '1';
         if (!defaultOptions.env.PYTHONIOENCODING) {
             defaultOptions.env.PYTHONIOENCODING = 'utf-8';
+        }
+
+        // Always ensure we have unbuffered output.
+        if (!defaultOptions.env.PYTHON_FROZEN_MODULES) {
+            defaultOptions.env.PYTHON_FROZEN_MODULES = 'on';
         }
 
         return defaultOptions;

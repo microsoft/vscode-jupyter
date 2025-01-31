@@ -2,23 +2,16 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    commands,
-    notebooks,
-    window
-} from 'vscode';
+import { commands, window } from 'vscode';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
-import { Commands, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
+import { Commands, Telemetry } from '../../../platform/common/constants';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { raceTimeout } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import { traceError, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
 
@@ -27,8 +20,6 @@ import { sendTelemetryEvent } from '../../../telemetry';
 @injectable()
 export class InstallPythonControllerCommands implements IExtensionSyncActivationService {
     private installedOnceBefore?: boolean;
-    // WeakSet of executing cells, so they get cleaned up on document close without worrying
-    private executingCells: WeakSet<NotebookCell> = new WeakSet<NotebookCell>();
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
@@ -37,9 +28,6 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
     ) {}
     public activate() {
-        this.disposables.push(
-            notebooks.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this)
-        );
         // Register our commands that will handle installing the python extension or python via the kernel picker
         this.disposables.push(
             commands.registerCommand(
@@ -53,20 +41,6 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
         );
     }
 
-    // Track if there are any cells currently executing or pending
-    private onDidChangeNotebookCellExecutionState(stateEvent: NotebookCellExecutionStateChangeEvent) {
-        if (stateEvent.cell.notebook.notebookType === JupyterNotebookView) {
-            if (
-                stateEvent.state === NotebookCellExecutionState.Pending ||
-                stateEvent.state === NotebookCellExecutionState.Executing
-            ) {
-                this.executingCells.add(stateEvent.cell);
-            } else if (stateEvent.state === NotebookCellExecutionState.Idle) {
-                this.executingCells.delete(stateEvent.cell);
-            }
-        }
-    }
-
     // This is called via the "install python" command in the kernel picker in the case where
     // we have the python extension installed, but 0 valid python kernels / interpreters found
     // just pop up a dialog box to prompt the user on how to install python
@@ -74,10 +48,12 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
     // when this command is installed, user will have to manually install python and rerun the cell
     private async installPythonViaKernelPicker(): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
-        const buttons = this.installedOnceBefore ? [Common.install, Common.reload] : [Common.install];
+        const buttons = this.installedOnceBefore
+            ? [Common.downloadAndInstall, Common.reload]
+            : [Common.downloadAndInstall];
         const selection = await window.showErrorMessage(DataScience.pythonNotInstalled, { modal: true }, ...buttons);
 
-        if (selection === Common.install) {
+        if (selection === Common.downloadAndInstall) {
             this.installedOnceBefore = true;
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
             // Activate the python extension command to show how to install python
@@ -119,14 +95,14 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
 
                 // Make sure that we didn't timeout waiting for the hook
                 if (this.extensionChecker.isPythonExtensionInstalled && hookResult === hooked) {
-                    traceVerbose('Python Extension installed via Kernel Picker command');
+                    logger.debug('Python Extension installed via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'success'
                     });
 
                     return true;
                 } else {
-                    traceError('Failed to install Python Extension via Kernel Picker command');
+                    logger.error('Failed to install Python Extension via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'failed'
                     });

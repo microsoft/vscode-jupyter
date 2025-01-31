@@ -11,10 +11,11 @@ import {
     Uri,
     ViewColumn
 } from 'vscode';
-import { IShowDataViewerFromVariablePanel } from './messageTypes';
 import { Commands as DSCommands, CommandSource } from './platform/common/constants';
 import { PythonEnvironment } from './platform/pythonEnvironments/info';
 import { Channel } from './platform/common/application/types';
+import { IJupyterVariable } from './kernels/variables/types';
+import { IShowDataViewerFromVariablePanel } from './messageTypes';
 
 export type CommandIds = keyof ICommandNameArgumentTypeMapping;
 
@@ -63,8 +64,6 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
     [DSCommands.CreateNewNotebook]: [];
-    [DSCommands.EnableDebugLogging]: [];
-    [DSCommands.ResetLoggingLevel]: [];
     [DSCommands.OpenVariableView]: [];
     [DSCommands.OpenOutlineView]: [];
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri } }];
@@ -176,9 +175,8 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.NativeNotebookExport]: [Uri | undefined | { notebookEditor: { notebookUri: Uri } }];
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
-    [DSCommands.NotebookEditorExpandAllCells]: [];
-    [DSCommands.NotebookEditorCollapseAllCells]: [];
-    [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
+    [DSCommands.ShowDataViewer]: [IJupyterVariable | IShowDataViewerFromVariablePanel];
+    [DSCommands.ShowJupyterDataViewer]: [IJupyterVariable];
     [DSCommands.RefreshDataViewer]: [];
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.RunByLine]: [NotebookCell];

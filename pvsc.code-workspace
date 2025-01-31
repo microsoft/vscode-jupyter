@@ -21,6 +21,9 @@
         {
             "name": "vscode-jupyter-powertoys",
             "path": "../vscode-jupyter-powertoys"
+        },
+        {
+            "path": "src/test/vscode-notebook-perf"
         }
     ],
     "settings": {

@@ -6,7 +6,7 @@ import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import type { ISignal, Signal } from '@lumino/signaling';
-import * as WebSocketWS from 'ws';
+import type * as WebSocketWS from 'ws';
 import { KernelSocketOptions } from '../../../../kernels/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
 import { serializeDataViews, deserializeDataViews } from '../../../../platform/common/utils/serializers';
@@ -78,8 +78,17 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     public createComm(targetName: string, commId?: string | undefined) {
         return this.realKernel.createComm(targetName, commId);
     }
+    public removeInputGuard() {
+        return this.realKernel.removeInputGuard();
+    }
+    public get hasPendingInput() {
+        return this.realKernel.hasPendingInput;
+    }
     public get disposed() {
         return this.realKernel.disposed as any; // NOSONAR
+    }
+    public get pendingInput() {
+        return this.realKernel.pendingInput as any; // NOSONAR
     }
     public clone(options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>) {
         return new ProxyKernel(
@@ -95,8 +104,14 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     private hookResults = new Map<string, boolean | PromiseLike<boolean>>();
     private websocket: WebSocketWS & { sendEnabled: boolean };
     private messageHook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>;
-    private messageHooks: Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>;
-    private lastHookedMessageId: string | undefined;
+    private readonly messageHooks = new Map<
+        string,
+        {
+            current: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>;
+            previous: ((msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>)[];
+        }
+    >();
+    private readonly lastHookedMessageId: string[] = [];
     private _options: KernelSocketOptions;
     // Messages that are awaiting extension messages to be fully handled
     private awaitingExtensionMessage: Map<string, Deferred<void>>;
@@ -106,10 +121,12 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     ) {
         // Dummy websocket we give to the underlying real kernel
         let proxySocketInstance: any;
+        const protocol = options.protocol;
         class ProxyWebSocket {
             public onopen?: ((this: ProxyWebSocket) => any) | null;
             public onmessage?: ((this: ProxyWebSocket, ev: MessageEvent) => any) | null;
             public sendEnabled: boolean = true;
+            public readonly protocol: string = protocol;
             constructor() {
                 proxySocketInstance = this;
             }
@@ -152,12 +169,12 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         const signaling = require('@lumino/signaling') as typeof import('@lumino/signaling');
         this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
+        this.realKernel.pendingInput.connect(this.onPendingInput, this);
         this._options = options;
 
         postOffice.addHandler(this);
         this.websocket = proxySocketInstance;
         this.messageHook = this.messageHookInterceptor.bind(this);
-        this.messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
         this.fakeOpenSocket();
     }
 
@@ -244,8 +261,11 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     }): Promise<KernelMessage.ICommInfoReplyMsg> {
         return this.realKernel.requestCommInfo(content);
     }
-    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void {
-        return this.realKernel.sendInputReply(content);
+    public sendInputReply(
+        content: KernelMessage.IInputReplyMsg['content'],
+        parent_header: KernelMessage.IInputReplyMsg['parent_header']
+    ): void {
+        return this.realKernel.sendInputReply(content, parent_header);
     }
     public registerCommTarget(
         targetName: string,
@@ -328,7 +348,14 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RegisterMessageHook, msgId);
 
         // Save the real hook so we can call it
-        this.messageHooks.set(msgId, hook);
+        const item = this.messageHooks.get(msgId);
+        if (item) {
+            // Preserve the previous hook and setup a new hook for the same comm msg.
+            item.previous.push(item.current);
+            item.current = hook;
+        } else {
+            this.messageHooks.set(msgId, { current: hook, previous: [] });
+        }
 
         // Wrap the hook and send it to the real kernel
         this.realKernel.registerMessageHook(msgId, this.messageHook);
@@ -348,15 +375,20 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
 
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, {
             hookMsgId: msgId,
-            lastHookedMsgId: this.lastHookedMessageId
+            lastHookedMsgId: this.lastHookedMessageId.length ? this.lastHookedMessageId.pop() : undefined
         });
 
         // Remove our mapping
-        this.messageHooks.delete(msgId);
-        this.lastHookedMessageId = undefined;
-
-        // Remove from the real kernel
-        this.realKernel.removeMessageHook(msgId, this.messageHook);
+        const item = this.messageHooks.get(msgId);
+        if (item) {
+            if (item.previous.length > 0) {
+                item.current = item.previous.pop()!;
+            } else {
+                this.messageHooks.delete(msgId);
+                // Remove from the real kernel
+                this.realKernel.removeMessageHook(msgId, this.messageHook);
+            }
+        }
     }
 
     // Called when the extension has finished an operation that we are waiting for in message processing
@@ -400,12 +432,12 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         try {
             // Save the active message that is currently being hooked. The Extension
             // side needs this information during removeMessageHook so it can delay removal until after a message is called
-            this.lastHookedMessageId = msg.header.msg_id;
+            this.lastHookedMessageId.push(msg.header.msg_id);
 
             const hook = this.messageHooks.get((msg.parent_header as any).msg_id);
             if (hook) {
                 // When the kernel calls the hook, save the result for this message. The other side will ask for it
-                const result = hook(msg);
+                const result = hook.current(msg);
                 this.hookResults.set(msg.header.msg_id, result);
                 if ((result as any).then) {
                     return (result as any).then((r: boolean) => {
@@ -497,6 +529,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
                     window.console.error('Failed to send iopub_msg_handled message', ex);
                 });
         }
+    }
+
+    private onPendingInput(_sender: Kernel.IKernelConnection, message: boolean) {
+        this.pendingInput.emit(message);
     }
 
     // Finish an iopub message by sending a message to the UI and then emitting that we are done with it

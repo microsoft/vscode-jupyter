@@ -5,8 +5,10 @@
 
 import { isTestExecution } from '../constants';
 import { DataWithExpiry, getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
-import { noop, TraceInfo, tracing } from './misc';
-import { traceError, traceVerbose } from '../../logging';
+import { noop } from './misc';
+import { logger, type TraceInfo } from '../../logging';
+import { StopWatch } from './stopWatch';
+import { isPromise } from './async';
 
 type PromiseFunctionWithAnyArgs = (...any: any) => Promise<any>;
 const cacheStoreForMethods = getGlobalCacheStore();
@@ -26,7 +28,7 @@ export function cache(expiryDurationMs: number) {
             const key = getCacheKeyFromFunctionArgs(keyPrefix, args);
             const cachedItem = cacheStoreForMethods.get(key);
             if (cachedItem && !cachedItem.expired) {
-                traceVerbose(`Cached data exists ${key}`);
+                logger.debug(`Cached data exists ${key}`);
                 return Promise.resolve(cachedItem.data);
             }
             const promise = originalMethod.apply(this, args) as Promise<any>;
@@ -62,14 +64,14 @@ export function swallowExceptions(scopeName?: string) {
                         if (isTestExecution()) {
                             return;
                         }
-                        traceError(errorMessage, error);
+                        logger.error(errorMessage, error);
                     });
                 }
             } catch (error) {
                 if (isTestExecution()) {
                     return;
                 }
-                traceError(errorMessage, error);
+                logger.error(errorMessage, error);
             }
         };
     };
@@ -88,6 +90,39 @@ export type CallInfo = {
     target: Object;
 };
 
+// Call run(), call log() with the trace info, and return the result.
+function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logBeforeCall?: boolean): T {
+    const timer = new StopWatch();
+    try {
+        if (logBeforeCall) {
+            log(undefined);
+        }
+        // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
+        const result = run();
+
+        // If method being wrapped returns a promise then wait for it.
+        if (isPromise(result)) {
+            // eslint-disable-next-line
+            (result as Promise<void>)
+                .then((data) => {
+                    log({ elapsed: timer.elapsedTime, returnValue: data });
+                    return data;
+                })
+                .catch((ex) => {
+                    log({ elapsed: timer.elapsedTime, err: ex });
+                    // eslint-disable-next-line
+                    // TODO(GH-11645) Re-throw the error like we do
+                    // in the non-Promise case.
+                });
+        } else {
+            log({ elapsed: timer.elapsedTime, returnValue: result });
+        }
+        return result;
+    } catch (ex) {
+        log({ elapsed: timer.elapsedTime, err: ex });
+        throw ex;
+    }
+}
 // Return a decorator that traces the decorated function.
 export function trace(log: (c: CallInfo, t: TraceInfo) => void, logBeforeCall?: boolean) {
     // eslint-disable-next-line , @typescript-eslint/no-explicit-any

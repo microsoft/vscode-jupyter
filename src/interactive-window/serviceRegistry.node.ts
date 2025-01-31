@@ -12,13 +12,14 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { GeneratedCodeStorageFactory } from './editor-integration/generatedCodeStorageFactory';
 import { HoverProvider } from './editor-integration/hoverProvider';
-import { InteractiveWindowProvider } from './interactiveWindowProvider';
+import { InteractiveWindowProvider, ReplNotebookTrackerService } from './interactiveWindowProvider';
 import {
     ICodeWatcher,
     ICodeLensFactory,
     IDataScienceCodeLensProvider,
     IGeneratedCodeStorageFactory,
-    ICodeGeneratorFactory
+    ICodeGeneratorFactory,
+    ICellRangeCache
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
@@ -36,16 +37,19 @@ import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldin
 import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveControllerHelper } from './InteractiveControllerHelper';
-import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
+import { CellRangeCache } from './editor-integration/cellRangeCache';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+    serviceManager.addSingleton<IReplNotebookTrackerService>(IReplNotebookTrackerService, ReplNotebookTrackerService);
     serviceManager.addSingleton<IInteractiveControllerHelper>(
         IInteractiveControllerHelper,
         InteractiveControllerHelper
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, HoverProvider);
+    serviceManager.addSingleton<ICellRangeCache>(ICellRangeCache, CellRangeCache);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(
@@ -64,10 +68,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         GeneratedCodeStorageManager
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        KernelStartupCodeProvider
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

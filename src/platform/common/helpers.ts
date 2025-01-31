@@ -90,3 +90,20 @@ export function stripCodicons(text: string | undefined) {
     }
     return text.replace(/\$\([a-z0-9\-]+?\)/gi, '').trim();
 }
+
+export function dedentCode(code: string) {
+    const lines = code.split('\n');
+    const firstNonEmptyLine = lines.find((line) => line.trim().length > 0 && !line.trim().startsWith('#'));
+    if (firstNonEmptyLine) {
+        const leadingSpaces = firstNonEmptyLine.match(/^\s*/)![0];
+        return lines
+            .map((line) => {
+                if (line.startsWith(leadingSpaces)) {
+                    return line.replace(leadingSpaces, '');
+                }
+                return line;
+            })
+            .join('\n');
+    }
+    return code;
+}

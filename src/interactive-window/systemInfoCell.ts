@@ -16,6 +16,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { SysInfoReason } from '../messageTypes';
 import { DataScience } from '../platform/common/utils/localize';
 import { KernelConnectionMetadata } from '../kernels/types';
+import { InteractiveWindow } from './interactiveWindow';
 
 export function getStartConnectMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
     const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
@@ -38,11 +39,7 @@ export function getFinishConnectMessage(kernelMetadata: KernelConnectionMetadata
 }
 
 export function isSysInfoCell(cell: NotebookCell) {
-    return (
-        cell.kind === NotebookCellKind.Markup &&
-        cell.metadata.custom?.metadata &&
-        cell.metadata.custom.metadata['isInteractiveWindowMessageCell']
-    );
+    return cell.kind === NotebookCellKind.Markup && cell.metadata?.isInteractiveWindowMessageCell === true;
 }
 
 export class SystemInfoCell {
@@ -50,33 +47,39 @@ export class SystemInfoCell {
     private isDeleted = false;
 
     constructor(
+        private readonly interactiveWindow: InteractiveWindow,
         private readonly notebookDocument: NotebookDocument,
         message: string
     ) {
-        if (notebookDocument.cellCount) {
-            const lastCell = notebookDocument.cellAt(notebookDocument.cellCount);
+        this.sysInfoCellPromise = this.getOrUpdate(message);
+    }
+
+    public async resolveCell() {
+        return await this.sysInfoCellPromise;
+    }
+
+    private async getOrUpdate(message: string) {
+        const lastCellIndex = (await this.interactiveWindow.getAppendIndex()) - 1;
+        if (lastCellIndex >= 0) {
+            const lastCell = this.notebookDocument.cellAt(lastCellIndex);
             if (isSysInfoCell(lastCell)) {
-                this.sysInfoCellPromise = Promise.resolve(lastCell);
-                this.sysInfoCellPromise = this.updateMessage(message);
+                return this.updateMessage(message);
             }
         }
 
-        if (this.sysInfoCellPromise === undefined) {
-            this.sysInfoCellPromise = this.createCell(message);
-        }
+        return (this.sysInfoCellPromise = this.createCell(message));
     }
 
     private async createCell(message: string) {
         let addedCellIndex: number | undefined;
-        await chainWithPendingUpdates(this.notebookDocument, (edit) => {
+        await chainWithPendingUpdates(this.notebookDocument, async (edit) => {
             const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
-            markdownCell.metadata = { custom: { metadata: { isInteractiveWindowMessageCell: true } } };
-            addedCellIndex = this.notebookDocument.cellCount;
+            markdownCell.metadata = { isInteractiveWindowMessageCell: true };
+            addedCellIndex = await this.interactiveWindow.getAppendIndex();
             const nbEdit = NotebookEdit.insertCells(addedCellIndex, [markdownCell]);
             edit.set(this.notebookDocument.uri, [nbEdit]);
         });
-        addedCellIndex = addedCellIndex ?? this.notebookDocument.cellCount - 1;
-        return this.notebookDocument.cellAt(addedCellIndex);
+        return this.notebookDocument.cellAt(addedCellIndex!);
     }
 
     public async updateMessage(newMessage: string) {
@@ -87,9 +90,7 @@ export class SystemInfoCell {
                     edit.replace(cell.document.uri, new Range(0, 0, cell.document.lineCount, 0), newMessage);
 
                     edit.set(this.notebookDocument!.uri, [
-                        NotebookEdit.updateCellMetadata(cell.index, {
-                            custom: { metadata: { isInteractiveWindowMessageCell: true } }
-                        })
+                        NotebookEdit.updateCellMetadata(cell.index, { isInteractiveWindowMessageCell: true })
                     ]);
                     return;
                 }

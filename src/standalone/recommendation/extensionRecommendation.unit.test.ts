@@ -16,7 +16,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-suite('Extension Recommendation', () => {
+suite(`Extension Recommendation`, () => {
     ['kernelspec', 'language_info'].forEach((whereIsLanguageDefined) => {
         ['csharp', 'fsharp', 'powershell'].forEach((languageToBeTested) => {
             suite(`Notebook language '${languageToBeTested}' defined in ${whereIsLanguageDefined}`, () => {
@@ -85,7 +85,7 @@ suite('Extension Recommendation', () => {
                         }
                     };
                     when(notebook.notebookType).thenReturn(JupyterNotebookView);
-                    when(notebook.metadata).thenReturn({ custom: notebookContent } as any);
+                    when(notebook.metadata).thenReturn(notebookContent);
                     return instance(notebook);
                 }
                 function createController(language: string) {

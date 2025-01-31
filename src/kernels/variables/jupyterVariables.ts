@@ -13,7 +13,8 @@ import {
     IConditionalJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
-    IJupyterVariable
+    IJupyterVariable,
+    IVariableDescription
 } from './types';
 
 /**
@@ -39,6 +40,15 @@ export class JupyterVariables implements IJupyterVariables {
     }
 
     // IJupyterVariables implementation
+    getAllVariableDiscriptions(
+        kernel: IKernel,
+        parent: IVariableDescription | undefined,
+        startIndex: number,
+        token: CancellationToken
+    ): Promise<IVariableDescription[]> {
+        return this.variableHandler.getAllVariableDiscriptions(kernel, parent, startIndex, token);
+    }
+
     @capturePerfTelemetry(Telemetry.VariableExplorerFetchTime)
     public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
         return this.variableHandler.getVariables(request, kernel);
@@ -63,6 +73,14 @@ export class JupyterVariables implements IJupyterVariables {
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
         return this.variableHandler.getDataFrameInfo(targetVariable, kernel, sliceExpression, isRefresh);
+    }
+
+    public async getVariableValueSummary(
+        targetVariable: IJupyterVariable,
+        kernel: IKernel,
+        cancelToken?: CancellationToken
+    ) {
+        return this.variableHandler.getVariableValueSummary(targetVariable, kernel, cancelToken);
     }
 
     public async getDataFrameRows(

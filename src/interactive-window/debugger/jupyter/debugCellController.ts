@@ -12,7 +12,7 @@ import {
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
 import { cellDebugSetup } from '../../../notebooks/debugger/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getInteractiveCellMetadata } from '../../helpers';
 
@@ -34,7 +34,7 @@ export class DebugCellController implements IDebuggingDelegate {
     }
 
     private trace(tag: string, msg: string) {
-        traceVerbose(`[Debug-IW] ${tag}: ${msg}`);
+        logger.debug(`[Debug-IW] ${tag}: ${msg}`);
     }
 
     public async willSendEvent(msg: DebugProtocol.Event): Promise<boolean> {

@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { languages, NotebookCellKind, NotebookDocument, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { traceError } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { chainWithPendingUpdates } from '../../kernels/execution/notebookUpdater';
@@ -69,7 +69,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSyncActivatio
                 break;
             }
             default: {
-                traceError(`Unsupported kernel kind encountered ${kernelKind}`);
+                logger.error(`Unsupported kernel kind encountered ${kernelKind}`);
                 return;
             }
         }

@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { InterpreterUri, IOutputChannel } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { DataScienceInstaller } from '../../../platform/interpreter/installer/productInstaller.node';
 import {
     Product,
@@ -59,12 +59,8 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will ignore with no installer modules', async () => {
         const testEnvironment: PythonEnvironment = {
-            envType: EnvironmentType.VirtualEnv,
-            envName: 'test',
-            envPath: interpreterPath,
             id: interpreterPath.fsPath,
-            uri: interpreterPath,
-            sysPrefix: ''
+            uri: interpreterPath
         };
         installationChannelManager
             .setup((c) => c.getInstallationChannels(TypeMoq.It.isAny()))
@@ -75,12 +71,8 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will cancel when signaled', async () => {
         const testEnvironment: PythonEnvironment = {
-            envType: EnvironmentType.VirtualEnv,
-            envName: 'test',
-            envPath: interpreterPath,
             id: interpreterPath.fsPath,
-            uri: interpreterPath,
-            sysPrefix: ''
+            uri: interpreterPath
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
         testInstaller.setup((c) => c.type).returns(() => ModuleInstallerType.Conda);
@@ -106,12 +98,8 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will invoke conda for conda environments', async () => {
         const testEnvironment: PythonEnvironment = {
-            envType: EnvironmentType.Conda,
-            envName: 'test',
-            envPath: interpreterPath,
             id: interpreterPath.fsPath,
-            uri: interpreterPath,
-            sysPrefix: ''
+            uri: interpreterPath
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
         testInstaller.setup((c) => c.type).returns(() => ModuleInstallerType.Conda);
@@ -137,12 +125,8 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will invoke pip by default', async () => {
         const testEnvironment: PythonEnvironment = {
-            envType: EnvironmentType.VirtualEnv,
-            envName: 'test',
-            envPath: interpreterPath,
             uri: interpreterPath,
-            id: interpreterPath.fsPath,
-            sysPrefix: ''
+            id: interpreterPath.fsPath
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
 
@@ -169,12 +153,8 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will invoke poetry', async () => {
         const testEnvironment: PythonEnvironment = {
-            envType: EnvironmentType.Poetry,
-            envName: 'test',
-            envPath: interpreterPath,
             id: interpreterPath.fsPath,
-            uri: interpreterPath,
-            sysPrefix: ''
+            uri: interpreterPath
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
 
@@ -201,12 +181,8 @@ suite('DataScienceInstaller install', async () => {
 
     test('Will invoke pipenv', async () => {
         const testEnvironment: PythonEnvironment = {
-            envType: EnvironmentType.Pipenv,
-            envName: 'test',
-            envPath: interpreterPath,
             id: interpreterPath.fsPath,
-            uri: interpreterPath,
-            sysPrefix: ''
+            uri: interpreterPath
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
 

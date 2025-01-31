@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../common/platform/types';
-import { IExtensionContext, IVariableScriptGenerator } from '../common/types';
+import { IExtensionContext, IVariableScriptGenerator, ParentOptions } from '../common/types';
 import { joinPath } from '../vscode-path/resources';
 import dedent from 'dedent';
 
@@ -21,6 +21,7 @@ const cleanupCode = dedent`
 @injectable()
 export class VariableScriptGenerator implements IVariableScriptGenerator {
     static contentsOfScript: string | undefined;
+    static contentsOfVariablesScript: string | undefined;
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
@@ -64,6 +65,21 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
             };
         }
     }
+
+    async generateCodeToGetAllVariableDescriptions(parentOptions: ParentOptions | undefined) {
+        let scriptCode = await this.getContentsOfVariablesScript();
+        if (parentOptions) {
+            scriptCode =
+                scriptCode +
+                `\n\nreturn _VSCODE_getAllChildrenDescriptions(\'${parentOptions.root}\', ${JSON.stringify(
+                    parentOptions.propertyChain
+                )}, ${parentOptions.startIndex})`;
+        } else {
+            scriptCode = scriptCode + '\n\nvariables= %who_ls\nreturn _VSCODE_getVariableDescriptions(variables)';
+        }
+        return scriptCode;
+    }
+
     async generateCodeToGetVariableTypes(options: { isDebugging: boolean }) {
         const scriptCode = await this.getContentsOfScript();
         const initializeCode = `${scriptCode}\n\n_VSCODE_rwho_ls = %who_ls\n`;
@@ -88,6 +104,11 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
             };
         }
     }
+    async generateCodeToGetVariableValueSummary(variableName: string) {
+        let scriptCode = await this.getContentsOfVariablesScript();
+        scriptCode = scriptCode + `\n\nvariables= %who_ls\nreturn _VSCODE_getVariableSummary(${variableName})`;
+        return scriptCode;
+    }
     /**
      * Script content is static, hence read the contents once.
      */
@@ -104,6 +125,22 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
         );
         const contents = await this.fs.readFile(scriptPath);
         VariableScriptGenerator.contentsOfScript = contents;
+        return contents;
+    }
+
+    private async getContentsOfVariablesScript() {
+        if (VariableScriptGenerator.contentsOfVariablesScript) {
+            return VariableScriptGenerator.contentsOfVariablesScript;
+        }
+        const scriptPath = joinPath(
+            this.context.extensionUri,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'getVariableInfo',
+            'vscodeGetVariablesForProvider.py'
+        );
+        const contents = await this.fs.readFile(scriptPath);
+        VariableScriptGenerator.contentsOfVariablesScript = contents;
         return contents;
     }
 }

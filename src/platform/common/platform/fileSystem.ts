@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import { IFileSystem } from './types';
 import * as uriPath from '../../vscode-path/resources';
 import { isFileNotFoundError } from './errors';
-import { traceError } from '../../logging';
+import { logger } from '../../logging';
 import { computeHash } from '../crypto';
 import { HttpClient } from '../net/httpClient';
 
@@ -48,17 +48,15 @@ export class FileSystem implements IFileSystem {
 
     async readFile(uri: vscode.Uri): Promise<string> {
         const result = await this.vscfs.readFile(uri);
-        const data = Buffer.from(result);
-        return data.toString(ENCODING);
+        return new TextDecoder().decode(result);
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return this.vscfs.stat(uri);
     }
 
-    async writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void> {
-        const data = typeof text === 'string' ? Buffer.from(text) : text;
-        return this.vscfs.writeFile(uri, data);
+    async writeFile(uri: vscode.Uri, text: string | Uint8Array): Promise<void> {
+        return this.vscfs.writeFile(uri, typeof text === 'string' ? new TextEncoder().encode(text) : text);
     }
 
     async exists(
@@ -84,7 +82,7 @@ export class FileSystem implements IFileSystem {
             if (isFileNotFoundError(err)) {
                 return false;
             }
-            traceError(`stat() failed for "${filename}"`, err);
+            logger.error(`stat() failed for "${filename}"`, err);
             return false;
         }
 

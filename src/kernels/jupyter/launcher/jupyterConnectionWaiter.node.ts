@@ -3,7 +3,7 @@
 
 import { Disposable, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
-import { traceError, traceWarning, traceVerbose } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -59,13 +59,13 @@ export class JupyterConnectionWaiter implements IDisposable {
         // Listen on stderr for its connection information
         this.subscriptions.push(
             launchResult.out.onDidChange((output: Output<string>) => {
-                traceVerbose(output.out);
+                logger.trace(output.out);
                 this.output += output.out;
                 if (RegExpValues.HttpPattern.exec(this.output) && !this.startPromise.completed) {
                     // .then so that we can keep from pushing aync up to the subscribed observable function
                     this.getServerInfo()
                         .then((serverInfos) => this.getJupyterURL(serverInfos, this.output))
-                        .catch((ex) => traceWarning('Failed to get server info', ex));
+                        .catch((ex) => logger.warn('Failed to get server info', ex));
                 }
 
                 // Sometimes jupyter will return a 403 error. Not sure why. We used
@@ -109,7 +109,7 @@ export class JupyterConnectionWaiter implements IDisposable {
                 try {
                     url = new URL(uriString);
                 } catch (err) {
-                    traceError(`Failed to parse ${uriString}`, err);
+                    logger.error(`Failed to parse ${uriString}`, err);
                     // Failed to parse the url either via server infos or the string
                     this.rejectStartPromise(DataScience.jupyterLaunchNoURL);
                     return;

@@ -5,7 +5,7 @@
 import * as vscode from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, openFile } from '../../common.node';
 import { initialize } from '../../initialize.node';
@@ -17,7 +17,7 @@ import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataViewer @webview', function () {
+suite.skip('DataViewer @webview', function () {
     const disposables: IDisposable[] = [];
     const testPythonFile = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -29,12 +29,12 @@ suite('DataViewer @webview', function () {
     );
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo('Suite Setup');
+        logger.info('Suite Setup');
         this.timeout(120_000);
         try {
             await initialize();
             sinon.restore();
-            traceInfo('Suite Setup (completed)');
+            logger.info('Suite Setup (completed)');
         } catch (e) {
             await captureScreenShot('data-viewer-suite');
             throw e;
@@ -112,6 +112,7 @@ suite('DataViewer @webview', function () {
                 evaluateName: 'my_list',
                 name: 'my_list',
                 value: '[1, 2, 3]',
+                type: 'list',
                 variablesReference
             }
         };

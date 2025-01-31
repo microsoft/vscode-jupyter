@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter, Memento } from 'vscode';
+import { CancellationToken, CancellationTokenSource, EventEmitter, Memento } from 'vscode';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../platform/common/types';
 import { createEventHandler } from '../test/common';
 import { createKernelController, TestNotebookDocument } from '../test/datascience/notebook/executionHelper';
@@ -16,6 +16,7 @@ import { IKernelSessionFactory, IKernelController, IStartupCodeProviders, Kernel
 import { ThirdPartyKernelProvider } from './kernelProvider.node';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { noop } from '../test/core';
+import { AsyncEmitter } from '../platform/common/utils/events';
 
 suite('Jupyter Session', () => {
     suite('Web Kernel Provider', function () {
@@ -76,26 +77,33 @@ suite('Jupyter Session', () => {
             await Promise.all(asyncDisposables.map((item) => item.dispose().catch(noop)));
             asyncDisposables.length = 0;
         });
-        function testKernelProviderEvents(thirdPartyKernelProvider = false) {
+        async function testKernelProviderEvents(thirdPartyKernelProvider = false) {
             const kernelProvider = thirdPartyKernelProvider ? create3rdPartyKernelProvider() : createKernelProvider();
             const kernelCreated = createEventHandler(kernelProvider, 'onDidCreateKernel', disposables);
             const kernelStarted = createEventHandler(kernelProvider, 'onDidStartKernel', disposables);
             const kernelDisposed = createEventHandler(kernelProvider, 'onDidDisposeKernel', disposables);
             const kernelRestarted = createEventHandler(kernelProvider, 'onDidRestartKernel', disposables);
+            const kernelPostInitialized = createEventHandler(kernelProvider, 'onDidPostInitializeKernel', disposables);
             const kernelStatusChanged = createEventHandler(kernelProvider, 'onKernelStatusChanged', disposables);
             const notebook = new TestNotebookDocument(undefined, 'jupyter-notebook');
             const onStarted = new EventEmitter<void>();
             const onStatusChanged = new EventEmitter<void>();
             const onRestartedEvent = new EventEmitter<void>();
+            const onPostInitializedEvent = new AsyncEmitter<{
+                token: CancellationToken;
+                waitUntil(thenable: Thenable<unknown>): void;
+            }>();
             const onDisposedEvent = new EventEmitter<void>();
             disposables.push(onStatusChanged);
             disposables.push(onRestartedEvent);
+            disposables.push(onPostInitializedEvent);
             disposables.push(onStarted);
             disposables.push(onDisposedEvent);
             if (kernelProvider instanceof KernelProvider) {
                 sinon.stub(Kernel.prototype, 'onStarted').get(() => onStarted.event);
                 sinon.stub(Kernel.prototype, 'onStatusChanged').get(() => onStatusChanged.event);
                 sinon.stub(Kernel.prototype, 'onRestarted').get(() => onRestartedEvent.event);
+                sinon.stub(Kernel.prototype, 'onPostInitialized').get(() => onPostInitializedEvent.event);
                 sinon.stub(Kernel.prototype, 'onDisposed').get(() => onDisposedEvent.event);
                 const kernel = kernelProvider.getOrCreate(notebook, {
                     controller,
@@ -107,6 +115,7 @@ suite('Jupyter Session', () => {
                 sinon.stub(ThirdPartyKernel.prototype, 'onStarted').get(() => onStarted.event);
                 sinon.stub(ThirdPartyKernel.prototype, 'onStatusChanged').get(() => onStatusChanged.event);
                 sinon.stub(ThirdPartyKernel.prototype, 'onRestarted').get(() => onRestartedEvent.event);
+                sinon.stub(ThirdPartyKernel.prototype, 'onPostInitialized').get(() => onPostInitializedEvent.event);
                 sinon.stub(ThirdPartyKernel.prototype, 'onDisposed').get(() => onDisposedEvent.event);
                 const kernel = kernelProvider.getOrCreate(notebook.uri, {
                     metadata: instance(metadata),
@@ -119,6 +128,10 @@ suite('Jupyter Session', () => {
             assert.isFalse(kernelStarted.fired, 'IKernelProvider.onDidStartKernel should not be fired');
             assert.isFalse(kernelStatusChanged.fired, 'IKernelProvider.onKernelStatusChanged should not be fired');
             assert.isFalse(kernelRestarted.fired, 'IKernelProvider.onDidRestartKernel should not have fired');
+            assert.isFalse(
+                kernelPostInitialized.fired,
+                'IKernelProvider.onDidPostInitializeKernel should not have fired'
+            );
             assert.isFalse(kernelDisposed.fired, 'IKernelProvider.onDidDisposeKernel should not have fired');
 
             onStarted.fire();
@@ -127,10 +140,12 @@ suite('Jupyter Session', () => {
             assert.isTrue(kernelStatusChanged.fired, 'IKernelProvider.onKernelStatusChanged not fired');
             onRestartedEvent.fire();
             assert.isTrue(kernelRestarted.fired, 'IKernelProvider.onKernelRestarted not fired');
+            await onPostInitializedEvent.fireAsync({}, new CancellationTokenSource().token);
+            assert.isTrue(kernelPostInitialized.fired, 'IKernelProvider.onDidPostInitializeKernel not fired');
             onDisposedEvent.fire();
             assert.isTrue(kernelDisposed.fired, 'IKernelProvider.onDisposedEvent not fired');
         }
-        test('Kernel Events', () => testKernelProviderEvents(false));
-        test('3rd Party Kernel Events', () => testKernelProviderEvents(true));
+        test('Kernel Events', async () => await testKernelProviderEvents(false));
+        test('3rd Party Kernel Events', async () => await testKernelProviderEvents(true));
     });
 });

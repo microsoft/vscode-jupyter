@@ -12,9 +12,6 @@ export interface ILanguageServerFolder {
 
 export interface INotebookLanguageClient {
     registerJupyterPythonPathFunction(func: (uri: vscode.Uri) => Promise<string | undefined>): void;
-    registerGetNotebookUriForTextDocumentUriFunction(
-        func: (textDocumentUri: vscode.Uri) => vscode.Uri | undefined
-    ): void;
     getCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
@@ -29,6 +26,10 @@ export interface INotebookLanguageClient {
         },
         token: vscode.CancellationToken
     ): Promise<LocationWithReferenceKind[] | null | undefined>;
+    getDocumentSymbols?(
+        document: vscode.TextDocument,
+        token: vscode.CancellationToken
+    ): Promise<vscode.DocumentSymbol[] | undefined>;
 }
 
 export interface LSExtensionApi {
@@ -62,10 +63,6 @@ export async function activatePylance(): Promise<INotebookLanguageClient | undef
         return undefined;
     }
 
-    if (!pylanceExtension.isActive) {
-        return undefined;
-    }
-
     if (_client) {
         return _client;
     }
@@ -74,7 +71,7 @@ export async function activatePylance(): Promise<INotebookLanguageClient | undef
         runPylance(pylanceExtension)
             .then(async (client) => {
                 if (!client) {
-                    vscode.window.showErrorMessage('Could not start Pylance').then(noop, noop);
+                    console.error('Could not start Pylance');
                     reject();
                     return;
                 }

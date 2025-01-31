@@ -15,7 +15,7 @@ import { CancellationTokenSource, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IInterpreterService } from '../contracts';
 import { Environment } from '@vscode/python-extension';
-import { getEnvironmentType, isCondaEnvironmentWithoutPython } from '../helpers';
+import { getCachedEnvironment, getEnvironmentType, isCondaEnvironmentWithoutPython } from '../helpers';
 
 /**
  * A Python module installer for a conda environment.
@@ -65,10 +65,7 @@ export class CondaInstaller extends ModuleInstaller {
             return false;
         }
         // Now we need to check if the current environment is a conda environment or not.
-        return (
-            ('executable' in interpreter ? getEnvironmentType(interpreter) : interpreter.envType) ===
-            EnvironmentType.Conda
-        );
+        return getEnvironmentType(interpreter) === EnvironmentType.Conda;
     }
 
     public override async installModule(
@@ -81,21 +78,14 @@ export class CondaInstaller extends ModuleInstaller {
 
         // If we just installed a package into a conda env without python init, then Python may have gotten installed
         // We now need to ensure the conda env gets updated as a result of this.
-        if (
-            ('executable' in interpreter
-                ? getEnvironmentType(interpreter)
-                : interpreter.envType === EnvironmentType.Conda) &&
-            ('executable' in interpreter
-                ? isCondaEnvironmentWithoutPython(interpreter)
-                : interpreter.isCondaEnvWithoutPython)
-        ) {
+        if (isCondaEnvironmentWithoutPython(interpreter)) {
             const pythonExt = this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
             if (!pythonExt.isPythonExtensionActive) {
                 return;
             }
             const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
             const updatedCondaEnv = await interpreterService.getInterpreterDetails(interpreter.id);
-            if (updatedCondaEnv && !updatedCondaEnv.isCondaEnvWithoutPython) {
+            if (updatedCondaEnv && !isCondaEnvironmentWithoutPython(updatedCondaEnv)) {
                 Object.assign(interpreter, updatedCondaEnv);
             }
         }
@@ -111,7 +101,7 @@ export class CondaInstaller extends ModuleInstaller {
     ): Promise<ExecutionInstallArgs> {
         const condaService = this.serviceContainer.get<CondaService>(CondaService);
         const condaFile = await condaService.getCondaFile();
-        const name = 'executable' in interpreter ? interpreter.environment?.name : interpreter.envName;
+        const name = getCachedEnvironment(interpreter)?.environment?.name;
         const envPath = this.getEnvironmentPath(interpreter);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
@@ -151,14 +141,11 @@ export class CondaInstaller extends ModuleInstaller {
 
     private getEnvironmentPath(interpreter: PythonEnvironment | Environment) {
         let exeuctablePath: Uri;
-        if ('executable' in interpreter) {
-            if (interpreter.environment?.folderUri) {
-                return interpreter.environment.folderUri.fsPath;
-            }
-            exeuctablePath = interpreter.executable.uri || Uri.file(interpreter.path);
-        } else {
-            exeuctablePath = interpreter.uri;
+        const env = getCachedEnvironment(interpreter);
+        if (env?.environment?.folderUri) {
+            return env.environment.folderUri.fsPath;
         }
+        exeuctablePath = env?.executable.uri || Uri.file(interpreter.id);
         const dir = path.dirname(exeuctablePath.fsPath);
 
         // If interpreter is in bin or Scripts, then go up one level

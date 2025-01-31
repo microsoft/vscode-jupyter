@@ -8,6 +8,7 @@ import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { IConnectionDisplayData } from './types';
+import { getEnvironmentType, isCondaEnvironmentWithoutPython } from '../../platform/interpreter/helpers';
 
 export class ConnectionDisplayData implements IDisposable, IConnectionDisplayData {
     private readonly _onDidChange = new EventEmitter<ConnectionDisplayData>();
@@ -55,9 +56,9 @@ export function getKernelConnectionCategorySync(kernelConnection: KernelConnecti
             ) {
                 return DataScience.kernelCategoryForJupyterKernel;
             }
-            switch (kernelConnection.interpreter.envType) {
+            switch (getEnvironmentType(kernelConnection.interpreter)) {
                 case EnvironmentType.Conda:
-                    return kernelConnection.interpreter.isCondaEnvWithoutPython
+                    return isCondaEnvironmentWithoutPython(kernelConnection.interpreter)
                         ? DataScience.kernelCategoryForCondaWithoutPython
                         : DataScience.kernelCategoryForConda;
                 case EnvironmentType.Pipenv:

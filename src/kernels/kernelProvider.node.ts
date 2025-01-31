@@ -26,6 +26,9 @@ import {
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
 import { NotebookKernelExecution } from './kernelExecution';
+import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
+import { logger } from '../platform/logging';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 
 /**
  * Node version of a kernel provider. Needed in order to create the node version of a kernel.
@@ -42,7 +45,8 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @multiInject(ITracebackFormatter)
         private readonly formatters: ITracebackFormatter[],
         @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento,
+        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService
     ) {
         super(asyncDisposables, disposables);
         disposables.push(jupyterServerUriStorage.onDidRemove(this.handleServerRemoval.bind(this)));
@@ -53,14 +57,21 @@ export class KernelProvider extends BaseCoreKernelProvider {
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;
         }
-        this.disposeOldKernel(notebook);
+        if (existingKernelInfo) {
+            logger.trace(
+                `Kernel for ${getDisplayPath(notebook.uri)} with id ${
+                    existingKernelInfo.options.metadata.id
+                } is being replaced with ${options.metadata.id}`
+            );
+        }
+        this.disposeOldKernel(notebook, 'createNewKernel');
 
-        const resourceUri = notebook.notebookType === InteractiveWindowView ? options.resourceUri : notebook.uri;
+        const replKernel = this.replTracker.isForReplEditor(notebook);
+        const resourceUri = replKernel ? options.resourceUri : notebook.uri;
         const settings = createKernelSettings(this.configService, resourceUri);
-        const notebookType =
-            notebook.uri.path.endsWith('.interactive') || options.resourceUri?.path.endsWith('.interactive')
-                ? InteractiveWindowView
-                : JupyterNotebookView;
+        const startupCodeProviders = this.startupCodeProviders.getProviders(
+            replKernel ? InteractiveWindowView : JupyterNotebookView
+        );
 
         const kernel: IKernel = new Kernel(
             resourceUri,
@@ -69,7 +80,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
             this.sessionCreator,
             settings,
             options.controller,
-            this.startupCodeProviders.getProviders(notebookType),
+            startupCodeProviders,
             this.workspaceStorage
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
@@ -83,6 +94,11 @@ export class KernelProvider extends BaseCoreKernelProvider {
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
             (status) => this._onKernelStatusChanged.fire({ kernel, status }),
+            this,
+            this.disposables
+        );
+        kernel.onPostInitialized(
+            (e) => e.waitUntil(this._onDidPostInitializeKernel.fireAsync({ kernel }, e.token)),
             this,
             this.disposables
         );
@@ -138,6 +154,11 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
             (status) => this._onKernelStatusChanged.fire({ kernel, status }),
+            this,
+            this.disposables
+        );
+        kernel.onPostInitialized(
+            (e) => e.waitUntil(this._onDidPostInitializeKernel.fireAsync({ kernel }, e.token)),
             this,
             this.disposables
         );

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
@@ -9,7 +10,6 @@ import { createInterpreterKernelSpec } from './helpers';
 import { KernelDependencyService } from './kernelDependencyService.node';
 import { IKernelProvider, KernelInterpreterDependencyResponse, PythonKernelConnectionMetadata } from './types';
 import { IServiceContainer } from '../platform/ioc/types';
-import { EnvironmentType } from '../platform/pythonEnvironments/info';
 import { IInstaller, Product, InstallerResponse } from '../platform/interpreter/installer/types';
 import { createPythonInterpreter } from '../test/utils/interpreters';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../interactive-window/types';
@@ -19,6 +19,9 @@ import { getResourceType } from '../platform/common/utils';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../test/vscode-mock';
 import { Disposable } from 'vscode';
 import { dispose } from '../platform/common/utils/lifecycle';
+import { PythonExtension } from '@vscode/python-extension';
+import { resolvableInstance } from '../test/datascience/helpers';
+import { setPythonApi } from '../platform/interpreter/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -32,19 +35,10 @@ suite('Kernel Dependency Service', () => {
     let editor: NotebookEditor;
     let disposables: Disposable[] = [];
     const interpreter = createPythonInterpreter({
-        displayName: 'name',
-        envType: EnvironmentType.Conda,
         uri: Uri.file('abc')
     });
     let metadata: PythonKernelConnectionMetadata;
-    suiteSetup(async () => {
-        metadata = PythonKernelConnectionMetadata.create({
-            interpreter,
-            kernelSpec: await createInterpreterKernelSpec(interpreter, Uri.file('')),
-            id: '1'
-        });
-    });
-    setup(() => {
+    setup(async () => {
         resetVSCodeMocks();
         disposables.push(new Disposable(() => resetVSCodeMocks()));
         installer = mock<IInstaller>();
@@ -65,6 +59,21 @@ suite('Kernel Dependency Service', () => {
             instance(rawSupport),
             instance(serviceContainer)
         );
+
+        const mockedApi = mock<PythonExtension>();
+        sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
+        disposables.push({ dispose: () => sinon.restore() });
+        const environments = mock<PythonExtension['environments']>();
+        when(mockedApi.environments).thenReturn(instance(environments));
+        when(environments.known).thenReturn([]);
+        setPythonApi(instance(mockedApi));
+        disposables.push({ dispose: () => setPythonApi(undefined as any) });
+
+        metadata = PythonKernelConnectionMetadata.create({
+            interpreter,
+            kernelSpec: await createInterpreterKernelSpec(interpreter, Uri.file('')),
+            id: '1'
+        });
     });
     teardown(() => (disposables = dispose(disposables)));
     [undefined, Uri.file('test.py'), Uri.file('test.ipynb')].forEach((resource) => {

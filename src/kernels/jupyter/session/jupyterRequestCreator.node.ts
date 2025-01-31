@@ -5,7 +5,7 @@ import { IJupyterRequestCreator } from '../types';
 import * as nodeFetch from 'node-fetch';
 import { ClassType } from '../../../platform/ioc/types';
 import WebSocketIsomorphic from 'isomorphic-ws';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
 import { injectable } from 'inversify';
@@ -95,7 +95,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
                         }
                     });
                 } else {
-                    traceError('KernelId not extracted from Kernel WebSocket URL');
+                    logger.error('KernelId not extracted from Kernel WebSocket URL');
                 }
 
                 // Ping the websocket connection every 30 seconds to make sure it stays alive
@@ -128,7 +128,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
                         }
                     });
                 } else {
-                    traceError('KernelId not extracted from Kernel WebSocket URL');
+                    logger.error('KernelId not extracted from Kernel WebSocket URL');
                 }
 
                 // Ping the websocket connection every 30 seconds to make sure it stays alive

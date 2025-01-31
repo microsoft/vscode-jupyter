@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
-import { traceWarning } from '../logging';
+import { logger } from '../logging';
+import { noop } from './utils/misc';
+import { PYTHON_LANGUAGE } from './constants';
 
 export class ConfigMigration {
     // old setting name: new setting name
@@ -11,6 +13,7 @@ export class ConfigMigration {
         interactiveWindowMode: 'interactiveWindow.creationMode',
         interactiveWindowViewColumn: 'interactiveWindow.viewColumn',
         splitRunFileIntoCells: 'interactiveWindow.splitRunFileIntoCells',
+        interactiveReplNotebook: 'interactiveWindow.notebookRepl',
 
         sendSelectionToInteractiveWindow: 'interactiveWindow.textEditor.executeSelection',
         normalizeSelectionForInteractiveWindow: 'interactiveWindow.textEditor.normalizeSelection',
@@ -22,12 +25,15 @@ export class ConfigMigration {
         enableCellCodeLens: 'interactiveWindow.codeLens.enable',
         addGotoCodeLenses: 'interactiveWindow.codeLens.enableGotoCell',
         codeLenses: 'interactiveWindow.codeLens.commands',
-        debugCodeLenses: 'interactiveWindow.codeLes.debugCommands',
+        debugCodeLenses: 'interactiveWindow.codeLens.debugCommands',
+        'interactiveWindow.codeLes.debugCommands': 'interactiveWindow.codeLens.debugCommands',
 
         codeRegularExpression: 'interactiveWindow.cellMarker.codeRegex',
         markdownRegularExpression: 'interactiveWindow.cellMarker.markdownRegex',
         decorateCells: 'interactiveWindow.cellMarker.decorateCells',
-        defaultCellMarker: 'interactiveWindow.cellMarker.default'
+        defaultCellMarker: 'interactiveWindow.cellMarker.default',
+
+        enableExtendedKernelCompletions: 'enableExtendedPythonKernelCompletions'
     };
 
     public static readonly fullSettingIds: Record<string, string> = {
@@ -41,10 +47,41 @@ export class ConfigMigration {
         for (let prop of Object.keys(ConfigMigration.migratedSettings)) {
             migratedSettings.push(...this.migrateSetting(prop, ConfigMigration.migratedSettings[prop]));
         }
+        migratedSettings.push(this.migrateIntellisenseSettings());
         try {
             await Promise.all(migratedSettings);
         } catch (e) {
             handleSettingMigrationFailure(e);
+        }
+    }
+
+    private async migrateIntellisenseSettings() {
+        const oldSetting = 'pythonCompletionTriggerCharacters';
+        const newSetting = 'completionTriggerCharacters';
+        const oldDetails = this.jupyterConfig.inspect(oldSetting);
+        const newDetails = this.jupyterConfig.inspect<Record<string, string[]>>(newSetting);
+        try {
+            if (oldDetails?.globalValue === oldDetails?.defaultValue || !newDetails) {
+                return;
+            }
+            if (newDetails?.globalValue && newDetails.globalValue[PYTHON_LANGUAGE]) {
+                // Already migrated or user already provided a value in the new setting.
+                return;
+            }
+            if (typeof oldDetails?.globalValue === 'string') {
+                const newValue = newDetails.globalValue || newDetails.defaultValue || {};
+                newValue[PYTHON_LANGUAGE] = oldDetails.globalValue.split('');
+                await this.jupyterConfig
+                    .update(newSetting, newValue, ConfigurationTarget.Global)
+                    .then(noop, handleSettingMigrationFailure);
+            }
+        } finally {
+            // Remove the old setting.
+            if (oldDetails?.globalValue) {
+                await this.jupyterConfig
+                    .update(oldSetting, undefined, ConfigurationTarget.Global)
+                    .then(noop, handleSettingMigrationFailure);
+            }
         }
     }
 
@@ -103,5 +140,5 @@ export class ConfigMigration {
 }
 
 function handleSettingMigrationFailure(e: Error) {
-    traceWarning('Error migrating Jupyter configuration', e);
+    logger.warn('Error migrating Jupyter configuration', e);
 }

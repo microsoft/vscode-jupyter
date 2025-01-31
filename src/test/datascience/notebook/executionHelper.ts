@@ -104,7 +104,7 @@ export class TestNotebookDocument implements NotebookDocument {
     constructor(
         public readonly uri: Uri = Uri.file(`untitled${Date.now()}.ipynb`),
         public readonly notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView = JupyterNotebookView,
-        public metadata = { custom: {} },
+        public metadata: {} = {},
         public isUntitled = true,
         public version: number = 0,
         public isDirty = false,

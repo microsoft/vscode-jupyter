@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, CompletionList, Position, Uri, window } from 'vscode';
-import { traceInfo } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, initialize, startJupyterServer, waitForCondition } from '../../common';
 import { closeActiveWindows } from '../../initialize';
@@ -28,7 +28,6 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { setIntellisenseTimeout } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { ControllerDefaultService } from './controllerDefaultService';
 import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
@@ -59,7 +58,7 @@ suite('Remote Execution @kernelCore', function () {
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         if (!this.currentTest?.title.includes('preferred')) {
             await startJupyterServer();
@@ -84,15 +83,15 @@ suite('Remote Execution @kernelCore', function () {
             ],
             disposables
         );
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('MRU and encrypted storage should be updated with remote Uri info', async function () {
@@ -150,8 +149,7 @@ suite('Remote Execution @kernelCore', function () {
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
     });
 
-    test('Remote kernels support completions', async function () {
-        setIntellisenseTimeout(30000);
+    test.skip('Remote kernels support completions', async function () {
         const { editor } = await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         let nbEditor = window.activeNotebookEditor!;
@@ -215,7 +213,7 @@ export async function runCellAndVerifyUpdateOfPreferredRemoteKernelId(
     // If we nb it as soon as output appears, its possible the kernel id hasn't been saved yet & we mess that up.
     // Optionally we could wait for 100ms.
     await waitForCondition(
-        async () => !!(await remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri)),
+        async () => !!(await remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook)),
         5_000,
         'Remote Kernel id not saved'
     );

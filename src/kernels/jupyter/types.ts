@@ -5,10 +5,10 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import type WebSocketIsomorphic from 'isomorphic-ws';
-import { CancellationToken, Disposable, Event } from 'vscode';
+import { CancellationToken, Disposable, Event, type NotebookCellData } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri } from 'vscode';
-import { IAsyncDisposable, ICell, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
+import { IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
@@ -42,7 +42,7 @@ export enum JupyterInterpreterDependencyResponse {
 }
 
 export const IJupyterServerHelper = Symbol('JupyterServerHelper');
-export interface IJupyterServerHelper extends IAsyncDisposable {
+export interface IJupyterServerHelper {
     isJupyterServerSupported(cancelToken?: CancellationToken): Promise<boolean>;
     startServer(resource: Resource, cancelToken?: CancellationToken): Promise<IJupyterConnection>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
@@ -69,12 +69,9 @@ export interface INotebookImporter extends Disposable {
 }
 
 export const INotebookExporter = Symbol('INotebookExporter');
-export interface INotebookExporter extends Disposable {
-    translateToNotebook(
-        cells: ICell[],
-        kernelSpec?: nbformat.IKernelspecMetadata
-    ): Promise<nbformat.INotebookContent | undefined>;
-    exportToFile(cells: ICell[], file: string, showOpenPrompt?: boolean): Promise<void>;
+export interface INotebookExporter {
+    serialize(cells: NotebookCellData[], kernelSpec?: nbformat.IKernelspecMetadata): Promise<string | undefined>;
+    exportToFile(cells: NotebookCellData[], file: string, showOpenPrompt?: boolean): Promise<void>;
 }
 
 export const IJupyterInterpreterDependencyManager = Symbol('IJupyterInterpreterDependencyManager');

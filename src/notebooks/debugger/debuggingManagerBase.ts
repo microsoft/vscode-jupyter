@@ -16,11 +16,11 @@ import {
     Uri,
     commands
 } from 'vscode';
-import { IKernel, IKernelProvider } from '../../kernels/types';
+import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IControllerRegistration } from '../controllers/types';
 import { DebuggingTelemetry } from './constants';
@@ -98,12 +98,12 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     }
 
     protected async startDebuggingConfig(config: INotebookDebugConfig, options?: DebugSessionOptions) {
-        traceInfoIfCI(`Attempting to start debugging with config ${JSON.stringify(config)}`);
+        logger.ci(`Attempting to start debugging with config ${JSON.stringify(config)}`);
 
         try {
             await debug.startDebugging(undefined, config, options);
         } catch (err) {
-            traceError(`Can't start debugging (${err})`);
+            logger.error(`Can't start debugging (${err})`);
             window.showErrorMessage(DataScience.cantStartDebugging).then(noop, noop);
         }
     }
@@ -114,7 +114,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     }
 
     protected async endSession(session: DebugSession) {
-        traceInfo(`Ending debug session ${session.id}`);
+        logger.info(`Ending debug session ${session.id}`);
         this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (dbg && session.id === dbg.session.id) {
@@ -204,6 +204,16 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
                     resourceUri: doc.uri
                 });
             }
+            // if this is a remote kernel, and the kernelspec has the right metadata, then no need to check the ipykernel version
+            const connection = kernel.kernelConnectionMetadata;
+            if (isRemoteConnection(connection)) {
+                if (connection.kind === 'startUsingRemoteKernelSpec' && connection.kernelSpec.metadata?.debugger) {
+                    return IpykernelCheckResult.Ok;
+                }
+                if (connection.kind === 'connectToLiveRemoteKernel' && connection.kernelModel.metadata?.debugger) {
+                    return IpykernelCheckResult.Ok;
+                }
+            }
             const execution = this.kernelProvider.getKernelExecution(kernel);
             const result = await isUsingIpykernel6OrLater(execution);
             sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
@@ -211,7 +221,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
             });
             return result;
         } catch (ex) {
-            traceError('Debugging: Could not check for ipykernel 6', ex);
+            logger.error('Debugging: Could not check for ipykernel 6', ex);
         }
         return IpykernelCheckResult.Unknown;
     }

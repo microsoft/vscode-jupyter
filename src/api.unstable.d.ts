@@ -3,6 +3,18 @@
 
 import type { CancellationToken, Disposable, Event, NotebookDocument, Uri } from 'vscode';
 import type { Session } from '@jupyterlab/services';
+type EnvironmentPath = {
+    /**
+     * The ID of the environment.
+     */
+    readonly id: string;
+    /**
+     * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
+     * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
+     * using python executable path.
+     */
+    readonly path: string;
+};
 
 declare module './api' {
     export interface Jupyter {
@@ -29,6 +41,13 @@ declare module './api' {
          * There are a specific set of extensions that are currently allowed to access this API.
          */
         getKernelService(): Promise<IExportedKernelService | undefined>;
+        /**
+         * Opens a notebook with a specific Python Environment as the active kernel.
+         * @param {Uri} uri Uri of the notebook to open.
+         * @param {EnvironmentPath} pythonEnvironment Python Environment
+         * @returns {Promise<NotebookDocument>} Promise that resolves to the notebook document.
+         */
+        openNotebook(uri: Uri, pythonEnvironment: EnvironmentPath): Promise<NotebookDocument>;
         /**
          * Opens a notebook with a specific kernel as the active kernel.
          * @param {Uri} uri Uri of the notebook to open.
@@ -65,16 +84,10 @@ declare module './api' {
         minor: number;
         patch: number;
     };
-    export type PythonEnvironment = {
+    export interface PythonEnvironment {
         id: string;
-        displayName?: string;
         uri: Uri;
-        version?: PythonVersion;
-        sysPrefix: string;
-        envType?: EnvironmentType;
-        envName?: string;
-        envPath?: Uri;
-    };
+    }
     //#endregion
 
     //#region Kernel Information (Kernel Specs, connections)

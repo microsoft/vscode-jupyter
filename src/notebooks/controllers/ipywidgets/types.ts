@@ -5,6 +5,7 @@ import { Event, Uri } from 'vscode';
 import { IDisposable } from '../../../platform/common/types';
 import { IPyWidgetMessages } from '../../../messageTypes';
 import { IKernel } from '../../../kernels/types';
+import type { IDisplayDataMsg } from '@jupyterlab/services/lib/kernel/messages';
 
 export interface IPyWidgetMessage {
     message: IPyWidgetMessages;
@@ -16,6 +17,7 @@ export interface IPyWidgetMessage {
  * Used to send/receive messages related to IPyWidgets
  */
 export interface IIPyWidgetMessageDispatcher extends IDisposable {
+    onDisplayMessage: Event<IDisplayDataMsg>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     postMessage: Event<IPyWidgetMessage>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,6 +45,7 @@ export type WidgetScriptSource = {
  * Used to get an entry for widget (or all of them).
  */
 export interface IWidgetScriptSourceProvider extends IDisposable {
+    readonly id: string;
     /**
      * Return the script path for the requested module.
      * This is called when ipywidgets needs a source for a particular widget.

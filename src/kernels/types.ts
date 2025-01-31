@@ -33,6 +33,7 @@ import {
 } from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { generateIdFromRemoteProvider } from './jupyter/jupyterUtils';
+import { getEnvironmentType } from '../platform/interpreter/helpers';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -354,6 +355,7 @@ export interface IBaseKernel extends IAsyncDisposable {
     readonly onDisposed: Event<void>;
     readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
+    readonly onPostInitialized: Event<{ token: CancellationToken; waitUntil(thenable: Thenable<unknown>): void }>;
     readonly restarting: Promise<void>;
     readonly status: KernelMessage.Status;
     readonly disposed: boolean;
@@ -380,6 +382,12 @@ export interface IBaseKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
+    /**
+     * A kernel might be started (e.g., for pre-warming or other internal reasons) but this does not
+     * necessarily correlate with whether it was started by a user.
+     * This flag will tell us whether the kernel has been started explicitly through user action from the UI.
+     */
+    readonly userStartedKernel: boolean;
     start(options?: IDisplayOptions): Promise<IKernelSession>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
@@ -431,8 +439,7 @@ export interface INotebookKernelExecution {
      * Total execution count on this kernel
      */
     readonly executionCount: number;
-    readonly onPreExecute: Event<NotebookCell>;
-    readonly onPostExecute: Event<NotebookCell>;
+    readonly onDidReceiveDisplayUpdate: Event<NotebookCellOutput>;
     /**
      * Cells that are still being executed (or pending).
      */
@@ -506,6 +513,11 @@ export interface IBaseKernelProvider<T extends IBaseKernel> extends IAsyncDispos
     onDidRestartKernel: Event<T>;
     onDidDisposeKernel: Event<T>;
     onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: T }>;
+    onDidPostInitializeKernel: Event<{
+        kernel: T;
+        token: CancellationToken;
+        waitUntil(thenable: Thenable<unknown>): void;
+    }>;
 }
 
 /**
@@ -579,7 +591,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly kind: T;
     readonly status: KernelMessage.Status;
     readonly onDidKernelSocketChange: Event<void>;
-    disposeAsync(): Promise<void>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
     restart(): Promise<void>;
@@ -597,11 +608,11 @@ export interface IJupyterKernelSpec {
      * @type {string}
      * @memberof IJupyterKernel
      */
-    id?: string;
-    name: string;
-    language?: string;
-    executable: string; // argv[0] of the kernelspec.json
-    env?: NodeJS.ProcessEnv | undefined;
+    readonly id?: string;
+    readonly name: string;
+    readonly language?: string;
+    readonly executable: string; // argv[0] of the kernelspec.json
+    readonly env?: Readonly<NodeJS.ProcessEnv> | undefined;
     /**
      * Kernel display name.
      *
@@ -613,33 +624,39 @@ export interface IJupyterKernelSpec {
      * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
      * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly metadata?: Record<string, any> & {
-        vscode?: {
+    readonly metadata?: Readonly<
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Record<string, any> & {
+            vscode?: {
+                /**
+                 * Optionally where the original user-created kernel spec json is located on the local FS.
+                 * Remember when using non-raw we create kernelspecs from the original spec.
+                 */
+                originalSpecFile?: string;
+                /**
+                 * E.g. assume we're loading a kernlespec for a default Python kernel, the name would be `python3`
+                 * However we give this a completely different name, and at that point its not possible to determine
+                 * whether this is a default kernel or not.
+                 * Hence keep track of the original name in the metadata.
+                 */
+                originalDisplayName?: string;
+            };
+            interpreter?: Partial<PythonEnvironment_PythonApi>; // read from disk so has to follow old format
             /**
-             * Optionally where the original user-created kernel spec json is located on the local FS.
-             * Remember when using non-raw we create kernelspecs from the original spec.
+             * @deprecated (use metadata.jupyter.originalSpecFile)
              */
             originalSpecFile?: string;
             /**
-             * E.g. assume we're loading a kernlespec for a default Python kernel, the name would be `python3`
-             * However we give this a completely different name, and at that point its not possible to determine
-             * whether this is a default kernel or not.
-             * Hence keep track of the original name in the metadata.
+             * Whether the kernels supports the debugger Protocol.
              */
-            originalDisplayName?: string;
-        };
-        interpreter?: Partial<PythonEnvironment_PythonApi>; // read from disk so has to follow old format
-        /**
-         * @deprecated (use metadata.jupyter.originalSpecFile)
-         */
-        originalSpecFile?: string;
-    };
+            debugger?: boolean;
+        }
+    >;
     readonly argv: string[];
     /**
      * Optionally where this kernel spec json is located on the local FS.
      */
-    specFile?: string;
+    readonly specFile?: string;
     /**
      * Optionally the Interpreter this kernel spec belongs to.
      * You can have kernel specs that are scoped to an interpreter.
@@ -647,7 +664,7 @@ export interface IJupyterKernelSpec {
      * Then you could have kernels in `<sys.prefix folder for this interpreter>\share\jupyter\kernels`
      * Plenty of conda packages ship kernels in this manner (beakerx, etc).
      */
-    interpreterPath?: string; // Has to be a string as old kernelspecs wrote it this way
+    readonly interpreterPath?: string; // Has to be a string as old kernelspecs wrote it this way
     readonly interrupt_mode?: 'message' | 'signal';
     /**
      * Whether the kernelspec is registered by VS Code
@@ -710,6 +727,11 @@ export interface IKernelSessionFactory {
 
 export interface IKernelSocket {
     /**
+     * Used to configure the protocol for WebSocket messages in Jupyter Lab.
+     * Empty string means no protocol (old behavior, this is simpler for raw sockets as we just want to serialize to JSON and back).
+     */
+    readonly protocol?: string;
+    /**
      * Adds a listener to a socket that will be called before the socket's onMessage is called. This
      * allows waiting for a callback before processing messages
      * @param listener
@@ -760,6 +782,10 @@ export interface KernelSocketOptions {
          */
         readonly name: string;
     };
+    /**
+     * WebSocket protocol used for Jupyter Messages.
+     */
+    readonly protocol: string;
 }
 /**
  * Response for installation of kernel dependencies such as ipykernel.
@@ -872,10 +898,8 @@ export interface IStartupCodeProvider {
 }
 
 export interface IKernelSettings {
-    enableExtendedKernelCompletions: boolean;
+    enableExtendedPythonKernelCompletions: boolean;
     themeMatplotlibPlots: boolean;
-    ignoreVscodeTheme: boolean;
-    generateSVGPlots: boolean;
     launchTimeout: number;
     interruptTimeout: number;
     runStartupCommands: string | string[];
@@ -941,7 +965,7 @@ function sendKernelTelemetry(kernel: KernelConnectionMetadata) {
                 providerExtensionId,
                 kernelConnectionType: kernel.kind,
                 kernelLanguage: language,
-                envType: interpreter?.envType,
+                envType: interpreter && getEnvironmentType(interpreter),
                 isArgv0SameAsInterpreter,
                 argv0,
                 argv

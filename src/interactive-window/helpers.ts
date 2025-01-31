@@ -2,14 +2,12 @@
 // Licensed under the MIT License.
 
 import { NotebookCell } from 'vscode';
-import { splitLines } from '../platform/common/helpers';
+import { dedentCode, splitLines } from '../platform/common/helpers';
 import { IJupyterSettings } from '../platform/common/types';
 import { appendLineFeed, removeLinesFromFrontAndBackNoConcat } from '../platform/common/utils';
-import { isUri } from '../platform/common/utils/misc';
 import { uncommentMagicCommands } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import { InteractiveCellMetadata } from './editor-integration/types';
-import { InteractiveTab } from './types';
 
 export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata | undefined {
     if (cell.metadata.interactive !== undefined) {
@@ -36,15 +34,5 @@ export function generateInteractiveCode(code: string, settings: IJupyterSettings
         settings.magicCommandsAsComments ? uncommentMagicCommands : undefined
     );
 
-    return withMagicsAndLinefeeds.join('');
-}
-
-export function isInteractiveInputTab(tab: unknown): tab is InteractiveTab {
-    let interactiveTab = tab as InteractiveTab;
-    return (
-        interactiveTab &&
-        interactiveTab.input &&
-        isUri(interactiveTab.input.uri) &&
-        isUri(interactiveTab.input.inputBoxUri)
-    );
+    return dedentCode(withMagicsAndLinefeeds.join(''));
 }

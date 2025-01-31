@@ -21,10 +21,8 @@ import {
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder';
 import { PreferredRemoteKernelIdProvider } from './jupyter/connection/preferredRemoteKernelIdProvider';
-import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
-import { KernelVariables } from './variables/kernelVariables';
+import { IJupyterVariables } from './variables/types';
 import { JupyterVariables } from './variables/jupyterVariables';
-import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
@@ -36,7 +34,7 @@ import { KernelDependencyService } from './kernelDependencyService.web';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.web';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
-import { KernelApi } from './api/accessManagement';
+import { KernelChatStartupCodeProvider } from './chat/kernelStartupCodeProvider';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -48,7 +46,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IRawNotebookSupportedService,
         RawNotebookSupportedService
     );
-    setSharedProperty('isInsiderExtension', isPreReleaseVersion());
+    setSharedProperty('isInsiderExtension', isPreReleaseVersion() ? 'true' : 'false');
 
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(
@@ -58,13 +56,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
     serviceManager.addSingleton<IStartupCodeProviders>(IStartupCodeProviders, KernelStartupCodeProviders);
-    serviceManager.addSingleton<IKernelVariableRequester>(
-        IKernelVariableRequester,
-        PythonVariablesRequester,
-        Identifiers.PYTHON_VARIABLES_REQUESTER
-    );
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
-    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
@@ -97,7 +89,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<LastCellExecutionTracker>(LastCellExecutionTracker, LastCellExecutionTracker);
     serviceManager.addBinding(LastCellExecutionTracker, IExtensionSyncActivationService);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelApi);
 
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
@@ -105,5 +96,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         CellOutputDisplayIdTracker
+    );
+
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelChatStartupCodeProvider
     );
 }

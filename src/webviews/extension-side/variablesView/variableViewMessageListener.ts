@@ -18,7 +18,7 @@ export class VariableViewMessageListener implements IWebviewViewMessageListener 
         this.callback = callback;
     }
 
-    public async dispose() {
+    public dispose() {
         this.disposedCallback();
     }
 

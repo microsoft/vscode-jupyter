@@ -15,11 +15,8 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 export function createPythonInterpreter(info?: Partial<PythonEnvironment>): PythonEnvironment {
     const rnd = new Date().getTime().toString();
     return {
-        displayName: `Something${rnd}`,
         id: Uri.file(`somePath${rnd}`).path,
         uri: Uri.file(`somePath${rnd}`),
-        sysPrefix: `someSysPrefix${rnd}`,
-        sysVersion: `1.1.1`,
         ...(info || {})
     };
 }

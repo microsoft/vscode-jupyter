@@ -15,23 +15,41 @@ import {
     isCI
 } from '../platform/common/constants';
 import { DownloadPlatform } from '@vscode/test-electron/out/download';
+import { arch } from 'os';
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_JUPYTER_CI_TEST = '1';
 const workspacePath = process.env.CODE_TESTS_WORKSPACE
     ? process.env.CODE_TESTS_WORKSPACE
     : path.join(__dirname, '..', '..', 'src', 'test');
-const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
+const extensionDevelopmentPathForTestsWithJupyter = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
+const extensionDevelopmentPathForPerfTestsWithoutJupyter = path.join(
+    extensionDevelopmentPathForTestsWithJupyter,
+    'src',
+    'test',
+    'vscode-notebook-perf'
+);
+const extensionDevelopmentPath = isNotebookPerfTestWithoutJupyter()
+    ? extensionDevelopmentPathForPerfTestsWithoutJupyter
+    : extensionDevelopmentPathForTestsWithJupyter;
+
 const isRunningVSCodeTests = process.env.TEST_FILES_SUFFIX?.includes('vscode.test');
 setTestExecution(true);
 
 function requiresPythonExtensionToBeInstalled() {
-    if (process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
+    if (
+        process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT &&
+        process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT !== 'false'
+    ) {
         return;
     }
     return isRunningVSCodeTests || IS_SMOKE_TEST() || IS_PERF_TEST();
+}
+
+function isNotebookPerfTestWithoutJupyter() {
+    return !!process.env.VSC_JUPYTER_NOTEBOOK_PERF_TEST;
 }
 
 const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
@@ -41,7 +59,7 @@ const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase(
 function computePlatform() {
     switch (process.platform) {
         case 'darwin':
-            return 'darwin';
+            return arch() === 'arm64' ? 'darwin-arm64' : 'darwin';
         case 'win32':
             return process.arch === 'ia32' ? 'win32-archive' : 'win32-x64-archive';
         default:
@@ -63,49 +81,44 @@ async function createTempDir() {
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
 async function installPythonExtension(vscodeExecutablePath: string, extensionsDir: string, platform: DownloadPlatform) {
-    if (!requiresPythonExtensionToBeInstalled()) {
+    if (!requiresPythonExtensionToBeInstalled() || isNotebookPerfTestWithoutJupyter()) {
         console.info('Python Extension not required');
         return;
     }
     console.info(`Installing Python Extension ${PythonExtension} to ${extensionsDir}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
-    spawnSync(
-        cliPath,
-        [
-            '--install-extension',
-            PythonExtension,
-            '--pre-release',
-            '--extensions-dir',
-            extensionsDir,
-            '--disable-telemetry'
-        ],
-        {
-            encoding: 'utf-8',
-            stdio: 'inherit'
-        }
-    );
+    await installExtension(PythonExtension, cliPath, extensionsDir, ['--pre-release']);
 
     // Make sure pylance is there too as we'll use it for intellisense tests
-    console.info(`Installing Pylance Extension to ${extensionsDir}`);
-    spawnSync(
-        cliPath,
-        ['--install-extension', PylanceExtension, '--extensions-dir', extensionsDir, '--disable-telemetry'],
-        {
-            encoding: 'utf-8',
-            stdio: 'inherit'
-        }
-    );
+    await installExtension(PylanceExtension, cliPath, extensionsDir);
 
     // Make sure renderers is there too as we'll use it for widget tests
-    console.info(`Installing Renderer Extension to ${extensionsDir}`);
-    spawnSync(
-        cliPath,
-        ['--install-extension', RendererExtension, '--extensions-dir', extensionsDir, '--disable-telemetry'],
-        {
-            encoding: 'utf-8',
-            stdio: 'inherit'
-        }
-    );
+    await installExtension(RendererExtension, cliPath, extensionsDir);
+}
+
+// Make sure renderers is there too as we'll use it for widget tests
+async function installExtension(extension: string, cliPath: string, extensionsDir: string, args: string[] = []) {
+    console.info(`Installing ${extension} Extension to ${extensionsDir}`);
+    args = ['--install-extension', extension, ...args, '--extensions-dir', extensionsDir, '--disable-telemetry'];
+    const output =
+        process.platform === 'win32'
+            ? spawnSync(cliPath, args, {
+                  encoding: 'utf-8',
+                  stdio: 'inherit',
+                  shell: true // Without this, node 20 would fail to install the extensions on Windows. See https://github.com/nodejs/node/issues/52554
+              })
+            : spawnSync(cliPath, args, {
+                  encoding: 'utf-8',
+                  stdio: 'inherit'
+              });
+
+    if (output.error) {
+        throw output.error;
+    }
+    if (output.stderr) {
+        console.error(`Error installing ${extension} Extension to ${extensionsDir}`);
+        console.error(output.stderr);
+    }
 }
 
 async function createSettings(): Promise<string> {
@@ -115,7 +128,7 @@ async function createSettings(): Promise<string> {
     const settingsFile = path.join(userDataDirectory, 'User', 'settings.json');
     const defaultSettings: Record<string, string | boolean | string[]> = {
         'python.insidersChannel': 'off',
-        'jupyter.logging.level': 'verbose',
+        'jupyter.logging.level': 'debug',
         'python.logging.level': 'debug',
         'files.autoSave': 'off',
         'python.experiments.enabled': true,
@@ -128,9 +141,10 @@ async function createSettings(): Promise<string> {
         'jupyter.askForKernelRestart': false,
         // To get widgets working.
         'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com'],
-        // New Kernel Picker.
-        'notebook.kernelPicker.type': 'mru'
+        'notebook.stickyScroll.enabled': true, // Required for perf tests
+        'notebook.outline.showCodeCells': true // Required for perf tests
     };
+
     if (IS_SMOKE_TEST()) {
         defaultSettings['python.languageServer'] = 'None';
     }
@@ -162,6 +176,7 @@ async function start() {
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
     const userDataDirectory = await createSettings();
     const extensionsDir = await getExtensionsDir();
+    console.error(`Using extensions development path: ${extensionDevelopmentPath}`);
     await installPythonExtension(vscodeExecutablePath, extensionsDir, platform);
     await runTests({
         vscodeExecutablePath,

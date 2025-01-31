@@ -33,14 +33,7 @@ import { IDisposable, IDisposableRegistry } from '../../../platform/common/types
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../../platform/common/utils';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import {
-    logValue,
-    traceDecoratorVerbose,
-    traceError,
-    traceInfo,
-    traceInfoIfCI,
-    traceVerbose
-} from '../../../platform/logging';
+import { logValue, debugDecorator, logger } from '../../../platform/logging';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { IServiceContainer } from '../../../platform/ioc/types';
@@ -109,7 +102,7 @@ export class ControllerPreferredService {
     public dispose() {
         dispose(Array.from(this.disposables));
     }
-    @traceDecoratorVerbose('Compute Preferred Controller')
+    @debugDecorator('Compute Preferred Controller')
     public async computePreferred(
         @logValue<NotebookDocument>('uri') document: NotebookDocument,
         cancelToken?: CancellationToken
@@ -121,7 +114,7 @@ export class ControllerPreferredService {
             return {};
         }
 
-        traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
+        logger.ci(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
         // Keep track of a token per document so that we can cancel the search if the doc is closed
         this.preferredCancelTokens.get(document)?.cancel();
         this.preferredCancelTokens.get(document)?.dispose();
@@ -151,7 +144,7 @@ export class ControllerPreferredService {
                 isPythonNbOrInteractiveWindow
             ) {
                 const defaultPythonController = await this.defaultService.computeDefaultController(
-                    document.uri,
+                    document,
                     document.notebookType
                 );
                 if (preferredSearchToken.token.isCancellationRequested) {
@@ -159,7 +152,7 @@ export class ControllerPreferredService {
                 }
                 preferredConnection = defaultPythonController?.connection;
                 if (preferredConnection) {
-                    traceInfoIfCI(
+                    logger.ci(
                         `Found target controller with default controller ${getDisplayPath(document.uri)} ${
                             preferredConnection.kind
                         }:${preferredConnection.id}.`
@@ -167,12 +160,12 @@ export class ControllerPreferredService {
                 }
             }
             if (preferredSearchToken.token.isCancellationRequested) {
-                traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                logger.ci(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                 return {};
             }
             if (document.notebookType === JupyterNotebookView && !preferredConnection) {
                 if (preferredSearchToken.token.isCancellationRequested) {
-                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    logger.ci(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
 
@@ -184,14 +177,14 @@ export class ControllerPreferredService {
                     undefined
                 );
                 if (preferredConnection) {
-                    traceInfoIfCI(
+                    logger.ci(
                         `Found target controller with an exact match (1) ${getDisplayPath(document.uri)} ${
                             preferredConnection.kind
                         }:${preferredConnection.id}.`
                     );
                 }
                 if (preferredSearchToken.token.isCancellationRequested) {
-                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    logger.ci(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
                 // If we didn't find an exact match in the cache, try awaiting for the non-cache version
@@ -204,7 +197,7 @@ export class ControllerPreferredService {
                         undefined
                     );
                     if (preferredConnection) {
-                        traceInfoIfCI(
+                        logger.ci(
                             `Found target controller with an exact match (2) ${getDisplayPath(document.uri)} ${
                                 preferredConnection.kind
                             }:${preferredConnection.id}.`
@@ -212,24 +205,22 @@ export class ControllerPreferredService {
                     }
                 }
                 if (preferredSearchToken.token.isCancellationRequested) {
-                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    logger.ci(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
 
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredSearchToken.token.isCancellationRequested && !preferredConnection) {
-                    traceInfo('Find preferred kernel cancelled');
+                    logger.debug('Find preferred kernel cancelled');
                     return {};
                 }
                 if (!preferredConnection) {
-                    traceInfoIfCI(
-                        `PreferredConnection not found for NotebookDocument: ${getDisplayPath(document.uri)}`
-                    );
+                    logger.ci(`PreferredConnection not found for NotebookDocument: ${getDisplayPath(document.uri)}`);
                     if (!preferredConnection && this.preferredControllers.get(document)) {
                         // Possible previously we had just 1 controller and that was setup as the preferred
                         // & now that we have more controllers, we know more about what needs to be matched
                         // & since we no longer have a preferred, we should probably unset the previous preferred
-                        traceVerbose(
+                        logger.debug(
                             `Resetting the previous preferred controller ${this.preferredControllers.get(document)
                                 ?.id} to default affinity for document ${getDisplayPath(document.uri)}`
                         );
@@ -241,7 +232,7 @@ export class ControllerPreferredService {
                     return {};
                 }
 
-                traceInfo(
+                logger.info(
                     `PreferredConnection: ${preferredConnection.id} found for NotebookDocument: ${getDisplayPath(
                         document.uri
                     )}`
@@ -253,7 +244,7 @@ export class ControllerPreferredService {
                 // If the controller doesn't exist, then it means we're still loading them.
                 // However we can create this one as we have all of the necessary info.
                 if (!targetController) {
-                    traceVerbose(`Early registration of controller for Kernel connection ${preferredConnection.id}`);
+                    logger.debug(`Early registration of controller for Kernel connection ${preferredConnection.id}`);
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     this.registration.addOrUpdate(preferredConnection, [JupyterNotebookView]);
                 }
@@ -262,18 +253,18 @@ export class ControllerPreferredService {
                 // can happen if a document is opened quick and we have not yet loaded our controllers
                 await this.registration.loaded;
                 if (preferredSearchToken.token.isCancellationRequested) {
-                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    logger.ci(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
 
                 // For interactive set the preferred controller as the interpreter or default
                 const defaultInteractiveController = await this.defaultService.computeDefaultController(
-                    document.uri,
+                    document,
                     'interactive'
                 );
                 preferredConnection = defaultInteractiveController?.connection;
                 if (preferredSearchToken.token.isCancellationRequested) {
-                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    logger.ci(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
             }
@@ -286,7 +277,7 @@ export class ControllerPreferredService {
             }
 
             if (targetController) {
-                traceVerbose(
+                logger.debug(
                     `TargetController found ID: ${targetController.connection.kind}:${
                         targetController.id
                     } for document ${getDisplayPath(document.uri)}`
@@ -300,7 +291,7 @@ export class ControllerPreferredService {
                     NotebookControllerAffinity.Preferred
                 );
                 if (preferredSearchToken.token.isCancellationRequested) {
-                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    logger.ci(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
 
@@ -310,7 +301,7 @@ export class ControllerPreferredService {
                 });
 
                 if (preferredSearchToken.token.isCancellationRequested) {
-                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    logger.ci(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
 
@@ -320,7 +311,7 @@ export class ControllerPreferredService {
                 // Possible previously we had just 1 controller and that was setup as the preferred
                 // & now that we have more controllers, we know more about what needs to be matched
                 // & since we no longer have a preferred, we should probably unset the previous preferred
-                traceVerbose(
+                logger.debug(
                     `Resetting the previous preferred controller ${this.preferredControllers.get(document)
                         ?.id} to default affinity for document ${getDisplayPath(document.uri)}`
                 );
@@ -336,7 +327,7 @@ export class ControllerPreferredService {
                 const controller = this.registration.addOrUpdate(preferredConnection, [
                     document.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
                 ]);
-                traceInfoIfCI(
+                logger.ci(
                     `Controller for preferred connection ${preferredConnection.kind}${
                         preferredConnection.id
                     } for notebook ${getDisplayPath(document.uri)} does not yet exist, creating this now`
@@ -344,14 +335,14 @@ export class ControllerPreferredService {
                 if (controller.length === 1) {
                     targetController = controller[0];
                 } else {
-                    traceError(
+                    logger.error(
                         `Failed to create the controller for preferred connection ${preferredConnection.kind}${
                             preferredConnection.id
                         } for notebook ${getDisplayPath(document.uri)}`
                     );
                 }
             }
-            traceInfoIfCI(
+            logger.ci(
                 `TargetController found ID: ${preferredConnection?.id} type ${preferredConnection?.kind} for document ${getDisplayPath(
                     document.uri
                 )} & associated controller id ${targetController?.connection?.kind}:${targetController?.id}`
@@ -359,7 +350,7 @@ export class ControllerPreferredService {
 
             return { preferredConnection, controller: targetController };
         } catch (ex) {
-            traceError('Failed to find & set preferred controllers', ex);
+            logger.error('Failed to find & set preferred controllers', ex);
             return {};
         } finally {
             if (changeHandler) {
@@ -411,10 +402,9 @@ export class ControllerPreferredService {
         cancelToken: CancellationToken,
         preferredInterpreter: PythonEnvironment | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
-        const uri = notebook.uri;
         let preferredConnection: KernelConnectionMetadata | undefined;
         const rankedConnections = await this.kernelRankHelper.rankKernels(
-            uri,
+            notebook,
             this.registration.all,
             notebookMetadata,
             preferredInterpreter,
@@ -438,7 +428,7 @@ export class ControllerPreferredService {
             }
 
             // Are we an exact match based on metadata hash / name / ect...?
-            const isExactMatch = await this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
+            const isExactMatch = await this.kernelRankHelper.isExactMatch(notebook, potentialMatch, notebookMetadata);
             if (cancelToken.isCancellationRequested) {
                 return;
             }
@@ -485,7 +475,7 @@ export class ControllerPreferredService {
                 isExactMatch ||
                 isNonPythonLanguageMatch
             ) {
-                traceInfo(
+                logger.info(
                     `Preferred kernel ${potentialMatch.id} is exact match or top match for non python kernels, (${onlyConnection}, ${topMatchIsPreferredInterpreter}, ${isExactMatch}, ${isNonPythonLanguageMatch})`
                 );
                 preferredConnection = potentialMatch;

@@ -12,7 +12,7 @@ import {
 } from './types';
 import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
-import { traceError } from '../../../platform/logging';
+import { logger } from '../../../platform/logging';
 import { Identifiers } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { isWeb } from '../../../platform/common/utils/misc';
@@ -76,7 +76,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                     .map((shapeEl) => parseInt(shapeEl));
             }
         } catch (e) {
-            traceError(`Could not parse IJupyterVariable with malformed shape: ${shape}`);
+            logger.error(`Could not parse IJupyterVariable with malformed shape: ${shape}`);
         }
         return undefined;
     }

@@ -15,7 +15,7 @@ import {
     IDisposable,
     IExtensionContext
 } from '../../platform/common/types';
-import { IMultiStepInputFactory, InputFlowAction } from '../../platform/common/utils/multiStepInput';
+import { InputFlowAction } from '../../platform/common/utils/multiStepInput';
 import {
     SecureConnectionValidator,
     UserJupyterServerDisplayName,
@@ -55,7 +55,6 @@ suite('User Uri Provider', () => {
     let serverUriStorage: IJupyterServerUriStorage;
     let globalMemento: Memento;
     let disposables: IDisposable[] = [];
-    let multiStepFactory: IMultiStepInputFactory;
     let asyncDisposables: IAsyncDisposable[] = [];
     let asyncDisposableRegistry: IAsyncDisposableRegistry = {
         dispose: async function () {
@@ -117,7 +116,6 @@ suite('User Uri Provider', () => {
         encryptedStorage = mock<IEncryptedStorage>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
         globalMemento = mock<Memento>();
-        multiStepFactory = mock<IMultiStepInputFactory>();
         requestCreator = mock<IJupyterRequestCreator>();
         tokenSource = new CancellationTokenSource();
         token = tokenSource.token;
@@ -185,8 +183,6 @@ suite('User Uri Provider', () => {
             instance(serverUriStorage),
             instance(globalMemento),
             disposables,
-            instance(multiStepFactory),
-            asyncDisposableRegistry,
             undefined,
             instance(requestCreator),
             instance(mock<IExtensionContext>()),

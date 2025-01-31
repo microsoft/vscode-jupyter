@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, Disposable, NotebookEditor, Uri, EventEmitter, workspace, window } from 'vscode';
 import { dispose } from '../../platform/common/utils/lifecycle';
-import { traceVerbose } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposableRegistry, IDisposable } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -142,7 +142,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         }
         const notebook = editor.notebook;
         if (!controller) {
-            traceVerbose(
+            logger.trace(
                 `No controller, hence notebook communications cannot be initialized for editor ${getDisplayPath(
                     editor.notebook.uri
                 )}`
@@ -150,18 +150,13 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
             return;
         }
         if (this.notebookCommunications.has(editor)) {
-            traceVerbose(
-                `notebook communications already initialized for editor ${getDisplayPath(editor.notebook.uri)}`
-            );
             return;
         }
-        traceVerbose(`Initialize notebook communications for editor ${getDisplayPath(editor.notebook.uri)}`);
         const comms = new NotebookCommunication(editor, controller);
         this.addNotebookDisposables(notebook, [comms]);
         this.notebookCommunications.set(editor, comms);
         // Create a handler for this notebook if we don't already have one. Since there's one of the notebookMessageCoordinator's for the
         // entire VS code session, we have a map of notebook document to message coordinator
-        traceVerbose(`Resolving notebook UI Comms (resolve) for ${getDisplayPath(notebook.uri)}`);
         let coordinator = this.messageCoordinators.get(notebook);
         if (!coordinator) {
             coordinator = new CommonMessageCoordinator(notebook, this.serviceContainer);

@@ -4,18 +4,16 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, optional } from 'inversify';
 
-import { Uri, window } from 'vscode';
-import { CellMatcher } from '../../interactive-window/editor-integration/cellMatcher';
-import { traceError } from '../../platform/logging';
+import { NotebookData, Uri, extensions, window, type NotebookCellData } from 'vscode';
+import { logger } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types';
-import { ICell, IConfigurationService } from '../../platform/common/types';
-import { pruneCell } from '../../platform/common/utils';
 import { DataScience } from '../../platform/common/utils/localize';
 import { defaultNotebookFormat } from '../../platform/common/constants';
 import { IJupyterServerHelper, INotebookExporter } from '../../kernels/jupyter/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { noop } from '../../platform/common/utils/misc';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
+import { getVersion } from '../../platform/interpreter/helpers';
 
 /**
  * Provides export for the interactive window
@@ -24,22 +22,15 @@ import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 export class JupyterExporter implements INotebookExporter {
     constructor(
         @inject(IJupyterServerHelper) @optional() private jupyterServerHelper: IJupyterServerHelper | undefined,
-        @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDataScienceErrorHandler) protected errorHandler: IDataScienceErrorHandler
     ) {}
 
-    public dispose() {
-        // Do nothing
-    }
-
-    public async exportToFile(cells: ICell[], file: string, showOpenPrompt: boolean = true): Promise<void> {
-        const notebook = await this.translateToNotebook(cells);
+    public async exportToFile(cells: NotebookCellData[], file: string, showOpenPrompt: boolean = true): Promise<void> {
+        const contents = await this.serialize(cells);
 
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const contents = JSON.stringify(notebook, undefined, 1);
-            await this.fileSystem.writeFile(Uri.file(file), contents);
+            await this.fileSystem.writeFile(Uri.file(file), contents || '');
             if (!showOpenPrompt) {
                 return;
             }
@@ -57,7 +48,7 @@ export class JupyterExporter implements INotebookExporter {
                     }
                 }, noop);
         } catch (exc) {
-            traceError('Error in exporting notebook file');
+            logger.error('Error in exporting notebook file');
             window
                 .showInformationMessage(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,10 +57,7 @@ export class JupyterExporter implements INotebookExporter {
                 .then(noop, noop);
         }
     }
-    public async translateToNotebook(
-        cells: ICell[],
-        kernelSpec?: nbformat.IKernelspecMetadata
-    ): Promise<nbformat.INotebookContent | undefined> {
+    async serialize(cells: NotebookCellData[], kernelSpec?: nbformat.IKernelspecMetadata): Promise<string | undefined> {
         const pythonNumber = await this.extractPythonMainVersion();
 
         // Use this to build our metadata object
@@ -90,61 +78,28 @@ export class JupyterExporter implements INotebookExporter {
             kernelspec: kernelSpec as any
         };
 
-        // Create an object for matching cell definitions
-        const matcher = new CellMatcher(this.configService.getSettings());
-
-        // Combine this into a JSON object
-        return {
-            cells: this.pruneCells(cells, matcher),
-            nbformat: defaultNotebookFormat.major,
-            nbformat_minor: defaultNotebookFormat.minor,
-            metadata: metadata
+        type IPynbApi = {
+            exportNotebook: (notebook: NotebookData) => string;
         };
-    }
-
-    private pruneCells = (cells: ICell[], cellMatcher: CellMatcher): nbformat.IBaseCell[] => {
-        // First filter out sys info cells. Jupyter doesn't understand these
-        const filtered = cells;
-
-        // Then prune each cell down to just the cell data.
-        return filtered.map((c) => this.pruneCell(c, cellMatcher));
-    };
-
-    private pruneCell = (cell: ICell, cellMatcher: CellMatcher): nbformat.IBaseCell => {
-        // Prune with the common pruning function first.
-        const copy = pruneCell({ ...cell.data });
-
-        // Remove the #%% of the top of the source if there is any. We don't need
-        // this to end up in the exported ipynb file.
-        copy.source = this.pruneSource(cell.data.source, cellMatcher);
-        return copy;
-    };
-
-    private pruneSource = (source: nbformat.MultilineString, cellMatcher: CellMatcher): nbformat.MultilineString => {
-        // Remove the comments on the top if there.
-        if (Array.isArray(source) && source.length > 0) {
-            if (cellMatcher.isCell(source[0])) {
-                return source.slice(1);
-            }
-        } else {
-            const array = source
-                .toString()
-                .split('\n')
-                .map((s) => `${s}\n`);
-            if (array.length > 0 && cellMatcher.isCell(array[0])) {
-                return array.slice(1);
-            }
+        const ipynbMain = extensions.getExtension<IPynbApi>('vscode.ipynb')?.exports;
+        if (!ipynbMain) {
+            throw new Error('vscode.ipynb extension not found');
         }
-
-        return source;
-    };
-
+        const notebook = new NotebookData(cells);
+        notebook.metadata = {
+            metadata,
+            nbformat: defaultNotebookFormat.major,
+            nbformat_minor: defaultNotebookFormat.minor
+        };
+        return ipynbMain.exportNotebook(notebook);
+    }
     private extractPythonMainVersion = async (): Promise<number> => {
         if (!this.jupyterServerHelper) {
             return 3;
         }
         // Use the active interpreter
         const usableInterpreter = await this.jupyterServerHelper.getUsableJupyterPython();
-        return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
+        const version = await getVersion(usableInterpreter);
+        return (usableInterpreter && version && version.major) || 3;
     };
 }

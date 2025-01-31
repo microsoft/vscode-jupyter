@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri, commands } from 'vscode';
 import { JVSC_EXTENSION_ID, TestingKernelPickerProviderId } from '../../platform/common/constants';
-import { traceInfo } from '../../platform/logging';
+import { logger } from '../../platform/logging';
 import { IJupyterServerProviderRegistry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { computeHash } from '../../platform/common/crypto';
@@ -50,7 +50,7 @@ export class JupyterServerSelectorCommand
         this._register(commands.registerCommand('jupyter.selectjupyteruri', this.selectJupyterUri, this));
     }
     private async selectJupyterUri(source: Uri): Promise<void> {
-        traceInfo(`Setting Jupyter Server URI to remote: ${source}`);
+        logger.info(`Setting Jupyter Server URI to remote: ${source}`);
         const uri = source.toString(true);
         const url = new URL(uri);
         const baseUrl = Uri.parse(`${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`);
