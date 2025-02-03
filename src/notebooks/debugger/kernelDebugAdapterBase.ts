@@ -276,7 +276,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
     protected abstract dumpCell(index: number): Promise<void>;
 
-    private lookupCellByLongName(sourcePath: string) {
+    protected lookupCellByLongName(sourcePath: string) {
         if (!this.platformService.isWindows) {
             return undefined;
         }
