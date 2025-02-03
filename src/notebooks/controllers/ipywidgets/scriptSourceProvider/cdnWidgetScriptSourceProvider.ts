@@ -22,7 +22,7 @@ export const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDN
 export const GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN = 'IPYWidgetNotFoundOnCDN';
 export const GlobalStateKeyToNeverWarnAboutNoNetworkAccess = 'IPYWidgetNoNetWorkAccess';
 
-function moduleNameToCDNUrl(cdn: string, moduleName: string, moduleVersion: string) {
+export function moduleNameToCDNUrl(cdn: string, moduleName: string, moduleVersion: string) {
     let packageName = moduleName;
     let fileName = 'index'; // default filename
     // if a '/' is present, like 'foo/bar', packageName is changed to 'foo', and path to 'bar'

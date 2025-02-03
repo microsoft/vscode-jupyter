@@ -1,31 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as sinon from 'sinon';
 import { assert } from 'chai';
-import * as fs from 'fs-extra';
-import nock from 'nock';
-import * as path from '../../../../platform/vscode-path/path';
-import { Readable } from 'stream';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ConfigurationTarget, Disposable, Memento, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Memento, type WorkspaceConfiguration } from 'vscode';
 import { JupyterSettings } from '../../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../../platform/common/configuration/service.node';
 import { IConfigurationService, IDisposable, WidgetCDNs } from '../../../../platform/common/types';
-import { noop } from '../../../../platform/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import {
     CDNWidgetScriptSourceProvider,
     GlobalStateKeyToNeverWarnAboutNoNetworkAccess,
-    GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce
+    GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce,
+    moduleNameToCDNUrl
 } from './cdnWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider } from '../types';
 import { dispose } from '../../../../platform/common/utils/lifecycle';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
-import { computeHash } from '../../../../platform/common/crypto';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../../test/vscode-mock';
-
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
-const sanitize = require('sanitize-filename');
+import { HttpClient } from '../../../../platform/common/net/httpClient';
 
 const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
@@ -50,18 +43,6 @@ suite('ipywidget - CDN', () => {
 
     teardown(() => (disposables = dispose(disposables)));
 
-    function createStreamFromString(str: string) {
-        const readable = new Readable();
-        readable._read = noop;
-        readable.push(str);
-        readable.push(null);
-        return readable;
-    }
-
-    async function generateScriptName(moduleName: string, moduleVersion: string) {
-        const hash = sanitize(await computeHash(`${moduleName}${moduleVersion}`, 'SHA-256'));
-        return Uri.file(path.join(EXTENSION_ROOT_DIR, 'temp', 'scripts', hash, 'index.js')).toString();
-    }
     test('Prompt to use CDN', async () => {
         when(
             mockedVSCodeNamespaces.window.showInformationMessage(
@@ -319,28 +300,30 @@ suite('ipywidget - CDN', () => {
                 // Nock seems to fail randomly on CI builds. See bug
                 // https://github.com/microsoft/vscode-python/issues/11442
                 // eslint-disable-next-line no-invalid-this
-                suite.skip(cdn, () => {
+                suite(cdn, () => {
                     const moduleName = 'HelloWorld';
                     const moduleVersion = '1';
-                    let baseUrl = '';
                     let scriptUri = '';
+                    const disposables: IDisposable[] = [];
                     setup(async () => {
-                        baseUrl = cdn === 'unpkg.com' ? unpgkUrl : jsdelivrUrl;
-                        scriptUri = await generateScriptName(moduleName, moduleVersion);
+                        const baseUrl = cdn === 'unpkg.com' ? unpgkUrl : jsdelivrUrl;
+                        scriptUri = moduleNameToCDNUrl(baseUrl, moduleName, moduleVersion);
+                        const workspaceConfig = mock<WorkspaceConfiguration>();
+                        when(workspaceConfig.get('proxy', anything())).thenReturn('');
+                        when(mockedVSCodeNamespaces.workspace.getConfiguration('http')).thenReturn(
+                            instance(workspaceConfig)
+                        );
                     });
                     teardown(() => {
+                        sinon.restore();
+                        resetVSCodeMocks();
                         scriptSourceProvider.dispose();
-                        nock.cleanAll();
+                        dispose(disposables);
+                        disposables.length = 0;
                     });
-                    test('Ensure widget script is downloaded once and cached', async () => {
+                    test('Verify script source', async () => {
                         updateCDNSettings(cdn);
-                        let downloadCount = 0;
-                        nock(baseUrl)
-                            .get(/.*/)
-                            .reply(200, () => {
-                                downloadCount += 1;
-                                return createStreamFromString('foo');
-                            });
+                        sinon.stub(HttpClient.prototype, 'exists').resolves(true);
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -349,20 +332,10 @@ suite('ipywidget - CDN', () => {
                             scriptUri,
                             source: 'cdn'
                         });
-
-                        const value2 = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
-
-                        assert.deepEqual(value2, {
-                            moduleName: 'HelloWorld',
-                            scriptUri,
-                            source: 'cdn'
-                        });
-
-                        assert.equal(downloadCount, 1, 'Downloaded more than once');
                     });
                     test('No script source if package does not exist on CDN', async () => {
                         updateCDNSettings(cdn);
-                        nock(baseUrl).get(/.*/).replyWithError('404');
+                        sinon.stub(HttpClient.prototype, 'exists').resolves(false);
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -377,61 +350,7 @@ suite('ipywidget - CDN', () => {
                                 ? ([cdn, 'jsdelivr.com'] as WidgetCDNs[])
                                 : ([cdn, 'unpkg.com'] as WidgetCDNs[]);
                         updateCDNSettings(cdns[0], cdns[1]);
-                        // Make only one cdn available
-                        // when(httpClient.exists(anything())).thenCall((a) => {
-                        //     if (a.includes(cdn[0])) {
-                        //         return true;
-                        //     }
-                        //     return false;
-                        // });
-                        nock(baseUrl)
-                            .get(/.*/)
-                            .reply(200, () => {
-                                return createStreamFromString('foo');
-                            });
-                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
-
-                        assert.deepEqual(value, {
-                            moduleName: 'HelloWorld',
-                            scriptUri,
-                            source: 'cdn'
-                        });
-                    });
-
-                    test('Retry if busy', async () => {
-                        let retryCount = 0;
-                        updateCDNSettings(cdn);
-                        // when(httpClient.exists(anything())).thenResolve(true);
-                        nock(baseUrl).get(/.*/).twice().replyWithError('Not found');
-                        nock(baseUrl)
-                            .get(/.*/)
-                            .thrice()
-                            .reply(200, () => {
-                                retryCount = 3;
-                                return createStreamFromString('foo');
-                            });
-
-                        // Then see if we can get it still.
-                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
-
-                        assert.deepEqual(value, {
-                            moduleName: 'HelloWorld',
-                            scriptUri,
-                            source: 'cdn'
-                        });
-                        assert.equal(retryCount, 3, 'Did not actually retry');
-                    });
-                    test('Script source already on disk', async () => {
-                        updateCDNSettings(cdn);
-                        // Make nobody available
-                        // when(httpClient.exists(anything())).thenResolve(true);
-
-                        // Write to where the file should eventually end up
-                        const filePath = Uri.parse(scriptUri).fsPath;
-                        await fs.createFile(filePath);
-                        await fs.writeFile(filePath, 'foo');
-
-                        // Then see if we can get it still.
+                        sinon.stub(HttpClient.prototype, 'exists').resolves(true);
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
                         assert.deepEqual(value, {

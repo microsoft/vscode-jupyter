@@ -100,20 +100,6 @@ suite('Experimentation service', () => {
             telemetryEvents = [];
         });
 
-        test.skip('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
-            configureSettings(true, [], []);
-
-            const experimentService = new ExperimentService(
-                instance(configurationService),
-                instance(appEnvironment),
-                globalMemento
-            );
-            const result = await experimentService.inExperiment(experiment);
-
-            assert.isTrue(result);
-            sinon.assert.notCalled(sendTelemetryEventStub);
-        });
-
         test('If the experiment setting is disabled, inExperiment should return false', async () => {
             configureSettings(false, [], []);
 
@@ -163,19 +149,6 @@ suite('Experimentation service', () => {
                 getTreatmentVariable: () => 'value'
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any);
-        });
-
-        test.skip('If the service is enabled and the opt-out array is empty,return the value from the experimentation framework for a given experiment', async () => {
-            configureSettings(true, [], []);
-
-            const experimentService = new ExperimentService(
-                instance(configurationService),
-                instance(appEnvironment),
-                globalMemento
-            );
-            const result = await experimentService.getExperimentValue(experiment);
-
-            assert.equal(result, 'value');
         });
 
         test('If the experiment setting is disabled, getExperimentValue should return undefined', async () => {
