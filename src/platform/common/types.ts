@@ -53,7 +53,6 @@ export interface IJupyterSettings {
     readonly useDefaultConfigForJupyter: boolean;
     readonly enablePythonKernelLogging: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
-    readonly normalizeSelectionForInteractiveWindow: boolean;
     readonly splitRunFileIntoCells: boolean;
     readonly markdownRegularExpression: string;
     readonly codeRegularExpression: string;

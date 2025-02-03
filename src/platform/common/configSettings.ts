@@ -45,7 +45,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public notebookFileRoot: string = '';
     public useDefaultConfigForJupyter: boolean = false;
     public sendSelectionToInteractiveWindow: boolean = false;
-    public normalizeSelectionForInteractiveWindow: boolean = true;
     public splitRunFileIntoCells: boolean = true;
     public markdownRegularExpression: string = '';
     public codeRegularExpression: string = '';
