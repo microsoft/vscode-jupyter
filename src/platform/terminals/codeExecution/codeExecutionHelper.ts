@@ -12,7 +12,6 @@ import { dedentCode } from '../../common/helpers';
  * Handles trimming code sent to a terminal so it actually runs.
  */
 export class CodeExecutionHelper implements ICodeExecutionHelper {
-
     public async getFileToExecute(): Promise<Uri | undefined> {
         const activeEditor = window.activeTextEditor;
         if (!activeEditor) {
