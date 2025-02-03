@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { CodeExecutionHelperBase } from './codeExecutionHelper';
+import { CodeExecutionHelper } from './codeExecutionHelper';
 import { MockEditor } from '../../../test/datascience/mockTextEditor';
 import { Uri, Selection } from 'vscode';
 import { MockDocumentManager } from '../../../test/datascience/mockDocumentManager';
@@ -28,49 +28,49 @@ if (true):
 suite('Normalize selected text for execution', () => {
     test('Normalize first line including newline', () => {
         const editor = initializeMockTextEditor(inputText, new Selection(0, 0, 1, 0));
-        const helper = new CodeExecutionHelperBase();
+        const helper = new CodeExecutionHelper();
         const text = helper.getSelectedTextToExecute(editor);
         assert.equal('print(1)', text);
     });
 
     test('Normalize several lines', () => {
         const editor = initializeMockTextEditor(inputText, new Selection(0, 0, 7, 0));
-        const helper = new CodeExecutionHelperBase();
+        const helper = new CodeExecutionHelper();
         const text = helper.getSelectedTextToExecute(editor);
         assert.equal(inputText.trimEnd(), text);
     });
 
     test('Normalize indented lines', () => {
         const editor = initializeMockTextEditor(inputText, new Selection(3, 0, 5, 0));
-        const helper = new CodeExecutionHelperBase();
+        const helper = new CodeExecutionHelper();
         const text = helper.getSelectedTextToExecute(editor);
         assert.equal('print(2)\nprint(3)', text);
     });
 
     test('Normalize indented lines but first line partially selected', () => {
         const editor = initializeMockTextEditor(inputText, new Selection(3, 3, 5, 0));
-        const helper = new CodeExecutionHelperBase();
+        const helper = new CodeExecutionHelper();
         const text = helper.getSelectedTextToExecute(editor);
         assert.equal('print(2)\nprint(3)', text);
     });
 
     test('Normalize single indented line', () => {
         const editor = initializeMockTextEditor(inputText, new Selection(3, 4, 3, 12));
-        const helper = new CodeExecutionHelperBase();
+        const helper = new CodeExecutionHelper();
         const text = helper.getSelectedTextToExecute(editor);
         assert.equal('print(2)', text);
     });
 
     test('Normalize indented line including leading newline', () => {
         const editor = initializeMockTextEditor(inputText, new Selection(3, 12, 4, 12));
-        const helper = new CodeExecutionHelperBase();
+        const helper = new CodeExecutionHelper();
         const text = helper.getSelectedTextToExecute(editor);
         assert.equal('\nprint(3)', text);
     });
 
     test('Normalize a multi-line string', () => {
         const editor = initializeMockTextEditor(inputText, new Selection(5, 0, 7, 0));
-        const helper = new CodeExecutionHelperBase();
+        const helper = new CodeExecutionHelper();
         const text = helper.getSelectedTextToExecute(editor);
         assert.equal("print('''a multiline\nstring''')", text);
     });

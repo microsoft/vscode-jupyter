@@ -7,15 +7,13 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ICodeExecutionHelper } from '../types';
 import { noop } from '../../common/utils/misc';
 import { dedentCode } from '../../common/helpers';
+import { injectable } from 'inversify';
 
 /**
  * Handles trimming code sent to a terminal so it actually runs.
  */
-export class CodeExecutionHelperBase implements ICodeExecutionHelper {
-    public async normalizeLines(code: string, _resource?: Uri): Promise<string> {
-        return code;
-    }
-
+@injectable()
+export class CodeExecutionHelper implements ICodeExecutionHelper {
     public async getFileToExecute(): Promise<Uri | undefined> {
         const activeEditor = window.activeTextEditor;
         if (!activeEditor) {

@@ -360,7 +360,6 @@ export enum Telemetry {
     PandasTooOld = 'DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD',
     PandasOK = 'DS_INTERNAL.SHOW_DATA_PANDAS_OK',
     PandasInstallCanceled = 'DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED',
-    DataScienceSettings = 'DS_INTERNAL.SETTINGS',
     VariableExplorerVariableCount = 'DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT',
     AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW',
     GetPasswordFailure = 'DS_INTERNAL.GET_PASSWORD_FAILURE',
