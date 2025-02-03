@@ -340,6 +340,15 @@ export async function loadKernelSpec(
         logger.error(`Failed to parse kernelspec ${specPath}`, ex);
         return;
     }
+
+    // Replace the `resource_dir` in the kernelspec argv with the actual path
+    // Check code in format_kernel_cmd of jupyter_client/manager.py
+    // The values `{connection_file}`, `{prefix}` and `resource_dir` are replaced with the actual values.
+    const resourceDir = path.dirname(specPath.fsPath);
+    kernelJson.argv = kernelJson.argv.map((arg) => {
+        return arg.replaceAll('{resource_dir}', resourceDir);
+    });
+
     if (cancelToken.isCancellationRequested) {
         return;
     }
