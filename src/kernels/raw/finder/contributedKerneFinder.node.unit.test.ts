@@ -4,7 +4,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { assert } from 'chai';
-import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import * as sinon from 'sinon';
@@ -834,10 +833,10 @@ import { setPythonApi } from '../../../platform/interpreter/helpers';
             condaEnv1
         ].forEach((activePythonEnv) => {
             suite(activePythonEnv ? `With active Python (${activePythonEnv.id})` : 'without active Python', () => {
-                setup(function () {
-                    // Flaky windows unit tests. https://github.com/microsoft/vscode-jupyter/issues/13462
-                    return this.skip();
-                });
+                // setup(function () {
+                //     // Flaky windows unit tests. https://github.com/microsoft/vscode-jupyter/issues/13462
+                //     return this.skip();
+                // });
                 /**
                  * As we're using a push model, we need to wait for the events to get triggered.
                  * How many events do we need to wait for is not deterministic (well for tests it is, but its too complex).
@@ -915,9 +914,9 @@ import { setPythonApi } from '../../../platform/interpreter/helpers';
                 });
                 test('If two kernelspecs share the same interpreter, but have different env variables, then both should be listed', async function () {
                     // https://github.com/microsoft/vscode-jupyter/issues/13236
-                    if (os.platform() === 'win32') {
-                        return this.skip();
-                    }
+                    // if (os.platform() === 'win32') {
+                    //     return this.skip();
+                    // }
                     const testData: TestData = {
                         interpreters: [
                             {
