@@ -822,6 +822,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
 
+      - name: Install screen capture dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install imagemagick x11-xserver-utils
+
       - name: pip install system test requirements
         run: |
           python -m pip install --upgrade -r build/venv-smoke-test-requirements.txt
@@ -840,3 +844,23 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.7
         with:
           run: npm run testSmokeLogged
+
+      - name: Upload VS code logs
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: VSCodeLogs-Smoke-${{matrix.os}}
+          path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
+          retention-days: 1
+
+      - name: Log test results
+        if: always()
+        run: npm run printTestResults
+
+      - name: Upload test result, screenshots files
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: TestLogs-Smoke-${{matrix.os}}
+          path: './logs/*'
+          retention-days: 60
