@@ -90,64 +90,6 @@ export function sharedIWDebuggerTests(
                 await closeNotebooksAndCleanUpAfterTests(disposables);
             });
 
-            // TODO: This should be a testMandatory
-            test.skip('Debug a cell from a python file @mandatory', async () => {
-                // #11917
-                // Run a cell to get IW open
-                const source = 'print(42)';
-                const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
-                    interactiveWindowProvider,
-                    source,
-                    disposables
-                );
-                await waitForLastCellToComplete(activeInteractiveWindow);
-
-                // Add some more text
-                const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri === untitledPythonFile.uri);
-                assert.ok(editor, `Couldn't find python file`);
-                await editor?.edit((b) => {
-                    b.insert(new vscode.Position(1, 0), '\n# %%\n\n\nprint(43)');
-                });
-
-                let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
-                let stopped = false;
-                let stoppedOnLine5 = false;
-                debugAdapterTracker = {
-                    onDidSendMessage: (message) => {
-                        if (message.event == 'stopped') {
-                            stopped = true;
-                        }
-                        if (message.command == 'stackTrace' && !stoppedOnLine5) {
-                            stoppedOnLine5 = message.body.stackFrames[0].line == 5;
-                        }
-                    }
-                };
-
-                // Try debugging the cell
-                assert.ok(codeLenses, `No code lenses found`);
-                assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
-                const args = codeLenses[2].command!.arguments || [];
-                vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
-
-                // Wait for breakpoint to be hit
-                await waitForCondition(
-                    async () => {
-                        return vscode.debug.activeDebugSession != undefined && stopped;
-                    },
-                    defaultNotebookTestTimeout,
-                    `Never hit stop event when waiting for debug cell`
-                );
-
-                // Verify we are on the 'print(43)' line (might take a second for UI to update after stop event)
-                await waitForCondition(
-                    async () => {
-                        return stoppedOnLine5;
-                    },
-                    defaultNotebookTestTimeout,
-                    `Cursor did not move to expected line when hitting breakpoint`
-                );
-            });
-
             test('Run a cell and step into breakpoint', async function () {
                 // Define the function
                 const source = 'def foo():\n  print("foo")';
