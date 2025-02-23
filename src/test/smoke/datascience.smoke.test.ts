@@ -3,17 +3,16 @@
 
 import { assert } from 'chai';
 /* eslint-disable , no-invalid-this, @typescript-eslint/no-explicit-any */
-import * as fs from 'fs-extra';
-import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { logger } from '../../platform/logging';
-import { PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../constants.node';
-import { sleep } from '../core';
+import { PYTHON_PATH, waitForCondition } from '../common.node';
+import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../constants.node';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
 import { captureScreenShot } from '../common';
 import { getCachedEnvironments } from '../../platform/interpreter/helpers';
 import { PythonExtension, type EnvironmentPath } from '@vscode/python-extension';
+import { waitForExecutionCompletedSuccessfullyV2, waitForTextOutputV2 } from '../datascience/notebook/helper';
+import { DisposableStore } from '../../platform/common/utils/lifecycle';
 
 type JupyterApi = {
     openNotebook(uri: vscode.Uri, env: EnvironmentPath): Promise<void>;
@@ -22,13 +21,13 @@ type JupyterApi = {
 const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', function () {
     this.timeout(timeoutForCellToRun);
+    const disposableStore = new DisposableStore();
     suiteSetup(async function () {
         this.timeout(timeoutForCellToRun);
         if (!IS_SMOKE_TEST()) {
             return this.skip();
         }
         await initialize();
-        await setAutoSaveDelayInWorkspaceRoot(1);
     });
     setup(async function () {
         logger.info(`Start Test ${this.currentTest?.title}`);
@@ -37,6 +36,7 @@ suite('Smoke Tests', function () {
     });
     suiteTeardown(closeActiveWindows);
     teardown(async function () {
+        disposableStore.clear();
         logger.info(`End Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
@@ -73,48 +73,29 @@ suite('Smoke Tests', function () {
     // }).timeout(timeoutForCellToRun);
 
     test('Run Cell in Notebook', async function () {
-        const file = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src',
-            'test',
-            'pythonFiles',
-            'datascience',
-            'simple_nb.ipynb'
-        );
-        const fileContents = await fs.readFile(file, { encoding: 'utf-8' });
-        const outputFile = path.join(path.dirname(file), 'ds_n.log');
-        await fs.writeFile(file, fileContents.replace("'ds_n.log'", `'${outputFile.replace(/\\/g, '/')}'`), {
-            encoding: 'utf-8'
-        });
-        if (await fs.pathExists(outputFile)) {
-            await fs.unlink(outputFile);
-        }
-        logger.info(`Opening notebook file ${file}`);
-        const notebook = await vscode.workspace.openNotebookDocument(vscode.Uri.file(file));
-        await vscode.window.showNotebookDocument(notebook);
-
-        let pythonPath = PYTHON_PATH;
-        const nb = vscode.window.activeNotebookEditor?.notebook;
-        if (!nb) {
-            throw new Error('No active notebook');
-        }
-        const pythonEnv = await PythonExtension.api().then((api) => api.environments.resolveEnvironment(pythonPath));
-        if (!pythonEnv) {
-            throw new Error(`Python environment not found ${pythonPath}`);
-        }
         const jupyterExt = vscode.extensions.getExtension<JupyterApi>(JVSC_EXTENSION_ID_FOR_TESTS);
         if (!jupyterExt) {
             throw new Error('Jupyter extension not found');
         }
-        await jupyterExt?.activate();
-        await jupyterExt.exports.openNotebook(nb.uri, pythonEnv);
+        const cellData = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print("Hello World")', 'python');
+        const [pythonEnv, { notebook }] = await Promise.all([
+            PythonExtension.api().then((api) => api.environments.resolveEnvironment(PYTHON_PATH)),
+            vscode.workspace
+                .openNotebookDocument('jupyter-notebook', new vscode.NotebookData([cellData]))
+                .then((notebook) => vscode.window.showNotebookDocument(notebook)),
+            jupyterExt.activate()
+        ]);
 
-        await vscode.commands.executeCommand<void>('notebook.execute');
-        const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-        await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
-
-        // Give time for the file to be saved before we shutdown
-        await sleep(300);
+        if (!pythonEnv) {
+            throw new Error(`Python environment not found ${PYTHON_PATH}`);
+        }
+        await jupyterExt.exports.openNotebook(notebook.uri, pythonEnv);
+        logger.trace(`1. Notebook Opened`);
+        await Promise.all([
+            vscode.commands.executeCommand<void>('notebook.execute'),
+            waitForTextOutputV2(notebook.cellAt(0), 'Hello World', 0, false, disposableStore),
+            waitForExecutionCompletedSuccessfullyV2(notebook.cellAt(0), disposableStore)
+        ]);
     }).timeout(timeoutForCellToRun);
 
     test('Interactive window should always pick up current active interpreter', async function () {
