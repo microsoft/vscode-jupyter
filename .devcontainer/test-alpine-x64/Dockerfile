@@ -1,4 +1,4 @@
-FROM amd64/alpine
+FROM --platform=linux/amd64 alpine
 RUN apk add curl
 RUN sh -c "$(curl -fsSL https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)" -- \
     -t powerlevel10k/powerlevel10k \
