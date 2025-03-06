@@ -3,6 +3,7 @@
 
 import { Event, EventEmitter } from 'vscode';
 import { IDisplayOptions } from '../platform/common/types';
+import type { IStartOptions } from './types';
 
 /**
  * Settings used when doing auto starts to determine if messages should be shown to the user or not.
@@ -28,5 +29,14 @@ export class DisplayOptions implements IDisplayOptions {
     }
     public dispose() {
         this._event.dispose();
+    }
+}
+
+export class StartOptions extends DisplayOptions implements IStartOptions {
+    constructor(
+        disableUI: boolean,
+        public readonly ignoreTriggeringOnPostInitialized: boolean
+    ) {
+        super(disableUI);
     }
 }
