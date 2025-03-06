@@ -54,7 +54,8 @@ import {
     IKernelSettings,
     IKernelController,
     IThirdPartyKernel,
-    IKernelSessionFactory
+    IKernelSessionFactory,
+    type IStartOptions
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -189,6 +190,10 @@ abstract class BaseKernel implements IBaseKernel {
         waitUntil: (thenable: Thenable<unknown>) => void;
         token: CancellationToken;
     }>();
+    private _isPostInitializedInProgress?: boolean;
+    public get isPostInitializedInProgress(): boolean {
+        return this._isPostInitializedInProgress === true;
+    }
     private readonly _onDisposed = new EventEmitter<void>();
     private _jupyterSessionPromise?: Promise<IKernelSession>;
     private readonly hookedSessionForEvents = new WeakSet<IKernelSession>();
@@ -253,14 +258,16 @@ abstract class BaseKernel implements IBaseKernel {
         }
         return disposable;
     }
-    public async start(options?: IDisplayOptions): Promise<IKernelSession> {
+    public async start(options?: IStartOptions): Promise<IKernelSession> {
         // Possible this cancellation was cancelled previously.
         if (this.startCancellation.token.isCancellationRequested) {
             this.startCancellation.dispose();
             this.startCancellation = new CancellationTokenSource();
         }
         const result = await this.startJupyterSession(options);
-        await this.triggerOnDidStartKernel(options?.disableUI === true, false);
+        if (!options?.ignoreTriggeringOnPostInitialized) {
+            await this.triggerOnDidStartKernel(options?.disableUI === true, false);
+        }
         return result;
     }
     /**
@@ -496,15 +503,16 @@ abstract class BaseKernel implements IBaseKernel {
         // then we can signal that the kernel was created and can be used by third-party extensions.
         // We also only want to fire off a single event here.
         if (!this._postInitializedOnStartPromise || isRestarting) {
+            this._isPostInitializedInProgress = true;
             this._postInitializedOnStartPromise = this._onPostInitialized.fireAsync({}, this.startCancellation.token);
-            await this._postInitializedOnStartPromise;
+            void this._postInitializedOnStartPromise.finally(() => (this._isPostInitializedInProgress = false));
         }
 
         // Do not enable this, end up in a dead lock.
         // E.g. extension `A` waits for `onDidStart` event, and then calls `executeCode` API.
         // However the `executeCode` API waits for `onDidStart` event to be fired and completed, but thats still waiting for ext `A` to complete.
         // Hence a deadlock.
-        // await this._postInitializedOnStartPromise;
+        await this._postInitializedOnStartPromise;
     }
 
     private async interruptExecution(

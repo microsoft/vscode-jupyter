@@ -545,6 +545,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             return;
         }
         // Start execution now (from the user's point of view)
+        // Creating these execution objects marks the cell as queued for execution (vscode will update cell UI).
         type CellExec = { cell: NotebookCell; exec: NotebookCellExecution };
         const cellExecs: CellExec[] = (this.cellQueue.get(doc) || []).map((cell) => {
             const exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));

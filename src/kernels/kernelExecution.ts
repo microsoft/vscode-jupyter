@@ -15,7 +15,7 @@ import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IDisposable, IExtensionContext } from '../platform/common/types';
 import { logger } from '../platform/logging';
 import { Telemetry } from '../telemetry';
-import { DisplayOptions } from './displayOptions';
+import { DisplayOptions, StartOptions } from './displayOptions';
 import { CellExecutionFactory } from './execution/cellExecution';
 import { CellExecutionMessageHandlerService } from './execution/cellExecutionMessageHandlerService';
 import { CellExecutionQueue } from './execution/cellExecutionQueue';
@@ -219,8 +219,20 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             result = CodeExecution.fromCode(code, extensionId);
             void sessionPromise.then((session) => result.start(session));
         } else {
+            // This only applies to 3rd party extension code executed against kernels.
+            // In kernels we have the ability to fire an async event when a kernel starts.
+            // That event is triggered when a kernel successfully starts.
+            // As part of that event handler 3rd party extensions can send code to kernel for execution.
+            // All this time, the handler is not complete, meaning kernel post initialization event handler is async
+            // & needs to wait before proceeding with other code.
+            // However when an extension handles this and then calls executeCode API, we can run into a dead lock.
+            // The solution is simple, if an extension invokes executeCode API from within the event handler, then we do not need to await on the start.
+            // Hence pass the second argument `true` into StartOptions based on this.kernel.isPostInitializedInProgress
+
             // If we're restarting, wait for it to finish
-            const sessionPromise = this.kernel.restarting.then(() => this.kernel.start(new DisplayOptions(false)));
+            const sessionPromise = this.kernel.restarting.then(() =>
+                this.kernel.start(new StartOptions(false, this.kernel.isPostInitializedInProgress))
+            );
 
             const executionQueue = this.getOrCreateCellExecutionQueue(this.notebook, sessionPromise);
             result = executionQueue.queueCode(code, extensionId, token);

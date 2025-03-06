@@ -334,6 +334,14 @@ export type KernelHooks =
     | 'interruptCompleted'
     | 'didStart'
     | 'willCancel';
+
+export interface IStartOptions extends IDisplayOptions {
+    /**
+     * If `true`, then do not trigger the onPostInitialized event.
+     */
+    ignoreTriggeringOnPostInitialized?: boolean;
+}
+
 export interface IBaseKernel extends IAsyncDisposable {
     readonly ipywidgetsVersion?: 7 | 8;
     readonly onIPyWidgetVersionResolved: Event<7 | 8 | undefined>;
@@ -356,6 +364,14 @@ export interface IBaseKernel extends IAsyncDisposable {
     readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
     readonly onPostInitialized: Event<{ token: CancellationToken; waitUntil(thenable: Thenable<unknown>): void }>;
+    /**
+     * Whether we're still in the process of handling onPostInitialized.
+     * The event `onPostInitialized` is an async event, where we want for it to be handled.
+     * This is fired once, however given that its async we need to know when it is being handled.
+     * This flag will be true only for the duration when the above event has been triggered until its promise has been resolved.
+     * I.e. after the async event has been handled, this value will be false.
+     */
+    readonly isPostInitializedInProgress: boolean;
     readonly restarting: Promise<void>;
     readonly status: KernelMessage.Status;
     readonly disposed: boolean;
@@ -388,7 +404,7 @@ export interface IBaseKernel extends IAsyncDisposable {
      * This flag will tell us whether the kernel has been started explicitly through user action from the UI.
      */
     readonly userStartedKernel: boolean;
-    start(options?: IDisplayOptions): Promise<IKernelSession>;
+    start(options?: IStartOptions): Promise<IKernelSession>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     addHook(
