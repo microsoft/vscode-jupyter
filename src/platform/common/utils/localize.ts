@@ -145,12 +145,12 @@ export namespace DataScience {
         pythonEnvName: string,
         pythonModuleName: string
     ) => l10n.t("Running cells with '{0}' requires the {1} package.", pythonEnvName, pythonModuleName);
+    export const createANewPythonEnvironment = () =>
+        l10n.t('[Create a Python Environment](command:jupyter.createPythonEnvAndSelectController) with the required packages.');
     export const installPackageInstructions = (pythonModuleName: string, commandId: string) =>
-        l10n.t(
-            "Run the following command to install '{0}' into the Python environment. \nCommand: '{1}'",
-            pythonModuleName,
-            commandId
-        );
+        l10n.t("Install '{0}' into the Python environment. \nCommand: '{1}'", pythonModuleName, commandId);
+    export const OrInstallPackageInstructions = (pythonModuleName: string, commandId: string) =>
+        l10n.t("Or install '{0}' using the command: '{1}'", pythonModuleName, commandId);
     export const pythonCondaKernelsWithoutPython = l10n.t(
         'The Python Runtime and IPyKernel will be automatically installed upon selecting this environment.'
     );

@@ -43,7 +43,7 @@ function findPythonEnvironmentClosestToNotebook(notebook: NotebookDocument, envs
     }
 }
 
-function findPythonEnvBelongingToFolder(folder: Uri, pythonEnvs: readonly Environment[]) {
+export function findPythonEnvBelongingToFolder(folder: Uri, pythonEnvs: readonly Environment[]) {
     const localEnvs = pythonEnvs.filter((p) =>
         // eslint-disable-next-line local-rules/dont-use-fspath
         isParentPath(p.environment?.folderUri?.fsPath || p.executable.uri?.fsPath || p.path, folder.fsPath)

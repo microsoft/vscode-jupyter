@@ -9,6 +9,7 @@ export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     // #region New API
     resolveEnvironment(id: string | Environment): Promise<ResolvedEnvironment | undefined>;
+    hasWorkspaceSpecificEnvironment(): Promise<boolean>;
     // #endregion
 
     // #region Old API
