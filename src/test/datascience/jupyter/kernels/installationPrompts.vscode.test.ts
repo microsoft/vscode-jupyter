@@ -61,6 +61,7 @@ import { isUri } from '../../../../platform/common/utils/misc';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../kernels/execution/helpers';
 import { BaseKernelError } from '../../../../kernels/errors/types';
 import { IControllerRegistration } from '../../../../notebooks/controllers/types';
+import type { PythonEnvironment } from '../../../../api';
 
 /* eslint-disable no-invalid-this, @typescript-eslint/no-explicit-any */
 suite('Install IPyKernel (install) @kernelCore', function () {
@@ -90,6 +91,9 @@ suite('Install IPyKernel (install) @kernelCore', function () {
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     let configSettings: ReadWrite<IWatchableJupyterSettings>;
     let previousDisableJupyterAutoStartValue: boolean;
+    let venvNoKernelPathEnv: PythonEnvironment | undefined;
+    let venvNoRegPathEnv: PythonEnvironment | undefined;
+    let venvKernelPathEnv: PythonEnvironment | undefined;
     /*
     This test requires a virtual environment to be created & registered as a kernel.
     It also needs to have ipykernel installed in it.
@@ -116,7 +120,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         await pythonApi?.environments.refreshEnvironments({ forceRefresh: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         let lastError: Error | undefined = undefined;
-        const [interpreter1, interpreter2, interpreter3] = await waitForCondition(
+        [venvNoKernelPathEnv, venvNoRegPathEnv, venvKernelPathEnv] = await waitForCondition(
             async () => {
                 try {
                     return await Promise.all([
@@ -131,12 +135,12 @@ suite('Install IPyKernel (install) @kernelCore', function () {
             defaultNotebookTestTimeout,
             () => `Failed to get interpreter information for 1,2 &/or 3, ${lastError?.toString()}`
         );
-        if (!interpreter1 || !interpreter2 || !interpreter3) {
+        if (!venvKernelPathEnv || !venvNoKernelPathEnv || !venvNoRegPathEnv) {
             throw new Error('Unable to get information for interpreter 1,2,3');
         }
-        venvNoKernelPath = interpreter1.uri;
-        venvNoRegPath = interpreter2.uri;
-        venvKernelPath = interpreter3.uri;
+        venvNoKernelPath = venvNoKernelPathEnv.uri;
+        venvNoRegPath = venvNoRegPathEnv.uri;
+        venvKernelPath = venvKernelPathEnv.uri;
     });
     setup(async function () {
         console.log(`Start test ${this.currentTest?.title}`);
@@ -158,8 +162,8 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         ]);
         await closeActiveWindows();
         await Promise.all([
-            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, venvNoKernelPath),
-            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, venvNoRegPath)
+            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, venvNoKernelPathEnv!),
+            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, venvNoRegPathEnv!)
         ]);
         sinon.restore();
         console.log(`Start Test completed ${this.currentTest?.title}`);
