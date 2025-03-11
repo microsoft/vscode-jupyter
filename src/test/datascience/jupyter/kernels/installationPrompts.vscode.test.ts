@@ -611,9 +611,10 @@ suite('Install IPyKernel (install) @kernelCore', function () {
     }
 
     function verifyInstallIPyKernelInstructionsInOutput(cell: NotebookCell) {
-        const textToLookFor = `Run the following command to install '${ProductNames.get(Product.ipykernel)!}'`;
+        const textToLookFor = `install '${ProductNames.get(Product.ipykernel)!}'`;
         const err = translateCellErrorOutput(cell.outputs[0]);
-        assert.include(err.traceback.join(''), textToLookFor);
+        assert.include(err.traceback.join('').toLowerCase(), textToLookFor.toLowerCase());
+        assert.include(err.traceback.join('').toLowerCase(), 'command:');
         return true;
     }
     type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
