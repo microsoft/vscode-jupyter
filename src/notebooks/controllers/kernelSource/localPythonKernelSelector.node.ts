@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationError, CancellationToken, NotebookDocument, commands, extensions } from 'vscode';
+import { CancellationError, CancellationToken, NotebookDocument, commands, extensions, workspace } from 'vscode';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -26,6 +26,8 @@ import { Commands } from '../../../platform/common/constants';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { logger } from '../../../platform/logging';
 import { DisposableBase } from '../../../platform/common/utils/lifecycle';
+import type { IDisposable } from '../../../platform/common/types';
+import { INotebookPythonEnvironmentService } from '../../types';
 
 export class LocalPythonKernelSelector extends DisposableBase {
     private readonly pythonEnvPicker: BaseProviderBasedQuickPick<Environment>;
@@ -39,6 +41,9 @@ export class LocalPythonKernelSelector extends DisposableBase {
         const filter = ServiceContainer.instance.get<PythonEnvironmentFilter>(PythonEnvironmentFilter);
         const pythonExtensionChecker = ServiceContainer.instance.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         const pythonApiProvider = ServiceContainer.instance.get<IPythonApiProvider>(IPythonApiProvider);
+        const notebookEnvironment = ServiceContainer.instance.get<INotebookPythonEnvironmentService>(
+            INotebookPythonEnvironmentService
+        );
 
         this.provider = ServiceContainer.instance
             .get<PythonEnvironmentQuickPickItemProvider>(PythonEnvironmentQuickPickItemProvider)
@@ -53,15 +58,17 @@ export class LocalPythonKernelSelector extends DisposableBase {
                 DataScience.quickPickSelectPythonEnvironmentTitle
             )
         );
-        let creationCommandAdded = false;
+        let createEnvCommand: IDisposable | undefined;
         const addCreationCommand = () => {
-            if (creationCommandAdded) {
+            if (createEnvCommand) {
                 return;
             }
-            creationCommandAdded = true;
-            this.pythonEnvPicker.addCommand(
+            const canUseWorkspaceSpecificEnv = (workspace.workspaceFolders || [])?.length > 0;
+            const recommendCreatingEnv = !this.pythonEnvPicker.recommended && canUseWorkspaceSpecificEnv;
+            createEnvCommand = this.pythonEnvPicker.addCommand(
                 { label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick}` },
-                this.createNewEnvironment.bind(this)
+                this.createNewEnvironment.bind(this),
+                recommendCreatingEnv
             );
         };
         if (this.provider.items.length) {
@@ -103,7 +110,15 @@ export class LocalPythonKernelSelector extends DisposableBase {
             if (!this.pythonApi || token.isCancellationRequested) {
                 return;
             }
-            this.pythonEnvPicker.recommended = findPreferredPythonEnvironment(this.notebook, this.pythonApi, filter);
+            this.pythonEnvPicker.recommended = findPreferredPythonEnvironment(
+                this.notebook,
+                this.pythonApi,
+                filter,
+                notebookEnvironment
+            );
+            createEnvCommand?.dispose();
+            createEnvCommand = undefined;
+            addCreationCommand();
         };
         const setupApi = (api?: PythonExtension) => {
             if (!api) {

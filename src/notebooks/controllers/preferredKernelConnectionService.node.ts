@@ -8,11 +8,13 @@ import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { getEnvironmentType } from '../../platform/interpreter/helpers';
 import { Environment, PythonExtension } from '@vscode/python-extension';
 import type { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
+import type { INotebookPythonEnvironmentService } from '../types';
 
 export function findPreferredPythonEnvironment(
     notebook: NotebookDocument,
     pythonApi: PythonExtension,
-    filter: PythonEnvironmentFilter
+    filter: PythonEnvironmentFilter,
+    notebookEnvironment: INotebookPythonEnvironmentService
 ): Environment | undefined {
     // 1. Check if we have a .conda or .venv virtual env in the local workspace folder.
     const localEnv = findPythonEnvironmentClosestToNotebook(
@@ -23,12 +25,9 @@ export function findPreferredPythonEnvironment(
         return localEnv;
     }
 
-    const findMatchingActiveEnvironment = () => {
-        const envPath = pythonApi.environments.getActiveEnvironmentPath(notebook.uri);
-        return envPath && pythonApi.environments.known.find((e) => e.id === envPath.id);
-    };
-    // 3. Fall back to the active interpreter.
-    return findMatchingActiveEnvironment();
+    // We never want to recommend even using the active interpreter.
+    // Its possible the active interpreter is global and could cause other issues.
+    return notebookEnvironment.getPythonEnvironment(notebook.uri);
 }
 
 function findPythonEnvironmentClosestToNotebook(notebook: NotebookDocument, envs: readonly Environment[]) {
