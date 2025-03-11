@@ -91,7 +91,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
     ) {
         super();
     }
-    private commands = new Set<CommandQuickPickItem<T>>();
+    private commands: CommandQuickPickItem<T>[] = [];
     private _recommended?: T;
     public set recommended(item: T | undefined) {
         const changed = this._recommended?.id !== item?.id;
@@ -202,18 +202,40 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         return { quickPick, disposables };
     }
     private isCommandQuickPickItem(item: QuickPickItem): item is CommandQuickPickItem<T> {
-        return this.commands.has(item as CommandQuickPickItem<T>);
+        return this.commands.indexOf(item as CommandQuickPickItem<T>) >= 0;
     }
-    public addCommand(item: QuickPickItem, execute: () => Promise<T | undefined | typeof InputFlowAction.back>) {
+    public addCommand(
+        item: QuickPickItem,
+        execute: () => Promise<T | undefined | typeof InputFlowAction.back>,
+        recommended?: boolean
+    ) {
+        let groupItem: CommandQuickPickItem<T> | undefined;
+        if (recommended) {
+            groupItem = {
+                execute: () => Promise.resolve(undefined),
+                label: DataScience.recommendedItemCategoryInQuickPick,
+                kind: QuickPickItemKind.Separator
+            };
+            this.commands.push(groupItem);
+        }
         const quickPickItem = item as CommandQuickPickItem<T>;
         quickPickItem.execute = execute;
-        this.commands.add(quickPickItem);
+        this.commands.push(quickPickItem);
         if (this.quickPick) {
             this.rebuildQuickPickItems(this.quickPick);
         }
         return {
             dispose: () => {
-                this.commands.delete(quickPickItem);
+                if (groupItem) {
+                    const index = this.commands.indexOf(groupItem);
+                    if (index >= 0) {
+                        this.commands.splice(index, 1);
+                    }
+                }
+                const index = this.commands.indexOf(quickPickItem);
+                if (index >= 0) {
+                    this.commands.splice(index, 1);
+                }
             }
         };
     }
@@ -387,8 +409,18 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 recommendedItemQuickPick
             );
         }
+        // Possible we have a command thats recommended.
+        const indexOfSeparator = this.commands.findIndex(
+            (c) => c.kind === QuickPickItemKind.Separator && c.label === DataScience.recommendedItemCategoryInQuickPick
+        );
 
-        let selectedQuickPickItem = recommendedItemQuickPick;
+        const recommendedCommandItem =
+            indexOfSeparator >= 0 && indexOfSeparator + 1 < this.commands.length
+                ? this.commands[indexOfSeparator + 1]
+                : undefined;
+
+        let selectedQuickPickItem: SelectorQuickPickItem<T> | CommandQuickPickItem<T> | undefined =
+            recommendedItemQuickPick || recommendedCommandItem;
         selectedQuickPickItem = !this.selected
             ? selectedQuickPickItem
             : this.quickPickItems
@@ -403,21 +435,32 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         const currentActiveItem = quickPick.activeItems.length ? quickPick.activeItems[0] : undefined;
         if (selectedQuickPickItem && currentActiveItem) {
             if (!this.isSelectorQuickPickItem(currentActiveItem)) {
-                // If user has selected a non-kernel item, then we need to ensure the recommended item is not selected.
-                // Else always select the recommended item
-                selectedQuickPickItem = undefined;
-            } else if (currentActiveItem.item.id !== selectedQuickPickItem.item.id) {
+                // If the active item is the recommended command, then we can keep that as the selected item.
+                if (recommendedCommandItem && recommendedCommandItem?.label === currentActiveItem.label) {
+                    // Do nothing.
+                } else {
+                    // If user has selected a non-kernel item, then we need to ensure the recommended item is not selected.
+                    // Else always select the recommended item
+                    selectedQuickPickItem = undefined;
+                }
+            } else if (
+                !recommendedCommandItem &&
+                selectedQuickPickItem &&
+                'item' in selectedQuickPickItem &&
+                currentActiveItem.item.id !== selectedQuickPickItem.item.id
+            ) {
                 // If user has selected a different kernel, then do not change the selection, leave it as is.
                 // Except when the selection is the recommended item (as thats the default).
                 selectedQuickPickItem = undefined;
             }
         }
+
         const errorItem = this.resolvedProvider?.lastError
             ? this.toErrorQuickPickItem(this.resolvedProvider.lastError)
             : undefined;
 
         const items = (<QuickPickItem[]>[])
-            .concat(Array.from(this.commands.values()))
+            .concat(Array.from(this.commands))
             .concat(recommendedItems)
             .concat(connections)
             .concat(errorItem ? [errorItem] : []);
