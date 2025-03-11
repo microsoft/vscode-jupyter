@@ -45,6 +45,7 @@ import {
 } from '../interpreter/helpers';
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
 import { trackInterpreterDiscovery, trackPythonExtensionActivation } from '../../kernels/telemetry/notebookTelemetry';
+import { findPythonEnvBelongingToFolder } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -351,6 +352,26 @@ export class InterpreterService implements IInterpreterService {
     public initialize() {
         this.hookupOnDidChangeInterpreterEvent();
     }
+    public async hasWorkspaceSpecificEnvironment(): Promise<boolean> {
+        if (!(workspace.workspaceFolders || []).length) {
+            return false;
+        }
+
+        const api = await this.getApi();
+        if (!api) {
+            return false;
+        }
+        if (
+            (workspace.workspaceFolders || []).some((folder) =>
+                findPythonEnvBelongingToFolder(folder.uri, api.environments.known)
+            )
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
     public async resolveEnvironment(id: string | Environment): Promise<ResolvedEnvironment | undefined> {
         return this.getApi().then((api) => {
             if (!api) {

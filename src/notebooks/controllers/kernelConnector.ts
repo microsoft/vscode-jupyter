@@ -104,7 +104,7 @@ export class KernelConnector {
             // If we failed to start the kernel, then clear cache used to track
             // whether we have dependencies installed or not.
             // Possible something is missing.
-            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.uri).catch(noop);
+            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter).catch(noop);
         }
 
         const handleResult = await errorHandler.handleKernelError(

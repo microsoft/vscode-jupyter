@@ -199,7 +199,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             .isInstalled(Product.ipykernel, kernelConnection.interpreter)
             .then((installed) => installed === true);
         installedPromise.then((installed) => {
-            if (installed) {
+            if (installed && kernelConnection.interpreter) {
                 trackPackageInstalledIntoInterpreter(
                     this.memento,
                     Product.ipykernel,
