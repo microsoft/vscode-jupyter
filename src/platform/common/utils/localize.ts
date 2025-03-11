@@ -146,7 +146,9 @@ export namespace DataScience {
         pythonModuleName: string
     ) => l10n.t("Running cells with '{0}' requires the {1} package.", pythonEnvName, pythonModuleName);
     export const createANewPythonEnvironment = () =>
-        l10n.t('[Create a Python Environment](command:jupyter.createPythonEnvAndSelectController) with the required packages.');
+        l10n.t(
+            '[Create a Python Environment](command:jupyter.createPythonEnvAndSelectController) with the required packages.'
+        );
     export const installPackageInstructions = (pythonModuleName: string, commandId: string) =>
         l10n.t("Install '{0}' into the Python environment. \nCommand: '{1}'", pythonModuleName, commandId);
     export const OrInstallPackageInstructions = (pythonModuleName: string, commandId: string) =>
