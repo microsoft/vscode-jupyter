@@ -779,13 +779,13 @@ export async function endCellAndDisplayErrorsInCell(
 }
 
 export function findErrorLocation(traceback: string[], cell: NotebookCell) {
-    const cellRegex = /Cell\s+(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
+    const cellRegex = /Cell\s+In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
     // older versions of IPython ~8.3.0
-    const inputRegex =
-        /Input\s+?(?:\u001b\[.+?m)?In\s*\[(?<executionCount>\d+)\][^<]*<cell line:\s?(?<lineNumber>\d+)>.*/;
+    const inputRegex = /Input\s+?In\s*\[(?<executionCount>\d+)\][^<]*<cell line:\s?(?<lineNumber>\d+)>.*/;
     let lineNumber: number | undefined = undefined;
     for (const line of traceback) {
-        const lineMatch = cellRegex.exec(line) ?? inputRegex.exec(line);
+        const cleanLine = line.replace(/(?:\u001b\[.+?m)/g, '');
+        const lineMatch = cellRegex.exec(cleanLine) ?? inputRegex.exec(cleanLine);
         if (lineMatch && lineMatch.groups) {
             lineNumber = parseInt(lineMatch.groups['lineNumber']);
             break;
