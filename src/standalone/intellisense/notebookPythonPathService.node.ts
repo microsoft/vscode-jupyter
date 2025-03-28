@@ -15,6 +15,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { raceTimeout } from '../../platform/common/utils/async';
 import * as fs from 'fs-extra';
 import { isUsingPylance } from './notebookPythonPathService';
+import { toPythonSafePath } from '../../platform/common/utils/encoder';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -116,7 +117,7 @@ import os as _VSCODE_os
 import sys as _VSCODE_sys
 import builtins as _VSCODE_builtins
 
-if _VSCODE_os.path.exists("${__filename}"):
+if _VSCODE_os.path.exists(${toPythonSafePath(__filename)}):
     _VSCODE_builtins.print(f"EXECUTABLE{_VSCODE_sys.executable}EXECUTABLE")
 
 del _VSCODE_os, _VSCODE_sys, _VSCODE_builtins
