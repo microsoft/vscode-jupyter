@@ -784,6 +784,7 @@ export function findErrorLocation(traceback: string[], cell: NotebookCell) {
     const inputRegex = /Input\s+?In\s*\[(?<executionCount>\d+)\][^<]*<cell line:\s?(?<lineNumber>\d+)>.*/;
     let lineNumber: number | undefined = undefined;
     for (const line of traceback) {
+        // TODO: use string.ts strip ANSI method from core
         const cleanLine = line.replace(/(?:\u001b\[.+?m)/g, '');
         const lineMatch = cellRegex.exec(cleanLine) ?? inputRegex.exec(cleanLine);
         if (lineMatch && lineMatch.groups) {
