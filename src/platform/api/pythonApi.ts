@@ -12,14 +12,15 @@ import {
     workspace,
     extensions,
     window,
-    commands
+    commands,
+    Disposable
 } from 'vscode';
 import { IPythonApiProvider, IPythonExtensionChecker, PythonApi, PythonEnvironment_PythonApi } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import { IDisposableRegistry, IExtensionContext } from '../common/types';
+import { IDisposableRegistry, IExtensionContext, type IDisposable } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { logger } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
@@ -46,6 +47,7 @@ import {
 import { getWorkspaceFolderIdentifier } from '../common/application/workspace.base';
 import { trackInterpreterDiscovery, trackPythonExtensionActivation } from '../../kernels/telemetry/notebookTelemetry';
 import { findPythonEnvBelongingToFolder } from '../../notebooks/controllers/preferredKernelConnectionService.node';
+import { DisposableMap } from '../common/utils/lifecycle';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -615,6 +617,8 @@ export class InterpreterService implements IInterpreterService {
         if (this.eventHandlerAdded) {
             return;
         }
+        const removedEnvironments = new DisposableMap<string, IDisposable>();
+        this.disposables.push(removedEnvironments);
         this.getApi()
             .then((api) => {
                 if (!this.eventHandlerAdded && api) {
@@ -641,11 +645,23 @@ export class InterpreterService implements IInterpreterService {
                             logger.trace(`Python API env change detected, ${e.type} => '${e.env.id}'`);
                             // Remove items that are no longer valid.
                             if (e.type === 'remove') {
-                                this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
-                                this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
-                                this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                // Wait a few seconds, possible the Python extension API eagerly triggers
+                                // a delete event, but the env is still valid & then subsequently triggers an add/update event.
+                                // This causes issues for us, as the notebook controller gets removed & users code can get stopped.
+                                const interval = 30_000;
+                                const timeout = setTimeout(() => {
+                                    logger.trace(
+                                        `Python API env change detected & removed after ${interval}, ${e.type} => '${e.env.id}'`
+                                    );
+                                    removedEnvironments.deleteAndDispose(e.env.id);
+                                    this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
+                                    this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
+                                    this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                }, interval);
+                                removedEnvironments.set(e.env.id, new Disposable(() => clearTimeout(timeout)));
                                 return;
                             }
+                            removedEnvironments.deleteAndDispose(e.env.id);
                             const info = resolvedPythonEnvToJupyterEnv(getCachedEnvironment(e.env));
                             if (info) {
                                 this.triggerEventIfAllowed('interpreterChangeEvent', info);
