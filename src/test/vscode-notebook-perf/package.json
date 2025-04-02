@@ -33,7 +33,7 @@
     "@vscode/test-cli": "^0.0.8",
     "@vscode/test-electron": "^2.3.9",
     "glob": "^7.1.2",
-    "mocha": "^10.2.0",
+    "mocha": "^10.8.2",
     "typescript": "^5.3.3"
   },
   "displayName": "Notebook Performance Test",
