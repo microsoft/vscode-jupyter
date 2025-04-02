@@ -1,4 +1,4 @@
-FROM amd64/python:3.11-alpine
+FROM --platform=linux/amd64 python:3.11-alpine
 RUN apk add gcc libc-dev linux-headers musl-dev zlib zlib-dev python3-dev curl
 RUN python -m pip install ipykernel
 RUN sh -c "$(curl -fsSL https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)" -- \
