@@ -15,6 +15,7 @@ import {
     JupyterServerProviderHandle
 } from '../../kernels/jupyter/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
+import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 
 export interface IJupyterPasswordConnectInfo {
     requiresPassword: boolean;
@@ -267,7 +268,7 @@ export class JupyterPasswordConnect {
                 this.addAllowUnauthorized(url, allowUnauthorized ? true : false, options)
             );
         } catch (e) {
-            if (e.message.indexOf('reason: self signed certificate') >= 0) {
+            if (JupyterSelfCertsError.isSelfCertsError(e)) {
                 // Ask user to change setting and possibly try again.
                 const enableOption: string = DataScience.jupyterSelfCertEnable;
                 const closeOption: string = DataScience.jupyterSelfCertClose;
