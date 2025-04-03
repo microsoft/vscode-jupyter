@@ -7,6 +7,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { logger } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IJupyterRequestAgentCreator, IJupyterRequestCreator } from '../../kernels/jupyter/types';
+import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 
 /**
  * Responsible for intercepting connections to a remote server and asking for a password if necessary
@@ -80,7 +81,7 @@ export class JupyterHubPasswordConnect {
                 this.addAllowUnauthorized(url, allowUnauthorized ? true : false, options)
             );
         } catch (e) {
-            if (e.message.indexOf('reason: self signed certificate') >= 0) {
+            if (JupyterSelfCertsError.isSelfCertsError(e)) {
                 // Ask user to change setting and possibly try again.
                 const enableOption: string = DataScience.jupyterSelfCertEnable;
                 const closeOption: string = DataScience.jupyterSelfCertClose;

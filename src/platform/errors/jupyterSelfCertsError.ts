@@ -16,7 +16,11 @@ export class JupyterSelfCertsError extends BaseError {
     constructor(message: string) {
         super('jupyterselfcert', message);
     }
-    public static isSelfCertsError(err: Error) {
-        return err.message.indexOf('reason: self signed certificate') >= 0;
+    public static isSelfCertsError(err: unknown) {
+        const message = (err as undefined | { message: string })?.message ?? '';
+        return (
+            message.indexOf('reason: self signed certificate') >= 0 ||
+            message.indexOf('reason: unable to verify the first certificate') >= 0
+        );
     }
 }
