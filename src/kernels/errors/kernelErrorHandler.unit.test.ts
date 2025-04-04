@@ -738,7 +738,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 result,
                 [
                     "Running cells with 'condaEnv1 (Python 3.12.7)' requires the ipykernel package.",
-                    "Run the following command to install 'ipykernel' into the Python environment. ",
+                    "Install 'ipykernel' into the Python environment. ",
                     `Command: 'conda install -n condaEnv1 ipykernel --update-deps --force-reinstall'`
                 ].join('\n')
             );
@@ -790,7 +790,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 result,
                 [
                     "Running cells with 'Hello (Python 3.12.7)' requires the ipykernel package.",
-                    "Run the following command to install 'ipykernel' into the Python environment. ",
+                    "Install 'ipykernel' into the Python environment. ",
                     command
                 ].join('\n')
             );

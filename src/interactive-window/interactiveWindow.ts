@@ -381,7 +381,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                             .then((cell) =>
                                 // If our cell result was a failure show an error
                                 this.errorHandler
-                                    .getErrorMessageForDisplayInCell(ex, 'execution', this.owningResource)
+                                    .getErrorMessageForDisplayInCellOutput(ex, 'execution', this.owningResource)
                                     .then((message) => this.showErrorForCell(message, cell))
                             )
                             .catch(noop);

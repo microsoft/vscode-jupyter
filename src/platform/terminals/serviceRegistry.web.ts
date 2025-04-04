@@ -3,8 +3,8 @@
 
 import { interfaces } from 'inversify';
 import { ClassType } from '../ioc/types';
-import { CodeExecutionHelper } from './codeExecution/codeExecutionHelper.web';
 import { ICodeExecutionHelper } from './types';
+import { CodeExecutionHelper } from './codeExecution/codeExecutionHelper';
 
 interface IServiceRegistry {
     addSingleton<T>(

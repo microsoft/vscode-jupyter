@@ -15,6 +15,7 @@ import { INotebookEditorProvider, INotebookPythonEnvironmentService } from './ty
 import { getCachedEnvironment, getInterpreterInfo } from '../platform/interpreter/helpers';
 import type { Environment } from '@vscode/python-extension';
 import type { PythonEnvironment } from '../platform/pythonEnvironments/info';
+import { toPythonSafePath } from '../platform/common/utils/encoder';
 
 @injectable()
 export class NotebookPythonEnvironmentService extends DisposableBase implements INotebookPythonEnvironmentService {
@@ -152,7 +153,7 @@ import os as _VSCODE_os
 import sys as _VSCODE_sys
 import builtins as _VSCODE_builtins
 
-if _VSCODE_os.path.exists("${__filename}"):
+if _VSCODE_os.path.exists(${toPythonSafePath(__filename)}):
     _VSCODE_builtins.print(f"EXECUTABLE{_VSCODE_sys.executable}EXECUTABLE")
 
 del _VSCODE_os, _VSCODE_sys, _VSCODE_builtins

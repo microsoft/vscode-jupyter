@@ -149,7 +149,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 if (!connection) {
                     throw ex;
                 } else if (JupyterSelfCertsError.isSelfCertsError(ex)) {
-                    throw new JupyterSelfCertsError(connection.baseUrl);
+                    throw new JupyterSelfCertsError(`${connection.baseUrl}, ${ex.message}`);
                 } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(ex)) {
                     throw new JupyterSelfCertsExpiredError(connection.baseUrl);
                 } else {

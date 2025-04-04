@@ -68,6 +68,7 @@ import {
 } from '../../platform/interpreter/helpers';
 import { JupyterServerCollection } from '../../api';
 import { getJupyterDisplayName } from '../jupyter/connection/jupyterServerProviderRegistry';
+import { wasIPyKernelInstalAttempted } from '../../platform/interpreter/installer/productInstaller';
 
 /***
  * Common code for handling errors.
@@ -129,6 +130,21 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         }
     }
     public async getErrorMessageForDisplayInCell(error: Error, errorContext: KernelAction, resource: Resource) {
+        return this.getErrorMessageForDisplayInCellImpl(error, errorContext, resource, false);
+    }
+    public async getErrorMessageForDisplayInCellOutput(
+        err: Error,
+        errorContext: KernelAction,
+        resource: Resource
+    ): Promise<string> {
+        return this.getErrorMessageForDisplayInCellImpl(err, errorContext, resource, true);
+    }
+    private async getErrorMessageForDisplayInCellImpl(
+        error: Error,
+        errorContext: KernelAction,
+        resource: Resource,
+        displayInCellOutput: boolean
+    ): Promise<string> {
         error = WrappedError.unwrap(error);
         if (!isCancellationError(error)) {
             logger.error(`Error in execution (get message for cell)`, error);
@@ -138,7 +154,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             // No need to display errors in each cell.
             return '';
         } else if (error instanceof JupyterKernelDependencyError) {
-            return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
+            const hasWorkspaceEnv = this.interpreterService
+                ? await this.interpreterService.hasWorkspaceSpecificEnvironment()
+                : false;
+            return (
+                getIPyKernelMissingErrorMessageForCell(
+                    error.kernelConnectionMetadata,
+                    !hasWorkspaceEnv && !isWebExtension() && displayInCellOutput
+                ) || error.message
+            );
         } else if (error instanceof JupyterInstallError) {
             return getJupyterMissingErrorMessageForCell(error) || error.message;
         } else if (error instanceof RemoteJupyterServerConnectionError && !isWebExtension()) {
@@ -180,7 +204,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         ) {
             // We don't look for ipykernel dependencies before we start a kernel, hence
             // its possible the kernel failed to start due to missing dependencies.
-            return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
+            const hasWorkspaceEnv = this.interpreterService
+                ? await this.interpreterService.hasWorkspaceSpecificEnvironment()
+                : false;
+            return (
+                getIPyKernelMissingErrorMessageForCell(
+                    error.kernelConnectionMetadata,
+                    !hasWorkspaceEnv && !isWebExtension() && displayInCellOutput
+                ) || error.message
+            );
         } else if (error instanceof BaseKernelError || error instanceof WrappedKernelError) {
             const [files, sysPrefix] = await Promise.all([
                 this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource),
@@ -199,7 +231,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     failureInfo.reason === KernelFailureReason.moduleNotFoundFailure &&
                     ['ipykernel_launcher', 'ipykernel'].includes(failureInfo.moduleName)
                 ) {
-                    return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
+                    const hasWorkspaceEnv = this.interpreterService
+                        ? await this.interpreterService.hasWorkspaceSpecificEnvironment()
+                        : false;
+                    return (
+                        getIPyKernelMissingErrorMessageForCell(
+                            error.kernelConnectionMetadata,
+                            !hasWorkspaceEnv && !isWebExtension() && displayInCellOutput
+                        ) || error.message
+                    );
                 }
                 const messageParts = [failureInfo.message];
                 if (failureInfo.moreInfoLink) {
@@ -569,7 +609,10 @@ function getCombinedErrorMessage(prefix: string = '', message: string = '') {
     }
     return errorMessage;
 }
-function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnectionMetadata) {
+function getIPyKernelMissingErrorMessageForCell(
+    kernelConnection: KernelConnectionMetadata,
+    recommendCreatingAndEnvironment: boolean
+) {
     if (
         kernelConnection.kind === 'connectToLiveRemoteKernel' ||
         kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
@@ -602,12 +645,23 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
             getFilePath(kernelConnection.interpreter.uri)
         )} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
     }
-    const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter(
-        displayNameOfKernel,
-        ProductNames.get(Product.ipykernel)!
-    );
-    const installationInstructions = DataScience.installPackageInstructions(ipyKernelName, installerCommand);
-    return message + '\n' + installationInstructions;
+    const messages = [
+        DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter(
+            displayNameOfKernel,
+            ProductNames.get(Product.ipykernel)!
+        )
+    ];
+    if (recommendCreatingAndEnvironment) {
+        if (wasIPyKernelInstalAttempted(kernelConnection.interpreter)) {
+            messages.push(DataScience.createANewPythonEnvironment());
+        } else {
+            messages.push(DataScience.createANewPythonEnvironment());
+            messages.push(DataScience.OrInstallPackageInstructions(ipyKernelName, installerCommand));
+        }
+    } else {
+        messages.push(DataScience.installPackageInstructions(ipyKernelName, installerCommand));
+    }
+    return messages.join('\n');
 }
 function getJupyterMissingErrorMessageForCell(err: JupyterInstallError) {
     const productNames = `${ProductNames.get(Product.jupyter)} ${Common.and} ${ProductNames.get(Product.notebook)}`;

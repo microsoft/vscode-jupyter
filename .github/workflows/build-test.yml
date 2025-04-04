@@ -93,7 +93,7 @@ jobs:
         uses: ./.github/actions/build-vsix
         id: build-vsix
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
           path: 'ms-toolsai-jupyter-insiders.vsix'
@@ -574,7 +574,7 @@ jobs:
 
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install imagemagick x11-xserver-utils
+        run: sudo apt-get install --fix-missing imagemagick x11-xserver-utils
 
         # This step is slow.
       - name: Compile # if not cached
@@ -641,7 +641,7 @@ jobs:
         run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
 
       - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
         env:
@@ -658,7 +658,7 @@ jobs:
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web' && matrix.tags != '@notebookPerformance'
 
       - name: Run Notebook Perf Test Without Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testPerfInVSCode
         env:
@@ -678,7 +678,7 @@ jobs:
         if: matrix.tags == '@notebookPerformance'
 
       - name: Run Execution Perf Test With Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testExecPerfInVSCode
         env:
@@ -702,7 +702,7 @@ jobs:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
       - name: Run Native Notebook with VSCode & Jupyter (web)
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: npm run testWebExtension
         env:
@@ -736,7 +736,7 @@ jobs:
         if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.jupyterConnection != 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
@@ -748,7 +748,7 @@ jobs:
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
 
       - name: Upload VS code logs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}-${{matrix.ipywidgetsVersion}}
@@ -760,7 +760,7 @@ jobs:
         run: npm run printTestResults
 
       - name: Upload test result, screenshots files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}-${{matrix.ipywidgetsVersion}}
@@ -807,7 +807,7 @@ jobs:
         run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Download VSIX
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
 
@@ -837,6 +837,6 @@ jobs:
           DISPLAY: 10
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: npm run testSmokeLogged

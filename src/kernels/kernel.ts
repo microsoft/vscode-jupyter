@@ -15,7 +15,8 @@ import {
     Memento,
     CancellationError,
     window,
-    workspace
+    workspace,
+    CancellationToken
 } from 'vscode';
 import {
     CodeSnippets,
@@ -53,7 +54,8 @@ import {
     IKernelSettings,
     IKernelController,
     IThirdPartyKernel,
-    IKernelSessionFactory
+    IKernelSessionFactory,
+    type IStartOptions
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -66,6 +68,7 @@ import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutErro
 import { dispose } from '../platform/common/utils/lifecycle';
 import { getCachedVersion, getEnvironmentType } from '../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker } from './telemetry/notebookTelemetry';
+import { AsyncEmitter } from '../platform/common/utils/events';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**
@@ -129,7 +132,7 @@ abstract class BaseKernel implements IBaseKernel {
     get onStarted(): Event<void> {
         return this._onStarted.event;
     }
-    get onPostInitialized(): Event<void> {
+    get onPostInitialized(): Event<{ token: CancellationToken; waitUntil(thenable: Thenable<unknown>): void }> {
         return this._onPostInitialized.event;
     }
     get onDisposed(): Event<void> {
@@ -178,12 +181,19 @@ abstract class BaseKernel implements IBaseKernel {
     private _disposed?: boolean;
     private _disposing?: boolean;
     private _ignoreJupyterSessionDisposedErrors?: boolean;
-    private _postInitializedOnStart?: boolean;
+    private _postInitializedOnStartPromise?: Promise<void>;
     private readonly _onDidKernelSocketChange = new EventEmitter<void>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
-    private readonly _onPostInitialized = new EventEmitter<void>();
+    private readonly _onPostInitialized = new AsyncEmitter<{
+        waitUntil: (thenable: Thenable<unknown>) => void;
+        token: CancellationToken;
+    }>();
+    private _isPostInitializedInProgress?: boolean;
+    public get isPostInitializedInProgress(): boolean {
+        return this._isPostInitializedInProgress === true;
+    }
     private readonly _onDisposed = new EventEmitter<void>();
     private _jupyterSessionPromise?: Promise<IKernelSession>;
     private readonly hookedSessionForEvents = new WeakSet<IKernelSession>();
@@ -248,22 +258,17 @@ abstract class BaseKernel implements IBaseKernel {
         }
         return disposable;
     }
-    public async start(options?: IDisplayOptions): Promise<IKernelSession> {
+    public async start(options?: IStartOptions): Promise<IKernelSession> {
         // Possible this cancellation was cancelled previously.
         if (this.startCancellation.token.isCancellationRequested) {
             this.startCancellation.dispose();
             this.startCancellation = new CancellationTokenSource();
         }
-        return this.startJupyterSession(options).then((result) => {
-            // If we started and the UI is no longer disabled (ie., a user executed a cell)
-            // then we can signal that the kernel was created and can be used by third-party extensions.
-            // We also only want to fire off a single event here.
-            if (!options?.disableUI && !this._postInitializedOnStart) {
-                this._onPostInitialized.fire();
-                this._postInitializedOnStart = true;
-            }
-            return result;
-        });
+        const result = await this.startJupyterSession(options);
+        if (!options?.ignoreTriggeringOnPostInitialized) {
+            await this.triggerOnDidStartKernel(options?.disableUI === true, false);
+        }
+        return result;
     }
     /**
      * Interrupts the execution of cells.
@@ -335,6 +340,7 @@ abstract class BaseKernel implements IBaseKernel {
                 ? await this._jupyterSessionPromise.catch(() => undefined)
                 : undefined;
             this._jupyterSessionPromise = undefined;
+            this._postInitializedOnStartPromise = undefined;
             if (this._session) {
                 promises.push(disposeAsync(this._session, this.disposables));
                 this._session = undefined;
@@ -404,6 +410,7 @@ abstract class BaseKernel implements IBaseKernel {
                 const session = this._session;
                 this._session = undefined;
                 this._jupyterSessionPromise = undefined;
+                this._postInitializedOnStartPromise = undefined;
                 // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
                 // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
                 sendKernelTelemetryEvent(
@@ -428,7 +435,7 @@ abstract class BaseKernel implements IBaseKernel {
             this._onRestarted.fire();
 
             // Also signal that the kernel post initialization completed.
-            this._onPostInitialized.fire();
+            await this.triggerOnDidStartKernel(false, true);
         } catch (ex) {
             logger.error(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
@@ -485,6 +492,27 @@ abstract class BaseKernel implements IBaseKernel {
             }
         }
         return this._jupyterSessionPromise;
+    }
+
+    private async triggerOnDidStartKernel(disableUI: boolean, isRestarting = false) {
+        if (disableUI) {
+            return;
+        }
+
+        // If we started and the UI is no longer disabled (ie., a user executed a cell)
+        // then we can signal that the kernel was created and can be used by third-party extensions.
+        // We also only want to fire off a single event here.
+        if (!this._postInitializedOnStartPromise || isRestarting) {
+            this._isPostInitializedInProgress = true;
+            this._postInitializedOnStartPromise = this._onPostInitialized.fireAsync({}, this.startCancellation.token);
+            void this._postInitializedOnStartPromise.finally(() => (this._isPostInitializedInProgress = false));
+        }
+
+        // Do not enable this, end up in a dead lock.
+        // E.g. extension `A` waits for `onDidStart` event, and then calls `executeCode` API.
+        // However the `executeCode` API waits for `onDidStart` event to be fired and completed, but thats still waiting for ext `A` to complete.
+        // Hence a deadlock.
+        await this._postInitializedOnStartPromise;
     }
 
     private async interruptExecution(
@@ -737,6 +765,7 @@ abstract class BaseKernel implements IBaseKernel {
                         );
                         const isActiveSessionDead = this._session === session;
                         this._jupyterSessionPromise = undefined;
+                        this._postInitializedOnStartPromise = undefined;
                         this._session = undefined;
 
                         // If the active session died, then kernel is dead.

@@ -133,7 +133,9 @@ export class JupyterPaths {
     private async getRuntimeDirImpl(): Promise<Uri | undefined> {
         let runtimeDir: Uri | undefined;
         const userHomeDir = this.platformService.homeDir;
-        if (userHomeDir) {
+        if (process.env['JUPYTER_RUNTIME_DIR']) {
+            runtimeDir = Uri.file(path.normalize(process.env['JUPYTER_RUNTIME_DIR']));
+        } else if (userHomeDir) {
             if (this.platformService.isWindows) {
                 // On windows the path is not correct if we combine those variables.
                 // It won't point to a path that you can actually read from.
@@ -141,8 +143,8 @@ export class JupyterPaths {
             } else if (this.platformService.isMac) {
                 runtimeDir = uriPath.joinPath(userHomeDir, macJupyterRuntimePath);
             } else {
-                runtimeDir = process.env['$XDG_RUNTIME_DIR']
-                    ? Uri.file(path.join(process.env['$XDG_RUNTIME_DIR'], 'jupyter', 'runtime'))
+                runtimeDir = process.env['XDG_RUNTIME_DIR']
+                    ? Uri.file(path.join(process.env['XDG_RUNTIME_DIR'], 'jupyter', 'runtime'))
                     : uriPath.joinPath(userHomeDir, '.local', 'share', 'jupyter', 'runtime');
             }
         }

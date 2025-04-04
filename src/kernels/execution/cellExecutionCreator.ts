@@ -7,8 +7,7 @@ import {
     NotebookCell,
     NotebookCellExecution,
     NotebookCellOutput,
-    NotebookCellOutputItem,
-    TextDocument
+    NotebookCellOutputItem
 } from 'vscode';
 import { logger } from '../../platform/logging';
 import { IKernelController } from '../types';
@@ -121,13 +120,12 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
  * Class for mapping cells to an instance of a NotebookCellExecution object
  */
 export class CellExecutionCreator {
-    private static _map = new WeakMap<TextDocument, NotebookCellExecutionWrapper>();
+    private static _map = new WeakMap<NotebookCell, NotebookCellExecutionWrapper>();
     static getOrCreate(cell: NotebookCell, controller: IKernelController, clearOutputOnStartWithTime = false) {
         let cellExecution: NotebookCellExecutionWrapper | undefined;
-        const key = cell.document;
         cellExecution = this.get(cell);
         if (!cellExecution) {
-            cellExecution = CellExecutionCreator.create(key, cell, controller, clearOutputOnStartWithTime);
+            cellExecution = CellExecutionCreator.create(cell, controller, clearOutputOnStartWithTime);
         } else {
             // Cell execution may already exist, but its controller may be different
             if (cellExecution.controllerId !== controller.id) {
@@ -136,7 +134,7 @@ export class CellExecutionCreator {
                 oldExecution.end(undefined);
 
                 // Create a new one with the new controller
-                cellExecution = CellExecutionCreator.create(key, cell, controller, clearOutputOnStartWithTime);
+                cellExecution = CellExecutionCreator.create(cell, controller, clearOutputOnStartWithTime);
 
                 // Start the new one off now if the old one was already started
                 if (oldExecution.started) {
@@ -147,25 +145,19 @@ export class CellExecutionCreator {
         return cellExecution;
     }
     static get(cell: NotebookCell) {
-        const key = cell.document;
-        return CellExecutionCreator._map.get(key);
+        return CellExecutionCreator._map.get(cell);
     }
 
-    private static create(
-        key: TextDocument,
-        cell: NotebookCell,
-        controller: IKernelController,
-        clearOutputOnStartWithTime = false
-    ) {
+    private static create(cell: NotebookCell, controller: IKernelController, clearOutputOnStartWithTime = false) {
         const result = new NotebookCellExecutionWrapper(
             controller.createNotebookCellExecution(cell),
             controller.id,
             () => {
-                CellExecutionCreator._map.delete(key);
+                CellExecutionCreator._map.delete(cell);
             },
             clearOutputOnStartWithTime
         );
-        CellExecutionCreator._map.set(key, result);
+        CellExecutionCreator._map.set(cell, result);
         return result;
     }
 }

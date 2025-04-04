@@ -33,6 +33,10 @@ export interface IDataScienceErrorHandler {
      * Thus based on the context the error message would be different.
      */
     getErrorMessageForDisplayInCell(err: Error, errorContext: KernelAction, resource: Resource): Promise<string>;
+    /**
+     * Same as `getErrorMessageForDisplayInCell`, but can contain commands & hyperlinks that can be displayed in the output.
+     */
+    getErrorMessageForDisplayInCellOutput(err: Error, errorContext: KernelAction, resource: Resource): Promise<string>;
 }
 
 export abstract class BaseKernelError extends BaseError {

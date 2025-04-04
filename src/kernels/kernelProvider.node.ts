@@ -98,9 +98,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
             this.disposables
         );
         kernel.onPostInitialized(
-            () => {
-                this._onDidPostInitializeKernel.fire(kernel);
-            },
+            (e) => e.waitUntil(this._onDidPostInitializeKernel.fireAsync({ kernel }, e.token)),
             this,
             this.disposables
         );
@@ -160,9 +158,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             this.disposables
         );
         kernel.onPostInitialized(
-            () => {
-                this._onDidPostInitializeKernel.fire(kernel);
-            },
+            (e) => e.waitUntil(this._onDidPostInitializeKernel.fireAsync({ kernel }, e.token)),
             this,
             this.disposables
         );
