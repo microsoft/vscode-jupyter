@@ -1784,7 +1784,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.excludeUserSitePackages.description%",
-                    "scope": "application"
+                    "scope": "window"
                 },
                 "jupyter.enableExtendedKernelCompletions": {
                     "type": "boolean",
