@@ -72,6 +72,7 @@ export class MockDocument implements TextDocument {
         this._lines = this.createLines();
         this._onSave = onSave;
     }
+    encoding: string;
 
     public setContent(contents: string) {
         this._contents = contents;
