@@ -189,7 +189,7 @@ export class PythonEnvKernelConnectionCreator {
             const result: CreateEnvironmentResult = await commands.executeCommand('python.createEnvironment', {
                 showBackButton: true,
                 selectEnvironment: true,
-                additionalPackages: ["ipykernel"]
+                additionalPackages: ['ipykernel']
             });
             if (result?.action === 'Cancel') {
                 return { action: 'Cancel' };
