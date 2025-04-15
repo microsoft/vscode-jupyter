@@ -90,17 +90,37 @@ export class JupyterPaths {
             return cachedRootPath || this.cachedKernelSpecRootPath;
         }
         this.cachedKernelSpecRootPath = (async () => {
-            const userHomeDir = this.platformService.homeDir;
-            if (userHomeDir) {
-                if (this.platformService.isWindows) {
-                    // On windows the path is not correct if we combine those variables.
-                    // It won't point to a path that you can actually read from.
-                    return tryGetRealPath(uriPath.joinPath(userHomeDir, winJupyterPath));
-                } else if (this.platformService.isMac) {
-                    return uriPath.joinPath(userHomeDir, macJupyterPath);
-                } else {
-                    return uriPath.joinPath(userHomeDir, linuxJupyterPath);
+            try {
+                const userHomeDir = this.platformService.homeDir;
+                logger.trace(`User Home Dir`, userHomeDir?.toString());
+                logger.trace(`is is Windows`, this.platformService.isWindows);
+                logger.trace(`is is Mac`, this.platformService.isMac);
+                if (userHomeDir) {
+                    if (this.platformService.isWindows) {
+                        logger.trace(
+                            `Get real Win Jupyter Path`,
+                            uriPath.joinPath(userHomeDir, winJupyterPath).toString()
+                        );
+                        // On windows the path is not correct if we combine those variables.
+                        // It won't point to a path that you can actually read from.
+                        return await tryGetRealPath(uriPath.joinPath(userHomeDir, winJupyterPath));
+                    } else if (this.platformService.isMac) {
+                        logger.trace(
+                            `Get real Mac Jupyter Path`,
+                            uriPath.joinPath(userHomeDir, macJupyterPath).toString()
+                        );
+                        return uriPath.joinPath(userHomeDir, macJupyterPath);
+                    } else {
+                        logger.trace(
+                            `Get real Linux Jupyter Path`,
+                            uriPath.joinPath(userHomeDir, linuxJupyterPath).toString()
+                        );
+                        return uriPath.joinPath(userHomeDir, linuxJupyterPath);
+                    }
                 }
+            } catch (ex) {
+                logger.error(`Failed to get Jupyter KernelSpec Root Path`, ex);
+                throw ex;
             }
         })();
         this.cachedKernelSpecRootPath
