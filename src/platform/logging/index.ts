@@ -64,7 +64,7 @@ export function initializeLoggers(options: {
         })
     );
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
-    registerLogger(new OutputChannelLogger(standardOutputChannel, options?.userNameRegEx, options?.homePathRegEx));
+    registerLogger(new OutputChannelLogger(standardOutputChannel, options?.homePathRegEx, options?.userNameRegEx));
 
     if (options.addConsoleLogger) {
         // In CI there's no need for the label.
