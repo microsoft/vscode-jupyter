@@ -144,6 +144,44 @@ function style({ minify = true, charset = 'utf8' }: StylePluginOptions = {}): Pl
     };
 }
 
+const jupyterLabServerConnectionPlugin: Plugin = {
+    name: 'jupyterLabServerConnection',
+    setup(build) {
+        const cwd = process.cwd();
+        build.onResolve({ filter: /serverconnection$/ }, async (args) => {
+            const absPath = `${path.join(args.resolveDir, args.path)}.js`;
+            if (await fs.pathExists(absPath)) {
+                const contents = await fs
+                    .readFile(absPath, 'utf8')
+                    .then((data) =>
+                        data.replace(
+                            `if (typeof window === 'undefined') {`,
+                            `if (typeof window === 'undefined' || typeof WebSocket === 'undefined') {`
+                        )
+                    );
+                if (!contents.includes(`if (typeof window === 'undefined' || typeof WebSocket === 'undefined') {`)) {
+                    throw new Error('JupyterLab serverconnection change not made.');
+                }
+                return {
+                    path: absPath,
+                    pluginData: {
+                        contents
+                    }
+                };
+            }
+        });
+        build.onLoad({ filter: /serverconnection.js$/ }, (args) => {
+            if (args.pluginData && args.pluginData.contents) {
+                return {
+                    contents: args.pluginData.contents,
+                    resolveDir: path.dirname(args.path),
+                    loader: 'js'
+                };
+            }
+        });
+    }
+};
+
 function createConfig(
     source: string,
     outfile: string,
@@ -191,7 +229,7 @@ function createConfig(
         logLevel: 'info',
         sourcemap: isDevbuild,
         inject,
-        plugins: target === 'desktop' ? [] : [style(), lessLoader()],
+        plugins: target === 'desktop' ? [jupyterLabServerConnectionPlugin] : [style(), lessLoader()],
         loader: target === 'desktop' ? {} : loader
     };
 }
