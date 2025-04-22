@@ -145,12 +145,17 @@ export function createJupyterConnectionInfo(
 
     const serializer: import('@jupyterlab/services').ServerConnection.ISettings['serializer'] = {
         deserialize: (data: ArrayBuffer, protocol?: string) => {
-            logger.trace(`Deserialize message ${typeof data} && ${data instanceof Buffer} with ${protocol}`);
+            logger.trace(`Deserialize message type=${typeof data}, Buffer=${data instanceof Buffer}, ArrayBuffer=${data instanceof ArrayBuffer} with ${protocol}`);
+            logger.trace(`Deserialize data=${data.toString()}`);
             try {
                 if (typeof data === 'string') {
-                    return deserialize(data, '');
+                    const result = deserialize(data, '');
+                    logger.trace(`Deserialize message type=string with ${protocol}`);
+                    return result;
                 }
-                return deserialize(data, protocol);
+                const result = deserialize(data, protocol);
+                logger.trace(`Deserialize message type=ArrayBuffer with ${protocol}`);
+                return result;
             } catch (ex) {
                 logger.warn(`Failed to deserialize message protocol = ${protocol}`, ex);
                 throw ex;
