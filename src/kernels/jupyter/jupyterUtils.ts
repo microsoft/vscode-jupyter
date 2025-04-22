@@ -163,16 +163,7 @@ export function createJupyterConnectionInfo(
         },
         serialize: (msg: KernelMessage.IMessage, protocol?: string) => {
             logger.trace(`Serialize message ${typeof msg} && ${msg instanceof Buffer} with ${protocol}`);
-            // try {
             return serialize(msg, protocol);
-            // } catch (ex) {
-            //     logger.warn(`Failed to serialize message protocol = ${protocol}`, ex);
-            //     if (protocol) {
-            //         return serialize(msg, supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg);
-            //     } else {
-            //         return serialize(msg, '');
-            //     }
-            // }
         }
     };
     // This replaces the WebSocket constructor in jupyter lab services with our own implementation
