@@ -140,11 +140,12 @@ export function createJupyterConnectionInfo(
     const { ServerConnection } = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
     const { deserialize, serialize } =
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize');
-    const { supportedKernelWebSocketProtocols } =
-        require('@jupyterlab/services/lib/kernel/messages') as typeof import('@jupyterlab/services/lib/kernel/messages');
+    // const { supportedKernelWebSocketProtocols } =
+    //     require('@jupyterlab/services/lib/kernel/messages') as typeof import('@jupyterlab/services/lib/kernel/messages');
 
     const serializer: import('@jupyterlab/services').ServerConnection.ISettings['serializer'] = {
         deserialize: (data: ArrayBuffer, protocol?: string) => {
+            logger.trace(`Deserialize message ${typeof data} && ${data instanceof Buffer} with ${protocol}`);
             try {
                 if (typeof data === 'string') {
                     return deserialize(data, '');
@@ -152,24 +153,26 @@ export function createJupyterConnectionInfo(
                 return deserialize(data, protocol);
             } catch (ex) {
                 logger.warn(`Failed to deserialize message protocol = ${protocol}`, ex);
-                if (protocol) {
-                    return deserialize(data, supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg);
-                } else {
-                    return deserialize(data, '');
-                }
+                throw ex;
+                // if (protocol) {
+                //     return deserialize(data, supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg);
+                // } else {
+                //     return deserialize(data, '');
+                // }
             }
         },
         serialize: (msg: KernelMessage.IMessage, protocol?: string) => {
-            try {
-                return serialize(msg, protocol);
-            } catch (ex) {
-                logger.warn(`Failed to serialize message protocol = ${protocol}`, ex);
-                if (protocol) {
-                    return serialize(msg, supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg);
-                } else {
-                    return serialize(msg, '');
-                }
-            }
+            logger.trace(`Serialize message ${typeof msg} && ${msg instanceof Buffer} with ${protocol}`);
+            // try {
+            return serialize(msg, protocol);
+            // } catch (ex) {
+            //     logger.warn(`Failed to serialize message protocol = ${protocol}`, ex);
+            //     if (protocol) {
+            //         return serialize(msg, supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg);
+            //     } else {
+            //         return serialize(msg, '');
+            //     }
+            // }
         }
     };
     // This replaces the WebSocket constructor in jupyter lab services with our own implementation
