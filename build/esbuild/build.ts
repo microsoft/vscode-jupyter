@@ -151,6 +151,7 @@ const jupyterLabServerConnectionPlugin: Plugin = {
         build.onResolve({ filter: /serverconnection$/ }, async (args) => {
             const absPath = `${path.join(args.resolveDir, args.path)}.js`;
             if (await fs.pathExists(absPath)) {
+                // For https://github.com/microsoft/vscode-jupyter/issues/16558
                 const contents = await fs
                     .readFile(absPath, 'utf8')
                     .then((data) =>
