@@ -62,7 +62,6 @@ import { activate as activateChat, deactivate as deactivateChat } from './standa
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import {
     initializeLoggers,
-    displayProgress,
     handleError,
     initializeGlobals,
     postActivateLegacy
