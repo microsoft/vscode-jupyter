@@ -60,12 +60,7 @@ import {
 } from './standalone/executionAnalysis/extension';
 import { activate as activateChat, deactivate as deactivateChat } from './standalone/chat/extesnion';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
-import {
-    initializeLoggers,
-    handleError,
-    initializeGlobals,
-    postActivateLegacy
-} from './extension.common';
+import { initializeLoggers, handleError, initializeGlobals, postActivateLegacy } from './extension.common';
 import { activateNotebookTelemetry } from './kernels/telemetry/notebookTelemetry';
 import { deleteOldTempDirs } from './platform/common/temp.node';
 
