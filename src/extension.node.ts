@@ -159,31 +159,26 @@ function activateUnsafe(
     context: IExtensionContext,
     standardOutputChannel: OutputChannel
 ): [IExtensionApi, Promise<void>, IServiceContainer] {
-    const progress = displayProgress();
-    try {
-        //===============================================
-        // activation starts here
+    //===============================================
+    // activation starts here
 
-        const [serviceManager, serviceContainer] = initializeGlobals(context, standardOutputChannel);
-        activatedServiceContainer = serviceContainer;
-        initializeTelemetryGlobals((interpreter) =>
-            serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
-        );
-        const activationPromise = activateLegacy(context, serviceManager, serviceContainer);
+    const [serviceManager, serviceContainer] = initializeGlobals(context, standardOutputChannel);
+    activatedServiceContainer = serviceContainer;
+    initializeTelemetryGlobals((interpreter) =>
+        serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
+    );
+    const activationPromise = activateLegacy(context, serviceManager, serviceContainer);
 
-        //===============================================
-        // activation ends here
+    //===============================================
+    // activation ends here
 
-        //===============================================
-        // dynamically load standalone plugins
-        activateExecutionAnalysis(context).then(noop, noop);
-        activateChat(context).then(noop, noop);
+    //===============================================
+    // dynamically load standalone plugins
+    activateExecutionAnalysis(context).then(noop, noop);
+    activateChat(context).then(noop, noop);
 
-        const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
-        return [api, activationPromise, serviceContainer];
-    } finally {
-        progress.dispose();
-    }
+    const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
+    return [api, activationPromise, serviceContainer];
 }
 
 function escapeRegExp(text: string) {
