@@ -13,8 +13,6 @@ import {
     env,
     type Memento,
     type Disposable,
-    type ProgressOptions,
-    ProgressLocation,
     commands
 } from 'vscode';
 import {
@@ -42,7 +40,6 @@ import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChan
 import { isUsingPylance } from './standalone/intellisense/notebookPythonPathService';
 import { noop } from './platform/common/utils/misc';
 import { sendErrorTelemetry } from './platform/telemetry/startupTelemetry';
-import { createDeferred } from './platform/common/utils/async';
 import { StopWatch } from './platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from './telemetry';
 import { IExtensionActivationManager } from './platform/activation/types';
@@ -123,14 +120,6 @@ export function initializeGlobals(
     );
 
     return [serviceManager, serviceContainer];
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function displayProgress() {
-    const promise = createDeferred<void>();
-    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension };
-    window.withProgress(progressOptions, () => promise.promise).then(noop, noop);
-    return { dispose: () => promise.resolve() };
 }
 
 export function handleError(
