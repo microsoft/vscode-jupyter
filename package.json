@@ -2050,6 +2050,31 @@
                     "DataArray"
                 ]
             }
+        ],
+        "languageModelTools": [
+            {
+                "name": "list_notebook_packages_tool",
+                "displayName": "List Notebook Kernel Packages",
+                "modelDescription": "List the installed packages that are currently available in the selected kernel for a notebook editor.",
+                "toolReferenceName": "listNotebookPackages",
+                "tags": [
+                    "notebooks"
+                ],
+                "icon": "$(package)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "filePath": {
+                        "description": "The absolute path of the notebook with the active kernel.",
+                        "type": "string"
+                        }
+                    },
+                    "required": [
+                        "filePath"
+                    ]
+                }
+            }
         ]
     },
     "enabledApiProposals": [

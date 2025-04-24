@@ -1,0 +1,62 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+import * as vscode from 'vscode';
+import { IKernelProvider } from '../../kernels/types';
+import { sendPipListRequest } from './helper';
+
+export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
+    public static toolName = 'list_notebook_packages_tool';
+
+    public get name() {
+        return ListPackageTool.toolName;
+    }
+    public get description() {
+        return 'Lists all installed packages in the active kernel of a notebook.';
+    }
+
+    constructor(private kernelProvider: IKernelProvider) {}
+
+    async invoke(
+        options: vscode.LanguageModelToolInvocationOptions<IListPackagesParams>,
+        token: vscode.CancellationToken
+    ) {
+        const { filePath } = options.input;
+
+        if (!filePath) {
+            throw new Error('notebookUri is a required parameter.');
+        }
+
+        // TODO: handle other schemas
+        const uri = vscode.Uri.file(filePath);
+        const notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
+        if (!notebook) {
+            throw new Error(`Notebook ${filePath} not found.`);
+        }
+        const kernel = this.kernelProvider.get(notebook);
+        if (!kernel) {
+            throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
+        }
+
+        const { content } = await sendPipListRequest(kernel, token);
+
+        if (!content) {
+            throw new Error(`Unable to list packages for notebook ${filePath}.`);
+        }
+
+        const contentString = content.map((pkg) => `${pkg.name}==${pkg.version}`).join(', ');
+        const finalMessageString = `Packages installed in notebook: ${contentString}`;
+        return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
+    }
+
+    prepareInvocation(
+        _options: vscode.LanguageModelToolInvocationPrepareOptions<IListPackagesParams>,
+        _token: vscode.CancellationToken
+    ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
+        return undefined;
+    }
+}
+
+export interface IListPackagesParams {
+    filePath: string;
+}
