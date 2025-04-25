@@ -41,28 +41,26 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         }
 
         let success: boolean = false;
+        let output = '';
         const kernelUri = kernel.kernelConnectionMetadata.interpreter?.uri;
         if (
             kernelUri &&
             (kernel.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
                 kernel.kernelConnectionMetadata.kind === 'startUsingPythonInterpreter')
         ) {
-            if (await installPackageThroughEnvsExtension(kernelUri, packageList)) {
-                const finalMessageString = `Installation finished, you may need to restart the kernel for the changes to take effect.`;
-                return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
-            }
+            success = await installPackageThroughEnvsExtension(kernelUri, packageList);
         }
 
         if (!success) {
             // TODO: There is an IInstaller service available, but currently only for a set list of packages.
             const result = await sendPipInstallRequest(kernel, packageList, token);
-            let message = String(result);
-            if (message.length > 200) {
-                message = message.substring(0, 200) + '...';
+            output = ` Output: ${String(result)}`;
+            if (output.length > 200) {
+                output = output.substring(0, 200) + '...';
             }
-            const finalMessageString = `Installation finished. If the installation was successful and importing still doesn't succeed, you may need to restart the kernel first. Output: ${message}`;
-            return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
         }
+        const finalMessageString = `Installation finished.${output}`;
+        return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
     }
 
     prepareInvocation(
