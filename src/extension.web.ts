@@ -63,13 +63,7 @@ import { registerTypes as registerWebviewTypes } from './webviews/extension-side
 import { Exiting, isTestExecution, setIsCodeSpace, setIsWebExtension } from './platform/common/constants';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
-import {
-    initializeLoggers,
-    displayProgress,
-    handleError,
-    initializeGlobals,
-    postActivateLegacy
-} from './extension.common';
+import { initializeLoggers, handleError, initializeGlobals, postActivateLegacy } from './extension.common';
 import { activateNotebookTelemetry } from './kernels/telemetry/notebookTelemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
@@ -146,25 +140,20 @@ function activateUnsafe(
     context: IExtensionContext,
     standardOutputChannel: OutputChannel
 ): [IExtensionApi, Promise<void>, IServiceContainer] {
-    const progress = displayProgress();
-    try {
-        //===============================================
-        // activation starts here
+    //===============================================
+    // activation starts here
 
-        const [serviceManager, serviceContainer] = initializeGlobals(context, standardOutputChannel);
+    const [serviceManager, serviceContainer] = initializeGlobals(context, standardOutputChannel);
 
-        activatedServiceContainer = serviceContainer;
-        initializeTelemetryGlobals(() => Promise.resolve(new Map()));
-        const activationPromise = activateLegacy(context, serviceManager, serviceContainer);
+    activatedServiceContainer = serviceContainer;
+    initializeTelemetryGlobals(() => Promise.resolve(new Map()));
+    const activationPromise = activateLegacy(context, serviceManager, serviceContainer);
 
-        //===============================================
-        // activation ends here
+    //===============================================
+    // activation ends here
 
-        const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
-        return [api, activationPromise, serviceContainer];
-    } finally {
-        progress.dispose();
-    }
+    const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
+    return [api, activationPromise, serviceContainer];
 }
 
 /////////////////////////////
