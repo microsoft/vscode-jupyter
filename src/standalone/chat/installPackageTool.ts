@@ -3,10 +3,8 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { injectable } from 'inversify';
 import { installPackageThroughEnvsExtension, sendPipInstallRequest } from './helper';
 
-@injectable()
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages_tool';
 
