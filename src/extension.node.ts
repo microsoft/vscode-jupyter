@@ -58,7 +58,7 @@ import {
     activate as activateExecutionAnalysis,
     deactivate as deactivateExecutionAnalysis
 } from './standalone/executionAnalysis/extension';
-import { activate as activateChat, deactivate as deactivateChat } from './standalone/chat/extesnion';
+import { activate as activateChat, deactivate as deactivateChat } from './standalone/chat/extension';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { initializeLoggers, handleError, initializeGlobals, postActivateLegacy } from './extension.common';
 import { activateNotebookTelemetry } from './kernels/telemetry/notebookTelemetry';
@@ -169,7 +169,7 @@ function activateUnsafe(
     //===============================================
     // dynamically load standalone plugins
     activateExecutionAnalysis(context).then(noop, noop);
-    activateChat(context).then(noop, noop);
+    activateChat(context, serviceContainer).then(noop, noop);
 
     const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
     return [api, activationPromise, serviceContainer];

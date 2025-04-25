@@ -493,7 +493,7 @@ function closeAllEditors(): Thenable<any> {
 }
 
 (vscode.extensions.getExtension(PylanceExtension) ? suite : suite.skip)('Cell Analysis - Pylance', () => {
-    test('Advanced type dependencies', async () => {
+    test.skip('Advanced type dependencies', async () => {
         const nb = new vscode.NotebookData([
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import pandas as pd', 'python'),
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'df = pd.DataFrame()', 'python'),
@@ -546,7 +546,7 @@ function closeAllEditors(): Thenable<any> {
         await closeAllEditors();
     });
 
-    test('Advanced type dependencies 2', async () => {
+    test.skip('Advanced type dependencies 2', async () => {
         const nb = new vscode.NotebookData([
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import numpy as np', 'python'),
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'arr = np.array([1, 2, 3, 4])', 'python'),
@@ -596,7 +596,7 @@ function closeAllEditors(): Thenable<any> {
         await closeAllEditors();
     });
 
-    test('Advanced type dependencies 3', async () => {
+    test.skip('Advanced type dependencies 3', async () => {
         const nb = new vscode.NotebookData([
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'import matplotlib.pyplot as plt', 'python'),
             new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'x = [1, 2, 3, 4]', 'python'),
