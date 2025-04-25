@@ -15,8 +15,9 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         return 'Lists all installed packages in the active kernel of a notebook.';
     }
 
-    constructor(private readonly kernelProvider: IKernelProvider) //private readonly installer: IInstaller
-    {}
+    constructor(
+        private readonly kernelProvider: IKernelProvider //private readonly installer: IInstaller
+    ) {}
 
     async invoke(
         options: vscode.LanguageModelToolInvocationOptions<IListPackagesParams>,

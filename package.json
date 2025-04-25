@@ -2066,15 +2066,16 @@
                     "type": "object",
                     "properties": {
                         "filePath": {
-                        "description": "The absolute path of the notebook with the active kernel.",
-                        "type": "string"
+                            "description": "The absolute path of the notebook with the active kernel.",
+                            "type": "string"
                         }
                     },
                     "required": [
                         "filePath"
                     ]
                 }
-            },{
+            },
+            {
                 "name": "notebook_install_packages_tool",
                 "displayName": "Install Packages for Notebook",
                 "modelDescription": "Install a list of packages on a notebook kernel to be used within that notebook.",
@@ -2091,12 +2092,12 @@
                             "description": "The absolute path of the notebook with the active kernel.",
                             "type": "string"
                         },
-                        "packageList":{
+                        "packageList": {
                             "description": "A list of packages to install.",
                             "type": "array",
-							"items": {
-								"type": "string"
-							}
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     },
                     "required": [
@@ -2105,7 +2106,6 @@
                     ]
                 }
             }
-
         ]
     },
     "enabledApiProposals": [

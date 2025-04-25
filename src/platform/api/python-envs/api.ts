@@ -11,7 +11,7 @@ import {
     Terminal,
     TaskExecution,
     TerminalOptions,
-    FileChangeType,
+    FileChangeType
 } from 'vscode';
 
 /**
@@ -293,7 +293,7 @@ export enum EnvironmentChangeKind {
     /**
      * Indicates that an environment was removed.
      */
-    remove = 'remove',
+    remove = 'remove'
 }
 
 /**
@@ -536,7 +536,7 @@ export enum PackageChangeKind {
     /**
      * Indicates that a package was removed.
      */
-    remove = 'remove',
+    remove = 'remove'
 }
 
 /**
@@ -863,7 +863,7 @@ export interface PythonEnvironmentManagementApi {
      */
     createEnvironment(
         scope: CreateEnvironmentScope,
-        options?: CreateEnvironmentOptions,
+        options?: CreateEnvironmentOptions
     ): Promise<PythonEnvironment | undefined>;
 
     /**
@@ -1129,7 +1129,7 @@ export interface PythonTerminalRunApi {
     runInDedicatedTerminal(
         terminalKey: Uri | string,
         environment: PythonEnvironment,
-        options: PythonTerminalExecutionOptions,
+        options: PythonTerminalExecutionOptions
     ): Promise<Terminal>;
 }
 
@@ -1250,7 +1250,7 @@ export interface PythonEnvironmentVariablesApi {
     getEnvironmentVariables(
         uri: Uri,
         overrides?: ({ [key: string]: string | undefined } | Uri)[],
-        baseEnvVar?: { [key: string]: string | undefined },
+        baseEnvVar?: { [key: string]: string | undefined }
     ): Promise<{ [key: string]: string | undefined }>;
 
     /**

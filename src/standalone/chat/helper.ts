@@ -30,7 +30,7 @@ return {"result": stdout}
 `.split('\n');
 
     try {
-        const result = await execCodeInBackgroundThread<{result: string}>(kernel, codeToExecute, token);
+        const result = await execCodeInBackgroundThread<{ result: string }>(kernel, codeToExecute, token);
         return result?.result;
     } catch (ex) {
         throw ex;
