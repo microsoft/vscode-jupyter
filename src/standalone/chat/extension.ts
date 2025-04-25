@@ -8,9 +8,16 @@ import { JupyterVariablesProvider } from '../variables/JupyterVariablesProvider'
 import { logger } from '../../platform/logging';
 import { sendPipListRequest } from './helper';
 import { ListPackageTool } from './listPackageTool';
+import { InstallPackagesTool } from './installPackageTool';
 import { IServiceContainer } from '../../platform/ioc/types';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            InstallPackagesTool.toolName,
+            new InstallPackagesTool(serviceContainer.get<IKernelProvider>(IKernelProvider))
+        )
+    );
     context.subscriptions.push(
         vscode.lm.registerTool(
             ListPackageTool.toolName,
@@ -28,8 +35,8 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
                     const token = new vscode.CancellationTokenSource().token;
                     try {
                         const result = await sendPipListRequest(kernel, token);
-                        if (Array.isArray(result.content)) {
-                            return result.content;
+                        if (result && Array.isArray(result)) {
+                            return result;
                         }
                     } catch (ex) {
                         // ignore

@@ -3,10 +3,10 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { sendPipListRequest } from './helper';
+import { getPackagesFromEnvsExtension, packageDefinition, sendPipListRequest } from './helper';
 
 export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
-    public static toolName = 'list_notebook_packages_tool';
+    public static toolName = 'notebook_list_packages_tool';
 
     public get name() {
         return ListPackageTool.toolName;
@@ -15,7 +15,8 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         return 'Lists all installed packages in the active kernel of a notebook.';
     }
 
-    constructor(private kernelProvider: IKernelProvider) {}
+    constructor(private readonly kernelProvider: IKernelProvider) //private readonly installer: IInstaller
+    {}
 
     async invoke(
         options: vscode.LanguageModelToolInvocationOptions<IListPackagesParams>,
@@ -38,13 +39,26 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
         }
 
-        const { content } = await sendPipListRequest(kernel, token);
+        let packages: packageDefinition[] | undefined = undefined;
 
-        if (!content) {
+        const kernelUri = kernel.kernelConnectionMetadata.interpreter?.uri;
+        if (
+            kernelUri &&
+            (kernel.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
+                kernel.kernelConnectionMetadata.kind === 'startUsingPythonInterpreter')
+        ) {
+            packages = await getPackagesFromEnvsExtension(kernelUri);
+        }
+
+        // TODO: There is an IInstaller service available, but currently only lists info for a single package.
+        // It may also depend on the environment extension?
+        packages = await sendPipListRequest(kernel, token);
+
+        if (!packages) {
             throw new Error(`Unable to list packages for notebook ${filePath}.`);
         }
 
-        const contentString = content.map((pkg) => `${pkg.name}==${pkg.version}`).join(', ');
+        const contentString = packages.map((pkg) => `${pkg.name}==${pkg.version}`).join(', ');
         const finalMessageString = `Packages installed in notebook: ${contentString}`;
         return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
     }

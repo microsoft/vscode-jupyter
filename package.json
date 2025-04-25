@@ -2053,7 +2053,7 @@
         ],
         "languageModelTools": [
             {
-                "name": "list_notebook_packages_tool",
+                "name": "notebook_list_packages_tool",
                 "displayName": "List Notebook Kernel Packages",
                 "modelDescription": "List the installed packages that are currently available in the selected kernel for a notebook editor.",
                 "toolReferenceName": "listNotebookPackages",
@@ -2074,7 +2074,38 @@
                         "filePath"
                     ]
                 }
+            },{
+                "name": "notebook_install_packages_tool",
+                "displayName": "Install Packages for Notebook",
+                "modelDescription": "Install a list of packages on a notebook kernel to be used within that notebook.",
+                "toolReferenceName": "installNotebookPackages",
+                "tags": [
+                    "notebooks"
+                ],
+                "icon": "$(package)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "filePath": {
+                            "description": "The absolute path of the notebook with the active kernel.",
+                            "type": "string"
+                        },
+                        "packageList":{
+                            "description": "A list of packages to install.",
+                            "type": "array",
+							"items": {
+								"type": "string"
+							}
+                        }
+                    },
+                    "required": [
+                        "filePath",
+                        "packageList"
+                    ]
+                }
             }
+
         ]
     },
     "enabledApiProposals": [
