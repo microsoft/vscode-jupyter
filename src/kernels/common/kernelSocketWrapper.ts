@@ -101,7 +101,7 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
                 this.msgChain = this.msgChain
                     .then(() => Promise.all(this.receiveHooks.map((p) => p(args[0]))))
                     .then(() => superHandler(event, ...args))
-                    .catch((e) => logger.error(`Exception while handling messages: ${e}`));
+                    .catch((e) => logger.error(`Exception while handling messages: `, e, e.stack));
                 // True value indicates there were handlers. We definitely have 'message' handlers.
                 return true;
             } else {

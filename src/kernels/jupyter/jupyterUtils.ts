@@ -145,7 +145,11 @@ export function createJupyterConnectionInfo(
 
     const serializer: import('@jupyterlab/services').ServerConnection.ISettings['serializer'] = {
         deserialize: (data: ArrayBuffer, protocol?: string) => {
-            logger.trace(`Deserialize message type=${typeof data}, Buffer=${data instanceof Buffer}, ArrayBuffer=${data instanceof ArrayBuffer} with ${protocol}`);
+            logger.trace(
+                `Deserialize message type=${typeof data}, Buffer=${data instanceof Buffer}, ArrayBuffer=${
+                    data instanceof ArrayBuffer
+                } with ${protocol}`
+            );
             logger.trace(`Deserialize data=${data.toString()}`);
             try {
                 if (typeof data === 'string') {
@@ -157,7 +161,7 @@ export function createJupyterConnectionInfo(
                 logger.trace(`Deserialize message type=ArrayBuffer with ${protocol}`);
                 return result;
             } catch (ex) {
-                logger.warn(`Failed to deserialize message protocol = ${protocol}`, ex);
+                logger.error(`Failed to deserialize message protocol = ${protocol}`, ex);
                 throw ex;
                 // if (protocol) {
                 //     return deserialize(data, supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg);
@@ -168,7 +172,17 @@ export function createJupyterConnectionInfo(
         },
         serialize: (msg: KernelMessage.IMessage, protocol?: string) => {
             logger.trace(`Serialize message ${typeof msg} && ${msg instanceof Buffer} with ${protocol}`);
-            return serialize(msg, protocol);
+            try {
+                const data = serialize(msg, protocol);
+                logger.trace(`Serialized message ${typeof msg} && ${msg instanceof Buffer} with ${protocol}`);
+                return data;
+            } catch (ex) {
+                logger.error(
+                    `Failed to serialize message ${typeof msg} && ${msg instanceof Buffer} with ${protocol}`,
+                    ex
+                );
+                throw ex;
+            }
         }
     };
     // This replaces the WebSocket constructor in jupyter lab services with our own implementation
