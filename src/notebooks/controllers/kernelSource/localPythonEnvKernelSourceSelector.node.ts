@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationError, CancellationTokenSource, EventEmitter, NotebookDocument, Uri } from 'vscode';
+import { CancellationError, CancellationTokenSource, Disposable, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { IKernelFinder, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
+import { DisposableMap, ObservableDisposable, dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -196,15 +196,27 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             return;
         }
         api.environments.known.map((e) => this.buildDummyEnvironment(e).catch(noop));
+        const removedEnvironments = this._register(new DisposableMap<string, IDisposable>());
         this._register(
             api.environments.onDidChangeEnvironments((e) => {
                 if (e.type === 'remove') {
-                    const kernel = this._kernels.get(e.env.id);
-                    if (kernel) {
-                        this._kernels.delete(e.env.id);
-                        this._onDidChangeKernels.fire({ removed: [kernel] });
-                    }
+                    // Wait a few seconds, possible the Python extension API eagerly triggers
+                    // a delete event, but the env is still valid & then subsequently triggers an add/update event.
+                    // This causes issues for us, as the notebook controller gets removed & users code can get stopped.
+                    const interval = 30_000;
+                    const timeout = setTimeout(() => {
+                        logger.trace(
+                            `Python API env change detected & Kernel removed after ${interval}, ${e.type} => '${e.env.id}'`
+                        );
+                        const kernel = this._kernels.get(e.env.id);
+                        if (kernel) {
+                            this._kernels.delete(e.env.id);
+                            this._onDidChangeKernels.fire({ removed: [kernel] });
+                        }
+                    }, interval);
+                    removedEnvironments.set(e.env.id, new Disposable(() => clearTimeout(timeout)));
                 } else {
+                    removedEnvironments.deleteAndDispose(e.env.id);
                     this.buildDummyEnvironment(e.env).catch(noop);
                 }
             }, this)
