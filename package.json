@@ -2053,9 +2053,9 @@
         ],
         "languageModelTools": [
             {
-                "name": "notebook_list_packages_tool",
+                "name": "notebook_list_packages",
                 "displayName": "List Notebook Kernel Packages",
-                "modelDescription": "List the installed packages that are currently available in the selected kernel for a notebook editor.",
+                "modelDescription": "List the installed packages that are currently available in the selected kernel for a notebook editor. This tool should be used when working with a notebook but only if already working in a notebook file.",
                 "toolReferenceName": "listNotebookPackages",
                 "tags": [
                     "notebooks"
@@ -2076,9 +2076,9 @@
                 }
             },
             {
-                "name": "notebook_install_packages_tool",
+                "name": "notebook_install_packages",
                 "displayName": "Install Packages for Notebook",
-                "modelDescription": "Install a list of packages on a notebook kernel to be used within that notebook.",
+                "modelDescription": "Install a list of packages on a notebook kernel to be used within that notebook. This tool should be used when working with a notebook but only if already working in a notebook file.",
                 "toolReferenceName": "installNotebookPackages",
                 "tags": [
                     "notebooks"

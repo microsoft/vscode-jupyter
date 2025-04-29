@@ -6,7 +6,7 @@ import { IKernelProvider } from '../../kernels/types';
 import { installPackageThroughEnvsExtension, sendPipInstallRequest } from './helper';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
-    public static toolName = 'notebook_install_packages_tool';
+    public static toolName = 'notebook_install_packages';
 
     public get name() {
         return InstallPackagesTool.toolName;
@@ -62,10 +62,21 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
     }
 
     prepareInvocation(
-        _options: vscode.LanguageModelToolInvocationPrepareOptions<IInstallPackageParams>,
+        options: vscode.LanguageModelToolInvocationPrepareOptions<IInstallPackageParams>,
         _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
-        return undefined;
+        const packageInstallationPrompt = vscode.l10n.t(
+            `Install packages into notebook kernel: ${options.input.packageList.join(', ')}`
+        );
+        const confirmationMessages = {
+            title: vscode.l10n.t(`Install Packages`),
+            message: packageInstallationPrompt
+        };
+
+        return {
+            confirmationMessages,
+            invocationMessage: packageInstallationPrompt
+        };
     }
 }
 
