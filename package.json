@@ -2062,6 +2062,7 @@
                 ],
                 "icon": "$(package)",
                 "canBeReferencedInPrompt": true,
+                "when": "jupyter.hasNativeNotebookOrInteractiveWindowOpen",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -2085,6 +2086,7 @@
                 ],
                 "icon": "$(package)",
                 "canBeReferencedInPrompt": true,
+                "when": "jupyter.hasNativeNotebookOrInteractiveWindowOpen",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
