@@ -6,7 +6,7 @@ import { IKernelProvider } from '../../kernels/types';
 import { getPackagesFromEnvsExtension, packageDefinition, sendPipListRequest } from './helper';
 
 export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
-    public static toolName = 'notebook_list_packages_tool';
+    public static toolName = 'notebook_list_packages';
 
     public get name() {
         return ListPackageTool.toolName;
