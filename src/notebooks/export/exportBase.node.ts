@@ -108,8 +108,12 @@ export class ExportBase implements IExportBase {
             return;
         }
         try {
-            if ((await this.fs.stat(Uri.file(tempTarget.filePath))).size > 1) {
-                await this.fs.copy(Uri.file(tempTarget.filePath), target);
+            let pdfFilePath = tempTarget.filePath;
+            if (!pdfFilePath.endsWith('.pdf') && (await this.fs.exists(Uri.file(pdfFilePath + '.pdf')))) {
+                pdfFilePath = pdfFilePath + '.pdf';
+            }
+            if ((await this.fs.stat(Uri.file(pdfFilePath))).size > 1) {
+                await this.fs.copy(Uri.file(pdfFilePath), target);
             } else {
                 throw new Error('File size is zero during conversion. Outputting error.');
             }
