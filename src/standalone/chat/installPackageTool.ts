@@ -66,7 +66,8 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
         const packageInstallationPrompt = vscode.l10n.t(
-            `Install packages into notebook kernel: ${options.input.packageList.join(', ')}`
+            'Install packages into notebook kernel: {0}',
+            options.input.packageList.join(', ')
         );
         const confirmationMessages = {
             title: vscode.l10n.t(`Install Packages`),
