@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { ServerConnection } from '@jupyterlab/services';
+import type { KernelMessage, ServerConnection } from '@jupyterlab/services';
 import * as path from '../../platform/vscode-path/path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
 import { IJupyterConnection } from '../types';
@@ -137,7 +137,54 @@ export function createJupyterConnectionInfo(
         requestInit = { ...requestInit, agent: requestAgent };
     }
 
-    const { ServerConnection } = require('@jupyterlab/services');
+    const { ServerConnection } = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+    const { deserialize, serialize } =
+        require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize');
+    // const { supportedKernelWebSocketProtocols } =
+    //     require('@jupyterlab/services/lib/kernel/messages') as typeof import('@jupyterlab/services/lib/kernel/messages');
+
+    const serializer: import('@jupyterlab/services').ServerConnection.ISettings['serializer'] = {
+        deserialize: (data: ArrayBuffer, protocol?: string) => {
+            logger.trace(
+                `Deserialize message type=${typeof data}, Buffer=${data instanceof Buffer}, ArrayBuffer=${
+                    data instanceof ArrayBuffer
+                } with ${protocol}`
+            );
+            logger.trace(`Deserialize data=${data.toString()}`);
+            try {
+                if (typeof data === 'string') {
+                    const result = deserialize(data, '');
+                    logger.trace(`Deserialize message type=string with ${protocol}`);
+                    return result;
+                }
+                const result = deserialize(data, protocol);
+                logger.trace(`Deserialize message type=ArrayBuffer with ${protocol}`);
+                return result;
+            } catch (ex) {
+                logger.error(`Failed to deserialize message protocol = ${protocol}`, ex);
+                throw ex;
+                // if (protocol) {
+                //     return deserialize(data, supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg);
+                // } else {
+                //     return deserialize(data, '');
+                // }
+            }
+        },
+        serialize: (msg: KernelMessage.IMessage, protocol?: string) => {
+            logger.trace(`Serialize message ${typeof msg} && ${msg instanceof Buffer} with ${protocol}`);
+            try {
+                const data = serialize(msg, protocol);
+                logger.trace(`Serialized message ${typeof msg} && ${msg instanceof Buffer} with ${protocol}`);
+                return data;
+            } catch (ex) {
+                logger.error(
+                    `Failed to serialize message ${typeof msg} && ${msg instanceof Buffer} with ${protocol}`,
+                    ex
+                );
+                throw ex;
+            }
+        }
+    };
     // This replaces the WebSocket constructor in jupyter lab services with our own implementation
     // See _createSocket here:
     // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
@@ -155,7 +202,8 @@ export function createJupyterConnectionInfo(
               ) as any),
         fetch: serverUri.fetch || requestCreator.getFetchMethod(),
         Request: requestCreator.getRequestCtor(undefined, allowUnauthorized, getAuthHeader),
-        Headers: requestCreator.getHeadersCtor()
+        Headers: requestCreator.getHeadersCtor(),
+        serializer
     };
 
     const connection: IJupyterConnection = {
