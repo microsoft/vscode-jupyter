@@ -77,7 +77,9 @@ export class KernelProvider extends BaseCoreKernelProvider {
             settings,
             options.controller,
             this.startupCodeProviders.getProviders(notebookType),
-            this.workspaceStorage
+            this.workspaceStorage,
+            undefined,
+            undefined
         ) as IKernel;
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onPostInitialized(
@@ -134,7 +136,9 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             this.sessionCreator,
             settings,
             this.startupCodeProviders.getProviders(notebookType),
-            this.workspaceStorage
+            this.workspaceStorage,
+            undefined,
+            undefined
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onPostInitialized(

@@ -21,7 +21,8 @@ import {
     KernelOptions,
     ThirdPartyKernelOptions,
     IStartupCodeProviders,
-    IKernelSessionFactory
+    IKernelSessionFactory,
+    IKernelWorkingDirectory
 } from './types';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
@@ -29,6 +30,7 @@ import { NotebookKernelExecution } from './kernelExecution';
 import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 import { logger } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { IRawNotebookSupportedService } from './raw/types';
 
 /**
  * Node version of a kernel provider. Needed in order to create the node version of a kernel.
@@ -46,7 +48,9 @@ export class KernelProvider extends BaseCoreKernelProvider {
         private readonly formatters: ITracebackFormatter[],
         @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento,
-        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService
+        @inject(IReplNotebookTrackerService) private readonly replTracker: IReplNotebookTrackerService,
+        @inject(IKernelWorkingDirectory) private readonly kernelWorkingDirectory: IKernelWorkingDirectory,
+        @inject(IRawNotebookSupportedService) private readonly rawKernelSupported: IRawNotebookSupportedService
     ) {
         super(asyncDisposables, disposables);
         disposables.push(jupyterServerUriStorage.onDidRemove(this.handleServerRemoval.bind(this)));
@@ -81,7 +85,9 @@ export class KernelProvider extends BaseCoreKernelProvider {
             settings,
             options.controller,
             startupCodeProviders,
-            this.workspaceStorage
+            this.workspaceStorage,
+            this.kernelWorkingDirectory,
+            this.rawKernelSupported
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(
@@ -119,7 +125,9 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IKernelSessionFactory) private sessionCreator: IKernelSessionFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento,
+        @inject(IKernelWorkingDirectory) private readonly kernelWorkingDirectory: IKernelWorkingDirectory,
+        @inject(IRawNotebookSupportedService) private readonly rawKernelSupported: IRawNotebookSupportedService
     ) {
         super(asyncDisposables, disposables);
     }
@@ -141,7 +149,9 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             this.sessionCreator,
             settings,
             this.startupCodeProviders.getProviders(notebookType),
-            this.workspaceStorage
+            this.workspaceStorage,
+            this.kernelWorkingDirectory,
+            this.rawKernelSupported
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(

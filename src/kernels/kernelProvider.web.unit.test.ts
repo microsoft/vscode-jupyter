@@ -13,7 +13,7 @@ import { IJupyterServerUriStorage } from './jupyter/types';
 import { KernelProvider } from './kernelProvider.web';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import { IKernelSessionFactory, IKernelController, IStartupCodeProviders, KernelConnectionMetadata } from './types';
-import { ThirdPartyKernelProvider } from './kernelProvider.node';
+import { ThirdPartyKernelProvider } from './kernelProvider.web';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { noop } from '../test/core';
 import { AsyncEmitter } from '../platform/common/utils/events';

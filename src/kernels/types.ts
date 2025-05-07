@@ -989,3 +989,12 @@ function sendKernelTelemetry(kernel: KernelConnectionMetadata) {
         )
         .catch(noop);
 }
+
+export const IKernelWorkingDirectory = Symbol('IKernelWorkingDirectory');
+export interface IKernelWorkingDirectory {
+    computeWorkingDirectory(
+        kernelConnection: KernelConnectionMetadata,
+        resource: Resource,
+        token: CancellationToken
+    ): Promise<Uri>;
+}

@@ -38,6 +38,7 @@ import {
     IKernelDependencyService,
     IKernelFinder,
     IKernelProvider,
+    IKernelWorkingDirectory,
     IStartupCodeProviders,
     IThirdPartyKernelProvider
 } from './types';
@@ -46,6 +47,7 @@ import { IJupyterVariables } from './variables/types';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
 import { KernelChatStartupCodeProvider } from './chat/kernelStartupCodeProvider';
+import { KernelWorkingDirectory } from './raw/session/kernelWorkingDirectory.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
@@ -135,6 +137,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<IStartupCodeProviders>(IStartupCodeProviders, KernelStartupCodeProviders);
     serviceManager.addSingleton<PythonKernelInterruptDaemon>(PythonKernelInterruptDaemon, PythonKernelInterruptDaemon);
+    serviceManager.addSingleton<IKernelWorkingDirectory>(IKernelWorkingDirectory, KernelWorkingDirectory);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelChatStartupCodeProvider

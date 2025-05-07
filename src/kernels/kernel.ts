@@ -55,7 +55,9 @@ import {
     IKernelController,
     IThirdPartyKernel,
     IKernelSessionFactory,
-    type IStartOptions
+    type IStartOptions,
+    isLocalConnection,
+    IKernelWorkingDirectory
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -69,6 +71,8 @@ import { dispose } from '../platform/common/utils/lifecycle';
 import { getCachedVersion, getEnvironmentType } from '../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker } from './telemetry/notebookTelemetry';
 import { AsyncEmitter } from '../platform/common/utils/events';
+import { toPythonSafePath } from '../platform/common/utils/encoder';
+import { IRawNotebookSupportedService } from './raw/types';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**
@@ -215,7 +219,9 @@ abstract class BaseKernel implements IBaseKernel {
         protected readonly kernelSettings: IKernelSettings,
         protected readonly startupCodeProviders: IStartupCodeProvider[],
         public readonly _creator: KernelActionSource,
-        private readonly workspaceMemento: Memento
+        private readonly workspaceMemento: Memento,
+        private readonly kernelWorkingDirectory: IKernelWorkingDirectory | undefined,
+        private readonly rawKernelSupported: IRawNotebookSupportedService | undefined
     ) {
         this.disposables.push(this._onStatusChanged);
         this.disposables.push(this._onRestarted);
@@ -952,6 +958,32 @@ abstract class BaseKernel implements IBaseKernel {
                     'Failed to initialize matplotlib startup code. Matplotlib might be missing.'
                 )
             );
+
+            // If this is a Jupyter Server kernel (not raw, then we need to ensure the cwd is set correctly)
+            if (
+                isLocalConnection(this.kernelConnectionMetadata) &&
+                this.rawKernelSupported?.isSupported === false &&
+                this.kernelWorkingDirectory
+            ) {
+                const workingDirectory = await this.kernelWorkingDirectory.computeWorkingDirectory(
+                    this.kernelConnectionMetadata,
+                    this.resourceUri,
+                    this.startCancellation.token
+                );
+
+                // eslint-disable-next-line local-rules/dont-use-fspath
+                const safeWorkingDirectory = toPythonSafePath(workingDirectory.fsPath);
+                const code = `
+import os as _VSCODE_os
+try:
+    _VSCODE_os.chdir(${safeWorkingDirectory})
+except:
+    pass
+
+del _VSCODE_os
+`;
+                result.push(code);
+            }
         }
 
         return result;
@@ -1028,7 +1060,9 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
         sessionCreator: IKernelSessionFactory,
         kernelSettings: IKernelSettings,
         startupCodeProviders: IStartupCodeProvider[],
-        workspaceMemento: Memento
+        workspaceMemento: Memento,
+        kernelWorkingDirectory: IKernelWorkingDirectory | undefined,
+        rawKernelSupported: IRawNotebookSupportedService | undefined
     ) {
         super(
             `3rdPartyKernel_${uuid()}`,
@@ -1039,7 +1073,9 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
             kernelSettings,
             startupCodeProviders,
             '3rdPartyExtension',
-            workspaceMemento
+            workspaceMemento,
+            kernelWorkingDirectory,
+            rawKernelSupported
         );
     }
 }
@@ -1060,7 +1096,9 @@ export class Kernel extends BaseKernel implements IKernel {
         kernelSettings: IKernelSettings,
         public readonly controller: IKernelController,
         startupCodeProviders: IStartupCodeProvider[],
-        workspaceMemento: Memento
+        workspaceMemento: Memento,
+        kernelWorkingDirectory: IKernelWorkingDirectory | undefined,
+        rawKernelSupported: IRawNotebookSupportedService | undefined
     ) {
         super(
             uuid(),
@@ -1071,7 +1109,9 @@ export class Kernel extends BaseKernel implements IKernel {
             kernelSettings,
             startupCodeProviders,
             'jupyterExtension',
-            workspaceMemento
+            workspaceMemento,
+            kernelWorkingDirectory,
+            rawKernelSupported
         );
     }
 }
