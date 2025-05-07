@@ -32,7 +32,8 @@ import { RawSessionConnection } from './rawSessionConnection.node';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
 import type { IFileSystem } from '../../../platform/common/platform/types';
-import { computeLocalWorkingDirectory } from './rawKernelSessionFactory.node';
+import { computeLocalWorkingDirectory } from './kernelWorkingDirectory.node';
+
 const jupyterLabKernel =
     require('@jupyterlab/services/lib/kernel/default') as typeof import('@jupyterlab/services/lib/kernel/default');
 

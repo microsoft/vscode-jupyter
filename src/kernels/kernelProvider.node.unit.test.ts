@@ -42,6 +42,9 @@ import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { IReplNotebookTrackerService } from '../platform/notebooks/replNotebookTrackerService';
 import { AsyncEmitter } from '../platform/common/utils/events';
+import { KernelWorkingDirectory } from './raw/session/kernelWorkingDirectory.node';
+import { FileSystem } from '../platform/common/platform/fileSystem.node';
+import { IRawNotebookSupportedService } from './raw/types';
 
 suite('Jupyter Session', () => {
     suite('Node Kernel Provider', function () {
@@ -53,6 +56,7 @@ suite('Jupyter Session', () => {
         let jupyterServerUriStorage: IJupyterServerUriStorage;
         let metadata: KernelConnectionMetadata;
         let controller: IKernelController;
+        let rawkernelSupported: IRawNotebookSupportedService;
         let workspaceMemento: Memento;
         const replTracker: IReplNotebookTrackerService = mock<IReplNotebookTrackerService>();
         setup(() => {
@@ -63,10 +67,12 @@ suite('Jupyter Session', () => {
             metadata = mock<KernelConnectionMetadata>();
             controller = createKernelController();
             workspaceMemento = mock<Memento>();
+            rawkernelSupported = mock<IRawNotebookSupportedService>();
             when(workspaceMemento.update(anything(), anything())).thenResolve();
             when(workspaceMemento.get(anything(), anything())).thenCall(
                 (_: unknown, defaultValue: unknown) => defaultValue
             );
+            when(rawkernelSupported.isSupported).thenReturn(true);
         });
         function createKernelProvider() {
             const registry = mock<IStartupCodeProviders>();
@@ -82,7 +88,9 @@ suite('Jupyter Session', () => {
                 [],
                 instance(registry),
                 instance(workspaceMemento),
-                instance(replTracker)
+                instance(replTracker),
+                new KernelWorkingDirectory(instance(configService), new FileSystem()),
+                instance(rawkernelSupported)
             );
         }
         function create3rdPartyKernelProvider() {
@@ -95,7 +103,9 @@ suite('Jupyter Session', () => {
                 instance(sessionCreator),
                 instance(configService),
                 instance(registry),
-                instance(workspaceMemento)
+                instance(workspaceMemento),
+                new KernelWorkingDirectory(instance(configService), new FileSystem()),
+                instance(rawkernelSupported)
             );
         }
         teardown(async () => {
@@ -233,7 +243,9 @@ suite('Jupyter Session', () => {
             when(workspaceMemento.get(anything(), anything())).thenCall(
                 (_: unknown, defaultValue: unknown) => defaultValue
             );
-
+            const kernelWorkingDirectory = new KernelWorkingDirectory(instance(configService), new FileSystem());
+            const rawkernelSupported = mock<IRawNotebookSupportedService>();
+            when(rawkernelSupported.isSupported).thenReturn(false);
             kernelProvider = new KernelProvider(
                 asyncDisposables,
                 disposables,
@@ -244,7 +256,9 @@ suite('Jupyter Session', () => {
                 [],
                 instance(registry),
                 instance(workspaceMemento),
-                instance(replTracker)
+                instance(replTracker),
+                kernelWorkingDirectory,
+                instance(rawkernelSupported)
             );
             thirdPartyKernelProvider = new ThirdPartyKernelProvider(
                 asyncDisposables,
@@ -252,7 +266,9 @@ suite('Jupyter Session', () => {
                 instance(sessionCreator),
                 instance(configService),
                 instance(registry),
-                instance(workspaceMemento)
+                instance(workspaceMemento),
+                kernelWorkingDirectory,
+                instance(rawkernelSupported)
             );
         });
         teardown(async () => {
