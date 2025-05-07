@@ -248,7 +248,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
                     {
                         message: pipMessage,
                         range,
-                        severity: DiagnosticSeverity.Error,
+                        severity: DiagnosticSeverity.Warning,
                         source: diagnosticSource
                     }
                 ]);
@@ -260,7 +260,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
                     {
                         message: condaMessage,
                         range,
-                        severity: DiagnosticSeverity.Error,
+                        severity: DiagnosticSeverity.Warning,
                         source: diagnosticSource
                     }
                 ]);
