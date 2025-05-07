@@ -778,13 +778,31 @@ export async function endCellAndDisplayErrorsInCell(
     execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
 }
 
+// Defacto standard: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+const CSI_SEQUENCE = /(?:\u001b\[|\u009b)[=?>!]?[\d;:]*["$#'* ]?[a-zA-Z@^`{}|~]/;
+const OSC_SEQUENCE = /(?:\u001b\]|\u009d).*?(?:\u001b\\|\u0007|\u009c)/;
+const ESC_SEQUENCE = /\u001b(?:[ #%\(\)\*\+\-\.\/]?[a-zA-Z0-9\|}~@])/;
+const CONTROL_SEQUENCES = new RegExp('(?:' + [
+	CSI_SEQUENCE.source,
+	OSC_SEQUENCE.source,
+	ESC_SEQUENCE.source,
+].join('|') + ')', 'g');
+
+function removeAnsiEscapeCodes(str: string): string {
+	if (str) {
+		str = str.replace(CONTROL_SEQUENCES, '');
+	}
+
+	return str.trim();
+}
+
 export function findErrorLocation(traceback: string[], cell: NotebookCell) {
     const cellRegex = /Cell\s+In\s*\[(?<executionCount>\d+)\],\s*line (?<lineNumber>\d+).*/;
     // older versions of IPython ~8.3.0
     const inputRegex = /Input\s+?In\s*\[(?<executionCount>\d+)\][^<]*<cell line:\s?(?<lineNumber>\d+)>.*/;
     let lineNumber: number | undefined = undefined;
     for (const line of traceback) {
-        const cleanLine = line.replace(/(?:\u001b\[.+?m)/g, '');
+        const cleanLine = removeAnsiEscapeCodes(line);
         const lineMatch = cellRegex.exec(cleanLine) ?? inputRegex.exec(cleanLine);
         if (lineMatch && lineMatch.groups) {
             lineNumber = parseInt(lineMatch.groups['lineNumber']);
