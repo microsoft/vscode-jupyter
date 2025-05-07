@@ -782,18 +782,17 @@ export async function endCellAndDisplayErrorsInCell(
 const CSI_SEQUENCE = /(?:\u001b\[|\u009b)[=?>!]?[\d;:]*["$#'* ]?[a-zA-Z@^`{}|~]/;
 const OSC_SEQUENCE = /(?:\u001b\]|\u009d).*?(?:\u001b\\|\u0007|\u009c)/;
 const ESC_SEQUENCE = /\u001b(?:[ #%\(\)\*\+\-\.\/]?[a-zA-Z0-9\|}~@])/;
-const CONTROL_SEQUENCES = new RegExp('(?:' + [
-	CSI_SEQUENCE.source,
-	OSC_SEQUENCE.source,
-	ESC_SEQUENCE.source,
-].join('|') + ')', 'g');
+const CONTROL_SEQUENCES = new RegExp(
+    '(?:' + [CSI_SEQUENCE.source, OSC_SEQUENCE.source, ESC_SEQUENCE.source].join('|') + ')',
+    'g'
+);
 
 function removeAnsiEscapeCodes(str: string): string {
-	if (str) {
-		str = str.replace(CONTROL_SEQUENCES, '');
-	}
+    if (str) {
+        str = str.replace(CONTROL_SEQUENCES, '');
+    }
 
-	return str.trim();
+    return str.trim();
 }
 
 export function findErrorLocation(traceback: string[], cell: NotebookCell) {
