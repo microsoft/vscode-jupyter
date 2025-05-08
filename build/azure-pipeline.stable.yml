@@ -87,11 +87,7 @@ extends:
         serviceTreeID: '14f24efd-b502-422a-9f40-09ea7ce9cf14'
       enabled: true
 
-    # Temporarily disable APIScan until we have new zeromq-prebuilt symbols
-    skipAPIScan: true
-
-    # Add a dependency on zeromq-prebuilt
-    apiScanDependentPipelineId: '466'
+    apiScanDependentPipelineId: '466' # zeromq-prebuilt
     apiScanSoftwareVersion: '2024'
 
     # Exclude win32-arm64/*.* because APIScan cannot process them.
