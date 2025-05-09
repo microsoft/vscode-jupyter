@@ -3,7 +3,13 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { getPackagesFromEnvsExtension, packageDefinition, sendPipListRequest } from './helper';
+import {
+    ensureKernelSelectedAndStarted,
+    getPackagesFromEnvsExtension,
+    packageDefinition,
+    sendPipListRequest
+} from './helper';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
     public static toolName = 'notebook_list_packages';
@@ -16,7 +22,8 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
     }
 
     constructor(
-        private readonly kernelProvider: IKernelProvider //private readonly installer: IInstaller
+        private readonly kernelProvider: IKernelProvider,
+        private readonly controllerRegistration: IControllerRegistration
     ) {}
 
     async invoke(
@@ -35,7 +42,14 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         if (!notebook) {
             throw new Error(`Notebook ${filePath} not found.`);
         }
-        const kernel = this.kernelProvider.get(notebook);
+
+        const kernel = await ensureKernelSelectedAndStarted(
+            notebook,
+            this.controllerRegistration,
+            this.kernelProvider,
+            token
+        );
+
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
         }

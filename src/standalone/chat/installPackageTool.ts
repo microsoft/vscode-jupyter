@@ -3,7 +3,8 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { installPackageThroughEnvsExtension, sendPipInstallRequest } from './helper';
+import { ensureKernelSelectedAndStarted, installPackageThroughEnvsExtension, sendPipInstallRequest } from './helper';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
@@ -15,7 +16,10 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         return 'Installs a package into the active kernel of a notebook.';
     }
 
-    constructor(private readonly kernelProvider: IKernelProvider) {}
+    constructor(
+        private readonly kernelProvider: IKernelProvider,
+        private readonly controllerRegistration: IControllerRegistration
+    ) {}
 
     async invoke(
         options: vscode.LanguageModelToolInvocationOptions<IInstallPackageParams>,
@@ -33,7 +37,14 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         if (!notebook) {
             throw new Error(`Notebook ${filePath} not found.`);
         }
-        const kernel = this.kernelProvider.get(notebook);
+
+        const kernel = await ensureKernelSelectedAndStarted(
+            notebook,
+            this.controllerRegistration,
+            this.kernelProvider,
+            token
+        );
+
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
         }
