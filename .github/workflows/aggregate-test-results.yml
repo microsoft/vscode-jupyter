@@ -15,12 +15,13 @@ jobs:
     name: Get Test Results
     runs-on: ubuntu-latest
 
-    permissions:
-      actions: read
+    permissions: {}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: setup python
         uses: actions/setup-python@v5
