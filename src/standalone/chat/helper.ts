@@ -79,16 +79,16 @@ export async function ensureKernelSelectedAndStarted(
 ) {
     let kernel = kernelProvider.get(notebook);
     if (!kernel) {
+        const selectedPromise = new Promise<void>((resolve) =>
+            controllerRegistration.onControllerSelected((e) => (e.notebook === notebook ? resolve() : undefined))
+        );
+
         await vscode.commands.executeCommand('notebook.selectKernel', {
             notebookUri: notebook.uri,
             skipIfAlreadySelected: true
         });
 
-        const selectedPromise = new Promise<void>((resolve) =>
-            controllerRegistration.onControllerSelected((e) => (e.notebook === notebook ? resolve() : undefined))
-        );
-
-        await raceTimeout(1_000, raceCancellation(token, selectedPromise));
+        await raceTimeout(200, raceCancellation(token, selectedPromise));
         kernel = kernelProvider.get(notebook);
     }
 
