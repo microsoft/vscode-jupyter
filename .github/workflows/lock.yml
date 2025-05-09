@@ -22,4 +22,6 @@ jobs:
 
       - name: Print locked issues
         run: |
-          echo "Locked issues: ${{ steps.lock.outputs.issues }}"
+          echo "Locked issues: ${ISSUES}"
+        env:
+          ISSUES: ${{ steps.lock.outputs.issues }}
