@@ -15,13 +15,19 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
     context.subscriptions.push(
         vscode.lm.registerTool(
             InstallPackagesTool.toolName,
-            new InstallPackagesTool(serviceContainer.get<IKernelProvider>(IKernelProvider))
+            new InstallPackagesTool(
+                serviceContainer.get<IKernelProvider>(IKernelProvider),
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+            )
         )
     );
     context.subscriptions.push(
         vscode.lm.registerTool(
             ListPackageTool.toolName,
-            new ListPackageTool(serviceContainer.get<IKernelProvider>(IKernelProvider))
+            new ListPackageTool(
+                serviceContainer.get<IKernelProvider>(IKernelProvider),
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+            )
         )
     );
 

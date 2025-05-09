@@ -2,9 +2,12 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { IKernel } from '../../kernels/types';
+import { IKernel, IKernelProvider } from '../../kernels/types';
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
 import { getEnvExtApi } from '../../platform/api/python-envs/pythonEnvsApi';
+import { raceTimeout } from '../../platform/common/utils/async';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { raceCancellation } from '../../platform/common/cancellation';
 
 export async function sendPipListRequest(kernel: IKernel, token: vscode.CancellationToken) {
     const codeToExecute = `import subprocess
@@ -67,3 +70,41 @@ export async function installPackageThroughEnvsExtension(kernelUri: vscode.Uri, 
 }
 
 export type packageDefinition = { name: string; version?: string };
+
+export async function ensureKernelSelectedAndStarted(
+    notebook: vscode.NotebookDocument,
+    controllerRegistration: IControllerRegistration,
+    kernelProvider: IKernelProvider,
+    token: vscode.CancellationToken
+) {
+    let kernel = kernelProvider.get(notebook);
+    if (!kernel) {
+        await vscode.commands.executeCommand('notebook.selectKernel', {
+            notebookUri: notebook.uri,
+            skipIfAlreadySelected: true
+        });
+
+        const selectedPromise = new Promise<void>((resolve) =>
+            controllerRegistration.onControllerSelected((e) => (e.notebook === notebook ? resolve() : undefined))
+        );
+
+        await raceTimeout(1_000, raceCancellation(token, selectedPromise));
+        kernel = kernelProvider.get(notebook);
+    }
+
+    if (kernel && (kernel.status === 'starting' || kernel.status === 'restarting')) {
+        const startedPromise = new Promise<void>(
+            (resolve, reject) =>
+                kernel?.onStatusChanged(() => {
+                    if (kernel?.status === 'idle') {
+                        resolve();
+                    } else if (kernel?.status === 'terminating' || kernel?.status === 'dead') {
+                        reject(new Error(`Kernel did not start successfully`));
+                    }
+                })
+        );
+        await raceTimeout(10_000, raceCancellation(token, startedPromise));
+    }
+
+    return kernel;
+}
