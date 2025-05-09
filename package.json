@@ -2312,7 +2312,7 @@
         "@vscode/dts": "^0.4.0",
         "@vscode/test-cli": "^0.0.8",
         "@vscode/test-electron": "^2.3.9",
-        "@vscode/test-web": "^0.0.61",
+        "@vscode/test-web": "^0.0.69",
         "@vscode/zeromq": "^0.2.3",
         "acorn": "^8.9.0",
         "babel-polyfill": "^6.26.0",
