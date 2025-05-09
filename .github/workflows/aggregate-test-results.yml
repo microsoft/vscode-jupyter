@@ -15,7 +15,8 @@ jobs:
     name: Get Test Results
     runs-on: ubuntu-latest
 
-    permissions: {}
+    permissions:
+        actions: read
 
     steps:
       - name: Checkout
