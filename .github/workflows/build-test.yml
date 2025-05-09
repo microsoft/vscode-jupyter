@@ -4,8 +4,7 @@
 
 name: Build and Test
 
-permissions:
-  deployments: write
+permissions: {}
 
 on:
   pull_request:
@@ -51,9 +50,11 @@ jobs:
   # Make sure to cancel previous runs on a push
   cancel_previous_runs:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
+        uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
         with:
           access_token: ${{ github.token }}
 
@@ -64,6 +65,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v4
@@ -105,6 +108,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v4
@@ -192,6 +197,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v4
@@ -364,6 +371,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Generate Tag Variable
         run: echo "TAGSVAR=${{ matrix.tags }}}" >> $GITHUB_ENV
@@ -381,7 +390,7 @@ jobs:
           python-version: ${{matrix.pythonVersion}}
 
       - name: Install Conda environment from environment.yml
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@0dea6379afdaffa5d528b3d1dabc45da37f443fc # v2.0.4
         if: matrix.python == 'conda'
         with:
           cache-downloads: true
@@ -595,7 +604,7 @@ jobs:
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Deno
-        uses: denoland/setup-deno@v2
+        uses: denoland/setup-deno@909cc5acb0fdd60627fb858598759246509fa755 # v2.0.2
         if: matrix.tags != '@notebookPerformance'
         with:
           deno-version: ${{ env.DENO_VERSION}}
@@ -641,7 +650,7 @@ jobs:
         run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
 
       - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
         env:
@@ -658,7 +667,7 @@ jobs:
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web' && matrix.tags != '@notebookPerformance'
 
       - name: Run Notebook Perf Test Without Jupyter
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testPerfInVSCode
         env:
@@ -678,7 +687,7 @@ jobs:
         if: matrix.tags == '@notebookPerformance'
 
       - name: Run Execution Perf Test With Jupyter
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testExecPerfInVSCode
         env:
@@ -702,7 +711,7 @@ jobs:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
       - name: Run Native Notebook with VSCode & Jupyter (web)
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testWebExtension
         env:
@@ -736,7 +745,7 @@ jobs:
         if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.jupyterConnection != 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
@@ -787,6 +796,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v5
@@ -837,6 +848,6 @@ jobs:
           DISPLAY: 10
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSmokeLogged
