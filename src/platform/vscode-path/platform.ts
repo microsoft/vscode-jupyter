@@ -63,7 +63,8 @@ if (typeof globals.vscode !== 'undefined' && typeof globals.vscode.process !== '
 }
 
 const isElectronProcess = typeof nodeProcess?.versions?.electron === 'string';
-const isElectronRenderer = isElectronProcess && nodeProcess?.type && ['renderer', 'utility'].includes(nodeProcess?.type);
+const isElectronRenderer =
+    isElectronProcess && nodeProcess?.type && ['renderer', 'utility'].includes(nodeProcess?.type);
 export const isElectronSandboxed = isElectronRenderer && nodeProcess?.sandboxed;
 
 interface INavigator {
