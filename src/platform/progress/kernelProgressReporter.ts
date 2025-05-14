@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Progress, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { raceCancellation } from '../common/cancellation';
-import { dispose } from '../common/utils/lifecycle';
+import { DisposableStore, dispose } from '../common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
@@ -86,8 +86,15 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
         if (!KernelProgressReporter.instance) {
             return cb();
         }
-        const progress = KernelProgressReporter.reportProgressInternal(key, title);
-        return cb().finally(() => progress?.dispose());
+        const store = new DisposableStore();
+        // Always wait 2s before showing any progress reporter (else we end up with too much noise).
+        const timeout = setTimeout(() => {
+            if (!store.isDisposed) {
+                store.add(KernelProgressReporter.reportProgressInternal(key, title));
+            }
+        }, 2_000);
+        store.add(new Disposable(() => clearTimeout(timeout)));
+        return cb().finally(() => store.dispose());
     }
 
     /**
