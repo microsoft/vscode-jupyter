@@ -94,5 +94,5 @@ export interface PythonApi {
     /**
      * Returns the Environment that was last used in a Python tool.
      */
-    getLastUsedEnvInLmTool(uri: Uri): EnvironmentPath | undefined;
+    getLastUsedEnvInLmTool?(uri: Uri): EnvironmentPath | undefined;
 }

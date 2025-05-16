@@ -701,6 +701,6 @@ export class PythonChatTools implements IPythonChatTools {
         if (!api || !pythonApi) {
             return;
         }
-        return api.getLastUsedEnvInLmTool(uri);
+        return api.getLastUsedEnvInLmTool?.(uri);
     }
 }
