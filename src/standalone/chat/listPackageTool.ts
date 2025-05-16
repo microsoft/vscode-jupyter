@@ -65,9 +65,11 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
             packages = await getPackagesFromEnvsExtension(kernelUri);
         }
 
-        // TODO: There is an IInstaller service available, but currently only lists info for a single package.
-        // It may also depend on the environment extension?
-        packages = await sendPipListRequest(kernel, token);
+        if (!packages) {
+            // TODO: There is an IInstaller service available, but currently only lists info for a single package.
+            // It may also depend on the environment extension?
+            packages = await sendPipListRequest(kernel, token);
+        }
 
         if (!packages) {
             throw new Error(`Unable to list packages for notebook ${filePath}.`);
