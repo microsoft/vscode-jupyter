@@ -89,7 +89,17 @@ export async function ensureKernelSelectedAndStarted(
         });
 
         await raceTimeout(200, raceCancellation(token, selectedPromise));
-        kernel = kernelProvider.get(notebook);
+
+        const controller = controllerRegistration.getSelected(notebook);
+        if (controller) {
+            kernel = kernelProvider.getOrCreate(notebook, {
+                metadata: controller.connection,
+                controller: controller.controller,
+                resourceUri: notebook.uri
+            });
+
+            void kernel.start();
+        }
     }
 
     if (kernel && (kernel.status === 'starting' || kernel.status === 'restarting')) {
