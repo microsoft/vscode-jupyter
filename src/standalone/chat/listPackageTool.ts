@@ -93,7 +93,7 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         const controller = this.controllerRegistration.getSelected(notebook);
         if (controller) {
             const kernel = this.kernelProvider.get(notebook);
-            if (!kernel) {
+            if (!kernel || !kernel.startedAtLeastOnce) {
                 return {
                     confirmationMessages: {
                         title: vscode.l10n.t(`Start Kernel and List Packages`),

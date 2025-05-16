@@ -102,6 +102,10 @@ export async function ensureKernelSelectedAndStarted(
         }
     }
 
+    if (kernel && !kernel.startedAtLeastOnce) {
+        void kernel.start();
+    }
+
     if (kernel && (kernel.status === 'starting' || kernel.status === 'restarting')) {
         const startedPromise = new Promise<void>(
             (resolve, reject) =>
