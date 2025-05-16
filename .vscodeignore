@@ -5,6 +5,7 @@ images/**
 docs/**
 *.vsix
 .appveyor.yml
+.config/**
 .devcontainer*/**
 .editorconfig
 .env
@@ -18,6 +19,7 @@ docs/**
 .npmrc
 .nvmrc
 .nycrc
+.ruff_cache/**
 .travis.yml
 .vscode-test.mjs
 api/**
