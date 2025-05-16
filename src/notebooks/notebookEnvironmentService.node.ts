@@ -13,10 +13,9 @@ import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { noop } from '../platform/common/utils/misc';
 import { INotebookEditorProvider, INotebookPythonEnvironmentService } from './types';
 import { getCachedEnvironment, getInterpreterInfo } from '../platform/interpreter/helpers';
-import type { Environment } from '@vscode/python-extension';
+import type { Environment, EnvironmentPath } from '@vscode/python-extension';
 import type { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { toPythonSafePath } from '../platform/common/utils/encoder';
-import { IInterpreterService } from '../platform/interpreter/contracts';
 
 @injectable()
 export class NotebookPythonEnvironmentService extends DisposableBase implements INotebookPythonEnvironmentService {
@@ -28,8 +27,7 @@ export class NotebookPythonEnvironmentService extends DisposableBase implements 
     constructor(
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
     ) {
         super();
         this.monitorRemoteKernelStart();
@@ -54,7 +52,7 @@ export class NotebookPythonEnvironmentService extends DisposableBase implements 
         );
     }
 
-    public async getPythonEnvironment(uri: Uri): Promise<Environment | undefined> {
+    public getPythonEnvironment(uri: Uri): EnvironmentPath | undefined {
         const notebook = this.notebookEditorProvider.findAssociatedNotebookDocument(uri);
         const env = notebook ? this.notebookPythonEnvironments.get(notebook) : undefined;
         if (env || !notebook) {
@@ -64,7 +62,10 @@ export class NotebookPythonEnvironmentService extends DisposableBase implements 
         // 2. Fall back to  `python.defaultInterpreterPath` set
         const defaultInterpreterPath = workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
         if (defaultInterpreterPath) {
-            return this.interpreterService.resolveEnvironment(defaultInterpreterPath).catch(() => undefined);
+            return {
+                id: defaultInterpreterPath,
+                path: defaultInterpreterPath
+            };
         }
     }
 

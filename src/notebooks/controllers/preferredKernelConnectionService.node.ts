@@ -27,7 +27,10 @@ export async function findPreferredPythonEnvironment(
 
     // We never want to recommend even using the active interpreter.
     // Its possible the active interpreter is global and could cause other issues.
-    return notebookEnvironment.getPythonEnvironment(notebook.uri);
+    const env = notebookEnvironment.getPythonEnvironment(notebook.uri);
+    if (env) {
+        return pythonApi.environments.resolveEnvironment(env.id);
+    }
 }
 
 function findPythonEnvironmentClosestToNotebook(notebook: NotebookDocument, envs: readonly Environment[]) {
