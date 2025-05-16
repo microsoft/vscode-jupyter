@@ -38,9 +38,12 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
 
         // TODO: handle other schemas
         const uri = vscode.Uri.file(filePath);
-        const notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
+        let notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
         if (!notebook) {
-            throw new Error(`Notebook ${filePath} not found.`);
+            notebook = await vscode.workspace.openNotebookDocument(uri);
+            if (!notebook) {
+                throw new Error(`Unable to find notebook at ${filePath}.`);
+            }
         }
 
         const kernel = await ensureKernelSelectedAndStarted(
