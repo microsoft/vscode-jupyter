@@ -91,8 +91,7 @@ export async function ensureKernelSelectedAndStarted(
     }
 
     const controller = controllerRegistration.getSelected(notebook);
-    if (!controller) {
-        return;
+    if (controller) {
+        return controller.startKernel(notebook);
     }
-    return controller.startKernel(notebook);
 }
