@@ -94,5 +94,5 @@ export async function ensureKernelSelectedAndStarted(
     if (!controller) {
         return;
     }
-    return raceTimeout(10_000, controller.startKernel(notebook));
+    return controller.startKernel(notebook);
 }
