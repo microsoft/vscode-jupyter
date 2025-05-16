@@ -3,8 +3,9 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { ensureKernelSelectedAndStarted, installPackageThroughEnvsExtension, sendPipInstallRequest } from './helper';
+import { ensureKernelSelectedAndStarted, installPackageThroughEnvsExtension } from './helper';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
@@ -18,7 +19,8 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
 
     constructor(
         private readonly kernelProvider: IKernelProvider,
-        private readonly controllerRegistration: IControllerRegistration
+        private readonly controllerRegistration: IControllerRegistration,
+        private readonly installationManager: IInstallationChannelManager
     ) {}
 
     async invoke(
@@ -50,7 +52,6 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         }
 
         let success: boolean = false;
-        let output = '';
         const kernelUri = kernel.kernelConnectionMetadata.interpreter?.uri;
         if (
             kernelUri &&
@@ -60,16 +61,33 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
             success = await installPackageThroughEnvsExtension(kernelUri, packageList);
         }
 
-        if (!success) {
-            // TODO: There is an IInstaller service available, but currently only for a set list of packages.
-            const result = await sendPipInstallRequest(kernel, packageList, token);
-            output = ` Output: ${String(result)}`;
-            if (output.length > 200) {
-                output = output.substring(0, 200) + '...';
+        if (!success && kernel.kernelConnectionMetadata.interpreter) {
+            const cancellationTokenSource = new vscode.CancellationTokenSource();
+            token.onCancellationRequested(() => cancellationTokenSource.cancel());
+            const installers = await this.installationManager.getInstallationChannels(
+                kernel.kernelConnectionMetadata.interpreter
+            );
+            if (installers.length > 0) {
+                const installer = installers[0];
+                for (const packageName of packageList) {
+                    await installer.installModule(
+                        packageName,
+                        kernel.kernelConnectionMetadata.interpreter,
+                        cancellationTokenSource
+                    );
+                }
+                success = true;
             }
         }
-        const finalMessageString = `Installation finished.${output}`;
-        return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
+
+        if (!success) {
+            const message = `Failed to install one or more packages: ${packageList.join(', ')}.`;
+            return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(message)]);
+        }
+
+        return new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart('Installation finished successfully.')
+        ]);
     }
 
     prepareInvocation(
