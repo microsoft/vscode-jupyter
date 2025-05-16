@@ -77,8 +77,7 @@ export async function ensureKernelSelectedAndStarted(
     kernelProvider: IKernelProvider,
     token: vscode.CancellationToken
 ) {
-    let kernel = kernelProvider.get(notebook);
-    if (!kernel) {
+    if (!kernelProvider.get(notebook)) {
         const selectedPromise = new Promise<void>((resolve) =>
             controllerRegistration.onControllerSelected((e) => (e.notebook === notebook ? resolve() : undefined))
         );
@@ -89,36 +88,11 @@ export async function ensureKernelSelectedAndStarted(
         });
 
         await raceTimeout(200, raceCancellation(token, selectedPromise));
-
-        const controller = controllerRegistration.getSelected(notebook);
-        if (controller) {
-            kernel = kernelProvider.getOrCreate(notebook, {
-                metadata: controller.connection,
-                controller: controller.controller,
-                resourceUri: notebook.uri
-            });
-
-            void kernel.start();
-        }
     }
 
-    if (kernel && !kernel.startedAtLeastOnce) {
-        void kernel.start();
+    const controller = controllerRegistration.getSelected(notebook);
+    if (!controller) {
+        return;
     }
-
-    if (kernel && (kernel.status === 'starting' || kernel.status === 'restarting')) {
-        const startedPromise = new Promise<void>(
-            (resolve, reject) =>
-                kernel?.onStatusChanged(() => {
-                    if (kernel?.status === 'idle') {
-                        resolve();
-                    } else if (kernel?.status === 'terminating' || kernel?.status === 'dead') {
-                        reject(new Error(`Kernel did not start successfully`));
-                    }
-                })
-        );
-        await raceTimeout(10_000, raceCancellation(token, startedPromise));
-    }
-
-    return kernel;
+    return raceTimeout(10_000, controller.startKernel(notebook));
 }

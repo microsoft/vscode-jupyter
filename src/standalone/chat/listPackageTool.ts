@@ -91,17 +91,15 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         }
 
         const controller = this.controllerRegistration.getSelected(notebook);
-        if (controller) {
-            const kernel = this.kernelProvider.get(notebook);
-            if (!kernel || !kernel.startedAtLeastOnce) {
-                return {
-                    confirmationMessages: {
-                        title: vscode.l10n.t(`Start Kernel and List Packages`),
-                        message: vscode.l10n.t('The notebook kernel needs to be started before listing packages')
-                    },
-                    invocationMessage: vscode.l10n.t('Starting kernel and listing packages')
-                };
-            }
+        const kernel = this.kernelProvider.get(notebook);
+        if (!controller || !kernel || !kernel.startedAtLeastOnce) {
+            return {
+                confirmationMessages: {
+                    title: vscode.l10n.t(`Start Kernel and List Packages`),
+                    message: vscode.l10n.t('The notebook kernel needs to be started before listing packages')
+                },
+                invocationMessage: vscode.l10n.t('Starting kernel and listing packages')
+            };
         }
 
         return undefined;

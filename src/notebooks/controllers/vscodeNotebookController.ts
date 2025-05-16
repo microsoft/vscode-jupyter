@@ -654,6 +654,10 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         ).catch(noop);
     }
 
+    public async startKernel(notebook: NotebookDocument) {
+        return this.connectToKernel(notebook, new DisplayOptions(false));
+    }
+
     private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions): Promise<IKernel> {
         const tracker = getNotebookTelemetryTracker(doc)?.startKernel();
         this._onConnecting.fire();
