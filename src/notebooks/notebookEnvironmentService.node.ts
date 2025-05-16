@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, NotebookDocument, Uri } from 'vscode';
+import { EventEmitter, NotebookDocument, Uri, workspace } from 'vscode';
 import * as fs from 'fs-extra';
 import { IControllerRegistration, type IVSCodeNotebookController } from './controllers/types';
 import { IKernelProvider, isRemoteConnection, type IKernel } from '../kernels/types';
@@ -16,6 +16,7 @@ import { getCachedEnvironment, getInterpreterInfo } from '../platform/interprete
 import type { Environment } from '@vscode/python-extension';
 import type { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { toPythonSafePath } from '../platform/common/utils/encoder';
+import { IInterpreterService } from '../platform/interpreter/contracts';
 
 @injectable()
 export class NotebookPythonEnvironmentService extends DisposableBase implements INotebookPythonEnvironmentService {
@@ -27,7 +28,8 @@ export class NotebookPythonEnvironmentService extends DisposableBase implements 
     constructor(
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         super();
         this.monitorRemoteKernelStart();
@@ -52,9 +54,18 @@ export class NotebookPythonEnvironmentService extends DisposableBase implements 
         );
     }
 
-    public getPythonEnvironment(uri: Uri): Environment | undefined {
+    public async getPythonEnvironment(uri: Uri): Promise<Environment | undefined> {
         const notebook = this.notebookEditorProvider.findAssociatedNotebookDocument(uri);
-        return notebook ? this.notebookPythonEnvironments.get(notebook) : undefined;
+        const env = notebook ? this.notebookPythonEnvironments.get(notebook) : undefined;
+        if (env || !notebook) {
+            return env;
+        }
+
+        // 2. Fall back to  `python.defaultInterpreterPath` set
+        const defaultInterpreterPath = workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
+        if (defaultInterpreterPath) {
+            return this.interpreterService.resolveEnvironment(defaultInterpreterPath).catch(() => undefined);
+        }
     }
 
     private monitorRemoteKernelStart() {

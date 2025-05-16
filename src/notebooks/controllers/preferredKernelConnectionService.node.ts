@@ -10,12 +10,12 @@ import { Environment, PythonExtension } from '@vscode/python-extension';
 import type { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import type { INotebookPythonEnvironmentService } from '../types';
 
-export function findPreferredPythonEnvironment(
+export async function findPreferredPythonEnvironment(
     notebook: NotebookDocument,
     pythonApi: PythonExtension,
     filter: PythonEnvironmentFilter,
     notebookEnvironment: INotebookPythonEnvironmentService
-): Environment | undefined {
+): Promise<Environment | undefined> {
     // 1. Check if we have a .conda or .venv virtual env in the local workspace folder.
     const localEnv = findPythonEnvironmentClosestToNotebook(
         notebook,

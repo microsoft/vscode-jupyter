@@ -21,5 +21,5 @@ export interface INotebookEditorProvider {
 export const INotebookPythonEnvironmentService = Symbol('INotebookPythonEnvironmentService');
 export interface INotebookPythonEnvironmentService {
     onDidChangeEnvironment: Event<Uri>;
-    getPythonEnvironment(uri: Uri): Environment | undefined;
+    getPythonEnvironment(uri: Uri): Promise<Environment | undefined>;
 }

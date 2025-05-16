@@ -12,7 +12,7 @@ export class NotebookPythonEnvironmentService extends DisposableBase implements 
     private readonly _onDidChangeEnvironment = this._register(new EventEmitter<Uri>());
     public readonly onDidChangeEnvironment = this._onDidChangeEnvironment.event;
 
-    public getPythonEnvironment(_: Uri): Environment | undefined {
+    public async getPythonEnvironment(_: Uri): Promise<Environment | undefined> {
         return undefined;
     }
 }
