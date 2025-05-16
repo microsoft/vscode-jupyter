@@ -40,7 +40,7 @@ export async function findPreferredPythonEnvironment(
         return pythonApi.environments.resolveEnvironment(lastUsedEnv);
     }
 
-    // 2. Fall back to  `python.defaultInterpreterPath` set
+    // 3. Fall back to  `python.defaultInterpreterPath` set
     const defaultInterpreterPath = workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
     if (defaultInterpreterPath) {
         return pythonApi.environments.resolveEnvironment(defaultInterpreterPath);
