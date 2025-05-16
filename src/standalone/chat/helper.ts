@@ -89,6 +89,10 @@ export async function ensureKernelSelectedAndStarted(
                 )
             );
 
+            if (!vscode.window.visibleNotebookEditors.some((e) => e.notebook.uri.toString() === notebook.uri.toString())) {
+                await vscode.window.showNotebookDocument(notebook);
+            }
+
             await raceCancellation(
                 token,
                 vscode.commands.executeCommand('notebook.selectKernel', {
