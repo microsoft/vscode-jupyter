@@ -3,7 +3,7 @@
 
 import { NotebookDocument, NotebookEditor, Uri, type Event } from 'vscode';
 import { Resource } from '../platform/common/types';
-import type { Environment } from '@vscode/python-extension';
+import type { EnvironmentPath } from '@vscode/python-extension';
 
 export interface IEmbedNotebookEditorProvider {
     findNotebookEditor(resource: Resource): NotebookEditor | undefined;
@@ -21,5 +21,5 @@ export interface INotebookEditorProvider {
 export const INotebookPythonEnvironmentService = Symbol('INotebookPythonEnvironmentService');
 export interface INotebookPythonEnvironmentService {
     onDidChangeEnvironment: Event<Uri>;
-    getPythonEnvironment(uri: Uri): Environment | undefined;
+    getPythonEnvironment(uri: Uri): EnvironmentPath | undefined;
 }

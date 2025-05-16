@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, NotebookDocument, Uri } from 'vscode';
+import { EventEmitter, NotebookDocument, Uri, workspace } from 'vscode';
 import * as fs from 'fs-extra';
 import { IControllerRegistration, type IVSCodeNotebookController } from './controllers/types';
 import { IKernelProvider, isRemoteConnection, type IKernel } from '../kernels/types';
@@ -13,7 +13,7 @@ import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { noop } from '../platform/common/utils/misc';
 import { INotebookEditorProvider, INotebookPythonEnvironmentService } from './types';
 import { getCachedEnvironment, getInterpreterInfo } from '../platform/interpreter/helpers';
-import type { Environment } from '@vscode/python-extension';
+import type { Environment, EnvironmentPath } from '@vscode/python-extension';
 import type { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { toPythonSafePath } from '../platform/common/utils/encoder';
 
@@ -52,9 +52,21 @@ export class NotebookPythonEnvironmentService extends DisposableBase implements 
         );
     }
 
-    public getPythonEnvironment(uri: Uri): Environment | undefined {
+    public getPythonEnvironment(uri: Uri): EnvironmentPath | undefined {
         const notebook = this.notebookEditorProvider.findAssociatedNotebookDocument(uri);
-        return notebook ? this.notebookPythonEnvironments.get(notebook) : undefined;
+        const env = notebook ? this.notebookPythonEnvironments.get(notebook) : undefined;
+        if (env || !notebook) {
+            return env;
+        }
+
+        // 2. Fall back to  `python.defaultInterpreterPath` set
+        const defaultInterpreterPath = workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
+        if (defaultInterpreterPath) {
+            return {
+                id: defaultInterpreterPath,
+                path: defaultInterpreterPath
+            };
+        }
     }
 
     private monitorRemoteKernelStart() {

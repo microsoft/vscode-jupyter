@@ -5,6 +5,7 @@
 
 import * as vscode from 'vscode';
 import {
+    IKernel,
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
     PythonKernelConnectionMetadata,
@@ -32,6 +33,7 @@ export interface IVSCodeNotebookController extends IDisposable {
     readonly onConnecting: vscode.Event<void>;
     readonly onDidDispose: vscode.Event<void>;
     readonly onDidReceiveMessage: vscode.Event<{ editor: vscode.NotebookEditor; message: any }>;
+    startKernel(notebook: vscode.NotebookDocument): Promise<IKernel>;
     restoreConnection(notebook: vscode.NotebookDocument): Promise<void>;
     postMessage(message: any, editor?: vscode.NotebookEditor): Thenable<boolean>;
     asWebviewUri(localResource: vscode.Uri): vscode.Uri;

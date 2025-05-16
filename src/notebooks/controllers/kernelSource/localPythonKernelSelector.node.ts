@@ -106,11 +106,11 @@ export class LocalPythonKernelSelector extends DisposableBase {
                 );
             })
             .catch(noop);
-        const computePreferredEnv = () => {
+        const computePreferredEnv = async () => {
             if (!this.pythonApi || token.isCancellationRequested) {
                 return;
             }
-            this.pythonEnvPicker.recommended = findPreferredPythonEnvironment(
+            this.pythonEnvPicker.recommended = await findPreferredPythonEnvironment(
                 this.notebook,
                 this.pythonApi,
                 filter,
@@ -125,7 +125,7 @@ export class LocalPythonKernelSelector extends DisposableBase {
                 return;
             }
             this.pythonApi = api;
-            computePreferredEnv();
+            void computePreferredEnv();
             this._register(api.environments.onDidChangeActiveEnvironmentPath(computePreferredEnv));
             this._register(api.environments.onDidChangeEnvironments(computePreferredEnv));
         };
@@ -140,7 +140,7 @@ export class LocalPythonKernelSelector extends DisposableBase {
             );
         }
 
-        computePreferredEnv();
+        void computePreferredEnv();
     }
 
     public async selectKernel(): Promise<

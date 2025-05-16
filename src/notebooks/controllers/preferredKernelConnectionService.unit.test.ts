@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CancellationTokenSource, NotebookDocument, Disposable, EventEmitter } from 'vscode';
+import { CancellationTokenSource, NotebookDocument, Disposable, EventEmitter, WorkspaceConfiguration } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../kernels/internalTypes';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import {
@@ -26,7 +26,7 @@ import { ServiceContainer } from '../../platform/ioc/container';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { PreferredKernelConnectionService } from './preferredKernelConnectionService';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
-import { resetVSCodeMocks } from '../../test/vscode-mock';
+import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 
 suite(
     `Preferred Kernel Connection`,
@@ -184,6 +184,9 @@ suite(
                 instance(localKernelSpecFinder),
                 instance(localPythonEnvFinder)
             ]);
+            const pythonConfig = mock<WorkspaceConfiguration>();
+            when(pythonConfig.get('defaultInterpreterPath')).thenReturn(undefined);
+            when(mockedVSCodeNamespaces.workspace.getConfiguration('python')).thenReturn(instance(pythonConfig));
             (instance(connection) as any).then = undefined;
             when(jupyterConnection.createConnectionInfo(anything())).thenResolve(instance(connection));
             disposables.push(new Disposable(() => resetVSCodeMocks()));

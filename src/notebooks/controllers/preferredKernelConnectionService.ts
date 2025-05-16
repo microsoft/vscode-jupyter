@@ -240,10 +240,18 @@ export class PreferredKernelConnectionService {
         }
 
         // 2. Fall back to the active interpreter.
-        const activeInterpreter = await interpreterService.getActiveInterpreter(notebook.uri);
+        let activeInterpreter = await interpreterService.getActiveInterpreter(notebook.uri);
         if (!activeInterpreter) {
-            return;
+            // no active interpreter, check if there is `python.defaultInterpreterPath` set
+            const defaultInterpreterPath = workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
+            activeInterpreter = defaultInterpreterPath
+                ? await interpreterService.getInterpreterDetails(defaultInterpreterPath, cancelToken)
+                : undefined;
+            if (!activeInterpreter) {
+                return;
+            }
         }
+
         const findMatchingActiveInterpreterKernel = () => {
             if (cancelToken.isCancellationRequested) {
                 return;

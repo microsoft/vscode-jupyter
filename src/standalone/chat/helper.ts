@@ -8,6 +8,7 @@ import { getEnvExtApi } from '../../platform/api/python-envs/pythonEnvsApi';
 import { raceTimeout } from '../../platform/common/utils/async';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { raceCancellation } from '../../platform/common/cancellation';
+import { DisposableStore } from '../../platform/common/utils/lifecycle';
 
 export async function sendPipListRequest(kernel: IKernel, token: vscode.CancellationToken) {
     const codeToExecute = `import subprocess
@@ -77,34 +78,33 @@ export async function ensureKernelSelectedAndStarted(
     kernelProvider: IKernelProvider,
     token: vscode.CancellationToken
 ) {
-    let kernel = kernelProvider.get(notebook);
-    if (!kernel) {
-        const selectedPromise = new Promise<void>((resolve) =>
-            controllerRegistration.onControllerSelected((e) => (e.notebook === notebook ? resolve() : undefined))
-        );
+    if (!kernelProvider.get(notebook)) {
+        const disposables = new DisposableStore();
+        try {
+            const selectedPromise = new Promise<void>((resolve) =>
+                disposables.add(
+                    controllerRegistration.onControllerSelected((e) =>
+                        e.notebook === notebook ? resolve() : undefined
+                    )
+                )
+            );
 
-        await vscode.commands.executeCommand('notebook.selectKernel', {
-            notebookUri: notebook.uri,
-            skipIfAlreadySelected: true
-        });
-
-        await raceTimeout(200, raceCancellation(token, selectedPromise));
-        kernel = kernelProvider.get(notebook);
-    }
-
-    if (kernel && (kernel.status === 'starting' || kernel.status === 'restarting')) {
-        const startedPromise = new Promise<void>(
-            (resolve, reject) =>
-                kernel?.onStatusChanged(() => {
-                    if (kernel?.status === 'idle') {
-                        resolve();
-                    } else if (kernel?.status === 'terminating' || kernel?.status === 'dead') {
-                        reject(new Error(`Kernel did not start successfully`));
-                    }
+            await raceCancellation(
+                token,
+                vscode.commands.executeCommand('notebook.selectKernel', {
+                    notebookUri: notebook.uri,
+                    skipIfAlreadySelected: true
                 })
-        );
-        await raceTimeout(10_000, raceCancellation(token, startedPromise));
+            );
+
+            await raceTimeout(200, raceCancellation(token, selectedPromise));
+        } finally {
+            disposables.dispose();
+        }
     }
 
-    return kernel;
+    const controller = controllerRegistration.getSelected(notebook);
+    if (controller) {
+        return raceCancellation(token, controller.startKernel(notebook));
+    }
 }
