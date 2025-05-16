@@ -38,9 +38,12 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
 
         // TODO: handle other schemas
         const uri = vscode.Uri.file(filePath);
-        const notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
+        let notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
         if (!notebook) {
-            throw new Error(`Notebook ${filePath} not found.`);
+            notebook = await vscode.workspace.openNotebookDocument(uri);
+            if (!notebook) {
+                throw new Error(`Unable to find notebook at ${filePath}.`);
+            }
         }
 
         const kernel = await ensureKernelSelectedAndStarted(
@@ -65,9 +68,11 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
             packages = await getPackagesFromEnvsExtension(kernelUri);
         }
 
-        // TODO: There is an IInstaller service available, but currently only lists info for a single package.
-        // It may also depend on the environment extension?
-        packages = await sendPipListRequest(kernel, token);
+        if (!packages) {
+            // TODO: There is an IInstaller service available, but currently only lists info for a single package.
+            // It may also depend on the environment extension?
+            packages = await sendPipListRequest(kernel, token);
+        }
 
         if (!packages) {
             throw new Error(`Unable to list packages for notebook ${filePath}.`);
