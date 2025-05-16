@@ -10,6 +10,7 @@ import { sendPipListRequest } from './helper';
 import { ListPackageTool } from './listPackageTool';
 import { InstallPackagesTool } from './installPackageTool';
 import { IServiceContainer } from '../../platform/ioc/types';
+import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
     context.subscriptions.push(
@@ -17,7 +18,8 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
             InstallPackagesTool.toolName,
             new InstallPackagesTool(
                 serviceContainer.get<IKernelProvider>(IKernelProvider),
-                serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager)
             )
         )
     );
