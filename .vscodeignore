@@ -86,6 +86,7 @@ obj/**
 logs/**
 out/**
 precommit.hook
+pythonFiles/.env
 pythonFiles/**/*.pyc
 pythonFiles/lib/**/*.dist-info/**
 pythonFiles/lib/**/*.egg-info/**
