@@ -19,6 +19,7 @@ docs/**
 .nvmrc
 .nycrc
 .travis.yml
+.vscode-test.mjs
 api/**
 CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
