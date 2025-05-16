@@ -79,10 +79,10 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
     }
 
     prepareInvocation(
-        _options: vscode.LanguageModelToolInvocationPrepareOptions<IListPackagesParams>,
+        options: vscode.LanguageModelToolInvocationPrepareOptions<IListPackagesParams>,
         _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
-        const filePath = _options.input.filePath;
+        const filePath = options.input.filePath;
         const uri = vscode.Uri.file(filePath);
         const notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
 
@@ -95,14 +95,14 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         if (!controller || !kernel || !kernel.startedAtLeastOnce) {
             return {
                 confirmationMessages: {
-                    title: vscode.l10n.t(`Start Kernel and List Packages`),
+                    title: vscode.l10n.t(`Start Kernel and List Packages?`),
                     message: vscode.l10n.t('The notebook kernel needs to be started before listing packages')
                 },
                 invocationMessage: vscode.l10n.t('Starting kernel and listing packages')
             };
         }
 
-        return undefined;
+        return { invocationMessage: vscode.l10n.t('Listing packages') };
     }
 }
 

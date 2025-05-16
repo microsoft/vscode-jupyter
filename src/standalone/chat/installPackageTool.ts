@@ -76,8 +76,29 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         options: vscode.LanguageModelToolInvocationPrepareOptions<IInstallPackageParams>,
         _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
+        const filePath = options.input.filePath;
+        const uri = vscode.Uri.file(filePath);
+        const notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
+        const controller = notebook ? this.controllerRegistration.getSelected(notebook) : undefined;
+        const kernel = notebook ? this.kernelProvider.get(notebook) : undefined;
+        if (!controller || !kernel || !kernel.startedAtLeastOnce) {
+            return {
+                confirmationMessages: {
+                    title: vscode.l10n.t(`Start Kernel and Install packages?`),
+                    message: vscode.l10n.t(
+                        'The notebook kernel needs to be started before installing packages: {0}',
+                        options.input.packageList.join(', ')
+                    )
+                },
+                invocationMessage: vscode.l10n.t(
+                    'Starting kernel and installing packages: {0}',
+                    options.input.packageList.join(', ')
+                )
+            };
+        }
+
         const packageInstallationPrompt = vscode.l10n.t(
-            'Install packages into notebook kernel: {0}',
+            'Installing packages into notebook kernel: {0}',
             options.input.packageList.join(', ')
         );
         const confirmationMessages = {
