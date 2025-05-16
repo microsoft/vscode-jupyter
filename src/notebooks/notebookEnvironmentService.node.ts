@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, NotebookDocument, Uri, workspace } from 'vscode';
+import { EventEmitter, NotebookDocument, Uri } from 'vscode';
 import * as fs from 'fs-extra';
 import { IControllerRegistration, type IVSCodeNotebookController } from './controllers/types';
 import { IKernelProvider, isRemoteConnection, type IKernel } from '../kernels/types';
@@ -54,19 +54,7 @@ export class NotebookPythonEnvironmentService extends DisposableBase implements 
 
     public getPythonEnvironment(uri: Uri): EnvironmentPath | undefined {
         const notebook = this.notebookEditorProvider.findAssociatedNotebookDocument(uri);
-        const env = notebook ? this.notebookPythonEnvironments.get(notebook) : undefined;
-        if (env || !notebook) {
-            return env;
-        }
-
-        // 2. Fall back to  `python.defaultInterpreterPath` set
-        const defaultInterpreterPath = workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
-        if (defaultInterpreterPath) {
-            return {
-                id: defaultInterpreterPath,
-                path: defaultInterpreterPath
-            };
-        }
+        return notebook ? this.notebookPythonEnvironments.get(notebook) : undefined;
     }
 
     private monitorRemoteKernelStart() {

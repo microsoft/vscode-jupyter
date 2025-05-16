@@ -29,7 +29,12 @@ import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironmen
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import { Environment, PythonExtension as PythonExtensionApi, ResolvedEnvironment } from '@vscode/python-extension';
+import {
+    Environment,
+    EnvironmentPath,
+    PythonExtension as PythonExtensionApi,
+    ResolvedEnvironment
+} from '@vscode/python-extension';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
@@ -680,5 +685,22 @@ export class InterpreterService implements IInterpreterService {
                 }
             })
             .catch(noop);
+    }
+}
+
+export const IPythonChatTools = Symbol('IPythonChatTools');
+export interface IPythonChatTools {
+    getLastUsedEnvInLmTool(uri: Uri): Promise<EnvironmentPath | undefined>;
+}
+
+@injectable()
+export class PythonChatTools implements IPythonChatTools {
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    async getLastUsedEnvInLmTool(uri: Uri): Promise<EnvironmentPath | undefined> {
+        const [api, pythonApi] = await Promise.all([this.apiProvider.getApi(), this.apiProvider.getNewApi()]);
+        if (!api || !pythonApi) {
+            return;
+        }
+        return api.getLastUsedEnvInLmTool?.(uri);
     }
 }

@@ -9,12 +9,14 @@ import { getEnvironmentType } from '../../platform/interpreter/helpers';
 import { Environment, PythonExtension } from '@vscode/python-extension';
 import type { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import type { INotebookPythonEnvironmentService } from '../types';
+import { IPythonChatTools } from '../../platform/api/pythonApi';
 
 export async function findPreferredPythonEnvironment(
     notebook: NotebookDocument,
     pythonApi: PythonExtension,
     filter: PythonEnvironmentFilter,
-    notebookEnvironment: INotebookPythonEnvironmentService
+    notebookEnvironment: INotebookPythonEnvironmentService,
+    pythonChatTools: IPythonChatTools
 ): Promise<Environment | undefined> {
     // 1. Check if we have a .conda or .venv virtual env in the local workspace folder.
     const localEnv = findPythonEnvironmentClosestToNotebook(
@@ -30,6 +32,18 @@ export async function findPreferredPythonEnvironment(
     const env = notebookEnvironment.getPythonEnvironment(notebook.uri);
     if (env) {
         return pythonApi.environments.resolveEnvironment(env.id);
+    }
+
+    // 2.  if a LM used an environment for this notebook/workspace in the recent past (15min or so).
+    const lastUsedEnv = await pythonChatTools.getLastUsedEnvInLmTool(notebook.uri);
+    if (lastUsedEnv) {
+        return pythonApi.environments.resolveEnvironment(lastUsedEnv);
+    }
+
+    // 3. Fall back to  `python.defaultInterpreterPath` set
+    const defaultInterpreterPath = workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
+    if (defaultInterpreterPath) {
+        return pythonApi.environments.resolveEnvironment(defaultInterpreterPath);
     }
 }
 

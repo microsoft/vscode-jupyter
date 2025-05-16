@@ -5,7 +5,7 @@ import { Event, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import type { SemVer } from 'semver';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
-import { PythonExtension, type Environment } from '@vscode/python-extension';
+import { EnvironmentPath, PythonExtension, type Environment } from '@vscode/python-extension';
 
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
@@ -91,4 +91,8 @@ export interface PythonApi {
      * @param func : The function that Python should call when requesting the Python path.
      */
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
+    /**
+     * Returns the Environment that was last used in a Python tool.
+     */
+    getLastUsedEnvInLmTool?(uri: Uri): EnvironmentPath | undefined;
 }
