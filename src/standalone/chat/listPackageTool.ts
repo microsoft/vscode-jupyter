@@ -10,6 +10,7 @@ import {
     sendPipListRequest
 } from './helper';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { isEqual } from '../../platform/vscode-path/resources';
 
 export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
     public static toolName = 'notebook_list_packages';
@@ -38,7 +39,7 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
 
         // TODO: handle other schemas
         const uri = vscode.Uri.file(filePath);
-        let notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
+        let notebook = vscode.workspace.notebookDocuments.find((n) => isEqual(n.uri, uri));
         if (!notebook) {
             notebook = await vscode.workspace.openNotebookDocument(uri);
             if (!notebook) {
