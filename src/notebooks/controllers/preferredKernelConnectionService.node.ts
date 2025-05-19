@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookDocument, workspace, Uri } from 'vscode';
+import { env, NotebookDocument, workspace, Uri } from 'vscode';
 import * as path from '../../platform/vscode-path/resources';
 import { isParentPath } from '../../platform/common/platform/fileUtils';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
@@ -29,9 +29,9 @@ export async function findPreferredPythonEnvironment(
 
     // We never want to recommend even using the active interpreter.
     // Its possible the active interpreter is global and could cause other issues.
-    const env = notebookEnvironment.getPythonEnvironment(notebook.uri);
-    if (env) {
-        return pythonApi.environments.resolveEnvironment(env.id);
+    const pythonEnv = notebookEnvironment.getPythonEnvironment(notebook.uri);
+    if (pythonEnv) {
+        return pythonApi.environments.resolveEnvironment(pythonEnv.id);
     }
 
     // 2.  if a LM used an environment for this notebook/workspace in the recent past (15min or so).
@@ -42,7 +42,7 @@ export async function findPreferredPythonEnvironment(
 
     // 3. Fall back to  `python.defaultInterpreterPath` set
     const defaultInterpreterPath = workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
-    if (defaultInterpreterPath) {
+    if (defaultInterpreterPath && env.remoteName === 'dev-container') {
         return pythonApi.environments.resolveEnvironment(defaultInterpreterPath);
     }
 }
