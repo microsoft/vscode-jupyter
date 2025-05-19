@@ -43,6 +43,10 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
             }
         }
 
+        if (!vscode.window.visibleNotebookEditors.some((e) => e.notebook.uri.toString() === notebook.uri.toString())) {
+            await vscode.window.showNotebookDocument(notebook);
+        }
+
         const kernel = await ensureKernelSelectedAndStarted(
             notebook,
             this.controllerRegistration,
