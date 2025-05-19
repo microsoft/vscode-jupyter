@@ -6,6 +6,7 @@ import { IKernelProvider } from '../../kernels/types';
 import { ensureKernelSelectedAndStarted, installPackageThroughEnvsExtension } from './helper';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
+import { isEqual } from '../../platform/vscode-path/resources';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
@@ -35,12 +36,16 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
 
         // TODO: handle other schemas
         const uri = vscode.Uri.file(filePath);
-        let notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
+        let notebook = vscode.workspace.notebookDocuments.find((n) => isEqual(n.uri, uri));
         if (!notebook) {
             notebook = await vscode.workspace.openNotebookDocument(uri);
             if (!notebook) {
                 throw new Error(`Unable to find notebook at ${filePath}.`);
             }
+        }
+
+        if (!vscode.window.visibleNotebookEditors.some((e) => isEqual(e.notebook.uri, notebook.uri))) {
+            await vscode.window.showNotebookDocument(notebook);
         }
 
         const kernel = await ensureKernelSelectedAndStarted(
