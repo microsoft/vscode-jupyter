@@ -3,21 +3,14 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { ensureKernelSelectedAndStarted, installPackageThroughEnvsExtension } from './helper';
+import { installPackageThroughEnvsExtension, resolveNotebookFromFilePath } from './helper';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
-import { isEqual } from '../../platform/vscode-path/resources';
 import { isPythonKernelConnection } from '../../kernels/helpers';
+import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
-
-    public get name() {
-        return InstallPackagesTool.toolName;
-    }
-    public get description() {
-        return 'Installs a package into the active kernel of a notebook.';
-    }
 
     constructor(
         private readonly kernelProvider: IKernelProvider,
@@ -35,27 +28,9 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
             throw new Error('filePath and package list are required parameters.');
         }
 
-        // TODO: handle other schemas
-        const uri = vscode.Uri.file(filePath);
-        let notebook = vscode.workspace.notebookDocuments.find((n) => isEqual(n.uri, uri));
-        if (!notebook) {
-            notebook = await vscode.workspace.openNotebookDocument(uri);
-            if (!notebook) {
-                throw new Error(`Unable to find notebook at ${filePath}.`);
-            }
-        }
-
-        if (!vscode.window.visibleNotebookEditors.some((e) => isEqual(e.notebook.uri, notebook.uri))) {
-            await vscode.window.showNotebookDocument(notebook);
-        }
-
-        const kernel = await ensureKernelSelectedAndStarted(
-            notebook,
-            this.controllerRegistration,
-            this.kernelProvider,
-            token
-        );
-
+        const notebook = await resolveNotebookFromFilePath(filePath);
+        await new ConfigurePythonNotebookTool(this.kernelProvider, this.controllerRegistration).invoke(notebook, token);
+        const kernel = this.kernelProvider.get(notebook);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
         }

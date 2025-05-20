@@ -7,10 +7,11 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { JupyterVariablesProvider } from '../variables/JupyterVariablesProvider';
 import { logger } from '../../platform/logging';
 import { sendPipListRequest } from './helper';
-import { ListPackageTool } from './listPackageTool';
-import { InstallPackagesTool } from './installPackageTool';
+import { ListPackageTool } from './listPackageTool.node';
+import { InstallPackagesTool } from './installPackageTool.node';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
+import { ConfigureNotebookTool } from './configureNotebook.node';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
     context.subscriptions.push(
@@ -35,29 +36,11 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
 
     context.subscriptions.push(
         vscode.lm.registerTool(
-            'configure_notebooks_before_execution',
-            new (class implements vscode.LanguageModelTool<unknown> {
-                async invoke(
-                    _options: vscode.LanguageModelToolInvocationOptions<unknown>,
-                    _token: vscode.CancellationToken
-                ): Promise<vscode.LanguageModelToolResult> {
-                    // This tool is a no-op, it just exists to ensure that the chat model can be used in notebooks.
-                    return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart('')]);
-                }
-
-                prepareInvocation(
-                    _options: vscode.LanguageModelToolInvocationPrepareOptions<unknown>,
-                    __token: vscode.CancellationToken
-                ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
-                    return {
-                        confirmationMessages: {
-                            title: 'Configure Jupyter Notebook for Execution?',
-                            message: ''
-                        },
-                        invocationMessage: 'Configuring Jupyter Notebook for execution'
-                    };
-                }
-            })()
+            ConfigureNotebookTool.toolName,
+            new ConfigureNotebookTool(
+                serviceContainer.get<IKernelProvider>(IKernelProvider),
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+            )
         )
     );
 
@@ -129,6 +112,3 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
         })
     );
 }
-
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-export function deactivate() {}

@@ -58,7 +58,7 @@ import {
     activate as activateExecutionAnalysis,
     deactivate as deactivateExecutionAnalysis
 } from './standalone/executionAnalysis/extension';
-import { activate as activateChat, deactivate as deactivateChat } from './standalone/chat/extension';
+import { activate as activateChat } from './standalone/chat/extension.node';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { initializeLoggers, handleError, initializeGlobals, postActivateLegacy } from './extension.common';
 import { activateNotebookTelemetry } from './kernels/telemetry/notebookTelemetry';
@@ -140,7 +140,6 @@ export function deactivate(): Thenable<void> {
     }
 
     deactivateExecutionAnalysis();
-    deactivateChat();
 
     return Promise.resolve();
 }

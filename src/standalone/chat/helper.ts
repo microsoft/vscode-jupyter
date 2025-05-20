@@ -6,12 +6,13 @@ import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../../kernel
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
 import { getEnvExtApi } from '../../platform/api/python-envs/pythonEnvsApi';
 import { raceTimeout } from '../../platform/common/utils/async';
-import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { raceCancellation } from '../../platform/common/cancellation';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
 import { isEqual } from '../../platform/vscode-path/resources';
-import { isJupyterNotebook } from '../../platform/common/utils';
-import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
+import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { getNameOfKernelConnection, isPythonNotebook } from '../../kernels/helpers';
 
 export async function sendPipListRequest(kernel: IKernel, token: vscode.CancellationToken) {
     const codeToExecute = `import subprocess
@@ -168,9 +169,6 @@ export async function resolveNotebookFromFilePath(filePath: string) {
             // eslint-disable-next-line local-rules/dont-use-fspath
             (doc) => doc.uri.path === filePath || doc.uri.fsPath === filePath
         ) || vscode.workspace.notebookDocuments.find((doc) => isEqual(doc.uri, uri));
-    if (notebook) {
-        return notebook;
-    }
     notebook = notebook || (await vscode.workspace.openNotebookDocument(uri));
     if (!notebook) {
         throw new Error(`Unable to find notebook at ${filePath}.`);
@@ -178,5 +176,31 @@ export async function resolveNotebookFromFilePath(filePath: string) {
     if (!isJupyterNotebook(notebook)) {
         throw new Error(`The notebook at ${filePath} is not a Jupyter notebook.`);
     }
+    if (vscode.window.visibleNotebookEditors.find((e) => e.notebook === notebook)) {
+        await vscode.window.showNotebookDocument(notebook);
+    }
     return notebook;
+}
+
+export function getToolResponseForConfiguredNotebook(
+    selectedController: IVSCodeNotebookController
+): vscode.LanguageModelToolResult {
+    const messages = [
+        `Notebook has been configured to use the kernel ${
+            selectedController.label || getNameOfKernelConnection(selectedController.connection)
+        }, and the Kernel has been successfully started.`
+    ];
+    return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(messages.join(' '))]);
+}
+
+export function getPrimaryLanguageOfNotebook(notebook: vscode.NotebookDocument) {
+    if (notebook.getCells().some((c) => c.document.languageId === PYTHON_LANGUAGE)) {
+        return PYTHON_LANGUAGE;
+    }
+    if (isPythonNotebook(getNotebookMetadata(notebook))) {
+        return PYTHON_LANGUAGE;
+    }
+    return (
+        notebook.getCells().find((c) => c.kind === vscode.NotebookCellKind.Code)?.document.languageId || PYTHON_LANGUAGE
+    );
 }

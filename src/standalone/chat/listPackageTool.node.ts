@@ -4,23 +4,16 @@
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
 import {
-    ensureKernelSelectedAndStarted,
     getPackagesFromEnvsExtension,
     packageDefinition,
+    resolveNotebookFromFilePath,
     sendPipListRequest
 } from './helper';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { isEqual } from '../../platform/vscode-path/resources';
+import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 
 export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
     public static toolName = 'notebook_list_packages';
-
-    public get name() {
-        return ListPackageTool.toolName;
-    }
-    public get description() {
-        return 'Lists all installed packages in the active kernel of a notebook.';
-    }
 
     constructor(
         private readonly kernelProvider: IKernelProvider,
@@ -37,23 +30,9 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
             throw new Error('notebookUri is a required parameter.');
         }
 
-        // TODO: handle other schemas
-        const uri = vscode.Uri.file(filePath);
-        let notebook = vscode.workspace.notebookDocuments.find((n) => isEqual(n.uri, uri));
-        if (!notebook) {
-            notebook = await vscode.workspace.openNotebookDocument(uri);
-            if (!notebook) {
-                throw new Error(`Unable to find notebook at ${filePath}.`);
-            }
-        }
-
-        const kernel = await ensureKernelSelectedAndStarted(
-            notebook,
-            this.controllerRegistration,
-            this.kernelProvider,
-            token
-        );
-
+        const notebook = await resolveNotebookFromFilePath(filePath);
+        await new ConfigurePythonNotebookTool(this.kernelProvider, this.controllerRegistration).invoke(notebook, token);
+        const kernel = this.kernelProvider.get(notebook);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
         }
