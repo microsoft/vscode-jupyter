@@ -10,6 +10,8 @@ import { Environment, PythonExtension, ResolvedEnvironment } from '@vscode/pytho
 import type { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import type { INotebookPythonEnvironmentService } from '../types';
 import { raceTimeout } from '../../platform/common/utils/async';
+import { logger } from '../../platform/logging';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 export async function findPreferredPythonEnvironment(
     notebook: NotebookDocument,
@@ -23,6 +25,7 @@ export async function findPreferredPythonEnvironment(
         pythonApi.environments.known.filter((e) => !filter.isPythonEnvironmentExcluded(e))
     );
     if (localEnv) {
+        logger.trace(`For ${getDisplayPath(notebook.uri)} found local Python environment: ${localEnv.path}`);
         return localEnv;
     }
 
@@ -30,11 +33,14 @@ export async function findPreferredPythonEnvironment(
     // Its possible the active interpreter is global and could cause other issues.
     const pythonEnv = notebookEnvironment.getPythonEnvironment(notebook.uri);
     if (pythonEnv) {
+        logger.trace(`For ${getDisplayPath(notebook.uri)} found Python environment: ${pythonEnv.path}`);
         return pythonApi.environments.resolveEnvironment(pythonEnv.id);
     }
 
     // 2. Fall back to the workspace env selected by the user.
-    return getRecommendedPythonEnvironment(notebook.uri);
+    const recommeded = await getRecommendedPythonEnvironment(notebook.uri);
+    logger.trace(`For ${getDisplayPath(notebook.uri)} found recommeded Python environment: ${recommeded?.path}`);
+    return recommeded;
 }
 
 function findPythonEnvironmentClosestToNotebook(notebook: NotebookDocument, envs: readonly Environment[]) {
@@ -99,6 +105,7 @@ export async function getRecommendedPythonEnvironment(uri: Uri): Promise<Resolve
         // In dev containers give preference to the global user selected environment.
         // This is because the global user selected environment is the one that is most likely pre-configured in the dev container.
         // Generally the images have the settings already pre-configured with this global env pre-selected.
+        // However if there are no workspace folders, then we should use the global user selected environment.
         if (
             result.reason === 'globalUserSelected' &&
             (!workspace.workspaceFolders?.length || env.remoteName === 'dev-container')
