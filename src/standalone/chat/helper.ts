@@ -172,7 +172,7 @@ export async function resolveNotebookFromFilePath(filePath: string) {
         throw new Error(`Unable to find notebook at ${filePath}.`);
     }
     if (!isJupyterNotebook(notebook)) {
-        throw new Error(`The notebook at ${filePath} is not a Jupyter notebook.`);
+        throw new Error(`The notebook at ${filePath} is not a Jupyter notebook This tool can only be used with Jupyter Notebooks.`);
     }
     if (vscode.window.visibleNotebookEditors.find((e) => e.notebook === notebook)) {
         await vscode.window.showNotebookDocument(notebook);
