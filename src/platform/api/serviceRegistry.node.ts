@@ -7,18 +7,11 @@ import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter.node';
 import { IServiceManager } from '../ioc/types';
-import {
-    InterpreterService,
-    IPythonChatTools,
-    OldPythonApiProvider,
-    PythonChatTools,
-    PythonExtensionChecker
-} from './pythonApi';
+import { InterpreterService, OldPythonApiProvider, PythonExtensionChecker } from './pythonApi';
 import { IPythonApiProvider, IPythonExtensionChecker } from './types';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IPythonApiProvider>(IPythonApiProvider, OldPythonApiProvider);
-    serviceManager.addSingleton<IPythonChatTools>(IPythonChatTools, PythonChatTools);
     serviceManager.addSingleton<IPythonExtensionChecker>(IPythonExtensionChecker, PythonExtensionChecker);
     serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(

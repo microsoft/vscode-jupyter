@@ -305,7 +305,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
 }
 export function getDisplayNameOrNameOfPythonKernelConnection(env: { id: string }) {
     if (getEnvironmentType(env) === EnvironmentType.Unknown) {
-        return;
+        return '';
     }
     const pythonVersion = (getTelemetrySafeVersion(getCachedVersion(env)) || '').trim();
     // If this is a conda environment without Python, then don't display `Python` in it.

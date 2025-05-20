@@ -1,22 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { env, NotebookDocument, workspace, Uri } from 'vscode';
+import { env, NotebookDocument, workspace, Uri, commands } from 'vscode';
 import * as path from '../../platform/vscode-path/resources';
 import { isParentPath } from '../../platform/common/platform/fileUtils';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { getEnvironmentType } from '../../platform/interpreter/helpers';
-import { Environment, PythonExtension } from '@vscode/python-extension';
+import { Environment, PythonExtension, ResolvedEnvironment } from '@vscode/python-extension';
 import type { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import type { INotebookPythonEnvironmentService } from '../types';
-import { IPythonChatTools } from '../../platform/api/pythonApi';
+import { raceTimeout } from '../../platform/common/utils/async';
 
 export async function findPreferredPythonEnvironment(
     notebook: NotebookDocument,
     pythonApi: PythonExtension,
     filter: PythonEnvironmentFilter,
     notebookEnvironment: INotebookPythonEnvironmentService,
-    pythonChatTools: IPythonChatTools
 ): Promise<Environment | undefined> {
     // 1. Check if we have a .conda or .venv virtual env in the local workspace folder.
     const localEnv = findPythonEnvironmentClosestToNotebook(
@@ -34,17 +33,8 @@ export async function findPreferredPythonEnvironment(
         return pythonApi.environments.resolveEnvironment(pythonEnv.id);
     }
 
-    // 2.  if a LM used an environment for this notebook/workspace in the recent past (15min or so).
-    const lastUsedEnv = await pythonChatTools.getLastUsedEnvInLmTool(notebook.uri);
-    if (lastUsedEnv) {
-        return pythonApi.environments.resolveEnvironment(lastUsedEnv);
-    }
-
-    // 3. Fall back to  `python.defaultInterpreterPath` set
-    const defaultInterpreterPath = workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
-    if (defaultInterpreterPath && env.remoteName === 'dev-container') {
-        return pythonApi.environments.resolveEnvironment(defaultInterpreterPath);
-    }
+    // 2. Fall back to the workspace env selected by the user.
+    return getRecommendedPythonEnvironment(notebook.uri);
 }
 
 function findPythonEnvironmentClosestToNotebook(notebook: NotebookDocument, envs: readonly Environment[]) {
@@ -86,4 +76,33 @@ export function findPythonEnvBelongingToFolder(folder: Uri, pythonEnvs: readonly
         localEnvs.length
         ? localEnvs[0]
         : undefined;
+}
+
+export async function getRecommendedPythonEnvironment(uri: Uri): Promise<ResolvedEnvironment | undefined> {
+    type RecommededEnvironment =
+        | {
+              environment: ResolvedEnvironment;
+              reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended';
+          }
+        | undefined;
+    try {
+        const result = (await raceTimeout(5_000, commands.executeCommand('python.getRecommendedEnvironment', uri))) as
+            | RecommededEnvironment
+            | undefined;
+        if (!result) {
+            return;
+        }
+        if (result.reason === 'workspaceUserSelected') {
+            return result.environment;
+        }
+
+        if (
+            result.reason === 'globalUserSelected' &&
+            (!workspace.workspaceFolders?.length || env.remoteName === 'dev-container')
+        ) {
+            return result.environment;
+        }
+    } catch (ex) {
+        return;
+    }
 }

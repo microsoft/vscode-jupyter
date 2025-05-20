@@ -3,17 +3,8 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import {
-    ensureKernelSelectedAndStarted,
-    installPackageThroughEnvsExtension,
-    resolveNotebookFromFilePath
-} from './helper';
-import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
-import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
-import { getNameOfKernelConnection, isPythonKernelConnection, isPythonNotebook } from '../../kernels/helpers';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { getNotebookMetadata } from '../../platform/common/utils';
-import { NotebookDocument } from 'vscode-languageclient';
+import { ensureKernelSelectedAndStarted, resolveNotebookFromFilePath } from './helper';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 export interface IConfigureNotebookToolParams {
     filePath: string;
@@ -24,8 +15,7 @@ export class ConfigureNotebookTool implements vscode.LanguageModelTool<IConfigur
 
     constructor(
         private readonly kernelProvider: IKernelProvider,
-        private readonly controllerRegistration: IControllerRegistration,
-        private readonly installationManager: IInstallationChannelManager
+        private readonly controllerRegistration: IControllerRegistration
     ) {}
 
     async invoke(
@@ -34,16 +24,41 @@ export class ConfigureNotebookTool implements vscode.LanguageModelTool<IConfigur
     ) {
         const { filePath } = options.input;
         const notebook = await resolveNotebookFromFilePath(filePath);
+        let controller = this.controllerRegistration.getSelected(notebook);
+        if (!controller) {
+            await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, this.kernelProvider, token);
+        }
+        controller = this.controllerRegistration.getSelected(notebook);
+        if (!controller) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart('No kernel selected for the notebook.')
+            ]);
+        }
 
         return new vscode.LanguageModelToolResult([
-            new vscode.LanguageModelTextPart('Installation finished successfully.')
+            new vscode.LanguageModelTextPart(`The notebook has been configured to use a Kernel '${controller.label}'.`)
         ]);
     }
 
-    prepareInvocation(
-        _options: vscode.LanguageModelToolInvocationPrepareOptions<IConfigureNotebookToolParams>,
+    async prepareInvocation(
+        options: vscode.LanguageModelToolInvocationPrepareOptions<IConfigureNotebookToolParams>,
         _token: vscode.CancellationToken
-    ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
+    ): Promise<vscode.PreparedToolInvocation> {
+        const { filePath } = options.input;
+        const notebook = await resolveNotebookFromFilePath(filePath);
+
+        if (!notebook) {
+            return {};
+        }
+        const controller = this.controllerRegistration.getSelected(notebook);
+        if (!controller) {
+            return {
+                confirmationMessages: {
+                    title: vscode.l10n.t('Select and start a kernel?'),
+                    message: vscode.l10n.t('Once a kernel is selected for the notebook, it will be started.')
+                }
+            };
+        }
         return {};
     }
 }
