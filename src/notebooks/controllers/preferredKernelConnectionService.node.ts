@@ -15,7 +15,7 @@ export async function findPreferredPythonEnvironment(
     notebook: NotebookDocument,
     pythonApi: PythonExtension,
     filter: PythonEnvironmentFilter,
-    notebookEnvironment: INotebookPythonEnvironmentService,
+    notebookEnvironment: INotebookPythonEnvironmentService
 ): Promise<Environment | undefined> {
     // 1. Check if we have a .conda or .venv virtual env in the local workspace folder.
     const localEnv = findPythonEnvironmentClosestToNotebook(
