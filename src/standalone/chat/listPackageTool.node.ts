@@ -15,6 +15,13 @@ import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
     public static toolName = 'notebook_list_packages';
 
+    public get name() {
+        return ListPackageTool.toolName;
+    }
+    public get description() {
+        return 'Lists all installed packages in the active kernel of a notebook.';
+    }
+
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration

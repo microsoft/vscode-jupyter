@@ -12,6 +12,13 @@ import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
 
+    public get name() {
+        return InstallPackagesTool.toolName;
+    }
+    public get description() {
+        return 'Installs a package into the active kernel of a notebook.';
+    }
+
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration,

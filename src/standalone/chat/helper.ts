@@ -93,9 +93,7 @@ export async function ensureKernelSelectedAndStarted(
                 )
             );
 
-            if (
-                !vscode.window.visibleNotebookEditors.some((e) => e.notebook.uri.toString() === notebook.uri.toString())
-            ) {
+            if (!vscode.window.visibleNotebookEditors.some((e) => e.notebook === notebook)) {
                 await vscode.window.showNotebookDocument(notebook);
             }
 

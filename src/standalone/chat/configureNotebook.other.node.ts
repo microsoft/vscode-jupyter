@@ -37,6 +37,17 @@ export class ConfigureNonPythonNotebookTool {
 
     async prepareInvocation(notebook: NotebookDocument, _token: CancellationToken): Promise<PreparedToolInvocation> {
         const language = getPrimaryLanguageOfNotebook(notebook);
+        const controller = this.controllerRegistration.getSelected(notebook);
+        if (controller) {
+            return {
+                confirmationMessages: {
+                    title: l10n.t(`Start Kernel?`),
+                    message: l10n.t('The {0} kernel {1} will be started', language, controller.label)
+                },
+                invocationMessage: l10n.t('Starting {0} Kernel', language)
+            };
+        }
+
         return {
             confirmationMessages: {
                 title: l10n.t(`Select and start a {0} Kernel?`, language),
