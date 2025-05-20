@@ -2061,7 +2061,7 @@
                 "tags": [
                     "notebooks"
                 ],
-                "icon": "$(package)",
+                "icon": "$(notebook)",
                 "canBeReferencedInPrompt": true,
                 "inputSchema": {
                     "type": "object",
@@ -2074,7 +2074,8 @@
                     "required": [
                         "filePath"
                     ]
-                }
+                },
+                "when": "workspacePlatform != webworker"
             },
             {
                 "name": "notebook_list_packages",
