@@ -25,7 +25,9 @@ export async function findPreferredPythonEnvironment(
         pythonApi.environments.known.filter((e) => !filter.isPythonEnvironmentExcluded(e))
     );
     if (localEnv) {
-        logger.trace(`For ${getDisplayPath(notebook.uri)} found local Python environment: ${localEnv.path}`);
+        logger.trace(
+            `For ${getDisplayPath(notebook.uri)} found local Python environment: ${getDisplayPath(localEnv.path)}`
+        );
         return localEnv;
     }
 
@@ -33,13 +35,15 @@ export async function findPreferredPythonEnvironment(
     // Its possible the active interpreter is global and could cause other issues.
     const pythonEnv = notebookEnvironment.getPythonEnvironment(notebook.uri);
     if (pythonEnv) {
-        logger.trace(`For ${getDisplayPath(notebook.uri)} found Python environment: ${pythonEnv.path}`);
+        logger.trace(`For ${getDisplayPath(notebook.uri)} found Python environment: ${getDisplayPath(pythonEnv.path)}`);
         return pythonApi.environments.resolveEnvironment(pythonEnv.id);
     }
 
     // 2. Fall back to the workspace env selected by the user.
     const recommeded = await getRecommendedPythonEnvironment(notebook.uri);
-    logger.trace(`For ${getDisplayPath(notebook.uri)} found recommeded Python environment: ${recommeded?.path}`);
+    logger.trace(
+        `For ${getDisplayPath(notebook.uri)} found recommeded Python environment: ${getDisplayPath(recommeded?.path)}`
+    );
     return recommeded;
 }
 
@@ -96,8 +100,14 @@ export async function getRecommendedPythonEnvironment(uri: Uri): Promise<Resolve
             | RecommededEnvironment
             | undefined;
         if (!result) {
+            logger.trace(`No recommended Python environment found for ${getDisplayPath(uri)}`);
             return;
         }
+        logger.trace(
+            `Get a recommended Python environment for ${getDisplayPath(uri)}, ${result.reason} and ${getDisplayPath(
+                result.environment?.path
+            )}`
+        );
         if (result.reason === 'workspaceUserSelected') {
             return result.environment;
         }
