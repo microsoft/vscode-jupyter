@@ -28,7 +28,7 @@ export class ConfigureNotebookTool implements LanguageModelTool<IConfigureNotebo
     private readonly configurePythonNotebook: ConfigurePythonNotebookTool;
     private readonly configureNonPythonNotebook: ConfigureNonPythonNotebookTool;
     constructor(
-        kernelProvider: IKernelProvider,
+        private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration
     ) {
         this.configurePythonNotebook = new ConfigurePythonNotebookTool(kernelProvider, controllerRegistration);
@@ -55,6 +55,13 @@ export class ConfigureNotebookTool implements LanguageModelTool<IConfigureNotebo
     ): Promise<PreparedToolInvocation> {
         const { filePath } = options.input;
         const notebook = await resolveNotebookFromFilePath(filePath);
+        if (
+            this.controllerRegistration.getSelected(notebook) &&
+            this.kernelProvider.get(notebook)?.startedAtLeastOnce
+        ) {
+            return {};
+        }
+
         const language = getPrimaryLanguageOfNotebook(notebook);
         if (language === PYTHON_LANGUAGE) {
             return this.configurePythonNotebook.prepareInvocation(notebook, _token);

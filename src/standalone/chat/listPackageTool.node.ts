@@ -70,17 +70,11 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
     }
 
-    prepareInvocation(
+    async prepareInvocation(
         options: vscode.LanguageModelToolInvocationPrepareOptions<IListPackagesParams>,
         _token: vscode.CancellationToken
-    ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
-        const filePath = options.input.filePath;
-        const uri = vscode.Uri.file(filePath);
-        const notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
-
-        if (!notebook) {
-            return undefined;
-        }
+    ): Promise<vscode.PreparedToolInvocation> {
+        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
 
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);

@@ -82,15 +82,13 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         ]);
     }
 
-    prepareInvocation(
+    async prepareInvocation(
         options: vscode.LanguageModelToolInvocationPrepareOptions<IInstallPackageParams>,
         _token: vscode.CancellationToken
-    ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
-        const filePath = options.input.filePath;
-        const uri = vscode.Uri.file(filePath);
-        const notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
-        const controller = notebook ? this.controllerRegistration.getSelected(notebook) : undefined;
-        const kernel = notebook ? this.kernelProvider.get(notebook) : undefined;
+    ): Promise<vscode.PreparedToolInvocation> {
+        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        const controller = this.controllerRegistration.getSelected(notebook);
+        const kernel = this.kernelProvider.get(notebook);
         if (!controller || !kernel || !kernel.startedAtLeastOnce) {
             return {
                 confirmationMessages: {
