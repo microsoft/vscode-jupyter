@@ -7,6 +7,7 @@ import { ensureKernelSelectedAndStarted, installPackageThroughEnvsExtension } fr
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { isEqual } from '../../platform/vscode-path/resources';
+import { isPythonKernelConnection } from '../../kernels/helpers';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
@@ -63,6 +64,7 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         const kernelUri = kernel.kernelConnectionMetadata.interpreter?.uri;
         if (
             kernelUri &&
+            isPythonKernelConnection(kernel.kernelConnectionMetadata) &&
             (kernel.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
                 kernel.kernelConnectionMetadata.kind === 'startUsingPythonInterpreter')
         ) {

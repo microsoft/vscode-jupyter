@@ -9,6 +9,8 @@ import { raceTimeout } from '../../platform/common/utils/async';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { raceCancellation } from '../../platform/common/cancellation';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
+import { isEqual } from '../../platform/vscode-path/resources';
+import { isJupyterNotebook } from '../../platform/common/utils';
 
 export async function sendPipListRequest(kernel: IKernel, token: vscode.CancellationToken) {
     const codeToExecute = `import subprocess
@@ -113,4 +115,24 @@ export async function ensureKernelSelectedAndStarted(
     if (controller) {
         return raceCancellation(token, controller.startKernel(notebook));
     }
+}
+
+export async function resolveNotebookFromFilePath(filePath: string) {
+    const uri = vscode.Uri.file(filePath);
+    let notebook =
+        vscode.workspace.notebookDocuments.find(
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            (doc) => doc.uri.path === filePath || doc.uri.fsPath === filePath
+        ) || vscode.workspace.notebookDocuments.find((doc) => isEqual(doc.uri, uri));
+    if (notebook) {
+        return notebook;
+    }
+    notebook = notebook || (await vscode.workspace.openNotebookDocument(uri));
+    if (!notebook) {
+        throw new Error(`Unable to find notebook at ${filePath}.`);
+    }
+    if (!isJupyterNotebook(notebook)) {
+        throw new Error(`The notebook at ${filePath} is not a Jupyter notebook.`);
+    }
+    return notebook;
 }

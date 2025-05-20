@@ -34,6 +34,34 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
     );
 
     context.subscriptions.push(
+        vscode.lm.registerTool(
+            'configure_notebooks_before_execution',
+            new (class implements vscode.LanguageModelTool<unknown> {
+                async invoke(
+                    _options: vscode.LanguageModelToolInvocationOptions<unknown>,
+                    _token: vscode.CancellationToken
+                ): Promise<vscode.LanguageModelToolResult> {
+                    // This tool is a no-op, it just exists to ensure that the chat model can be used in notebooks.
+                    return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart('')]);
+                }
+
+                prepareInvocation(
+                    _options: vscode.LanguageModelToolInvocationPrepareOptions<unknown>,
+                    __token: vscode.CancellationToken
+                ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
+                    return {
+                        confirmationMessages: {
+                            title: 'Configure Jupyter Notebook for Execution?',
+                            message: ''
+                        },
+                        invocationMessage: 'Configuring Jupyter Notebook for execution'
+                    };
+                }
+            })()
+        )
+    );
+
+    context.subscriptions.push(
         vscode.commands.registerCommand('jupyter.listPipPackages', async (uri) => {
             const documentUri = uri ?? vscode.window.activeNotebookEditor?.notebook.uri;
             if (documentUri) {
