@@ -4,13 +4,13 @@
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
 import {
-    ensureKernelSelectedAndStarted,
     getPackagesFromEnvsExtension,
     packageDefinition,
+    resolveNotebookFromFilePath,
     sendPipListRequest
 } from './helper';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { isEqual } from '../../platform/vscode-path/resources';
+import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 
 export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
     public static toolName = 'notebook_list_packages';
@@ -37,23 +37,9 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
             throw new Error('notebookUri is a required parameter.');
         }
 
-        // TODO: handle other schemas
-        const uri = vscode.Uri.file(filePath);
-        let notebook = vscode.workspace.notebookDocuments.find((n) => isEqual(n.uri, uri));
-        if (!notebook) {
-            notebook = await vscode.workspace.openNotebookDocument(uri);
-            if (!notebook) {
-                throw new Error(`Unable to find notebook at ${filePath}.`);
-            }
-        }
-
-        const kernel = await ensureKernelSelectedAndStarted(
-            notebook,
-            this.controllerRegistration,
-            this.kernelProvider,
-            token
-        );
-
+        const notebook = await resolveNotebookFromFilePath(filePath);
+        await new ConfigurePythonNotebookTool(this.kernelProvider, this.controllerRegistration).invoke(notebook, token);
+        const kernel = this.kernelProvider.get(notebook);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
         }
@@ -84,17 +70,11 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
     }
 
-    prepareInvocation(
+    async prepareInvocation(
         options: vscode.LanguageModelToolInvocationPrepareOptions<IListPackagesParams>,
         _token: vscode.CancellationToken
-    ): vscode.ProviderResult<vscode.PreparedToolInvocation> {
-        const filePath = options.input.filePath;
-        const uri = vscode.Uri.file(filePath);
-        const notebook = vscode.workspace.notebookDocuments.find((n) => n.uri.toString() === uri.toString());
-
-        if (!notebook) {
-            return undefined;
-        }
+    ): Promise<vscode.PreparedToolInvocation> {
+        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
 
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);

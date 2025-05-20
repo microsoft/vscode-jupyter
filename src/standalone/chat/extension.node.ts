@@ -7,10 +7,11 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { JupyterVariablesProvider } from '../variables/JupyterVariablesProvider';
 import { logger } from '../../platform/logging';
 import { sendPipListRequest } from './helper';
-import { ListPackageTool } from './listPackageTool';
-import { InstallPackagesTool } from './installPackageTool';
+import { ListPackageTool } from './listPackageTool.node';
+import { InstallPackagesTool } from './installPackageTool.node';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
+import { ConfigureNotebookTool } from './configureNotebook.node';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
     context.subscriptions.push(
@@ -27,6 +28,16 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
         vscode.lm.registerTool(
             ListPackageTool.toolName,
             new ListPackageTool(
+                serviceContainer.get<IKernelProvider>(IKernelProvider),
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+            )
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            ConfigureNotebookTool.toolName,
+            new ConfigureNotebookTool(
                 serviceContainer.get<IKernelProvider>(IKernelProvider),
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration)
             )
@@ -101,6 +112,3 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
         })
     );
 }
-
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-export function deactivate() {}

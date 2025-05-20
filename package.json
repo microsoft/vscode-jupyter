@@ -2053,12 +2053,38 @@
         ],
         "languageModelTools": [
             {
-                "name": "notebook_list_packages",
-                "displayName": "List Notebook Kernel Packages",
-                "modelDescription": "List the installed packages that are currently available in the selected kernel for a notebook editor. This tool should be used when working with a jupyter notebook with python code cells. Do not use this tool if not already working with a notebook, or for a language other than python.",
-                "toolReferenceName": "listNotebookPackages",
+                "name": "configure_notebook",
+                "displayName": "%jupyter.languageModelTools.configure_notebook.displayName%",
+                "modelDescription": "Tool used to configure a Notebook. ALWAYS use this tool before running/executing any Notebook Cells or before listing/installing packages in Notebooks.",
+                "userDescription": "%jupyter.languageModelTools.configure_notebook.userDescription%",
+                "toolReferenceName": "configureNotebook",
                 "tags": [
                     "notebooks"
+                ],
+                "icon": "$(notebook)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "filePath": {
+                            "description": "The absolute path of the notebook with the active kernel.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "filePath"
+                    ]
+                },
+                "when": "workspacePlatform != webworker"
+            },
+            {
+                "name": "notebook_list_packages",
+                "displayName": "List Notebook Kernel Packages",
+                "modelDescription": "List the installed packages that are currently available in the selected kernel for a notebook editor. This tool should be used when working with a jupyter notebook with python code cells. Do not use this tool if not already working with a notebook, or for a language other than python. If the tool configure_notebooks exists, then ensure to call configure_notebooks before using this tool.",
+                "toolReferenceName": "listNotebookPackages",
+                "tags": [
+                    "notebooks",
+                    "enable_other_tool_configure_notebook"
                 ],
                 "icon": "$(package)",
                 "canBeReferencedInPrompt": true,
@@ -2078,10 +2104,11 @@
             {
                 "name": "notebook_install_packages",
                 "displayName": "Install Packages for Notebook",
-                "modelDescription": "Install a list of packages on a notebook kernel to be used within that notebook. This tool should be used when working with a jupyter notebook with python code cells. Do not use this tool if not already working with a notebook, or for a language other than python.",
+                "modelDescription": "Install a list of packages on a notebook kernel to be used within that notebook. This tool should be used when working with a jupyter notebook with python code cells. Do not use this tool if not already working with a notebook, or for a language other than python. If the tool configure_notebooks exists, then ensure to call configure_notebooks before using this tool.",
                 "toolReferenceName": "installNotebookPackages",
                 "tags": [
-                    "notebooks"
+                    "notebooks",
+                    "enable_other_tool_configure_notebook"
                 ],
                 "icon": "$(package)",
                 "canBeReferencedInPrompt": true,

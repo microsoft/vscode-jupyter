@@ -244,5 +244,7 @@
     "DataScience.interactiveGoToCode": "Go to code",
     "DataScience.installPythonTitle": "Install Python",
     "DataScience.installPythonExtensionViaKernelPickerTitle": "Install Python Extension",
-    "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server"
+    "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server",
+    "jupyter.languageModelTools.configure_notebook.displayName": "Configure Jupyter Notebook",
+    "jupyter.languageModelTools.configure_notebook.userDescription": "Configures notebooks by selecting a relevant Kernel."
 }

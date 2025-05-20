@@ -61,7 +61,7 @@ export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environ
     return [nameWithVersion, details.length ? `(${details.join(': ')})` : ''].join(' ').trim();
 }
 
-export function getPythonEnvironmentName(pythonEnv: PythonEnvironment) {
+export function getPythonEnvironmentName(pythonEnv: { id: string }) {
     // Sometimes Python extension doesn't detect conda environments correctly (e.g. conda env create without a name).
     // In such cases the envName is empty, but it has a path.
     const env = getCachedEnvironment(pythonEnv);

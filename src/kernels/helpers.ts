@@ -295,20 +295,29 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 ) {
                     return kernelConnection.kernelSpec.display_name;
                 }
-                // If this is a conda environment without Python, then don't display `Python` in it.
-                const isCondaEnvWithoutPython = isCondaEnvironmentWithoutPython(kernelConnection.interpreter);
-                const pythonDisplayName = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
-                const envName = getPythonEnvironmentName(kernelConnection.interpreter);
-                if (isCondaEnvWithoutPython && envName) {
-                    return envName;
-                }
-                return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
+
+                return getDisplayNameOrNameOfPythonKernelConnection(kernelConnection.interpreter);
             } else {
                 return `Python ${pythonVersion}`.trim();
             }
     }
     return oldDisplayName;
 }
+export function getDisplayNameOrNameOfPythonKernelConnection(env: { id: string }) {
+    if (getEnvironmentType(env) === EnvironmentType.Unknown) {
+        return '';
+    }
+    const pythonVersion = (getTelemetrySafeVersion(getCachedVersion(env)) || '').trim();
+    // If this is a conda environment without Python, then don't display `Python` in it.
+    const isCondaEnvWithoutPython = isCondaEnvironmentWithoutPython(env);
+    const pythonDisplayName = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
+    const envName = getPythonEnvironmentName(env);
+    if (isCondaEnvWithoutPython && envName) {
+        return envName;
+    }
+    return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
+}
+
 function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
     if (!kernelConnection) {
         return '';
