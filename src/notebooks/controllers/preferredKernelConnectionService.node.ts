@@ -96,6 +96,9 @@ export async function getRecommendedPythonEnvironment(uri: Uri): Promise<Resolve
             return result.environment;
         }
 
+        // In dev containers give preference to the global user selected environment.
+        // This is because the global user selected environment is the one that is most likely pre-configured in the dev container.
+        // Generally the images have the settings already pre-configured with this global env pre-selected.
         if (
             result.reason === 'globalUserSelected' &&
             (!workspace.workspaceFolders?.length || env.remoteName === 'dev-container')
