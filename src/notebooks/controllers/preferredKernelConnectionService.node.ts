@@ -131,7 +131,7 @@ export async function getRecommendedPythonEnvironment(uri: Uri): Promise<Resolve
             .get<string | undefined>('defaultInterpreterPath', undefined);
         if (env.remoteName === 'dev-container' && defaultInterpreterPath) {
             try {
-                let env = result.environment;
+                let env: ResolvedEnvironment | undefined = result.environment;
                 if (env.path !== defaultInterpreterPath) {
                     const api = await PythonExtension.api();
                     env = await api.environments.resolveEnvironment(defaultInterpreterPath);
