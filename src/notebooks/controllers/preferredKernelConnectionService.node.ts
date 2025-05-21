@@ -6,12 +6,12 @@ import * as path from '../../platform/vscode-path/resources';
 import { isParentPath } from '../../platform/common/platform/fileUtils';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { getEnvironmentType } from '../../platform/interpreter/helpers';
-import { Environment, PythonExtension, ResolvedEnvironment } from '@vscode/python-extension';
 import type { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import type { INotebookPythonEnvironmentService } from '../types';
 import { raceTimeout } from '../../platform/common/utils/async';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { Environment, PythonExtension } from '@vscode/python-extension';
 
 export async function findPreferredPythonEnvironment(
     notebook: NotebookDocument,
@@ -104,7 +104,7 @@ export async function getRecommendedPythonEnvironment(uri: Uri): Promise<Resolve
             return;
         }
         logger.trace(
-            `Get a recommended Python environment for ${getDisplayPath(uri)}, ${result.reason} and ${getDisplayPath(
+            `Got a recommended Python environment for ${getDisplayPath(uri)}, ${result.reason} and ${getDisplayPath(
                 result.environment?.path
             )}`
         );
@@ -121,6 +121,30 @@ export async function getRecommendedPythonEnvironment(uri: Uri): Promise<Resolve
             (!workspace.workspaceFolders?.length || env.remoteName === 'dev-container')
         ) {
             return result.environment;
+        }
+
+        // Its possible we're in a dev container and the workspace & global env is not selected.
+        // However the python.defaultInterprerterPath is set to a path in the dev container.
+        // If thats the same as the one we get, then we should use that.
+        const defaultInterpreterPath = workspace
+            .getConfiguration('python')
+            .get<string | undefined>('defaultInterpreterPath', undefined);
+        if (env.remoteName === 'dev-container' && defaultInterpreterPath) {
+            try {
+                let env = result.environment;
+                if (env.path !== defaultInterpreterPath) {
+                    const api = await PythonExtension.api();
+                    env = await api.environments.resolveEnvironment(defaultInterpreterPath);
+                }
+                if (env && env.path === defaultInterpreterPath) {
+                    logger.trace(
+                        `Using the default interpreter path ${defaultInterpreterPath} as the recommended Python environment`
+                    );
+                    return env;
+                }
+            } catch {
+                //
+            }
         }
     } catch (ex) {
         return;
