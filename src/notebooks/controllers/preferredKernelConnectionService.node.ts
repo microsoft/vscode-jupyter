@@ -11,7 +11,7 @@ import type { INotebookPythonEnvironmentService } from '../types';
 import { raceTimeout } from '../../platform/common/utils/async';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { Environment, PythonExtension } from '@vscode/python-extension';
+import { Environment, PythonExtension, ResolvedEnvironment } from '@vscode/python-extension';
 
 export async function findPreferredPythonEnvironment(
     notebook: NotebookDocument,
