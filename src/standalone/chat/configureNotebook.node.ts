@@ -39,7 +39,7 @@ export class ConfigureNotebookTool implements LanguageModelTool<IConfigureNotebo
         const { filePath } = options.input;
         const notebook = await resolveNotebookFromFilePath(filePath);
         let selectedController = this.controllerRegistration.getSelected(notebook);
-        if (selectedController) {
+        if (selectedController && this.kernelProvider.get(notebook)?.startedAtLeastOnce) {
             return getToolResponseForConfiguredNotebook(selectedController);
         }
         if (getPrimaryLanguageOfNotebook(notebook) == PYTHON_LANGUAGE) {
