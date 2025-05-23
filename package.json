@@ -56,7 +56,10 @@
         "onNotebook:jupyter-notebook",
         "onNotebook:interactive",
         "onWebviewPanel:jupyter-variables",
-        "onWebviewPanel:jupyter"
+        "onWebviewPanel:jupyter",
+        "onLanguageModelTool:configure_notebook",
+        "onLanguageModelTool:notebook_list_packages",
+        "onLanguageModelTool:notebook_install_packages"
     ],
     "main": "./dist/extension.node.proxy.js",
     "browser": "./dist/extension.web.bundle.js",
