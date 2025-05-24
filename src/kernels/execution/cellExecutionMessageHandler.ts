@@ -496,6 +496,14 @@ export class CellExecutionMessageHandler implements IDisposable {
             this.execution?.start(this.startTime);
             logger.debug(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
         }
+        if (!msg.header) {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                logger.warn(`Got a message without a header ${JSON.stringify(msg)}`);
+            } catch {
+                logger.warn(`Got a message without a header, no idea what it is`, msg);
+            }
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
@@ -527,7 +535,16 @@ export class CellExecutionMessageHandler implements IDisposable {
         } else if (jupyterLab.KernelMessage.isCommCloseMsg(msg)) {
             // Noop.
         } else {
-            logger.warn(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+            if (msg.header) {
+                logger.warn(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+            } else {
+                try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    logger.warn(`Unknown message ${JSON.stringify(msg)}`);
+                } catch {
+                    logger.warn(`Unknown message, no idea what it is`, msg);
+                }
+            }
         }
 
         // Set execution count, all messages should have it
