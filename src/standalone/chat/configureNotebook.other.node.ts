@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IKernelProvider } from '../../kernels/types';
 import {
     ensureKernelSelectedAndStarted,
     getPrimaryLanguageOfNotebook,
@@ -18,13 +17,10 @@ import {
 } from 'vscode';
 
 export class ConfigureNonPythonNotebookTool {
-    constructor(
-        private readonly kernelProvider: IKernelProvider,
-        private readonly controllerRegistration: IControllerRegistration
-    ) {}
+    constructor(private readonly controllerRegistration: IControllerRegistration) {}
 
     async invoke(notebook: NotebookDocument, token: CancellationToken) {
-        await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, this.kernelProvider, token);
+        await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
 
         const selectedController = this.controllerRegistration.getSelected(notebook);
         if (selectedController) {

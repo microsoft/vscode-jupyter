@@ -36,7 +36,7 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         }
 
         const notebook = await resolveNotebookFromFilePath(filePath);
-        await new ConfigurePythonNotebookTool(this.kernelProvider, this.controllerRegistration).invoke(notebook, token);
+        await new ConfigurePythonNotebookTool(this.controllerRegistration).invoke(notebook, token);
         const kernel = this.kernelProvider.get(notebook);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);

@@ -31,8 +31,8 @@ export class ConfigureNotebookTool implements LanguageModelTool<IConfigureNotebo
         private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration
     ) {
-        this.configurePythonNotebook = new ConfigurePythonNotebookTool(kernelProvider, controllerRegistration);
-        this.configureNonPythonNotebook = new ConfigureNonPythonNotebookTool(kernelProvider, controllerRegistration);
+        this.configurePythonNotebook = new ConfigurePythonNotebookTool(controllerRegistration);
+        this.configureNonPythonNotebook = new ConfigureNonPythonNotebookTool(controllerRegistration);
     }
 
     async invoke(options: LanguageModelToolInvocationOptions<IConfigureNotebookToolParams>, token: CancellationToken) {

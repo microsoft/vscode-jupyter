@@ -566,7 +566,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         let kernel: IKernel | undefined;
         try {
             logger.trace(`Connect to Kernel ${getDisplayPath(doc.uri)}. Step 2`);
-            kernel = await this.connectToKernel(doc, new DisplayOptions(false));
+            kernel = await this.startKernel(doc);
             logger.trace(`Connected to Kernel ${getDisplayPath(doc.uri)}. Step 3`);
             if (kernel.disposing) {
                 throw new CancellationError();

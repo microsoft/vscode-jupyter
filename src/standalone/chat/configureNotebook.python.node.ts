@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IKernelProvider } from '../../kernels/types';
 import { ensureKernelSelectedAndStarted, getToolResponseForConfiguredNotebook, selectKernelAndStart } from './helper';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { Commands, PythonExtension as PythonExtensionId } from '../../platform/common/constants';
@@ -18,15 +17,17 @@ import {
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
 import { raceCancellationError } from '../../platform/common/cancellation';
+import { logger } from '../../platform/logging';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 export class ConfigurePythonNotebookTool {
-    constructor(
-        private readonly kernelProvider: IKernelProvider,
-        private readonly controllerRegistration: IControllerRegistration
-    ) {}
+    constructor(private readonly controllerRegistration: IControllerRegistration) {}
 
     async invoke(notebook: NotebookDocument, token: CancellationToken) {
         if (!this.controllerRegistration.getSelected(notebook)) {
+            logger.trace(
+                `ConfigurePythonNotebookTool: No controller selected for notebook ${getDisplayPath(notebook.uri)}`
+            );
             if (!extensions.getExtension(PythonExtensionId)) {
                 await raceCancellationError(
                     token,
@@ -39,6 +40,7 @@ export class ConfigurePythonNotebookTool {
                     ]);
                 }
                 await pythonExt.activate();
+                logger.trace(`ConfigurePythonNotebookTool: Python extension installed and activated`);
             }
 
             const preferredEnv = await raceCancellationError(token, getRecommendedPythonEnvironment(notebook.uri));
@@ -51,22 +53,35 @@ export class ConfigurePythonNotebookTool {
             // Possible python extension was installed and a controller was selected.
             // Can happen if python extension was initially installed and then disabled later
             if (preferredController) {
-                await selectKernelAndStart(
-                    notebook,
-                    preferredController,
-                    this.controllerRegistration,
-                    this.kernelProvider,
-                    token
+                logger.trace(
+                    `ConfigurePythonNotebookTool: Selecting recommended Python Env for notebook ${getDisplayPath(
+                        notebook.uri
+                    )}`
                 );
+                await selectKernelAndStart(notebook, preferredController, this.controllerRegistration, token);
             }
         }
 
-        await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, this.kernelProvider, token);
+        logger.trace(`ConfigurePythonNotebookTool: Start kernel for notebook ${getDisplayPath(notebook.uri)}`);
+        const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
+        if (kernel) {
+            logger.trace(
+                `ConfigurePythonNotebookTool: Kernel selected for notebook ${getDisplayPath(notebook.uri)}, status = ${
+                    kernel.status
+                }`
+            );
+        } else {
+            logger.trace(
+                `ConfigurePythonNotebookTool: No kernel selected for notebook ${getDisplayPath(notebook.uri)}`
+            );
+        }
         const selectedController = this.controllerRegistration.getSelected(notebook);
         if (selectedController) {
+            logger.trace(`ConfigurePythonNotebookTool: kernel started for notebook ${getDisplayPath(notebook.uri)}`);
             return getToolResponseForConfiguredNotebook(selectedController);
         }
 
+        logger.trace(`ConfigurePythonNotebookTool: No kernel selected for notebook ${getDisplayPath(notebook.uri)}`);
         return new LanguageModelToolResult([
             new LanguageModelTextPart('User did not select a Kernel for the notebook.')
         ]);
