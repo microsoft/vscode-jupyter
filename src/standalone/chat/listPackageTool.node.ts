@@ -11,6 +11,8 @@ import {
 } from './helper';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
+import { isPythonKernelConnection } from '../../kernels/helpers';
+import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../kernels/helpers.node';
 
 export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
     public static toolName = 'notebook_list_packages';
@@ -38,20 +40,19 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         }
 
         const notebook = await resolveNotebookFromFilePath(filePath);
-        await new ConfigurePythonNotebookTool(this.kernelProvider, this.controllerRegistration).invoke(notebook, token);
+        await new ConfigurePythonNotebookTool(this.controllerRegistration).invoke(notebook, token);
         const kernel = this.kernelProvider.get(notebook);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
+        }
+        if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
+            throw new Error(`The selected Kernel is not a Python Kernel and this tool only supports Python Kernels.`);
         }
 
         let packages: packageDefinition[] | undefined = undefined;
 
         const kernelUri = kernel.kernelConnectionMetadata.interpreter?.uri;
-        if (
-            kernelUri &&
-            (kernel.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
-                kernel.kernelConnectionMetadata.kind === 'startUsingPythonInterpreter')
-        ) {
+        if (kernelUri && isKernelLaunchedViaLocalPythonIPyKernel(kernel.kernelConnectionMetadata)) {
             packages = await getPackagesFromEnvsExtension(kernelUri);
         }
 

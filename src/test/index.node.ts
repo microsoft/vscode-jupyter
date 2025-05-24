@@ -65,6 +65,8 @@ process.on('unhandledRejection', (ex: Error, _a) => {
             msg.includes('View Jupyter [log](command:jupyter.viewOutput)')) ||
         msg.includes('Channel has been closed') ||
         msg.includes('Error: custom request failed') ||
+        msg.includes('resources/app/extensions/github-authentication/dist') || // Ignore known external issues, https://github.com/microsoft/vscode/issues/249697
+        msg.includes('resources\\app\\extensions\\github-authentication\\dist') || // Ignore known external issues, https://github.com/microsoft/vscode/issues/249697
         msg.includes('ms-python.python') || // We don't care about unhanded promise rejections from the Python extension.
         msg.includes('ms-python.isort') || // We don't care about unhanded promise rejections from the Python related extensions.
         msg.includes('extensions/git/dist/main.js') // git extension often throws errors from calling extension APIs after EH has been disconnected
