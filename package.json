@@ -2082,6 +2082,72 @@
                 "when": "workspacePlatform != webworker"
             },
             {
+                "name": "configure_python_notebook",
+                "displayName": "Start Notebook Kernel",
+                "modelDescription": "Selects a Python Kernel and starts it.",
+                "tags": [
+                    "extension_installed_by_tool",
+                    "notebooks"
+                ],
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "filePath": {
+                            "description": "The absolute path of the notebook with the active kernel.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "filePath"
+                    ]
+                },
+                "when": "false"
+            },
+            {
+                "name": "install_python_dependencies_notebook",
+                "displayName": "Install Python Kernel dependencies",
+                "modelDescription": "Installs Python Kernel dependencies",
+                "tags": [
+                    "extension_installed_by_tool",
+                    "notebooks"
+                ],
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "filePath": {
+                            "description": "The absolute path of the notebook with the active kernel.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "filePath"
+                    ]
+                },
+                "when": "false"
+            },
+            {
+                "name": "configure_non_python_notebook",
+                "displayName": "Start Notebook Kernel",
+                "modelDescription": "Selects the Notebook Kernel and starts it.",
+                "tags": [
+                    "extension_installed_by_tool",
+                    "notebooks"
+                ],
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "filePath": {
+                            "description": "The absolute path of the notebook with the active kernel.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "filePath"
+                    ]
+                },
+                "when": "false"
+            },
+            {
                 "name": "notebook_list_packages",
                 "displayName": "List Notebook Kernel Packages",
                 "modelDescription": "List the installed packages that are currently available in the selected kernel for a notebook editor. This tool should be used when working with a jupyter notebook with python code cells. Do not use this tool if not already working with a notebook, or for a language other than python. If the tool configure_notebooks exists, then ensure to call configure_notebooks before using this tool.",

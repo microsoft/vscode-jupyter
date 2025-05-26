@@ -3,11 +3,15 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { installPackageThroughEnvsExtension, resolveNotebookFromFilePath } from './helper';
+import {
+    ensureKernelSelectedAndStarted,
+    IBaseToolParams,
+    installPackageThroughEnvsExtension,
+    resolveNotebookFromFilePath
+} from './helper';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
-import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
@@ -36,8 +40,7 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         }
 
         const notebook = await resolveNotebookFromFilePath(filePath);
-        await new ConfigurePythonNotebookTool(this.controllerRegistration).invoke(notebook, token);
-        const kernel = this.kernelProvider.get(notebook);
+        const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
         }
@@ -121,7 +124,6 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
     }
 }
 
-export interface IInstallPackageParams {
-    filePath: string;
+export interface IInstallPackageParams extends IBaseToolParams {
     packageList: string[];
 }
