@@ -2063,6 +2063,7 @@
                 "toolReferenceName": "configureNotebook",
                 "tags": [
                     "extension_installed_by_tool",
+                    "jupyter",
                     "notebooks"
                 ],
                 "icon": "$(notebook)",
@@ -2087,6 +2088,7 @@
                 "modelDescription": "Selects a Python Kernel and starts it.",
                 "tags": [
                     "extension_installed_by_tool",
+                    "install python package",
                     "notebooks"
                 ],
                 "inputSchema": {
@@ -2109,6 +2111,7 @@
                 "modelDescription": "Installs Python Kernel dependencies",
                 "tags": [
                     "extension_installed_by_tool",
+                    "install python package",
                     "notebooks"
                 ],
                 "inputSchema": {
@@ -2131,6 +2134,7 @@
                 "modelDescription": "Selects the Notebook Kernel and starts it.",
                 "tags": [
                     "extension_installed_by_tool",
+                    "jupyter",
                     "notebooks"
                 ],
                 "inputSchema": {
