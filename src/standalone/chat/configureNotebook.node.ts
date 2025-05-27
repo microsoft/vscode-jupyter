@@ -74,7 +74,15 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
             }
         } else if (await shouldCreateVirtualEnvForNotebook(notebook, token)) {
             try {
-                if (await createVirtualEnvAndSelectAsKernel(options, notebook, this.controllerRegistration, this.kernelDependencyService, this., token)) {
+                if (
+                    await createVirtualEnvAndSelectAsKernel(
+                        options,
+                        notebook,
+                        this.controllerRegistration,
+                        this.kernelDependencyService,
+                        token
+                    )
+                ) {
                     // If it was successful, now start the kernel.
                     return await lm.invokeTool(ConfigurePythonNotebookTool.toolName, options, token);
                 }
