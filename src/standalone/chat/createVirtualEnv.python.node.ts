@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IBaseToolParams, selectKernelAndStart } from './helper';
-import { PythonExtension as PythonExtensionId } from '../../platform/common/constants';
+import { PythonEnvironmentExtension, PythonExtension as PythonExtensionId } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import {
     CancellationToken,
@@ -20,13 +20,14 @@ import { Environment, PythonExtension } from '@vscode/python-extension';
 import { dirname, isEqual } from '../../platform/vscode-path/resources';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sleep } from '../../platform/common/utils/async';
-
-const PYTHON_VIRTUAL_ENV_TOOL_NAME = 'create_virtual_environment';
+import { IKernelDependencyService } from '../../kernels/types';
+import { DisplayOptions } from '../../kernels/displayOptions';
 
 export async function createVirtualEnvAndSelectAsKernel(
     options: LanguageModelToolInvocationOptions<IBaseToolParams>,
     notebook: NotebookDocument,
     controllerRegistration: IControllerRegistration,
+    kernelDependencyService: IKernelDependencyService,
     token: CancellationToken
 ) {
     const shoudlCreateVenv = await shouldCreateVirtualEnvForNotebook(notebook, token);
@@ -37,8 +38,10 @@ export async function createVirtualEnvAndSelectAsKernel(
     }
 
     const api = await raceCancellationError(token, PythonExtension.api());
-    const input = { resourcePath: notebook.uri.fsPath };
-    await lm.invokeTool(PYTHON_VIRTUAL_ENV_TOOL_NAME, { ...options, input }, token);
+    // Only the Python tool in Python Env extension can create venv with additional packages.
+    const input = { resourcePath: notebook.uri.fsPath, packageList: ['ipykernel'] };
+    const toolName = getToolNameToCreateVirtualEnv();
+    await lm.invokeTool(toolName, { ...options, input }, token);
 
     logger.trace(`Create Env tool for notebook ${getDisplayPath(notebook.uri)}`);
 
@@ -83,8 +86,24 @@ export async function createVirtualEnvAndSelectAsKernel(
     logger.trace(
         `ConfigurePythonNotebookTool: Selecting recommended Python Env for notebook ${getDisplayPath(notebook.uri)}`
     );
+
     // Lets not start just yet, as dependencies will be missing.
     await selectKernelAndStart(notebook, preferredController, controllerRegistration, token, false);
+
+    const selectedController = controllerRegistration.getSelected(notebook);
+    // The Python tool doesn't have ability to install dependencies, so we do it here.
+    // The Python Env Tool does,
+    if (selectedController && !extensions.getExtension(PythonEnvironmentExtension)) {
+        await kernelDependencyService.installMissingDependencies({
+            resource: notebook.uri,
+            kernelConnection: selectedController.connection,
+            ui: new DisplayOptions(true),
+            token,
+            ignoreCache: true,
+            installWithoutPrompting: true
+        });
+    }
+
     return true;
 }
 
@@ -110,6 +129,18 @@ export async function shouldCreateVirtualEnvForNotebook(
     const api = await raceCancellationError(token, PythonExtension.api());
 
     return !getWorkspaceVenvOrCondaEnv(notebook.uri, api.environments);
+}
+
+function getToolNameToCreateVirtualEnv() {
+    const PYTHON_EXT_VIRTUAL_ENV_TOOL_NAME = 'create_virtual_environment';
+    const PYTHON_ENV_EXT_VIRTUAL_ENV_TOOL_NAME = 'create_quick_virtual_environment';
+
+    if (extensions.getExtension(PythonEnvironmentExtension)) {
+        // If the Python Environment extension is installed, then use the tool from that extension.
+        return PYTHON_ENV_EXT_VIRTUAL_ENV_TOOL_NAME;
+    } else {
+        return PYTHON_EXT_VIRTUAL_ENV_TOOL_NAME;
+    }
 }
 
 function getWorkspaceVenvOrCondaEnv(resource: Uri | undefined, api: PythonExtension['environments']) {
