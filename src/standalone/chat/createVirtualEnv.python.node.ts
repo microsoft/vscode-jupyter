@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IBaseToolParams, selectKernelAndStart } from './helper';
-import { PythonExtension as PythonExtensionId } from '../../platform/common/constants';
+import { PythonEnvironmentExtension, PythonExtension as PythonExtensionId } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import {
     CancellationToken,
@@ -21,8 +21,6 @@ import { dirname, isEqual } from '../../platform/vscode-path/resources';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sleep } from '../../platform/common/utils/async';
 
-const PYTHON_VIRTUAL_ENV_TOOL_NAME = 'create_virtual_environment';
-
 export async function createVirtualEnvAndSelectAsKernel(
     options: LanguageModelToolInvocationOptions<IBaseToolParams>,
     notebook: NotebookDocument,
@@ -38,7 +36,8 @@ export async function createVirtualEnvAndSelectAsKernel(
 
     const api = await raceCancellationError(token, PythonExtension.api());
     const input = { resourcePath: notebook.uri.fsPath };
-    await lm.invokeTool(PYTHON_VIRTUAL_ENV_TOOL_NAME, { ...options, input }, token);
+    const toolName = getToolNameToCreateVirtualEnv();
+    await lm.invokeTool(toolName, { ...options, input }, token);
 
     logger.trace(`Create Env tool for notebook ${getDisplayPath(notebook.uri)}`);
 
@@ -110,6 +109,18 @@ export async function shouldCreateVirtualEnvForNotebook(
     const api = await raceCancellationError(token, PythonExtension.api());
 
     return !getWorkspaceVenvOrCondaEnv(notebook.uri, api.environments);
+}
+
+function getToolNameToCreateVirtualEnv() {
+    const PYTHON_EXT_VIRTUAL_ENV_TOOL_NAME = 'create_virtual_environment';
+    const PYTHON_ENV_EXT_VIRTUAL_ENV_TOOL_NAME = 'create_quick_virtual_environment';
+
+    if (extensions.getExtension(PythonEnvironmentExtension)) {
+        // If the Python Environment extension is installed, then use the tool from that extension.
+        return PYTHON_ENV_EXT_VIRTUAL_ENV_TOOL_NAME;
+    } else {
+        return PYTHON_EXT_VIRTUAL_ENV_TOOL_NAME;
+    }
 }
 
 function getWorkspaceVenvOrCondaEnv(resource: Uri | undefined, api: PythonExtension['environments']) {
