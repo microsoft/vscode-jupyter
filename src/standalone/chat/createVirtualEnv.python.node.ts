@@ -20,11 +20,14 @@ import { Environment, PythonExtension } from '@vscode/python-extension';
 import { dirname, isEqual } from '../../platform/vscode-path/resources';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sleep } from '../../platform/common/utils/async';
+import { IKernelDependencyService } from '../../kernels/types';
+import { DisplayOptions } from '../../kernels/displayOptions';
 
 export async function createVirtualEnvAndSelectAsKernel(
     options: LanguageModelToolInvocationOptions<IBaseToolParams>,
     notebook: NotebookDocument,
     controllerRegistration: IControllerRegistration,
+    kernelDependencyService: IKernelDependencyService,
     token: CancellationToken
 ) {
     const shoudlCreateVenv = await shouldCreateVirtualEnvForNotebook(notebook, token);
@@ -35,7 +38,8 @@ export async function createVirtualEnvAndSelectAsKernel(
     }
 
     const api = await raceCancellationError(token, PythonExtension.api());
-    const input = { resourcePath: notebook.uri.fsPath };
+    // Only the Python tool in Python Env extension can create venv with additional packages.
+    const input = { resourcePath: notebook.uri.fsPath, packageList: ['ipykernel'] };
     const toolName = getToolNameToCreateVirtualEnv();
     await lm.invokeTool(toolName, { ...options, input }, token);
 
@@ -82,8 +86,24 @@ export async function createVirtualEnvAndSelectAsKernel(
     logger.trace(
         `ConfigurePythonNotebookTool: Selecting recommended Python Env for notebook ${getDisplayPath(notebook.uri)}`
     );
+
     // Lets not start just yet, as dependencies will be missing.
     await selectKernelAndStart(notebook, preferredController, controllerRegistration, token, false);
+
+    const selectedController = controllerRegistration.getSelected(notebook);
+    // The Python tool doesn't have ability to install dependencies, so we do it here.
+    // The Python Env Tool does,
+    if (selectedController && !extensions.getExtension(PythonEnvironmentExtension)) {
+        await kernelDependencyService.installMissingDependencies({
+            resource: notebook.uri,
+            kernelConnection: selectedController.connection,
+            ui: new DisplayOptions(true),
+            token,
+            ignoreCache: true,
+            installWithoutPrompting: true
+        });
+    }
+
     return true;
 }
 

@@ -2106,29 +2106,6 @@
                 "when": "false"
             },
             {
-                "name": "install_python_dependencies_notebook",
-                "displayName": "Install Python Kernel dependencies",
-                "modelDescription": "Installs Python Kernel dependencies",
-                "tags": [
-                    "extension_installed_by_tool",
-                    "install python package",
-                    "notebooks"
-                ],
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "filePath": {
-                            "description": "The absolute path of the notebook with the active kernel.",
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "filePath"
-                    ]
-                },
-                "when": "false"
-            },
-            {
                 "name": "configure_non_python_notebook",
                 "displayName": "Start Notebook Kernel",
                 "modelDescription": "Selects the Notebook Kernel and starts it.",

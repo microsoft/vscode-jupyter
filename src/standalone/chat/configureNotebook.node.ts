@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IKernelProvider } from '../../kernels/types';
+import { IKernelDependencyService, IKernelProvider } from '../../kernels/types';
 import {
     getPrimaryLanguageOfNotebook,
     getToolResponseForConfiguredNotebook,
@@ -27,13 +27,13 @@ import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
 import { logger } from '../../platform/logging';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { createVirtualEnvAndSelectAsKernel, shouldCreateVirtualEnvForNotebook } from './createVirtualEnv.python.node';
-import { InstallPythonNotebookDependenciesTool } from './installKernelDepencies.python.node';
 
 export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_notebook';
     constructor(
         private readonly kernelProvider: IKernelProvider,
-        private readonly controllerRegistration: IControllerRegistration
+        private readonly controllerRegistration: IControllerRegistration,
+        private readonly kernelDependencyService: IKernelDependencyService
     ) {}
 
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
@@ -74,9 +74,7 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
             }
         } else if (await shouldCreateVirtualEnvForNotebook(notebook, token)) {
             try {
-                if (await createVirtualEnvAndSelectAsKernel(options, notebook, this.controllerRegistration, token)) {
-                    // Install the missing depenencies
-                    await lm.invokeTool(InstallPythonNotebookDependenciesTool.toolName, options, token);
+                if (await createVirtualEnvAndSelectAsKernel(options, notebook, this.controllerRegistration, this.kernelDependencyService, this., token)) {
                     // If it was successful, now start the kernel.
                     return await lm.invokeTool(ConfigurePythonNotebookTool.toolName, options, token);
                 }
