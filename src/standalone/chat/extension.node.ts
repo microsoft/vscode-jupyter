@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { IKernelProvider } from '../../kernels/types';
+import { IKernelDependencyService, IKernelProvider } from '../../kernels/types';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { JupyterVariablesProvider } from '../variables/JupyterVariablesProvider';
 import { logger } from '../../platform/logging';
@@ -12,6 +12,9 @@ import { InstallPackagesTool } from './installPackageTool.node';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { ConfigureNotebookTool } from './configureNotebook.node';
+import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
+import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
+import { InstallPythonNotebookDependenciesTool } from './installKernelDepencies.python.node';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
     context.subscriptions.push(
@@ -41,6 +44,30 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
                 serviceContainer.get<IKernelProvider>(IKernelProvider),
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration)
             )
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            InstallPythonNotebookDependenciesTool.toolName,
+            new InstallPythonNotebookDependenciesTool(
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IKernelDependencyService>(IKernelDependencyService)
+            )
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            ConfigureNonPythonNotebookTool.toolName,
+            new ConfigureNonPythonNotebookTool(serviceContainer.get<IControllerRegistration>(IControllerRegistration))
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            ConfigurePythonNotebookTool.toolName,
+            new ConfigurePythonNotebookTool(serviceContainer.get<IControllerRegistration>(IControllerRegistration))
         )
     );
 

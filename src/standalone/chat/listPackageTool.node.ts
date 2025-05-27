@@ -4,17 +4,18 @@
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
 import {
+    ensureKernelSelectedAndStarted,
     getPackagesFromEnvsExtension,
+    IBaseToolParams,
     packageDefinition,
     resolveNotebookFromFilePath,
     sendPipListRequest
 } from './helper';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../kernels/helpers.node';
 
-export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
+export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams> {
     public static toolName = 'notebook_list_packages';
 
     public get name() {
@@ -29,10 +30,7 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         private readonly controllerRegistration: IControllerRegistration
     ) {}
 
-    async invoke(
-        options: vscode.LanguageModelToolInvocationOptions<IListPackagesParams>,
-        token: vscode.CancellationToken
-    ) {
+    async invoke(options: vscode.LanguageModelToolInvocationOptions<IBaseToolParams>, token: vscode.CancellationToken) {
         const { filePath } = options.input;
 
         if (!filePath) {
@@ -40,8 +38,7 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         }
 
         const notebook = await resolveNotebookFromFilePath(filePath);
-        await new ConfigurePythonNotebookTool(this.controllerRegistration).invoke(notebook, token);
-        const kernel = this.kernelProvider.get(notebook);
+        const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
         }
@@ -72,7 +69,7 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
     }
 
     async prepareInvocation(
-        options: vscode.LanguageModelToolInvocationPrepareOptions<IListPackagesParams>,
+        options: vscode.LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
@@ -91,8 +88,4 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
 
         return { invocationMessage: vscode.l10n.t('Listing packages') };
     }
-}
-
-export interface IListPackagesParams {
-    filePath: string;
 }

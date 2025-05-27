@@ -16,6 +16,10 @@ import { getNameOfKernelConnection, isPythonNotebook } from '../../kernels/helpe
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
+export interface IBaseToolParams {
+    filePath: string;
+}
+
 export async function sendPipListRequest(kernel: IKernel, token: vscode.CancellationToken) {
     const codeToExecute = `import subprocess
 proc = subprocess.Popen(["pip", "list", "--format", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -130,7 +134,8 @@ export async function selectKernelAndStart(
     notebook: vscode.NotebookDocument,
     connection: KernelConnectionMetadata,
     controllerRegistration: IControllerRegistration,
-    token: vscode.CancellationToken
+    token: vscode.CancellationToken,
+    startKernel: boolean = true
 ) {
     if (!controllerRegistration.getSelected(notebook)) {
         const disposables = new DisposableStore();
@@ -163,7 +168,7 @@ export async function selectKernelAndStart(
     }
 
     const controller = controllerRegistration.getSelected(notebook);
-    if (controller) {
+    if (controller && startKernel) {
         return raceCancellation(token, controller.startKernel(notebook));
     }
 }

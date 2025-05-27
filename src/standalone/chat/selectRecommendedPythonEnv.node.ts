@@ -21,24 +21,19 @@ import {
 } from 'vscode';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
-import { raceCancellationError } from '../../platform/common/cancellation';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { raceCancellationError } from '../../platform/common/cancellation';
 
-export interface IConfigurePythonNotebookToolParams extends IBaseToolParams {
-    action?: 'select';
-}
-
-export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolParams> {
-    public static toolName = 'configure_python_notebook';
+export class SelectRecommendedPythonEnv implements LanguageModelTool<IBaseToolParams> {
+    public static toolName = 'select_recommended_python_environment';
     constructor(private readonly controllerRegistration: IControllerRegistration) {}
 
-    async invoke(
-        options: LanguageModelToolInvocationOptions<IConfigurePythonNotebookToolParams>,
-        token: CancellationToken
-    ) {
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
-        if (!this.controllerRegistration.getSelected(notebook) && options.input.action !== 'select') {
+    async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
+        const { filePath } = options.input;
+        const notebook = await resolveNotebookFromFilePath(filePath);
+
+        if (!this.controllerRegistration.getSelected(notebook)) {
             logger.trace(
                 `ConfigurePythonNotebookTool: No controller selected for notebook ${getDisplayPath(notebook.uri)}`
             );
@@ -87,22 +82,13 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
     }
 
     async prepareInvocation(
-        options: LanguageModelToolInvocationPrepareOptions<IConfigurePythonNotebookToolParams>,
-        _token: CancellationToken
+        options: LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
+        token: CancellationToken
     ): Promise<PreparedToolInvocation> {
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
-        const controller = this.controllerRegistration.getSelected(notebook);
-        if (controller) {
-            return {
-                confirmationMessages: {
-                    title: l10n.t(`Start Kernel?`),
-                    message: l10n.t('The Python kernel {0} will be started', controller.label)
-                },
-                invocationMessage: l10n.t('Starting Python Kernel')
-            };
-        }
-        const preferredEnv = await getRecommendedPythonEnvironment(notebook.uri);
-        if (preferredEnv && options.input.action !== 'select') {
+        const { filePath } = options.input;
+        const notebook = await resolveNotebookFromFilePath(filePath);
+        const preferredEnv = await raceCancellationError(token, getRecommendedPythonEnvironment(notebook.uri));
+        if (preferredEnv) {
             return {
                 confirmationMessages: {
                     title: l10n.t(`Select and start a Python Kernel?`),
