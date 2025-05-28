@@ -2158,6 +2158,7 @@
                 "toolReferenceName": "listNotebookPackages",
                 "tags": [
                     "extension_installed_by_tool",
+                    "jupyter",
                     "notebooks",
                     "enable_other_tool_configure_notebook"
                 ],
@@ -2183,6 +2184,7 @@
                 "toolReferenceName": "installNotebookPackages",
                 "tags": [
                     "extension_installed_by_tool",
+                    "jupyter",
                     "notebooks",
                     "enable_other_tool_configure_notebook"
                 ],
