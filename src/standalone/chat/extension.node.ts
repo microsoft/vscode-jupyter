@@ -14,6 +14,7 @@ import { IInstallationChannelManager } from '../../platform/interpreter/installe
 import { ConfigureNotebookTool } from './configureNotebook.node';
 import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
+import { RestartKernelTool } from './restartKernelTool.node';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
     context.subscriptions.push(
@@ -58,6 +59,16 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
         vscode.lm.registerTool(
             ConfigurePythonNotebookTool.toolName,
             new ConfigurePythonNotebookTool(serviceContainer.get<IControllerRegistration>(IControllerRegistration))
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            RestartKernelTool.toolName,
+            new RestartKernelTool(
+                serviceContainer.get<IKernelProvider>(IKernelProvider),
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+            )
         )
     );
 
