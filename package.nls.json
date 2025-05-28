@@ -246,5 +246,7 @@
     "DataScience.installPythonExtensionViaKernelPickerTitle": "Install Python Extension",
     "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server",
     "jupyter.languageModelTools.configure_notebook.displayName": "Configure Jupyter Notebook",
-    "jupyter.languageModelTools.configure_notebook.userDescription": "Configures notebooks by selecting a relevant Kernel."
+    "jupyter.languageModelTools.configure_notebook.userDescription": "Configures notebooks by selecting a relevant Kernel.",
+    "jupyter.languageModelTools.restart_notebook_kernel.displayName": "Restart Notebook Kernel",
+    "jupyter.languageModelTools.restart_notebook_kernel.userDescription": "Restarts the kernel for the Jupyter Notebook."
 }
