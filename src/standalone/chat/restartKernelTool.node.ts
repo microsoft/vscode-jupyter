@@ -6,7 +6,11 @@ import { IKernelProvider } from '../../kernels/types';
 import { IBaseToolParams, resolveNotebookFromFilePath } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 
-export class RestartKernelTool implements vscode.LanguageModelTool<IBaseToolParams> {
+interface RestartKernelToolParams extends IBaseToolParams {
+    reason?: string;
+}
+
+export class RestartKernelTool implements vscode.LanguageModelTool<RestartKernelToolParams> {
     public static toolName = 'restart_notebook_kernel';
 
     public get name() {
@@ -22,7 +26,7 @@ export class RestartKernelTool implements vscode.LanguageModelTool<IBaseToolPara
     ) {}
 
     async invoke(
-        options: vscode.LanguageModelToolInvocationOptions<IBaseToolParams>,
+        options: vscode.LanguageModelToolInvocationOptions<RestartKernelToolParams>,
         _token: vscode.CancellationToken
     ) {
         await vscode.commands.executeCommand('jupyter.restartkernel', vscode.Uri.file(options.input.filePath));
@@ -31,7 +35,7 @@ export class RestartKernelTool implements vscode.LanguageModelTool<IBaseToolPara
     }
 
     async prepareInvocation(
-        options: vscode.LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
+        options: vscode.LanguageModelToolInvocationPrepareOptions<RestartKernelToolParams>,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
@@ -47,7 +51,7 @@ export class RestartKernelTool implements vscode.LanguageModelTool<IBaseToolPara
         return {
             confirmationMessages: {
                 title: vscode.l10n.t(`Restart Kernel`),
-                message: vscode.l10n.t('Restart the notebook kernel?')
+                message: options.input.reason ?? vscode.l10n.t('Restart the notebook kernel?')
             },
             invocationMessage: vscode.l10n.t('Restarting kernel')
         };

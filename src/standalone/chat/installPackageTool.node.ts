@@ -12,6 +12,7 @@ import {
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
+import { RestartKernelTool } from './restartKernelTool.node';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
@@ -78,6 +79,21 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         if (!success) {
             const message = `Failed to install one or more packages: ${packageList.join(', ')}.`;
             return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(message)]);
+        }
+
+        const restartOptionsInput = { ...options.input, reason: 'Packages installed' };
+        const restartOptions = { ...options, input: restartOptionsInput };
+
+        try {
+            await vscode.lm.invokeTool(RestartKernelTool.toolName, restartOptions);
+        } catch (ex) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(
+                    `Installation finished, but the kernel was not restarted because ${
+                        ex.name === 'Canceled' ? 'the user chose not to' : `an error occurred: ${ex.message}`
+                    }.`
+                )
+            ]);
         }
 
         return new vscode.LanguageModelToolResult([
