@@ -2205,13 +2205,17 @@
                         "filePath": {
                             "description": "The absolute path of the notebook with the active kernel.",
                             "type": "string"
+                        },
+                        "reason": {
+                            "description": "The reason for restarting the kernel.",
+                            "type": "string"
                         }
                     },
                     "required": [
                         "filePath"
                     ]
                 },
-                "when": "workspacePlatform != webworker"
+                "when": "false"
             }
         ]
     },
