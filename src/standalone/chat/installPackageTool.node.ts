@@ -13,7 +13,6 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { RestartKernelTool } from './restartKernelTool.node';
-import { logger } from '../../platform/logging';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
