@@ -72,7 +72,7 @@ export class SelectRecommendedPythonEnv implements LanguageModelTool<IBaseToolPa
         const selectedController = this.controllerRegistration.getSelected(notebook);
         if (selectedController) {
             logger.trace(`ConfigurePythonNotebookTool: kernel started for notebook ${getDisplayPath(notebook.uri)}`);
-            return getToolResponseForConfiguredNotebook(selectedController);
+            return getToolResponseForConfiguredNotebook(selectedController, kernel);
         }
 
         logger.trace(`ConfigurePythonNotebookTool: No kernel selected for notebook ${getDisplayPath(notebook.uri)}`);

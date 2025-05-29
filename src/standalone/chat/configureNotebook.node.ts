@@ -42,8 +42,9 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
         // If user user just reloaded vscode, possible Python/Jupyter ext is a little slow in creating the controller for VSC to pre-select an existing controller
         await sleep(1_000);
         let selectedController = this.controllerRegistration.getSelected(notebook);
-        if (selectedController && this.kernelProvider.get(notebook)?.startedAtLeastOnce) {
-            return getToolResponseForConfiguredNotebook(selectedController);
+        const kernel = this.kernelProvider.get(notebook);
+        if (selectedController && kernel?.startedAtLeastOnce) {
+            return getToolResponseForConfiguredNotebook(selectedController, kernel);
         }
         if (getPrimaryLanguageOfNotebook(notebook) !== PYTHON_LANGUAGE) {
             return lm.invokeTool(ConfigureNonPythonNotebookTool.name, options, token);
