@@ -27,7 +27,6 @@ import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
 import { logger } from '../../platform/logging';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { createVirtualEnvAndSelectAsKernel, shouldCreateVirtualEnvForNotebook } from './createVirtualEnv.python.node';
-import { sleep } from '../../platform/common/utils/async';
 
 export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_notebook';
@@ -39,8 +38,6 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
 
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
-        // If user user just reloaded vscode, possible Python/Jupyter ext is a little slow in creating the controller for VSC to pre-select an existing controller
-        await sleep(1_000);
         let selectedController = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);
         if (selectedController && kernel?.startedAtLeastOnce) {
