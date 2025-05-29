@@ -1,41 +1,52 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IKernelProvider } from '../../kernels/types';
 import {
     ensureKernelSelectedAndStarted,
     getPrimaryLanguageOfNotebook,
-    getToolResponseForConfiguredNotebook
-} from './helper';
+    getToolResponseForConfiguredNotebook,
+    IBaseToolParams,
+    resolveNotebookFromFilePath
+} from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import {
     CancellationToken,
     l10n,
     LanguageModelTextPart,
+    LanguageModelTool,
+    LanguageModelToolInvocationOptions,
+    LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
-    NotebookDocument,
     PreparedToolInvocation
 } from 'vscode';
+import { IKernelProvider } from '../../kernels/types';
 
-export class ConfigureNonPythonNotebookTool {
+export class ConfigureNonPythonNotebookTool implements LanguageModelTool<IBaseToolParams> {
+    public static toolName = 'configure_non_python_notebook';
     constructor(
-        private readonly kernelProvider: IKernelProvider,
-        private readonly controllerRegistration: IControllerRegistration
+        private readonly controllerRegistration: IControllerRegistration,
+        private readonly kernelProvider: IKernelProvider
     ) {}
 
-    async invoke(notebook: NotebookDocument, token: CancellationToken) {
-        await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, this.kernelProvider, token);
+    async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
+        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
 
         const selectedController = this.controllerRegistration.getSelected(notebook);
+        const kernel = this.kernelProvider.get(notebook);
         if (selectedController) {
-            return getToolResponseForConfiguredNotebook(selectedController);
+            return getToolResponseForConfiguredNotebook(selectedController, kernel);
         }
         return new LanguageModelToolResult([
             new LanguageModelTextPart('User did not select a Kernel for the notebook.')
         ]);
     }
 
-    async prepareInvocation(notebook: NotebookDocument, _token: CancellationToken): Promise<PreparedToolInvocation> {
+    async prepareInvocation(
+        options: LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
+        _token: CancellationToken
+    ): Promise<PreparedToolInvocation> {
+        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         const language = getPrimaryLanguageOfNotebook(notebook);
         const controller = this.controllerRegistration.getSelected(notebook);
         if (controller) {

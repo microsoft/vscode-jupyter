@@ -3,11 +3,16 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { installPackageThroughEnvsExtension, resolveNotebookFromFilePath } from './helper';
+import {
+    ensureKernelSelectedAndStarted,
+    IBaseToolParams,
+    installPackageThroughEnvsExtension,
+    resolveNotebookFromFilePath
+} from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
-import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
+import { RestartKernelTool } from './restartKernelTool.node';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
@@ -36,8 +41,7 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         }
 
         const notebook = await resolveNotebookFromFilePath(filePath);
-        await new ConfigurePythonNotebookTool(this.kernelProvider, this.controllerRegistration).invoke(notebook, token);
-        const kernel = this.kernelProvider.get(notebook);
+        const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
         }
@@ -75,6 +79,21 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         if (!success) {
             const message = `Failed to install one or more packages: ${packageList.join(', ')}.`;
             return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(message)]);
+        }
+
+        const restartOptionsInput = { ...options.input, reason: 'Packages installed' };
+        const restartOptions = { ...options, input: restartOptionsInput };
+
+        try {
+            await vscode.lm.invokeTool(RestartKernelTool.toolName, restartOptions);
+        } catch (ex) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(
+                    `Installation finished, but the kernel was not restarted because ${
+                        ex.name === 'Canceled' ? 'the user chose not to' : `an error occurred: ${ex.message}`
+                    }.`
+                )
+            ]);
         }
 
         return new vscode.LanguageModelToolResult([
@@ -121,7 +140,6 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
     }
 }
 
-export interface IInstallPackageParams {
-    filePath: string;
+export interface IInstallPackageParams extends IBaseToolParams {
     packageList: string[];
 }

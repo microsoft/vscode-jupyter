@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
 import { getEnvExtApi } from '../../platform/api/python-envs/pythonEnvsApi';
 import { raceTimeout } from '../../platform/common/utils/async';
@@ -13,6 +13,13 @@ import { isEqual } from '../../platform/vscode-path/resources';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { getNameOfKernelConnection, isPythonNotebook } from '../../kernels/helpers';
+import { logger } from '../../platform/logging';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { getPythonPackagesInKernel } from './listPackageTool.node';
+
+export interface IBaseToolParams {
+    filePath: string;
+}
 
 export async function sendPipListRequest(kernel: IKernel, token: vscode.CancellationToken) {
     const codeToExecute = `import subprocess
@@ -79,17 +86,20 @@ export type packageDefinition = { name: string; version?: string };
 export async function ensureKernelSelectedAndStarted(
     notebook: vscode.NotebookDocument,
     controllerRegistration: IControllerRegistration,
-    kernelProvider: IKernelProvider,
     token: vscode.CancellationToken
 ) {
-    if (!kernelProvider.get(notebook)) {
+    if (!controllerRegistration.getSelected(notebook)) {
+        logger.trace(`No kernel selected, displaying quick pick for notebook ${getDisplayPath(notebook.uri)}`);
         const disposables = new DisposableStore();
         try {
             const selectedPromise = new Promise<void>((resolve) =>
                 disposables.add(
-                    controllerRegistration.onControllerSelected((e) =>
-                        e.notebook === notebook ? resolve() : undefined
-                    )
+                    controllerRegistration.onControllerSelected((e) => {
+                        logger.trace(`Kernel selected for notebook ${getDisplayPath(notebook.uri)}`);
+                        if (e.notebook === notebook) {
+                            resolve();
+                        }
+                    })
                 )
             );
 
@@ -97,7 +107,7 @@ export async function ensureKernelSelectedAndStarted(
                 await vscode.window.showNotebookDocument(notebook);
             }
 
-            await raceCancellation(
+            const result = await raceCancellation(
                 token,
                 vscode.commands.executeCommand('notebook.selectKernel', {
                     notebookUri: notebook.uri,
@@ -105,7 +115,8 @@ export async function ensureKernelSelectedAndStarted(
                 })
             );
 
-            await raceTimeout(200, raceCancellation(token, selectedPromise));
+            logger.trace(`Kernel Selector invoked for notebook ${getDisplayPath(notebook.uri)} and returned ${result}`);
+            await raceTimeout(500, raceCancellation(token, selectedPromise));
         } finally {
             disposables.dispose();
         }
@@ -113,7 +124,10 @@ export async function ensureKernelSelectedAndStarted(
 
     const controller = controllerRegistration.getSelected(notebook);
     if (controller) {
+        logger.trace(`Kernel selected for notebook ${getDisplayPath(notebook.uri)}`);
         return raceCancellation(token, controller.startKernel(notebook));
+    } else {
+        logger.warn(`No kernel controller selected for notebook ${getDisplayPath(notebook.uri)}`);
     }
 }
 
@@ -121,10 +135,10 @@ export async function selectKernelAndStart(
     notebook: vscode.NotebookDocument,
     connection: KernelConnectionMetadata,
     controllerRegistration: IControllerRegistration,
-    kernelProvider: IKernelProvider,
-    token: vscode.CancellationToken
+    token: vscode.CancellationToken,
+    startKernel: boolean = true
 ) {
-    if (!kernelProvider.get(notebook)) {
+    if (!controllerRegistration.getSelected(notebook)) {
         const disposables = new DisposableStore();
         try {
             const selectedPromise = new Promise<void>((resolve) =>
@@ -148,14 +162,14 @@ export async function selectKernelAndStart(
                 })
             );
 
-            await raceTimeout(200, raceCancellation(token, selectedPromise));
+            await raceTimeout(500, raceCancellation(token, selectedPromise));
         } finally {
             disposables.dispose();
         }
     }
 
     const controller = controllerRegistration.getSelected(notebook);
-    if (controller) {
+    if (controller && startKernel) {
         return raceCancellation(token, controller.startKernel(notebook));
     }
 }
@@ -182,15 +196,23 @@ export async function resolveNotebookFromFilePath(filePath: string) {
     return notebook;
 }
 
-export function getToolResponseForConfiguredNotebook(
-    selectedController: IVSCodeNotebookController
-): vscode.LanguageModelToolResult {
+export async function getToolResponseForConfiguredNotebook(
+    selectedController: IVSCodeNotebookController,
+    kernel: IKernel | undefined
+): Promise<vscode.LanguageModelToolResult> {
     const messages = [
         `Notebook has been configured to use the kernel ${
             selectedController.label || getNameOfKernelConnection(selectedController.connection)
         }, and the Kernel has been successfully started.`
     ];
-    return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(messages.join(' '))]);
+
+    // We don't want to delay configuring notebook controller just because fetchign packages is slow.
+    const packagesMessage = kernel ? await raceTimeout(5_000, getPythonPackagesInKernel(kernel)) : undefined;
+
+    return new vscode.LanguageModelToolResult([
+        new vscode.LanguageModelTextPart(messages.join(' ')),
+        ...(packagesMessage ? [packagesMessage] : [])
+    ]);
 }
 
 export function getPrimaryLanguageOfNotebook(notebook: vscode.NotebookDocument) {

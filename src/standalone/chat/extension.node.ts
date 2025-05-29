@@ -2,16 +2,19 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { IKernelProvider } from '../../kernels/types';
+import { IKernelDependencyService, IKernelProvider } from '../../kernels/types';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { JupyterVariablesProvider } from '../variables/JupyterVariablesProvider';
 import { logger } from '../../platform/logging';
-import { sendPipListRequest } from './helper';
+import { sendPipListRequest } from './helper.node';
 import { ListPackageTool } from './listPackageTool.node';
 import { InstallPackagesTool } from './installPackageTool.node';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { ConfigureNotebookTool } from './configureNotebook.node';
+import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
+import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
+import { RestartKernelTool } from './restartKernelTool.node';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
     context.subscriptions.push(
@@ -38,6 +41,34 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
         vscode.lm.registerTool(
             ConfigureNotebookTool.toolName,
             new ConfigureNotebookTool(
+                serviceContainer.get<IKernelProvider>(IKernelProvider),
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IKernelDependencyService>(IKernelDependencyService)
+            )
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            ConfigureNonPythonNotebookTool.toolName,
+            new ConfigureNonPythonNotebookTool(
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IKernelProvider>(IKernelProvider)
+            )
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            ConfigurePythonNotebookTool.toolName,
+            new ConfigurePythonNotebookTool(serviceContainer.get<IControllerRegistration>(IControllerRegistration))
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            RestartKernelTool.toolName,
+            new RestartKernelTool(
                 serviceContainer.get<IKernelProvider>(IKernelProvider),
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration)
             )

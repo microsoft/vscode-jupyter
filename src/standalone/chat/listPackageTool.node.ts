@@ -2,17 +2,20 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { IKernelProvider } from '../../kernels/types';
+import { IKernel, IKernelProvider } from '../../kernels/types';
 import {
+    ensureKernelSelectedAndStarted,
     getPackagesFromEnvsExtension,
+    IBaseToolParams,
     packageDefinition,
     resolveNotebookFromFilePath,
     sendPipListRequest
-} from './helper';
+} from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
+import { isPythonKernelConnection } from '../../kernels/helpers';
+import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../kernels/helpers.node';
 
-export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesParams> {
+export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams> {
     public static toolName = 'notebook_list_packages';
 
     public get name() {
@@ -27,10 +30,7 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         private readonly controllerRegistration: IControllerRegistration
     ) {}
 
-    async invoke(
-        options: vscode.LanguageModelToolInvocationOptions<IListPackagesParams>,
-        token: vscode.CancellationToken
-    ) {
+    async invoke(options: vscode.LanguageModelToolInvocationOptions<IBaseToolParams>, token: vscode.CancellationToken) {
         const { filePath } = options.input;
 
         if (!filePath) {
@@ -38,40 +38,25 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
         }
 
         const notebook = await resolveNotebookFromFilePath(filePath);
-        await new ConfigurePythonNotebookTool(this.kernelProvider, this.controllerRegistration).invoke(notebook, token);
-        const kernel = this.kernelProvider.get(notebook);
+        const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
         }
-
-        let packages: packageDefinition[] | undefined = undefined;
-
-        const kernelUri = kernel.kernelConnectionMetadata.interpreter?.uri;
-        if (
-            kernelUri &&
-            (kernel.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
-                kernel.kernelConnectionMetadata.kind === 'startUsingPythonInterpreter')
-        ) {
-            packages = await getPackagesFromEnvsExtension(kernelUri);
+        if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
+            throw new Error(`The selected Kernel is not a Python Kernel and this tool only supports Python Kernels.`);
         }
 
-        if (!packages) {
-            // TODO: There is an IInstaller service available, but currently only lists info for a single package.
-            // It may also depend on the environment extension?
-            packages = await sendPipListRequest(kernel, token);
-        }
+        const packagesMessage = await getPythonPackagesInKernel(kernel);
 
-        if (!packages) {
+        if (!packagesMessage) {
             throw new Error(`Unable to list packages for notebook ${filePath}.`);
         }
 
-        const contentString = packages.map((pkg) => `${pkg.name}==${pkg.version}`).join(', ');
-        const finalMessageString = `Packages installed in notebook: ${contentString}`;
-        return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
+        return new vscode.LanguageModelToolResult([packagesMessage]);
     }
 
     async prepareInvocation(
-        options: vscode.LanguageModelToolInvocationPrepareOptions<IListPackagesParams>,
+        options: vscode.LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
@@ -92,6 +77,31 @@ export class ListPackageTool implements vscode.LanguageModelTool<IListPackagesPa
     }
 }
 
-export interface IListPackagesParams {
-    filePath: string;
+export async function getPythonPackagesInKernel(kernel: IKernel): Promise<vscode.LanguageModelTextPart | undefined> {
+    if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
+        throw new Error(`The selected Kernel is not a Python Kernel and this tool only supports Python Kernels.`);
+    }
+
+    const kernelUri = kernel.kernelConnectionMetadata.interpreter?.uri;
+    let packages: packageDefinition[] | undefined = [];
+    if (kernelUri && isKernelLaunchedViaLocalPythonIPyKernel(kernel.kernelConnectionMetadata)) {
+        packages = await getPackagesFromEnvsExtension(kernelUri);
+    }
+
+    if (!packages) {
+        // TODO: There is an IInstaller service available, but currently only lists info for a single package.
+        // It may also depend on the environment extension?
+        const token = new vscode.CancellationTokenSource();
+        try {
+            packages = await sendPipListRequest(kernel, token.token);
+        } finally {
+            token.dispose();
+        }
+    }
+
+    if (packages) {
+        const contentString = packages.map((pkg) => `${pkg.name}==${pkg.version}`).join(', ');
+        const finalMessageString = `Packages installed in notebook: ${contentString}`;
+        return new vscode.LanguageModelTextPart(finalMessageString);
+    }
 }
