@@ -27,6 +27,7 @@ import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
 import { logger } from '../../platform/logging';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { createVirtualEnvAndSelectAsKernel, shouldCreateVirtualEnvForNotebook } from './createVirtualEnv.python.node';
+import { sleep } from '../../platform/common/utils/async';
 
 export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_notebook';
@@ -38,6 +39,8 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
 
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        // If user user just reloaded vscode, possible Python/Jupyter ext is a little slow in creating the controller for VSC to pre-select an existing controller
+        await sleep(1_000);
         let selectedController = this.controllerRegistration.getSelected(notebook);
         if (selectedController && this.kernelProvider.get(notebook)?.startedAtLeastOnce) {
             return getToolResponseForConfiguredNotebook(selectedController);
@@ -64,8 +67,12 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
             }
         }
 
-        const preferredEnv = await getRecommendedPythonEnvironment(notebook.uri);
-        if (preferredEnv) {
+        // If we have already selected a controller then start that.
+        // If we have a preferred Python Env, then recommend that.
+        if (
+            this.controllerRegistration.getSelected(notebook) ||
+            (await getRecommendedPythonEnvironment(notebook.uri))
+        ) {
             try {
                 return await lm.invokeTool(ConfigurePythonNotebookTool.toolName, options, token);
             } catch (ex) {
