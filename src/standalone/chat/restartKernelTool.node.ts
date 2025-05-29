@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { IBaseToolParams, resolveNotebookFromFilePath } from './helper.node';
+import { hasKernelStartedOrIsStarting, IBaseToolParams, resolveNotebookFromFilePath } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 interface RestartKernelToolParams extends IBaseToolParams {
@@ -42,7 +42,7 @@ export class RestartKernelTool implements vscode.LanguageModelTool<RestartKernel
 
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);
-        if (!controller || !kernel || !kernel.startedAtLeastOnce) {
+        if (!controller || !kernel || !hasKernelStartedOrIsStarting(kernel)) {
             throw new Error(
                 `No active kernel for notebook ${options.input.filePath}, the configure_notebook tool can be used to help the user select a kernel.`
             );

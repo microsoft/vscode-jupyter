@@ -1,13 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IKernelDependencyService, IKernelProvider } from '../../kernels/types';
-import {
-    getPrimaryLanguageOfNotebook,
-    getToolResponseForConfiguredNotebook,
-    IBaseToolParams,
-    resolveNotebookFromFilePath
-} from './helper.node';
+import { IKernelDependencyService } from '../../kernels/types';
+import { getPrimaryLanguageOfNotebook, IBaseToolParams, resolveNotebookFromFilePath } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { PythonExtension as PythonExtensionId } from '../../platform/common/constants';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -31,18 +26,12 @@ import { createVirtualEnvAndSelectAsKernel, shouldCreateVirtualEnvForNotebook } 
 export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_notebook';
     constructor(
-        private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration,
         private readonly kernelDependencyService: IKernelDependencyService
     ) {}
 
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
-        let selectedController = this.controllerRegistration.getSelected(notebook);
-        const kernel = this.kernelProvider.get(notebook);
-        if (selectedController && kernel?.startedAtLeastOnce) {
-            return getToolResponseForConfiguredNotebook(selectedController, kernel);
-        }
         if (getPrimaryLanguageOfNotebook(notebook) !== PYTHON_LANGUAGE) {
             return lm.invokeTool(ConfigureNonPythonNotebookTool.name, options, token);
         } else {

@@ -226,3 +226,10 @@ export function getPrimaryLanguageOfNotebook(notebook: vscode.NotebookDocument) 
         notebook.getCells().find((c) => c.kind === vscode.NotebookCellKind.Code)?.document.languageId || PYTHON_LANGUAGE
     );
 }
+
+export function hasKernelStartedOrIsStarting(kernel: IKernel) {
+    if (kernel.status === 'dead' || kernel.status === 'terminating' || kernel.status === 'unknown') {
+        return false;
+    }
+    return true;
+}

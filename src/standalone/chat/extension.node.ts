@@ -41,7 +41,6 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
         vscode.lm.registerTool(
             ConfigureNotebookTool.toolName,
             new ConfigureNotebookTool(
-                serviceContainer.get<IKernelProvider>(IKernelProvider),
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration),
                 serviceContainer.get<IKernelDependencyService>(IKernelDependencyService)
             )
