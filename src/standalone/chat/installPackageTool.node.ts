@@ -89,7 +89,11 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
             await vscode.lm.invokeTool(RestartKernelTool.toolName, restartOptions);
         } catch (ex) {
             return new vscode.LanguageModelToolResult([
-                new vscode.LanguageModelTextPart(`Installation finished, but the kernel was not restarted because ${ex.name === 'Canceled' ? 'the user chose not to' : `an error occurred: ${ex.message}`}.`)
+                new vscode.LanguageModelTextPart(
+                    `Installation finished, but the kernel was not restarted because ${
+                        ex.name === 'Canceled' ? 'the user chose not to' : `an error occurred: ${ex.message}`
+                    }.`
+                )
             ]);
         }
 
