@@ -7,7 +7,7 @@ import {
     IBaseToolParams,
     resolveNotebookFromFilePath,
     selectKernelAndStart
-} from './helper';
+} from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import {
     CancellationToken,
@@ -77,7 +77,7 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
         const selectedController = this.controllerRegistration.getSelected(notebook);
         if (selectedController) {
             logger.trace(`ConfigurePythonNotebookTool: kernel started for notebook ${getDisplayPath(notebook.uri)}`);
-            return getToolResponseForConfiguredNotebook(selectedController);
+            return getToolResponseForConfiguredNotebook(selectedController, kernel);
         }
 
         logger.trace(`ConfigurePythonNotebookTool: No kernel selected for notebook ${getDisplayPath(notebook.uri)}`);

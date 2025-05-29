@@ -7,7 +7,7 @@ import {
     getToolResponseForConfiguredNotebook,
     IBaseToolParams,
     resolveNotebookFromFilePath
-} from './helper';
+} from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import {
     CancellationToken,
@@ -19,18 +19,23 @@ import {
     LanguageModelToolResult,
     PreparedToolInvocation
 } from 'vscode';
+import { IKernelProvider } from '../../kernels/types';
 
 export class ConfigureNonPythonNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_non_python_notebook';
-    constructor(private readonly controllerRegistration: IControllerRegistration) {}
+    constructor(
+        private readonly controllerRegistration: IControllerRegistration,
+        private readonly kernelProvider: IKernelProvider
+    ) {}
 
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
 
         const selectedController = this.controllerRegistration.getSelected(notebook);
+        const kernel = this.kernelProvider.get(notebook);
         if (selectedController) {
-            return getToolResponseForConfiguredNotebook(selectedController);
+            return getToolResponseForConfiguredNotebook(selectedController, kernel);
         }
         return new LanguageModelToolResult([
             new LanguageModelTextPart('User did not select a Kernel for the notebook.')

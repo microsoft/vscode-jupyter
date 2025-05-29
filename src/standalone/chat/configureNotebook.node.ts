@@ -7,7 +7,7 @@ import {
     getToolResponseForConfiguredNotebook,
     IBaseToolParams,
     resolveNotebookFromFilePath
-} from './helper';
+} from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { PythonExtension as PythonExtensionId } from '../../platform/common/constants';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -39,8 +39,9 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         let selectedController = this.controllerRegistration.getSelected(notebook);
-        if (selectedController && this.kernelProvider.get(notebook)?.startedAtLeastOnce) {
-            return getToolResponseForConfiguredNotebook(selectedController);
+        const kernel = this.kernelProvider.get(notebook);
+        if (selectedController && kernel?.startedAtLeastOnce) {
+            return getToolResponseForConfiguredNotebook(selectedController, kernel);
         }
         if (getPrimaryLanguageOfNotebook(notebook) !== PYTHON_LANGUAGE) {
             return lm.invokeTool(ConfigureNonPythonNotebookTool.name, options, token);
@@ -64,8 +65,12 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
             }
         }
 
-        const preferredEnv = await getRecommendedPythonEnvironment(notebook.uri);
-        if (preferredEnv) {
+        // If we have already selected a controller then start that.
+        // If we have a preferred Python Env, then recommend that.
+        if (
+            this.controllerRegistration.getSelected(notebook) ||
+            (await getRecommendedPythonEnvironment(notebook.uri))
+        ) {
             try {
                 return await lm.invokeTool(ConfigurePythonNotebookTool.toolName, options, token);
             } catch (ex) {

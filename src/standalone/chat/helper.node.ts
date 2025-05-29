@@ -15,6 +15,7 @@ import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../platform/common/consta
 import { getNameOfKernelConnection, isPythonNotebook } from '../../kernels/helpers';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { getPythonPackagesInKernel } from './listPackageTool.node';
 
 export interface IBaseToolParams {
     filePath: string;
@@ -195,15 +196,23 @@ export async function resolveNotebookFromFilePath(filePath: string) {
     return notebook;
 }
 
-export function getToolResponseForConfiguredNotebook(
-    selectedController: IVSCodeNotebookController
-): vscode.LanguageModelToolResult {
+export async function getToolResponseForConfiguredNotebook(
+    selectedController: IVSCodeNotebookController,
+    kernel: IKernel | undefined
+): Promise<vscode.LanguageModelToolResult> {
     const messages = [
         `Notebook has been configured to use the kernel ${
             selectedController.label || getNameOfKernelConnection(selectedController.connection)
         }, and the Kernel has been successfully started.`
     ];
-    return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(messages.join(' '))]);
+
+    // We don't want to delay configuring notebook controller just because fetchign packages is slow.
+    const packagesMessage = kernel ? await raceTimeout(5_000, getPythonPackagesInKernel(kernel)) : undefined;
+
+    return new vscode.LanguageModelToolResult([
+        new vscode.LanguageModelTextPart(messages.join(' ')),
+        ...(packagesMessage ? [packagesMessage] : [])
+    ]);
 }
 
 export function getPrimaryLanguageOfNotebook(notebook: vscode.NotebookDocument) {
