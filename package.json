@@ -2197,7 +2197,6 @@
                     "notebooks"
                 ],
                 "icon": "$(notebook)",
-                "canBeReferencedInPrompt": true,
                 "inputSchema": {
                     "type": "object",
                     "properties": {
