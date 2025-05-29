@@ -2188,9 +2188,8 @@
             },
             {
                 "name": "restart_notebook_kernel",
-                "displayName": "%jupyter.languageModelTools.restart_notebook_kernel.displayName%",
+                "displayName": "Restart Notebook",
                 "modelDescription": "Tool used to restart a Notebook kernel. Some packages require a restart of the kernel after being installed. Use this if after installing a package if you know the package requires a restart, or if still getting an error about a missing package after installing.",
-                "userDescription": "%jupyter.languageModelTools.restart_notebook_kernel.userDescription%",
                 "toolReferenceName": "restartNotebookKernel",
                 "tags": [
                     "extension_installed_by_tool",
