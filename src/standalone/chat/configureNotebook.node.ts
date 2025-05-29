@@ -7,7 +7,7 @@ import {
     getToolResponseForConfiguredNotebook,
     IBaseToolParams,
     resolveNotebookFromFilePath
-} from './helper';
+} from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { PythonExtension as PythonExtensionId } from '../../platform/common/constants';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';

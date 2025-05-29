@@ -12,10 +12,9 @@ import { DisposableStore } from '../../platform/common/utils/lifecycle';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { getNameOfKernelConnection, isPythonKernelConnection, isPythonNotebook } from '../../kernels/helpers';
+import { getNameOfKernelConnection, isPythonNotebook } from '../../kernels/helpers';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../kernels/helpers.node';
 import { getPythonPackagesInKernel } from './listPackageTool.node';
 
 export interface IBaseToolParams {

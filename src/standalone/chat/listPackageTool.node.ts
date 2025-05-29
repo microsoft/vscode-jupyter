@@ -10,8 +10,8 @@ import {
     packageDefinition,
     resolveNotebookFromFilePath,
     sendPipListRequest
-} from './helper';
-import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
+} from './helper.node';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../kernels/helpers.node';
 

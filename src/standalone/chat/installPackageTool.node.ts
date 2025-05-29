@@ -8,7 +8,7 @@ import {
     IBaseToolParams,
     installPackageThroughEnvsExtension,
     resolveNotebookFromFilePath
-} from './helper';
+} from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';

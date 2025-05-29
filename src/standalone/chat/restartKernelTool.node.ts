@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { IBaseToolParams, resolveNotebookFromFilePath } from './helper';
+import { IBaseToolParams, resolveNotebookFromFilePath } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 export class RestartKernelTool implements vscode.LanguageModelTool<IBaseToolParams> {

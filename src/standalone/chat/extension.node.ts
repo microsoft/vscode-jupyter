@@ -6,7 +6,7 @@ import { IKernelDependencyService, IKernelProvider } from '../../kernels/types';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { JupyterVariablesProvider } from '../variables/JupyterVariablesProvider';
 import { logger } from '../../platform/logging';
-import { sendPipListRequest } from './helper';
+import { sendPipListRequest } from './helper.node';
 import { ListPackageTool } from './listPackageTool.node';
 import { InstallPackagesTool } from './installPackageTool.node';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -51,7 +51,10 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
     context.subscriptions.push(
         vscode.lm.registerTool(
             ConfigureNonPythonNotebookTool.toolName,
-            new ConfigureNonPythonNotebookTool(serviceContainer.get<IControllerRegistration>(IControllerRegistration))
+            new ConfigureNonPythonNotebookTool(
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IKernelProvider>(IKernelProvider)
+            )
         )
     );
 

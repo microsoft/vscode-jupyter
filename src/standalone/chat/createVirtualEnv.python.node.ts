@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IBaseToolParams, selectKernelAndStart } from './helper';
+import { IBaseToolParams, selectKernelAndStart } from './helper.node';
 import { PythonEnvironmentExtension, PythonExtension as PythonExtensionId } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import {
