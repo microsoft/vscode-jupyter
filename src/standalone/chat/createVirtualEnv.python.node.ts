@@ -40,8 +40,7 @@ export async function createVirtualEnvAndSelectAsKernel(
     const api = await raceCancellationError(token, PythonExtension.api());
     // Only the Python tool in Python Env extension can create venv with additional packages.
     const input = { resourcePath: notebook.uri.fsPath, packageList: ['ipykernel'] };
-    const toolName = getToolNameToCreateVirtualEnv();
-    await lm.invokeTool(toolName, { ...options, input }, token);
+    await lm.invokeTool('create_virtual_environment', { ...options, input }, token);
 
     logger.trace(`Create Env tool for notebook ${getDisplayPath(notebook.uri)}`);
 
@@ -92,7 +91,8 @@ export async function createVirtualEnvAndSelectAsKernel(
 
     const selectedController = controllerRegistration.getSelected(notebook);
     // The Python tool doesn't have ability to install dependencies, so we do it here.
-    // The Python Env Tool does,
+    // The Python Env Tool does, If python env extension is installed, then the packages would have been installed.
+    // As Python Ext calls into Python Env extension to install packages.
     if (selectedController && !extensions.getExtension(PythonEnvironmentExtension)) {
         await kernelDependencyService.installMissingDependencies({
             resource: notebook.uri,
@@ -129,18 +129,6 @@ export async function shouldCreateVirtualEnvForNotebook(
     const api = await raceCancellationError(token, PythonExtension.api());
 
     return !getWorkspaceVenvOrCondaEnv(notebook.uri, api.environments);
-}
-
-function getToolNameToCreateVirtualEnv() {
-    const PYTHON_EXT_VIRTUAL_ENV_TOOL_NAME = 'create_virtual_environment';
-    const PYTHON_ENV_EXT_VIRTUAL_ENV_TOOL_NAME = 'create_quick_virtual_environment';
-
-    if (extensions.getExtension(PythonEnvironmentExtension)) {
-        // If the Python Environment extension is installed, then use the tool from that extension.
-        return PYTHON_ENV_EXT_VIRTUAL_ENV_TOOL_NAME;
-    } else {
-        return PYTHON_EXT_VIRTUAL_ENV_TOOL_NAME;
-    }
 }
 
 function getWorkspaceVenvOrCondaEnv(resource: Uri | undefined, api: PythonExtension['environments']) {
