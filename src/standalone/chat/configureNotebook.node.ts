@@ -1,13 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IKernelDependencyService, IKernelProvider } from '../../kernels/types';
-import {
-    getPrimaryLanguageOfNotebook,
-    getToolResponseForConfiguredNotebook,
-    IBaseToolParams,
-    resolveNotebookFromFilePath
-} from './helper.node';
+import { IKernelDependencyService } from '../../kernels/types';
+import { getPrimaryLanguageOfNotebook, IBaseToolParams, resolveNotebookFromFilePath } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { PythonExtension as PythonExtensionId } from '../../platform/common/constants';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
