@@ -6,6 +6,7 @@ import { IKernel, IKernelProvider } from '../../kernels/types';
 import {
     ensureKernelSelectedAndStarted,
     getPackagesFromEnvsExtension,
+    hasKernelStartedOrIsStarting,
     IBaseToolParams,
     packageDefinition,
     resolveNotebookFromFilePath,
@@ -63,7 +64,7 @@ export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams
 
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);
-        if (!controller || !kernel || !kernel.startedAtLeastOnce) {
+        if (!controller || !kernel || !hasKernelStartedOrIsStarting(kernel)) {
             return {
                 confirmationMessages: {
                     title: vscode.l10n.t(`Start Kernel and List Packages?`),

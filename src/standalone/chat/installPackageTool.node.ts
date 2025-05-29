@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
 import {
     ensureKernelSelectedAndStarted,
+    hasKernelStartedOrIsStarting,
     IBaseToolParams,
     installPackageThroughEnvsExtension,
     resolveNotebookFromFilePath
@@ -92,7 +93,7 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);
-        if (!controller || !kernel || !kernel.startedAtLeastOnce) {
+        if (!controller || !kernel || !hasKernelStartedOrIsStarting(kernel)) {
             return {
                 confirmationMessages: {
                     title: vscode.l10n.t(`Start Kernel and Install packages?`),
