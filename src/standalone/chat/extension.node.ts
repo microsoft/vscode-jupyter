@@ -60,7 +60,9 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
     context.subscriptions.push(
         vscode.lm.registerTool(
             ConfigurePythonNotebookTool.toolName,
-            new ConfigurePythonNotebookTool(serviceContainer.get<IControllerRegistration>(IControllerRegistration))
+            new ConfigurePythonNotebookTool(
+                serviceContainer.get<IKernelProvider>(IKernelProvider),
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration))
         )
     );
 

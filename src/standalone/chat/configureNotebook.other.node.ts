@@ -5,6 +5,7 @@ import {
     ensureKernelSelectedAndStarted,
     getPrimaryLanguageOfNotebook,
     getToolResponseForConfiguredNotebook,
+    hasKernelStartedOrIsStarting,
     IBaseToolParams,
     resolveNotebookFromFilePath
 } from './helper.node';
@@ -49,6 +50,13 @@ export class ConfigureNonPythonNotebookTool implements LanguageModelTool<IBaseTo
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         const language = getPrimaryLanguageOfNotebook(notebook);
         const controller = this.controllerRegistration.getSelected(notebook);
+        const kernel = this.kernelProvider.get(notebook.uri);
+        if (controller && kernel && hasKernelStartedOrIsStarting(kernel)) {
+            return {
+                invocationMessage: l10n.t('Using {0} Kernel', language)
+            };
+        }
+
         if (controller) {
             return {
                 confirmationMessages: {
