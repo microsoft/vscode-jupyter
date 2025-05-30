@@ -98,7 +98,9 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         }
 
         return new vscode.LanguageModelToolResult([
-            new vscode.LanguageModelTextPart('Installation finished successfully.')
+            new vscode.LanguageModelTextPart(
+                `Installation finished successfully. Use the 'copilot_getNotebookSummary' to get the latest summary (state) of the notebook.`
+            )
         ]);
     }
 
@@ -109,6 +111,15 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);
+        if (controller && kernel && hasKernelStartedOrIsStarting(kernel)) {
+            return {
+                confirmationMessages: {
+                    title: vscode.l10n.t(`Install packages?`),
+                    message: vscode.l10n.t('Installing packages: {0}', options.input.packageList.join(', '))
+                },
+                invocationMessage: vscode.l10n.t('Installing packages: {0}', options.input.packageList.join(', '))
+            };
+        }
         if (!controller || !kernel || !hasKernelStartedOrIsStarting(kernel)) {
             return {
                 confirmationMessages: {
