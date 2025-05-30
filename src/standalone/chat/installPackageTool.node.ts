@@ -98,7 +98,7 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         }
 
         return new vscode.LanguageModelToolResult([
-            new vscode.LanguageModelTextPart('Installation finished successfully')
+            new vscode.LanguageModelTextPart('Installation finished successfully.')
         ]);
     }
 
