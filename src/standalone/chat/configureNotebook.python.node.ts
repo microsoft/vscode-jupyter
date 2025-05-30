@@ -4,6 +4,7 @@
 import {
     ensureKernelSelectedAndStarted,
     getToolResponseForConfiguredNotebook,
+    hasKernelStartedOrIsStarting,
     IBaseToolParams,
     resolveNotebookFromFilePath,
     selectKernelAndStart
@@ -24,6 +25,7 @@ import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
 import { raceCancellationError } from '../../platform/common/cancellation';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { IKernelProvider } from '../../kernels/types';
 
 export interface IConfigurePythonNotebookToolParams extends IBaseToolParams {
     action?: 'select';
@@ -31,7 +33,10 @@ export interface IConfigurePythonNotebookToolParams extends IBaseToolParams {
 
 export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_python_notebook';
-    constructor(private readonly controllerRegistration: IControllerRegistration) {}
+    constructor(
+        private readonly kernelProvider: IKernelProvider,
+        private readonly controllerRegistration: IControllerRegistration
+    ) {}
 
     async invoke(
         options: LanguageModelToolInvocationOptions<IConfigurePythonNotebookToolParams>,
@@ -91,7 +96,14 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
         _token: CancellationToken
     ): Promise<PreparedToolInvocation> {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        const kernel = this.kernelProvider.get(notebook.uri);
         const controller = this.controllerRegistration.getSelected(notebook);
+        if (controller && kernel && hasKernelStartedOrIsStarting(kernel)) {
+            return {
+                invocationMessage: l10n.t('Using Python Kernel')
+            };
+        }
+
         if (controller) {
             return {
                 confirmationMessages: {

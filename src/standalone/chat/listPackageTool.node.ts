@@ -64,7 +64,9 @@ export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams
 
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);
-        if (!controller || !kernel || !hasKernelStartedOrIsStarting(kernel)) {
+        if (controller && kernel && hasKernelStartedOrIsStarting(kernel)) {
+            return { invocationMessage: vscode.l10n.t('Listing packages') };
+        } else {
             return {
                 confirmationMessages: {
                     title: vscode.l10n.t(`Start Kernel and List Packages?`),
@@ -73,8 +75,6 @@ export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams
                 invocationMessage: vscode.l10n.t('Starting kernel and listing packages')
             };
         }
-
-        return { invocationMessage: vscode.l10n.t('Listing packages') };
     }
 }
 
