@@ -46,7 +46,7 @@ export class CellExecutionFactory {
         cell: NotebookCell,
         code: string | undefined,
         metadata: Readonly<KernelConnectionMetadata>,
-        info?: ResumeCellExecutionInformation
+        info?: ResumeCellExecutionInformation | 'preserveOutput'
     ) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         return CellExecution.fromCell(cell, code, metadata, this.controller, this.requestListener, info);
@@ -97,7 +97,7 @@ export class CellExecution implements ICellExecution, IDisposable {
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         private readonly controller: IKernelController,
         private readonly requestListener: CellExecutionMessageHandlerService,
-        private readonly resumeExecution?: ResumeCellExecutionInformation
+        private readonly resumeExecution?: ResumeCellExecutionInformation | 'preserveOutput'
     ) {
         workspace.onDidCloseTextDocument(
             (e) => {
@@ -126,7 +126,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             this.execution = CellExecutionCreator.getOrCreate(
                 cell,
                 this.controller,
-                resumeExecution?.msg_id ? false : true // Do not clear output if we're resuming execution of a cell.
+                resumeExecution === 'preserveOutput' || resumeExecution?.msg_id ? false : true // Do not clear output if we're resuming execution of a cell.
             );
             NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Pending);
         } else {
@@ -139,19 +139,26 @@ export class CellExecution implements ICellExecution, IDisposable {
         }
     }
 
+    public clear() {
+        if (this.canExecuteCell()) {
+            const execution = CellExecutionCreator.getOrCreate(this.cell, this.controller, false);
+            execution.start();
+            execution.end(undefined);
+        }
+    }
     public static fromCell(
         cell: NotebookCell,
         code: string | undefined,
         metadata: Readonly<KernelConnectionMetadata>,
         controller: IKernelController,
         requestListener: CellExecutionMessageHandlerService,
-        info?: ResumeCellExecutionInformation
+        info?: ResumeCellExecutionInformation | 'preserveOutput'
     ) {
         return new CellExecution(cell, code, metadata, controller, requestListener, info);
     }
     public async start(session: IKernelSession) {
         this.session = session;
-        if (this.resumeExecution?.msg_id) {
+        if (this.resumeExecution && typeof this.resumeExecution !== 'string' && this.resumeExecution?.msg_id) {
             return this.resume(session, this.resumeExecution);
         }
         if (this.cancelHandled) {
@@ -399,7 +406,11 @@ export class CellExecution implements ICellExecution, IDisposable {
         // Skip if no code to execute
         if (code.trim().length === 0 || this.cell.document.isClosed) {
             if (code.trim().length === 0) {
-                this.execution?.start(this.resumeExecution?.startTime);
+                this.execution?.start(
+                    this.resumeExecution && typeof this.resumeExecution !== 'string'
+                        ? this.resumeExecution?.startTime
+                        : undefined
+                );
                 this.execution?.clearOutput()?.then(noop, noop);
             }
             traceCellMessage(this.cell, 'Empty cell execution');

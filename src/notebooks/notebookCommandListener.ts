@@ -31,6 +31,8 @@ import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
 import { IControllerRegistration } from './controllers/types';
+import { DisposableStore } from '../platform/common/utils/lifecycle';
+import { createDeferred } from '../platform/common/utils/async';
 
 /**
  * Registers commands specific to the notebook UI
@@ -170,21 +172,43 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
 
         if (kernel) {
             logger.debug(`Restart kernel command handler for ${getDisplayPath(document.uri)}`);
-            if (await this.shouldAskForRestart(document.uri)) {
-                // Ask the user if they want us to restart or not.
-                const message = DataScience.restartKernelMessage;
-                const yes = DataScience.restartKernelMessageYes;
-                const dontAskAgain = DataScience.restartKernelMessageDontAskAgain;
-
-                const response = await window.showInformationMessage(message, { modal: true }, yes, dontAskAgain);
-                if (response === dontAskAgain) {
-                    await this.disableAskForRestart(document.uri);
-                    this.wrapKernelMethod('restart', kernel).catch(noop);
-                } else if (response === yes) {
-                    this.wrapKernelMethod('restart', kernel).catch(noop);
+            const didRestartKernel = createDeferred<void>();
+            const disposable = new DisposableStore();
+            disposable.add(kernel.onRestarted(() => didRestartKernel.resolve()));
+            const resetExecutionOfCells = async () => {
+                await didRestartKernel.promise;
+                const controller = this.controllerRegistration.getSelected(document);
+                const kernel = this.kernelProvider.get(document);
+                const execution = kernel ? this.kernelProvider.getKernelExecution(kernel) : undefined;
+                if (controller && execution) {
+                    const pendingCells = new Set(execution.pendingCells);
+                    document
+                        .getCells()
+                        .filter((c) => c.kind === NotebookCellKind.Code && !pendingCells.has(c))
+                        .forEach((cell) => execution.clearState(cell));
                 }
-            } else {
-                this.wrapKernelMethod('restart', kernel).catch(noop);
+            };
+            void resetExecutionOfCells();
+            try {
+                if (await this.shouldAskForRestart(document.uri)) {
+                    // Ask the user if they want us to restart or not.
+                    const message = DataScience.restartKernelMessage;
+                    const yes = DataScience.restartKernelMessageYes;
+                    const dontAskAgain = DataScience.restartKernelMessageDontAskAgain;
+                    const response = await window.showInformationMessage(message, { modal: true }, yes, dontAskAgain);
+                    if (response === dontAskAgain) {
+                        await this.disableAskForRestart(document.uri);
+                        await this.wrapKernelMethod('restart', kernel).catch(noop);
+                    } else if (response === yes) {
+                        await this.wrapKernelMethod('restart', kernel).catch(noop);
+                    }
+                } else {
+                    await this.wrapKernelMethod('restart', kernel).catch(noop);
+                }
+            } finally {
+                // If we
+                disposable.dispose();
+                didRestartKernel.reject();
             }
         }
     }
