@@ -98,9 +98,7 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         }
 
         return new vscode.LanguageModelToolResult([
-            new vscode.LanguageModelTextPart(
-                `Installation finished successfully. Use the 'copilot_getNotebookSummary' to get the latest summary (state) of the notebook.`
-            )
+            new vscode.LanguageModelTextPart('Installation finished successfully')
         ]);
     }
 
