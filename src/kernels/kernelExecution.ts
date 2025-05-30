@@ -154,6 +154,20 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         );
         logger.trace(`Cell ${cell.index} executed ${success ? 'successfully' : 'with an error'}`);
     }
+    public clearState(cell: NotebookCell): void {
+        const execution = this.documentExecutions.get(cell.notebook);
+        const exec = execution?.queue.includes(cell)
+            ? undefined
+            : this.executionFactory.create(cell, undefined, this.kernel.kernelConnectionMetadata, 'preserveOutput');
+        if (exec?.cell.executionSummary?.timing && typeof exec.cell.executionSummary.executionOrder === 'number') {
+            try {
+                exec.clear();
+            } finally {
+                exec.dispose();
+            }
+        }
+    }
+
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<void> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
         const stopWatch = new StopWatch();

@@ -466,6 +466,12 @@ export interface INotebookKernelExecution {
      */
     executeCell(cell: NotebookCell, codeOverride?: string): Promise<void>;
     /**
+     * Clears the execution state of a cell.
+     * This will clear the green check or red cross again cell along with the execution time.
+     * These are populated to indicate whether a cell was executed.
+     */
+    clearState(cell: NotebookCell): void;
+    /**
      * Executes 3rd party code against the kernel.
      */
     executeCode(
