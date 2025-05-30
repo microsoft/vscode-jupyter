@@ -117,8 +117,7 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
                 },
                 invocationMessage: vscode.l10n.t('Installing packages: {0}', options.input.packageList.join(', '))
             };
-        }
-        if (!controller || !kernel || !hasKernelStartedOrIsStarting(kernel)) {
+        } else {
             return {
                 confirmationMessages: {
                     title: vscode.l10n.t(`Start Kernel and Install packages?`),
@@ -133,20 +132,6 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
                 )
             };
         }
-
-        const packageInstallationPrompt = vscode.l10n.t(
-            'Installing packages into notebook kernel: {0}',
-            options.input.packageList.join(', ')
-        );
-        const confirmationMessages = {
-            title: vscode.l10n.t(`Install Packages`),
-            message: packageInstallationPrompt
-        };
-
-        return {
-            confirmationMessages,
-            invocationMessage: packageInstallationPrompt
-        };
     }
 }
 
