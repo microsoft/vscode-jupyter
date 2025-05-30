@@ -52,6 +52,7 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     }
     private startIfNecessary() {
         if (!this.started) {
+            this._started = true;
             this._impl.start();
         }
     }
