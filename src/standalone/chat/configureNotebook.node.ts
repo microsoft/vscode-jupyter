@@ -86,12 +86,12 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
                         token
                     )
                 ) {
-                    // If it was successful, now start the kernel.
                     sendConfigureNotebookToolCallTelemetry(notebook.uri, {
                         isPython: true,
                         installedPythonExtension,
                         createdEnv: true
                     });
+                    // If it was successful, now start the kernel.
                     return await lm.invokeTool(ConfigurePythonNotebookTool.toolName, options, token);
                 }
                 // Not created for whatever reason, fall back to kernel selection.
@@ -101,7 +101,6 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
             }
         }
 
-        // If it was successful, now start the kernel.
         sendConfigureNotebookToolCallTelemetry(notebook.uri, {
             isPython: true,
             installedPythonExtension
