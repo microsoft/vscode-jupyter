@@ -14,6 +14,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { RestartKernelTool } from './restartKernelTool.node';
+import { sendLMToolCallTelemetry } from './helper';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
@@ -42,6 +43,7 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         }
 
         const notebook = await resolveNotebookFromFilePath(filePath);
+        sendLMToolCallTelemetry(InstallPackagesTool.toolName, notebook.uri);
         const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);

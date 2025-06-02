@@ -22,6 +22,7 @@ import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
 import { logger } from '../../platform/logging';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { createVirtualEnvAndSelectAsKernel, shouldCreateVirtualEnvForNotebook } from './createVirtualEnv.python.node';
+import { sendConfigureNotebookToolCallTelemetry, sendLMToolCallTelemetry } from './helper';
 
 export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_notebook';
@@ -32,7 +33,9 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
 
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        sendLMToolCallTelemetry(ConfigureNotebookTool.toolName, notebook.uri);
         if (getPrimaryLanguageOfNotebook(notebook) !== PYTHON_LANGUAGE) {
+            sendConfigureNotebookToolCallTelemetry(notebook.uri, { isPython: false });
             return lm.invokeTool(ConfigureNonPythonNotebookTool.name, options, token);
         } else {
             return this.invokeToolForPython(options, notebook, token);
@@ -43,11 +46,13 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
         notebook: NotebookDocument,
         token: CancellationToken
     ) {
+        let installedPythonExtension = false;
         // If we do not have Python extension installed, then install that.
         if (!extensions.getExtension(PythonExtensionId)) {
             try {
                 const input = { id: PythonExtensionId, name: 'Python' };
                 await lm.invokeTool('copilot_installExtension', { ...options, input }, token);
+                installedPythonExtension = true;
             } catch (ex) {
                 // Any error can be ignored, e.g. user cancelling the install of the extension or failure to install the extension.
                 logger.error(`Error while installing Python extension`, ex);
@@ -61,6 +66,10 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
             (await getRecommendedPythonEnvironment(notebook.uri))
         ) {
             try {
+                sendConfigureNotebookToolCallTelemetry(notebook.uri, {
+                    isPython: true,
+                    installedPythonExtension
+                });
                 return await lm.invokeTool(ConfigurePythonNotebookTool.toolName, options, token);
             } catch (ex) {
                 // What ever the error, fallback to the user selecting a kernel via quick pick.
@@ -78,6 +87,11 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
                     )
                 ) {
                     // If it was successful, now start the kernel.
+                    sendConfigureNotebookToolCallTelemetry(notebook.uri, {
+                        isPython: true,
+                        installedPythonExtension,
+                        createdEnv: true
+                    });
                     return await lm.invokeTool(ConfigurePythonNotebookTool.toolName, options, token);
                 }
                 // Not created for whatever reason, fall back to kernel selection.
@@ -86,6 +100,12 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
                 logger.error(`Error while creating a venv and selecting that`, ex);
             }
         }
+
+        // If it was successful, now start the kernel.
+        sendConfigureNotebookToolCallTelemetry(notebook.uri, {
+            isPython: true,
+            installedPythonExtension
+        });
 
         // If we're here, then there was no preferred environment or the user cancelled the selection.
         // Or user didn't create a virtual environment.

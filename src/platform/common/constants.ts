@@ -477,7 +477,9 @@ export enum Telemetry {
     EnterRemoteJupyterUrl = 'DATASCIENCE.ENTER_REMOTE_JUPYTER_URL',
     NativeNotebookExecutionPerformance = 'DATASCIENCE.JUPYTER_NOTEBOOK_EXEC_PERFORMANCE',
     JupyterNotebookExecutionPerformance = 'DATASCIENCE.JUPYTER_JUPYTER_NOTEBOOK_EXEC_PERFORMANCE',
-    NativeNotebookEditPerformance = 'DATASCIENCE.JUPYTER_NOTEBOOK_EDIT_PERFORMANCE'
+    NativeNotebookEditPerformance = 'DATASCIENCE.JUPYTER_NOTEBOOK_EDIT_PERFORMANCE',
+    LMToolCall = 'DATASCIENCE.JUPYTER_LM_TOOL_CALL',
+    ConfigureNotebookToolCall = 'DATASCIENCE.JUPYTER_CONFIGURE_NOTEBOOK_TOOL_CALL'
 }
 
 export enum JupyterCommands {

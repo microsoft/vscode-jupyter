@@ -4397,4 +4397,77 @@ export class IEventNamePropertyMapping {
             }
         }
     };
+    /**
+     * Telemetry sent with details of LM toolcalls.
+     */
+    [Telemetry.LMToolCall]: TelemetryEventInfo<{
+        /**
+         * Tool name.
+         * One of configure_notebook, configure_non_python_notebook, configure_python_notebook, notebook_install_packages, notebook_list_packages, restart_notebook_kernel, select_recommended_python_environment
+         */
+        toolName: string;
+
+        /**
+         * Hash of the resource (notebook.uri associated with this).
+         */
+        resourceHash: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            toolName: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight',
+                comment: 'The name of the tool that was called.'
+            },
+            resourceHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
+    /**
+     * Telemetry sent with details of LM toolcalls.
+     */
+    [Telemetry.ConfigureNotebookToolCall]: TelemetryEventInfo<{
+        /**
+         * Hash of the resource (notebook.uri associated with this).
+         */
+        resourceHash: string;
+        /**
+         * Whether the tool installed Python extension or not
+         */
+        installedPythonExtension: boolean;
+        /**
+         * Whether this is a Python notebook/kernel or not.
+         */
+        isPython: boolean;
+        /**
+         * Whether a new Env was created
+         */
+        createdEnv: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            resourceHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            },
+            installedPythonExtension: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            isPython: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            createdEnv: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
 }
