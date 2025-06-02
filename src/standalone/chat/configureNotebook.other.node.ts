@@ -21,6 +21,7 @@ import {
     PreparedToolInvocation
 } from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
+import { sendLMToolCallTelemetry } from './helper';
 
 export class ConfigureNonPythonNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_non_python_notebook';
@@ -31,6 +32,7 @@ export class ConfigureNonPythonNotebookTool implements LanguageModelTool<IBaseTo
 
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        sendLMToolCallTelemetry(ConfigureNonPythonNotebookTool.toolName, notebook.uri);
         await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
 
         const selectedController = this.controllerRegistration.getSelected(notebook);

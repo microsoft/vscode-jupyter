@@ -15,6 +15,7 @@ import {
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../kernels/helpers.node';
+import { sendLMToolCallTelemetry } from './helper';
 
 export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams> {
     public static toolName = 'notebook_list_packages';
@@ -39,6 +40,7 @@ export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams
         }
 
         const notebook = await resolveNotebookFromFilePath(filePath);
+        sendLMToolCallTelemetry(ListPackageTool.toolName, notebook.uri);
         const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
         if (!kernel) {
             throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);

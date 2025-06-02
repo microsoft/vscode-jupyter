@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
 import { hasKernelStartedOrIsStarting, IBaseToolParams, resolveNotebookFromFilePath } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { sendLMToolCallTelemetry } from './helper';
 
 interface RestartKernelToolParams extends IBaseToolParams {
     reason?: string;
@@ -29,7 +30,9 @@ export class RestartKernelTool implements vscode.LanguageModelTool<RestartKernel
         options: vscode.LanguageModelToolInvocationOptions<RestartKernelToolParams>,
         _token: vscode.CancellationToken
     ) {
-        await vscode.commands.executeCommand('jupyter.restartkernel', vscode.Uri.file(options.input.filePath));
+        const uri = vscode.Uri.file(options.input.filePath);
+        sendLMToolCallTelemetry(RestartKernelTool.toolName, uri);
+        await vscode.commands.executeCommand('jupyter.restartkernel', uri);
         const finalMessageString = `The kernel for the notebook at ${options.input.filePath} has been restarted.`;
         return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
     }

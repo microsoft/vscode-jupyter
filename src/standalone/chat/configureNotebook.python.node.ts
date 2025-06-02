@@ -26,6 +26,7 @@ import { raceCancellationError } from '../../platform/common/cancellation';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IKernelProvider } from '../../kernels/types';
+import { sendLMToolCallTelemetry } from './helper';
 
 export interface IConfigurePythonNotebookToolParams extends IBaseToolParams {
     action?: 'select';
@@ -43,6 +44,7 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
         token: CancellationToken
     ) {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        sendLMToolCallTelemetry(ConfigurePythonNotebookTool.toolName, notebook.uri);
         if (!this.controllerRegistration.getSelected(notebook) && options.input.action !== 'select') {
             logger.trace(
                 `ConfigurePythonNotebookTool: No controller selected for notebook ${getDisplayPath(notebook.uri)}`
