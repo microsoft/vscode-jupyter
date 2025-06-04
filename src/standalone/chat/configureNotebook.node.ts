@@ -29,6 +29,7 @@ import { logger } from '../../platform/logging';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { createVirtualEnvAndSelectAsKernel, shouldCreateVirtualEnvForNotebook } from './createVirtualEnv.python.node';
 import { sendConfigureNotebookToolCallTelemetry, sendLMToolCallTelemetry } from './helper';
+import { basename } from '../../platform/vscode-path/resources';
 
 export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_notebook';
@@ -131,11 +132,13 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
     }
 
     async prepareInvocation(
-        _options: LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
+        options: LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
         _token: CancellationToken
     ): Promise<PreparedToolInvocation> {
+        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        const name = basename(notebook.uri);
         return {
-            invocationMessage: l10n.t('Configuring notebook')
+            invocationMessage: l10n.t('Configuring notebook {0}', name)
         };
     }
 }
