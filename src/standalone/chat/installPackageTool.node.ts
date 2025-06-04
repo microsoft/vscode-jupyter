@@ -100,7 +100,9 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         }
 
         return new vscode.LanguageModelToolResult([
-            new vscode.LanguageModelTextPart('Installation finished successfully.')
+            new vscode.LanguageModelTextPart(
+                'Installation finished successfully. The kernel has been restarted, so any previously executed cells will need to be re-run.'
+            )
         ]);
     }
 

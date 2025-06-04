@@ -33,7 +33,7 @@ export class RestartKernelTool implements vscode.LanguageModelTool<RestartKernel
         const uri = vscode.Uri.file(options.input.filePath);
         sendLMToolCallTelemetry(RestartKernelTool.toolName, uri);
         await vscode.commands.executeCommand('jupyter.restartkernel', uri);
-        const finalMessageString = `The kernel for the notebook at ${options.input.filePath} has been restarted.`;
+        const finalMessageString = `The kernel for the notebook at ${options.input.filePath} has been restarted and any state from previous cell executions has been cleared.`;
         return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
     }
 
