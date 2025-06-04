@@ -15,14 +15,15 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     lm,
     NotebookDocument,
-    PreparedToolInvocation
+    PreparedToolInvocation,
+    workspace
 } from 'vscode';
 import { ConfigurePythonNotebookTool, IConfigurePythonNotebookToolParams } from './configureNotebook.python.node';
 import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
 import { logger } from '../../platform/logging';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { createVirtualEnvAndSelectAsKernel, shouldCreateVirtualEnvForNotebook } from './createVirtualEnv.python.node';
-import { sendConfigureNotebookToolCallTelemetry, sendLMToolCallTelemetry } from './helper';
+import { getUntrustedWorkspaceResponse, sendConfigureNotebookToolCallTelemetry, sendLMToolCallTelemetry } from './helper';
 
 export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_notebook';
@@ -32,6 +33,9 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
     ) {}
 
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
+        if (!workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         sendLMToolCallTelemetry(ConfigureNotebookTool.toolName, notebook.uri);
         if (getPrimaryLanguageOfNotebook(notebook) !== PYTHON_LANGUAGE) {

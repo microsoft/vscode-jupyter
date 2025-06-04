@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import { LanguageModelTextPart, LanguageModelToolResult, Uri } from 'vscode';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 
@@ -32,4 +32,8 @@ export function sendConfigureNotebookToolCallTelemetry(
             isPython: telemetry.isPython === true
         });
     });
+}
+
+export function getUntrustedWorkspaceResponse() {
+    return new LanguageModelToolResult([new LanguageModelTextPart('Cannot use this tool in an untrusted workspace.')]);
 }
