@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 
 import {
     ConfigurationTarget,
+    Disposable,
     NotebookCellData,
     NotebookCellKind,
     NotebookEdit,
@@ -14,7 +15,7 @@ import {
     window,
     workspace
 } from 'vscode';
-import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
+import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
 import { Commands } from '../platform/common/constants';
 import { noop } from '../platform/common/utils/misc';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
@@ -31,12 +32,18 @@ import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
 import { IControllerRegistration } from './controllers/types';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
+import { IKernelStatusProvider } from '../kernels/kernelStatusProvider';
 
+export const INotebookCommandHandler = Symbol('INotebookCommandHandler');
+export interface INotebookCommandHandler {
+    restartKernel(notebookUri: Uri | undefined, disableUI: boolean): Promise<void>;
+}
 /**
  * Registers commands specific to the notebook UI
  */
 @injectable()
-export class NotebookCommandListener implements IDataScienceCommandListener {
+export class NotebookCommandListener implements INotebookCommandHandler, IExtensionSyncActivationService {
     private kernelInterruptedDontAskToRestart: boolean = false;
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
@@ -46,8 +53,13 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         @inject(IControllerRegistration) private controllerRegistration: IControllerRegistration,
         @inject(IDataScienceErrorHandler) private errorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IKernelStatusProvider) private kernelStatusProvider: IKernelStatusProvider
     ) {}
+
+    activate(): void {
+        this.register();
+    }
 
     public register(): void {
         this.disposableRegistry.push(
@@ -71,9 +83,9 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 Commands.RestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        return this.restartKernel(context?.notebookEditor?.notebookUri).catch(noop);
+                        return this.restartKernelImpl(context?.notebookEditor?.notebookUri).catch(noop);
                     } else {
-                        return this.restartKernel(context).catch(noop);
+                        return this.restartKernelImpl(context).catch(noop);
                     }
                 }
             )
@@ -140,7 +152,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     }
 
     private async restartKernelAndRunAllCells(notebookUri: Uri | undefined) {
-        await this.restartKernel(notebookUri);
+        await this.restartKernelImpl(notebookUri);
         this.runAllCells();
     }
 
@@ -148,7 +160,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         const activeNBE = this.notebookEditorProvider.activeNotebookEditor;
 
         if (activeNBE) {
-            await this.restartKernel(activeNBE.notebook.uri);
+            await this.restartKernelImpl(activeNBE.notebook.uri);
             commands
                 .executeCommand('notebook.cell.execute', {
                     ranges: [{ start: 0, end: activeNBE.selection.end }],
@@ -158,7 +170,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         }
     }
 
-    private async restartKernel(notebookUri: Uri | undefined): Promise<void> {
+    private async restartKernelImpl(notebookUri: Uri | undefined): Promise<void> {
         const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
@@ -189,8 +201,21 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         }
     }
 
+    public async restartKernel(notebookUri: Uri | undefined, disableUI: boolean = false): Promise<void> {
+        const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
+        const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
+        const kernel = document ? this.kernelProvider.get(document) : undefined;
+        if (kernel) {
+            return this.wrapKernelMethod('restart', kernel, disableUI);
+        }
+    }
+
     private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
-    private async wrapKernelMethod(currentContext: 'interrupt' | 'restart', kernel: IKernel) {
+    private async wrapKernelMethod(
+        currentContext: 'interrupt' | 'restart',
+        kernel: IKernel,
+        disableUI: boolean = false
+    ): Promise<void> {
         const notebook = kernel.notebook;
         // We don't want to create multiple restarts/interrupt requests for the same kernel.
         const pendingPromise = this.pendingRestartInterrupt.get(kernel);
@@ -201,6 +226,10 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             // Get currently executing cell and controller
             const currentCell = this.kernelProvider.getKernelExecution(kernel).pendingCells[0];
             const controller = this.controllerRegistration.getSelected(notebook);
+            const disposable =
+                disableUI && currentContext === 'restart'
+                    ? this.kernelStatusProvider.hideRestartProgress(kernel)
+                    : new Disposable(noop);
             try {
                 if (!controller) {
                     throw new Error('No kernel associated with the notebook');
@@ -212,7 +241,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                     kernel.creator,
                     this.serviceContainer,
                     { resource: kernel.resourceUri, notebook, controller: controller.controller },
-                    new DisplayOptions(false),
+                    new DisplayOptions(disableUI),
                     this.disposableRegistry
                 );
             } catch (ex) {
@@ -230,6 +259,8 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 } else {
                     window.showErrorMessage(ex.toString()).then(noop, noop);
                 }
+            } finally {
+                disposable.dispose();
             }
         })();
         promise

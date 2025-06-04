@@ -28,6 +28,7 @@ import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IKernelProvider } from '../../kernels/types';
 import { getUntrustedWorkspaceResponse, sendLMToolCallTelemetry } from './helper';
+import { basename } from '../../platform/vscode-path/resources';
 
 export interface IConfigurePythonNotebookToolParams extends IBaseToolParams {
     action?: 'select';
@@ -106,7 +107,7 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
         const controller = this.controllerRegistration.getSelected(notebook);
         if (controller && kernel && hasKernelStartedOrIsStarting(kernel)) {
             return {
-                invocationMessage: l10n.t('Using Python Kernel')
+                invocationMessage: undefined
             };
         }
 
@@ -116,7 +117,7 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
                     title: l10n.t(`Start Kernel?`),
                     message: l10n.t('The Python kernel {0} will be started', controller.label)
                 },
-                invocationMessage: l10n.t('Starting Python Kernel')
+                invocationMessage: l10n.t('Starting Python Kernel for {0}', basename(notebook.uri))
             };
         }
         const preferredEnv = await getRecommendedPythonEnvironment(notebook.uri);
@@ -129,7 +130,7 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
                         getPythonEnvDisplayName(preferredEnv)
                     )
                 },
-                invocationMessage: l10n.t('Selecting and starting a Python Kernel')
+                invocationMessage: l10n.t('Starting Python Kernel for {0}', basename(notebook.uri))
             };
         }
 
@@ -140,7 +141,7 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
                     'The selected Python Kernel will be started and used for execution of code in the notebook.'
                 )
             },
-            invocationMessage: l10n.t('Selecting and starting a Python Kernel')
+            invocationMessage: l10n.t('Starting Python Kernel for {0}', basename(notebook.uri))
         };
     }
 }

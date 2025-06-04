@@ -5,7 +5,6 @@ import { ITracebackFormatter } from '../kernels/types';
 import { IJupyterVariables } from '../kernels/variables/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { Identifiers } from '../platform/common/constants';
-import { IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
 import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
@@ -30,7 +29,7 @@ import { FileConverter } from './export/fileConverter.web';
 import { IExportBase, IExportUtil, IFileConverter } from './export/types';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
-import { NotebookCommandListener } from './notebookCommandListener';
+import { INotebookCommandHandler, NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { NotebookPythonEnvironmentService } from './notebookEnvironmentService.web';
 import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
@@ -55,7 +54,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         RemoteKernelConnectionHandler
     );
-    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NotebookCommandListener);
+    serviceManager.addSingleton<INotebookCommandHandler>(INotebookCommandHandler, NotebookCommandListener);
+    serviceManager.addBinding(INotebookCommandHandler, IExtensionSyncActivationService);
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
     serviceManager.addBinding(NotebookCellLanguageService, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(

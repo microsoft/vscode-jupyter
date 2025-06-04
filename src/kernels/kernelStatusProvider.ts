@@ -11,9 +11,15 @@ import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 import { Disposable } from 'vscode';
 
+export const IKernelStatusProvider = Symbol('IKernelStatusProvider');
+export interface IKernelStatusProvider extends IExtensionSyncActivationService {
+    hideRestartProgress(kernel: IKernel): Disposable;
+}
+
 @injectable()
-export class KernelStatusProvider implements IExtensionSyncActivationService {
+export class KernelStatusProvider implements IExtensionSyncActivationService, IKernelStatusProvider {
     private readonly disposables: IDisposable[] = [];
+    private readonly restartProgressToHide = new WeakMap<IKernel, Disposable>();
     private readonly restartProgress = new WeakMap<IKernel, IDisposable>();
     private readonly interruptProgress = new WeakMap<IKernel, IDisposable>();
     constructor(
@@ -36,11 +42,23 @@ export class KernelStatusProvider implements IExtensionSyncActivationService {
             this.disposables
         );
     }
+    public hideRestartProgress(kernel: IKernel): Disposable {
+        if (!this.restartProgressToHide.has(kernel)) {
+            const disposable = new Disposable(() => {
+                this.restartProgressToHide.delete(kernel);
+            });
+            this.restartProgressToHide.set(kernel, disposable);
+        }
+        return this.restartProgressToHide.get(kernel)!;
+    }
     private onDidCreateKernel(kernel: IKernel) {
         // Restart status.
         kernel.addHook(
             'willRestart',
             async () => {
+                if (this.restartProgressToHide.has(kernel)) {
+                    return;
+                }
                 this.restartProgress.get(kernel)?.dispose();
                 const progress = KernelProgressReporter.createProgressReporter(
                     kernel.resourceUri,
@@ -56,6 +74,11 @@ export class KernelStatusProvider implements IExtensionSyncActivationService {
         kernel.addHook(
             'restartCompleted',
             async () => {
+                if (this.restartProgressToHide.has(kernel)) {
+                    this.restartProgressToHide.get(kernel)?.dispose();
+                    this.restartProgressToHide.delete(kernel);
+                    return;
+                }
                 this.restartProgress.get(kernel)?.dispose();
                 this.interruptProgress.get(kernel)?.dispose();
             },
