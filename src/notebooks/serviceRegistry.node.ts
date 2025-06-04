@@ -5,7 +5,6 @@ import { ITracebackFormatter } from '../kernels/types';
 import { IJupyterVariables } from '../kernels/variables/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { Identifiers } from '../platform/common/constants';
-import { IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { InstallPythonControllerCommands } from './controllers/commands/installPythonControllerCommands';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
