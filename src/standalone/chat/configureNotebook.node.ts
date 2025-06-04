@@ -23,7 +23,11 @@ import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
 import { logger } from '../../platform/logging';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { createVirtualEnvAndSelectAsKernel, shouldCreateVirtualEnvForNotebook } from './createVirtualEnv.python.node';
-import { getUntrustedWorkspaceResponse, sendConfigureNotebookToolCallTelemetry, sendLMToolCallTelemetry } from './helper';
+import {
+    getUntrustedWorkspaceResponse,
+    sendConfigureNotebookToolCallTelemetry,
+    sendLMToolCallTelemetry
+} from './helper';
 
 export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams> {
     public static toolName = 'configure_notebook';
