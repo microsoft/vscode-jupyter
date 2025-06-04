@@ -126,7 +126,7 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
                         getPythonEnvDisplayName(preferredEnv)
                     )
                 },
-                invocationMessage: l10n.t('Selecting and starting a Python Kernel for {0}', basename(notebook.uri))
+                invocationMessage: l10n.t('Starting Python Kernel for {0}', basename(notebook.uri))
             };
         }
 
@@ -137,7 +137,7 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
                     'The selected Python Kernel will be started and used for execution of code in the notebook.'
                 )
             },
-            invocationMessage: l10n.t('Selecting and starting a Python Kernel for {0}', basename(notebook.uri))
+            invocationMessage: l10n.t('Starting Python Kernel for {0}', basename(notebook.uri))
         };
     }
 }
