@@ -648,7 +648,9 @@ export class InterpreterService implements IInterpreterService {
                                 // Wait a few seconds, possible the Python extension API eagerly triggers
                                 // a delete event, but the env is still valid & then subsequently triggers an add/update event.
                                 // This causes issues for us, as the notebook controller gets removed & users code can get stopped.
-                                const interval = 10_000;
+                                // Bump timeout from 10_000 to 30_000 because of https://github.com/microsoft/vscode-python/issues/25144#issuecomment-2941408859
+                                // Too many issues that impact users, hence wait longer before removing the kernel.
+                                const interval = 30_000;
                                 const timeout = setTimeout(() => {
                                     logger.trace(
                                         `Python API env change detected & removed after ${interval}, ${e.type} => '${e.env.id}'`
