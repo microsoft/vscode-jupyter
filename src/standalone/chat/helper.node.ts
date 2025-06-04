@@ -176,11 +176,23 @@ export async function selectKernelAndStart(
 
 export async function resolveNotebookFromFilePath(filePath: string) {
     const uri = vscode.Uri.file(filePath);
+    let parsedUri = uri;
+    try {
+        parsedUri = vscode.Uri.parse(filePath);
+    } catch {
+        //
+    }
     let notebook =
         vscode.workspace.notebookDocuments.find(
             // eslint-disable-next-line local-rules/dont-use-fspath
             (doc) => doc.uri.path === filePath || doc.uri.fsPath === filePath
-        ) || vscode.workspace.notebookDocuments.find((doc) => isEqual(doc.uri, uri));
+        ) ||
+        vscode.workspace.notebookDocuments.find((doc) => isEqual(doc.uri, uri)) ||
+        vscode.workspace.notebookDocuments.find(
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            (doc) => doc.uri.path === filePath || doc.uri.fsPath === parsedUri.fsPath
+        ) ||
+        vscode.workspace.notebookDocuments.find((doc) => isEqual(doc.uri, parsedUri));
     notebook = notebook || (await vscode.workspace.openNotebookDocument(uri));
     if (!notebook) {
         throw new Error(`Unable to find notebook at ${filePath}.`);
@@ -190,7 +202,7 @@ export async function resolveNotebookFromFilePath(filePath: string) {
             `The notebook at ${filePath} is not a Jupyter notebook This tool can only be used with Jupyter Notebooks.`
         );
     }
-    if (vscode.window.visibleNotebookEditors.find((e) => e.notebook === notebook)) {
+    if (!vscode.window.visibleNotebookEditors.find((e) => e.notebook === notebook)) {
         await vscode.window.showNotebookDocument(notebook);
     }
     return notebook;
