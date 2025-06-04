@@ -20,7 +20,8 @@ import {
     JUPYTER_OUTPUT_CHANNEL,
     PylanceExtension,
     PythonExtension,
-    Telemetry
+    Telemetry,
+    PythonEnvironmentExtension
 } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
 import {
@@ -66,6 +67,14 @@ export async function initializeLoggers(
         standardOutputChannel.appendLine(`Python Extension Version: ${pythonExtension.packageJSON['version']}.`);
     } else {
         standardOutputChannel.appendLine('Python Extension not installed.');
+    }
+    const pythonEnvironmentExtension = extensions.getExtension(PythonEnvironmentExtension);
+    if (pythonEnvironmentExtension) {
+        standardOutputChannel.appendLine(
+            `Python Environment Extension Version: ${pythonEnvironmentExtension.packageJSON['version']}.`
+        );
+    } else {
+        standardOutputChannel.appendLine('Python Environment Extension not installed.');
     }
     const pylanceExtension = extensions.getExtension(PylanceExtension);
     if (pylanceExtension) {
