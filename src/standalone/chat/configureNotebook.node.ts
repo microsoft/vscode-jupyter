@@ -1,8 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IKernelDependencyService } from '../../kernels/types';
-import { getPrimaryLanguageOfNotebook, IBaseToolParams, resolveNotebookFromFilePath } from './helper.node';
+import { IKernelDependencyService, IKernelProvider } from '../../kernels/types';
+import {
+    getPrimaryLanguageOfNotebook,
+    getToolResponseForConfiguredNotebook,
+    hasKernelStartedOrIsStarting,
+    IBaseToolParams,
+    resolveNotebookFromFilePath
+} from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { PythonExtension as PythonExtensionId } from '../../platform/common/constants';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -28,12 +34,20 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
     public static toolName = 'configure_notebook';
     constructor(
         private readonly controllerRegistration: IControllerRegistration,
-        private readonly kernelDependencyService: IKernelDependencyService
+        private readonly kernelDependencyService: IKernelDependencyService,
+        private readonly kernelProvider: IKernelProvider
     ) {}
 
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         sendLMToolCallTelemetry(ConfigureNotebookTool.toolName, notebook.uri);
+
+        const selectedController = this.controllerRegistration.getSelected(notebook);
+        const kernel = this.kernelProvider.get(notebook);
+        if (selectedController && kernel && hasKernelStartedOrIsStarting(kernel)) {
+            return getToolResponseForConfiguredNotebook(selectedController, kernel);
+        }
+
         if (getPrimaryLanguageOfNotebook(notebook) !== PYTHON_LANGUAGE) {
             sendConfigureNotebookToolCallTelemetry(notebook.uri, { isPython: false });
             return lm.invokeTool(ConfigureNonPythonNotebookTool.name, options, token);
