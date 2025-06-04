@@ -15,7 +15,7 @@ import {
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../kernels/helpers.node';
-import { sendLMToolCallTelemetry } from './helper';
+import { getUntrustedWorkspaceResponse, sendLMToolCallTelemetry } from './helper';
 
 export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams> {
     public static toolName = 'notebook_list_packages';
@@ -33,6 +33,9 @@ export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams
     ) {}
 
     async invoke(options: vscode.LanguageModelToolInvocationOptions<IBaseToolParams>, token: vscode.CancellationToken) {
+        if (!vscode.workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
         const { filePath } = options.input;
 
         if (!filePath) {

@@ -18,7 +18,8 @@ import {
     LanguageModelToolInvocationOptions,
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
-    PreparedToolInvocation
+    PreparedToolInvocation,
+    workspace
 } from 'vscode';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
@@ -26,7 +27,7 @@ import { raceCancellationError } from '../../platform/common/cancellation';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IKernelProvider } from '../../kernels/types';
-import { sendLMToolCallTelemetry } from './helper';
+import { getUntrustedWorkspaceResponse, sendLMToolCallTelemetry } from './helper';
 import { basename } from '../../platform/vscode-path/resources';
 
 export interface IConfigurePythonNotebookToolParams extends IBaseToolParams {
@@ -44,6 +45,9 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
         options: LanguageModelToolInvocationOptions<IConfigurePythonNotebookToolParams>,
         token: CancellationToken
     ) {
+        if (!workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         sendLMToolCallTelemetry(ConfigurePythonNotebookTool.toolName, notebook.uri);
         if (!this.controllerRegistration.getSelected(notebook) && options.input.action !== 'select') {

@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
 import { hasKernelStartedOrIsStarting, IBaseToolParams, resolveNotebookFromFilePath } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { sendLMToolCallTelemetry } from './helper';
+import { getUntrustedWorkspaceResponse, sendLMToolCallTelemetry } from './helper';
 import { INotebookCommandHandler } from '../../notebooks/notebookCommandListener';
 import { basename } from '../../platform/vscode-path/resources';
 
@@ -33,6 +33,9 @@ export class RestartKernelTool implements vscode.LanguageModelTool<RestartKernel
         options: vscode.LanguageModelToolInvocationOptions<RestartKernelToolParams>,
         _token: vscode.CancellationToken
     ) {
+        if (!vscode.workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         sendLMToolCallTelemetry(RestartKernelTool.toolName, notebook.uri);
         await this.notebookCommandHandler.restartKernel(notebook.uri, true);

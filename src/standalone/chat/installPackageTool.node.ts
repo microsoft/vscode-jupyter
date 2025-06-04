@@ -14,7 +14,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { RestartKernelTool } from './restartKernelTool.node';
-import { sendLMToolCallTelemetry } from './helper';
+import { getUntrustedWorkspaceResponse, sendLMToolCallTelemetry } from './helper';
 
 export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
@@ -37,6 +37,9 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         token: vscode.CancellationToken
     ) {
         const { filePath, packageList } = options.input;
+        if (!vscode.workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
 
         if (!filePath || !packageList || packageList.length === 0) {
             throw new Error('filePath and package list are required parameters.');
