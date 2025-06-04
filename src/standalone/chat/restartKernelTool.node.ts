@@ -36,7 +36,7 @@ export class RestartKernelTool implements vscode.LanguageModelTool<RestartKernel
         const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         sendLMToolCallTelemetry(RestartKernelTool.toolName, notebook.uri);
         await this.notebookCommandHandler.restartKernel(notebook.uri, true);
-        const finalMessageString = `The kernel for the notebook at ${options.input.filePath} has been restarted.`;
+        const finalMessageString = `The kernel for the notebook at ${options.input.filePath} has been restarted and any state from previous cell executions has been cleared.`;
         return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
     }
 
