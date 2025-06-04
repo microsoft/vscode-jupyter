@@ -34,7 +34,7 @@ import { FileConverter } from './export/fileConverter.node';
 import { IExportBase, IExportUtil, IFileConverter } from './export/types';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
-import { NotebookCommandListener } from './notebookCommandListener';
+import { INotebookCommandHandler, NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { NotebookPythonEnvironmentService } from './notebookEnvironmentService.node';
 import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
@@ -45,7 +45,8 @@ import { INotebookEditorProvider, INotebookPythonEnvironmentService } from './ty
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LiveKernelSwitcher);
-    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NotebookCommandListener);
+    serviceManager.addSingleton<INotebookCommandHandler>(INotebookCommandHandler, NotebookCommandListener);
+    serviceManager.addBinding(INotebookCommandHandler, IExtensionSyncActivationService);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

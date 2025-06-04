@@ -27,7 +27,7 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
 import { ITrustedKernelPaths } from './raw/finder/types';
-import { KernelStatusProvider } from './kernelStatusProvider';
+import { IKernelStatusProvider, KernelStatusProvider } from './kernelStatusProvider';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyterServerMruUpdate';
 import { KernelDependencyService } from './kernelDependencyService.web';
@@ -63,7 +63,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         KernelRefreshIndicator
     );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
+    serviceManager.addSingleton<IKernelStatusProvider>(IKernelStatusProvider, KernelStatusProvider);
+    serviceManager.addBinding(IKernelStatusProvider, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelAutoReconnectMonitor

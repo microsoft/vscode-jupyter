@@ -6,6 +6,8 @@ import { IKernelProvider } from '../../kernels/types';
 import { hasKernelStartedOrIsStarting, IBaseToolParams, resolveNotebookFromFilePath } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { sendLMToolCallTelemetry } from './helper';
+import { INotebookCommandHandler } from '../../notebooks/notebookCommandListener';
+import { basename } from '../../platform/vscode-path/resources';
 
 interface RestartKernelToolParams extends IBaseToolParams {
     reason?: string;
@@ -23,16 +25,17 @@ export class RestartKernelTool implements vscode.LanguageModelTool<RestartKernel
 
     constructor(
         private readonly kernelProvider: IKernelProvider,
-        private readonly controllerRegistration: IControllerRegistration
+        private readonly controllerRegistration: IControllerRegistration,
+        private readonly notebookCommandHandler: INotebookCommandHandler
     ) {}
 
     async invoke(
         options: vscode.LanguageModelToolInvocationOptions<RestartKernelToolParams>,
         _token: vscode.CancellationToken
     ) {
-        const uri = vscode.Uri.file(options.input.filePath);
-        sendLMToolCallTelemetry(RestartKernelTool.toolName, uri);
-        await vscode.commands.executeCommand('jupyter.restartkernel', uri);
+        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        sendLMToolCallTelemetry(RestartKernelTool.toolName, notebook.uri);
+        await this.notebookCommandHandler.restartKernel(notebook.uri, true);
         const finalMessageString = `The kernel for the notebook at ${options.input.filePath} has been restarted.`;
         return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
     }
@@ -50,13 +53,15 @@ export class RestartKernelTool implements vscode.LanguageModelTool<RestartKernel
                 `No active kernel for notebook ${options.input.filePath}, the configure_notebook tool can be used to help the user select a kernel.`
             );
         }
+        const nbName = basename(notebook.uri);
 
         return {
             confirmationMessages: {
-                title: vscode.l10n.t(`Restart Kernel`),
-                message: options.input.reason ?? vscode.l10n.t('Restart the notebook kernel?')
+                title: vscode.l10n.t(`Restart Kernel?`),
+                message:
+                    options.input.reason ?? vscode.l10n.t('The kernel for the notebook {0} will be restarted.', nbName)
             },
-            invocationMessage: vscode.l10n.t('Restarting kernel')
+            invocationMessage: vscode.l10n.t('Restarting kernel for {0}', nbName)
         };
     }
 }

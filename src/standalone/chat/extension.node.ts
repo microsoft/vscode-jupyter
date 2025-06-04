@@ -15,6 +15,7 @@ import { ConfigureNotebookTool } from './configureNotebook.node';
 import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
 import { RestartKernelTool } from './restartKernelTool.node';
+import { INotebookCommandHandler } from '../../notebooks/notebookCommandListener';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
     context.subscriptions.push(
@@ -72,7 +73,8 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
             RestartKernelTool.toolName,
             new RestartKernelTool(
                 serviceContainer.get<IKernelProvider>(IKernelProvider),
-                serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<INotebookCommandHandler>(INotebookCommandHandler)
             )
         )
     );
