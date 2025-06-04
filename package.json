@@ -2058,7 +2058,7 @@
             {
                 "name": "configure_notebook",
                 "displayName": "%jupyter.languageModelTools.configure_notebook.displayName%",
-                "modelDescription": "Tool used to configure a Notebook. ALWAYS use this tool before running/executing any Notebook Cells or before listing/installing packages in Notebooks.",
+                "modelDescription": "Tool used to configure a Notebook. ALWAYS use this tool before running/executing any Notebook Cells for the first time or before listing/installing packages in Notebooks for the first time. I.e. there is no need to use this tool more than once for the same notebook.",
                 "userDescription": "%jupyter.languageModelTools.configure_notebook.userDescription%",
                 "toolReferenceName": "configureNotebook",
                 "tags": [
