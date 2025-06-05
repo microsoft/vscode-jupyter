@@ -5,6 +5,7 @@ images/**
 docs/**
 *.vsix
 .appveyor.yml
+.config/**
 .devcontainer*/**
 .editorconfig
 .env
@@ -18,7 +19,9 @@ docs/**
 .npmrc
 .nvmrc
 .nycrc
+.ruff_cache/**
 .travis.yml
+.vscode-test.mjs
 api/**
 CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
@@ -83,6 +86,7 @@ obj/**
 logs/**
 out/**
 precommit.hook
+pythonFiles/.env
 pythonFiles/**/*.pyc
 pythonFiles/lib/**/*.dist-info/**
 pythonFiles/lib/**/*.egg-info/**
