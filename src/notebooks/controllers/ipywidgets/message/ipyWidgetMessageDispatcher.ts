@@ -107,7 +107,73 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLabSerialize =
             require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
-        this.deserialize = jupyterLabSerialize.deserialize;
+        this.deserialize = (data: ArrayBuffer, protocol?: string) => {
+            if (
+                data &&
+                typeof data === 'object' &&
+                (data as unknown as KernelMessage.IMessage<KernelMessage.MessageType>).header &&
+                (data as unknown as KernelMessage.IMessage<KernelMessage.MessageType>).channel
+            ) {
+                logger.trace(
+                    `1.0 WIDGET. Deserialize message not required, has header and channel properties ${protocol}`
+                );
+            }
+            try {
+                logger.trace(`1.a WIDGET. MESSAGE`, JSON.stringify(data));
+            } catch (error) {
+                try {
+                    logger.trace(`1.b WIDGET. MESSAGE`, data, error);
+                } catch (error2) {
+                    logger.error(`1.c WIDGET. MESSAGE`, error, error2);
+                }
+            }
+            logger.trace(
+                `1. WIDGET. Deserialize message type=${typeof data}, Buffer=${data instanceof Buffer}, ArrayBuffer=${
+                    data instanceof ArrayBuffer
+                } with ${protocol}`
+            );
+            logger.trace(`1. WIDGET. Deserialize data=${data.toString()}`);
+            try {
+                if (typeof data === 'string') {
+                    const result = jupyterLabSerialize.deserialize(data, '');
+                    logger.trace(`1. WIDGET. Deserialize message type=string with ${protocol}`);
+                    return result;
+                }
+                if (
+                    data &&
+                    typeof data === 'object' &&
+                    (data as unknown as KernelMessage.IMessage<KernelMessage.MessageType>).header &&
+                    (data as unknown as KernelMessage.IMessage<KernelMessage.MessageType>).channel
+                ) {
+                    logger.trace(
+                        `1.x WIDGET. Deserialize message not required, has header and channel properties ${protocol}`
+                    );
+                    try {
+                        logger.trace(
+                            `1.y WIDGET. Deserialize message not required type=JSON object with ${protocol}`,
+                            JSON.stringify(data)
+                        );
+                    } catch {
+                        logger.trace(
+                            `1.z WIDGET. Deserialize message not required type=JSON object with ${protocol}`,
+                            data
+                        );
+                    }
+                    return data as unknown as KernelMessage.IMessage<KernelMessage.MessageType>;
+                }
+                const result = jupyterLabSerialize.deserialize(data, protocol);
+                logger.trace(`1. WIDGET. Deserialize message type=ArrayBuffer with ${protocol}`);
+                return result;
+            } catch (ex) {
+                logger.error(`1. WIDGET. Failed to deserialize message protocol = ${protocol}`, ex);
+                throw ex;
+                // if (protocol) {
+                //     return deserialize(data, supportedKernelWebSocketProtocols.v1KernelWebsocketJupyterOrg);
+                // } else {
+                //     return deserialize(data, '');
+                // }
+            }
+        };
     }
     public dispose() {
         this.disposed = true;

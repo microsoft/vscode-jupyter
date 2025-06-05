@@ -145,6 +145,15 @@ export function createJupyterConnectionInfo(
 
     const serializer: import('@jupyterlab/services').ServerConnection.ISettings['serializer'] = {
         deserialize: (data: ArrayBuffer, protocol?: string) => {
+            try {
+                logger.trace(`1.a UTILS. MESSAGE`, JSON.stringify(data));
+            } catch (error) {
+                try {
+                    logger.trace(`1.b UTILS. MESSAGE`, data, error);
+                } catch (error2) {
+                    logger.error(`1.c UTILS. MESSAGE`, error, error2);
+                }
+            }
             logger.trace(
                 `Deserialize message type=${typeof data}, Buffer=${data instanceof Buffer}, ArrayBuffer=${
                     data instanceof ArrayBuffer
@@ -157,6 +166,7 @@ export function createJupyterConnectionInfo(
                     logger.trace(`Deserialize message type=string with ${protocol}`);
                     return result;
                 }
+                logger.trace(`Deserialize message type=NOT string with ${protocol}`);
                 const result = deserialize(data, protocol);
                 logger.trace(`Deserialize message type=ArrayBuffer with ${protocol}`);
                 return result;
