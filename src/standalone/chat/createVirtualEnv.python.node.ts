@@ -97,11 +97,13 @@ export async function createVirtualEnvAndSelectAsKernel(
         await kernelDependencyService.installMissingDependencies({
             resource: notebook.uri,
             kernelConnection: selectedController.connection,
-            ui: new DisplayOptions(true),
+            ui: new DisplayOptions(false),
             token,
             ignoreCache: true,
             installWithoutPrompting: true
         });
+
+        await selectKernelAndStart(notebook, preferredController, controllerRegistration, token, true);
     }
 
     return true;
