@@ -281,7 +281,7 @@ jobs:
           ]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest]
+        os: [windows-latest]
         ipywidgetsVersion: ['']
         isScheduled:
           - ${{ github.event_name == 'schedule' && 'true' || '' }} # We need an empty value to preserve the matrix name (as we enforce mandatory tests based on names).
@@ -507,9 +507,9 @@ jobs:
         if: matrix.jupyterConnection != 'web'
         run: npm run postinstall
 
-      - name: Install screen capture dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install --fix-missing imagemagick x11-xserver-utils
+    #   - name: Install screen capture dependencies
+    #     if: matrix.os == 'ubuntu-latest'
+    #     run: sudo apt-get update && sudo apt-get install --fix-missing imagemagick x11-xserver-utils
 
         # This step is slow.
       - name: Compile # if not cached
