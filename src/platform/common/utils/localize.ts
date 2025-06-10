@@ -5,6 +5,7 @@ import { l10n } from 'vscode';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { fromNow } from './date';
 import { getPythonEnvDisplayName } from '../../interpreter/helpers';
+import { format } from '../helpers';
 
 function getInterpreterDisplayName(interpreter: PythonEnvironment) {
     return getPythonEnvDisplayName(interpreter);
@@ -525,8 +526,10 @@ export namespace DataScience {
     export const cellStopOnErrorMessage = l10n.t('Cell was canceled due to an error in a previous cell.');
     export const scrollToCellTitleFormatMessage = (executionCount: number) =>
         l10n.t('Go to [{0}]', executionCount.toString());
-    export const instructionComments = (cellMarker: string) =>
-        l10n.t(`# To add a new cell, type '{0}'\n# To add a new markdown cell, type '{0} [markdown]'\n`, cellMarker);
+    export const instructionComments = (cellMarker: string) => {
+        const template = l10n.t(`# To add a new cell, type '{0}'\n# To add a new markdown cell, type '{0} [markdown]'\n`);
+        return format(template, cellMarker);
+    };
     export const exportButtonTitle = l10n.t('Export');
     export const exportAsQuickPickPlaceholder = l10n.t('Export As...');
     export const openExportedFileMessage = l10n.t('Would you like to open the exported file?');
