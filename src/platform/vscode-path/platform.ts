@@ -39,9 +39,10 @@ export interface INodeProcess {
     arch: string;
     env: IProcessEnvironment;
     versions?: {
+        node?: string;
         electron?: string;
+        chrome?: string;
     };
-    sandboxed?: boolean;
     type?: string;
     cwd: () => string;
 }
@@ -63,9 +64,7 @@ if (typeof globals.vscode !== 'undefined' && typeof globals.vscode.process !== '
 }
 
 const isElectronProcess = typeof nodeProcess?.versions?.electron === 'string';
-const isElectronRenderer =
-    isElectronProcess && nodeProcess?.type && ['renderer', 'utility'].includes(nodeProcess?.type);
-export const isElectronSandboxed = isElectronRenderer && nodeProcess?.sandboxed;
+const isElectronRenderer = isElectronProcess && nodeProcess?.type === 'renderer';
 
 interface INavigator {
     userAgent: string;
