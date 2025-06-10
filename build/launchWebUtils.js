@@ -66,7 +66,11 @@ exports.launch = async function launch(launchTests) {
             port,
             headless: isCI ? false : false, // Set this to false to debug failures (false on CI to support capturing screenshots when tests fail).
             extensionDevelopmentPath,
-            folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience')
+            folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience'),
+            quality: 'insiders',
+            // commit: '16ee4a72cebe007cc3f25d139bb379c3a1a27ea9'
+            // commit: '83d1ff749141e435b3b135079a02f8f515621eec'
+            commit: 'dac0c97d082bd3bf38fdb3251e955e25c7c992a0'
         };
         if (launchTests) {
             options.extensionTestsPath = bundlePath;
