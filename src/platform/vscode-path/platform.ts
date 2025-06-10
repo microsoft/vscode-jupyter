@@ -39,9 +39,10 @@ export interface INodeProcess {
     arch: string;
     env: IProcessEnvironment;
     versions?: {
+        node?: string;
         electron?: string;
+        chrome?: string;
     };
-    sandboxed?: boolean;
     type?: string;
     cwd: () => string;
 }
@@ -57,15 +58,13 @@ let nodeProcess: INodeProcess | undefined = undefined;
 if (typeof globals.vscode !== 'undefined' && typeof globals.vscode.process !== 'undefined') {
     // Native environment (sandboxed)
     nodeProcess = globals.vscode.process;
-} else if (typeof process !== 'undefined') {
+} else if (typeof process !== 'undefined' && typeof process?.versions?.node === 'string') {
     // Native environment (non-sandboxed)
     nodeProcess = process;
 }
 
 const isElectronProcess = typeof nodeProcess?.versions?.electron === 'string';
-const isElectronRenderer =
-    isElectronProcess && nodeProcess?.type && ['renderer', 'utility'].includes(nodeProcess?.type);
-export const isElectronSandboxed = isElectronRenderer && nodeProcess?.sandboxed;
+const isElectronRenderer = isElectronProcess && nodeProcess?.type === 'renderer';
 
 interface INavigator {
     userAgent: string;
@@ -74,25 +73,8 @@ interface INavigator {
 }
 declare const navigator: INavigator;
 
-// Web environment
-if (typeof navigator === 'object' && !isElectronRenderer) {
-    _userAgent = navigator.userAgent;
-    _isWindows = _userAgent.indexOf('Windows') >= 0;
-    _isMacintosh = _userAgent.indexOf('Macintosh') >= 0;
-    _isIOS =
-        (_userAgent.indexOf('Macintosh') >= 0 ||
-            _userAgent.indexOf('iPad') >= 0 ||
-            _userAgent.indexOf('iPhone') >= 0) &&
-        !!navigator.maxTouchPoints &&
-        navigator.maxTouchPoints > 0;
-    _isLinux = _userAgent.indexOf('Linux') >= 0;
-    _isWeb = true;
-    _locale = navigator.language;
-    _language = _locale;
-}
-
 // Native environment
-else if (typeof nodeProcess === 'object') {
+if (typeof nodeProcess === 'object') {
     _isWindows = nodeProcess.platform === 'win32';
     _isMacintosh = nodeProcess.platform === 'darwin';
     _isLinux = nodeProcess.platform === 'linux';
@@ -113,6 +95,23 @@ else if (typeof nodeProcess === 'object') {
         } catch (e) {}
     }
     _isNative = true;
+}
+
+// Web environment
+else if (typeof navigator === 'object' && !isElectronRenderer) {
+    _userAgent = navigator.userAgent;
+    _isWindows = _userAgent.indexOf('Windows') >= 0;
+    _isMacintosh = _userAgent.indexOf('Macintosh') >= 0;
+    _isIOS =
+        (_userAgent.indexOf('Macintosh') >= 0 ||
+            _userAgent.indexOf('iPad') >= 0 ||
+            _userAgent.indexOf('iPhone') >= 0) &&
+        !!navigator.maxTouchPoints &&
+        navigator.maxTouchPoints > 0;
+    _isLinux = _userAgent.indexOf('Linux') >= 0;
+    _isWeb = true;
+    _locale = navigator.language;
+    _language = _locale;
 }
 
 // Unknown environment
