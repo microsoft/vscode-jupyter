@@ -1,6 +1,6 @@
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.169.0/containers/python-3-miniconda/.devcontainer/base.Dockerfile
 
-FROM node:20.17.0-bullseye-slim
+FROM node:22.15.1-bullseye-slim
 
 RUN apt-get -y update
 RUN apt-get -y install apt-utils git gnupg2 curl locales ca-certificates sudo
