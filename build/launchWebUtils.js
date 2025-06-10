@@ -68,7 +68,8 @@ exports.launch = async function launch(launchTests) {
             extensionDevelopmentPath,
             folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience'),
             quality: 'insiders',
-            commit: '16ee4a72cebe007cc3f25d139bb379c3a1a27ea9'
+            // commit: '16ee4a72cebe007cc3f25d139bb379c3a1a27ea9'
+            commit: '83d1ff749141e435b3b135079a02f8f515621eec'
         };
         if (launchTests) {
             options.extensionTestsPath = bundlePath;
