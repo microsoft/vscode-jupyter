@@ -52,7 +52,8 @@ function isNotebookPerfTestWithoutJupyter() {
     return !!process.env.VSC_JUPYTER_NOTEBOOK_PERF_TEST;
 }
 
-const channel = '83d1ff749141e435b3b135079a02f8f515621eec';
+// const channel = '83d1ff749141e435b3b135079a02f8f515621eec';
+const channel = '2ba158ca779b715bd4d29d1cb6ac022b27672b26';
 
 function computePlatform() {
     switch (process.platform) {
