@@ -7,7 +7,6 @@ import { l10n, CancellationToken, Event, EventEmitter, NotebookCellOutput, type 
 import { Kernel, KernelStatus, Output } from '../../../api';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
-import { isPythonKernelConnection } from '../../../kernels/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
 import { noop } from '../../../platform/common/utils/misc';

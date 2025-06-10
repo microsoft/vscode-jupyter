@@ -24,7 +24,6 @@ import {
 import {
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    getDefaultKernelConnection,
     insertCodeCell,
     runCell,
     waitForExecutionCompletedSuccessfully
@@ -38,7 +37,6 @@ import { Kernels, Output } from '../../../api';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../../test/constants';
 import { KernelError } from '../../../kernels/errors/kernelError';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
-import { escapeStringToEmbedInPythonCode } from '../../../kernels/chat/generator';
 import { notebookCellExecutions } from '../../../platform/notebooks/cellExecutionStateService';
 import { noop } from '../../../test/core';
 
