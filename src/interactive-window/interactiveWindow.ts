@@ -607,38 +607,7 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     public async exportAs() {
-        await this.ensureInitialized();
-        if (!this.controller) {
-            throw new Error('An active kernel is required to export the notebook.');
-        }
-        const kernel = this.controller.kernel?.value;
-
-        let defaultFileName;
-        if (this.submitters && this.submitters.length) {
-            const lastSubmitter = this.submitters[this.submitters.length - 1];
-            lastSubmitter;
-            defaultFileName = path.basename(lastSubmitter.path, path.extname(lastSubmitter.path));
-        }
-
-        // Then run the export command with these contents
-        if (isWebExtension()) {
-            // In web, we currently only support exporting as python script
-            commands
-                .executeCommand(
-                    Commands.ExportAsPythonScript,
-                    this.notebookDocument,
-                    kernel?.kernelConnectionMetadata.interpreter
-                )
-                .then(noop, noop);
-        } else {
-            commands
-                .executeCommand(
-                    Commands.Export,
-                    this.notebookDocument,
-                    defaultFileName,
-                    kernel?.kernelConnectionMetadata.interpreter
-                )
-                .then(noop, noop);
-        }
+        // Just run save on the active editor
+        commands.executeCommand('workbench.action.files.save').then(noop, noop);
     }
 }
