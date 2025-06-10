@@ -53,7 +53,8 @@ function isNotebookPerfTestWithoutJupyter() {
 }
 
 // const channel = '83d1ff749141e435b3b135079a02f8f515621eec';
-const channel = '2ba158ca779b715bd4d29d1cb6ac022b27672b26';
+// const channel = '2ba158ca779b715bd4d29d1cb6ac022b27672b26';
+const channel = '1.99';
 
 function computePlatform() {
     switch (process.platform) {
