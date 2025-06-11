@@ -35,10 +35,14 @@ import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred } from '../platform/common/utils/async';
 import { IServiceContainer } from '../platform/ioc/types';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
+import { INotebookExporter } from '../kernels/jupyter/types';
+import { ExportFormat } from '../notebooks/export/types';
+import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import { IInteractiveWindow, IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager } from './types';
 import { generateInteractiveCode } from './helpers';
 import { getInteractiveCellMetadata } from './helpers';
+import { getFilePath } from '../platform/common/platform/fs-paths';
 import {
     ICodeGeneratorFactory,
     IGeneratedCodeStorageFactory,
@@ -55,6 +59,7 @@ import {
     InteractiveControllerFactory
 } from './InteractiveWindowController';
 import { getRootFolder } from '../platform/common/application/workspace.base';
+import { ExportDialog } from '../notebooks/export/exportDialog';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -98,6 +103,7 @@ export class InteractiveWindow implements IInteractiveWindow {
 
     private readonly fs: IFileSystem;
     private readonly configuration: IConfigurationService;
+    private readonly jupyterExporter: INotebookExporter;
     private readonly interactiveWindowDebugger: IInteractiveWindowDebugger | undefined;
     private readonly errorHandler: IDataScienceErrorHandler;
     private readonly codeGeneratorFactory: ICodeGeneratorFactory;
@@ -114,6 +120,7 @@ export class InteractiveWindow implements IInteractiveWindow {
     ) {
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.jupyterExporter = this.serviceContainer.get<INotebookExporter>(INotebookExporter);
         this.interactiveWindowDebugger =
             this.serviceContainer.tryGet<IInteractiveWindowDebugger>(IInteractiveWindowDebugger);
         this.errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
@@ -584,6 +591,19 @@ export class InteractiveWindow implements IInteractiveWindow {
         const cellEdit = NotebookEdit.updateCellMetadata(cell.index, newMetadata);
         edit.set(cell.notebook.uri, [cellEdit]);
         await workspace.applyEdit(edit);
+    }
+
+    public async export() {
+        if (!this.notebookDocument) {
+            throw new Error('no notebook to export.');
+        }
+        const cells = generateCellsFromNotebookDocument(this.notebookDocument);
+
+        // Bring up the export file dialog box
+        const uri = await new ExportDialog().showDialog(ExportFormat.ipynb, this.owningResource);
+        if (uri) {
+            await this.jupyterExporter?.exportToFile(cells, getFilePath(uri));
+        }
     }
 
     public async exportAs() {

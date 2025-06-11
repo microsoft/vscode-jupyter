@@ -146,7 +146,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         );
         this.registerCommand(
             Commands.InteractiveExportAsNotebook,
-            async (context?: { notebookEditor: { notebookUri: Uri } }) => await this.save(context?.notebookEditor?.notebookUri)
+            async (context?: { notebookEditor: { notebookUri: Uri } }) => await this.export(context?.notebookEditor?.notebookUri)
         );
         this.registerCommand(Commands.InteractiveExportAs, (context?: { notebookEditor: { notebookUri: Uri } }) =>
             this.exportAs(context?.notebookEditor?.notebookUri)
@@ -628,11 +628,10 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         }
     }
 
-    private async save(uri?: Uri) {
+    private async export(uri?: Uri) {
         const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
-        if (interactiveWindow?.notebookDocument) {
-            await window.showNotebookDocument(interactiveWindow.notebookDocument);
-            await commands.executeCommand('workbench.action.files.save');
+        if (interactiveWindow) {
+            interactiveWindow.export();
         }
     }
 
