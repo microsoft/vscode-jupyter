@@ -370,7 +370,9 @@ def main():
                     logging.exception(f"Error in line {line}")
         except OSError as e:
             if e.errno == 9:  # Bad file descriptor
-                logging.warning("Bad file descriptor encountered. Retrying in 0.5 seconds...")
+                logging.warning(
+                    "Bad file descriptor encountered. Retrying in 0.5 seconds..."
+                )
                 time.sleep(0.5)  # Wait a bit before retrying
                 # Try to reopen stdin
                 try:
