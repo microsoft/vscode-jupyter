@@ -139,7 +139,6 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.DebugCurrentCellPalette]: [];
     [DSCommands.RunToLine]: [Uri, number, number];
     [DSCommands.RunFromLine]: [Uri, number, number];
-    [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ImportNotebookFile]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ExecSelectionInInteractiveWindow]: [string | undefined];

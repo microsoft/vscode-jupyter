@@ -557,12 +557,6 @@
                 "enablement": "isWorkspaceTrusted"
             },
             {
-                "command": "jupyter.importnotebook",
-                "title": "%jupyter.command.jupyter.importnotebook.title%",
-                "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
-            },
-            {
                 "command": "jupyter.importnotebookfile",
                 "title": "%jupyter.command.jupyter.importnotebookfile.title%",
                 "category": "Jupyter",
@@ -799,11 +793,6 @@
                 {
                     "submenu": "editor.interactiveWindow.context",
                     "group": "Jupyter2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && resourceExtname == .ipynb && !notebookEditorFocused && isWorkspaceTrusted",
-                    "command": "jupyter.importnotebook",
-                    "group": "Jupyter3@1"
                 },
                 {
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && isWorkspaceTrusted",
@@ -1213,12 +1202,6 @@
                     "title": "%jupyter.command.jupyter.debugFileInteractive.title%",
                     "category": "Jupyter",
                     "when": "editorLangId == python && !notebookEditorFocused && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.importnotebook",
-                    "title": "%jupyter.command.jupyter.importnotebook.title%",
-                    "category": "Jupyter",
-                    "when": "isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.exportfileasnotebook",
