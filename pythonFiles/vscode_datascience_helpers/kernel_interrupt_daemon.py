@@ -8,6 +8,7 @@ import sys
 import os
 import logging
 import logging.config
+import time  # Add time import for sleep function
 
 
 # This comes from here:
@@ -353,12 +354,39 @@ def main():
             # Do not change the format of this message (used in parent process).
             logging.exception(f"ERROR: handling command :{command}:{id}")
 
-    for line in sys.stdin:
+    # Add retry logic for reading from stdin
+    start_time = time.time()
+    timeout = 5  # 5 seconds timeout
+
+    while time.time() - start_time < timeout:
         try:
-            line = line.strip()
-            handle_command(line.split(":")[0], int(line.split(":")[1]), line)
-        except:
-            logging.exception(f"Error in line {line}")
+            for line in sys.stdin:
+                try:
+                    line = line.strip()
+                    handle_command(line.split(":")[0], int(line.split(":")[1]), line)
+                    # Reset the timer on successful read
+                    start_time = time.time()
+                except:
+                    logging.exception(f"Error in line {line}")
+        except OSError as e:
+            if e.errno == 9:  # Bad file descriptor
+                logging.warning("Bad file descriptor encountered. Retrying in 0.5 seconds...")
+                time.sleep(0.5)  # Wait a bit before retrying
+                # Try to reopen stdin
+                try:
+                    if sys.stdin.closed:
+                        sys.stdin = open(0)  # Attempt to reopen stdin
+                except:
+                    logging.exception("Failed to reopen stdin")
+            else:
+                # If it's not the specific error we're handling, log and re-raise
+                logging.exception("Unexpected OSError")
+                raise
+        except Exception as e:
+            logging.exception("Unexpected error reading from stdin")
+            time.sleep(0.5)  # Wait a bit before retrying
+
+    logging.warning("Timeout reached while trying to read from stdin. Exiting.")
 
 
 def send_exit_message():
