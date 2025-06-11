@@ -121,14 +121,9 @@ export function generateCellsFromNotebookDocument(notebookDocument: NotebookDocu
         .getCells()
         .filter((cell) => !isSysInfoCell(cell))
         .map((cell) => {
-            // Reinstate cell structure + comments from cell metadata
-            let code = splitLines(cell.document.getText(), { trim: false, removeEmptyEntries: false });
-            if (cell.metadata.interactiveWindowCellMarker !== undefined) {
-                code.unshift(cell.metadata.interactiveWindowCellMarker + '\n');
-            }
             const cellData = new NotebookCellData(
                 cell.kind,
-                code.join('\n'),
+                cell.document.getText(),
                 cell.kind === NotebookCellKind.Code ? cell.document.languageId : 'markdown'
             );
             if (cell.kind === NotebookCellKind.Code) {

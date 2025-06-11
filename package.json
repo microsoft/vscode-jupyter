@@ -569,20 +569,8 @@
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
-                "command": "jupyter.exportoutputasnotebook",
-                "title": "%jupyter.command.jupyter.exportoutputasnotebook.title%",
-                "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
-            },
-            {
                 "command": "jupyter.exportfileasnotebook",
                 "title": "%jupyter.command.jupyter.exportfileasnotebook.title%",
-                "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
-            },
-            {
-                "command": "jupyter.exportfileandoutputasnotebook",
-                "title": "%jupyter.command.jupyter.exportfileandoutputasnotebook.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
@@ -821,11 +809,6 @@
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && isWorkspaceTrusted",
                     "command": "jupyter.exportfileasnotebook",
                     "group": "Jupyter3@2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && isWorkspaceTrusted",
-                    "command": "jupyter.exportfileandoutputasnotebook",
-                    "group": "Jupyter3@3"
                 }
             ],
             "editor.interactiveWindow.context": [
@@ -1244,12 +1227,6 @@
                     "when": "jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.exportfileandoutputasnotebook",
-                    "title": "%jupyter.command.jupyter.exportfileandoutputasnotebook.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
-                },
-                {
                     "command": "jupyter.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "category": "Jupyter",
@@ -1278,12 +1255,6 @@
                     "command": "jupyter.collapseallcells",
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
                     "shortTitle": "%jupyter.command.jupyter.collapseallcells.shorttitle%",
-                    "category": "Jupyter",
-                    "when": "jupyter.isinteractiveactive"
-                },
-                {
-                    "command": "jupyter.exportoutputasnotebook",
-                    "title": "%jupyter.command.jupyter.exportoutputasnotebook.title%",
                     "category": "Jupyter",
                     "when": "jupyter.isinteractiveactive"
                 },

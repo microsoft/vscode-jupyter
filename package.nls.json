@@ -84,16 +84,8 @@
         "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.importnotebookfile.title": "Import Notebook to Script",
-    "jupyter.command.jupyter.exportoutputasnotebook.title": {
-        "message": "Export Interactive Window as Jupyter Notebook",
-        "comment": ["{Locked='Notebook'}"]
-    },
     "jupyter.command.jupyter.exportfileasnotebook.title": {
         "message": "Export Current Python File as Jupyter Notebook",
-        "comment": ["{Locked='Notebook'}"]
-    },
-    "jupyter.command.jupyter.exportfileandoutputasnotebook.title": {
-        "message": "Export Current Python File and Output as Jupyter Notebook",
         "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.notebookeditor.removeallcells.title": {
