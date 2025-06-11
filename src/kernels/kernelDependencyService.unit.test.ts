@@ -211,6 +211,9 @@ suite('Kernel Dependency Service', () => {
                     new Error('Install failed - kaboom')
                 );
                 when(
+                    installer.install(Product.ipykernel, interpreter, anything(), anything(), anything(), anything())
+                ).thenReject(new Error('Install failed - kaboom'));
+                when(
                     mockedVSCodeNamespaces.window.showInformationMessage(anything(), anything(), anything())
                 ).thenResolve(Common.install as any);
                 when(
