@@ -98,18 +98,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             this.createNewInteractiveWindow(connection)
         );
         this.registerCommand(
-            Commands.ImportNotebook,
-            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
-                return this.listenForErrors(() => {
-                    if (file) {
-                        return this.importNotebookOnFile(file);
-                    } else {
-                        return this.importNotebook();
-                    }
-                });
-            }
-        );
-        this.registerCommand(
             Commands.ImportNotebookFile,
             (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
                 return this.listenForErrors(() => {

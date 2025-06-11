@@ -79,10 +79,6 @@
     "jupyter.command.jupyter.gotoNextCellInFile.title": "Go to Next Cell",
     "jupyter.command.jupyter.gotoPrevCellInFile.title": "Go to Previous Cell",
     "jupyter.command.jupyter.createnewinteractive.title": "Create Interactive Window",
-    "jupyter.command.jupyter.importnotebook.title": {
-        "message": "Import Jupyter Notebook",
-        "comment": ["{Locked='Notebook'}"]
-    },
     "jupyter.command.jupyter.importnotebookfile.title": "Import Notebook to Script",
     "jupyter.command.jupyter.exportfileasnotebook.title": {
         "message": "Export Current Python File as Jupyter Notebook",

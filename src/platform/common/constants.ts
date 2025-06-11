@@ -178,7 +178,6 @@ export namespace Commands {
     export const RunCurrentCell = 'jupyter.runcurrentcell';
     export const RunCurrentCellAdvance = 'jupyter.runcurrentcelladvance';
     export const CreateNewInteractive = 'jupyter.createnewinteractive';
-    export const ImportNotebook = 'jupyter.importnotebook';
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const InterruptKernel = 'jupyter.interruptkernel';
