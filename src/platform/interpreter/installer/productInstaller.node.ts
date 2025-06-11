@@ -89,7 +89,8 @@ export class DataScienceInstaller {
         interpreter: PythonEnvironment,
         cancelTokenSource: CancellationTokenSource,
         reInstallAndUpdate?: boolean,
-        installPipIfRequired?: boolean
+        installPipIfRequired?: boolean,
+        silent?: boolean
     ): Promise<InstallerResponse> {
         const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
         const installer = await channels.getInstallationChannel(product, interpreter);
@@ -106,7 +107,7 @@ export class DataScienceInstaller {
         if (installPipIfRequired === true) {
             flags = flags ? flags | ModuleInstallFlags.installPipIfRequired : ModuleInstallFlags.installPipIfRequired;
         }
-        await installer.installModule(product, interpreter, cancelTokenSource, flags);
+        await installer.installModule(product, interpreter, cancelTokenSource, flags, silent);
         if (cancelTokenSource.token.isCancellationRequested) {
             return InstallerResponse.Cancelled;
         }
@@ -183,7 +184,8 @@ export class ProductInstaller implements IInstaller {
         interpreter: PythonEnvironment,
         cancelTokenSource: CancellationTokenSource,
         reInstallAndUpdate?: boolean,
-        installPipIfRequired?: boolean
+        installPipIfRequired?: boolean,
+        silent?: boolean
     ): Promise<InstallerResponse> {
         if (interpreter) {
             this.interpreterPackages.trackPackages(interpreter);
@@ -195,7 +197,8 @@ export class ProductInstaller implements IInstaller {
                 interpreter,
                 cancelTokenSource,
                 reInstallAndUpdate,
-                installPipIfRequired
+                installPipIfRequired,
+                silent
             );
             trackPackageInstalledIntoInterpreter(this.memento, product, interpreter).catch(noop);
             if (result === InstallerResponse.Installed) {

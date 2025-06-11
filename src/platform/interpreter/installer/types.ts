@@ -65,17 +65,14 @@ export interface IModuleInstaller {
      * If a cancellation token is provided, then a cancellable progress message is dispalyed.
      *  At this point, this method would resolve only after the module has been successfully installed.
      * If cancellation token is not provided, its not guaranteed that module installation has completed.
-     * @param {string} name
-     * @param {InterpreterUri} [resource]
-     * @param {CancellationToken} [cancel]
-     * @returns {Promise<void>}
-     * @memberof IModuleInstaller
      */
     installModule(
         product: string,
         interpreter: PythonEnvironment | Environment,
         cancelTokenSource: CancellationTokenSource,
-        flags?: ModuleInstallFlags
+        flags?: ModuleInstallFlags,
+        /** Whether to install without displaying any progress messages */
+        silent?: boolean
     ): Promise<void>;
     /**
      * Installs a Product
@@ -92,7 +89,9 @@ export interface IModuleInstaller {
         product: Product,
         interpreter: PythonEnvironment | Environment,
         cancelTokenSource: CancellationTokenSource,
-        flags?: ModuleInstallFlags
+        flags?: ModuleInstallFlags,
+        /** Whether to install without displaying any progress messages */
+        silent?: boolean
     ): Promise<void>;
     isSupported(resource?: InterpreterUri | Environment): Promise<boolean>;
 }
@@ -135,7 +134,8 @@ export interface IInstaller {
         resource: InterpreterUri,
         cancelTokenSource: CancellationTokenSource,
         reInstallAndUpdate?: boolean,
-        installPipIfRequired?: boolean
+        installPipIfRequired?: boolean,
+        silent?: boolean
     ): Promise<InstallerResponse>;
     isInstalled(product: Product, resource: InterpreterUri | Environment): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
