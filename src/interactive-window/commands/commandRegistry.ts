@@ -34,12 +34,11 @@ import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-p
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ExportFormat, IFileConverter } from '../../notebooks/export/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
-import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { logger } from '../../platform/logging';
 import { generateCellsFromDocument } from '../editor-integration/cellFactory';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
-import { IJupyterServerHelper, INotebookExporter } from '../../kernels/jupyter/types';
+import { INotebookExporter } from '../../kernels/jupyter/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { StatusProvider } from './statusProvider';
 import { ExportDialog } from '../../notebooks/export/exportDialog';
@@ -53,7 +52,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookExporter) @optional() private jupyterExporter: INotebookExporter | undefined,
-        @inject(IJupyterServerHelper) @optional() private jupyterServerHelper: IJupyterServerHelper | undefined,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDataScienceCodeLensProvider)
@@ -140,32 +138,15 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                 });
             }
         );
-        this.registerCommand(
-            Commands.ExportFileAndOutputAsNotebook,
-            (file: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
-                return this.listenForErrors(() => {
-                    if (file) {
-                        return this.exportFileAndOutput(file);
-                    } else {
-                        const activeEditor = window.activeTextEditor;
-                        if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
-                            return this.exportFileAndOutput(activeEditor.document.uri);
-                        }
-                    }
-                    return Promise.resolve();
-                });
-            }
-        );
         this.registerCommand(Commands.ExpandAllCells, async (context?: { notebookEditor: { notebookUri: Uri } }) =>
             this.expandAllCells(context?.notebookEditor?.notebookUri)
         );
         this.registerCommand(Commands.CollapseAllCells, async (context?: { notebookEditor: { notebookUri: Uri } }) =>
             this.collapseAllCells(context?.notebookEditor?.notebookUri)
         );
-        this.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells());
         this.registerCommand(
             Commands.InteractiveExportAsNotebook,
-            (context?: { notebookEditor: { notebookUri: Uri } }) => this.export(context?.notebookEditor?.notebookUri)
+            async (context?: { notebookEditor: { notebookUri: Uri } }) => await this.save(context?.notebookEditor?.notebookUri)
         );
         this.registerCommand(Commands.InteractiveExportAs, (context?: { notebookEditor: { notebookUri: Uri } }) =>
             this.exportAs(context?.notebookEditor?.notebookUri)
@@ -624,58 +605,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         }
     }
 
-    @captureUsageTelemetry(Telemetry.ExportPythonFileAndOutputInteractive)
-    private async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
-        const filePath = getFilePath(file);
-        if (
-            filePath &&
-            filePath.length > 0 &&
-            this.jupyterExporter &&
-            this.jupyterServerHelper &&
-            (await this.jupyterServerHelper.isJupyterServerSupported())
-        ) {
-            // If the current file is the active editor, then generate cells from the document.
-            const activeEditor = window.activeTextEditor;
-            if (
-                activeEditor &&
-                activeEditor.document &&
-                this.fileSystem.arePathsSame(activeEditor.document.uri, file)
-            ) {
-                const cells = generateCellsFromDocument(
-                    activeEditor.document,
-                    this.configuration.getSettings(activeEditor.document.uri)
-                );
-                if (cells) {
-                    // Bring up the export dialog box
-                    const uri = await new ExportDialog().showDialog(ExportFormat.ipynb, file);
-                    if (!uri) {
-                        return;
-                    }
-                    await this.waitForStatus(
-                        async () => {
-                            if (uri) {
-                                const notebook = await this.jupyterExporter?.serialize(cells);
-                                await this.fileSystem.writeFile(uri, notebook || '');
-                            }
-                        },
-                        DataScience.exportingFormat,
-                        getDisplayPath(file)
-                    );
-                    // Next open this notebook & execute it.
-                    await workspace.openNotebookDocument(uri).then((document) => window.showNotebookDocument(document));
-                    await commands.executeCommand('notebook.execute');
-                    return uri;
-                }
-            }
-        } else if (this.jupyterServerHelper) {
-            await this.dataScienceErrorHandler.handleError(
-                new JupyterInstallError(
-                    DataScience.jupyterNotSupported(await this.jupyterServerHelper.getJupyterServerError())
-                )
-            );
-        }
-    }
-
     private async expandAllCells(uri?: Uri) {
         const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         logger.info(`Expanding all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
@@ -692,13 +621,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         }
     }
 
-    private exportCells() {
-        const interactiveWindow = this.interactiveWindowProvider?.activeWindow;
-        if (interactiveWindow) {
-            interactiveWindow.export();
-        }
-    }
-
     private exportAs(uri?: Uri) {
         const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         if (interactiveWindow) {
@@ -706,10 +628,11 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         }
     }
 
-    private export(uri?: Uri) {
+    private async save(uri?: Uri) {
         const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
-        if (interactiveWindow) {
-            interactiveWindow.export();
+        if (interactiveWindow?.notebookDocument) {
+            await window.showNotebookDocument(interactiveWindow.notebookDocument);
+            await commands.executeCommand('workbench.action.files.save');
         }
     }
 

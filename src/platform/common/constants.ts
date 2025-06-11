@@ -181,7 +181,6 @@ export namespace Commands {
     export const ImportNotebook = 'jupyter.importnotebook';
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
-    export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
     export const InterruptKernel = 'jupyter.interruptkernel';
     export const RestartKernel = 'jupyter.restartkernel';
     export const RestartKernelAndRunAllCells = 'jupyter.restartkernelandrunallcells';
@@ -192,7 +191,6 @@ export namespace Commands {
     export const NotebookEditorAddCellBelow = 'jupyter.notebookeditor.addcellbelow';
     export const ExpandAllCells = 'jupyter.expandallcells';
     export const CollapseAllCells = 'jupyter.collapseallcells';
-    export const ExportOutputAsNotebook = 'jupyter.exportoutputasnotebook';
     export const ExecSelectionInInteractiveWindow = 'jupyter.execSelectionInteractive';
     export const RunFileInInteractiveWindows = 'jupyter.runFileInteractive';
     export const DebugFileInInteractiveWindows = 'jupyter.debugFileInteractive';

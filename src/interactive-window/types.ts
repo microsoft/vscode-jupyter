@@ -98,7 +98,6 @@ export interface IInteractiveWindow extends IInteractiveBase {
     collapseAllCells(): Promise<void>;
     scrollToCell(id: string): void;
     exportAs(): void;
-    export(): void;
 }
 
 export interface IInteractiveWindowCache {

@@ -61,7 +61,6 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.NotebookEditorAddCellBelow]: [];
     [DSCommands.ExpandAllCells]: [];
     [DSCommands.CollapseAllCells]: [];
-    [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
     [DSCommands.CreateNewNotebook]: [];
     [DSCommands.OpenVariableView]: [];
@@ -131,7 +130,6 @@ export interface ICommandNameArgumentTypeMapping {
     ['notebook.cell.expandCellInput']: [
         { ranges: { start: number; end: number }[]; document?: Uri; autoReveal?: boolean }
     ];
-    [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];
     [DSCommands.RunAllCellsAbove]: [Uri, number, number];
