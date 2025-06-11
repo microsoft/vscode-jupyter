@@ -249,7 +249,7 @@ suite('Export @export', function () {
             'test.ipynb'
         );
         const importFile = Uri.file(testFilePath);
-        await commands.executeCommand('jupyter.importnotebookFile', importFile);
+        await commands.executeCommand('jupyter.importnotebookfile', importFile);
 
         // Wait until our active document changes
         await deferred.promise;
@@ -287,7 +287,7 @@ suite('Export @export', function () {
             'test.ipynb'
         );
         const importFile = Uri.file(testFilePath);
-        await commands.executeCommand('jupyter.importnotebookFile', importFile);
+        await commands.executeCommand('jupyter.importnotebookfile', importFile);
 
         // Wait until our active document changes
         await deferred.promise;
