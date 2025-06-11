@@ -26,7 +26,6 @@ import { IPythonExecutionFactory } from '../types.node';
 import { Environment } from '@vscode/python-extension';
 import { IDisposable } from '../../common/types';
 import { dispose } from '../../common/utils/lifecycle';
-import { noop } from '../../common/utils/misc';
 
 export type ExecutionInstallArgs = {
     args: string[];
@@ -68,10 +67,12 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             return;
         }
         const install = async (
-            progress: Progress<{
-                message?: string | undefined;
-                increment?: number | undefined;
-            }> | undefined,
+            progress:
+                | Progress<{
+                      message?: string | undefined;
+                      increment?: number | undefined;
+                  }>
+                | undefined,
             token: CancellationToken
         ) => {
             const deferred = createDeferred();
