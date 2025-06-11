@@ -51,10 +51,6 @@ export const IControllerRegistration = Symbol('IControllerRegistration');
 
 export interface IControllerRegistration {
     /**
-     * Promise resolved when controllers are done being loaded (refresh makes this promise update)
-     */
-    readonly loaded: Promise<void>;
-    /**
      * Gets the registered list of all of the controllers (the ones shown by VS code)
      */
     registered: IVSCodeNotebookController[];

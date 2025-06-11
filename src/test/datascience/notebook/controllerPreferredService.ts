@@ -249,9 +249,6 @@ export class ControllerPreferredService {
                     this.registration.addOrUpdate(preferredConnection, [JupyterNotebookView]);
                 }
             } else if (document.notebookType === InteractiveWindowView) {
-                // Wait for our controllers to be loaded before we try to set a preferred on
-                // can happen if a document is opened quick and we have not yet loaded our controllers
-                await this.registration.loaded;
                 if (preferredSearchToken.token.isCancellationRequested) {
                     logger.ci(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
