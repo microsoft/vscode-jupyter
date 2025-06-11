@@ -146,7 +146,8 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         );
         this.registerCommand(
             Commands.InteractiveExportAsNotebook,
-            async (context?: { notebookEditor: { notebookUri: Uri } }) => await this.export(context?.notebookEditor?.notebookUri)
+            async (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                await this.export(context?.notebookEditor?.notebookUri)
         );
         this.registerCommand(Commands.InteractiveExportAs, (context?: { notebookEditor: { notebookUri: Uri } }) =>
             this.exportAs(context?.notebookEditor?.notebookUri)
