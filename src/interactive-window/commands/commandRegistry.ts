@@ -617,7 +617,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         }
     }
 
-    private async export(uri?: Uri) {
+    private export(uri?: Uri) {
         const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         if (interactiveWindow) {
             interactiveWindow.export();
