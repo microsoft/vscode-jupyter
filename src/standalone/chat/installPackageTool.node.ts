@@ -75,7 +75,9 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
                     await installer.installModule(
                         packageName,
                         kernel.kernelConnectionMetadata.interpreter,
-                        cancellationTokenSource
+                        cancellationTokenSource,
+                        undefined,
+                        true
                     );
                 }
                 success = true;

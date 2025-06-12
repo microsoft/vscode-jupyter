@@ -41,7 +41,8 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
     constructor(
         private readonly controllerRegistration: IControllerRegistration,
         private readonly kernelDependencyService: IKernelDependencyService,
-        private readonly kernelProvider: IKernelProvider
+        private readonly kernelProvider: IKernelProvider,
+        private readonly configurePythonNotebookTool: ConfigurePythonNotebookTool
     ) {}
 
     async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
@@ -114,8 +115,9 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
                         installedPythonExtension,
                         createdEnv: true
                     });
-                    // If it was successful, now start the kernel.
-                    return await lm.invokeTool(ConfigurePythonNotebookTool.toolName, options, token);
+
+                    // No need to invoke the tool via VSC Api, just get the return value directly
+                    return this.configurePythonNotebookTool.invoke(options, token);
                 }
                 // Not created for whatever reason, fall back to kernel selection.
             } catch (ex) {

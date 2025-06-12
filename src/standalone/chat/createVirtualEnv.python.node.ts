@@ -97,7 +97,7 @@ export async function createVirtualEnvAndSelectAsKernel(
         await kernelDependencyService.installMissingDependencies({
             resource: notebook.uri,
             kernelConnection: selectedController.connection,
-            ui: new DisplayOptions(false),
+            ui: new DisplayOptions(true),
             token,
             ignoreCache: true,
             installWithoutPrompting: true

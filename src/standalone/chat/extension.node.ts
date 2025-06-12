@@ -40,17 +40,6 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
 
     context.subscriptions.push(
         vscode.lm.registerTool(
-            ConfigureNotebookTool.toolName,
-            new ConfigureNotebookTool(
-                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
-                serviceContainer.get<IKernelDependencyService>(IKernelDependencyService),
-                serviceContainer.get<IKernelProvider>(IKernelProvider)
-            )
-        )
-    );
-
-    context.subscriptions.push(
-        vscode.lm.registerTool(
             ConfigureNonPythonNotebookTool.toolName,
             new ConfigureNonPythonNotebookTool(
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration),
@@ -59,12 +48,20 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
         )
     );
 
+    const configurePythonTool = new ConfigurePythonNotebookTool(
+        serviceContainer.get<IKernelProvider>(IKernelProvider),
+        serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+    );
+    context.subscriptions.push(vscode.lm.registerTool(ConfigurePythonNotebookTool.toolName, configurePythonTool));
+
     context.subscriptions.push(
         vscode.lm.registerTool(
-            ConfigurePythonNotebookTool.toolName,
-            new ConfigurePythonNotebookTool(
+            ConfigureNotebookTool.toolName,
+            new ConfigureNotebookTool(
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IKernelDependencyService>(IKernelDependencyService),
                 serviceContainer.get<IKernelProvider>(IKernelProvider),
-                serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+                configurePythonTool
             )
         )
     );
