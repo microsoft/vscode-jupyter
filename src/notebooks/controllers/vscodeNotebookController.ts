@@ -780,22 +780,25 @@ async function updateNotebookDocumentMetadata(
     }
 }
 
+const MINIMUM_SUPPORTED_PYTHON_VERSION = [3, 9] as const; // 3.9, as defined here https://devguide.python.org/versions/
 export async function warnWhenUsingOutdatedPython(kernelConnection: KernelConnectionMetadata) {
     const pyVersion = await getVersion(kernelConnection.interpreter, true);
+    if (!pyVersion) {
+        return;
+    }
     const major = pyVersion?.major || 0;
     const minor = pyVersion?.minor || 0;
     if (
-        !pyVersion ||
-        major >= 4 ||
         major <= 0 || // Invalid versions from Python extension
-        minor <= -1 || // Invalid versions from Python extension
-        (kernelConnection.kind !== 'startUsingLocalKernelSpec' &&
-            kernelConnection.kind !== 'startUsingPythonInterpreter')
+        minor <= -1 // Invalid versions from Python extension
     ) {
         return;
     }
 
-    if (major < 3 || (major === 3 && minor <= 5)) {
+    if (
+        major < MINIMUM_SUPPORTED_PYTHON_VERSION[0] ||
+        (major === MINIMUM_SUPPORTED_PYTHON_VERSION[0] && minor <= MINIMUM_SUPPORTED_PYTHON_VERSION[1])
+    ) {
         window
             .showWarningMessage(DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion, Common.learnMore)
             .then((selection) => {
