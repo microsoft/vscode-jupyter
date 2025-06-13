@@ -39,7 +39,7 @@ def printTestOutput(testlog):
     with p.open() as f:
         for line in readStripLines(f):
             stripped = line.strip()
-            if len(stripped) > 2 and stripped[0] == "\x1B" and stripped[1] == "[":
+            if len(stripped) > 2 and stripped[0] == "\x1b" and stripped[1] == "[":
                 print(line.rstrip())  # Should be a test line as it has color encoding
 
 
