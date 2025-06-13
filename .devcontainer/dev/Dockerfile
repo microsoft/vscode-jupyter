@@ -26,7 +26,7 @@ RUN bash /tmp/library-scripts/common-debian.sh "${INSTALL_ZSH}" "${USERNAME}" "$
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts
 
 # # Finally install npm
-RUN echo "npm i -g npm@10.8.2" | bash
+RUN echo "npm i -g npm@10.9.2" | bash
 
 RUN apt install curl -y
 RUN sh -c "$(curl -fsSL https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)" -- \
