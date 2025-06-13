@@ -28,7 +28,7 @@ on:
 env:
   NODE_VERSION: 22.15.1
   NPM_VERSION: 10.8.2
-  PYTHON_VERSION: 3.8
+  PYTHON_VERSION: 3.12
   DENO_VERSION: '~1.37'
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   CACHE_NPM_DEPS: cache-npm
