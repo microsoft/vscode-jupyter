@@ -2,14 +2,20 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { IKernelProvider } from '../../kernels/types';
+import { IKernelDependencyService, IKernelProvider } from '../../kernels/types';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { JupyterVariablesProvider } from '../variables/JupyterVariablesProvider';
 import { logger } from '../../platform/logging';
-import { sendPipListRequest } from './helper';
-import { ListPackageTool } from './listPackageTool';
-import { InstallPackagesTool } from './installPackageTool';
+import { sendPipListRequest } from './helper.node';
+import { ListPackageTool } from './listPackageTool.node';
+import { InstallPackagesTool } from './installPackageTool.node';
 import { IServiceContainer } from '../../platform/ioc/types';
+import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
+import { ConfigureNotebookTool } from './configureNotebook.node';
+import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
+import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
+import { RestartKernelTool } from './restartKernelTool.node';
+import { INotebookCommandHandler } from '../../notebooks/notebookCommandListener';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
     context.subscriptions.push(
@@ -17,7 +23,8 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
             InstallPackagesTool.toolName,
             new InstallPackagesTool(
                 serviceContainer.get<IKernelProvider>(IKernelProvider),
-                serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager)
             )
         )
     );
@@ -27,6 +34,45 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
             new ListPackageTool(
                 serviceContainer.get<IKernelProvider>(IKernelProvider),
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+            )
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            ConfigureNonPythonNotebookTool.toolName,
+            new ConfigureNonPythonNotebookTool(
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IKernelProvider>(IKernelProvider)
+            )
+        )
+    );
+
+    const configurePythonTool = new ConfigurePythonNotebookTool(
+        serviceContainer.get<IKernelProvider>(IKernelProvider),
+        serviceContainer.get<IControllerRegistration>(IControllerRegistration)
+    );
+    context.subscriptions.push(vscode.lm.registerTool(ConfigurePythonNotebookTool.toolName, configurePythonTool));
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            ConfigureNotebookTool.toolName,
+            new ConfigureNotebookTool(
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IKernelDependencyService>(IKernelDependencyService),
+                serviceContainer.get<IKernelProvider>(IKernelProvider),
+                configurePythonTool
+            )
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.lm.registerTool(
+            RestartKernelTool.toolName,
+            new RestartKernelTool(
+                serviceContainer.get<IKernelProvider>(IKernelProvider),
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<INotebookCommandHandler>(INotebookCommandHandler)
             )
         )
     );
@@ -99,6 +145,3 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
         })
     );
 }
-
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-export function deactivate() {}

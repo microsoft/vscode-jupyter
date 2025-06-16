@@ -1,22 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookDocument, workspace, Uri } from 'vscode';
+import { env, NotebookDocument, workspace, Uri, commands } from 'vscode';
 import * as path from '../../platform/vscode-path/resources';
 import { isParentPath } from '../../platform/common/platform/fileUtils';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { getEnvironmentType } from '../../platform/interpreter/helpers';
-import { Environment, PythonExtension } from '@vscode/python-extension';
 import type { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import type { INotebookPythonEnvironmentService } from '../types';
-import { IPythonChatTools } from '../../platform/api/pythonApi';
+import { raceTimeout } from '../../platform/common/utils/async';
+import { logger } from '../../platform/logging';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { Environment, PythonExtension, ResolvedEnvironment } from '@vscode/python-extension';
 
 export async function findPreferredPythonEnvironment(
     notebook: NotebookDocument,
     pythonApi: PythonExtension,
     filter: PythonEnvironmentFilter,
-    notebookEnvironment: INotebookPythonEnvironmentService,
-    pythonChatTools: IPythonChatTools
+    notebookEnvironment: INotebookPythonEnvironmentService
 ): Promise<Environment | undefined> {
     // 1. Check if we have a .conda or .venv virtual env in the local workspace folder.
     const localEnv = findPythonEnvironmentClosestToNotebook(
@@ -24,27 +25,26 @@ export async function findPreferredPythonEnvironment(
         pythonApi.environments.known.filter((e) => !filter.isPythonEnvironmentExcluded(e))
     );
     if (localEnv) {
+        logger.trace(
+            `For ${getDisplayPath(notebook.uri)} found local Python environment: ${getDisplayPath(localEnv.path)}`
+        );
         return localEnv;
     }
 
     // We never want to recommend even using the active interpreter.
     // Its possible the active interpreter is global and could cause other issues.
-    const env = notebookEnvironment.getPythonEnvironment(notebook.uri);
-    if (env) {
-        return pythonApi.environments.resolveEnvironment(env.id);
+    const pythonEnv = notebookEnvironment.getPythonEnvironment(notebook.uri);
+    if (pythonEnv) {
+        logger.trace(`For ${getDisplayPath(notebook.uri)} found Python environment: ${getDisplayPath(pythonEnv.path)}`);
+        return pythonApi.environments.resolveEnvironment(pythonEnv.id);
     }
 
-    // 2.  if a LM used an environment for this notebook/workspace in the recent past (15min or so).
-    const lastUsedEnv = await pythonChatTools.getLastUsedEnvInLmTool(notebook.uri);
-    if (lastUsedEnv) {
-        return pythonApi.environments.resolveEnvironment(lastUsedEnv);
-    }
-
-    // 3. Fall back to  `python.defaultInterpreterPath` set
-    const defaultInterpreterPath = workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
-    if (defaultInterpreterPath) {
-        return pythonApi.environments.resolveEnvironment(defaultInterpreterPath);
-    }
+    // 2. Fall back to the workspace env selected by the user.
+    const recommeded = await getRecommendedPythonEnvironment(notebook.uri);
+    logger.trace(
+        `For ${getDisplayPath(notebook.uri)} found recommeded Python environment: ${getDisplayPath(recommeded?.path)}`
+    );
+    return recommeded;
 }
 
 function findPythonEnvironmentClosestToNotebook(notebook: NotebookDocument, envs: readonly Environment[]) {
@@ -86,4 +86,67 @@ export function findPythonEnvBelongingToFolder(folder: Uri, pythonEnvs: readonly
         localEnvs.length
         ? localEnvs[0]
         : undefined;
+}
+
+export async function getRecommendedPythonEnvironment(uri: Uri): Promise<ResolvedEnvironment | undefined> {
+    type RecommededEnvironment =
+        | {
+              environment: ResolvedEnvironment;
+              reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended';
+          }
+        | undefined;
+    try {
+        const result = (await raceTimeout(5_000, commands.executeCommand('python.getRecommendedEnvironment', uri))) as
+            | RecommededEnvironment
+            | undefined;
+        if (!result) {
+            logger.trace(`No recommended Python environment found for ${getDisplayPath(uri)}`);
+            return;
+        }
+        logger.trace(
+            `Got a recommended Python environment for ${getDisplayPath(uri)}, ${result.reason} and ${getDisplayPath(
+                result.environment?.path
+            )}`
+        );
+        if (result.reason === 'workspaceUserSelected') {
+            return result.environment;
+        }
+
+        // In dev containers give preference to the global user selected environment.
+        // This is because the global user selected environment is the one that is most likely pre-configured in the dev container.
+        // Generally the images have the settings already pre-configured with this global env pre-selected.
+        // However if there are no workspace folders, then we should use the global user selected environment.
+        if (
+            result.reason === 'globalUserSelected' &&
+            (!workspace.workspaceFolders?.length || env.remoteName === 'dev-container')
+        ) {
+            return result.environment;
+        }
+
+        // Its possible we're in a dev container and the workspace & global env is not selected.
+        // However the python.defaultInterprerterPath is set to a path in the dev container.
+        // If thats the same as the one we get, then we should use that.
+        const defaultInterpreterPath = workspace
+            .getConfiguration('python')
+            .get<string | undefined>('defaultInterpreterPath', undefined);
+        if (env.remoteName === 'dev-container' && defaultInterpreterPath) {
+            try {
+                let env: ResolvedEnvironment | undefined = result.environment;
+                if (env.path !== defaultInterpreterPath) {
+                    const api = await PythonExtension.api();
+                    env = await api.environments.resolveEnvironment(defaultInterpreterPath);
+                }
+                if (env && env.path === defaultInterpreterPath) {
+                    logger.trace(
+                        `Using the default interpreter path ${defaultInterpreterPath} as the recommended Python environment`
+                    );
+                    return env;
+                }
+            } catch {
+                //
+            }
+        }
+    } catch (ex) {
+        return;
+    }
 }

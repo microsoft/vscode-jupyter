@@ -372,27 +372,34 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 newItems.sort((a, b) => a.label.localeCompare(b.label));
                 this.quickPickItems.splice(indexOfExistingCategory + 1, oldItemCount, ...newItems);
             } else {
+                items.sort((a, b) => a.label.localeCompare(b.label));
+                this.categories.set(newCategory, new Set(items));
+
                 // Since we sort items by Env type, ensure this new item is inserted in the right place.
                 const currentCategories: [CategoryQuickPickItem, number][] = this.quickPickItems
                     .filter((item) => item instanceof CategoryQuickPickItem)
                     .map((item, index) => [item as CategoryQuickPickItem, index]);
 
                 currentCategories.push([newCategory, -1]);
-                currentCategories.sort((a, b) => a[0].sortKey.localeCompare(b[0].sortKey));
+                currentCategories.sort((a, b) => compareIgnoreCase(a[0], b[0]));
 
                 // Find where we need to insert this new category.
                 const indexOfNewCategoryInList = currentCategories.findIndex((item) => item[1] === -1);
-                let newIndex = 0;
-                if (indexOfNewCategoryInList > 0) {
-                    newIndex =
-                        currentCategories.length === indexOfNewCategoryInList + 1
-                            ? this.quickPickItems.length
-                            : (currentCategories[indexOfNewCategoryInList + 1][1] as number);
-                }
 
-                items.sort((a, b) => a.label.localeCompare(b.label));
-                this.quickPickItems.splice(newIndex, 0, newCategory, ...items);
-                this.categories.set(newCategory, new Set(items));
+                if (indexOfNewCategoryInList === 0) {
+                    // If this is the first item, then insert it at the start.
+                    this.quickPickItems.splice(0, 0, newCategory, ...items);
+                    return;
+                } else if (indexOfNewCategoryInList === currentCategories.length - 1) {
+                    // If last item, then just append it.
+                    this.quickPickItems.push(newCategory, ...items);
+                } else {
+                    let newIndex = this.quickPickItems.findIndex(
+                        (c) => c.kind === -1 && c.label === currentCategories[indexOfNewCategoryInList + 1][0].label
+                    );
+                    newIndex = newIndex >= 0 ? newIndex : 0;
+                    this.quickPickItems.splice(newIndex, 0, newCategory, ...items);
+                }
             }
         });
         this.rebuildQuickPickItems(quickPick);

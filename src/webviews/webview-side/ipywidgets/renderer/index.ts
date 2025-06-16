@@ -18,7 +18,8 @@ function convertVSCodeOutputToExecuteResultOrDisplayData(outputItem: OutputItem)
           _vsc_test_cellIndex?: number;
       })
     | undefined {
-    return outputItem.mime.toLowerCase().includes('json') ? outputItem.json() : outputItem.text();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return outputItem.mime.toLowerCase().includes('json') ? outputItem.json() : (outputItem.text() as any);
 }
 
 /**

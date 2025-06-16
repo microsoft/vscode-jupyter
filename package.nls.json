@@ -79,21 +79,9 @@
     "jupyter.command.jupyter.gotoNextCellInFile.title": "Go to Next Cell",
     "jupyter.command.jupyter.gotoPrevCellInFile.title": "Go to Previous Cell",
     "jupyter.command.jupyter.createnewinteractive.title": "Create Interactive Window",
-    "jupyter.command.jupyter.importnotebook.title": {
-        "message": "Import Jupyter Notebook",
-        "comment": ["{Locked='Notebook'}"]
-    },
     "jupyter.command.jupyter.importnotebookfile.title": "Import Notebook to Script",
-    "jupyter.command.jupyter.exportoutputasnotebook.title": {
-        "message": "Export Interactive Window as Jupyter Notebook",
-        "comment": ["{Locked='Notebook'}"]
-    },
     "jupyter.command.jupyter.exportfileasnotebook.title": {
         "message": "Export Current Python File as Jupyter Notebook",
-        "comment": ["{Locked='Notebook'}"]
-    },
-    "jupyter.command.jupyter.exportfileandoutputasnotebook.title": {
-        "message": "Export Current Python File and Output as Jupyter Notebook",
         "comment": ["{Locked='Notebook'}"]
     },
     "jupyter.command.jupyter.notebookeditor.removeallcells.title": {
@@ -244,5 +232,7 @@
     "DataScience.interactiveGoToCode": "Go to code",
     "DataScience.installPythonTitle": "Install Python",
     "DataScience.installPythonExtensionViaKernelPickerTitle": "Install Python Extension",
-    "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server"
+    "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server",
+    "jupyter.languageModelTools.configure_notebook.displayName": "Configure Jupyter Notebook",
+    "jupyter.languageModelTools.configure_notebook.userDescription": "Configures notebooks by selecting a relevant Kernel."
 }

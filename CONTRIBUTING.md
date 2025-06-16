@@ -13,8 +13,8 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 20.17.0
-2. [npm](https://www.npmjs.com/) 10.8.2
+1. [Node.js](https://nodejs.org/) 22.15.1
+2. [npm](https://www.npmjs.com/) 10.9.2
 3. [Python](https://www.python.org/) 3.6 or later
 4. Windows, macOS, or Linux
 5. [Visual Studio Code](https://code.visualstudio.com/)
@@ -204,9 +204,6 @@ To run only the functional tests:
 Clone the repo into any directory, open that directory in VSCode, and use the `Extension` launch option within VSCode.
 
 ### Coding Standards
-
-Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-jupyter/blob/main/CODING_STANDARDS.md).
-We have CI tests to ensure the code committed will adhere to the above coding standards.
 
 Messages displayed to the user must be localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-jupyter/blob/main/src/platform/common/utils/localize.ts) file.
 

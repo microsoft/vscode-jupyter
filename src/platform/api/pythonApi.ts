@@ -29,12 +29,7 @@ import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironmen
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import {
-    Environment,
-    EnvironmentPath,
-    PythonExtension as PythonExtensionApi,
-    ResolvedEnvironment
-} from '@vscode/python-extension';
+import { Environment, PythonExtension as PythonExtensionApi, ResolvedEnvironment } from '@vscode/python-extension';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
@@ -653,7 +648,9 @@ export class InterpreterService implements IInterpreterService {
                                 // Wait a few seconds, possible the Python extension API eagerly triggers
                                 // a delete event, but the env is still valid & then subsequently triggers an add/update event.
                                 // This causes issues for us, as the notebook controller gets removed & users code can get stopped.
-                                const interval = 10_000;
+                                // Bump timeout from 10_000 to 30_000 because of https://github.com/microsoft/vscode-python/issues/25144#issuecomment-2941408859
+                                // Too many issues that impact users, hence wait longer before removing the kernel.
+                                const interval = 30_000;
                                 const timeout = setTimeout(() => {
                                     logger.trace(
                                         `Python API env change detected & removed after ${interval}, ${e.type} => '${e.env.id}'`
@@ -685,22 +682,5 @@ export class InterpreterService implements IInterpreterService {
                 }
             })
             .catch(noop);
-    }
-}
-
-export const IPythonChatTools = Symbol('IPythonChatTools');
-export interface IPythonChatTools {
-    getLastUsedEnvInLmTool(uri: Uri): Promise<EnvironmentPath | undefined>;
-}
-
-@injectable()
-export class PythonChatTools implements IPythonChatTools {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
-    async getLastUsedEnvInLmTool(uri: Uri): Promise<EnvironmentPath | undefined> {
-        const [api, pythonApi] = await Promise.all([this.apiProvider.getApi(), this.apiProvider.getNewApi()]);
-        if (!api || !pythonApi) {
-            return;
-        }
-        return api.getLastUsedEnvInLmTool?.(uri);
     }
 }

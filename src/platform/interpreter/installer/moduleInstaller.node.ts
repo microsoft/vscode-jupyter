@@ -49,7 +49,8 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         productOrModuleName: Product | string,
         interpreter: PythonEnvironment | Environment,
         cancelTokenSource: CancellationTokenSource,
-        flags?: ModuleInstallFlags
+        flags?: ModuleInstallFlags,
+        silent?: boolean
     ): Promise<void> {
         const name =
             typeof productOrModuleName == 'string'
@@ -66,10 +67,12 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             return;
         }
         const install = async (
-            progress: Progress<{
-                message?: string | undefined;
-                increment?: number | undefined;
-            }>,
+            progress:
+                | Progress<{
+                      message?: string | undefined;
+                      increment?: number | undefined;
+                  }>
+                | undefined,
             token: CancellationToken
         ) => {
             const deferred = createDeferred();
@@ -138,7 +141,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                         counter += 1;
                         const message =
                             trimmedOutput.length > 28 ? `${trimmedOutput.substring(0, 28)}${suffix}` : trimmedOutput;
-                        progress.report({ message });
+                        progress?.report({ message });
                         logger.debug(output.out);
                         if (output.source === 'stderr') {
                             // https://github.com/microsoft/vscode-jupyter/issues/12703
@@ -210,7 +213,11 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             cancellable: true,
             title: Products.installingModule(name)
         };
-        await window.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
+        if (silent) {
+            await install(undefined, cancelTokenSource.token);
+        } else {
+            await window.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
+        }
     }
     public abstract isSupported(interpreter: PythonEnvironment | Environment): Promise<boolean>;
     protected abstract getExecutionArgs(

@@ -1,110 +1,39 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as vscode from 'vscode';
-import { IKernel, IKernelProvider } from '../../kernels/types';
-import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
-import { getEnvExtApi } from '../../platform/api/python-envs/pythonEnvsApi';
-import { raceTimeout } from '../../platform/common/utils/async';
-import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { raceCancellation } from '../../platform/common/cancellation';
-import { DisposableStore } from '../../platform/common/utils/lifecycle';
+import { LanguageModelTextPart, LanguageModelToolResult, Uri } from 'vscode';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 
-export async function sendPipListRequest(kernel: IKernel, token: vscode.CancellationToken) {
-    const codeToExecute = `import subprocess
-proc = subprocess.Popen(["pip", "list", "--format", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-stdout, stderr = proc.communicate()
-return stdout
-`.split('\n');
-
-    try {
-        const packages = await execCodeInBackgroundThread<packageDefinition[]>(kernel, codeToExecute, token);
-        return packages;
-    } catch (ex) {
-        throw ex;
-    }
+export function sendLMToolCallTelemetry(toolName: string, resource: Uri) {
+    // eslint-disable-next-line local-rules/dont-use-fspath
+    void getTelemetrySafeHashedString(resource.fsPath).then((resourceHash) => {
+        sendTelemetryEvent(Telemetry.LMToolCall, undefined, {
+            toolName,
+            resourceHash
+        });
+    });
 }
 
-export async function sendPipInstallRequest(kernel: IKernel, packages: string[], token: vscode.CancellationToken) {
-    const packageList = packages.join('", "');
-    const codeToExecute = `import subprocess
-proc = subprocess.Popen(["pip", "install", "${packageList}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-stdout, stderr = proc.communicate()
-return {"result": stdout}
-`.split('\n');
-
-    try {
-        const result = await execCodeInBackgroundThread<{ result: string }>(kernel, codeToExecute, token);
-        return result?.result;
-    } catch (ex) {
-        throw ex;
+export function sendConfigureNotebookToolCallTelemetry(
+    resource: Uri,
+    telemetry: {
+        createdEnv?: boolean;
+        installedPythonExtension?: boolean;
+        isPython?: boolean;
     }
-}
-
-export async function getPackagesFromEnvsExtension(kernelUri: vscode.Uri): Promise<packageDefinition[] | undefined> {
-    const envsApi = await getEnvExtApi();
-    if (!envsApi) {
-        return;
-    }
-
-    const environment = await envsApi.resolveEnvironment(kernelUri);
-    if (!environment) {
-        return;
-    }
-
-    return await envsApi.getPackages(environment);
-}
-
-export async function installPackageThroughEnvsExtension(kernelUri: vscode.Uri, packages: string[]): Promise<boolean> {
-    const envsApi = await getEnvExtApi();
-    if (!envsApi) {
-        return false;
-    }
-
-    const environment = await envsApi.resolveEnvironment(kernelUri);
-    if (!environment) {
-        return false;
-    }
-
-    await envsApi.managePackages(environment, { install: packages });
-    return true;
-}
-
-export type packageDefinition = { name: string; version?: string };
-
-export async function ensureKernelSelectedAndStarted(
-    notebook: vscode.NotebookDocument,
-    controllerRegistration: IControllerRegistration,
-    kernelProvider: IKernelProvider,
-    token: vscode.CancellationToken
 ) {
-    if (!kernelProvider.get(notebook)) {
-        const disposables = new DisposableStore();
-        try {
-            const selectedPromise = new Promise<void>((resolve) =>
-                disposables.add(
-                    controllerRegistration.onControllerSelected((e) =>
-                        e.notebook === notebook ? resolve() : undefined
-                    )
-                )
-            );
+    // eslint-disable-next-line local-rules/dont-use-fspath
+    void getTelemetrySafeHashedString(resource.fsPath).then((resourceHash) => {
+        sendTelemetryEvent(Telemetry.ConfigureNotebookToolCall, undefined, {
+            resourceHash,
+            createdEnv: telemetry.createdEnv === true,
+            installedPythonExtension: telemetry.installedPythonExtension === true,
+            isPython: telemetry.isPython === true
+        });
+    });
+}
 
-            await raceCancellation(
-                token,
-                vscode.commands.executeCommand('notebook.selectKernel', {
-                    notebookUri: notebook.uri,
-                    skipIfAlreadySelected: true
-                })
-            );
-
-            await raceTimeout(200, raceCancellation(token, selectedPromise));
-        } finally {
-            disposables.dispose();
-        }
-    }
-
-    const controller = controllerRegistration.getSelected(notebook);
-    if (controller) {
-        return raceCancellation(token, controller.startKernel(notebook));
-    }
+export function getUntrustedWorkspaceResponse() {
+    return new LanguageModelToolResult([new LanguageModelTextPart('Cannot use this tool in an untrusted workspace.')]);
 }

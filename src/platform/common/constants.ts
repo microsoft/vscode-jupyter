@@ -178,10 +178,8 @@ export namespace Commands {
     export const RunCurrentCell = 'jupyter.runcurrentcell';
     export const RunCurrentCellAdvance = 'jupyter.runcurrentcelladvance';
     export const CreateNewInteractive = 'jupyter.createnewinteractive';
-    export const ImportNotebook = 'jupyter.importnotebook';
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
-    export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
     export const InterruptKernel = 'jupyter.interruptkernel';
     export const RestartKernel = 'jupyter.restartkernel';
     export const RestartKernelAndRunAllCells = 'jupyter.restartkernelandrunallcells';
@@ -192,7 +190,6 @@ export namespace Commands {
     export const NotebookEditorAddCellBelow = 'jupyter.notebookeditor.addcellbelow';
     export const ExpandAllCells = 'jupyter.expandallcells';
     export const CollapseAllCells = 'jupyter.collapseallcells';
-    export const ExportOutputAsNotebook = 'jupyter.exportoutputasnotebook';
     export const ExecSelectionInInteractiveWindow = 'jupyter.execSelectionInteractive';
     export const RunFileInInteractiveWindows = 'jupyter.runFileInteractive';
     export const DebugFileInInteractiveWindows = 'jupyter.debugFileInteractive';
@@ -477,7 +474,9 @@ export enum Telemetry {
     EnterRemoteJupyterUrl = 'DATASCIENCE.ENTER_REMOTE_JUPYTER_URL',
     NativeNotebookExecutionPerformance = 'DATASCIENCE.JUPYTER_NOTEBOOK_EXEC_PERFORMANCE',
     JupyterNotebookExecutionPerformance = 'DATASCIENCE.JUPYTER_JUPYTER_NOTEBOOK_EXEC_PERFORMANCE',
-    NativeNotebookEditPerformance = 'DATASCIENCE.JUPYTER_NOTEBOOK_EDIT_PERFORMANCE'
+    NativeNotebookEditPerformance = 'DATASCIENCE.JUPYTER_NOTEBOOK_EDIT_PERFORMANCE',
+    LMToolCall = 'DATASCIENCE.JUPYTER_LM_TOOL_CALL',
+    ConfigureNotebookToolCall = 'DATASCIENCE.JUPYTER_CONFIGURE_NOTEBOOK_TOOL_CALL'
 }
 
 export enum JupyterCommands {

@@ -26,8 +26,8 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: 20.17.0
-  NPM_VERSION: 10.8.2
+  NODE_VERSION: 22.15.1
+  NPM_VERSION: 10.9.2
   PYTHON_VERSION: 3.8
   DENO_VERSION: '~1.37'
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
@@ -314,12 +314,12 @@ jobs:
           #     tags: '^[^@]+$|@mandatory'
           #     os: ubuntu-latest
           #     ipywidgetsVersion: ''
-          - jupyterConnection: web
-            python: python
-            pythonVersion: '3.10'
-            tags: '^[^@]+$|@mandatory'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
+          #   - jupyterConnection: web https://github.com/microsoft/vscode-jupyter/issues/16645
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     tags: '^[^@]+$|@mandatory'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: ''
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
@@ -390,7 +390,7 @@ jobs:
           python-version: ${{matrix.pythonVersion}}
 
       - name: Install Conda environment from environment.yml
-        uses: mamba-org/setup-micromamba@0dea6379afdaffa5d528b3d1dabc45da37f443fc # v2.0.4
+        uses: mamba-org/setup-micromamba@b09ef9b599704322748535812ca03efb2625677b # v2.0.5
         if: matrix.python == 'conda'
         with:
           cache-downloads: true

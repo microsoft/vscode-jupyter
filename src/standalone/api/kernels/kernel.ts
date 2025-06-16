@@ -7,7 +7,6 @@ import { l10n, CancellationToken, Event, EventEmitter, NotebookCellOutput, type 
 import { Kernel, KernelStatus, Output } from '../../../api';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
-import { isPythonKernelConnection } from '../../../kernels/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
 import { noop } from '../../../platform/common/utils/misc';
@@ -132,12 +131,7 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
 
                 return that.onDidReceiveDisplayUpdate.bind(this);
             },
-            executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
-            executeChatCode: (
-                code: string,
-                handlers: Record<string, (data?: string) => Promise<string | undefined>>,
-                token: CancellationToken
-            ) => this.executeChatCode(code, handlers, token)
+            executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token)
         });
     }
     static createApiKernel(
@@ -180,23 +174,6 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
     async *executeCode(code: string, token: CancellationToken): AsyncGenerator<Output, void, unknown> {
         await this.checkAccess();
         for await (const output of this.executeCodeInternal(code, undefined, token)) {
-            yield output;
-        }
-    }
-    async *executeChatCode(
-        code: string,
-        handlers: Record<string, (data?: string) => Promise<string | undefined>>,
-        token: CancellationToken
-    ): AsyncGenerator<Output, void, unknown> {
-        await this.checkAccess();
-        const allowedList = ['ms-vscode.dscopilot-agent', JVSC_EXTENSION_ID];
-        if (!allowedList.includes(this.extensionId.toLowerCase())) {
-            throw new Error(`Proposed API is not supported for extension ${this.extensionId}`);
-        }
-        if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
-            throw new Error('Chat code execution is only supported for Python kernels');
-        }
-        for await (const output of this.executeCodeInternal(code, handlers, token)) {
             yield output;
         }
     }
