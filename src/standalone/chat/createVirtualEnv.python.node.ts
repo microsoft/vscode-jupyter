@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IBaseToolParams, selectKernelAndStart } from './helper.node';
+import { selectKernelAndStart } from './helper.node';
 import { PythonEnvironmentExtension, PythonExtension as PythonExtensionId } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import {
@@ -22,6 +22,7 @@ import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sleep } from '../../platform/common/utils/async';
 import { IKernelDependencyService } from '../../kernels/types';
 import { DisplayOptions } from '../../kernels/displayOptions';
+import { IBaseToolParams } from './helper';
 
 export async function createVirtualEnvAndSelectAsKernel(
     options: LanguageModelToolInvocationOptions<IBaseToolParams>,

@@ -7,66 +7,63 @@ import {
     ensureKernelSelectedAndStarted,
     getPackagesFromEnvsExtension,
     hasKernelStartedOrIsStarting,
-    IBaseToolParams,
     packageDefinition,
-    resolveNotebookFromFilePath,
     sendPipListRequest
 } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../kernels/helpers.node';
-import { getUntrustedWorkspaceResponse, sendLMToolCallTelemetry } from './helper';
+import { BaseTool, IBaseToolParams } from './helper';
+import { WrappedError } from '../../platform/errors/types';
 
-export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams> {
+export class ListPackageTool extends BaseTool<IBaseToolParams> {
     public static toolName = 'notebook_list_packages';
-
-    public get name() {
-        return ListPackageTool.toolName;
-    }
-    public get description() {
-        return 'Lists all installed packages in the active kernel of a notebook.';
-    }
-
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration
-    ) {}
+    ) {
+        super(ListPackageTool.toolName);
+    }
 
-    async invoke(options: vscode.LanguageModelToolInvocationOptions<IBaseToolParams>, token: vscode.CancellationToken) {
-        if (!vscode.workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-        const { filePath } = options.input;
-
-        if (!filePath) {
-            throw new Error('notebookUri is a required parameter.');
-        }
-
-        const notebook = await resolveNotebookFromFilePath(filePath);
-        sendLMToolCallTelemetry(ListPackageTool.toolName, notebook.uri);
+    async invokeImpl(
+        _options: vscode.LanguageModelToolInvocationOptions<IBaseToolParams>,
+        notebook: vscode.NotebookDocument,
+        token: vscode.CancellationToken
+    ) {
         const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
         if (!kernel) {
-            throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
+            throw new WrappedError(
+                `No active kernel for notebook ${notebook.uri}, A kernel needs to be selected.`,
+                undefined,
+                'noActiveKernel'
+            );
         }
         if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
-            throw new Error(`The selected Kernel is not a Python Kernel and this tool only supports Python Kernels.`);
+            throw new WrappedError(
+                `The selected Kernel is not a Python Kernel and this tool only supports Python Kernels.`,
+                undefined,
+                'nonPythonKernelSelected'
+            );
         }
 
         const packagesMessage = await getPythonPackagesInKernel(kernel);
 
         if (!packagesMessage) {
-            throw new Error(`Unable to list packages for notebook ${filePath}.`);
+            throw new WrappedError(
+                `Unable to list packages for notebook ${notebook.uri}.`,
+                undefined,
+                'failedToListPackages'
+            );
         }
 
         return new vscode.LanguageModelToolResult([packagesMessage]);
     }
 
-    async prepareInvocation(
-        options: vscode.LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
+    async prepareInvocationImpl(
+        _options: vscode.LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
+        notebook: vscode.NotebookDocument,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
-
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);
         if (controller && kernel && hasKernelStartedOrIsStarting(kernel)) {
@@ -85,7 +82,11 @@ export class ListPackageTool implements vscode.LanguageModelTool<IBaseToolParams
 
 export async function getPythonPackagesInKernel(kernel: IKernel): Promise<vscode.LanguageModelTextPart | undefined> {
     if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
-        throw new Error(`The selected Kernel is not a Python Kernel and this tool only supports Python Kernels.`);
+        throw new WrappedError(
+            `The selected Kernel is not a Python Kernel and this tool only supports Python Kernels.`,
+            undefined,
+            'nonPythonKernelSelected'
+        );
     }
 
     const kernelUri = kernel.kernelConnectionMetadata.interpreter?.uri;

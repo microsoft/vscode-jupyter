@@ -4406,11 +4406,20 @@ export class IEventNamePropertyMapping {
          * One of configure_notebook, configure_non_python_notebook, configure_python_notebook, notebook_install_packages, notebook_list_packages, restart_notebook_kernel, select_recommended_python_environment
          */
         toolName: string;
-
         /**
          * Hash of the resource (notebook.uri associated with this).
          */
-        resourceHash: string;
+        resourceHash: string | undefined;
+        /**
+         * Whether there was a failure.
+         * Common to most of the events.
+         */
+        failed: boolean;
+        /**
+         * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
+         * Common to most of the events.
+         */
+        failureCategory?: string;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -4424,6 +4433,17 @@ export class IEventNamePropertyMapping {
             resourceHash: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'PerformanceAndHealth'
+            },
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'Whether there was a failure. Common to most of the events.'
+            },
+            failureCategory: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment:
+                    'A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error. Common to most of the events.'
             }
         }
     };

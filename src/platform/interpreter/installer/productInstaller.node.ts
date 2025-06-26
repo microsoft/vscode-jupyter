@@ -38,6 +38,7 @@ import { translateProductToModule } from './utils';
 import { IInterpreterPackages } from '../types';
 import { IPythonExecutionFactory } from '../types.node';
 import { Environment } from '@vscode/python-extension';
+import { WrappedError } from '../../errors/types';
 
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${await getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
@@ -249,6 +250,6 @@ export class ProductInstaller implements IInstaller {
             default:
                 break;
         }
-        throw new Error(`Unknown product ${product}`);
+        throw new WrappedError(`Unknown product ${product}`, undefined, 'unknownProduct');
     }
 }

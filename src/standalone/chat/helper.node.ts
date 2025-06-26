@@ -9,17 +9,12 @@ import { raceTimeout } from '../../platform/common/utils/async';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { raceCancellation } from '../../platform/common/cancellation';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
-import { isEqual } from '../../platform/vscode-path/resources';
-import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
+import { getNotebookMetadata } from '../../platform/common/utils';
 import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { getNameOfKernelConnection, isPythonNotebook } from '../../kernels/helpers';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { getPythonPackagesInKernel } from './listPackageTool.node';
-
-export interface IBaseToolParams {
-    filePath: string;
-}
 
 export async function sendPipListRequest(kernel: IKernel, token: vscode.CancellationToken) {
     const codeToExecute = `import subprocess
@@ -172,40 +167,6 @@ export async function selectKernelAndStart(
     if (controller && startKernel) {
         return raceCancellation(token, controller.startKernel(notebook));
     }
-}
-
-export async function resolveNotebookFromFilePath(filePath: string) {
-    const uri = vscode.Uri.file(filePath);
-    let parsedUri = uri;
-    try {
-        parsedUri = vscode.Uri.parse(filePath);
-    } catch {
-        //
-    }
-    let notebook =
-        vscode.workspace.notebookDocuments.find(
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            (doc) => doc.uri.path === filePath || doc.uri.fsPath === filePath
-        ) ||
-        vscode.workspace.notebookDocuments.find((doc) => isEqual(doc.uri, uri)) ||
-        vscode.workspace.notebookDocuments.find(
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            (doc) => doc.uri.path === filePath || doc.uri.fsPath === parsedUri.fsPath
-        ) ||
-        vscode.workspace.notebookDocuments.find((doc) => isEqual(doc.uri, parsedUri));
-    notebook = notebook || (await vscode.workspace.openNotebookDocument(uri));
-    if (!notebook) {
-        throw new Error(`Unable to find notebook at ${filePath}.`);
-    }
-    if (!isJupyterNotebook(notebook)) {
-        throw new Error(
-            `The notebook at ${filePath} is not a Jupyter notebook This tool can only be used with Jupyter Notebooks.`
-        );
-    }
-    if (!vscode.window.visibleNotebookEditors.find((e) => e.notebook === notebook)) {
-        await vscode.window.showNotebookDocument(notebook);
-    }
-    return notebook;
 }
 
 export async function getToolResponseForConfiguredNotebook(

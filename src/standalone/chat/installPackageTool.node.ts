@@ -6,50 +6,43 @@ import { IKernelProvider } from '../../kernels/types';
 import {
     ensureKernelSelectedAndStarted,
     hasKernelStartedOrIsStarting,
-    IBaseToolParams,
-    installPackageThroughEnvsExtension,
-    resolveNotebookFromFilePath
+    installPackageThroughEnvsExtension
 } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { RestartKernelTool } from './restartKernelTool.node';
-import { getUntrustedWorkspaceResponse, sendLMToolCallTelemetry } from './helper';
+import { BaseTool, IBaseToolParams } from './helper';
+import { WrappedError } from '../../platform/errors/types';
 
-export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPackageParams> {
+export class InstallPackagesTool extends BaseTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
-
-    public get name() {
-        return InstallPackagesTool.toolName;
-    }
-    public get description() {
-        return 'Installs a package into the active kernel of a notebook.';
-    }
-
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration,
         private readonly installationManager: IInstallationChannelManager
-    ) {}
+    ) {
+        super(InstallPackagesTool.toolName);
+    }
 
-    async invoke(
+    async invokeImpl(
         options: vscode.LanguageModelToolInvocationOptions<IInstallPackageParams>,
+        notebook: vscode.NotebookDocument,
         token: vscode.CancellationToken
     ) {
-        const { filePath, packageList } = options.input;
-        if (!vscode.workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
+        const { packageList } = options.input;
+
+        if (!packageList || packageList.length === 0) {
+            throw new WrappedError('filePath and package list are required parameters.', undefined, 'emptyPackageList');
         }
 
-        if (!filePath || !packageList || packageList.length === 0) {
-            throw new Error('filePath and package list are required parameters.');
-        }
-
-        const notebook = await resolveNotebookFromFilePath(filePath);
-        sendLMToolCallTelemetry(InstallPackagesTool.toolName, notebook.uri);
         const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
         if (!kernel) {
-            throw new Error(`No active kernel for notebook ${filePath}, A kernel needs to be selected.`);
+            throw new WrappedError(
+                `No active kernel for notebook ${notebook.uri}, A kernel needs to be selected.`,
+                undefined,
+                'noActiveKernel'
+            );
         }
 
         let success: boolean = false;
@@ -111,11 +104,11 @@ export class InstallPackagesTool implements vscode.LanguageModelTool<IInstallPac
         ]);
     }
 
-    async prepareInvocation(
+    async prepareInvocationImpl(
         options: vscode.LanguageModelToolInvocationPrepareOptions<IInstallPackageParams>,
+        notebook: vscode.NotebookDocument,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);
         if (controller && kernel && hasKernelStartedOrIsStarting(kernel)) {

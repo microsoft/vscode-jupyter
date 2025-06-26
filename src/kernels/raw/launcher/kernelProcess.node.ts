@@ -26,7 +26,7 @@ import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
 } from '../../../platform/errors/errorUtils';
-import { BaseError } from '../../../platform/errors/types';
+import { BaseError, WrappedError } from '../../../platform/errors/types';
 import { logger, ignoreLogging } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
@@ -651,7 +651,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         }
 
         if (!exeObs.proc) {
-            throw new Error('KernelProcess failed to launch');
+            throw new WrappedError('KernelProcess failed to launch', undefined, 'kernelProcessFailedToLaunch');
         }
         this._process = exeObs.proc;
         this._pid = exeObs.proc.pid;

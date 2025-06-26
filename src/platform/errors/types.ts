@@ -94,7 +94,17 @@ export type ErrorCategory =
     | 'jupytercannotbelaunchedwitheroot'
     | 'pythonExtension'
     | 'windowsLongPathNotEnabled'
-    | 'unknown';
+    | 'unknown'
+    | 'notebookNotFound'
+    | 'nonJupyterNotebook'
+    | 'emptyPackageList'
+    | 'noActiveKernel'
+    | 'nonPythonKernelSelected'
+    | 'failedToListPackages'
+    | 'kernelProcessFailedToLaunch'
+    | 'unknownProduct'
+    | 'invalidInterpreter'
+    | 'pythonAPINotInitialized';
 
 // If there are errors, then the are added to the telementry properties.
 export type TelemetryErrorProperties = {
