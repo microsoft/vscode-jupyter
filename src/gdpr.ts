@@ -590,6 +590,7 @@
    "DATASCIENCE.JUPYTER_LM_TOOL_CALL" : {
      "toolName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"The name of the tool that was called. Tool name. One of configure_notebook, configure_non_python_notebook, configure_python_notebook, notebook_install_packages, notebook_list_packages, restart_notebook_kernel, select_recommended_python_environment","owner":"donjayamanne"},
      "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri associated with this).","owner":"donjayamanne"},
+     "outcome": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Outcome of the tool call.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
