@@ -12,7 +12,8 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IInstallationChannelManager } from '../../platform/interpreter/installer/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { RestartKernelTool } from './restartKernelTool.node';
-import { BaseTool, IBaseToolParams, TelemetrySafeError } from './helper';
+import { BaseTool, IBaseToolParams } from './helper';
+import { WrappedError } from '../../platform/errors/types';
 
 export class InstallPackagesTool extends BaseTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
@@ -32,13 +33,14 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> {
         const { packageList } = options.input;
 
         if (!packageList || packageList.length === 0) {
-            throw new TelemetrySafeError('filePath and package list are required parameters.', 'emptyPackageList');
+            throw new WrappedError('filePath and package list are required parameters.', undefined, 'emptyPackageList');
         }
 
         const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
         if (!kernel) {
-            throw new TelemetrySafeError(
+            throw new WrappedError(
                 `No active kernel for notebook ${notebook.uri}, A kernel needs to be selected.`,
+                undefined,
                 'noActiveKernel'
             );
         }

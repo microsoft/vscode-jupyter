@@ -19,22 +19,14 @@ import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { isJupyterNotebook } from '../../platform/common/utils';
+import { BaseError, WrappedError } from '../../platform/errors/types';
 
 export interface IBaseToolParams {
     filePath: string;
 }
 
-export class TelemetrySafeError extends Error {
-    constructor(
-        message: string,
-        public readonly reason: string
-    ) {
-        super(message);
-    }
-}
-
 export function sendLMToolCallTelemetry(toolName: string, resource?: Uri, error?: Error) {
-    const outcome = error ? (error instanceof TelemetrySafeError ? error.reason : 'error') : 'success';
+    const outcome = error ? (error instanceof BaseError ? error.category : 'error') : 'success';
     // eslint-disable-next-line local-rules/dont-use-fspath
     const resourceHash = resource ? getTelemetrySafeHashedString(resource.fsPath) : Promise.resolve(undefined);
     void resourceHash.then((resourceHash) => {
@@ -90,11 +82,12 @@ export async function resolveNotebookFromFilePath(filePath: string) {
         workspace.notebookDocuments.find((doc) => isEqual(doc.uri, parsedUri));
     notebook = notebook || (await workspace.openNotebookDocument(uri));
     if (!notebook) {
-        throw new TelemetrySafeError(`Unable to find notebook at ${filePath}.`, 'notebookNotFound');
+        throw new WrappedError(`Unable to find notebook at ${filePath}.`, undefined, 'notebookNotFound');
     }
     if (!isJupyterNotebook(notebook)) {
-        throw new TelemetrySafeError(
+        throw new WrappedError(
             `The notebook at ${filePath} is not a Jupyter notebook This tool can only be used with Jupyter Notebooks.`,
+            undefined,
             'nonJupyterNotebook'
         );
     }

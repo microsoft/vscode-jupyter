@@ -10,6 +10,7 @@ import { getDisplayPath } from '../common/platform/fs-paths';
 import { Uri } from 'vscode';
 import { getOSType, OSType } from '../common/utils/platform';
 import { isCI } from '../common/constants';
+import { WrappedError } from '../errors/types';
 
 export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment | { id: string }) {
     const env = getCachedEnvironment(interpreter);
@@ -149,7 +150,7 @@ export function getCachedEnvironment(interpreter?: { id: string } | string) {
         return;
     }
     if (!pythonApi) {
-        throw new Error('Python API not initialized');
+        throw new WrappedError('Python API not initialized', undefined, 'pythonAPINotInitialized');
     }
     if (typeof interpreter === 'string') {
         return pythonApi.environments.known.find(
@@ -184,7 +185,7 @@ export function getCachedSysPrefix(interpreter?: { id: string }) {
         return;
     }
     if (!pythonApi) {
-        throw new Error('Python API not initialized');
+        throw new WrappedError('Python API not initialized', undefined, 'pythonAPINotInitialized');
     }
     const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
     return cachedInfo?.executable?.sysPrefix;
@@ -213,7 +214,7 @@ export function getCachedVersion(interpreter?: { id?: string }) {
         return;
     }
     if (!pythonApi) {
-        throw new Error('Python API not initialized');
+        throw new WrappedError('Python API not initialized', undefined, 'pythonAPINotInitialized');
     }
     const cachedInfo = pythonApi.environments.known.find((i) => i.id === interpreter.id);
     return cachedInfo?.version;

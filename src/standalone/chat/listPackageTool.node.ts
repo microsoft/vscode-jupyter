@@ -13,7 +13,8 @@ import {
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../kernels/helpers.node';
-import { BaseTool, IBaseToolParams, TelemetrySafeError } from './helper';
+import { BaseTool, IBaseToolParams } from './helper';
+import { WrappedError } from '../../platform/errors/types';
 
 export class ListPackageTool extends BaseTool<IBaseToolParams> {
     public static toolName = 'notebook_list_packages';
@@ -31,14 +32,16 @@ export class ListPackageTool extends BaseTool<IBaseToolParams> {
     ) {
         const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
         if (!kernel) {
-            throw new TelemetrySafeError(
+            throw new WrappedError(
                 `No active kernel for notebook ${notebook.uri}, A kernel needs to be selected.`,
+                undefined,
                 'noActiveKernel'
             );
         }
         if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
-            throw new TelemetrySafeError(
+            throw new WrappedError(
                 `The selected Kernel is not a Python Kernel and this tool only supports Python Kernels.`,
+                undefined,
                 'nonPythonKernelSelected'
             );
         }
@@ -46,8 +49,9 @@ export class ListPackageTool extends BaseTool<IBaseToolParams> {
         const packagesMessage = await getPythonPackagesInKernel(kernel);
 
         if (!packagesMessage) {
-            throw new TelemetrySafeError(
+            throw new WrappedError(
                 `Unable to list packages for notebook ${notebook.uri}.`,
+                undefined,
                 'failedToListPackages'
             );
         }
@@ -78,8 +82,9 @@ export class ListPackageTool extends BaseTool<IBaseToolParams> {
 
 export async function getPythonPackagesInKernel(kernel: IKernel): Promise<vscode.LanguageModelTextPart | undefined> {
     if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
-        throw new TelemetrySafeError(
+        throw new WrappedError(
             `The selected Kernel is not a Python Kernel and this tool only supports Python Kernels.`,
+            undefined,
             'nonPythonKernelSelected'
         );
     }

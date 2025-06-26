@@ -8,6 +8,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { BaseTool, IBaseToolParams } from './helper';
 import { INotebookCommandHandler } from '../../notebooks/notebookCommandListener';
 import { basename } from '../../platform/vscode-path/resources';
+import { WrappedError } from '../../platform/errors/types';
 
 interface RestartKernelToolParams extends IBaseToolParams {
     reason?: string;
@@ -42,8 +43,10 @@ export class RestartKernelTool extends BaseTool<RestartKernelToolParams> {
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);
         if (!controller || !kernel || !hasKernelStartedOrIsStarting(kernel)) {
-            throw new Error(
-                `No active kernel for notebook ${options.input.filePath}, the configure_notebook tool can be used to help the user select a kernel.`
+            throw new WrappedError(
+                `No active kernel for notebook ${options.input.filePath}, the configure_notebook tool can be used to help the user select a kernel.`,
+                undefined,
+                'noActiveKernel'
             );
         }
         const nbName = basename(notebook.uri);

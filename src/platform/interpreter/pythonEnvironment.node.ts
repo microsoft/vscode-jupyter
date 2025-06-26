@@ -11,6 +11,7 @@ import { Uri } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
 import { logger } from '../logging';
 import { Environment } from '@vscode/python-extension';
+import { WrappedError } from '../errors/types';
 class PythonEnvironment {
     private readonly executable: Uri;
     private readonly pythonEnvId: string;
@@ -29,7 +30,11 @@ class PythonEnvironment {
         this.pythonEnvId = interpreter.id;
         if ('executable' in interpreter) {
             if (!interpreter.executable.uri) {
-                throw new Error(`interpreter.executable.uri is not defined for ${interpreter.id}`);
+                throw new WrappedError(
+                    `interpreter.executable.uri is not defined for ${interpreter.id}`,
+                    undefined,
+                    'invalidInterpreter'
+                );
             }
             this.executable = interpreter.executable.uri;
         } else {
