@@ -104,7 +104,7 @@ export type ErrorCategory =
     | 'kernelProcessFailedToLaunch'
     | 'unknownProduct'
     | 'invalidInterpreter'
-    |'pythonAPINotInitialized';
+    | 'pythonAPINotInitialized';
 
 // If there are errors, then the are added to the telementry properties.
 export type TelemetryErrorProperties = {
