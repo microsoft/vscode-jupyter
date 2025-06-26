@@ -4411,9 +4411,15 @@ export class IEventNamePropertyMapping {
          */
         resourceHash: string | undefined;
         /**
-         * Outcome of the tool call.
+         * Whether there was a failure.
+         * Common to most of the events.
          */
-        outcome: string;
+        failed: boolean;
+        /**
+         * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
+         * Common to most of the events.
+         */
+        failureCategory?: string;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -4428,9 +4434,16 @@ export class IEventNamePropertyMapping {
                 classification: 'PublicNonPersonalData',
                 purpose: 'PerformanceAndHealth'
             },
-            outcome: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'PerformanceAndHealth'
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'Whether there was a failure. Common to most of the events.'
+            },
+            failureCategory: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment:
+                    'A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error. Common to most of the events.'
             }
         }
     };

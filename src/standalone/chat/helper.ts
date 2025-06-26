@@ -62,7 +62,8 @@ export abstract class BaseTool<T extends IBaseToolParams> implements LanguageMod
         } catch (ex) {
             error = ex;
         } finally {
-            const outcome = error ? (error instanceof BaseError ? error.category : 'error') : 'success';
+            const failed = !!error;
+            const failureCategory = error ? (error instanceof BaseError ? error.category : 'error') : undefined;
             const resourceHash = notebookUri
                 ? // eslint-disable-next-line local-rules/dont-use-fspath
                   getTelemetrySafeHashedString(notebookUri.fsPath)
@@ -71,7 +72,8 @@ export abstract class BaseTool<T extends IBaseToolParams> implements LanguageMod
                 sendTelemetryEvent(Telemetry.LMToolCall, undefined, {
                     toolName: this.toolName,
                     resourceHash,
-                    outcome
+                    failed,
+                    failureCategory
                 });
             });
         }
