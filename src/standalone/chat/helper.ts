@@ -25,19 +25,6 @@ export interface IBaseToolParams {
     filePath: string;
 }
 
-export function sendLMToolCallTelemetry(toolName: string, resource?: Uri, error?: Error) {
-    const outcome = error ? (error instanceof BaseError ? error.category : 'error') : 'success';
-    // eslint-disable-next-line local-rules/dont-use-fspath
-    const resourceHash = resource ? getTelemetrySafeHashedString(resource.fsPath) : Promise.resolve(undefined);
-    void resourceHash.then((resourceHash) => {
-        sendTelemetryEvent(Telemetry.LMToolCall, undefined, {
-            toolName,
-            resourceHash,
-            outcome
-        });
-    });
-}
-
 export function sendConfigureNotebookToolCallTelemetry(
     resource: Uri,
     telemetry: {
@@ -57,11 +44,59 @@ export function sendConfigureNotebookToolCallTelemetry(
     });
 }
 
-export function getUntrustedWorkspaceResponse() {
-    return new LanguageModelToolResult([new LanguageModelTextPart('Cannot use this tool in an untrusted workspace.')]);
+export abstract class BaseTool<T extends IBaseToolParams> implements LanguageModelTool<T> {
+    constructor(private readonly toolName: string) {}
+
+    public async invoke(options: LanguageModelToolInvocationOptions<T>, token: CancellationToken) {
+        if (!workspace.isTrusted) {
+            return new LanguageModelToolResult([
+                new LanguageModelTextPart('Cannot use this tool in an untrusted workspace.')
+            ]);
+        }
+
+        let error: Error | undefined;
+        let notebookUri: Uri | undefined;
+        try {
+            const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+            return await this.invokeImpl(options, notebook, token);
+        } catch (ex) {
+            error = ex;
+        } finally {
+            const outcome = error ? (error instanceof BaseError ? error.category : 'error') : 'success';
+            const resourceHash = notebookUri
+                ? // eslint-disable-next-line local-rules/dont-use-fspath
+                  getTelemetrySafeHashedString(notebookUri.fsPath)
+                : Promise.resolve(undefined);
+            void resourceHash.then((resourceHash) => {
+                sendTelemetryEvent(Telemetry.LMToolCall, undefined, {
+                    toolName: this.toolName,
+                    resourceHash,
+                    outcome
+                });
+            });
+        }
+    }
+
+    async prepareInvocation(
+        options: LanguageModelToolInvocationPrepareOptions<T>,
+        token: CancellationToken
+    ): Promise<PreparedToolInvocation> {
+        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        return this.prepareInvocationImpl(options, notebook, token);
+    }
+    protected abstract invokeImpl(
+        options: LanguageModelToolInvocationOptions<T>,
+        notebook: NotebookDocument,
+        token: CancellationToken
+    ): ProviderResult<LanguageModelToolResult>;
+    protected abstract prepareInvocationImpl(
+        options: LanguageModelToolInvocationPrepareOptions<T>,
+        notebook: NotebookDocument,
+        token: CancellationToken
+    ): Promise<PreparedToolInvocation>;
 }
 
-export async function resolveNotebookFromFilePath(filePath: string) {
+async function resolveNotebookFromFilePath(filePath: string) {
     const uri = Uri.file(filePath);
     let parsedUri = uri;
     try {
@@ -95,43 +130,4 @@ export async function resolveNotebookFromFilePath(filePath: string) {
         await window.showNotebookDocument(notebook);
     }
     return notebook;
-}
-
-export abstract class BaseTool<T extends IBaseToolParams> implements LanguageModelTool<T> {
-    constructor(private readonly toolName: string) {}
-
-    public async invoke(options: LanguageModelToolInvocationOptions<T>, token: CancellationToken) {
-        if (!workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-
-        let error: Error | undefined;
-        let notebookUri: Uri | undefined;
-        try {
-            const notebook = await resolveNotebookFromFilePath(options.input.filePath);
-            return await this.invokeImpl(options, notebook, token);
-        } catch (ex) {
-            error = ex;
-        } finally {
-            sendLMToolCallTelemetry(this.toolName, notebookUri, error);
-        }
-    }
-
-    async prepareInvocation(
-        options: LanguageModelToolInvocationPrepareOptions<T>,
-        token: CancellationToken
-    ): Promise<PreparedToolInvocation> {
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
-        return this.prepareInvocationImpl(options, notebook, token);
-    }
-    protected abstract invokeImpl(
-        options: LanguageModelToolInvocationOptions<T>,
-        notebook: NotebookDocument,
-        token: CancellationToken
-    ): ProviderResult<LanguageModelToolResult>;
-    protected abstract prepareInvocationImpl(
-        options: LanguageModelToolInvocationPrepareOptions<T>,
-        notebook: NotebookDocument,
-        token: CancellationToken
-    ): Promise<PreparedToolInvocation>;
 }
