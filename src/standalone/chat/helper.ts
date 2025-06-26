@@ -20,6 +20,7 @@ import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { BaseError, WrappedError } from '../../platform/errors/types';
+import { isCancellationError } from '../../platform/common/cancellation';
 
 export interface IBaseToolParams {
     filePath: string;
@@ -62,8 +63,15 @@ export abstract class BaseTool<T extends IBaseToolParams> implements LanguageMod
         } catch (ex) {
             error = ex;
         } finally {
-            const failed = !!error;
-            const failureCategory = error ? (error instanceof BaseError ? error.category : 'error') : undefined;
+            const isCancelled = token.isCancellationRequested || (error ? isCancellationError(error, true) : false);
+            const failed = !!error || isCancelled;
+            const failureCategory = isCancelled
+                ? 'cancelled'
+                : error
+                ? error instanceof BaseError
+                    ? error.category
+                    : 'error'
+                : undefined;
             const resourceHash = notebookUri
                 ? // eslint-disable-next-line local-rules/dont-use-fspath
                   getTelemetrySafeHashedString(notebookUri.fsPath)
