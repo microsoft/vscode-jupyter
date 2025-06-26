@@ -5,8 +5,6 @@ import {
     ensureKernelSelectedAndStarted,
     getToolResponseForConfiguredNotebook,
     hasKernelStartedOrIsStarting,
-    IBaseToolParams,
-    resolveNotebookFromFilePath,
     selectKernelAndStart
 } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
@@ -14,12 +12,11 @@ import {
     CancellationToken,
     l10n,
     LanguageModelTextPart,
-    LanguageModelTool,
     LanguageModelToolInvocationOptions,
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
-    PreparedToolInvocation,
-    workspace
+    NotebookDocument,
+    PreparedToolInvocation
 } from 'vscode';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
@@ -27,29 +24,27 @@ import { raceCancellationError } from '../../platform/common/cancellation';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IKernelProvider } from '../../kernels/types';
-import { getUntrustedWorkspaceResponse, sendLMToolCallTelemetry } from './helper';
+import { BaseTool, IBaseToolParams } from './helper';
 import { basename } from '../../platform/vscode-path/resources';
 
 export interface IConfigurePythonNotebookToolParams extends IBaseToolParams {
     action?: 'select';
 }
 
-export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolParams> {
+export class ConfigurePythonNotebookTool extends BaseTool<IConfigurePythonNotebookToolParams> {
     public static toolName = 'configure_python_notebook';
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration
-    ) {}
+    ) {
+        super(ConfigurePythonNotebookTool.toolName);
+    }
 
-    async invoke(
+    async invokeImpl(
         options: LanguageModelToolInvocationOptions<IConfigurePythonNotebookToolParams>,
+        notebook: NotebookDocument,
         token: CancellationToken
     ) {
-        if (!workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
-        sendLMToolCallTelemetry(ConfigurePythonNotebookTool.toolName, notebook.uri);
         if (!this.controllerRegistration.getSelected(notebook) && options.input.action !== 'select') {
             logger.trace(
                 `ConfigurePythonNotebookTool: No controller selected for notebook ${getDisplayPath(notebook.uri)}`
@@ -98,11 +93,11 @@ export class ConfigurePythonNotebookTool implements LanguageModelTool<IBaseToolP
         ]);
     }
 
-    async prepareInvocation(
+    async prepareInvocationImpl(
         options: LanguageModelToolInvocationPrepareOptions<IConfigurePythonNotebookToolParams>,
+        notebook: NotebookDocument,
         _token: CancellationToken
     ): Promise<PreparedToolInvocation> {
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         const kernel = this.kernelProvider.get(notebook.uri);
         const controller = this.controllerRegistration.getSelected(notebook);
         if (controller && kernel && hasKernelStartedOrIsStarting(kernel)) {

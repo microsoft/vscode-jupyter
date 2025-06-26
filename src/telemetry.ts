@@ -4406,11 +4406,14 @@ export class IEventNamePropertyMapping {
          * One of configure_notebook, configure_non_python_notebook, configure_python_notebook, notebook_install_packages, notebook_list_packages, restart_notebook_kernel, select_recommended_python_environment
          */
         toolName: string;
-
         /**
          * Hash of the resource (notebook.uri associated with this).
          */
-        resourceHash: string;
+        resourceHash: string | undefined;
+        /**
+         * Outcome of the tool call.
+         */
+        outcome: string;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -4422,6 +4425,10 @@ export class IEventNamePropertyMapping {
                 comment: 'The name of the tool that was called.'
             },
             resourceHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            },
+            outcome: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'PerformanceAndHealth'
             }

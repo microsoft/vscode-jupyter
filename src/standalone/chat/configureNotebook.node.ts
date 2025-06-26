@@ -5,9 +5,7 @@ import { IKernelDependencyService, IKernelProvider } from '../../kernels/types';
 import {
     getPrimaryLanguageOfNotebook,
     getToolResponseForConfiguredNotebook,
-    hasKernelStartedOrIsStarting,
-    IBaseToolParams,
-    resolveNotebookFromFilePath
+    hasKernelStartedOrIsStarting
 } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { PythonExtension as PythonExtensionId } from '../../platform/common/constants';
@@ -16,42 +14,36 @@ import {
     CancellationToken,
     extensions,
     l10n,
-    LanguageModelTool,
     LanguageModelToolInvocationOptions,
     LanguageModelToolInvocationPrepareOptions,
     lm,
     NotebookDocument,
-    PreparedToolInvocation,
-    workspace
+    PreparedToolInvocation
 } from 'vscode';
 import { ConfigurePythonNotebookTool, IConfigurePythonNotebookToolParams } from './configureNotebook.python.node';
 import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
 import { logger } from '../../platform/logging';
 import { getRecommendedPythonEnvironment } from '../../notebooks/controllers/preferredKernelConnectionService.node';
 import { createVirtualEnvAndSelectAsKernel, shouldCreateVirtualEnvForNotebook } from './createVirtualEnv.python.node';
-import {
-    getUntrustedWorkspaceResponse,
-    sendConfigureNotebookToolCallTelemetry,
-    sendLMToolCallTelemetry
-} from './helper';
+import { BaseTool, IBaseToolParams, sendConfigureNotebookToolCallTelemetry } from './helper';
 import { basename } from '../../platform/vscode-path/resources';
 
-export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams> {
+export class ConfigureNotebookTool extends BaseTool<IBaseToolParams> {
     public static toolName = 'configure_notebook';
     constructor(
         private readonly controllerRegistration: IControllerRegistration,
         private readonly kernelDependencyService: IKernelDependencyService,
         private readonly kernelProvider: IKernelProvider,
         private readonly configurePythonNotebookTool: ConfigurePythonNotebookTool
-    ) {}
+    ) {
+        super(ConfigureNotebookTool.toolName);
+    }
 
-    async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
-        if (!workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
-        sendLMToolCallTelemetry(ConfigureNotebookTool.toolName, notebook.uri);
-
+    async invokeImpl(
+        options: LanguageModelToolInvocationOptions<IBaseToolParams>,
+        notebook: NotebookDocument,
+        token: CancellationToken
+    ) {
         const selectedController = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);
         if (selectedController && kernel && hasKernelStartedOrIsStarting(kernel)) {
@@ -141,11 +133,11 @@ export class ConfigureNotebookTool implements LanguageModelTool<IBaseToolParams>
         return lm.invokeTool(ConfigurePythonNotebookTool.toolName, { ...options, input }, token);
     }
 
-    async prepareInvocation(
-        options: LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
+    async prepareInvocationImpl(
+        _options: LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
+        notebook: NotebookDocument,
         _token: CancellationToken
     ): Promise<PreparedToolInvocation> {
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         const name = basename(notebook.uri);
         return {
             invocationMessage: l10n.t('Configuring notebook {0}', name)

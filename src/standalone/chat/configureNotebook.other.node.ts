@@ -5,38 +5,36 @@ import {
     ensureKernelSelectedAndStarted,
     getPrimaryLanguageOfNotebook,
     getToolResponseForConfiguredNotebook,
-    hasKernelStartedOrIsStarting,
-    IBaseToolParams,
-    resolveNotebookFromFilePath
+    hasKernelStartedOrIsStarting
 } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import {
     CancellationToken,
     l10n,
     LanguageModelTextPart,
-    LanguageModelTool,
     LanguageModelToolInvocationOptions,
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
-    PreparedToolInvocation,
-    workspace
+    NotebookDocument,
+    PreparedToolInvocation
 } from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { getUntrustedWorkspaceResponse, sendLMToolCallTelemetry } from './helper';
+import { BaseTool, IBaseToolParams } from './helper';
 
-export class ConfigureNonPythonNotebookTool implements LanguageModelTool<IBaseToolParams> {
+export class ConfigureNonPythonNotebookTool extends BaseTool<IBaseToolParams> {
     public static toolName = 'configure_non_python_notebook';
     constructor(
         private readonly controllerRegistration: IControllerRegistration,
         private readonly kernelProvider: IKernelProvider
-    ) {}
+    ) {
+        super(ConfigureNonPythonNotebookTool.toolName);
+    }
 
-    async invoke(options: LanguageModelToolInvocationOptions<IBaseToolParams>, token: CancellationToken) {
-        if (!workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
-        sendLMToolCallTelemetry(ConfigureNonPythonNotebookTool.toolName, notebook.uri);
+    async invokeImpl(
+        _options: LanguageModelToolInvocationOptions<IBaseToolParams>,
+        notebook: NotebookDocument,
+        token: CancellationToken
+    ) {
         await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
 
         const selectedController = this.controllerRegistration.getSelected(notebook);
@@ -49,11 +47,11 @@ export class ConfigureNonPythonNotebookTool implements LanguageModelTool<IBaseTo
         ]);
     }
 
-    async prepareInvocation(
-        options: LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
+    async prepareInvocationImpl(
+        _options: LanguageModelToolInvocationPrepareOptions<IBaseToolParams>,
+        notebook: NotebookDocument,
         _token: CancellationToken
     ): Promise<PreparedToolInvocation> {
-        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
         const language = getPrimaryLanguageOfNotebook(notebook);
         const controller = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook.uri);
