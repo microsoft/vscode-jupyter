@@ -14,10 +14,10 @@ The controller system manages the lifecycle of notebook kernel connections and p
 
 #### Core Controller Components
 
-- **`VSCodeNotebookController`**: The main implementation of VS Code's NotebookController API
-- **`ControllerRegistration`**: Central registry for managing available notebook controllers
-- **`KernelConnector`**: Handles the connection process between notebooks and kernels
-- **`KernelSelector`**: Provides UI for selecting kernels for notebooks
+-   **`VSCodeNotebookController`**: The main implementation of VS Code's NotebookController API
+-   **`ControllerRegistration`**: Central registry for managing available notebook controllers
+-   **`KernelConnector`**: Handles the connection process between notebooks and kernels
+-   **`KernelSelector`**: Provides UI for selecting kernels for notebooks
 
 ```mermaid
 classDiagram
@@ -52,16 +52,16 @@ classDiagram
 
 The kernel source selection system provides specialized UI for different types of kernel connections:
 
-- **`LocalNotebookKernelSourceSelector`**: Selects local kernel specs
-- **`LocalPythonEnvNotebookKernelSourceSelector`**: Selects Python environments
-- **`RemoteNotebookKernelSourceSelector`**: Selects remote Jupyter kernels
-- **`KernelSourceCommandHandler`**: Coordinates kernel source selection UI
+-   **`LocalNotebookKernelSourceSelector`**: Selects local kernel specs
+-   **`LocalPythonEnvNotebookKernelSourceSelector`**: Selects Python environments
+-   **`RemoteNotebookKernelSourceSelector`**: Selects remote Jupyter kernels
+-   **`KernelSourceCommandHandler`**: Coordinates kernel source selection UI
 
 #### Connection Display and Management
 
-- **`ConnectionDisplayDataProvider`**: Formats kernel connection information for display
-- **`PreferredKernelConnectionService`**: Manages preferred kernel selections
-- **`RemoteKernelConnectionHandler`**: Handles remote kernel connection lifecycle
+-   **`ConnectionDisplayDataProvider`**: Formats kernel connection information for display
+-   **`PreferredKernelConnectionService`**: Manages preferred kernel selections
+-   **`RemoteKernelConnectionHandler`**: Handles remote kernel connection lifecycle
 
 ### Notebook Debugging (`debugger/`)
 
@@ -69,9 +69,9 @@ The debugging system provides comprehensive debugging support for notebook cells
 
 #### Core Debugging Components
 
-- **`DebuggingManager`**: Central manager for debugging sessions
-- **`KernelDebugAdapter`**: Bridges VS Code debug protocol with kernel debugging
-- **`DebugLocationTracker`**: Tracks execution location during debugging
+-   **`DebuggingManager`**: Central manager for debugging sessions
+-   **`KernelDebugAdapter`**: Bridges VS Code debug protocol with kernel debugging
+-   **`DebugLocationTracker`**: Tracks execution location during debugging
 
 ```mermaid
 sequenceDiagram
@@ -101,15 +101,15 @@ sequenceDiagram
 
 Specialized controllers for different debugging modes:
 
-- **`RunByLineController`**: Implements run-by-line debugging functionality
-- **`DebugCellController`**: Manages cell-level debugging
-- **`RestartController`**: Handles debug session restarts
+-   **`RunByLineController`**: Implements run-by-line debugging functionality
+-   **`DebugCellController`**: Manages cell-level debugging
+-   **`RestartController`**: Handles debug session restarts
 
 #### Debug Services
 
-- **`JupyterDebugService`**: Provides Jupyter-specific debugging capabilities
-- **`MultiplexingDebugService`**: Manages multiple debug sessions
-- **`DebuggerVariables`**: Handles variable inspection during debugging
+-   **`JupyterDebugService`**: Provides Jupyter-specific debugging capabilities
+-   **`MultiplexingDebugService`**: Manages multiple debug sessions
+-   **`DebuggerVariables`**: Handles variable inspection during debugging
 
 ### Export System (`export/`)
 
@@ -137,39 +137,39 @@ flowchart TD
 
 #### Key Export Components
 
-- **`FileConverter`**: Main coordinator for export operations
-- **`ExportBase`**: Base class for export implementations (Node.js/Web variants)
-- **`ExportUtil`**: Utilities for export operations
-- **`ExportDialog`**: File picker UI for export destinations
+-   **`FileConverter`**: Main coordinator for export operations
+-   **`ExportBase`**: Base class for export implementations (Node.js/Web variants)
+-   **`ExportUtil`**: Utilities for export operations
+-   **`ExportDialog`**: File picker UI for export destinations
 
 #### Export Formats
 
-- **`ExportToPython`**: Converts notebooks to Python scripts
-- **`ExportToHTML`**: Exports notebooks as HTML documents
-- **`ExportToPDF`**: Generates PDF versions of notebooks
-- **`ExportInterpreterFinder`**: Finds appropriate Python environments for export
+-   **`ExportToPython`**: Converts notebooks to Python scripts
+-   **`ExportToHTML`**: Exports notebooks as HTML documents
+-   **`ExportToPDF`**: Generates PDF versions of notebooks
+-   **`ExportInterpreterFinder`**: Finds appropriate Python environments for export
 
 ### Language Support (`languages/`)
 
 Manages programming language support within notebooks:
 
-- **`NotebookCellLanguageService`**: Manages cell language identification and switching
-- **`EmptyNotebookCellLanguageService`**: Fallback service for unsupported scenarios
+-   **`NotebookCellLanguageService`**: Manages cell language identification and switching
+-   **`EmptyNotebookCellLanguageService`**: Fallback service for unsupported scenarios
 
 ### Output Handling (`outputs/`)
 
 Manages notebook cell outputs and their presentation:
 
-- **`CellOutputMimeTypeTracker`**: Tracks and categorizes output MIME types
-- **`TracebackFormatter`**: Formats Python tracebacks for display
-- **`LinkProvider`**: Provides clickable links in outputs
+-   **`CellOutputMimeTypeTracker`**: Tracks and categorizes output MIME types
+-   **`TracebackFormatter`**: Formats Python tracebacks for display
+-   **`LinkProvider`**: Provides clickable links in outputs
 
 ### Service Registration
 
 Platform-specific service registration:
 
-- **`serviceRegistry.node.ts`**: Services for Node.js environment
-- **`serviceRegistry.web.ts`**: Services for web browser environment
+-   **`serviceRegistry.node.ts`**: Services for Node.js environment
+-   **`serviceRegistry.web.ts`**: Services for web browser environment
 
 ## Key Interfaces and Types
 
@@ -261,17 +261,17 @@ sequenceDiagram
 
 ### Node.js Environment Features
 
-- **Full Export Capabilities**: Complete nbconvert integration for all export formats
-- **Python Environment Detection**: Deep integration with Python extension APIs
-- **File System Access**: Direct file system operations for export and import
-- **Process Management**: Can spawn external processes for export operations
+-   **Full Export Capabilities**: Complete nbconvert integration for all export formats
+-   **Python Environment Detection**: Deep integration with Python extension APIs
+-   **File System Access**: Direct file system operations for export and import
+-   **Process Management**: Can spawn external processes for export operations
 
 ### Web Environment Limitations
 
-- **Limited Export**: Only basic export formats supported
-- **Remote Operations**: Relies on remote Jupyter servers for advanced features
-- **Browser APIs**: Constrained by browser security model
-- **No File System**: Uses VS Code's file system abstraction
+-   **Limited Export**: Only basic export formats supported
+-   **Remote Operations**: Relies on remote Jupyter servers for advanced features
+-   **Browser APIs**: Constrained by browser security model
+-   **No File System**: Uses VS Code's file system abstraction
 
 ## Component Interactions
 
@@ -328,31 +328,31 @@ sequenceDiagram
 
 ### Controller Error Handling
 
-- **Connection Failures**: `KernelConnector` provides user-friendly error messages
-- **Kernel Death**: Automatic detection and recovery options
-- **Authentication Issues**: Specialized handling for remote connections
+-   **Connection Failures**: `KernelConnector` provides user-friendly error messages
+-   **Kernel Death**: Automatic detection and recovery options
+-   **Authentication Issues**: Specialized handling for remote connections
 
 ### Export Error Handling
 
-- **Missing Dependencies**: `ExportInterpreterFinder` validates requirements
-- **Conversion Failures**: Detailed error reporting with suggested fixes
-- **File System Issues**: Graceful handling of permission/space issues
+-   **Missing Dependencies**: `ExportInterpreterFinder` validates requirements
+-   **Conversion Failures**: Detailed error reporting with suggested fixes
+-   **File System Issues**: Graceful handling of permission/space issues
 
 ## Testing Architecture
 
 ### Unit Tests
 
-- Controller logic testing with mocked dependencies
-- Export format validation
-- Debug adapter protocol compliance
-- Service registration verification
+-   Controller logic testing with mocked dependencies
+-   Export format validation
+-   Debug adapter protocol compliance
+-   Service registration verification
 
 ### Integration Tests
 
-- End-to-end controller workflows
-- Export process validation
-- Debug session management
-- Cross-platform compatibility
+-   End-to-end controller workflows
+-   Export process validation
+-   Debug session management
+-   Cross-platform compatibility
 
 This architecture provides a comprehensive foundation for notebook management in VS Code, supporting multiple execution environments, debugging capabilities, and export formats while maintaining extensibility for future enhancements.
 
@@ -369,18 +369,18 @@ Based on my comprehensive analysis of the VS Code Jupyter extension's notebooks 
 
 ## Key Architectural Insights:
 
-- **Component Interactions**: Detailed workflows showing how controllers, kernels, and debugging systems work together
-- **Platform Differences**: Clear distinction between Node.js and web capabilities
-- **Extension Points**: Guidance for adding new export formats, kernel sources, and debugging features
-- **Error Handling**: Comprehensive error recovery strategies
-- **Testing Architecture**: Both unit and integration testing approaches
+-   **Component Interactions**: Detailed workflows showing how controllers, kernels, and debugging systems work together
+-   **Platform Differences**: Clear distinction between Node.js and web capabilities
+-   **Extension Points**: Guidance for adding new export formats, kernel sources, and debugging features
+-   **Error Handling**: Comprehensive error recovery strategies
+-   **Testing Architecture**: Both unit and integration testing approaches
 
 ## Workflow Documentation:
 
-- Controller selection and connection process
-- Cell execution flow
-- Export operations from start to finish
-- Debugging session management
-- Cross-component communication patterns
+-   Controller selection and connection process
+-   Cell execution flow
+-   Export operations from start to finish
+-   Debugging session management
+-   Cross-component communication patterns
 
 The documentation follows the same structure as the existing kernel instructions file and provides the comprehensive context needed for working effectively with the notebooks system components. This should significantly improve development efficiency when working on notebook-related features, bugs, or enhancements.
