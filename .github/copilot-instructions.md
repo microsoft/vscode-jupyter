@@ -6,49 +6,179 @@ This file provides repository-wide instructions for the Jupyter Extension. These
 
 ## Project Overview
 
--   This repository is the **Jupyter extension for Visual Studio Code**. It enables rich Jupyter notebook, interactive computing, and Python data science experiences in VS Code.
--   The codebase is primarily TypeScript, with some JavaScript and Python for integration and testing.
--   The extension uses the VS Code Extension API, proposed APIs, and integrates with Jupyter, Python, and other data science tools.
--   The extension works in both desktop environments and web browsers (vscode.dev and GitHub Codespaces), providing consistent functionality across platforms.
+The **Jupyter Extension for Visual Studio Code** is a comprehensive extension that brings the full power of Jupyter notebooks to VS Code. It provides:
 
-## Key Features
+- **Multi-language support**: Works with any Jupyter kernel (Python, R, Julia, C#, etc.)
+- **Cross-platform compatibility**: Functions identically in desktop VS Code, vscode.dev, and GitHub Codespaces
+- **Native integration**: Built on VS Code's native notebook API for optimal performance and UX
+- **Rich data science features**: Interactive computing, variable exploration, debugging, and visualization
 
--   Jupyter notebook and interactive window support in VS Code
--   Python, data science, and notebook integration
--   Rich UI, code completions, and debugging for notebooks
--   Support for multiple kernels and remote Jupyter servers
--   Export to various formats (HTML, PDF)
--   Custom renderers for various output types
--   Web-based editing support through vscode.dev and GitHub Codespaces
--   Integration with other VS Code extensions and features
+### How It Works
 
-## Tech Stack
+The extension operates through a multi-layered architecture:
 
--   **TypeScript**: Main language, follows VS Code coding standards
--   **Node.js**: Extension host and backend features
--   **Python**: For integration, testing, and notebook support
--   **VS Code Extension API**: Core integration, including proposed APIs
--   **ESBuild**: Bundling and compilation
--   **Mocha**: Unit testing
--   **Inversify**: Dependency injection framework
+1. **Extension Host Layer**: Manages extension lifecycle, commands, and VS Code integration
+2. **Platform Layer**: Provides cross-platform abstractions for file systems, processes, and UI
+3. **Kernel Management Layer**: Discovers, connects to, and manages Jupyter kernels
+4. **Notebook Layer**: Handles notebook editing, cell execution, and output rendering
+5. **WebView Layer**: Renders rich outputs, variable viewers, and interactive components
 
-## Architecture & File Organization
+The extension uses dependency injection (Inversify) to manage complex service relationships and supports both Node.js (desktop) and web browser environments through conditional compilation.
 
--   Organize features by functionality, not technical layer
--   Separate platform services (`src/platform/`) from extension features (`src/`)
--   Place unit tests close to implementation (in files named `<filename>.unit.test.ts`)
--   Integration tests go in `src/test` folder
--   Use clear interfaces for service boundaries
--   Do not introduce breaking changes to the extension API without discussion
--   The extension uses Inversify for dependency injection in `src/platform/ioc`
--   The extension has multiple entry points for different environments:
-    -   `extension.node.ts`: Node.js-specific activation logic
-    -   `extension.web.ts`: Web browser-specific activation logic
--   Cross-platform support is implemented with separate files:
-    -   `.node.ts` files for Node.js-specific implementations
-    -   `.web.ts` files for web browser-specific implementations
-    -   Regular `.ts` files for common functionality
+## Tech Stack & Dependencies
 
+### Core Technologies
+- **TypeScript**: Primary language with strict type checking enabled
+- **Node.js**: Runtime for desktop functionality
+- **Inversify**: Dependency injection container
+- **VS Code Extension API**: Core platform integration
+
+### Build & Development Tools
+- **ESBuild**: Fast TypeScript compilation and bundling
+- **Mocha**: Unit testing framework with TDD interface
+- **ESLint**: Code linting with TypeScript-specific rules
+- **Prettier**: Code formatting (disabled in favor of ESLint rules)
+
+### Testing Infrastructure
+- **Mocha + Chai**: Unit testing with assertion library
+- **ts-mockito**: Mocking framework for TypeScript
+- **VS Code Test Runner**: Integration testing in VS Code environment
+- **Sinon**: Test spies, stubs, and fake timers
+
+## Project Architecture
+
+### Directory Structure & Responsibilities
+
+**Root Level**
+- `package.json`: Extension manifest with commands, configuration, and activation events
+- `src/`: Main TypeScript source code
+- `build/`: Build scripts, webpack configs, and CI/CD tools
+- `pythonFiles/`: Python scripts for integration and helper functions
+- `resources/`: Static assets, icons, and walkthrough content
+- `types/`: TypeScript type definitions
+
+**Core Source Structure (`src/`)**
+
+```
+src/
+├── extension.common.ts          # Shared extension activation logic
+├── extension.node.ts            # Desktop-specific entry point
+├── extension.web.ts             # Web browser entry point
+├── extension.node.proxy.ts      # Desktop proxy for bundle optimization
+├── platform/                   # Cross-platform abstractions
+│   ├── common/                 # Shared utilities and interfaces
+│   ├── ioc/                    # Dependency injection container
+│   ├── logging/                # Logging infrastructure
+│   ├── telemetry/              # Usage analytics
+│   ├── activation/             # Extension lifecycle management
+│   ├── interpreter/            # Python environment discovery
+│   ├── pythonEnvironments/     # Python environment management
+│   └── webviews/               # WebView communication layer
+├── kernels/                    # Kernel management and execution
+│   ├── common/                 # Shared kernel interfaces
+│   ├── jupyter/                # Jupyter protocol implementation
+│   ├── raw/                    # Direct kernel process management
+│   ├── execution/              # Cell execution logic
+│   ├── variables/              # Variable inspection and data viewer
+│   └── types.ts                # Kernel-related type definitions
+├── notebooks/                  # Notebook editing and management
+│   ├── controllers/            # VS Code notebook controllers
+│   ├── export/                 # Export to HTML, PDF, etc.
+│   ├── debugger/               # Notebook debugging support
+│   ├── languages/              # Language-specific features
+│   └── outputs/                # Cell output rendering
+├── interactive-window/         # Python Interactive window (REPL)
+│   ├── commands/               # Interactive window commands
+│   ├── debugger/               # Interactive debugging
+│   └── editor-integration/     # Integration with Python files
+├── webviews/                   # Rich UI components
+│   ├── extension-side/         # Extension-side webview logic
+│   └── webview-side/           # Frontend React/HTML components
+└── test/                       # Integration and end-to-end tests
+```
+
+### Cross-Platform Architecture
+
+The extension supports both desktop and web environments through:
+
+**Desktop Implementation (`.node.ts` files)**
+- Full Node.js API access for file system, process spawning, and native modules
+- Direct kernel process management via child_process
+- ZeroMQ communication with kernels
+- Full Python environment discovery and management
+
+**Web Implementation (`.web.ts` files)**
+- Browser-compatible APIs only
+- Remote kernel connections via HTTP/WebSocket
+- Limited file system access through VS Code APIs
+- No access to Python environments
+
+**Shared Implementation (regular `.ts` files)**
+- Common business logic that works across platforms
+- VS Code API usage for UI and editor integration
+- Platform-agnostic utilities and interfaces
+
+### Dependency Injection Architecture
+
+The extension uses **Inversify** for dependency injection to manage complex service relationships:
+
+**Container Setup** (`src/platform/ioc/`)
+- `serviceManager.ts`: Central service registration and resolution
+- `types.ts`: Service identifiers and interfaces
+- Service registries in each module (`serviceRegistry.node.ts`, `serviceRegistry.web.ts`)
+
+**Registration Pattern**
+```typescript
+// Each module has platform-specific service registration
+export function registerTypes(serviceManager: IServiceManager) {
+    serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
+    serviceManager.add<IKernel>(IKernel, Kernel);
+}
+```
+
+**Resolution Pattern**
+```typescript
+// Services are injected via constructor parameters
+@injectable()
+export class NotebookController {
+    constructor(
+        @inject(IKernelProvider) private kernelProvider: IKernelProvider,
+        @inject(ILogger) private logger: ILogger
+    ) {}
+}
+```
+
+
+## Coding Standards & Best Practices
+
+### TypeScript Standards
+- **Strict TypeScript**: `strict: true` with `noImplicitAny`, `noUnusedLocals`, `noUnusedParameters`
+- **Interface over type**: Use interfaces for object types, type aliases for unions/intersections
+- **Naming conventions**: PascalCase for classes/interfaces, camelCase for variables/functions
+- **File naming**: Use kebab-case for file names, match the primary export name
+
+### Code Organization Principles
+- **Feature-based organization**: Group by domain functionality, not technical layers
+- **Platform separation**: Use `.node.ts`/`.web.ts` suffixes for platform-specific code
+- **Dependency injection**: All services must use Inversify DI container
+- **Interface segregation**: Define small, focused interfaces rather than large ones
+- **Service boundaries**: Platform services (`src/platform/`) vs. extension features (`src/`)
+
+### Testing Requirements
+- **Unit tests**: Place alongside implementation as `<filename>.unit.test.ts`
+- **TDD approach**: Use Mocha's TDD interface (`suite`, `test`, `setup`, `teardown`)
+- **Mocking**: Use `ts-mockito` for TypeScript-compatible mocks
+- **Test structure**: Follow AAA pattern (Arrange, Act, Assert)
+
+### Error Handling & Logging
+- **Localization**: All user-facing messages must use `l10n.t()` from `src/platform/common/utils/localize.ts`
+- **Error propagation**: Use typed error classes in `src/platform/errors/`
+- **Logging**: Use injected `ILogger` service, not console.log
+
+### Code Quality
+- **ESLint rules**: Follow the extensive ruleset in `.eslintrc.js`
+- **Copyright headers**: All files must include Microsoft copyright header
+- **Async patterns**: Prefer async/await over Promises, handle cancellation with CancellationToken
 
 ## Development Workflow
 
