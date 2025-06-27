@@ -6,8 +6,9 @@ Read the contents of these pages https://code.visualstudio.com/docs/copilot/copi
 
 Review the structure of the file `.github/kernel-instructions.md`.
 
-Now create a file named `.github/instructions/<FolderName>.instructions.md` based on #codebase and contents of `src/<FolderName>`.
-In particular document:
+Basedon the structore of the contents in `.github/kernel-instructions.md`, I would like you to review the #codebase , specially the contents of `src/platform`.
+Now create a file named `.github/instructions/platform.instructions.md` based on the above documentation:
+Ensure the following information is in the documentation:
 - The major components (names & files)
 - How each component interacts with others
 - Workflow for high level operations
