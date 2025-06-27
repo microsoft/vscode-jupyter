@@ -62,6 +62,7 @@ export abstract class BaseTool<T extends IBaseToolParams> implements LanguageMod
             return await this.invokeImpl(options, notebook, token);
         } catch (ex) {
             error = ex;
+            throw ex;
         } finally {
             const isCancelled = token.isCancellationRequested || (error ? isCancellationError(error, true) : false);
             const failed = !!error || isCancelled;
@@ -77,7 +78,7 @@ export abstract class BaseTool<T extends IBaseToolParams> implements LanguageMod
                   getTelemetrySafeHashedString(notebookUri.fsPath)
                 : Promise.resolve(undefined);
             void resourceHash.then((resourceHash) => {
-                sendTelemetryEvent(Telemetry.LMToolCall, undefined, {
+                sendTelemetryEvent(Telemetry.InvokeTool, undefined, {
                     toolName: this.toolName,
                     resourceHash,
                     failed,

@@ -4400,7 +4400,7 @@ export class IEventNamePropertyMapping {
     /**
      * Telemetry sent with details of LM toolcalls.
      */
-    [Telemetry.LMToolCall]: TelemetryEventInfo<{
+    [Telemetry.InvokeTool]: TelemetryEventInfo<{
         /**
          * Tool name.
          * One of configure_notebook, configure_non_python_notebook, configure_python_notebook, notebook_install_packages, notebook_list_packages, restart_notebook_kernel, select_recommended_python_environment
