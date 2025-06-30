@@ -2023,7 +2023,6 @@
                     "notebooks"
                 ],
                 "icon": "$(notebook)",
-                "canBeReferencedInPrompt": true,
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -2097,7 +2096,6 @@
                     "enable_other_tool_configure_notebook"
                 ],
                 "icon": "$(package)",
-                "canBeReferencedInPrompt": true,
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -2124,7 +2122,6 @@
                     "enable_other_tool_configure_notebook"
                 ],
                 "icon": "$(package)",
-                "canBeReferencedInPrompt": true,
                 "inputSchema": {
                     "type": "object",
                     "properties": {
