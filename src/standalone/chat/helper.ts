@@ -65,7 +65,7 @@ export abstract class BaseTool<T extends IBaseToolParams> implements LanguageMod
             throw ex;
         } finally {
             const isCancelled = token.isCancellationRequested || (error ? isCancellationError(error, true) : false);
-            const failed = !!error || isCancelled;
+            const failed = !!error || isCancelled ? 'true' : 'false';
             const failureCategory = isCancelled
                 ? 'cancelled'
                 : error
