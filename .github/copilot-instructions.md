@@ -105,6 +105,7 @@ src/
 
 -   `src/interactive-window` found in `.github/instructions/interactiveWindow.instructions.md`
 -   `src/kernels` found in `.github/instructions/kernel.instructions.md`
+-   `src/kernels/jupyter` found in `.github/instructions/kernel-jupyter.instructions.md`
 -   `src/notebooks` found in `.github/instructions/notebooks.instructions.md`
 -   `src/platform` found in `.github/instructions/platform.instructions.md`
 -   `src/standalone` found in `.github/instructions/standalone.instructions.md`
