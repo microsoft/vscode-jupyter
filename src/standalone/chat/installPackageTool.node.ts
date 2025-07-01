@@ -14,9 +14,10 @@ import { isPythonKernelConnection } from '../../kernels/helpers';
 import { RestartKernelTool } from './restartKernelTool.node';
 import { BaseTool, IBaseToolParams } from './helper';
 import { WrappedError } from '../../platform/errors/types';
+import { IDisposable } from '../../platform/common/types';
 
 
-export class InstallPackagesTool extends BaseTool<IInstallPackageParams> {
+export class InstallPackagesTool extends BaseTool<IInstallPackageParams> implements IDisposable {
     public static toolName = 'notebook_install_packages';
     private readonly executedNotebooks = new WeakSet<vscode.NotebookDocument>();
     private readonly disposables: vscode.Disposable[] = [];
@@ -26,6 +27,10 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> {
         private readonly installationManager: IInstallationChannelManager
     ) {
         super(InstallPackagesTool.toolName);
+        
+        // Check existing notebooks for already-executed cells
+        this.initializeExecutedNotebooks();
+        
         // Track cell execution for all notebooks
         this.disposables.push(
             vscode.workspace.onDidChangeNotebookDocument((e) => {
@@ -42,8 +47,29 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> {
         );
     }
 
+    dispose(): void {
+        this.disposables.forEach(d => d.dispose());
+        this.disposables.length = 0;
+    }
+
+    private initializeExecutedNotebooks(): void {
+        // Check all currently open notebooks for executed cells
+        for (const notebook of vscode.workspace.notebookDocuments) {
+            if (this.hasAnyExecutedCells(notebook)) {
+                this.executedNotebooks.add(notebook);
+            }
+        }
+    }
+
+    private hasAnyExecutedCells(notebook: vscode.NotebookDocument): boolean {
+        return notebook.getCells().some(cell => 
+            cell.kind === vscode.NotebookCellKind.Code &&
+            typeof cell.executionSummary?.executionOrder === 'number'
+        );
+    }
+
     private hasExecutedCells(notebook: vscode.NotebookDocument): boolean {
-        return this.executedNotebooks.has(notebook);
+        return this.executedNotebooks.has(notebook) || this.hasAnyExecutedCells(notebook);
     }
 
     async invokeImpl(
