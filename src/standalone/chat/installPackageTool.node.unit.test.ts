@@ -89,6 +89,26 @@ suite('InstallPackagesTool Unit Tests', () => {
         assert.isTrue(hasExecuted, 'Should return true for notebook with executed cells');
     });
 
+    test('Should not detect cells with execution order 0', () => {
+        // Setup notebook with cell that has execution order 0 (not executed)
+        const mockNonExecutedCell = {
+            kind: vscode.NotebookCellKind.Code,
+            executionSummary: { executionOrder: 0 }
+        } as vscode.NotebookCell;
+        
+        mockCells.push(mockNonExecutedCell);
+        
+        installPackagesTool = new InstallPackagesTool(
+            instance(kernelProvider),
+            instance(controllerRegistration),
+            instance(installationManager)
+        );
+        
+        // hasExecutedCells should return false for cell with execution order 0
+        const hasExecuted = (installPackagesTool as any).hasExecutedCells(mockNotebook);
+        assert.isFalse(hasExecuted, 'Should return false for cell with execution order 0');
+    });
+
     test('Should track cell execution via event listener', () => {
         let onDidChangeCallback: (e: vscode.NotebookDocumentChangeEvent) => void;
         
@@ -168,6 +188,29 @@ suite('InstallPackagesTool Unit Tests', () => {
         
         // Should still return false since only non-code cells were changed
         assert.isFalse((installPackagesTool as any).hasExecutedCells(mockNotebook));
+    });
+
+    test('Should handle errors gracefully during initialization', () => {
+        // Setup notebook that throws error when getCells is called
+        const mockErrorNotebook = {
+            uri: vscode.Uri.file('/test/error-notebook.ipynb'),
+            getCells: sinon.stub().throws(new Error('Test error'))
+        } as any;
+        
+        mockWorkspace.notebookDocuments = [mockErrorNotebook];
+        
+        // Should not throw error during initialization
+        assert.doesNotThrow(() => {
+            installPackagesTool = new InstallPackagesTool(
+                instance(kernelProvider),
+                instance(controllerRegistration),
+                instance(installationManager)
+            );
+        }, 'Should handle initialization errors gracefully');
+        
+        // Should return false for error case
+        const hasExecuted = (installPackagesTool as any).hasExecutedCells(mockErrorNotebook);
+        assert.isFalse(hasExecuted, 'Should return false when error occurs');
     });
 
     test('Should dispose of event listeners properly', () => {

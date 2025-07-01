@@ -34,14 +34,20 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> impleme
         // Track cell execution for all notebooks
         this.disposables.push(
             vscode.workspace.onDidChangeNotebookDocument((e) => {
-                for (const change of e.cellChanges) {
-                    const cell = change.cell;
-                    if (
-                        cell.kind === vscode.NotebookCellKind.Code &&
-                        typeof cell.executionSummary?.executionOrder === 'number'
-                    ) {
-                        this.executedNotebooks.add(e.notebook);
+                try {
+                    for (const change of e.cellChanges) {
+                        const cell = change.cell;
+                        if (
+                            cell.kind === vscode.NotebookCellKind.Code &&
+                            typeof cell.executionSummary?.executionOrder === 'number' &&
+                            cell.executionSummary.executionOrder > 0
+                        ) {
+                            this.executedNotebooks.add(e.notebook);
+                            break; // Once we find one executed cell, no need to check others
+                        }
                     }
+                } catch (error) {
+                    console.warn('Error processing notebook document change:', error);
                 }
             })
         );
@@ -53,19 +59,31 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> impleme
     }
 
     private initializeExecutedNotebooks(): void {
-        // Check all currently open notebooks for executed cells
-        for (const notebook of vscode.workspace.notebookDocuments) {
-            if (this.hasAnyExecutedCells(notebook)) {
-                this.executedNotebooks.add(notebook);
+        try {
+            // Check all currently open notebooks for executed cells
+            for (const notebook of vscode.workspace.notebookDocuments) {
+                if (this.hasAnyExecutedCells(notebook)) {
+                    this.executedNotebooks.add(notebook);
+                }
             }
+        } catch (error) {
+            // If there's an error during initialization, log it but don't fail
+            console.warn('Error initializing executed notebooks:', error);
         }
     }
 
     private hasAnyExecutedCells(notebook: vscode.NotebookDocument): boolean {
-        return notebook.getCells().some(cell => 
-            cell.kind === vscode.NotebookCellKind.Code &&
-            typeof cell.executionSummary?.executionOrder === 'number'
-        );
+        try {
+            return notebook.getCells().some(cell => 
+                cell.kind === vscode.NotebookCellKind.Code &&
+                typeof cell.executionSummary?.executionOrder === 'number' &&
+                cell.executionSummary.executionOrder > 0
+            );
+        } catch (error) {
+            // If there's an error accessing cells, assume no execution
+            console.warn('Error checking executed cells:', error);
+            return false;
+        }
     }
 
     private hasExecutedCells(notebook: vscode.NotebookDocument): boolean {
