@@ -14,6 +14,7 @@ suite('Cell Execution Tracker', () => {
 
     setup(() => {
         cellExecutionTracker = new CellExecutionTracker();
+        cellExecutionTracker.activate(); // Activate the service to start listening for events
         mockNotebook = mock<NotebookDocument>();
         mockCell = mock<NotebookCell>();
         
@@ -26,6 +27,12 @@ suite('Cell Execution Tracker', () => {
         const notebook = instance(mockNotebook);
         const result = cellExecutionTracker.hasExecutedCells(notebook);
         expect(result).to.be.false;
+    });
+
+    test('Should activate successfully', () => {
+        // Test that activate method can be called without errors
+        const newTracker = new CellExecutionTracker();
+        expect(() => newTracker.activate()).to.not.throw;
     });
 
     test('Should return true after a cell execution completes', () => {

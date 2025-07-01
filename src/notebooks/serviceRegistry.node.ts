@@ -121,4 +121,5 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         NotebookPythonEnvironmentService
     );
     serviceManager.addSingleton<ICellExecutionTracker>(ICellExecutionTracker, CellExecutionTracker);
+    serviceManager.addBinding(ICellExecutionTracker, IExtensionSyncActivationService);
 }

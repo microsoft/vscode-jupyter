@@ -5,6 +5,7 @@ import { injectable } from 'inversify';
 import { NotebookDocument, NotebookCell, Disposable } from 'vscode';
 import { DisposableBase } from '../common/utils/lifecycle';
 import { ICellExecutionTracker } from '../../notebooks/types';
+import { IExtensionSyncActivationService } from '../activation/types';
 import {
     NotebookCellExecutionState,
     notebookCellExecutions,
@@ -16,11 +17,17 @@ import {
  * This is used to determine if a kernel restart is needed after package installation.
  */
 @injectable()
-export class CellExecutionTracker extends DisposableBase implements ICellExecutionTracker {
+export class CellExecutionTracker extends DisposableBase implements ICellExecutionTracker, IExtensionSyncActivationService {
     private readonly _notebookExecutionState = new Map<string, boolean>();
 
     constructor() {
         super();
+    }
+
+    /**
+     * Activate the service and start listening for cell execution events.
+     */
+    public activate(): void {
         this.hookupEventHandlers();
     }
 

@@ -34,7 +34,8 @@ import { NotebookEditorProvider } from './notebookEditorProvider';
 import { NotebookPythonEnvironmentService } from './notebookEnvironmentService.web';
 import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
-import { INotebookEditorProvider, INotebookPythonEnvironmentService } from './types';
+import { INotebookEditorProvider, INotebookPythonEnvironmentService, ICellExecutionTracker } from './types';
+import { CellExecutionTracker } from '../platform/notebooks/cellExecutionTracker';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
@@ -92,4 +93,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         INotebookPythonEnvironmentService,
         NotebookPythonEnvironmentService
     );
+    serviceManager.addSingleton<ICellExecutionTracker>(ICellExecutionTracker, CellExecutionTracker);
+    serviceManager.addBinding(ICellExecutionTracker, IExtensionSyncActivationService);
 }
