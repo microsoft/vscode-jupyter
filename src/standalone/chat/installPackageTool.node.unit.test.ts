@@ -190,7 +190,7 @@ suite('InstallPackagesTool Unit Tests', () => {
         assert.isFalse((installPackagesTool as any).hasExecutedCells(mockNotebook));
     });
 
-    test('Should handle errors gracefully during initialization', () => {
+    test('Should throw errors during initialization', () => {
         // Setup notebook that throws error when getCells is called
         const mockErrorNotebook = {
             uri: vscode.Uri.file('/test/error-notebook.ipynb'),
@@ -199,18 +199,14 @@ suite('InstallPackagesTool Unit Tests', () => {
         
         mockWorkspace.notebookDocuments = [mockErrorNotebook];
         
-        // Should not throw error during initialization
-        assert.doesNotThrow(() => {
+        // Should throw error during initialization
+        assert.throws(() => {
             installPackagesTool = new InstallPackagesTool(
                 instance(kernelProvider),
                 instance(controllerRegistration),
                 instance(installationManager)
             );
-        }, 'Should handle initialization errors gracefully');
-        
-        // Should return false for error case
-        const hasExecuted = (installPackagesTool as any).hasExecutedCells(mockErrorNotebook);
-        assert.isFalse(hasExecuted, 'Should return false when error occurs');
+        }, 'Test error');
     });
 
     test('Should dispose of event listeners properly', () => {

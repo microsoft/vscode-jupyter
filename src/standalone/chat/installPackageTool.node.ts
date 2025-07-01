@@ -59,16 +59,11 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> impleme
     }
 
     private initializeExecutedNotebooks(): void {
-        try {
-            // Check all currently open notebooks for executed cells
-            for (const notebook of vscode.workspace.notebookDocuments) {
-                if (this.hasAnyExecutedCells(notebook)) {
-                    this.executedNotebooks.add(notebook);
-                }
+        // Check all currently open notebooks for executed cells
+        for (const notebook of vscode.workspace.notebookDocuments) {
+            if (this.hasAnyExecutedCells(notebook)) {
+                this.executedNotebooks.add(notebook);
             }
-        } catch (error) {
-            // If there's an error during initialization, log it but don't fail
-            console.warn('Error initializing executed notebooks:', error);
         }
     }
 
