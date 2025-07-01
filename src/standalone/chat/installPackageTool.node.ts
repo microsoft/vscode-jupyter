@@ -28,9 +28,6 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> impleme
     ) {
         super(InstallPackagesTool.toolName);
         
-        // Check existing notebooks for already-executed cells
-        this.initializeExecutedNotebooks();
-        
         // Track cell execution for all notebooks
         this.disposables.push(
             vscode.workspace.onDidChangeNotebookDocument((e) => {
@@ -58,31 +55,8 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> impleme
         this.disposables.length = 0;
     }
 
-    private initializeExecutedNotebooks(): void {
-        // Check all currently open notebooks for executed cells
-        for (const notebook of vscode.workspace.notebookDocuments) {
-            if (this.hasAnyExecutedCells(notebook)) {
-                this.executedNotebooks.add(notebook);
-            }
-        }
-    }
-
-    private hasAnyExecutedCells(notebook: vscode.NotebookDocument): boolean {
-        try {
-            return notebook.getCells().some(cell => 
-                cell.kind === vscode.NotebookCellKind.Code &&
-                typeof cell.executionSummary?.executionOrder === 'number' &&
-                cell.executionSummary.executionOrder > 0
-            );
-        } catch (error) {
-            // If there's an error accessing cells, assume no execution
-            console.warn('Error checking executed cells:', error);
-            return false;
-        }
-    }
-
     private hasExecutedCells(notebook: vscode.NotebookDocument): boolean {
-        return this.executedNotebooks.has(notebook) || this.hasAnyExecutedCells(notebook);
+        return this.executedNotebooks.has(notebook);
     }
 
     async invokeImpl(
@@ -165,7 +139,7 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> impleme
         } else {
             return new vscode.LanguageModelToolResult([
                 new vscode.LanguageModelTextPart(
-                    'Installation finished successfully. No cells have been executed, so the kernel was not restarted.'
+                    'Installation finished successfully.'
                 )
             ]);
         }

@@ -68,7 +68,7 @@ suite('InstallPackagesTool Unit Tests', () => {
         assert.isFalse(hasExecuted, 'Should return false for notebook with no executed cells');
     });
 
-    test('Should detect already executed cells during initialization', () => {
+    test('Should not detect already executed cells during initialization', () => {
         // Setup notebook with executed cells
         const mockExecutedCell = {
             kind: vscode.NotebookCellKind.Code,
@@ -77,16 +77,16 @@ suite('InstallPackagesTool Unit Tests', () => {
         
         mockCells.push(mockExecutedCell);
         
-        // Create tool - should detect the already executed cell
+        // Create tool - should not detect already executed cells during initialization
         installPackagesTool = new InstallPackagesTool(
             instance(kernelProvider),
             instance(controllerRegistration),
             instance(installationManager)
         );
         
-        // hasExecutedCells should return true for notebook with executed cells
+        // hasExecutedCells should return false since we no longer check during initialization
         const hasExecuted = (installPackagesTool as any).hasExecutedCells(mockNotebook);
-        assert.isTrue(hasExecuted, 'Should return true for notebook with executed cells');
+        assert.isFalse(hasExecuted, 'Should return false since initialization does not check for executed cells');
     });
 
     test('Should not detect cells with execution order 0', () => {
@@ -190,24 +190,7 @@ suite('InstallPackagesTool Unit Tests', () => {
         assert.isFalse((installPackagesTool as any).hasExecutedCells(mockNotebook));
     });
 
-    test('Should throw errors during initialization', () => {
-        // Setup notebook that throws error when getCells is called
-        const mockErrorNotebook = {
-            uri: vscode.Uri.file('/test/error-notebook.ipynb'),
-            getCells: sinon.stub().throws(new Error('Test error'))
-        } as any;
-        
-        mockWorkspace.notebookDocuments = [mockErrorNotebook];
-        
-        // Should throw error during initialization
-        assert.throws(() => {
-            installPackagesTool = new InstallPackagesTool(
-                instance(kernelProvider),
-                instance(controllerRegistration),
-                instance(installationManager)
-            );
-        }, 'Test error');
-    });
+
 
     test('Should dispose of event listeners properly', () => {
         const disposeSpy = sinon.spy();
