@@ -16,6 +16,7 @@ import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
 import { RestartKernelTool } from './restartKernelTool.node';
 import { INotebookCommandHandler } from '../../notebooks/notebookCommandListener';
+import { ICellExecutionTracker } from '../../notebooks/types';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
     context.subscriptions.push(
@@ -24,7 +25,8 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
             new InstallPackagesTool(
                 serviceContainer.get<IKernelProvider>(IKernelProvider),
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration),
-                serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager)
+                serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager),
+                serviceContainer.get<ICellExecutionTracker>(ICellExecutionTracker)
             )
         )
     );
@@ -72,7 +74,8 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
             new RestartKernelTool(
                 serviceContainer.get<IKernelProvider>(IKernelProvider),
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration),
-                serviceContainer.get<INotebookCommandHandler>(INotebookCommandHandler)
+                serviceContainer.get<INotebookCommandHandler>(INotebookCommandHandler),
+                serviceContainer.get<ICellExecutionTracker>(ICellExecutionTracker)
             )
         )
     );

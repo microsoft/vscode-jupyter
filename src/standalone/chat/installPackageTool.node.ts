@@ -14,13 +14,15 @@ import { isPythonKernelConnection } from '../../kernels/helpers';
 import { RestartKernelTool } from './restartKernelTool.node';
 import { BaseTool, IBaseToolParams } from './helper';
 import { WrappedError } from '../../platform/errors/types';
+import { ICellExecutionTracker } from '../../notebooks/types';
 
 export class InstallPackagesTool extends BaseTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration,
-        private readonly installationManager: IInstallationChannelManager
+        private readonly installationManager: IInstallationChannelManager,
+        private readonly cellExecutionTracker: ICellExecutionTracker
     ) {
         super(InstallPackagesTool.toolName);
     }
@@ -82,26 +84,38 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> {
             return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(message)]);
         }
 
-        const restartOptionsInput = { ...options.input, reason: 'Packages installed' };
-        const restartOptions = { ...options, input: restartOptionsInput };
+        // Only prompt for kernel restart if any cells have been executed
+        const hasExecutedCells = this.cellExecutionTracker.hasExecutedCells(notebook);
+        
+        if (hasExecutedCells) {
+            const restartOptionsInput = { ...options.input, reason: 'Packages installed' };
+            const restartOptions = { ...options, input: restartOptionsInput };
 
-        try {
-            await vscode.lm.invokeTool(RestartKernelTool.toolName, restartOptions);
-        } catch (ex) {
+            try {
+                await vscode.lm.invokeTool(RestartKernelTool.toolName, restartOptions);
+            } catch (ex) {
+                return new vscode.LanguageModelToolResult([
+                    new vscode.LanguageModelTextPart(
+                        `Installation finished, but the kernel was not restarted because ${
+                            ex.name === 'Canceled' ? 'the user chose not to' : `an error occurred: ${ex.message}`
+                        }.`
+                    )
+                ]);
+            }
+
             return new vscode.LanguageModelToolResult([
                 new vscode.LanguageModelTextPart(
-                    `Installation finished, but the kernel was not restarted because ${
-                        ex.name === 'Canceled' ? 'the user chose not to' : `an error occurred: ${ex.message}`
-                    }.`
+                    'Installation finished successfully. The kernel has been restarted, so any previously executed cells will need to be re-run.'
+                )
+            ]);
+        } else {
+            // No cells have been executed, so no need to restart
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(
+                    'Installation finished successfully. The kernel was not restarted since no cells have been executed yet.'
                 )
             ]);
         }
-
-        return new vscode.LanguageModelToolResult([
-            new vscode.LanguageModelTextPart(
-                'Installation finished successfully. The kernel has been restarted, so any previously executed cells will need to be re-run.'
-            )
-        ]);
     }
 
     async prepareInvocationImpl(

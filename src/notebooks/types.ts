@@ -23,3 +23,16 @@ export interface INotebookPythonEnvironmentService {
     onDidChangeEnvironment: Event<Uri>;
     getPythonEnvironment(uri: Uri): EnvironmentPath | undefined;
 }
+
+export const ICellExecutionTracker = Symbol('ICellExecutionTracker');
+export interface ICellExecutionTracker {
+    /**
+     * Check if any cells have been executed in the given notebook.
+     */
+    hasExecutedCells(notebook: NotebookDocument): boolean;
+    
+    /**
+     * Reset the execution state for a notebook (e.g., after kernel restart).
+     */
+    resetExecutionState(notebook: NotebookDocument): void;
+}

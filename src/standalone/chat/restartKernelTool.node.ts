@@ -9,6 +9,7 @@ import { BaseTool, IBaseToolParams } from './helper';
 import { INotebookCommandHandler } from '../../notebooks/notebookCommandListener';
 import { basename } from '../../platform/vscode-path/resources';
 import { WrappedError } from '../../platform/errors/types';
+import { ICellExecutionTracker } from '../../notebooks/types';
 
 interface RestartKernelToolParams extends IBaseToolParams {
     reason?: string;
@@ -20,7 +21,8 @@ export class RestartKernelTool extends BaseTool<RestartKernelToolParams> {
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration,
-        private readonly notebookCommandHandler: INotebookCommandHandler
+        private readonly notebookCommandHandler: INotebookCommandHandler,
+        private readonly cellExecutionTracker: ICellExecutionTracker
     ) {
         super(RestartKernelTool.toolName);
     }
@@ -31,6 +33,10 @@ export class RestartKernelTool extends BaseTool<RestartKernelToolParams> {
         _token: vscode.CancellationToken
     ) {
         await this.notebookCommandHandler.restartKernel(notebook.uri, true);
+        
+        // Reset the execution state for this notebook since the kernel was restarted
+        this.cellExecutionTracker.resetExecutionState(notebook);
+        
         const finalMessageString = `The kernel for the notebook at ${notebook.uri} has been restarted and any state from previous cell executions has been cleared.`;
         return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(finalMessageString)]);
     }
