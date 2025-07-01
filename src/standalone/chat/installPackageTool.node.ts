@@ -15,14 +15,35 @@ import { RestartKernelTool } from './restartKernelTool.node';
 import { BaseTool, IBaseToolParams } from './helper';
 import { WrappedError } from '../../platform/errors/types';
 
+
 export class InstallPackagesTool extends BaseTool<IInstallPackageParams> {
     public static toolName = 'notebook_install_packages';
+    private readonly executedNotebooks = new WeakSet<vscode.NotebookDocument>();
+    private readonly disposables: vscode.Disposable[] = [];
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly controllerRegistration: IControllerRegistration,
         private readonly installationManager: IInstallationChannelManager
     ) {
         super(InstallPackagesTool.toolName);
+        // Track cell execution for all notebooks
+        this.disposables.push(
+            vscode.workspace.onDidChangeNotebookDocument((e) => {
+                for (const change of e.cellChanges) {
+                    const cell = change.cell;
+                    if (
+                        cell.kind === vscode.NotebookCellKind.Code &&
+                        typeof cell.executionSummary?.executionOrder === 'number'
+                    ) {
+                        this.executedNotebooks.add(e.notebook);
+                    }
+                }
+            })
+        );
+    }
+
+    private hasExecutedCells(notebook: vscode.NotebookDocument): boolean {
+        return this.executedNotebooks.has(notebook);
     }
 
     async invokeImpl(
@@ -82,26 +103,33 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageParams> {
             return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(message)]);
         }
 
-        const restartOptionsInput = { ...options.input, reason: 'Packages installed' };
-        const restartOptions = { ...options, input: restartOptionsInput };
-
-        try {
-            await vscode.lm.invokeTool(RestartKernelTool.toolName, restartOptions);
-        } catch (ex) {
+        // Only restart the kernel if any cells have been executed in this notebook
+        if (this.hasExecutedCells(notebook)) {
+            const restartOptionsInput = { ...options.input, reason: 'Packages installed' };
+            const restartOptions = { ...options, input: restartOptionsInput };
+            try {
+                await vscode.lm.invokeTool(RestartKernelTool.toolName, restartOptions);
+            } catch (ex) {
+                return new vscode.LanguageModelToolResult([
+                    new vscode.LanguageModelTextPart(
+                        `Installation finished, but the kernel was not restarted because ${
+                            ex.name === 'Canceled' ? 'the user chose not to' : `an error occurred: ${ex.message}`
+                        }.`
+                    )
+                ]);
+            }
             return new vscode.LanguageModelToolResult([
                 new vscode.LanguageModelTextPart(
-                    `Installation finished, but the kernel was not restarted because ${
-                        ex.name === 'Canceled' ? 'the user chose not to' : `an error occurred: ${ex.message}`
-                    }.`
+                    'Installation finished successfully. The kernel has been restarted, so any previously executed cells will need to be re-run.'
+                )
+            ]);
+        } else {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(
+                    'Installation finished successfully. No cells have been executed, so the kernel was not restarted.'
                 )
             ]);
         }
-
-        return new vscode.LanguageModelToolResult([
-            new vscode.LanguageModelTextPart(
-                'Installation finished successfully. The kernel has been restarted, so any previously executed cells will need to be re-run.'
-            )
-        ]);
     }
 
     async prepareInvocationImpl(
