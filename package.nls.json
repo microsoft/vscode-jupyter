@@ -234,5 +234,7 @@
     "DataScience.installPythonExtensionViaKernelPickerTitle": "Install Python Extension",
     "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server",
     "jupyter.languageModelTools.configure_notebook.displayName": "Configure Jupyter Notebook",
-    "jupyter.languageModelTools.configure_notebook.userDescription": "Configures notebooks by selecting a relevant Kernel."
+    "jupyter.languageModelTools.configure_notebook.userDescription": "Ensure Notebook to ensure it is ready for use such as running cells",
+    "jupyter.languageModelTools.notebook_list_packages.userDescription": "Lists Python packages available in the selected Notebook Kernel.",
+    "jupyter.languageModelTools.notebook_install_packages.userDescription": "Installs a Python packages in the selected Notebook Kernel."
 }
