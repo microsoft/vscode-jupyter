@@ -1,6 +1,6 @@
 ---
 mode: agent
-tools: ['codebase', 'editFiles', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'search', 'searchResults', 'usages', 'vscodeAPI', 'github', 'activePullRequest', 'websearch']
+tools: ['codebase', 'editFiles', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'search', 'searchResults', 'usages', 'vscodeAPI', 'github', 'get_file_contents', 'get_issue', 'get_issue_comments', 'list_issues', 'list_pull_requests', 'search_code', 'search_issues', 'pylance mcp server', 'activePullRequest', 'websearch']
 ---
 Now review the issue reported in https://github.com/microsoft/vscode-jupyter/issues/16709
 
