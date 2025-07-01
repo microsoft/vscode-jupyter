@@ -4414,7 +4414,7 @@ export class IEventNamePropertyMapping {
          * Whether there was a failure.
          * Common to most of the events.
          */
-        failed: boolean;
+        failed: 'true' | 'false';
         /**
          * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
          * Common to most of the events.
