@@ -4,21 +4,21 @@ tools: ['codebase', 'editFiles', 'extensions', 'fetch', 'findTestFiles', 'github
 ---
 Now review the issue reported in https://github.com/microsoft/vscode-jupyter/issues/16709
 
-Based on your initial review of the above issue, pick an area and read the contents of the most relevant instruction file to get a detailed understanding of the code base (feature area):
-- .github/copilot-instructions.md
-- .github/instructions/interactiveWindow.instructions.md
+Based on your initial review of the above issue, determine the area within the application this relates to and read the contents of the most relevant instruction file to get a detailed understanding of the code base (feature area):
+- .github/instructions/platform.instructions.md
 - .github/instructions/kernel-jupyter.instructions.md
 - .github/instructions/kernel.instructions.md
 - .github/instructions/notebooks.instructions.md
-- .github/instructions/platform.instructions.md
+- .github/instructions/interactiveWindow.instructions.md
 - .github/instructions/standalone.instructions.md
 
-Now that you have a better understanding of the code:
-- Analyze the details of the reported issue
-- Determine the root cause of the issue if possible
-- Do not make any changes yet
+Now that you have a better understanding of the code please provide a detailed report of your findings, including:
+  - The area of the code base that is affected
+  - The specific files or components that are involved
+  - Any relevant code snippets or patterns that are related to the issue
+  - Any potential solutions or fixes that could be applied
+  - DO NOT make any code changes at this time, just provide a detailed report.
 
 Note:
-- Finally at the end, update any of the `.github/instructions/*.instructions.md` file with any new insights or information gathered during the investigation.
+- If required update any of the `.github/instructions/*.instructions.md` file (or create a new file in `.github/instructions/`) with any new insights or information gathered during the investigation. Only do so if it adds value to the existing instructions and help you.
 - Do not blindly overwrite the file, patch/merge the file with the new information.
-- If required create a new file in `.github/instructions/` with the new information, retaining the structure of existing files in the same directory.
