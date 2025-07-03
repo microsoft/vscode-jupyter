@@ -25,11 +25,13 @@ suite('CellFactory', () => {
         cells = generateCells(undefined, "#%% [markdown]\n'''\n# a\nb\n'''", true);
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].languageId, 'markdown', 'Markdown cell not generated');
-        assert.equal(splitMarkdown(cells[0].value).length, 3, 'Lines for markdown not emitted');
+        assert.equal(splitMarkdown(cells[0].value).length, 2, 'Lines for markdown not emitted');
         cells = generateCells(undefined, '#%% [markdown]\n"""\n# a\nb\n"""', true);
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].languageId, 'markdown', 'Markdown cell not generated');
-        assert.equal(splitMarkdown(cells[0].value).length, 3, 'Lines for markdown not emitted');
+        assert.equal(splitMarkdown(cells[0].value).length, 2, 'Lines for markdown not emitted');
+        // Test that line breaks are preserved correctly - no empty line between # a and b in the input
+        assert.equal(cells[0].value, '# a\nb', 'Markdown content should not add extra line breaks');
         cells = generateCells(undefined, '#%% \n"""\n# a\nb\n"""', true);
         assert.equal(cells.length, 1, 'Code cell multline failed');
         assert.equal(cells[0].languageId, 'python', 'Code cell not generated');
@@ -150,6 +152,31 @@ class Pizza(object):
         assert.equal(cells[1].languageId, 'python', 'code cell not generated');
         assert.equal(splitCode(cells[1].value).length, 7, 'Lines for code not emitted');
         assert.equal(splitCode(cells[1].value)[3], '        self.toppings = toppings', 'Lines for cell not emitted');
+
+        // Test for issue #9620 - line breaks in multi-line comments should be preserved
+        // eslint-disable-next-line no-multi-str
+        const multilineMarkdownWithBreaks = `#%% [markdown]
+
+"""
+# H1 Title
+
+description 1
+
+- item 1
+    - item 2
+- item 3
+
+description 2
+
+- item 4
+    - item 5
+- item 6
+"""`;
+        cells = generateCells(undefined, multilineMarkdownWithBreaks, true);
+        assert.equal(cells.length, 1, 'Markdown cell with line breaks failed');
+        assert.equal(cells[0].languageId, 'markdown', 'Markdown cell not generated');
+        const expectedContent = '# H1 Title\n\ndescription 1\n\n- item 1\n    - item 2\n- item 3\n\ndescription 2\n\n- item 4\n    - item 5\n- item 6';
+        assert.equal(cells[0].value, expectedContent, 'Markdown content should preserve line breaks and indentation correctly');
 
         // Non comments tests
         let nonComments = stripComments(multilineCode);
