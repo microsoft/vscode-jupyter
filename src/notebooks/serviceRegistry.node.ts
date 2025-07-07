@@ -36,7 +36,7 @@ import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellL
 import { INotebookCommandHandler, NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { NotebookPythonEnvironmentService } from './notebookEnvironmentService.node';
-import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
+import { CellOutputMimeTypeTracker } from './outputs/cellOutputMimeTypeTracker';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker.node';
 import { INotebookEditorProvider, INotebookPythonEnvironmentService } from './types';

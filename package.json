@@ -2205,6 +2205,7 @@
         "updatePackageJsonForBundle": "gulp updatePackageJsonForBundle",
         "prePublishNonBundle": "concurrently npm:compile-out npm:esbuild-all",
         "compile": "concurrently \"tsc --watch -p ./\" \"npx tsx build/esbuild/build.ts --watch\"",
+        "compile-nowatch": "concurrently \"tsc -p ./\" \"npx tsx build/esbuild/build.ts\"",
         "compile-esbuild-watch": "npx tsx build/esbuild/build.ts --watch",
         "compile-tsc-watch": "tsc -p . --watch",
         "compile-watch-all": "concurrently \"tsc --watch -p ./\" \"npx tsx build/esbuild/build.ts --watch-all\"",
