@@ -68,5 +68,6 @@
     "python.analysis.enablePytestSupport": false,
     "python.analysis.exclude": [
         "*.ipynb"
-    ]
+    ],
+    "github.copilot.chat.codeGeneration.useInstructionFiles": true
 }

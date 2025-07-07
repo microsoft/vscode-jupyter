@@ -67,6 +67,10 @@ export interface IControllerRegistration {
         controller: IVSCodeNotebookController;
         selected: boolean;
     }>;
+    /**
+     * Event fired when controllers are added or removed
+     */
+    readonly onDidChange: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
     getSelected(document: vscode.NotebookDocument): IVSCodeNotebookController | undefined;
     /**
      * Keeps track of controllers created for the active interpreter.
@@ -90,10 +94,6 @@ export interface IControllerRegistration {
         connection: KernelConnectionMetadata,
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): IVSCodeNotebookController | undefined;
-    /**
-     * Event fired when controllers are added or removed
-     */
-    onDidChange: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
 }
 
 // Flag enum for the reason why a kernel was logged as an exact match

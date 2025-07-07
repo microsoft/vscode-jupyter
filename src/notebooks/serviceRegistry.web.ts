@@ -32,7 +32,7 @@ import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellL
 import { INotebookCommandHandler, NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { NotebookPythonEnvironmentService } from './notebookEnvironmentService.web';
-import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
+import { CellOutputMimeTypeTracker } from './outputs/cellOutputMimeTypeTracker';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { INotebookEditorProvider, INotebookPythonEnvironmentService } from './types';
 
