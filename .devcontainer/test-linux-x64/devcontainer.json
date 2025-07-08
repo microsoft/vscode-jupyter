@@ -7,8 +7,8 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"ms-toolsai.jupyter@prerelease", "ms-python.python@prerelease"
-			]
+                "ms-toolsai.jupyter@prerelease", "ms-python.python@prerelease"
+            ]
 		}
 	},
 	"workspaceFolder": "/workspaces/vscode-jupyter/src/test/testMultiRootWkspc/smokeTests"
