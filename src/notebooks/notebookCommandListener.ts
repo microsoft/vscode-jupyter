@@ -38,6 +38,7 @@ import { IKernelStatusProvider } from '../kernels/kernelStatusProvider';
 export const INotebookCommandHandler = Symbol('INotebookCommandHandler');
 export interface INotebookCommandHandler {
     restartKernel(notebookUri: Uri | undefined, disableUI: boolean): Promise<void>;
+    killKernel(notebookUri: Uri | undefined): Promise<void>;
 }
 /**
  * Registers commands specific to the notebook UI
@@ -96,6 +97,11 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
             )
         );
         this.disposableRegistry.push(
+            commands.registerCommand(Commands.KillKernel, (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                this.killKernel(context?.notebookEditor?.notebookUri)
+            )
+        );
+        this.disposableRegistry.push(
             commands.registerCommand(
                 Commands.RestartKernelAndRunAllCells,
                 (context?: { notebookEditor: { notebookUri: Uri } }) => {
@@ -149,6 +155,32 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
             return;
         }
         await this.wrapKernelMethod('interrupt', kernel);
+    }
+
+    public async killKernel(notebookUri: Uri | undefined): Promise<void> {
+        const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
+        const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
+
+        if (document === undefined) {
+            return;
+        }
+        logger.debug(`Command kill kernel for ${getDisplayPath(document.uri)}`);
+
+        const kernel = this.kernelProvider.get(document);
+        if (!kernel) {
+            logger.info(`Kill requested & no kernel.`);
+            return;
+        }
+
+        // Ask user for confirmation before killing
+        const message = DataScience.killKernelMessage;
+        const yes = DataScience.killKernelMessageYes;
+        const no = DataScience.killKernelMessageNo;
+
+        const response = await window.showWarningMessage(message, { modal: true }, yes, no);
+        if (response === yes) {
+            await this.wrapKernelMethod('kill', kernel);
+        }
     }
 
     private async restartKernelAndRunAllCells(notebookUri: Uri | undefined) {
@@ -212,7 +244,7 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
 
     private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
     private async wrapKernelMethod(
-        currentContext: 'interrupt' | 'restart',
+        currentContext: 'interrupt' | 'restart' | 'kill',
         kernel: IKernel,
         disableUI: boolean = false
     ): Promise<void> {

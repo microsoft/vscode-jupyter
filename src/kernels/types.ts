@@ -406,6 +406,7 @@ export interface IBaseKernel extends IAsyncDisposable {
     readonly userStartedKernel: boolean;
     start(options?: IStartOptions): Promise<IKernelSession>;
     interrupt(): Promise<void>;
+    kill(): Promise<void>;
     restart(): Promise<void>;
     addHook(
         event: 'didStart',
@@ -869,7 +870,7 @@ export interface IKernelFinder {
     onDidChangeRegistrations: Event<{ added: IContributedKernelFinder[]; removed: IContributedKernelFinder[] }>;
 }
 
-export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';
+export type KernelAction = 'start' | 'interrupt' | 'restart' | 'kill' | 'execution';
 
 export type KernelActionSource = 'jupyterExtension' | '3rdPartyExtension';
 

@@ -163,6 +163,9 @@ export class KernelConnector {
 
             case 'restart':
                 return (k: IBaseKernel) => k.restart();
+
+            case 'kill':
+                return (k: IBaseKernel) => k.kill();
         }
     }
 

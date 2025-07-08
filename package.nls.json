@@ -94,6 +94,8 @@
     },
     "jupyter.command.jupyter.interruptkernel.title": "Interrupt Kernel",
     "jupyter.command.jupyter.interruptkernel.shorttitle": "Interrupt",
+    "jupyter.command.jupyter.killkernel.title": "Kill Kernel",
+    "jupyter.command.jupyter.killkernel.shorttitle": "Kill",
     "jupyter.command.jupyter.restartkernel.title": "Restart Kernel",
     "jupyter.command.jupyter.restartkernel.shorttitle": "Restart",
     "jupyter.command.jupyter.restartkernelandrunallcells.title": "Restart Kernel and Run All Cells",

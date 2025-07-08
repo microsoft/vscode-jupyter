@@ -181,6 +181,7 @@ export namespace Commands {
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const InterruptKernel = 'jupyter.interruptkernel';
+    export const KillKernel = 'jupyter.killkernel';
     export const RestartKernel = 'jupyter.restartkernel';
     export const RestartKernelAndRunAllCells = 'jupyter.restartkernelandrunallcells';
     export const RestartKernelAndRunUpToSelectedCell = 'jupyter.restartkernelandrunuptoselectedcell';

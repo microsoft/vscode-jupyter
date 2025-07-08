@@ -53,6 +53,7 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.CreateNewInteractive]: [];
     [DSCommands.InterruptKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
+    [DSCommands.KillKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
     [DSCommands.RestartKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
     [DSCommands.RestartKernelAndRunAllCells]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
     [DSCommands.RestartKernelAndRunUpToSelectedCell]: [{ notebookEditor: { notebookUri: Uri } } | undefined];

@@ -214,6 +214,11 @@ export namespace DataScience {
     );
     export const restartKernelMessageYes = l10n.t('Restart');
     export const restartKernelMessageDontAskAgain = l10n.t("Don't Ask Again");
+    export const killKernelMessage = l10n.t(
+        'Do you want to forcefully kill the Jupyter kernel? This will terminate the kernel process immediately. All variables will be lost.'
+    );
+    export const killKernelMessageYes = l10n.t('Kill');
+    export const killKernelMessageNo = l10n.t('Cancel');
     export const automaticallyReconnectingToAKernelProgressMessage = (kernelName: string) =>
         l10n.t('Reconnecting to the kernel {0}', kernelName);
     export const restartingKernelStatus = (kernelName: string) => l10n.t('Restarting Kernel {0}', kernelName);

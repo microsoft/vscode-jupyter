@@ -323,6 +323,26 @@ abstract class BaseKernel implements IBaseKernel {
             }
         }
     }
+
+    /**
+     * Forcefully kills the kernel process.
+     * This is more aggressive than interrupt and should be used when interrupt fails.
+     */
+    public async kill(): Promise<void> {
+        logger.info(`Kill requested for kernel ${getDisplayPath(this.uri)}`);
+
+        try {
+            await Promise.all(Array.from(this.hooks.get('willCancel') || new Set<Hook>()).map((h) => h()));
+        } catch (ex) {
+            logger.warn('Error in willCancel hooks during kill', ex);
+        }
+
+        // Forcefully dispose the kernel
+        if (!this.disposed && !this.disposing) {
+            await this.dispose();
+        }
+    }
+
     public async dispose(): Promise<void> {
         logger.info(
             `Dispose Kernel '${getDisplayPath(this.uri)}' associated with '${getDisplayPath(this.resourceUri)}'`

@@ -580,6 +580,17 @@
                 "enablement": "isWorkspaceTrusted && jupyter.interactive.canInterruptNotebookKernel"
             },
             {
+                "command": "jupyter.killkernel",
+                "title": "%jupyter.command.jupyter.killkernel.title%",
+                "shortTitle": "%jupyter.command.jupyter.killkernel.shorttitle%",
+                "category": "Jupyter",
+                "icon": {
+                    "light": "resources/light/stop.svg",
+                    "dark": "resources/dark/stop.svg"
+                },
+                "enablement": "isWorkspaceTrusted && jupyter.interactive.canInterruptNotebookKernel"
+            },
+            {
                 "command": "jupyter.restartkernel",
                 "title": "%jupyter.command.jupyter.restartkernel.title%",
                 "shortTitle": "%jupyter.command.jupyter.restartkernel.shorttitle%",
