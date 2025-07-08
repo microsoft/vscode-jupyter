@@ -57,6 +57,7 @@ import {
     IKernelSessionFactory,
     type IStartOptions,
     isLocalConnection,
+    isRemoteConnection,
     IKernelWorkingDirectory
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
@@ -337,9 +338,77 @@ abstract class BaseKernel implements IBaseKernel {
             logger.warn('Error in willCancel hooks during kill', ex);
         }
 
-        // Forcefully dispose the kernel
-        if (!this.disposed && !this.disposing) {
-            await this.dispose();
+        // Handle remote kernels differently than local kernels
+        if (isRemoteConnection(this.kernelConnectionMetadata)) {
+            await this.killRemoteKernel();
+        } else {
+            // For local kernels, forcefully dispose
+            if (!this.disposed && !this.disposing) {
+                await this.dispose();
+            }
+        }
+    }
+
+    private async killRemoteKernel(): Promise<void> {
+        try {
+            const session = this._session;
+            const kernelId = session?.kernel?.id;
+            
+            if (!kernelId) {
+                logger.warn('No kernel ID available for remote kernel kill, falling back to dispose');
+                if (!this.disposed && !this.disposing) {
+                    await this.dispose();
+                }
+                return;
+            }
+
+            logger.info(`Killing remote kernel with ID: ${kernelId}`);
+
+            // Create server settings from the connection metadata
+            const serverSettings = this.createServerSettingsFromConnection();
+            
+            if (serverSettings) {
+                // Use JupyterLab services to shutdown the kernel via the API
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                const { KernelAPI } = require('@jupyterlab/services');
+                await KernelAPI.shutdownKernel(kernelId, serverSettings).catch((ex) => {
+                    logger.warn(`Failed to shutdown remote kernel via API: ${ex}`);
+                });
+            }
+
+            // Always dispose the local session objects regardless of API call success
+            if (!this.disposed && !this.disposing) {
+                await this.dispose();
+            }
+        } catch (ex) {
+            logger.error(`Error killing remote kernel: ${ex}`);
+            // Fallback to dispose if remote kill fails
+            if (!this.disposed && !this.disposing) {
+                await this.dispose();
+            }
+        }
+    }
+
+    private createServerSettingsFromConnection() {
+        if (!isRemoteConnection(this.kernelConnectionMetadata)) {
+            return undefined;
+        }
+
+        try {
+            const { ServerConnection } = require('@jupyterlab/services');
+            const baseUrl = this.kernelConnectionMetadata.baseUrl;
+            
+            // Create basic server settings for the API call
+            const serverSettings: Partial<any> = {
+                baseUrl,
+                appUrl: '',
+                wsUrl: baseUrl.replace('http', 'ws')
+            };
+
+            return ServerConnection.makeSettings(serverSettings);
+        } catch (ex) {
+            logger.error(`Failed to create server settings for remote kernel kill: ${ex}`);
+            return undefined;
         }
     }
 
