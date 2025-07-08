@@ -8,6 +8,7 @@ import {
     LiveRemoteKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata,
+    RemoteKernelSpecConnectionMetadata,
     isRemoteConnection,
     isLocalConnection
 } from './types';
@@ -79,7 +80,7 @@ suite('Kernel Kill Functionality - Type Detection', () => {
         assert.isFalse(isRemoteConnection(pythonConnection), 'PythonKernelConnectionMetadata should not be identified as remote');
     });
 
-    test('Remote kernel should have baseUrl property', () => {
+    test('LiveRemoteKernelConnectionMetadata should have baseUrl property', () => {
         // Arrange
         const remoteConnection = LiveRemoteKernelConnectionMetadata.create({
             baseUrl: 'http://localhost:8888',
@@ -101,8 +102,32 @@ suite('Kernel Kill Functionality - Type Detection', () => {
         });
 
         // Act & Assert
-        assert.equal(remoteConnection.baseUrl, 'http://localhost:8888', 'Remote kernel should have correct baseUrl');
-        assert.isDefined(remoteConnection.serverProviderHandle, 'Remote kernel should have serverProviderHandle');
+        assert.equal(remoteConnection.baseUrl, 'http://localhost:8888', 'Live remote kernel should have correct baseUrl');
+        assert.isDefined(remoteConnection.serverProviderHandle, 'Live remote kernel should have serverProviderHandle');
+        assert.equal(remoteConnection.kind, 'connectToLiveRemoteKernel', 'Should have correct kind');
+    });
+
+    test('RemoteKernelSpecConnectionMetadata should be identified as remote and have baseUrl', () => {
+        // Arrange
+        const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
+            baseUrl: 'http://localhost:8888',
+            id: 'remote-kernel-spec',
+            kernelSpec: {
+                argv: ['python'],
+                display_name: 'Python 3',
+                executable: 'python',
+                language: 'python',
+                name: 'python3'
+            },
+            serverProviderHandle: { handle: 'handle', id: 'id', extensionId: 'test' }
+        });
+
+        // Act & Assert
+        assert.isTrue(isRemoteConnection(remoteKernelSpec), 'RemoteKernelSpecConnectionMetadata should be identified as remote');
+        assert.isFalse(isLocalConnection(remoteKernelSpec), 'RemoteKernelSpecConnectionMetadata should not be identified as local');
+        assert.equal(remoteKernelSpec.baseUrl, 'http://localhost:8888', 'Remote kernel spec should have correct baseUrl');
+        assert.isDefined(remoteKernelSpec.serverProviderHandle, 'Remote kernel spec should have serverProviderHandle');
+        assert.equal(remoteKernelSpec.kind, 'startUsingRemoteKernelSpec', 'Should have correct kind');
     });
 });
 
