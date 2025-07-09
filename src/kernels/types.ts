@@ -870,7 +870,7 @@ export interface IKernelFinder {
     onDidChangeRegistrations: Event<{ added: IContributedKernelFinder[]; removed: IContributedKernelFinder[] }>;
 }
 
-export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution' | 'shutdown';
+export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';
 
 export type KernelActionSource = 'jupyterExtension' | '3rdPartyExtension';
 
