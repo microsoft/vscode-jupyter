@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { window } from 'vscode';
 import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
@@ -17,7 +16,6 @@ import {
 } from './helper.node';
 import { captureScreenShot } from '../../common';
 import { TestNotebookDocument, createKernelController } from './executionHelper';
-import { traceInfo } from '../../../platform/logging';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Kernel Shutdown @kernelCore', function () {
@@ -28,13 +26,13 @@ suite('Kernel Shutdown @kernelCore', function () {
     const disposables: IDisposable[] = [];
 
     suiteSetup(async function () {
-        traceInfo(`Start Test (file: Shutdown)`);
+        logger.info(`Start Test (file: Shutdown)`);
         this.timeout(120_000);
         api = await initialize();
     });
 
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        logger.info(`Start Test ${this.currentTest?.title}`);
         await startJupyterServer();
         await closeNotebooksAndCleanUpAfterTests();
         notebook = new TestNotebookDocument();
@@ -46,7 +44,7 @@ suite('Kernel Shutdown @kernelCore', function () {
     });
 
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        logger.info(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
@@ -58,11 +56,11 @@ suite('Kernel Shutdown @kernelCore', function () {
     test('Can shutdown a kernel correctly', async function () {
         // Create a simple test cell that we can execute
         const cell = await notebook.appendCodeCell('print("Hello from kernel")');
-        
+
         // Get kernel execution service
         const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         const kernelExecution = kernelProvider.getKernelExecution(kernel);
-        
+
         // First, start the kernel by executing a cell
         logger.info('Step 1: Execute cell to ensure kernel is started');
         await Promise.all([
@@ -70,25 +68,25 @@ suite('Kernel Shutdown @kernelCore', function () {
             waitForExecutionCompletedSuccessfully(cell),
             waitForTextOutput(cell, 'Hello from kernel', 0, false)
         ]);
-        
+
         // Verify kernel is running
         assert.isFalse(kernel.disposed, 'Kernel should not be disposed before shutdown');
-        
+
         // Now shutdown the kernel
         logger.info('Step 2: Shutdown kernel');
         await kernel.shutdown();
-        
+
         // Then dispose the kernel
         logger.info('Step 3: Dispose kernel');
         await kernel.dispose();
-        
+
         // After shutdown and disposal, the kernel should be disposed
         await waitForCondition(
             async () => kernel.disposed,
             30_000,
             'Kernel should be disposed after shutdown and disposal'
         );
-        
+
         logger.info('Step 4: Verify kernel is disposed');
         assert.isTrue(kernel.disposed, 'Kernel should be disposed after shutdown and disposal');
     });
