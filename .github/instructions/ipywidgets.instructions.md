@@ -230,6 +230,8 @@ define('@jupyter-widgets/output', () => outputWidgets);
 
 ### 1. Widget Protocol Fundamentals
 
+Refer to [Low Level Widget Tutorial](https://ipywidgets.readthedocs.io/en/7.x/examples/Widget%20Low%20Level.html) for a detailed overview of the IPyWidgets protocol.
+
 #### Comm System Overview
 
 IPyWidgets uses the Jupyter Comm system for kernel-frontend communication:
