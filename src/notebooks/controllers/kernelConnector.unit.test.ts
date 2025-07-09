@@ -209,4 +209,24 @@ suite('Kernel Connector', () => {
             )
         ).once();
     });
+    test('Can shutdown a kernel', async () => {
+        when(kernel.status).thenReturn('idle');
+        when(kernel.shutdown()).thenResolve();
+
+        await KernelConnector.wrapKernelMethod(
+            pythonConnection,
+            'shutdown',
+            'jupyterExtension',
+            instance(serviceContainer),
+            {
+                controller,
+                notebook,
+                resource: notebook.uri
+            },
+            new DisplayOptions(false),
+            disposables
+        );
+
+        verify(kernel.shutdown()).once();
+    });
 });

@@ -591,6 +591,17 @@
                 "enablement": "isWorkspaceTrusted && (jupyter.interactive.canRestartNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
             },
             {
+                "command": "jupyter.shutdownkernel",
+                "title": "%jupyter.command.jupyter.shutdownkernel.title%",
+                "shortTitle": "%jupyter.command.jupyter.shutdownkernel.shorttitle%",
+                "category": "Jupyter",
+                "icon": {
+                    "light": "resources/light/restart-kernel.svg",
+                    "dark": "resources/dark/restart-kernel.svg"
+                },
+                "enablement": "isWorkspaceTrusted && (jupyter.interactive.canRestartNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
+            },
+            {
                 "command": "jupyter.restartkernelandrunallcells",
                 "title": "%jupyter.command.jupyter.restartkernelandrunallcells.title%",
                 "shortTitle": "%jupyter.command.jupyter.restartkernelandrunallcells.shorttitle%",
@@ -845,6 +856,12 @@
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel && config.notebook.globalToolbar != true"
                 },
                 {
+                    "command": "jupyter.shutdownkernel",
+                    "title": "%jupyter.command.jupyter.shutdownkernel.title%",
+                    "group": "navigation@2",
+                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel && config.notebook.globalToolbar != true"
+                },
+                {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "group": "navigation@2",
@@ -872,6 +889,11 @@
                 {
                     "command": "jupyter.restartkernel",
                     "group": "navigation/execute@5",
+                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.kernel.isjupyter"
+                },
+                {
+                    "command": "jupyter.shutdownkernel",
+                    "group": "navigation/execute@6",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.kernel.isjupyter"
                 },
                 {
@@ -1212,6 +1234,12 @@
                 {
                     "command": "jupyter.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
+                    "category": "Jupyter",
+                    "when": "(jupyter.ispythonorinteractiveeactive || jupyter.isnativeactive) && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.shutdownkernel",
+                    "title": "%jupyter.command.jupyter.shutdownkernel.title%",
                     "category": "Jupyter",
                     "when": "(jupyter.ispythonorinteractiveeactive || jupyter.isnativeactive) && isWorkspaceTrusted"
                 },
