@@ -28,6 +28,7 @@ import { INotebookEditorProvider } from './types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
+import { isEqual } from '../platform/vscode-path/resources';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
@@ -158,7 +159,7 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
 
     private async shutdownKernel(notebookUri: Uri | undefined): Promise<void> {
         const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
-        const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
+        const document = workspace.notebookDocuments.find((document) => uri && isEqual(document.uri, uri));
 
         if (document === undefined) {
             return;
