@@ -705,7 +705,7 @@ jobs:
         if: matrix.tags == '@executionPerformance'
 
       - name: Build web bundle for testing
-        run: npm run compile-web-test
+        run: npm run compile
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
         env:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
