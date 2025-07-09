@@ -44,7 +44,7 @@ The **Jupyter Extension for Visual Studio Code** is a comprehensive extension th
     -   **Common** (`*.ts`): Suffix intended for shared logic that works across both platforms.
 -   **Handle Limitations**: Gracefully degrade functionality in web environment
 
-### Dependency Injection 
+### Dependency Injection
 
 -   **Interface-Based**: Always inject interfaces, not concrete classes
 -   **Lifecycle Management**: Use appropriate lifetime (singleton, transient, scoped)
@@ -136,6 +136,9 @@ src/
 -   `src/notebooks` found in `.github/instructions/notebooks.instructions.md`
 -   `src/interactive-window` found in `.github/instructions/interactiveWindow.instructions.md`
 -   `src/standalone` found in `.github/instructions/standalone.instructions.md`
+-   `src/notebooks/controllers/ipywidgets/` found in `.github/instructions/ipywidgets.instructions.md`
+-   `src/webviews/extension-side/ipywidgets/` found in `.github/instructions/ipywidgets.instructions.md`
+-   `src/webviews/webview-side/ipywidgets/` found in `.github/instructions/ipywidgets.instructions.md`
 
 ---
 
