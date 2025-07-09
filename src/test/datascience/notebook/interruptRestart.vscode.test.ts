@@ -509,4 +509,33 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
             'Cell 1 should have an execution order of 2'
         );
     });
+    test('Can shutdown a kernel correctly', async function () {
+        // Create a simple test cell that we can execute
+        const cell = await notebook.appendCodeCell('print("Hello from kernel")');
+        
+        // First, start the kernel by executing a cell
+        logger.info('Step 1: Execute cell to ensure kernel is started');
+        await Promise.all([
+            kernelExecution.executeCell(cell),
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForTextOutput(cell, 'Hello from kernel', 0, false)
+        ]);
+        
+        // Verify kernel is running
+        assert.isFalse(kernel.disposed, 'Kernel should not be disposed before shutdown');
+        
+        // Now shutdown the kernel
+        logger.info('Step 2: Shutdown kernel');
+        await kernel.shutdown();
+        
+        // After shutdown, the kernel should be disposed
+        await waitForCondition(
+            async () => kernel.disposed,
+            30_000,
+            'Kernel should be disposed after shutdown'
+        );
+        
+        logger.info('Step 3: Verify kernel is disposed');
+        assert.isTrue(kernel.disposed, 'Kernel should be disposed after shutdown');
+    });
 });

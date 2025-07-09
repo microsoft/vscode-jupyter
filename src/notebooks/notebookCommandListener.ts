@@ -171,7 +171,16 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
             logger.info(`Shutdown requested & no kernel.`);
             return;
         }
-        await this.wrapKernelMethod('shutdown', kernel);
+        
+        try {
+            logger.info(`Shutting down kernel for ${getDisplayPath(document.uri)}`);
+            await kernel.shutdown();
+            logger.info(`Disposing kernel for ${getDisplayPath(document.uri)}`);
+            await kernel.dispose();
+        } catch (ex) {
+            logger.error(`Failed to shutdown kernel for ${getDisplayPath(document.uri)}`, ex);
+            throw ex;
+        }
     }
 
     private async restartKernelAndRunAllCells(notebookUri: Uri | undefined) {
@@ -235,7 +244,7 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
 
     private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
     private async wrapKernelMethod(
-        currentContext: 'interrupt' | 'restart' | 'shutdown',
+        currentContext: 'interrupt' | 'restart',
         kernel: IKernel,
         disableUI: boolean = false
     ): Promise<void> {
@@ -250,7 +259,7 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
             const currentCell = this.kernelProvider.getKernelExecution(kernel).pendingCells[0];
             const controller = this.controllerRegistration.getSelected(notebook);
             const disposable =
-                disableUI && (currentContext === 'restart' || currentContext === 'shutdown')
+                disableUI && currentContext === 'restart'
                     ? this.kernelStatusProvider.hideRestartProgress(kernel)
                     : new Disposable(noop);
             try {
