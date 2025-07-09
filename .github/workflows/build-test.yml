@@ -152,7 +152,7 @@ jobs:
         run: npm run lint
 
       - name: Run prettier on JavaScript code
-        run: npm run format-check
+        run: npm run format
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v5

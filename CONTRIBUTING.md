@@ -57,10 +57,10 @@ Optionally you can use the following commands depending on your needs:
 ```shell
 # This will compile everything, but only watch for changes to the desktop bundle.
 # Note: Its advisable to use the `watch` task instead of this one (for integration with VS Code, e.g. view errors in problems window).
-npm run compile
+npm run watch
 # This watches changes to all files, webviews, web version of extension, node version of extension, etc
 # This can be resource intensive, as there are a number of bundles created, thus requiring monitoring of files for each of these numerous bundles.
-npm run compile-watch-all
+npm run watch-all
 ```
 
 Sometimes you will need to run `npm run clean` and even `rm -r out dist`.
