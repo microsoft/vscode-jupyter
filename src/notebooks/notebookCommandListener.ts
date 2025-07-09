@@ -8,6 +8,7 @@ import {
     Disposable,
     NotebookCellData,
     NotebookCellKind,
+    NotebookDocument,
     NotebookEdit,
     NotebookRange,
     Uri,
@@ -97,8 +98,19 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
             )
         );
         this.disposableRegistry.push(
-            commands.registerCommand(Commands.ShutdownKernel, (context?: { notebookEditor: { notebookUri: Uri } }) =>
-                this.shutdownKernel(context?.notebookEditor?.notebookUri)
+            commands.registerCommand(
+                Commands.ShutdownKernel,
+                (context?: { notebookEditor: { notebookUri: Uri } } | Uri | NotebookDocument) => {
+                    if (context && 'notebookEditor' in context) {
+                        return this.shutdownKernel(context?.notebookEditor?.notebookUri).catch(noop);
+                    } else if (context && 'uri' in context) {
+                        // NotebookDocument case
+                        return this.shutdownKernel(context.uri).catch(noop);
+                    } else {
+                        // Uri case
+                        return this.shutdownKernel(context).catch(noop);
+                    }
+                }
             )
         );
         this.disposableRegistry.push(
@@ -175,10 +187,16 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
         try {
             logger.info(`Shutting down kernel for ${getDisplayPath(document.uri)}`);
             await kernel.shutdown();
+        } catch (ex) {
+            logger.error(`Failed to shutdown kernel for ${getDisplayPath(document.uri)}`, ex);
+            throw ex;
+        }
+
+        try {
             logger.info(`Disposing kernel for ${getDisplayPath(document.uri)}`);
             await kernel.dispose();
         } catch (ex) {
-            logger.error(`Failed to shutdown kernel for ${getDisplayPath(document.uri)}`, ex);
+            logger.error(`Failed to dispose kernel for ${getDisplayPath(document.uri)}`, ex);
             throw ex;
         }
     }
