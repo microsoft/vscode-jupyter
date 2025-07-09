@@ -183,7 +183,7 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
             logger.info(`Shutdown requested & no kernel.`);
             return;
         }
-        
+
         try {
             logger.info(`Shutting down kernel for ${getDisplayPath(document.uri)}`);
             await kernel.shutdown();

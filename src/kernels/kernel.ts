@@ -453,11 +453,11 @@ abstract class BaseKernel implements IBaseKernel {
     public async shutdown(): Promise<void> {
         try {
             logger.info(`Shutdown requested ${getDisplayPath(this.uri)}`);
-            
+
             // Cancel any pending starts
             this.startCancellation.cancel();
             this.startCancellation.dispose();
-            
+
             // Get the current session if it exists
             const session = this._jupyterSessionPromise
                 ? await this._jupyterSessionPromise.catch(() => undefined)
@@ -477,7 +477,7 @@ abstract class BaseKernel implements IBaseKernel {
             this._session = undefined;
             this._jupyterSessionPromise = undefined;
             this._postInitializedOnStartPromise = undefined;
-            
+
             logger.info(`Shutdown completed ${getDisplayPath(this.uri)}`);
         } catch (ex) {
             logger.error(`Failed to shutdown kernel ${getDisplayPath(this.uri)}`, ex);
