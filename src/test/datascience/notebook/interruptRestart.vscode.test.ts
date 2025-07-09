@@ -528,14 +528,18 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         logger.info('Step 2: Shutdown kernel');
         await kernel.shutdown();
         
-        // After shutdown, the kernel should be disposed
+        // Then dispose the kernel
+        logger.info('Step 3: Dispose kernel');
+        await kernel.dispose();
+        
+        // After shutdown and disposal, the kernel should be disposed
         await waitForCondition(
             async () => kernel.disposed,
             30_000,
-            'Kernel should be disposed after shutdown'
+            'Kernel should be disposed after shutdown and disposal'
         );
         
-        logger.info('Step 3: Verify kernel is disposed');
-        assert.isTrue(kernel.disposed, 'Kernel should be disposed after shutdown');
+        logger.info('Step 4: Verify kernel is disposed');
+        assert.isTrue(kernel.disposed, 'Kernel should be disposed after shutdown and disposal');
     });
 });
