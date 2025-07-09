@@ -28,11 +28,11 @@ The **Jupyter Extension for Visual Studio Code** is a comprehensive extension th
 ### Build, Development & Testing Tools
 
 -   Use `npm install` to install dependencies
--   Use `npm run compile` for development builds (but in watch mode)
--   Use `npm run compile-nowatch` for non-incremental builds (useful on CI or Agents)
+-   Use `npm run compile` for development builds
+-   Use `npm run watch` for development builds in watch mode
 -   Use `npm run test:unittests` for unit tests
 -   Use `npm run lint` to check code style issues and use `npm run lint-fix` to fix issues before submitting changes
--   Use `npm run format-check` to check formatting issues and use `npm run format` to fix formatting issues before submitting changes
+-   Use `npm run format` to check formatting issues and use `npm run format-fix` to fix formatting issues before submitting changes
 
 ## Coding Standards & Best Practices
 
@@ -72,7 +72,7 @@ The **Jupyter Extension for Visual Studio Code** is a comprehensive extension th
 
 -   All files must include Microsoft copyright header
 -   Prefer async/await over Promises, handle cancellation with CancellationToken
--   Use `npm run lint` and `npm run format-check` to ensure code style consistency.
+-   Use `npm run lint` and `npm run format` to ensure code style consistency.
 
 
 ## Project Architecture
