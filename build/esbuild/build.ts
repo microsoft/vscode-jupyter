@@ -161,7 +161,6 @@ function createConfig(
         plugins.push(style());
         plugins.push(lessLoader());
 
-
         define = {
             BROWSER: 'true', // From webacpk scripts we had.
             global: 'this'
