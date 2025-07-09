@@ -314,7 +314,7 @@ jobs:
           #     tags: '^[^@]+$|@mandatory'
           #     os: ubuntu-latest
           #     ipywidgetsVersion: ''
-          - jupyterConnection: web https://github.com/microsoft/vscode-jupyter/issues/16645
+          - jupyterConnection: web
             python: python
             pythonVersion: '3.10'
             tags: '^[^@]+$|@mandatory'
