@@ -182,6 +182,7 @@ export namespace Commands {
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const InterruptKernel = 'jupyter.interruptkernel';
     export const RestartKernel = 'jupyter.restartkernel';
+    export const ShutdownKernel = 'jupyter.shutdownkernel';
     export const RestartKernelAndRunAllCells = 'jupyter.restartkernelandrunallcells';
     export const RestartKernelAndRunUpToSelectedCell = 'jupyter.restartkernelandrunuptoselectedcell';
     export const NotebookEditorRemoveAllCells = 'jupyter.notebookeditor.removeallcells';
