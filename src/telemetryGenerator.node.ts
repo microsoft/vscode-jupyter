@@ -485,7 +485,7 @@ function generateDocumentation(fileNames: string[]): void {
                                 m.getSourceFile().fileName,
                                 m.name.end - 1
                             );
-                            if (defs) {
+                            if (defs && defs.length) {
                                 const refSourceFile = program!.getSourceFile(defs[0].fileName);
                                 if (refSourceFile) {
                                     const refNode = findNode(
