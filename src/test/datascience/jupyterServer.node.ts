@@ -22,9 +22,23 @@ import { sleep } from '../core';
 import { noop } from '../../platform/common/utils/misc';
 import { dispose } from '../../platform/common/utils/lifecycle';
 
+const venvPath = path.join(
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    '.venv',
+    process.platform === 'win32' ? 'Scripts' : 'bin',
+    process.platform === 'win32' ? 'python.exe' : 'python'
+);
+let venvPathExists: boolean | undefined = undefined;
+
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return process.env.CI_PYTHON_PATH;
+    }
+    if (typeof venvPathExists === 'undefined') {
+        venvPathExists = fs.existsSync(venvPath);
+    }
+    if (venvPathExists) {
+        return venvPath;
     }
     // eslint-disable-next-line
     // TODO: Change this to python3.
