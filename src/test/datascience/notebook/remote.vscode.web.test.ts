@@ -33,26 +33,16 @@ suiteMandatory('Remote Tests', function () {
     // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
     this.retries(1);
     let editor: NotebookEditor;
-    logger.debug(`Inside Remote Tests`);
     suiteSetup(async function () {
-        console.error(`Suite Setup Remote Tests isWeb = ${isWeb()}`);
-        console.error(`Suite Setup Remote Tests isWeb = ${process.platform.toString() === 'web' || (process as any).browser === true}`);
-        logger.error(`Suite Setup Remote Tests = ${isWeb()}`);
-        logger.debug(`Suite Setup Remote Tests = ${isWeb()}`);
         if (!isWeb()) {
             return this.skip();
         }
-        logger.info('Suite Setup Remote Tests');
         this.timeout(120_000);
         await initialize();
-        logger.info('Suite Setup Remote Tests, Step 2');
         await startJupyterServer();
-        logger.info('Suite Setup Remote Tests, Step 4');
         await prewarmNotebooks();
-        logger.info('Suite Setup Remote Tests, Step 5');
         editor = (await createEmptyPythonNotebook(disposables, undefined, true)).editor;
         await selectDefaultController(editor);
-        logger.info('Suite Setup (completed)');
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -70,7 +60,6 @@ suiteMandatory('Remote Tests', function () {
     });
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell and print Hello World', async function () {
-        console.error('Executing cell and printing Hello World');
         const nbEdit = NotebookEdit.replaceCells(new NotebookRange(0, editor.notebook.cellCount), [
             new NotebookCellData(NotebookCellKind.Code, 'print("Hello World")', 'python')
         ]);
