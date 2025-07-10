@@ -86,7 +86,7 @@
         {
             "label": "Start Jupyter Server",
             "type": "npm",
-            "dependsOn": "compile-web-test",
+            "dependsOn": "watch",
             "isBackground": false,
             "script": "startJupyterServer",
             "problemMatcher": [],

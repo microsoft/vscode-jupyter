@@ -83,7 +83,7 @@ The **Jupyter Extension for Visual Studio Code** is a comprehensive extension th
 
 -   `package.json`: Extension manifest with commands, configuration, and activation events
 -   `src/`: Main TypeScript source code
--   `build/`: Build scripts, webpack configs, and CI/CD tools
+-   `build/`: Build scripts and CI/CD tools
 -   `pythonFiles/`: Python scripts for integration and helper functions
 -   `resources/`: Static assets, icons, and walkthrough content
 -   `types/`: TypeScript type definitions

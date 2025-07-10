@@ -3,8 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-/// <reference path="../../../node_modules/@types/webpack-env/index.d.ts" />
-
 import type * as mochaTypes from 'mocha';
 import { env, extensions, UIKind, Uri } from 'vscode';
 import { JVSC_EXTENSION_ID_FOR_TESTS, PerformanceExtensionId } from '../constants';
@@ -105,9 +103,7 @@ function writeReportProgress(message: Message) {
                 : Uri.joinPath(extensions.getExtension(PerformanceExtensionId)!.extensionUri, '..', '..', '..', 'logs');
             const logFile = Uri.joinPath(logDir, 'testresults.json');
             console.log(`Writing test results to ${logFile}`);
-            const requireFunc: typeof require =
-                typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
-            const fs: typeof import('fs-extra') = requireFunc('fs-extra');
+            const fs: typeof import('fs-extra') = require('fs-extra');
             // eslint-disable-next-line local-rules/dont-use-fspath
             fs.ensureDirSync(logDir.fsPath);
             // eslint-disable-next-line local-rules/dont-use-fspath
