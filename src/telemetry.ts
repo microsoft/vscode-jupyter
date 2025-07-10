@@ -3706,6 +3706,25 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
+     * Telemetry to verify whether we can use Uri instead of url-parse
+     */
+    [Telemetry.JupyterUriCanBeParsedAsUri]: TelemetryEventInfo<{
+        /**
+         * Reason for failure to compare Uri with url-parse.
+         */
+        failureReason: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failureReason: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
      * Telemetry sent when an extension uses our 3rd party Kernel Execution API.
      */
     [Telemetry.NewJupyterKernelApiUsage]: TelemetryEventInfo<{

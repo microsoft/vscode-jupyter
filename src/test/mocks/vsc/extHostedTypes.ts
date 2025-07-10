@@ -10,7 +10,7 @@ import { SnippetTextEdit } from 'vscode';
 import { vscMockHtmlContent } from './htmlContent';
 import { vscMockStrings } from './strings';
 import { vscUri } from './uri';
-import { generateUuid } from './uuid';
+import { generateUuid } from '../../../platform/common/uuid';
 
 export namespace vscMockExtHostedTypes {
     export class NotebookCellOutputItem {

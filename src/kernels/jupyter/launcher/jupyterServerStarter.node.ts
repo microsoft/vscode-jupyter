@@ -5,7 +5,6 @@ import * as cp from 'child_process';
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
-import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
 import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
@@ -29,6 +28,7 @@ import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNot
 import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
 import { noop } from '../../../platform/common/utils/misc';
 import { UsedPorts, ignorePortForwarding } from '../../common/usedPorts';
+import { generateUuid } from '../../../platform/common/uuid';
 
 /**
  * Responsible for starting a notebook.
@@ -295,7 +295,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         }
     }
     private async generateTempDir(): Promise<TemporaryDirectory> {
-        const resultDir = Uri.file(path.join(os.tmpdir(), uuid()));
+        const resultDir = Uri.file(path.join(os.tmpdir(), generateUuid()));
         await this.fs.createDirectory(resultDir);
 
         return {

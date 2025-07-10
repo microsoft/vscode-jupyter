@@ -14,7 +14,6 @@ const spawn = require('cross-spawn');
 const path = require('path');
 const del = require('del');
 const fs = require('fs-extra');
-const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const { spawnSync } = require('child_process');
@@ -238,9 +237,10 @@ function hasNativeDependencies() {
     }
     const dependencies = JSON.parse(spawn.sync('npm', ['ls', '--json', '--prod']).stdout.toString());
     const jsonProperties = Object.keys(flat.flatten(dependencies));
-    nativeDependencies = _.flatMap(nativeDependencies, (item) =>
-        path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep)
-    )
+    nativeDependencies = nativeDependencies
+        .flatMap((item) =>
+            path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep)
+        )
         .filter((item) => item.length > 0)
         .filter((item) => !item.includes('zeromq') && !item.includes('canvas') && !item.includes('keytar')) // Known native modules
         .filter(

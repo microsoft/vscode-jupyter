@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import * as net from 'net';
 import * as path from '../../platform/vscode-path/path';
-import uuid from 'uuid/v4';
 import {
     Breakpoint,
     BreakpointsChangeEvent,
@@ -24,6 +23,7 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { logger } from '../../platform/logging';
+import { generateUuid } from '../../platform/common/uuid';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
@@ -169,7 +169,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         // Should have a port number. We'll assume it's local
         const config = nameOrConfiguration as DebugConfiguration; // NOSONAR
         if (config.port) {
-            this.session = new JupyterDebugSession(uuid(), config, this.sendCustomRequest.bind(this));
+            this.session = new JupyterDebugSession(generateUuid(), config, this.sendCustomRequest.bind(this));
             this.sessionChangedEvent.fire(this.session);
 
             // Create our debug adapter trackers at session start
