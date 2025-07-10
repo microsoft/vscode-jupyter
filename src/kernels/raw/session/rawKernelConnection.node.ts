@@ -3,7 +3,6 @@
 
 import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
-import uuid from 'uuid/v4';
 import { logger } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
@@ -39,6 +38,7 @@ import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError';
 import { once } from '../../../platform/common/utils/functional';
 import { disposeAsync } from '../../../platform/common/utils';
+import { generateUuid } from '../../../platform/common/uuid';
 
 let jupyterLabKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -63,9 +63,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     }
     public readonly name: string;
     public readonly model: Kernel.IModel;
-    public readonly id = uuid();
-    public readonly clientId = uuid();
-    public readonly username = uuid();
+    public readonly id = generateUuid();
+    public readonly clientId = generateUuid();
+    public readonly username = generateUuid();
     private isRestarting?: boolean;
     private isShuttingDown?: boolean;
     private hasShutdown?: boolean;

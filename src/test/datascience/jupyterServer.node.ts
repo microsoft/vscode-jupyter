@@ -9,12 +9,11 @@
 import * as crypto from 'crypto';
 import * as tcpPortUsed from 'tcp-port-used';
 import getPort from 'get-port';
-import uuid from 'uuid/v4';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as child_process from 'child_process';
 import { Event, EventEmitter } from '@c4312/evt';
-const uuidToHex = require('uuid-to-hex') as typeof import('uuid-to-hex');
+import { generateUuid } from '../../platform/common/uuid';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { splitLines } from '../../platform/common/helpers';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
@@ -200,7 +199,7 @@ export class JupyterServer {
     }
 
     private generateToken(): string {
-        return uuidToHex(uuid());
+        return generateUuid().replaceAll('-', '');
     }
     private async getFreePort() {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).

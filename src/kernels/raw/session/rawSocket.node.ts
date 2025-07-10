@@ -3,7 +3,6 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
-import uuid from 'uuid/v4';
 import type * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
 import { logger } from '../../../platform/logging';
@@ -14,6 +13,7 @@ import { IKernelConnection } from '../types';
 import type { Channel } from '@jupyterlab/services/lib/kernel/messages';
 import { getZeroMQ } from './zeromq.node';
 import type { IDisposable } from '../../../platform/common/types';
+import { generateUuid } from '../../../platform/common/uuid';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
     const portDelimiter = config.transport === 'tcp' ? ':' : '-';
@@ -149,7 +149,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         const zmq = getZeroMQ();
 
         // Need a routing id for them to share.
-        const routingId = uuid();
+        const routingId = generateUuid();
 
         // Wire up all of the different channels.
         const result: IChannels = {

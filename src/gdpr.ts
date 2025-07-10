@@ -672,7 +672,18 @@
      ]
    }
  */
-// (53). Telemetry.KernelCrash (DATASCIENCE.KERNEL_CRASH)
+// (53). Telemetry.JupyterUriCanBeParsedAsUri (DATASCIENCE.JUPYTER_URI_CAN_BE_PARSED_AS_URI)
+// Telemetry to verify whether we can use Uri instead of url-parse
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_URI_CAN_BE_PARSED_AS_URI" : {
+     "failureReason": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Reason for failure to compare Uri with url-parse.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+// (54). Telemetry.KernelCrash (DATASCIENCE.KERNEL_CRASH)
 // Sent when Kernel crashes.
 /* __GDPR__
    "DATASCIENCE.KERNEL_CRASH" : {
@@ -699,7 +710,7 @@
      ]
    }
  */
-// (54). Telemetry.KernelSpecLanguage (DATASCIENCE.KERNEL_SPEC_LANGUAGE)
+// (55). Telemetry.KernelSpecLanguage (DATASCIENCE.KERNEL_SPEC_LANGUAGE)
 // Sent to detect the different languages of kernel specs used.
 /* __GDPR__
    "DATASCIENCE.KERNEL_SPEC_LANGUAGE" : {
@@ -712,7 +723,7 @@
      ]
    }
  */
-// (55). Telemetry.OpenNotebookAll (DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL)
+// (56). Telemetry.OpenNotebookAll (DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL)
 // Sent when we have opened any Jupyter notebook in a VS Code session.
 // Not tagging as a user action as this could be something like auto opening a file
 // from a previous session and not a direct user action.
@@ -726,7 +737,7 @@
      ]
    }
  */
-// (56). Telemetry.NoActiveKernelSession (DATASCIENCE.NO_ACTIVE_KERNEL_SESSION)
+// (57). Telemetry.NoActiveKernelSession (DATASCIENCE.NO_ACTIVE_KERNEL_SESSION)
 // Send when we want to install data viewer dependendies, but don't have an active kernel session.
 // Used by the dataViewerDependencyService.
 /* __GDPR__
@@ -737,7 +748,7 @@
      ]
    }
  */
-// (57). Telemetry.NotebookFirstKernelAutoSelectionBreakDown (DATASCIENCE.NOTEBOOK_FIRST_KERNEL_AUTO_SELECTION_BREAKDOWN)
+// (58). Telemetry.NotebookFirstKernelAutoSelectionBreakDown (DATASCIENCE.NOTEBOOK_FIRST_KERNEL_AUTO_SELECTION_BREAKDOWN)
 // This event is sent to measure the times involved in automatically selecting the first kernel of a notebook.
 /* __GDPR__
    "DATASCIENCE.NOTEBOOK_FIRST_KERNEL_AUTO_SELECTION_BREAKDOWN" : {
@@ -770,7 +781,7 @@
      ]
    }
  */
-// (58). Telemetry.NotebookFirstStartBreakDown (DATASCIENCE.NOTEBOOK_FIRST_START_BREAKDOWN)
+// (59). Telemetry.NotebookFirstStartBreakDown (DATASCIENCE.NOTEBOOK_FIRST_START_BREAKDOWN)
 // This event is sent to measure the times involved in various parts of extension when running a cell.
 // The reference time is `openedAfter` (time when the notebook was opened).
 // All other times are relative to this time, except in the case where a notebook was already opened before the extension was activated.
@@ -829,7 +840,7 @@
      ]
    }
  */
-// (59). Telemetry.NotebookInterrupt (DATASCIENCE.NOTEBOOK_INTERRUPT)
+// (60). Telemetry.NotebookInterrupt (DATASCIENCE.NOTEBOOK_INTERRUPT)
 // Telemetry sent when user interrupts the kernel.
 // Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 /* __GDPR__
@@ -858,7 +869,7 @@
      ]
    }
  */
-// (60). Telemetry.NotebookRestart (DATASCIENCE.NOTEBOOK_RESTART)
+// (61). Telemetry.NotebookRestart (DATASCIENCE.NOTEBOOK_RESTART)
 // Telemetry sent when user Restarts the Kernel.
 // Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 /* __GDPR__
@@ -886,7 +897,7 @@
      ]
    }
  */
-// (61). Telemetry.NotebookStart (DATASCIENCE.NOTEBOOK_START)
+// (62). Telemetry.NotebookStart (DATASCIENCE.NOTEBOOK_START)
 // Send when a kernel starts.
 /* __GDPR__
    "DATASCIENCE.NOTEBOOK_START" : {
@@ -913,7 +924,7 @@
      ]
    }
  */
-// (62). Telemetry.OpenPlotViewer (DATASCIENCE.OPEN_PLOT_VIEWER)
+// (63). Telemetry.OpenPlotViewer (DATASCIENCE.OPEN_PLOT_VIEWER)
 // A new instance of the plot viewer was opened.
 /* __GDPR__
    "DATASCIENCE.OPEN_PLOT_VIEWER" : {
@@ -923,7 +934,7 @@
      ]
    }
  */
-// (63). Telemetry.PythonVariableFetchingCodeFailure (DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE)
+// (64). Telemetry.PythonVariableFetchingCodeFailure (DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE)
 // The Python code that we ran to fetch variables had a failure.
 /* __GDPR__
    "DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE" : {
@@ -933,7 +944,7 @@
      ]
    }
  */
-// (64). Telemetry.RecommendExtension (DATASCIENCE.RECOMMENT_EXTENSION)
+// (65). Telemetry.RecommendExtension (DATASCIENCE.RECOMMENT_EXTENSION)
 // Telemetry sent when we recommend installing an extension.
 /* __GDPR__
    "DATASCIENCE.RECOMMENT_EXTENSION" : {
@@ -945,7 +956,7 @@
      ]
    }
  */
-// (65). Telemetry.RefreshDataViewer (DATASCIENCE.REFRESH_DATA_VIEWER)
+// (66). Telemetry.RefreshDataViewer (DATASCIENCE.REFRESH_DATA_VIEWER)
 // Sent when the jupyter.refreshDataViewer command is invoked
 /* __GDPR__
    "DATASCIENCE.REFRESH_DATA_VIEWER" : {
@@ -955,7 +966,7 @@
      ]
    }
  */
-// (66). Telemetry.ResumeCellExecution (DATASCIENCE.RESUME_EXECUTE_CELL)
+// (67). Telemetry.ResumeCellExecution (DATASCIENCE.RESUME_EXECUTE_CELL)
 // Sent when we resume execution of a cell (e.g. when reloading VS Code while a cell was executing).
 /* __GDPR__
    "DATASCIENCE.RESUME_EXECUTE_CELL" : {
@@ -982,7 +993,7 @@
      ]
    }
  */
-// (67). Telemetry.RunAllCells (DATASCIENCE.RUN_ALL_CELLS)
+// (68). Telemetry.RunAllCells (DATASCIENCE.RUN_ALL_CELLS)
 // Command to Run all cells from the active python file in the Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_ALL_CELLS" : {
@@ -992,7 +1003,7 @@
      ]
    }
  */
-// (68). Telemetry.RunAllCellsAbove (DATASCIENCE.RUN_ALL_CELLS_ABOVE)
+// (69). Telemetry.RunAllCellsAbove (DATASCIENCE.RUN_ALL_CELLS_ABOVE)
 // Command to Run all the above cells in the Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_ALL_CELLS_ABOVE" : {
@@ -1002,7 +1013,7 @@
      ]
    }
  */
-// (69). Telemetry.RunByLineVariableHover (DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER)
+// (70). Telemetry.RunByLineVariableHover (DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER)
 // Fired when a user hovers a variable while debugging the IW.
 /* __GDPR__
    "DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER" : {
@@ -1012,7 +1023,7 @@
      ]
    }
  */
-// (70). Telemetry.RunCellAndAllBelow (DATASCIENCE.RUN_CELL_AND_ALL_BELOW)
+// (71). Telemetry.RunCellAndAllBelow (DATASCIENCE.RUN_CELL_AND_ALL_BELOW)
 // Command to Run current cell and all below in the Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_CELL_AND_ALL_BELOW" : {
@@ -1022,7 +1033,7 @@
      ]
    }
  */
-// (71). Telemetry.ChangeCellToCode (DATASCIENCE.RUN_CHANGE_CELL_TO_CODE)
+// (72). Telemetry.ChangeCellToCode (DATASCIENCE.RUN_CHANGE_CELL_TO_CODE)
 // Cell Edit Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_CHANGE_CELL_TO_CODE" : {
@@ -1032,7 +1043,7 @@
      ]
    }
  */
-// (72). Telemetry.ChangeCellToMarkdown (DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN)
+// (73). Telemetry.ChangeCellToMarkdown (DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN)
 // Cell Edit Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN" : {
@@ -1042,7 +1053,7 @@
      ]
    }
  */
-// (73). Telemetry.RunCurrentCell (DATASCIENCE.RUN_CURRENT_CELL)
+// (74). Telemetry.RunCurrentCell (DATASCIENCE.RUN_CURRENT_CELL)
 // Command to Run the current Cell in the Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_CURRENT_CELL" : {
@@ -1052,7 +1063,7 @@
      ]
    }
  */
-// (74). Telemetry.RunCurrentCellAndAddBelow (DATASCIENCE.RUN_CURRENT_CELL_AND_ADD_BELOW)
+// (75). Telemetry.RunCurrentCellAndAddBelow (DATASCIENCE.RUN_CURRENT_CELL_AND_ADD_BELOW)
 // Run the cell and everything below it in the Interactive Window.
 /* __GDPR__
    "DATASCIENCE.RUN_CURRENT_CELL_AND_ADD_BELOW" : {
@@ -1062,7 +1073,7 @@
      ]
    }
  */
-// (75). Telemetry.RunCurrentCellAndAdvance (DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE)
+// (76). Telemetry.RunCurrentCellAndAdvance (DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE)
 // Command to Run current cell in the Interactive Window and advance cursor to the next cell
 /* __GDPR__
    "DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE" : {
@@ -1072,7 +1083,7 @@
      ]
    }
  */
-// (76). Telemetry.DeleteCells (DATASCIENCE.RUN_DELETE_CELLS)
+// (77). Telemetry.DeleteCells (DATASCIENCE.RUN_DELETE_CELLS)
 // Cell Edit Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_DELETE_CELLS" : {
@@ -1082,7 +1093,7 @@
      ]
    }
  */
-// (77). Telemetry.ExtendSelectionByCellAbove (DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_ABOVE)
+// (78). Telemetry.ExtendSelectionByCellAbove (DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_ABOVE)
 // Cell Selection Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_ABOVE" : {
@@ -1092,7 +1103,7 @@
      ]
    }
  */
-// (78). Telemetry.ExtendSelectionByCellBelow (DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_BELOW)
+// (79). Telemetry.ExtendSelectionByCellBelow (DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_BELOW)
 // Cell Selection Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_BELOW" : {
@@ -1102,7 +1113,7 @@
      ]
    }
  */
-// (79). Telemetry.RunFileInteractive (DATASCIENCE.RUN_FILE_INTERACTIVE)
+// (80). Telemetry.RunFileInteractive (DATASCIENCE.RUN_FILE_INTERACTIVE)
 // Command to Run the active file in the Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_FILE_INTERACTIVE" : {
@@ -1112,7 +1123,7 @@
      ]
    }
  */
-// (80). Telemetry.RunFromLine (DATASCIENCE.RUN_FROM_LINE)
+// (81). Telemetry.RunFromLine (DATASCIENCE.RUN_FROM_LINE)
 // Command to Run the active file contents from the cursor location in the Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_FROM_LINE" : {
@@ -1122,7 +1133,7 @@
      ]
    }
  */
-// (81). Telemetry.InsertCellAbove (DATASCIENCE.RUN_INSERT_CELL_ABOVE)
+// (82). Telemetry.InsertCellAbove (DATASCIENCE.RUN_INSERT_CELL_ABOVE)
 // Cell Edit Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_INSERT_CELL_ABOVE" : {
@@ -1132,7 +1143,7 @@
      ]
    }
  */
-// (82). Telemetry.InsertCellBelow (DATASCIENCE.RUN_INSERT_CELL_BELOW)
+// (83). Telemetry.InsertCellBelow (DATASCIENCE.RUN_INSERT_CELL_BELOW)
 // Cell Edit Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_INSERT_CELL_BELOW" : {
@@ -1142,7 +1153,7 @@
      ]
    }
  */
-// (83). Telemetry.InsertCellBelowPosition (DATASCIENCE.RUN_INSERT_CELL_BELOW_POSITION)
+// (84). Telemetry.InsertCellBelowPosition (DATASCIENCE.RUN_INSERT_CELL_BELOW_POSITION)
 // Cell Edit Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_INSERT_CELL_BELOW_POSITION" : {
@@ -1152,7 +1163,7 @@
      ]
    }
  */
-// (84). Telemetry.MoveCellsDown (DATASCIENCE.RUN_MOVE_CELLS_DOWN)
+// (85). Telemetry.MoveCellsDown (DATASCIENCE.RUN_MOVE_CELLS_DOWN)
 // Cell Edit Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_MOVE_CELLS_DOWN" : {
@@ -1162,7 +1173,7 @@
      ]
    }
  */
-// (85). Telemetry.MoveCellsUp (DATASCIENCE.RUN_MOVE_CELLS_UP)
+// (86). Telemetry.MoveCellsUp (DATASCIENCE.RUN_MOVE_CELLS_UP)
 // Cell Edit Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_MOVE_CELLS_UP" : {
@@ -1172,7 +1183,7 @@
      ]
    }
  */
-// (86). Telemetry.SelectCell (DATASCIENCE.RUN_SELECT_CELL)
+// (87). Telemetry.SelectCell (DATASCIENCE.RUN_SELECT_CELL)
 // Cell Selection Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_SELECT_CELL" : {
@@ -1182,7 +1193,7 @@
      ]
    }
  */
-// (87). Telemetry.SelectCellContents (DATASCIENCE.RUN_SELECT_CELL_CONTENTS)
+// (88). Telemetry.SelectCellContents (DATASCIENCE.RUN_SELECT_CELL_CONTENTS)
 // Cell Selection Command in Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_SELECT_CELL_CONTENTS" : {
@@ -1192,7 +1203,7 @@
      ]
    }
  */
-// (88). Telemetry.RunSelectionOrLine (DATASCIENCE.RUN_SELECTION_OR_LINE)
+// (89). Telemetry.RunSelectionOrLine (DATASCIENCE.RUN_SELECTION_OR_LINE)
 // Command to Run a Selection or Line in the Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_SELECTION_OR_LINE" : {
@@ -1202,7 +1213,7 @@
      ]
    }
  */
-// (89). Telemetry.RunToLine (DATASCIENCE.RUN_TO_LINE)
+// (90). Telemetry.RunToLine (DATASCIENCE.RUN_TO_LINE)
 // Command to Run the active file contents up to the cursor location in the Interactive Window
 /* __GDPR__
    "DATASCIENCE.RUN_TO_LINE" : {
@@ -1212,7 +1223,7 @@
      ]
    }
  */
-// (90). Telemetry.SelfCertsMessageClose (DATASCIENCE.SELFCERTSMESSAGECLOSE)
+// (91). Telemetry.SelfCertsMessageClose (DATASCIENCE.SELFCERTSMESSAGECLOSE)
 // Sent when users chose not to allow connecting to Jupyter over HTTPS when certificate isn't trusted by a trusted CA.
 /* __GDPR__
    "DATASCIENCE.SELFCERTSMESSAGECLOSE" : {
@@ -1222,7 +1233,7 @@
      ]
    }
  */
-// (91). Telemetry.SelfCertsMessageEnabled (DATASCIENCE.SELFCERTSMESSAGEENABLED)
+// (92). Telemetry.SelfCertsMessageEnabled (DATASCIENCE.SELFCERTSMESSAGEENABLED)
 // Sent when users chose to use self-signed certificates when connecting to Jupyter over https.
 // Basically this means users has chosen to connect to Jupyter over HTTPS when certificate isn't trusted by a trusted CA.
 /* __GDPR__
@@ -1233,7 +1244,7 @@
      ]
    }
  */
-// (92). Telemetry.ShowDataViewer (DATASCIENCE.SHOW_DATA_EXPLORER)
+// (93). Telemetry.ShowDataViewer (DATASCIENCE.SHOW_DATA_EXPLORER)
 // Request was made to show the data viewer with specific data frame info.
 /* __GDPR__
    "DATASCIENCE.SHOW_DATA_EXPLORER" : {
@@ -1245,7 +1256,7 @@
      ]
    }
  */
-// (93). Telemetry.ShowDataViewerRowsLoaded (DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED)
+// (94). Telemetry.ShowDataViewerRowsLoaded (DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED)
 // Data viewer loads rows in chunks, this event is sent when the rows have all been loaded
 /* __GDPR__
    "DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED" : {
@@ -1256,7 +1267,7 @@
      ]
    }
  */
-// (94). Telemetry.StartShowDataViewer (DATASCIENCE.START_SHOW_DATA_EXPLORER)
+// (95). Telemetry.StartShowDataViewer (DATASCIENCE.START_SHOW_DATA_EXPLORER)
 // User requested to open the data frame viewer.
 /* __GDPR__
    "DATASCIENCE.START_SHOW_DATA_EXPLORER" : {
@@ -1266,7 +1277,7 @@
      ]
    }
  */
-// (95). Telemetry.UserDidNotInstallJupyter (DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER)
+// (96). Telemetry.UserDidNotInstallJupyter (DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER)
 // Sent when user click `cancel` button when prompted to install Jupyter.
 /* __GDPR__
    "DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER" : {
@@ -1276,7 +1287,7 @@
      ]
    }
  */
-// (96). Telemetry.UserDidNotInstallPandas (DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS)
+// (97). Telemetry.UserDidNotInstallPandas (DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS)
 // Prompted to install Pandas and chose not to install
 // Note: This could be just ignoring the UI so not a user action.
 /* __GDPR__
@@ -1287,7 +1298,7 @@
      ]
    }
  */
-// (97). Telemetry.UserInstalledJupyter (DATASCIENCE.USER_INSTALLED_JUPYTER)
+// (98). Telemetry.UserInstalledJupyter (DATASCIENCE.USER_INSTALLED_JUPYTER)
 // Sent when user installs Jupyter.
 /* __GDPR__
    "DATASCIENCE.USER_INSTALLED_JUPYTER" : {
@@ -1297,7 +1308,7 @@
      ]
    }
  */
-// (98). Telemetry.UserInstalledPandas (DATASCIENCE.USER_INSTALLED_PANDAS)
+// (99). Telemetry.UserInstalledPandas (DATASCIENCE.USER_INSTALLED_PANDAS)
 // Installed the python Pandas package.
 /* __GDPR__
    "DATASCIENCE.USER_INSTALLED_PANDAS" : {
@@ -1307,7 +1318,7 @@
      ]
    }
  */
-// (99). Telemetry.DataViewerUsingInterpreter (DATAVIEWER.USING_INTERPRETER)
+// (100). Telemetry.DataViewerUsingInterpreter (DATAVIEWER.USING_INTERPRETER)
 // When the Data Viewer installer is using a Python interpreter to do the install.
 /* __GDPR__
    "DATAVIEWER.USING_INTERPRETER" : {
@@ -1317,7 +1328,7 @@
      ]
    }
  */
-// (100). Telemetry.DataViewerUsingKernel (DATAVIEWER.USING_KERNEL)
+// (101). Telemetry.DataViewerUsingKernel (DATAVIEWER.USING_KERNEL)
 // When the Data Viewer installer is using the Kernel to do the install.
 /* __GDPR__
    "DATAVIEWER.USING_KERNEL" : {
@@ -1327,7 +1338,7 @@
      ]
    }
  */
-// (101). Telemetry.DataViewerWebviewLoaded (DATAVIEWER.WEBVIEW_LOADED)
+// (102). Telemetry.DataViewerWebviewLoaded (DATAVIEWER.WEBVIEW_LOADED)
 // The Data Viewer webview was loaded.
 /* __GDPR__
    "DATAVIEWER.WEBVIEW_LOADED" : {
@@ -1337,7 +1348,7 @@
      ]
    }
  */
-// (102). Telemetry.ActiveInterpreterListingPerf (DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF)
+// (103). Telemetry.ActiveInterpreterListingPerf (DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF)
 // Total time taken by Python extension to return the active Python environment.
 /* __GDPR__
    "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF" : {
@@ -1348,7 +1359,7 @@
      ]
    }
  */
-// (103). Telemetry.CellOutputMimeType (DS_INTERNAL.CELL_OUTPUT_MIME_TYPE)
+// (104). Telemetry.CellOutputMimeType (DS_INTERNAL.CELL_OUTPUT_MIME_TYPE)
 // Mime type of a cell output.
 // Used to detect the popularity of a mime type, that would help determine which mime types are most common.
 // E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
@@ -1364,7 +1375,7 @@
      ]
    }
  */
-// (104). Telemetry.CodeLensAverageAcquisitionTime (DS_INTERNAL.CODE_LENS_ACQ_TIME)
+// (105). Telemetry.CodeLensAverageAcquisitionTime (DS_INTERNAL.CODE_LENS_ACQ_TIME)
 // How long on average we spent parsing code lens. Sent on shutdown.
 // We should be able to deprecate in favor of DocumentWithCodeCells, but we should compare the numbers first.
 /* __GDPR__
@@ -1375,7 +1386,7 @@
      ]
    }
  */
-// (105). Telemetry.CommandExecuted (DS_INTERNAL.COMMAND_EXECUTED)
+// (106). Telemetry.CommandExecuted (DS_INTERNAL.COMMAND_EXECUTED)
 // A command that the extension contributes is executed.
 /* __GDPR__
    "DS_INTERNAL.COMMAND_EXECUTED" : {
@@ -1386,7 +1397,7 @@
      ]
    }
  */
-// (106). Telemetry.CreateInteractiveWindow (DS_INTERNAL.CREATED_INTERACTIVE_WINDOW)
+// (107). Telemetry.CreateInteractiveWindow (DS_INTERNAL.CREATED_INTERACTIVE_WINDOW)
 /* __GDPR__
    "DS_INTERNAL.CREATED_INTERACTIVE_WINDOW" : {
      "hasKernel": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the kernel was known at the time of creation","owner":"amunger"},
@@ -1400,7 +1411,7 @@
      ]
    }
  */
-// (107). Telemetry.DocumentWithCodeCells (DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS)
+// (108). Telemetry.DocumentWithCodeCells (DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS)
 // Info about code lenses, count and average time to parse the document.
 /* __GDPR__
    "DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS" : {
@@ -1412,7 +1423,7 @@
      ]
    }
  */
-// (108). Telemetry.ExperimentLoad (DS_INTERNAL.EXPERIMENT_LOAD)
+// (109). Telemetry.ExperimentLoad (DS_INTERNAL.EXPERIMENT_LOAD)
 // Telemetry event sent with perf measures related to loading experiments.
 /* __GDPR__
    "DS_INTERNAL.EXPERIMENT_LOAD" : {
@@ -1422,7 +1433,7 @@
      ]
    }
  */
-// (109). Telemetry.GetActivatedEnvironmentVariables (DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES)
+// (110). Telemetry.GetActivatedEnvironmentVariables (DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES)
 // Used to capture time taken to get environment variables for a python environment.
 // Also lets us know whether it worked or not.
 /* __GDPR__
@@ -1436,7 +1447,7 @@
      ]
    }
  */
-// (110). Telemetry.GetPasswordFailure (DS_INTERNAL.GET_PASSWORD_FAILURE)
+// (111). Telemetry.GetPasswordFailure (DS_INTERNAL.GET_PASSWORD_FAILURE)
 // Sent to indicate we've failed to connect to a Remote Jupyter Server successfully after requesting a password.
 /* __GDPR__
    "DS_INTERNAL.GET_PASSWORD_FAILURE" : {
@@ -1446,7 +1457,7 @@
      ]
    }
  */
-// (111). Telemetry.GetPasswordSuccess (DS_INTERNAL.GET_PASSWORD_SUCCESS)
+// (112). Telemetry.GetPasswordSuccess (DS_INTERNAL.GET_PASSWORD_SUCCESS)
 // Sent to indicate we've connected to a Remote Jupyter Server successfully after requesting a password.
 /* __GDPR__
    "DS_INTERNAL.GET_PASSWORD_SUCCESS" : {
@@ -1456,7 +1467,7 @@
      ]
    }
  */
-// (112). Telemetry.InteractiveFileTooltipsPerf (DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF)
+// (113). Telemetry.InteractiveFileTooltipsPerf (DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF)
 // How long it took to return our hover tooltips for a .py file.
 /* __GDPR__
    "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF" : {
@@ -1467,7 +1478,7 @@
      ]
    }
  */
-// (113). Telemetry.DiscoverIPyWidgetNamesPerf (DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS)
+// (114). Telemetry.DiscoverIPyWidgetNamesPerf (DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS)
 // Total time taken to discover all IPyWidgets.
 // This is how long it takes to discover all widgets on disc (from python environment).
 /* __GDPR__
@@ -1479,7 +1490,7 @@
      ]
    }
  */
-// (114). Telemetry.HashedIPyWidgetScriptDiscoveryError (DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED)
+// (115). Telemetry.HashedIPyWidgetScriptDiscoveryError (DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED)
 // Something went wrong in looking for a widget.
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED" : {
@@ -1489,7 +1500,7 @@
      ]
    }
  */
-// (115). Telemetry.IPyWidgetExtensionJsInfo (DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO)
+// (116). Telemetry.IPyWidgetExtensionJsInfo (DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO)
 // Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
 // E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.
 /* __GDPR__
@@ -1504,7 +1515,7 @@
      ]
    }
  */
-// (116). Telemetry.IPyWidgetLoadFailure (DS_INTERNAL.IPYWIDGET_LOAD_FAILURE)
+// (117). Telemetry.IPyWidgetLoadFailure (DS_INTERNAL.IPYWIDGET_LOAD_FAILURE)
 // Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_LOAD_FAILURE" : {
@@ -1518,7 +1529,7 @@
      ]
    }
  */
-// (117). Telemetry.IPyWidgetLoadSuccess (DS_INTERNAL.IPYWIDGET_LOAD_SUCCESS)
+// (118). Telemetry.IPyWidgetLoadSuccess (DS_INTERNAL.IPYWIDGET_LOAD_SUCCESS)
 // Telemetry event sent when an ipywidget module loads. Module name is hashed.
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_LOAD_SUCCESS" : {
@@ -1530,7 +1541,7 @@
      ]
    }
  */
-// (118). Telemetry.IPyWidgetPromptToUseCDN (DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN)
+// (119). Telemetry.IPyWidgetPromptToUseCDN (DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN)
 // Telemetry sent when we prompt user to use a CDN for IPyWidget scripts.
 // This is always sent when we display a prompt.
 /* __GDPR__
@@ -1541,7 +1552,7 @@
      ]
    }
  */
-// (119). Telemetry.IPyWidgetPromptToUseCDNSelection (DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN_SELECTION)
+// (120). Telemetry.IPyWidgetPromptToUseCDNSelection (DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN_SELECTION)
 // Telemetry sent when user does something with the prompt displayed to user about using CDN for IPyWidget scripts.
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN_SELECTION" : {
@@ -1552,7 +1563,7 @@
      ]
    }
  */
-// (120). Telemetry.IPyWidgetRenderFailure (DS_INTERNAL.IPYWIDGET_RENDER_FAILURE)
+// (121). Telemetry.IPyWidgetRenderFailure (DS_INTERNAL.IPYWIDGET_RENDER_FAILURE)
 // Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_RENDER_FAILURE" : {
@@ -1562,7 +1573,7 @@
      ]
    }
  */
-// (121). Telemetry.IPyWidgetNbExtensionCopyTime (DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR)
+// (122). Telemetry.IPyWidgetNbExtensionCopyTime (DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR)
 // Total time take to copy the nb extensions folder.
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR" : {
@@ -1572,7 +1583,7 @@
      ]
    }
  */
-// (122). Telemetry.IPyWidgetUnhandledMessage (DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE)
+// (123). Telemetry.IPyWidgetUnhandledMessage (DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE)
 // Telemetry event sent when the widget tries to send a kernel message but nothing was listening
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE" : {
@@ -1583,7 +1594,7 @@
      ]
    }
  */
-// (123). Telemetry.HashedIPyWidgetNameUsed (DS_INTERNAL.IPYWIDGET_USED_BY_USER)
+// (124). Telemetry.HashedIPyWidgetNameUsed (DS_INTERNAL.IPYWIDGET_USED_BY_USER)
 // Telemetry event sent with name of a Widget that is used.
 // Helps determine which widgets are used the most, and which are not.
 // Useful in prioritizing which widgets to work on if things fail to work.
@@ -1601,7 +1612,7 @@
      ]
    }
  */
-// (124). Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure (DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE)
+// (125). Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure (DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE)
 // Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE" : {
@@ -1613,7 +1624,7 @@
      ]
    }
  */
-// (125). Telemetry.CheckPasswordJupyterHub (DS_INTERNAL.JUPYTER_HUB_PASSWORD)
+// (126). Telemetry.CheckPasswordJupyterHub (DS_INTERNAL.JUPYTER_HUB_PASSWORD)
 // Sent when checking for passwords for Jupyter Hub
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_HUB_PASSWORD" : {
@@ -1624,7 +1635,7 @@
      ]
    }
  */
-// (126). Telemetry.KernelSpec (DS_INTERNAL.JUPYTER_KERNEL_SPEC)
+// (127). Telemetry.KernelSpec (DS_INTERNAL.JUPYTER_KERNEL_SPEC)
 // Information about KernelSpecs
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_KERNEL_SPEC" : {
@@ -1645,7 +1656,7 @@
      ]
    }
  */
-// (127). Telemetry.ZMQSupport (DS_INTERNAL.JUPYTER_ZMQ_SUPPORT)
+// (128). Telemetry.ZMQSupport (DS_INTERNAL.JUPYTER_ZMQ_SUPPORT)
 // Information used to determine the zmq binary support.
 // the alpine, libc, armv version is used by the node module
 /* __GDPR__
@@ -1663,7 +1674,7 @@
      ]
    }
  */
-// (128). Telemetry.ZMQSupportFailure (DS_INTERNAL.JUPYTER_ZMQ_SUPPORT_FAILURE)
+// (129). Telemetry.ZMQSupportFailure (DS_INTERNAL.JUPYTER_ZMQ_SUPPORT_FAILURE)
 // Information used to determine the zmq binary support.
 // the alpine, libc, armv version is used by the node module
 /* __GDPR__
@@ -1684,7 +1695,7 @@
      ]
    }
  */
-// (129). Telemetry.KernelCount (DS_INTERNAL.KERNEL_COUNT)
+// (130). Telemetry.KernelCount (DS_INTERNAL.KERNEL_COUNT)
 // Telemetry sent with the total number of different types of kernels in the kernel picker.
 /* __GDPR__
    "DS_INTERNAL.KERNEL_COUNT" : {
@@ -1699,7 +1710,7 @@
      ]
    }
  */
-// (130). Telemetry.KernelLauncherPerf (DS_INTERNAL.KERNEL_LAUNCHER_PERF)
+// (131). Telemetry.KernelLauncherPerf (DS_INTERNAL.KERNEL_LAUNCHER_PERF)
 // Total time taken to Launch a raw kernel.
 /* __GDPR__
    "DS_INTERNAL.KERNEL_LAUNCHER_PERF" : {
@@ -1710,7 +1721,7 @@
      ]
    }
  */
-// (131). Telemetry.NativeVariableViewLoaded (DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED)
+// (132). Telemetry.NativeVariableViewLoaded (DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED)
 // The Variable View webview was loaded.
 /* __GDPR__
    "DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED" : {
@@ -1720,7 +1731,7 @@
      ]
    }
  */
-// (132). Telemetry.NativeVariableViewMadeVisible (DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE)
+// (133). Telemetry.NativeVariableViewMadeVisible (DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE)
 // The Variable View webview was made visible.
 /* __GDPR__
    "DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE" : {
@@ -1730,7 +1741,7 @@
      ]
    }
  */
-// (133). Telemetry.NewFileForInteractiveWindow (DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE)
+// (134). Telemetry.NewFileForInteractiveWindow (DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE)
 // Telemetry event sent when a user runs the interactive window with a new file
 /* __GDPR__
    "DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE" : {
@@ -1740,7 +1751,7 @@
      ]
    }
  */
-// (134). Telemetry.PerceivedJupyterStartupNotebook (DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK)
+// (135). Telemetry.PerceivedJupyterStartupNotebook (DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK)
 // Time take for jupyter server to start and be ready to run first user cell.
 // (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
 /* __GDPR__
@@ -1768,7 +1779,7 @@
      ]
    }
  */
-// (135). Telemetry.PreferredKernelExactMatch (DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH)
+// (136). Telemetry.PreferredKernelExactMatch (DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH)
 // Send we we complete our preferred kernel match. Matched reason might be 'no match'.
 /* __GDPR__
    "DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH" : {
@@ -1779,7 +1790,7 @@
      ]
    }
  */
-// (136). Telemetry.PythonExtensionInstalledViaKernelPicker (DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER)
+// (137). Telemetry.PythonExtensionInstalledViaKernelPicker (DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER)
 // Python extension was attempted to be installed via the kernel picker command.
 /* __GDPR__
    "DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER" : {
@@ -1790,7 +1801,7 @@
      ]
    }
  */
-// (137). Telemetry.PythonExtensionNotInstalled (DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED)
+// (138). Telemetry.PythonExtensionNotInstalled (DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED)
 // The kernel picker command to install python extension was shown.
 /* __GDPR__
    "DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED" : {
@@ -1801,7 +1812,7 @@
      ]
    }
  */
-// (138). Telemetry.PythonModuleInstall (DS_INTERNAL.PYTHON_MODULE_INSTALL)
+// (139). Telemetry.PythonModuleInstall (DS_INTERNAL.PYTHON_MODULE_INSTALL)
 // Telemetry sent when user is presented with a dialog to install a python package.
 // Also sent with the user's response to the dialog.
 /* __GDPR__
@@ -1818,7 +1829,7 @@
      ]
    }
  */
-// (139). Telemetry.PythonNotInstalled (DS_INTERNAL.PYTHON_NOT_INSTALLED)
+// (140). Telemetry.PythonNotInstalled (DS_INTERNAL.PYTHON_NOT_INSTALLED)
 // The kernel picker command to install python was shown.
 /* __GDPR__
    "DS_INTERNAL.PYTHON_NOT_INSTALLED" : {
@@ -1829,7 +1840,7 @@
      ]
    }
  */
-// (140). Telemetry.RawKernelInfoResponse (DS_INTERNAL.RAWKERNEL_INFO_RESPONSE)
+// (141). Telemetry.RawKernelInfoResponse (DS_INTERNAL.RAWKERNEL_INFO_RESPONSE)
 // After starting a kernel we send a request to get the kernel info.
 // This tracks the total time taken to get the response back (or wether we timedout).
 // If we timeout and later we find successful comms for this session, then timeout is too low
@@ -1861,7 +1872,7 @@
      ]
    }
  */
-// (141). Telemetry.RawKernelProcessLaunch (DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH)
+// (142). Telemetry.RawKernelProcessLaunch (DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH)
 // Sent to measure time taken to spawn the raw kernel process.
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH" : {
@@ -1871,7 +1882,7 @@
      ]
    }
  */
-// (142). Telemetry.RawKernelSessionDisposed (DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED)
+// (143). Telemetry.RawKernelSessionDisposed (DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED)
 // This event is sent when a RawSession's `dispose` method is called.
 // Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.
 /* __GDPR__
@@ -1900,7 +1911,7 @@
      ]
    }
  */
-// (143). Telemetry.RawKernelSessionKernelProcessExited (DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED)
+// (144). Telemetry.RawKernelSessionKernelProcessExited (DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED)
 // This event is sent when the underlying kernelProcess for a
 // RawJupyterSession exits.
 /* __GDPR__
@@ -1930,7 +1941,7 @@
      ]
    }
  */
-// (144). Telemetry.RawKernelSessionStartNoIpykernel (DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL)
+// (145). Telemetry.RawKernelSessionStartNoIpykernel (DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL)
 // Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
 // This is useful to see what the user does with this error message.
 /* __GDPR__
@@ -1959,7 +1970,7 @@
      ]
    }
  */
-// (145). Telemetry.RawKernelSessionShutdown (DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN)
+// (146). Telemetry.RawKernelSessionShutdown (DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN)
 // This event is sent when a RawJupyterSession's `shutdownSession` method is called.
 // Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.
 /* __GDPR__
@@ -1989,7 +2000,7 @@
      ]
    }
  */
-// (146). Telemetry.RunTest (DS_INTERNAL.RUNTEST)
+// (147). Telemetry.RunTest (DS_INTERNAL.RUNTEST)
 // A automated test has been run
 /* __GDPR__
    "DS_INTERNAL.RUNTEST" : {
@@ -2004,7 +2015,7 @@
      ]
    }
  */
-// (147). Telemetry.ShiftEnterBannerShown (DS_INTERNAL.SHIFTENTER_BANNER_SHOWN)
+// (148). Telemetry.ShiftEnterBannerShown (DS_INTERNAL.SHIFTENTER_BANNER_SHOWN)
 // Information banner displayed to give the user the option to configure shift+enter for the Interactive Window.
 /* __GDPR__
    "DS_INTERNAL.SHIFTENTER_BANNER_SHOWN" : {
@@ -2014,7 +2025,7 @@
      ]
    }
  */
-// (148). Telemetry.PandasNotInstalled (DS_INTERNAL.SHOW_DATA_NO_PANDAS)
+// (149). Telemetry.PandasNotInstalled (DS_INTERNAL.SHOW_DATA_NO_PANDAS)
 // User tried to open the data viewer and Pandas package was not installed.
 // Note: Not a failure state, as we prompt for install after this.
 /* __GDPR__
@@ -2025,7 +2036,7 @@
      ]
    }
  */
-// (149). Telemetry.PandasInstallCanceled (DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED)
+// (150). Telemetry.PandasInstallCanceled (DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED)
 // When opening the data viewer the user was prompted to install / upgrade
 // pandas and choose to cancel the operation.
 /* __GDPR__
@@ -2036,7 +2047,7 @@
      ]
    }
  */
-// (150). Telemetry.PandasOK (DS_INTERNAL.SHOW_DATA_PANDAS_OK)
+// (151). Telemetry.PandasOK (DS_INTERNAL.SHOW_DATA_PANDAS_OK)
 // When opening the data viewer the version of Pandas installed was ok.
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_OK" : {
@@ -2046,7 +2057,7 @@
      ]
    }
  */
-// (151). Telemetry.PandasTooOld (DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD)
+// (152). Telemetry.PandasTooOld (DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD)
 // When opening the data viewer the version of Pandas installed was too old.
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD" : {
@@ -2056,7 +2067,7 @@
      ]
    }
  */
-// (152). Telemetry.SwitchKernel (DS_INTERNAL.SWITCH_KERNEL)
+// (153). Telemetry.SwitchKernel (DS_INTERNAL.SWITCH_KERNEL)
 // Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 // WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
 /* __GDPR__
@@ -2084,7 +2095,7 @@
      ]
    }
  */
-// (153). Telemetry.VariableExplorerFetchTime (DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME)
+// (154). Telemetry.VariableExplorerFetchTime (DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME)
 // How long did it take for a single variable request to be resolved.
 /* __GDPR__
    "DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME" : {
@@ -2094,7 +2105,7 @@
      ]
    }
  */
-// (154). Telemetry.VariableExplorerVariableCount (DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT)
+// (155). Telemetry.VariableExplorerVariableCount (DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT)
 // Count how many variables were in a variable request.
 /* __GDPR__
    "DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT" : {
@@ -2105,7 +2116,7 @@
      ]
    }
  */
-// (155). Telemetry.VSCNotebookCellTranslationFailed (DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED)
+// (156). Telemetry.VSCNotebookCellTranslationFailed (DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED)
 // We've failed to translate a Jupyter cell output for serialization into a Notebook cell.
 /* __GDPR__
    "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED" : {
@@ -2116,7 +2127,7 @@
      ]
    }
  */
-// (156). EventName.ENVFILE_VARIABLE_SUBSTITUTION (ENVFILE_VARIABLE_SUBSTITUTION)
+// (157). EventName.ENVFILE_VARIABLE_SUBSTITUTION (ENVFILE_VARIABLE_SUBSTITUTION)
 // Telemetry event sent when substituting Environment variables to calculate value of variables.
 // E.g. user has a a .env file with tokens that need to be replaced with env variables.
 // such as an env file having the variable `${HOME}`.
@@ -2129,7 +2140,7 @@
      ]
    }
  */
-// (157). EventName.ENVFILE_WORKSPACE (ENVFILE_WORKSPACE)
+// (158). EventName.ENVFILE_WORKSPACE (ENVFILE_WORKSPACE)
 // Telemetry event sent when an environment file is detected in the workspace.
 /* __GDPR__
    "ENVFILE_WORKSPACE" : {
@@ -2139,7 +2150,7 @@
      ]
    }
  */
-// (158). EventName.EXTENSION_LOAD (EXTENSION.LOAD)
+// (159). EventName.EXTENSION_LOAD (EXTENSION.LOAD)
 // Telemetry event sent with perf measures related to activation and loading of extension.
 /* __GDPR__
    "EXTENSION.LOAD" : {
@@ -2152,7 +2163,7 @@
      ]
    }
  */
-// (159). Telemetry.AmbiguousGlobalKernelSpec (GLOBAL_PYTHON_KERNELSPEC)
+// (160). Telemetry.AmbiguousGlobalKernelSpec (GLOBAL_PYTHON_KERNELSPEC)
 // We have a Python Kernel spec without fully qualified path of Python env.
 // We have no idea how to start these kernels if the user has more than one Python env.
 //
@@ -2176,7 +2187,7 @@
      ]
    }
  */
-// (160). EventName.HASHED_PACKAGE_NAME (HASHED_PACKAGE_NAME)
+// (161). EventName.HASHED_PACKAGE_NAME (HASHED_PACKAGE_NAME)
 // Telemetry event sent with hash of an imported python package.
 // Used to detect the popularity of a package, that would help determine which packages
 // need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.
@@ -2191,7 +2202,7 @@
      ]
    }
  */
-// (161). Telemetry.InvokeTool (InvokeTool)
+// (162). Telemetry.InvokeTool (InvokeTool)
 // Telemetry sent with details of LM toolcalls.
 /* __GDPR__
    "InvokeTool" : {
@@ -2203,7 +2214,7 @@
      ]
    }
  */
-// (162). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX)
+// (163). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX)
 // Telemetry event sent when user opens the data viewer via the variable view and there is an error in doing so.
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX" : {
@@ -2213,7 +2224,7 @@
      ]
    }
  */
-// (163). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX)
+// (164). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX)
 // Telemetry event sent when user opens the data viewer via the variable view.
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX" : {
@@ -2223,7 +2234,7 @@
      ]
    }
  */
-// (164). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX)
+// (165). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX)
 // Telemetry event sent when user opens the data viewer via the variable view and we successfully open the view.
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX" : {
@@ -2233,7 +2244,7 @@
      ]
    }
  */
-// (165). Telemetry.PlotViewerWebviewLoaded (PLOTVIEWER.WEBVIEW_LOADED)
+// (166). Telemetry.PlotViewerWebviewLoaded (PLOTVIEWER.WEBVIEW_LOADED)
 // The Plot Viewer webview was loaded.
 /* __GDPR__
    "PLOTVIEWER.WEBVIEW_LOADED" : {

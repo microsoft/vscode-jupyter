@@ -602,9 +602,25 @@ export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata
         kernelConnection.kind === 'startUsingRemoteKernelSpec'
     ) {
         const parsed = new url(kernelConnection.baseUrl);
+        verifyIfUrlIsSameAsUri(kernelConnection.baseUrl);
         return parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1';
     }
     return false;
+}
+
+function verifyIfUrlIsSameAsUri(urlValue: string) {
+    const parsed = new url(urlValue);
+    let failureReason = '';
+    try {
+        const uri = Uri.parse(urlValue);
+        if (parsed.hostname.toLocaleLowerCase() !== uri.authority) {
+            failureReason = 'different';
+        }
+    } catch (ex) {
+        failureReason = 'parseFailure';
+    }
+
+    sendTelemetryEvent(Telemetry.JupyterUriCanBeParsedAsUri, { failureReason });
 }
 
 // Options for error reporting from kernel silent execution

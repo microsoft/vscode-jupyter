@@ -5,7 +5,6 @@ import './mainPanel.css';
 
 import * as React from 'react';
 import { Tool, Value } from 'react-svg-pan-zoom';
-import uuid from 'uuid/v4';
 
 import { storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -15,6 +14,7 @@ import { SvgViewer } from '../react-common/svgViewer';
 import { TestSvg } from './testSvg';
 import { Toolbar } from './toolbar';
 import { createDeferred } from '../../../platform/common/utils/async';
+import { generateUuid } from '../../../platform/common/uuid';
 import { SharedMessages } from '../../../messageTypes';
 import { IPlotViewerMapping, PlotViewerMessages } from '../../extension-side/plotting/types';
 import { IJupyterExtraSettings } from '../../../platform/webviews/types';
@@ -59,7 +59,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const thumbnails = images.map(this.generateThumbnail);
         const sizes = images.map(this.extractSize);
         const values = images.map((_i) => undefined);
-        const ids = images.map((_i) => uuid());
+        const ids = images.map((_i) => generateUuid());
 
         this.state = {
             images,
@@ -206,7 +206,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             thumbnails: [...this.state.thumbnails, this.generateThumbnail(payload)],
             sizes: [...this.state.sizes, this.extractSize(payload)],
             values: [...this.state.values, undefined],
-            ids: [...this.state.ids, uuid()],
+            ids: [...this.state.ids, generateUuid()],
             currentImage: this.state.images.length
         });
     }

@@ -5,9 +5,9 @@ import { assert } from 'chai';
 import { Signal } from '@lumino/signaling';
 import * as sinon from 'sinon';
 import type * as nbformat from '@jupyterlab/nbformat';
-import uuid from 'uuid/v4';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { Kernel, type KernelMessage } from '@jupyterlab/services';
+import { generateUuid } from '../../platform/common/uuid';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import {
     IKernel,
@@ -82,7 +82,7 @@ suite('Jupyter Kernel Completion (requestInspect)', () => {
     setup(() => {
         kernelConnection = mock<Kernel.IKernelConnection>();
         kernel = mock<IKernel>();
-        kernelId = uuid();
+        kernelId = generateUuid();
         when(kernel.id).thenReturn(kernelId);
         when(kernel.kernelConnectionMetadata).thenReturn(instance(pythonKernel));
         const session = mock<IKernelSession>();
