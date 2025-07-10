@@ -32,7 +32,7 @@ exports.launch = async function launch(launchTests) {
             server = (await startJupyter()).server;
             testServer = await startReportServer();
         }
-        const bundlePath = path.join(extensionDevelopmentPath, launchTests ? 'out' : 'dist', 'extension.web.bundle');
+        const bundlePath = path.join(extensionDevelopmentPath, launchTests ? 'out' : 'dist', 'extension.web.bundle.js');
 
         // Changing the logging level to be read from workspace settings file.
         // This way we can enable verbose logging and get the logs for web tests.
