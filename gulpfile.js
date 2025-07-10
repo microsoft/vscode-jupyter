@@ -17,13 +17,10 @@ const fs = require('fs-extra');
 const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
-const os = require('os');
 const { spawnSync } = require('child_process');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
-const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 const { dumpTestSummary } = require('./build/webTestReporter');
 const { Validator } = require('jsonschema');
-const { stripVTControlCharacters } = require('util');
 const common = require('./build/webpack/common');
 const jsonc = require('jsonc-parser');
 
@@ -159,14 +156,6 @@ gulp.task('checkNpmDependencies', (done) => {
     done();
 });
 
-async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
-    if (configNameForProductionBuilds) {
-        await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
-    } else {
-        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
-    }
-}
-
 function modifyJson(jsonFile, cb) {
     const json = fs.readFileSync(jsonFile).toString('utf-8');
     const [key, value] = cb(json);
@@ -211,107 +200,22 @@ gulp.task('updatePackageJsonForBundle', async () => {
         }
     }
 });
-async function buildWebPack(webpackConfigName, args, env) {
-    // Remember to perform a case insensitive search.
-    const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map((item) => item.toLowerCase());
-    const stdOut = await spawnAsync(
-        'npm',
-        ['run', 'webpack', '--', ...args, ...['--mode', 'production', '--devtool', 'source-map']],
-        env
-    );
-    const stdOutLines = stdOut
-        .split('\n')
-        .map((item) => stripVTControlCharacters(item).trim())
-        .filter((item) => item.length > 0);
-    // Remember to perform a case insensitive search.
-    const warnings = stdOutLines
-        .filter((item) => item.startsWith('WARNING in '))
-        .filter(
-            (item) =>
-                allowedWarnings.findIndex((allowedWarning) =>
-                    item.toLowerCase().startsWith(allowedWarning.toLowerCase())
-                ) == -1
-        );
-    const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
-    if (errors) {
-        throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
-    }
-    if (warnings.length > 0) {
-        throw new Error(
-            `Warnings in ${webpackConfigName}, Check gulpfile.js to see if the warning should be allowed., \n\n${stdOut}`
-        );
-    }
-}
-function getAllowedWarningsForWebPack(buildConfig) {
-    switch (buildConfig) {
-        case 'production':
-            return [
-                'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
-                'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
-                'WARNING in webpack performance recommendations:',
-                'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
-                'WARNING in ./node_modules/keyv/src/index.js',
-                'ERROR in ./node_modules/got/index.js',
-                'WARNING in ./node_modules/ws/lib/BufferUtil.js',
-                'WARNING in ./node_modules/ws/lib/buffer-util.js',
-                'WARNING in ./node_modules/ws/lib/Validation.js',
-                'WARNING in ./node_modules/ws/lib/validation.js',
-                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/buffer-util.js',
-                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
-                'WARNING in ./node_modules/any-promise/register.js',
-                'WARNING in ./node_modules/log4js/lib/appenders/index.js',
-                'WARNING in ./node_modules/log4js/lib/clustering.js',
-                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/dist/AutoCollection/NativePerformance.js'
-            ];
-        case 'extension':
-            return [
-                'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
-                'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
-                'WARNING in webpack performance recommendations:',
-                'WARNING in ./node_modules/cacheable-request/node_modules/keyv/src/index.js',
-                'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
-                'WARNING in ./node_modules/keyv/src/index.js',
-                'WARNING in ./node_modules/ws/lib/BufferUtil.js',
-                'WARNING in ./node_modules/ws/lib/buffer-util.js',
-                'WARNING in ./node_modules/ws/lib/Validation.js',
-                'WARNING in ./node_modules/ws/lib/validation.js',
-                'WARNING in ./node_modules/any-promise/register.js',
-                'remove-files-plugin@1.4.0:',
-                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/buffer-util.js',
-                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
-                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/Validation.js',
-                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/dist/AutoCollection/NativePerformance.js'
-            ];
-        case 'debugAdapter':
-            return [
-                'WARNING in ./node_modules/vscode-uri/lib/index.js',
-                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/dist/AutoCollection/NativePerformance.js'
-            ];
-        default:
-            throw new Error('Unknown WebPack Configuration');
-    }
-}
 
 gulp.task('prePublishBundle', async () => {
-    await spawnAsync('npm', ['run', 'prePublishBundle'], webpackEnv);
+    await spawnAsync('npm', ['run', 'prePublishBundle']);
 });
 
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 
 gulp.task('prePublishNonBundle', async () => {
-    await spawnAsync('npm', ['run', 'prePublishNonBundle'], webpackEnv);
+    await spawnAsync('npm', ['run', 'prePublishNonBundle']);
 });
 
-function spawnAsync(command, args, env, rejectOnStdErr = false) {
-    env = env || {};
-    env = { ...process.env, ...env };
+function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
         let stdOut = '';
         console.info(`> ${command} ${args.join(' ')}`);
-        const proc = spawn(command, args, { cwd: __dirname, env });
+        const proc = spawn(command, args, { cwd: __dirname, env: process.env });
         proc.stdout.on('data', (data) => {
             // Log output on CI (else travis times out when there's not output).
             stdOut += data.toString();
@@ -321,9 +225,6 @@ function spawnAsync(command, args, env, rejectOnStdErr = false) {
         });
         proc.stderr.on('data', (data) => {
             console.error(data.toString());
-            if (rejectOnStdErr) {
-                reject(data.toString());
-            }
         });
         proc.on('close', () => resolve(stdOut));
         proc.on('error', (error) => reject(error));
