@@ -77,29 +77,6 @@
             }
         },
         {
-            "name": "Web Tests",
-            "type": "extensionHost",
-            "debugWebWorkerHost": true,
-            "request": "launch",
-            "args": [
-                "${workspaceFolder}/src/test/datascience",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--enable-proposed-api",
-                "--extensionDevelopmentKind=web",
-                "--extensionTestsPath=${workspaceFolder}/out/extension.web.bundle"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.*"
-            ],
-            "sourceMaps": true,
-            "preLaunchTask": "Start Jupyter Server", // Update the env variables for this script in tasks.json with a remote URI to use your own
-            "postDebugTask": "Stop Jupyter Server",
-            "presentation": {
-                "group": "2_tests",
-                "order": 11
-            }
-        },
-        {
             "name": "Web Tests (without debugging)",
             "type": "node",
             "program": "${workspaceFolder}/build/launchWebTest.js",
@@ -108,7 +85,7 @@
                 "${workspaceFolder}/out/**/*.*"
             ],
             "sourceMaps": true,
-            "preLaunchTask": "compile-web-test",
+            "preLaunchTask": "watch",
             "presentation": {
                 "group": "2_tests",
                 "order": 11
@@ -436,6 +413,45 @@
                 "group": "3_misc",
                 "order": 2
             }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Web test to debug",
+			"outputCapture": "std",
+            "program": "${workspaceFolder}/build/launchWebTest.js",
+			"args": ["--waitForDebugger=9229"],
+			"cascadeTerminateToConfigurations": ["Launch sample test"],
+			"presentation": {
+				"hidden": true,
+			}
+        },
+        {
+            "type": "chrome",
+            "request": "attach",
+            "name": "Attach Web test to debug",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+			"port": 9229,
+			"timeout": 30000, // give it time to download vscode if needed
+			"resolveSourceMapLocations": [
+				"!**/vs/**", // exclude core vscode sources
+				"!**/static/build/extensions/**", // exclude built-in extensions
+			],
+			"webRoot": "${workspaceFolder}/src/test/datascience", // only needed since sample is in a subdir
+			"presentation": {
+				"hidden": true,
+			}
         }
-    ]
+    ],
+    "compounds": [
+		{
+			"name": "Web Tests",
+			"configurations": [
+				"Launch Web test to debug",
+                "Attach Web test to debug"
+			]
+		}
+	]
 }

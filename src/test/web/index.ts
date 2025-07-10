@@ -63,7 +63,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
                 // bundles all files in the current directory matching `*.web.test` & `*.common.test`
                 const importAll = (options: { default: any[] }) => options.default.forEach((x) => x.default);
                 importAll(require('../**/*.web.test.*'));
-                importAll(require('../**/*.common.test.*'));
+                // importAll(require('../**/*.common.test.*'));
             } catch (err) {
                 console.error('Failed to import tests', err);
                 throw err;

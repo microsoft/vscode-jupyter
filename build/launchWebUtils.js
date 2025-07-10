@@ -22,6 +22,8 @@ const port =
         .filter((arg) => arg.startsWith('--port'))
         .map((arg) => parseInt(arg.split('=')[1]))
         .pop() || 3000;
+const attachArgName = '--waitForDebugger=';
+const waitForDebuggerArg = process.argv.find((arg) => arg.startsWith(attachArgName));
 
 exports.launch = async function launch(launchTests) {
     let exitCode = 0;
@@ -60,13 +62,15 @@ exports.launch = async function launch(launchTests) {
             );
         }
         fs.writeFileSync(packageJsonFile, settingsJson);
+        const waitForDebugger = waitForDebuggerArg ? Number(waitForDebuggerArg.slice(attachArgName.length)) : undefined;
         const options = {
             browserType,
             verbose: true,
             port,
             headless: isCI ? false : false, // Set this to false to debug failures (false on CI to support capturing screenshots when tests fail).
             extensionDevelopmentPath,
-            folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience')
+            folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience'),
+            waitForDebugger,
         };
         if (launchTests) {
             options.extensionTestsPath = bundlePath;
