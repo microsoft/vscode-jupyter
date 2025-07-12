@@ -449,6 +449,41 @@ abstract class BaseKernel implements IBaseKernel {
             Promise.all(Array.from(this.hooks.get('restartCompleted') || new Set<Hook>()).map((h) => h())).catch(noop);
         }
     }
+
+    public async shutdown(): Promise<void> {
+        try {
+            logger.info(`Shutdown requested ${getDisplayPath(this.uri)}`);
+
+            // Cancel any pending starts
+            this.startCancellation.cancel();
+            this.startCancellation.dispose();
+
+            // Get the current session if it exists
+            const session = this._jupyterSessionPromise
+                ? await this._jupyterSessionPromise.catch(() => undefined)
+                : undefined;
+
+            if (session) {
+                logger.info('Shutting down kernel session');
+                try {
+                    await session.shutdown();
+                } catch (ex) {
+                    logger.warn(`Failed to shutdown kernel session ${getDisplayPath(this.uri)}`, ex);
+                    // Continue with disposal even if shutdown fails
+                }
+            }
+
+            // Clean up the session references
+            this._session = undefined;
+            this._jupyterSessionPromise = undefined;
+            this._postInitializedOnStartPromise = undefined;
+
+            logger.info(`Shutdown completed ${getDisplayPath(this.uri)}`);
+        } catch (ex) {
+            logger.error(`Failed to shutdown kernel ${getDisplayPath(this.uri)}`, ex);
+            throw ex;
+        }
+    }
     protected async startJupyterSession(options: IDisplayOptions = new DisplayOptions(false)): Promise<IKernelSession> {
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
