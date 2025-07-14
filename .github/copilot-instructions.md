@@ -1,23 +1,16 @@
+---
+applyTo: '**'
+---
+
 # Jupyter Extension - Copilot Instructions
 
-Guidelines for generating code that matches conventions, architecture, and workflows of vscode-jupyter.
+This file contains key information to help AI assistants work more efficiently with the VS Code Jupyter codebase.
 
-## Project Overview
-
-Jupyter Extension for VS Code brings Jupyter notebooks to VS Code with:
-- Multi-language support (Python, R, Julia, C#, etc.)
-- Works in desktop VS Code, vscode.dev, and GitHub Codespaces
-- Interactive computing, variable exploration, debugging, visualization
-
-## Tech Stack
-
-- **Core**: TypeScript, Node.js, Inversify (DI), VS Code Extension API
-- **Testing**: Mocha + Chai, ts-mockito, VS Code Test Runner, Sinon
-- **Commands**:
-  - `npm run compile|watch` - build
-  - `npm run test:unittests` - unit tests
-  - `npm run lint|lint-fix` - code style
-  - `npm run format|format-fix` - formatting
+## Build & Test Workflow
+1. **Compile**: `npm run compile` (required before testing code changes)
+2. **Run specific tests**: `npm run test:unittests -- --grep "pattern"`
+3. **Linting**: `npm run lint` to check for linter issues
+4. **Formatting**: `npm run format` to check code style, `npm run lint-fix` to auto-fix issues
 
 ## Coding Standards
 
@@ -28,17 +21,15 @@ Jupyter Extension for VS Code brings Jupyter notebooks to VS Code with:
 
 ### Dependency Injection
 - Inject interfaces, not concrete classes
-- Use appropriate lifecycle (singleton, transient, scoped)
 - Avoid circular dependencies
-- Use mocks for testing
 
 ### Testing
-- Write unit tests for new features/fixes (`*.unit.test.ts`)
-- Integration tests (`*.test.ts`, not `*.unit.test.ts`)
-- Use Mocha TDD interface and AAA pattern
+- Unit tests in `*.unit.test.ts`
+- Integration tests in `*.test.ts` (not `*.unit.test.ts`)
+- Look for existing test patterns before creating new structures
 
-### Error Handling
-- User messages via `l10n.t()` from `src/platform/common/utils/localize.ts`
+### User Messages
+- Use `l10n.t()` for user facing strings
 - Use typed error classes in `src/platform/errors/`
 - Use `ILogger` service, not console.log
 - Preserve error details, scrub PII
