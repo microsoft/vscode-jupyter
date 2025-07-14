@@ -8,10 +8,10 @@
     },
     "tasks": [
         {
-            "label": "watch",
+            "label": "Build",
             "dependsOn": [
-                "npm: compile-esbuild-watch",
-				"npm: compile-tsc-watch"
+                "Core - Build",
+                "Unittest - Build"
             ],
             "presentation": {
                 "reveal": "never",
@@ -19,7 +19,8 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
         },
         {
             "type": "npm",
@@ -27,9 +28,9 @@
             "group": "build",
             "problemMatcher": "$esbuild-watch",
             "isBackground": true,
-            "label": "npm: compile-esbuild-watch",
+            "label": "Core - Build",
             "presentation": {
-                "group": "watch",
+                "group": "buildWatchers",
                 "reveal": "never"
             }
         },
@@ -39,9 +40,9 @@
             "group": "build",
             "problemMatcher": "$tsc-watch",
             "isBackground": true,
-            "label": "npm: compile-tsc-watch",
+            "label": "Unittest - Build",
             "presentation": {
-                "group": "watch",
+                "group": "buildWatchers",
                 "reveal": "never"
             }
         },
@@ -86,7 +87,7 @@
         {
             "label": "Start Jupyter Server",
             "type": "npm",
-            "dependsOn": "watch",
+            "dependsOn": "Build",
             "isBackground": false,
             "script": "startJupyterServer",
             "problemMatcher": [],
