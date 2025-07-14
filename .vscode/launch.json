@@ -17,7 +17,7 @@
                 "${workspaceFolder}/dist/**/*",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "watch",
+            "preLaunchTask": "Build",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -49,7 +49,7 @@
                 "${workspaceFolder}/dist/**/*",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "watch",
+            "preLaunchTask": "Build",
             "presentation": {
                 "group": "1_extension",
                 "order": 1
@@ -70,7 +70,7 @@
                 "${workspaceFolder}/dist/**/*",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "watch",
+            "preLaunchTask": "Build",
             "presentation": {
                 "group": "1_extension",
                 "order": 3
@@ -85,7 +85,7 @@
                 "${workspaceFolder}/out/**/*.*"
             ],
             "sourceMaps": true,
-            "preLaunchTask": "watch",
+            "preLaunchTask": "Build",
             "presentation": {
                 "group": "2_tests",
                 "order": 11
@@ -117,7 +117,7 @@
                 "${workspaceFolder}/out/**/*.js",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "watch",
+            "preLaunchTask": "Build",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -187,7 +187,7 @@
                 "${workspaceFolder}/out/**/*.js",
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
-            "preLaunchTask": "watch",
+            "preLaunchTask": "Build",
             "skipFiles": [
                 "<node_internals>/**"
             ],
