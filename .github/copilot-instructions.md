@@ -73,6 +73,7 @@ src/                                # Source code for the extension
 │   └── types.ts                    # Kernel-related type definitions
 ├── notebooks/                      # Notebook editing and management
 │   ├── controllers/                # VS Code notebook controllers
+│   │   └── ipywidgets/             # IPython widgets (interactive Notebook outputs)
 │   ├── export/                     # Export to HTML, PDF, etc.
 │   ├── debugger/                   # Notebook debugging support
 │   ├── languages/                  # Language-specific features
@@ -84,9 +85,9 @@ src/                                # Source code for the extension
 ├── standalone/                     # Standalone features
 ├── webviews/                       # Rich UI components
 │   ├── extension-side/             # Extension-side webview logic
-│   │   └── ipywidgets/             # IPython widgets in extension-sid
+│   │   └── ipywidgets/             # IPython widgets (interactive Notebook outputs) in extension-side
 │   └── webview-side/               # Frontend React/HTML components
-│       └── ipywidgets/             # IPython widgets in webview
+│       └── ipywidgets/             # IPython widgets (interactive Notebook outputs) in webview
 └── test/                           # Integration, unit and end-to-end tests
 ```
 
@@ -111,8 +112,8 @@ Each component has detailed guidelines that cover:
 | `src/notebooks/**` | `.github/instructions/notebooks.instructions.md` | Notebook controllers |
 | `src/interactive-window/**` | `.github/instructions/interactiveWindow.instructions.md` | REPL functionality |
 | `src/standalone/**` | `.github/instructions/standalone.instructions.md` | Standalone features |
-| `src/notebooks/controllers/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | IPython widgets |
-| `src/webviews/extension-side/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | Widget communication |
-| `src/webviews/webview-side/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | Widget rendering |
+| `src/notebooks/controllers/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | IPython widgets (interactive Notebook outputs) |
+| `src/webviews/extension-side/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | IPython Widget (interactive Notebook outputs) communication |
+| `src/webviews/webview-side/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | IPython Widget (interactive Notebook outputs) rendering |
 
 **For AI/Copilot**: Always read the relevant instruction file(s) before modifying code in these directories to ensure adherence to component-specific patterns.

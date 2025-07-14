@@ -1,5 +1,6 @@
 ---
-description: Explain some code/feature in the codebase.
+mode: agent
+description: Analyze the codebase and explain a feature/component in detail.
 tools: ['codebase', 'fetch', 'findTestFiles', 'githubRepo', 'search', 'searchResults', 'usages', 'vscodeAPI', 'search_code', 'memory', 'sequentialthinking', 'websearch']
 ---
 # Code Explanation Guide
