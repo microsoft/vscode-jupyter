@@ -7,7 +7,7 @@ import {} from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
 import { Installer } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
-import { IInstallationChannelManager, IModuleInstaller, Product } from './types';
+import { IInstallationChannelManager, IModuleInstaller, ModuleInstallerType, Product } from './types';
 import { Uri, env, window } from 'vscode';
 import { getEnvironmentType } from '../helpers';
 
@@ -44,6 +44,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         // group by priority and pick supported from the highest priority
         installers.sort((a, b) => b.priority - a.priority);
         let currentPri = installers[0].priority;
+        let uvInstaller: IModuleInstaller | undefined;
         for (const mi of installers) {
             if (mi.priority !== currentPri) {
                 if (supportedInstallers.length > 0) {
@@ -53,10 +54,16 @@ export class InstallationChannelManager implements IInstallationChannelManager {
                 currentPri = mi.priority;
             }
             if (await mi.isSupported(interpreter)) {
-                supportedInstallers.push(mi);
+                if (mi.type === ModuleInstallerType.UV) {
+                    uvInstaller = mi;
+                } else {
+                    supportedInstallers.push(mi);
+                }
             }
         }
-        return supportedInstallers;
+        return supportedInstallers.length === 0 && uvInstaller
+            ? [uvInstaller] // If no supported installers, but UV is available, return it.
+            : supportedInstallers; // Otherwise return the supported installers.
     }
 
     public async showNoInstallersMessage(interpreter: PythonEnvironment): Promise<void> {
