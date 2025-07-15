@@ -104,8 +104,8 @@ function sanitizeProperties(eventName: string, data: Record<string, any>) {
                 typeof data[prop] === 'string'
                     ? data[prop]
                     : typeof data[prop] === 'object'
-                    ? 'object'
-                    : data[prop].toString();
+                      ? 'object'
+                      : data[prop].toString();
         } catch (ex) {
             logger.error(`Failed to serialize ${prop} for ${eventName}`, ex);
         }
@@ -154,19 +154,15 @@ function isPerfMeasurementOnCI(eventName: string) {
     );
 }
 
-export type TelemetryProperties<
-    E extends keyof P,
-    P extends IEventNamePropertyMapping = IEventNamePropertyMapping
-> = P[E] extends TelemetryEventInfo<infer R>
-    ? ExcludeType<R, number> extends never | undefined
-        ? undefined
-        : ExcludeType<R, number>
-    : undefined | undefined;
+export type TelemetryProperties<E extends keyof P, P extends IEventNamePropertyMapping = IEventNamePropertyMapping> =
+    P[E] extends TelemetryEventInfo<infer R>
+        ? ExcludeType<R, number> extends never | undefined
+            ? undefined
+            : ExcludeType<R, number>
+        : undefined | undefined;
 
-export type TelemetryMeasures<
-    E extends keyof P,
-    P extends IEventNamePropertyMapping = IEventNamePropertyMapping
-> = P[E] extends TelemetryEventInfo<infer R> ? PickType<UnionToIntersection<R>, number> : undefined;
+export type TelemetryMeasures<E extends keyof P, P extends IEventNamePropertyMapping = IEventNamePropertyMapping> =
+    P[E] extends TelemetryEventInfo<infer R> ? PickType<UnionToIntersection<R>, number> : undefined;
 
 function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,

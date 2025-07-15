@@ -59,8 +59,8 @@ export async function computeLocalWorkingDirectory(
             suggestedDir && suggestedDir.includes('${')
                 ? suggestedDir
                 : suggestedDir
-                ? getFilePath(Uri.file(suggestedDir))
-                : undefined;
+                  ? getFilePath(Uri.file(suggestedDir))
+                  : undefined;
         const expandedWorkingDir = expandWorkingDir(workingDir, resource, configService.getSettings(resource));
         if (await fs.exists(Uri.file(expandedWorkingDir))) {
             return expandedWorkingDir;

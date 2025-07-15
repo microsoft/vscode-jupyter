@@ -85,9 +85,9 @@ suite('Non-Python Kernel @nonPython ', async function () {
                 }
             },
             defaultNotebookTestTimeout,
-            `Preferred controller not found for Notebook, currently preferred ${controllerPreferred.getPreferred(
-                notebook
-            )?.connection.kind}:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
+            `Preferred controller not found for Notebook, currently preferred ${
+                controllerPreferred.getPreferred(notebook)?.connection.kind
+            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
             500
         );
     });
@@ -104,9 +104,9 @@ suite('Non-Python Kernel @nonPython ', async function () {
                 }
             },
             defaultNotebookTestTimeout,
-            `Preferred controller not found for Notebook, currently preferred ${controllerPreferred.getPreferred(
-                notebook
-            )?.connection.kind}:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
+            `Preferred controller not found for Notebook, currently preferred ${
+                controllerPreferred.getPreferred(notebook)?.connection.kind
+            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
             500
         );
         const cell = await notebook.appendCodeCell('123456', 'typescript');

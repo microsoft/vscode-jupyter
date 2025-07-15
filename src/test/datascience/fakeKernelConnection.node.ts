@@ -22,8 +22,8 @@ function deserialize(msg: string | ArrayBuffer): KernelMessage.IMessage {
     return typeof msg === 'string'
         ? JSON.parse(msg)
         : msg instanceof ArrayBuffer
-        ? jupyterLabSerialize.deserialize(msg)
-        : msg;
+          ? jupyterLabSerialize.deserialize(msg)
+          : msg;
 }
 function serialize(msg: KernelMessage.IMessage, protocol?: string): string | ArrayBuffer {
     return jupyterLabSerialize.serialize(msg, protocol);

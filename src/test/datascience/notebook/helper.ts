@@ -520,8 +520,9 @@ async function waitForKernelToChangeImpl(
                     const criteria = typeof searchCriteria === 'function' ? await searchCriteria() : searchCriteria;
                     lastCriteria = JSON.stringify(lastCriteria);
                     logger.ci(
-                        `Notebook select.kernel command switching to kernel id ${controller?.connection
-                            .kind}${controller?.id}: Try ${tryCount} for ${JSON.stringify(criteria)}`
+                        `Notebook select.kernel command switching to kernel id ${
+                            controller?.connection.kind
+                        }${controller?.id}: Try ${tryCount} for ${JSON.stringify(criteria)}`
                     );
                     // Send a select kernel on the active notebook editor. Keep sending it if it fails.
                     await commands.executeCommand('notebook.selectKernel', {
@@ -651,11 +652,9 @@ async function selectActiveInterpreterController(notebookEditor: NotebookEditor,
             controllerRegistration.getSelected(notebookEditor.notebook)?.viewType ===
                 notebookEditor.notebook.notebookType,
         timeout,
-        `Controller ${
-            controller.id
-        } not selected for ${notebookEditor.notebook.uri.toString()}, currently selected ${controllerRegistration.getSelected(
-            notebookEditor.notebook
-        )?.id} (1)`
+        `Controller ${controller.id} not selected for ${notebookEditor.notebook.uri.toString()}, currently selected ${
+            controllerRegistration.getSelected(notebookEditor.notebook)?.id
+        } (1)`
     );
 }
 async function selectPythonRemoteKernelConnectionForActiveInterpreter(
@@ -687,11 +686,9 @@ async function selectPythonRemoteKernelConnectionForActiveInterpreter(
     await waitForCondition(
         () => controllerRegistration.getSelected(notebookEditor.notebook)?.id === controller.id,
         timeout,
-        `Controller ${
-            controller.id
-        } not selected for ${notebookEditor.notebook.uri.toString()}, currently selected ${controllerRegistration.getSelected(
-            notebookEditor.notebook
-        )?.id} (2)`
+        `Controller ${controller.id} not selected for ${notebookEditor.notebook.uri.toString()}, currently selected ${
+            controllerRegistration.getSelected(notebookEditor.notebook)?.id
+        } (2)`
     );
 }
 export async function waitForKernelToGetAutoSelected(

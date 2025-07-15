@@ -148,35 +148,35 @@ type EventPropertiesData<T> = AllEventPropertiesData<T>;
 type GdprEventDefinition<P> = P extends never | undefined
     ? IEventData
     : keyof EventPropertiesData<ExcludeType<ExcludeType<P, number>, number | undefined>> extends never | undefined
-    ? IEventData & {
-          measures: EventPropertiesData<PickType<P, number | undefined>> | EventPropertiesData<PickType<P, number>>;
-      }
-    : keyof (EventPropertiesData<PickType<P, number | undefined>> & EventPropertiesData<PickType<P, number>>) extends
-          | never
-          | undefined
-    ? IEventData & {
-          properties: EventPropertiesData<ExcludeType<ExcludeType<P, number>, number | undefined>>;
-      }
-    : IEventData & {
-          measures: EventPropertiesData<PickType<P, number | undefined>> | EventPropertiesData<PickType<P, number>>;
-          properties: EventPropertiesData<ExcludeType<ExcludeType<P, number>, number | undefined>>;
-      };
+      ? IEventData & {
+            measures: EventPropertiesData<PickType<P, number | undefined>> | EventPropertiesData<PickType<P, number>>;
+        }
+      : keyof (EventPropertiesData<PickType<P, number | undefined>> & EventPropertiesData<PickType<P, number>>) extends
+              | never
+              | undefined
+        ? IEventData & {
+              properties: EventPropertiesData<ExcludeType<ExcludeType<P, number>, number | undefined>>;
+          }
+        : IEventData & {
+              measures: EventPropertiesData<PickType<P, number | undefined>> | EventPropertiesData<PickType<P, number>>;
+              properties: EventPropertiesData<ExcludeType<ExcludeType<P, number>, number | undefined>>;
+          };
 
 type PropertyMeasureDefinition<P> = P extends never
     ? never
     : keyof EventPropertiesData<ExcludeType<ExcludeType<P, number>, number | undefined>> extends never
-    ? {
-          measures: EventPropertiesData<PickType<P, number | undefined>> | EventPropertiesData<PickType<P, number>>;
-      }
-    : keyof (EventPropertiesData<PickType<P, number | undefined>> &
-          EventPropertiesData<PickType<P, number>>) extends never
-    ? {
-          properties: EventPropertiesData<ExcludeType<ExcludeType<P, number>, number | undefined>>;
-      }
-    : {
-          measures: EventPropertiesData<PickType<P, number | undefined>> | EventPropertiesData<PickType<P, number>>;
-          properties: EventPropertiesData<ExcludeType<ExcludeType<P, number>, number | undefined>>;
-      };
+      ? {
+            measures: EventPropertiesData<PickType<P, number | undefined>> | EventPropertiesData<PickType<P, number>>;
+        }
+      : keyof (EventPropertiesData<PickType<P, number | undefined>> &
+              EventPropertiesData<PickType<P, number>>) extends never
+        ? {
+              properties: EventPropertiesData<ExcludeType<ExcludeType<P, number>, number | undefined>>;
+          }
+        : {
+              measures: EventPropertiesData<PickType<P, number | undefined>> | EventPropertiesData<PickType<P, number>>;
+              properties: EventPropertiesData<ExcludeType<ExcludeType<P, number>, number | undefined>>;
+          };
 
 function globallySharedProperties(): PropertyMeasureDefinition<SharedPropertyMapping>['properties'] {
     return {

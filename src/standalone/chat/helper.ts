@@ -69,10 +69,10 @@ export abstract class BaseTool<T extends IBaseToolParams> implements LanguageMod
             const failureCategory = isCancelled
                 ? 'cancelled'
                 : error
-                ? error instanceof BaseError
-                    ? error.category
-                    : 'error'
-                : undefined;
+                  ? error instanceof BaseError
+                      ? error.category
+                      : 'error'
+                  : undefined;
             const resourceHash = notebookUri
                 ? // eslint-disable-next-line local-rules/dont-use-fspath
                   getTelemetrySafeHashedString(notebookUri.fsPath)

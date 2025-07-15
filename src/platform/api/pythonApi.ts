@@ -508,14 +508,14 @@ export class InterpreterService implements IInterpreterService {
                     return isUri(pythonPath)
                         ? areInterpreterPathsSame(item.executable.uri, pythonPath)
                         : typeof pythonPath === 'string'
-                        ? item.id === pythonPath
-                        : areInterpreterPathsSame(Uri.file(item.path), Uri.file(pythonPath.path));
+                          ? item.id === pythonPath
+                          : areInterpreterPathsSame(Uri.file(item.path), Uri.file(pythonPath.path));
                 });
                 const pythonPathForLogging = isUri(pythonPath)
                     ? getDisplayPath(pythonPath)
                     : typeof pythonPath === 'string'
-                    ? pythonPath
-                    : getDisplayPath(Uri.file(pythonPath.path));
+                      ? pythonPath
+                      : getDisplayPath(Uri.file(pythonPath.path));
                 if (matchedPythonEnv) {
                     const env = await api.environments.resolveEnvironment(matchedPythonEnv);
                     const resolved = this.trackResolvedEnvironment(env);

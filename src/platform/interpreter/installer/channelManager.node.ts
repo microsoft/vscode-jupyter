@@ -8,7 +8,7 @@ import { IPlatformService } from '../../common/platform/types';
 import { Installer } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IInstallationChannelManager, IModuleInstaller, Product } from './types';
-import { Uri, env, window } from 'vscode';
+import { Uri, env, window, l10n } from 'vscode';
 import { getEnvironmentType } from '../helpers';
 
 /**
@@ -61,21 +61,29 @@ export class InstallationChannelManager implements IInstallationChannelManager {
 
     public async showNoInstallersMessage(interpreter: PythonEnvironment): Promise<void> {
         const envType = getEnvironmentType(interpreter);
-        const result = await window.showErrorMessage(
-            envType === EnvironmentType.Conda ? Installer.noCondaOrPipInstaller : Installer.noPipInstaller,
-            { modal: true },
-            Installer.searchForHelp
-        );
+        let message: string;
+        let searchTerm: string;
+
+        switch (envType) {
+            case EnvironmentType.Conda:
+                message = Installer.noCondaOrPipInstaller;
+                searchTerm = 'Install Pip Conda';
+                break;
+            case EnvironmentType.UV:
+                message = l10n.t('There is no UV installer available in the selected environment.');
+                searchTerm = 'Install UV Python';
+                break;
+            default:
+                message = Installer.noPipInstaller;
+                searchTerm = 'Install Pip';
+                break;
+        }
+
+        const result = await window.showErrorMessage(message, { modal: true }, Installer.searchForHelp);
         if (result === Installer.searchForHelp) {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
             const osName = platform.isWindows ? 'Windows' : platform.isMac ? 'MacOS' : 'Linux';
-            void env.openExternal(
-                Uri.parse(
-                    `https://www.bing.com/search?q=Install Pip ${osName} ${
-                        envType === EnvironmentType.Conda ? 'Conda' : ''
-                    }`
-                )
-            );
+            void env.openExternal(Uri.parse(`https://www.bing.com/search?q=${searchTerm} ${osName}`));
         }
     }
 }

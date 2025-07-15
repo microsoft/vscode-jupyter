@@ -54,9 +54,8 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
     ) {
         // Looks like some other module is missing.
         // Sometimes when you create files like xml.py, then kernel startup fails due to xml.dom module not being found.
-        const problematicFiles = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
-            resource
-        );
+        const problematicFiles =
+            await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
         if (problematicFiles.length > 0) {
             const cwd = resource ? path.dirname(resource) : undefined;
             const fileLinks = problematicFiles.map((item) => {
