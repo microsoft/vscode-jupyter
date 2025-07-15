@@ -16,6 +16,7 @@ export enum EnvironmentType {
     Venv = 'Venv',
     Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
+    UV = 'UV',
 }
 
 /**

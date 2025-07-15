@@ -81,7 +81,8 @@ const environmentTypes = [
     EnvironmentType.Pyenv,
     EnvironmentType.Venv,
     EnvironmentType.VirtualEnv,
-    EnvironmentType.VirtualEnvWrapper
+    EnvironmentType.VirtualEnvWrapper,
+    EnvironmentType.UV
 ];
 
 export function getEnvironmentType(interpreter: { id: string }): EnvironmentType {
@@ -91,6 +92,11 @@ export function getEnvironmentType(interpreter: { id: string }): EnvironmentType
 function getEnvironmentTypeImpl(env: Environment): EnvironmentType {
     if ((env.environment?.type as KnownEnvironmentTypes) === 'Conda') {
         return EnvironmentType.Conda;
+    }
+
+    // Check for UV environment by looking for uv tools
+    if (env.tools.some((tool) => tool.toLowerCase() === 'uv')) {
+        return EnvironmentType.UV;
     }
 
     // Map the Python env tool to a Jupyter environment type.

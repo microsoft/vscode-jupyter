@@ -41,11 +41,12 @@ export class PipInstaller extends ModuleInstaller {
     }
     public async isSupported(interpreter: PythonEnvironment | Environment): Promise<boolean> {
         const envType = getEnvironmentType(interpreter);
-        // Skip this on conda, poetry, and pipenv environments
+        // Skip this on conda, poetry, pipenv, and UV environments
         switch (envType) {
             case EnvironmentType.Conda:
             case EnvironmentType.Pipenv:
             case EnvironmentType.Poetry:
+            case EnvironmentType.UV:
                 return false;
         }
 
