@@ -12,6 +12,7 @@ import { getEnvironmentType, getCachedEnvironment } from '../helpers';
 import { getEnvExtApi } from '../../api/python-envs/pythonEnvsApi';
 import { logger } from '../../logging';
 import { CancellationTokenSource } from 'vscode';
+import { IPythonExecutionFactory } from '../types.node';
 
 /**
  * Installer for UV environments (created with `uv venv`).
@@ -114,7 +115,7 @@ export class UvInstaller extends ModuleInstaller {
     /**
      * Check if the interpreter is in a UV-managed environment
      */
-    private isUvEnvironment(interpreter: PythonEnvironment | Environment): boolean {
+    private async isUvEnvironment(interpreter: PythonEnvironment | Environment): Promise<boolean> {
         try {
             // Check if the environment was created by UV
             const env = getCachedEnvironment(interpreter);
@@ -128,8 +129,9 @@ export class UvInstaller extends ModuleInstaller {
                 return false;
             }
 
-            // Check if UV tool is in the environment tools
+            // Check if UV tool is explicitly in the environment tools
             if (env.tools.includes('UV' as any)) {
+                logger.debug('Environment has UV tool explicitly listed');
                 return true;
             }
 
@@ -137,17 +139,36 @@ export class UvInstaller extends ModuleInstaller {
             const envPath = env.environment?.folderUri?.fsPath || env.path;
             if (envPath) {
                 // UV typically creates environments in .venv directories
-                // and from the logs, we can see pip is not available in UV environments
                 const isLikelyUvEnv = this.checkUvEnvironmentPath(envPath);
                 if (isLikelyUvEnv) {
                     logger.debug(`Detected likely UV environment at ${envPath}`);
-                    return true;
+                    // Additional check: see if pip is available
+                    // UV environments often don't have pip installed by default
+                    const hasPip = await this.checkPipAvailability(interpreter);
+                    if (!hasPip) {
+                        logger.debug('Pip not available, confirming UV environment detection');
+                        return true;
+                    }
                 }
             }
 
             return false;
         } catch (error) {
             logger.debug(`Error checking if environment is UV-managed: ${error}`);
+            return false;
+        }
+    }
+
+    /**
+     * Check if pip is available in the environment
+     */
+    private async checkPipAvailability(interpreter: PythonEnvironment | Environment): Promise<boolean> {
+        try {
+            const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            const proc = await pythonExecutionFactory.create({ resource: undefined, interpreter });
+            return proc.isModuleInstalled('pip');
+        } catch (error) {
+            logger.debug(`Error checking pip availability: ${error}`);
             return false;
         }
     }

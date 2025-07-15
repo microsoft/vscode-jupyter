@@ -15,15 +15,26 @@ import { PythonExtension, Environment } from '@vscode/python-extension';
 import sinon from 'sinon';
 import { resolvableInstance } from '../../../test/datascience/helpers';
 import { setPythonApi } from '../helpers';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../types.node';
 
 suite('UV installer', async () => {
     let serviceContainer: IServiceContainer;
     let uvInstaller: UvInstaller;
     let disposables: IDisposable[] = [];
     let environments: PythonExtension['environments'];
+    let pythonExecutionFactory: IPythonExecutionFactory;
+    let pythonExecutionService: IPythonExecutionService;
     
     setup(() => {
         serviceContainer = mock<IServiceContainer>();
+        pythonExecutionFactory = mock<IPythonExecutionFactory>();
+        pythonExecutionService = mock<IPythonExecutionService>();
+        
+        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
+            instance(pythonExecutionFactory)
+        );
+        when(pythonExecutionFactory.create(anything())).thenResolve(instance(pythonExecutionService));
+        
         uvInstaller = new UvInstaller(instance(serviceContainer));
         
         // Mock Python API for environment detection
@@ -61,7 +72,7 @@ suite('UV installer', async () => {
             uri: Uri.file('/path/to/python')
         };
 
-        // Mock environment that is not UV-managed
+        // Mock environment that is not UV-managed (has pip available)
         const mockEnv: Environment = {
             id: 'python-test',
             path: '/path/to/python',
@@ -76,18 +87,19 @@ suite('UV installer', async () => {
         } as any;
 
         when(environments.known).thenReturn([mockEnv]);
+        when(pythonExecutionService.isModuleInstalled('pip')).thenResolve(true);
 
         const isSupported = await uvInstaller.isSupported(interpreter);
         expect(isSupported).to.equal(false);
     });
 
-    test('isSupported returns true for UV environments', async () => {
+    test('isSupported returns true for UV environments without pip', async () => {
         const interpreter: PythonEnvironment = {
             id: 'python-test',
             uri: Uri.file('/path/to/project/.venv/bin/python')
         };
 
-        // Mock environment that is UV-managed (contains .venv in path)
+        // Mock environment that is UV-managed (no pip available, .venv path)
         const mockEnv: Environment = {
             id: 'python-test',
             path: '/path/to/project/.venv/bin/python',
@@ -102,6 +114,7 @@ suite('UV installer', async () => {
         } as any;
 
         when(environments.known).thenReturn([mockEnv]);
+        when(pythonExecutionService.isModuleInstalled('pip')).thenResolve(false);
 
         const isSupported = await uvInstaller.isSupported(interpreter);
         expect(isSupported).to.equal(true);
