@@ -16,6 +16,7 @@ import { CondaInstaller } from './installer/condaInstaller.node';
 import { PipEnvInstaller } from './installer/pipEnvInstaller.node';
 import { PipInstaller } from './installer/pipInstaller.node';
 import { PoetryInstaller } from './installer/poetryInstaller.node';
+import { UvInstaller } from './installer/uvInstaller.node';
 import { ProductInstaller } from './installer/productInstaller.node';
 import { DataScienceProductPathService } from './installer/productPath.node';
 import { ProductService } from './installer/productService.node';
@@ -78,6 +79,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PoetryInstaller);
+    serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, UvInstaller);
     serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
     serviceManager.addSingleton<IProductService>(IProductService, ProductService);
     serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
