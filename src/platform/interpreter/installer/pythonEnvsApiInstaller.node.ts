@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationTokenSource, Progress, ProgressLocation, ProgressOptions, window, Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { ModuleInstaller } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -16,8 +16,6 @@ import {
     PackageManagementOptions
 } from '../../api/python-envs/api';
 import { logger } from '../../logging';
-import { Products } from '../../common/utils/localize';
-import { createDeferred } from '../../common/utils/async';
 
 /**
  * Installer that uses the Python Environment Extension API to manage packages.
