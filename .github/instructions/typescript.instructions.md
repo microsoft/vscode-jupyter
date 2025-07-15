@@ -20,6 +20,14 @@ Typescript compilation errors can be found by running the "Core - Build" and "Un
 - If not already running, start them to get real-time compilation feedback
 - The tasks provide incremental compilation, so they will automatically recompile when files change
 
+## Unit Tests
+- When a mock is returned from a promise, ensure the mocked instance has an undefined `then` property to avoid hanging tests. Here's an example:
+```typescript
+import { mock } from 'ts-mockito';
+const mockInstance = mock<YourType>();
+mockInstance.then = undefined; // Ensure 'then' is undefined to prevent hanging
+```
+
 ## Scripts
 - Use `npm install` to install dependencies if you changed `package.json`
 - Use `npm run test:unittests` for unit tests (add `--grep <pattern>` to filter tests)
