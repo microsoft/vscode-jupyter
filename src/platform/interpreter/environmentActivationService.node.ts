@@ -149,8 +149,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         resource = resource
             ? resource
             : workspace.workspaceFolders?.length
-            ? workspace.workspaceFolders[0].uri
-            : undefined;
+              ? workspace.workspaceFolders[0].uri
+              : undefined;
         const stopWatch = new StopWatch();
         // We'll need this later.
         const customEnvVarsPromise = this.customEnvVarsService

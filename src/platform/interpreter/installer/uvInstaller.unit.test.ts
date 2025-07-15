@@ -46,12 +46,12 @@ describe('UV Installer', () => {
         const mockInterpreter: Environment = {
             id: 'test-uv-env',
             path: '/path/to/uv/env',
-            tools: ['uv'],
+            tools: ['uv']
         } as any;
 
         // Test basic installation
         const args = await (installer as any).getExecutionArgs('numpy', mockInterpreter, ModuleInstallFlags.None);
-        
+
         expect(args.exe).to.equal('uv');
         expect(args.args).to.include('pip');
         expect(args.args).to.include('install');
@@ -62,11 +62,11 @@ describe('UV Installer', () => {
         const mockInterpreter: Environment = {
             id: 'test-uv-env',
             path: '/path/to/uv/env',
-            tools: ['uv'],
+            tools: ['uv']
         } as any;
 
         const args = await (installer as any).getExecutionArgs('numpy', mockInterpreter, ModuleInstallFlags.upgrade);
-        
+
         expect(args.args).to.include('--upgrade');
     });
 
@@ -74,11 +74,11 @@ describe('UV Installer', () => {
         const mockInterpreter: Environment = {
             id: 'test-uv-env',
             path: '/path/to/uv/env',
-            tools: ['uv'],
+            tools: ['uv']
         } as any;
 
         const args = await (installer as any).getExecutionArgs('numpy', mockInterpreter, ModuleInstallFlags.reInstall);
-        
+
         expect(args.args).to.include('--force-reinstall');
     });
 });

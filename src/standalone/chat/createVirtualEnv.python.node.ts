@@ -139,8 +139,8 @@ function getWorkspaceVenvOrCondaEnv(resource: Uri | undefined, api: PythonExtens
         resource && workspace.workspaceFolders?.length
             ? workspace.getWorkspaceFolder(resource)
             : workspace.workspaceFolders?.length === 1
-            ? workspace.workspaceFolders[0]
-            : undefined;
+              ? workspace.workspaceFolders[0]
+              : undefined;
     if (!workspaceFolder) {
         return;
     }

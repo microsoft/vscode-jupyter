@@ -79,19 +79,11 @@ export class InstallationChannelManager implements IInstallationChannelManager {
                 break;
         }
 
-        const result = await window.showErrorMessage(
-            message,
-            { modal: true },
-            Installer.searchForHelp
-        );
+        const result = await window.showErrorMessage(message, { modal: true }, Installer.searchForHelp);
         if (result === Installer.searchForHelp) {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
             const osName = platform.isWindows ? 'Windows' : platform.isMac ? 'MacOS' : 'Linux';
-            void env.openExternal(
-                Uri.parse(
-                    `https://www.bing.com/search?q=${searchTerm} ${osName}`
-                )
-            );
+            void env.openExternal(Uri.parse(`https://www.bing.com/search?q=${searchTerm} ${osName}`));
         }
     }
 }

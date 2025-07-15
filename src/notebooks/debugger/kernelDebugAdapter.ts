@@ -51,7 +51,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             return;
         }
         const cell = this.notebookDocument.getCells().find((c) => c.document.uri.toString() === mapping.toString());
-        const offset = cell ? this.lineOffsets.get(cell) ?? 0 : 0;
+        const offset = cell ? (this.lineOffsets.get(cell) ?? 0) : 0;
         source.name = path.basename(mapping.path);
         source.path = mapping.toString();
         if (offset && typeof location?.endLine === 'number') {
@@ -79,7 +79,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             return;
         }
         const cell = this.notebookDocument.getCells().find((c) => c.document.uri.toString() === source.path);
-        const offset = cell ? this.lineOffsets.get(cell) ?? 0 : 0;
+        const offset = cell ? (this.lineOffsets.get(cell) ?? 0) : 0;
         source.path = mapping;
         if (offset && typeof location.line === 'number') {
             if (location.line < offset) {

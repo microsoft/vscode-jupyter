@@ -343,8 +343,8 @@ abstract class BaseKernel implements IBaseKernel {
             this._session = this._session
                 ? this._session
                 : this._jupyterSessionPromise
-                ? await this._jupyterSessionPromise.catch(() => undefined)
-                : undefined;
+                  ? await this._jupyterSessionPromise.catch(() => undefined)
+                  : undefined;
             this._jupyterSessionPromise = undefined;
             this._postInitializedOnStartPromise = undefined;
             if (this._session) {
@@ -875,11 +875,11 @@ abstract class BaseKernel implements IBaseKernel {
                 logger.error('Failed to determine version of IPyWidgets', ex)
             );
             if (Array.isArray(version)) {
-                const isVersion8 = version.some(
-                    (output) => (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
+                const isVersion8 = version.some((output) =>
+                    (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
                 );
-                const isVersion7 = version.some(
-                    (output) => (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}7.`)
+                const isVersion7 = version.some((output) =>
+                    (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}7.`)
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);

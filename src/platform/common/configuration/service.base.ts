@@ -72,8 +72,8 @@ export abstract class BaseConfigurationService implements IConfigurationService 
                         target === ConfigurationTarget.Global
                             ? setting.globalValue
                             : target === ConfigurationTarget.Workspace
-                            ? setting.workspaceValue
-                            : setting.workspaceFolderValue;
+                              ? setting.workspaceValue
+                              : setting.workspaceFolderValue;
                     if (actual === value) {
                         break;
                     }

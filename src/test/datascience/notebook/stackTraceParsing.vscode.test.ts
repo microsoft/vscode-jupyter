@@ -118,7 +118,7 @@ myLib.throwEx()`);
         assert(range, 'should have found a range');
         assert.equal(range.start.line, 0, 'wrong start line');
         assert.equal(range.start.character, 0, 'wrong start character');
-        assert.equal(range.end.line, 0), 'wrong end line';
+        (assert.equal(range.end.line, 0), 'wrong end line');
         assert.equal(range.end.character, 'print(1/0)'.length, 'wrong end character');
     });
 
