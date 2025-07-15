@@ -44,7 +44,7 @@ export enum ModuleInstallerType {
     Pip = 'Pip',
     Poetry = 'Poetry',
     Pipenv = 'Pipenv',
-    UV = 'UV',
+    UV = 'UV'
 }
 
 export enum ProductType {
