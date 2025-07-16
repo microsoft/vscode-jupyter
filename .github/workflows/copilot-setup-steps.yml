@@ -43,9 +43,6 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
-      - name: Use Npm ${{env.NPM_VERSION}}
-        run: npm i -g npm@${{env.NPM_VERSION}}
-
       - name: Cache npm files
         uses: actions/cache@v4
         with:
