@@ -4,7 +4,7 @@
 import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Uri, FileRenameEvent } from 'vscode';
+import { CancellationTokenSource, Uri, FileRenameEvent } from 'vscode';
 import { IKernel, IKernelProvider } from '../types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { IDisposableRegistry } from '../../platform/common/types';
@@ -59,6 +59,7 @@ suite('Kernel File Rename Handler', () => {
         // Arrange
         const oldUri = Uri.file('/path/old.ipynb');
         const newUri = Uri.file('/path/new.ipynb');
+        const token = new CancellationTokenSource().token;
         
         when(kernelProvider.get(oldUri)).thenReturn(instance(mockKernel));
         when(mockKernel.id).thenReturn('test-kernel-id');
@@ -68,7 +69,7 @@ suite('Kernel File Rename Handler', () => {
         };
 
         // Act
-        await (handler as any).prepareForFileRename(event);
+        await (handler as any).prepareForFileRename(event, token);
 
         // Assert
         const pendingMigrations = (handler as any).pendingMigrations;
@@ -85,6 +86,7 @@ suite('Kernel File Rename Handler', () => {
         // Arrange
         const oldUri = Uri.file('/path/old.ipynb');
         const newUri = Uri.file('/path/new.ipynb');
+        const token = new CancellationTokenSource().token;
         
         when(kernelProvider.get(oldUri)).thenReturn(undefined);
 
@@ -93,7 +95,7 @@ suite('Kernel File Rename Handler', () => {
         };
 
         // Act
-        await (handler as any).prepareForFileRename(event);
+        await (handler as any).prepareForFileRename(event, token);
 
         // Assert
         const pendingMigrations = (handler as any).pendingMigrations;

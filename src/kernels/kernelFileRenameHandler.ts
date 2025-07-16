@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { FileRenameEvent, Uri, workspace } from 'vscode';
+import { CancellationToken, CancellationTokenSource, FileRenameEvent, Uri, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IDisposableRegistry } from '../platform/common/types';
 import { logger } from '../platform/logging';
@@ -29,20 +29,24 @@ export class KernelFileRenameHandler implements IExtensionSyncActivationService 
         // Listen for file rename events to capture old kernel state
         this.disposables.push(
             workspace.onWillRenameFiles(async (event: FileRenameEvent) => {
-                await this.prepareForFileRename(event);
+                await this.prepareForFileRename(event, new CancellationTokenSource().token);
             })
         );
 
         // Listen for file rename completion to migrate kernels to new documents
         this.disposables.push(
             workspace.onDidRenameFiles(async (event: FileRenameEvent) => {
-                await this.handleFileRename(event);
+                await this.handleFileRename(event, new CancellationTokenSource().token);
             })
         );
     }
 
-    private async prepareForFileRename(event: FileRenameEvent): Promise<void> {
+    private async prepareForFileRename(event: FileRenameEvent, token: CancellationToken): Promise<void> {
         for (const rename of event.files) {
+            if (token.isCancellationRequested) {
+                return;
+            }
+            
             const { oldUri, newUri } = rename;
             
             // Only handle .ipynb files
@@ -66,8 +70,12 @@ export class KernelFileRenameHandler implements IExtensionSyncActivationService 
         }
     }
 
-    private async handleFileRename(event: FileRenameEvent): Promise<void> {
+    private async handleFileRename(event: FileRenameEvent, token: CancellationToken): Promise<void> {
         for (const rename of event.files) {
+            if (token.isCancellationRequested) {
+                return;
+            }
+            
             const { oldUri, newUri } = rename;
             
             // Only handle .ipynb files
@@ -83,7 +91,7 @@ export class KernelFileRenameHandler implements IExtensionSyncActivationService 
             logger.debug(`Executing kernel migration for notebook file rename from ${oldUri.fsPath} to ${newUri.fsPath}`);
             
             try {
-                await this.migrateKernelForRename(oldUri, newUri, migration.kernel);
+                await this.migrateKernelForRename(oldUri, newUri, migration.kernel, token);
             } catch (error) {
                 logger.error(`Failed to migrate kernel for rename from ${oldUri.fsPath} to ${newUri.fsPath}`, error);
             } finally {
@@ -97,7 +105,11 @@ export class KernelFileRenameHandler implements IExtensionSyncActivationService 
         return uri.fsPath.toLowerCase().endsWith('.ipynb');
     }
 
-    private async migrateKernelForRename(oldUri: Uri, newUri: Uri, kernel: any): Promise<void> {
+    private async migrateKernelForRename(oldUri: Uri, newUri: Uri, kernel: any, token: CancellationToken): Promise<void> {
+        if (token.isCancellationRequested) {
+            return;
+        }
+        
         // Find the old and new notebook documents
         const oldNotebook = workspace.notebookDocuments.find((doc: any) => doc.uri.toString() === oldUri.toString());
         const newNotebook = workspace.notebookDocuments.find((doc: any) => doc.uri.toString() === newUri.toString());
@@ -109,6 +121,10 @@ export class KernelFileRenameHandler implements IExtensionSyncActivationService 
 
         if (!newNotebook) {
             logger.debug(`New notebook document not found for URI ${newUri.fsPath}, will wait for it to open`);
+            return;
+        }
+
+        if (token.isCancellationRequested) {
             return;
         }
 
@@ -124,6 +140,10 @@ export class KernelFileRenameHandler implements IExtensionSyncActivationService 
 
         // Migrate kernel mappings in all relevant controllers
         for (const controller of this.controllerRegistration.registered) {
+            if (token.isCancellationRequested) {
+                return;
+            }
+            
             if (controller.migrateKernelMapping && controller.isAssociatedWithDocument(oldNotebook)) {
                 const migrated = controller.migrateKernelMapping(oldNotebook, newNotebook);
                 if (migrated) {
