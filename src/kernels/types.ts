@@ -555,6 +555,11 @@ export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
      */
     getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
     getKernelExecution(kernel: IKernel): INotebookKernelExecution;
+    /**
+     * Migrates a kernel from one notebook document to another.
+     * This is useful during file renames to maintain kernel state.
+     */
+    migrateKernel?(fromNotebook: NotebookDocument, toNotebook: NotebookDocument): boolean;
 }
 
 /**

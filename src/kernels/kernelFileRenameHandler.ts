@@ -115,9 +115,8 @@ export class KernelFileRenameHandler implements IExtensionSyncActivationService 
         logger.debug(`Migrating kernel ${kernel.id} from ${getDisplayPath(oldNotebook.uri)} to ${getDisplayPath(newNotebook.uri)}`);
 
         // Migrate the kernel in the kernel provider
-        const kernelProvider = this.kernelProvider as any;
-        if (kernelProvider.migrateKernel) {
-            const migrated = kernelProvider.migrateKernel(oldNotebook, newNotebook);
+        if (this.kernelProvider.migrateKernel) {
+            const migrated = this.kernelProvider.migrateKernel(oldNotebook, newNotebook);
             if (migrated) {
                 logger.debug(`Successfully migrated kernel in kernel provider`);
             }
@@ -125,10 +124,8 @@ export class KernelFileRenameHandler implements IExtensionSyncActivationService 
 
         // Migrate kernel mappings in all relevant controllers
         for (const controller of this.controllerRegistration.registered) {
-            const vscodeController = controller as any;
-            if (vscodeController.migrateKernelMapping && vscodeController.isAssociatedWithDocument && 
-                vscodeController.isAssociatedWithDocument(oldNotebook)) {
-                const migrated = vscodeController.migrateKernelMapping(oldNotebook, newNotebook);
+            if (controller.migrateKernelMapping && controller.isAssociatedWithDocument(oldNotebook)) {
+                const migrated = controller.migrateKernelMapping(oldNotebook, newNotebook);
                 if (migrated) {
                     logger.debug(`Successfully migrated kernel mapping in controller ${controller.id}`);
                 }

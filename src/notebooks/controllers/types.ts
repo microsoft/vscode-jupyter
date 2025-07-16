@@ -40,6 +40,11 @@ export interface IVSCodeNotebookController extends IDisposable {
     isAssociatedWithDocument(notebook: vscode.NotebookDocument): boolean;
     updateConnection(connection: KernelConnectionMetadata): void;
     setPendingCellAddition(notebook: vscode.NotebookDocument, promise: Promise<void>): void;
+    /**
+     * Migrates kernel mapping from one notebook document to another.
+     * This is useful during file renames to maintain kernel state.
+     */
+    migrateKernelMapping?(fromDocument: vscode.NotebookDocument, toDocument: vscode.NotebookDocument): boolean;
 }
 
 export interface IVSCodeNotebookControllerUpdateEvent {
