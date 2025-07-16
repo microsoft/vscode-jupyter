@@ -6,11 +6,14 @@ applyTo: '**'
 
 This file contains key information to help AI assistants work more efficiently with the VS Code Jupyter codebase.
 
-## Build & Test Workflow
-1. **Compile**: `npm run compile` (required before testing code changes)
-2. **Run specific tests**: `npm run test:unittests -- --grep "pattern"`
-3. **Linting**: `npm run lint` to check for linter issues
-4. **Formatting**: `npm run format` to check code style, `npm run lint-fix` to auto-fix issues
+### Required Before Each Commit
+- Run `npm run format-fix` before committing any changes to ensure proper code formatting
+
+## Development Flow
+- **Compile**: `npm run compile` (required before testing code changes)
+- **Run all unit tests**: `npm run test:unittests`
+- **Run specific unit tests**: `npm run test:unittests -- --grep "pattern"`
+- **Linting**: `npm run lint` to check for linter issues
 
 Read `.github/typescript-instructions.md` for detailed TypeScript development steps.
 

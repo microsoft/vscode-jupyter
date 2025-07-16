@@ -6,10 +6,11 @@ applyTo: '**/*.ts'
 
 You MUST check compilation output before running ANY script or declaring work complete!
 
-1. **ALWAYS** check the "Core - Build" task output for compilation errors
-2. **ALWAYS** check the "Unittest - Build" task output for compilation errors
-3. **NEVER** run tests if there are compilation errors
-4. **FIX** all compilation errors before moving forward
+- **ALWAYS** check the "Core - Build" task output for compilation errors
+- **ALWAYS** check the "Unittest - Build" task output for compilation errors
+- **ALWAYS** run `npm run format-fix` before committing changes to ensure proper code formatting
+- **NEVER** run tests if there are compilation errors
+- **FIX** all compilation errors before moving forward
 
 ## TypeScript Compilation steps
 
