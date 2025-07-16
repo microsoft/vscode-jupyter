@@ -12,6 +12,8 @@ This file contains key information to help AI assistants work more efficiently w
 3. **Linting**: `npm run lint` to check for linter issues
 4. **Formatting**: `npm run format` to check code style, `npm run lint-fix` to auto-fix issues
 
+Read `.github/typescript-instructions.md` for detailed TypeScript development steps.
+
 ## Coding Standards
 
 ### Platform Implementation
