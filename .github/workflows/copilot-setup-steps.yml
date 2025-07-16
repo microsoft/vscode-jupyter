@@ -65,3 +65,13 @@ jobs:
 
       - name: npm run postinstall
         run: npm run postinstall
+
+      - name: Install Playwright browsers (if needed)
+        run: |
+          if [ -d "node_modules/playwright" ]; then
+            echo "Installing Playwright browsers..."
+            npx playwright install --with-deps
+          else
+            echo "Playwright not found, skipping browser installation"
+          fi
+        continue-on-error: true
