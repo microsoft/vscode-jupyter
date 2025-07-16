@@ -17,8 +17,8 @@ Based on your above understanding generate a plan to fix the bug or add the new 
 Ensure the plan consists of a Markdown document that has the following sections:
 
 * Overview: A brief description of the bug/feature.
-* Root Cause: A detailed explanation of the root cause of the bug, including any relevant code snippets or references to the codebase. (only if it's a bug)
-* Requirements: A list of requirements to resolve the bug or add the new feature.
+* Problem: A detailed explanation of the root cause of the bug, including any relevant code snippets or references to the codebase. (only if it's a bug)
+* Solution: A brief summary of the solution including a list of requirements to resolve the bug or add the new feature.
 * Additional Considerations: Mention any potential challenges or risks associated with the implementation.
 * Implementation Steps: A detailed list of steps to implement the bug fix or new feature.
 Note: Limit information to what is necessary for developers and AI assistants to understand the implementation steps.
