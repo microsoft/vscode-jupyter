@@ -17,6 +17,7 @@ import { PipEnvInstaller } from './installer/pipEnvInstaller.node';
 import { PipInstaller } from './installer/pipInstaller.node';
 import { PoetryInstaller } from './installer/poetryInstaller.node';
 import { ProductInstaller } from './installer/productInstaller.node';
+import { PythonEnvsApiInstaller } from './installer/pythonEnvsApiInstaller.node';
 import { DataScienceProductPathService } from './installer/productPath.node';
 import { ProductService } from './installer/productService.node';
 import {
@@ -74,6 +75,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IReservedPythonNamedProvider>(IReservedPythonNamedProvider, ReservedNamedProvider);
     serviceManager.addSingleton<IVariableScriptGenerator>(IVariableScriptGenerator, VariableScriptGenerator);
     serviceManager.addSingleton<IDataFrameScriptGenerator>(IDataFrameScriptGenerator, DataFrameScriptGenerator);
+    serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PythonEnvsApiInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);
