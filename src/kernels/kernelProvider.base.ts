@@ -99,6 +99,30 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
             return this.kernelsByNotebook.get(uriOrNotebook)?.kernel;
         }
     }
+
+    /**
+     * Migrates a kernel from one notebook document to another.
+     * This is useful during file renames to maintain kernel state.
+     */
+    public migrateKernel(fromNotebook: NotebookDocument, toNotebook: NotebookDocument): boolean {
+        const kernelInfo = this.kernelsByNotebook.get(fromNotebook);
+        if (!kernelInfo) {
+            return false;
+        }
+
+        logger.debug(
+            `Migrating kernel ${kernelInfo.kernel.id} from ${getDisplayPath(fromNotebook.uri)} to ${getDisplayPath(toNotebook.uri)}`
+        );
+
+        // Remove old mapping
+        this.kernelsByNotebook.delete(fromNotebook);
+        
+        // Add new mapping
+        this.kernelsByNotebook.set(toNotebook, kernelInfo);
+
+        return true;
+    }
+
     public getKernelExecution(kernel: IKernel): INotebookKernelExecution {
         return this.executions.get(kernel)!;
     }

@@ -705,6 +705,30 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         handlerDisposables.push({ dispose: () => statusChangeDisposable.dispose() });
         handlerDisposables.push({ dispose: () => kernelDisposedDisposable?.dispose() });
     }
+
+    /**
+     * Migrates kernel mapping from one notebook document to another.
+     * This is useful during file renames to maintain kernel state.
+     */
+    public migrateKernelMapping(fromDocument: NotebookDocument, toDocument: NotebookDocument): boolean {
+        const kernel = this.notebookKernels.get(fromDocument);
+        if (!kernel) {
+            return false;
+        }
+
+        logger.debug(
+            `Migrating kernel mapping from ${getDisplayPath(fromDocument.uri)} to ${getDisplayPath(toDocument.uri)}`
+        );
+
+        // Remove old mapping
+        this.notebookKernels.delete(fromDocument);
+        
+        // Add new mapping
+        this.notebookKernels.set(toDocument, kernel);
+
+        return true;
+    }
+
     private async onDidSelectController(document: NotebookDocument) {
         const selectedKernelConnectionMetadata = this.connection;
         const existingKernel = this.kernelProvider.get(document);
