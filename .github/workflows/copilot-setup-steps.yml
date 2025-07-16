@@ -1,0 +1,67 @@
+name: "Copilot Setup Steps"
+
+# Automatically run the setup steps when they are changed to allow for easy validation, and
+# allow manual testing through the repository's "Actions" tab
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+env:
+  NODE_VERSION: 22.15.1
+  NPM_VERSION: 10.9.2
+  PYTHON_VERSION: 3.12
+  DENO_VERSION: '~1.37'
+  MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
+  CACHE_NPM_DEPS: cache-npm
+  CACHE_OUT_DIRECTORY: cache-out-directory
+  CACHE_PIP_DEPS: cache-pip
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    # Set the permissions to the lowest permissions possible needed for your steps.
+    # Copilot will be given its own token for its operations.
+    permissions:
+      # If you want to clone the repository as part of your setup steps, for example to install dependencies, you'll need the `contents: read` permission. If you don't clone the repository in your setup steps, Copilot will do this for you automatically after the steps complete.
+      contents: read
+
+    # You can define any steps you want, and they will run before the agent starts.
+    # If you do not check out your code, Copilot will do this for you.
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
+
+      - name: Cache npm files
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+
+      - name: Cache the out/ directory
+        uses: actions/cache@v4
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
+      # This is faster than running `npm ci`, we do not want to build zmq, etc.
+      # Let that happen in other jobs, this job needs to be fast
+      - name: npm ci
+        run: npm ci --ignore-scripts --prefer-offline --no-audit
+
+      - name: npm run postinstall
+        run: npm run postinstall
