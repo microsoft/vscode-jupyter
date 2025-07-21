@@ -96,7 +96,13 @@ suite('UvInstaller', () => {
             const result = await testableInstaller.testGetExecutionArgs('jupyter', mockPythonEnvironment);
 
             assert.equal(result.exe, 'uv');
-            assert.deepEqual(result.args, ['pip', 'install', '--python', '/path/to/python', 'jupyter']);
+            assert.deepEqual(result.args, [
+                'pip',
+                'install',
+                '--python',
+                Uri.file('/path/to/python').fsPath,
+                'jupyter'
+            ]);
         });
 
         test('Should generate correct arguments with upgrade flag', async () => {
@@ -109,7 +115,14 @@ suite('UvInstaller', () => {
             );
 
             assert.equal(result.exe, 'uv');
-            assert.deepEqual(result.args, ['pip', 'install', '--upgrade', '--python', '/path/to/python', 'jupyter']);
+            assert.deepEqual(result.args, [
+                'pip',
+                'install',
+                '--upgrade',
+                '--python',
+                Uri.file('/path/to/python').fsPath,
+                'jupyter'
+            ]);
         });
 
         test('Should use path when executable.uri is not available', async () => {
@@ -126,7 +139,13 @@ suite('UvInstaller', () => {
             const result = await testableInstaller.testGetExecutionArgs('jupyter', mockPythonEnvironment);
 
             assert.equal(result.exe, 'uv');
-            assert.deepEqual(result.args, ['pip', 'install', '--python', '/path/to/python', 'jupyter']);
+            assert.deepEqual(result.args, [
+                'pip',
+                'install',
+                '--python',
+                Uri.file('/path/to/python').fsPath,
+                'jupyter'
+            ]);
         });
 
         test('Should work with Extension Environment type', async () => {
@@ -145,7 +164,13 @@ suite('UvInstaller', () => {
             const result = await testableInstaller.testGetExecutionArgs('numpy', mockExtensionEnvironment);
 
             assert.equal(result.exe, 'uv');
-            assert.deepEqual(result.args, ['pip', 'install', '--python', '/extension/path/to/python', 'numpy']);
+            assert.deepEqual(result.args, [
+                'pip',
+                'install',
+                '--python',
+                Uri.file('/extension/path/to/python').fsPath,
+                'numpy'
+            ]);
         });
 
         test('Should throw error when interpreter info is not available', async () => {
