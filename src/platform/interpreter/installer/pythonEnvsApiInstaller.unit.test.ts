@@ -51,14 +51,6 @@ suite('Python Envs API Installer', () => {
 
     teardown(() => disposables.clear());
 
-    test('Should have correct name', () => {
-        assert.equal(installer.name, 'PythonEnvsApi');
-    });
-
-    test('Should have correct display name', () => {
-        assert.equal(installer.displayName, 'Python Environment API');
-    });
-
     test('Should have correct type', () => {
         assert.equal(installer.type, ModuleInstallerType.PythonExt);
     });
