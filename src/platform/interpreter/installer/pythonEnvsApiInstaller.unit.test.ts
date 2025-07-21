@@ -60,7 +60,7 @@ suite('Python Envs API Installer', () => {
     });
 
     test('Should have correct type', () => {
-        assert.equal(installer.type, ModuleInstallerType.UV);
+        assert.equal(installer.type, ModuleInstallerType.PythonExt);
     });
 
     test('Should have high priority', () => {
