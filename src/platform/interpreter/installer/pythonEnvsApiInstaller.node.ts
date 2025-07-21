@@ -34,11 +34,11 @@ export class PythonEnvsApiInstaller extends ModuleInstaller {
     }
 
     public get type(): ModuleInstallerType {
-        return ModuleInstallerType.UV;
+        return ModuleInstallerType.PythonExt;
     }
 
     public get displayName() {
-        return 'Python Environment API';
+        return 'Python Environment Installer';
     }
 
     public get priority(): number {

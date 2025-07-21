@@ -38,6 +38,7 @@ import { IPythonExecutionFactory } from './types.node';
 import { VariableScriptGenerator } from './variableScriptGenerator';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 import { DesktopWorkspaceInterpreterTracker } from './workspaceInterpreterTracker.node';
+import { UvInstaller } from './installer/uvInstaller.node';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
@@ -76,6 +77,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IVariableScriptGenerator>(IVariableScriptGenerator, VariableScriptGenerator);
     serviceManager.addSingleton<IDataFrameScriptGenerator>(IDataFrameScriptGenerator, DataFrameScriptGenerator);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PythonEnvsApiInstaller);
+    serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, UvInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);
