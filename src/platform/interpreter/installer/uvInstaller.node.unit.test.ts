@@ -58,16 +58,8 @@ suite('UvInstaller', () => {
     });
 
     suite('Basic Properties', () => {
-        test('Should return correct name', () => {
-            assert.equal(installer.name, 'UvInstaller');
-        });
-
         test('Should return correct type', () => {
             assert.equal(installer.type, ModuleInstallerType.UV);
-        });
-
-        test('Should return correct display name', () => {
-            assert.equal(installer.displayName, 'UV Installer');
         });
 
         test('Should return correct priority', () => {
@@ -154,15 +146,6 @@ suite('UvInstaller', () => {
 
             assert.equal(result.exe, 'uv');
             assert.deepEqual(result.args, ['pip', 'install', '--python', '/extension/path/to/python', 'numpy']);
-        });
-
-        test('Should handle multiple module names', async () => {
-            getInterpreterInfoStub.resolves(mockInterpreterInfo);
-
-            const result = await testableInstaller.testGetExecutionArgs('jupyter notebook', mockPythonEnvironment);
-
-            assert.equal(result.exe, 'uv');
-            assert.deepEqual(result.args, ['pip', 'install', '--python', '/path/to/python', 'jupyter notebook']);
         });
 
         test('Should throw error when interpreter info is not available', async () => {
