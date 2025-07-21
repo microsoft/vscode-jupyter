@@ -139,13 +139,7 @@ suite('UvInstaller', () => {
             const result = await testableInstaller.testGetExecutionArgs('jupyter', mockPythonEnvironment);
 
             assert.equal(result.exe, 'uv');
-            assert.deepEqual(result.args, [
-                'pip',
-                'install',
-                '--python',
-                Uri.file('/path/to/python').fsPath,
-                'jupyter'
-            ]);
+            assert.deepEqual(result.args, ['pip', 'install', '--python', '/path/to/prefix', 'jupyter']);
         });
 
         test('Should work with Extension Environment type', async () => {
