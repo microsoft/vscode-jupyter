@@ -271,7 +271,7 @@ jobs:
       matrix:
         jupyterConnection: [raw] # valid values include raw = uzing zqm, local = using local jupyter, remote = using remote jupyter, web = using remote jupyter in web mode
         python: [python] # valid values include python,conda,noPython
-        pythonVersion: ['3.10']
+        pythonVersion: ['3.12']
         # Whether we're using stable (<empty>) or pre-release versions of Python packages.
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
@@ -303,53 +303,53 @@ jobs:
           # Mandatory tests
           - jupyterConnection: remote
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
           #   - jupyterConnection: remote
           #     python: python
-          #     pythonVersion: '3.10'
+          #     pythonVersion: '3.12'
           #     packageVersion: 'prerelease'
           #     tags: '^[^@]+$|@mandatory'
           #     os: ubuntu-latest
           #     ipywidgetsVersion: ''
           - jupyterConnection: web
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
           - jupyterConnection: raw
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '^[^@]+$|@mandatory'
             os: windows-latest
             ipywidgetsVersion: ''
           # IPyWidgets 8
           - jupyterConnection: raw
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '@widgets'
             os: ubuntu-latest
             ipywidgetsVersion: '8'
           - jupyterConnection: remote
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '@widgets'
             os: ubuntu-latest
             ipywidgetsVersion: '8'
           # Conda
           - jupyterConnection: raw
             python: conda
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '^[^@]+$|@mandatory|@python'
             os: ubuntu-latest
             ipywidgetsVersion: ''
           # Pre-Release Versions
           #   - jupyterConnection: raw
           #     python: python
-          #     pythonVersion: '3.10'
+          #     pythonVersion: '3.12'
           #     packageVersion: 'prerelease'
           #     tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
           #     os: ubuntu-latest
@@ -363,7 +363,7 @@ jobs:
           # Misc
           - jupyterConnection: remote
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '@kernelCore'
             os: ubuntu-latest
             ipywidgetsVersion: ''
@@ -792,7 +792,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python: ['3.10']
+        python: ['3.12']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
