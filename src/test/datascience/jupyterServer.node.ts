@@ -229,7 +229,7 @@ export class JupyterServer {
         token: string;
         port: number;
         useCert?: boolean;
-        jupyterLab?: boolean;
+        _jupyterLab?: boolean;
         password?: string;
         detached?: boolean;
     }): Promise<{ url: string; dispose: () => void }> {
