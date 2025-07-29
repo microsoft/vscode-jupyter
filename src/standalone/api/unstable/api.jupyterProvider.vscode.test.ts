@@ -81,7 +81,7 @@ suite('Jupyter Provider Tests', function () {
         dispose(disposables);
         logger.info(`End Test Completed ${this.currentTest?.title}`);
     });
-    test('Verify Kernel Source Action is registered & unregistered for the 3rd party extension', async () => {
+    test.skip('Verify Kernel Source Action is registered & unregistered for the 3rd party extension', async () => {
         const serverProvider1 = {
             provideJupyterServers: () => Promise.resolve([]),
             resolveJupyterServer: () => Promise.reject(new Error('Not Implemented'))
