@@ -12,6 +12,8 @@ import { IProgressReporter, Progress, ReportableAction } from './types';
 
 /**
  * Creates a progress indicator using the VS code withProgress api but allows for updates as more progress is made.
+ * Creates a progress indicator using the VS code withProgress api but allows for updates as more progress is made.
+ * Creates a progress indicator using the VS code withProgress api but allows for updates as more progress is made.
  */
 @injectable()
 export class ProgressReporter implements IProgressReporter {
