@@ -238,7 +238,8 @@ export class JupyterServer {
                 const args = [
                     '-m',
                     'jupyter',
-                    jupyterLab ? 'lab' : 'notebook',
+                    'lab',
+                    // jupyterLab ? 'lab' : 'notebook',
                     '--no-browser',
                     `--NotebookApp.port=${port}`,
                     `--NotebookApp.token=${token}`,
