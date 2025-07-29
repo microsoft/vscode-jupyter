@@ -222,14 +222,14 @@ export class JupyterServer {
         token,
         port,
         useCert,
-        jupyterLab,
+        jupyterLab: _jupyterLab,
         password,
         detached
     }: {
         token: string;
         port: number;
         useCert?: boolean;
-        _jupyterLab?: boolean;
+        jupyterLab?: boolean;
         password?: string;
         detached?: boolean;
     }): Promise<{ url: string; dispose: () => void }> {
