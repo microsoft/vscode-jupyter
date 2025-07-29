@@ -301,12 +301,12 @@ jobs:
             isScheduled: ''
         include:
           # Mandatory tests
-        #   - jupyterConnection: remote //https://github.com/microsoft/vscode-jupyter/issues/16851
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     tags: '^[^@]+$|@mandatory'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: ''
+          #   - jupyterConnection: remote //https://github.com/microsoft/vscode-jupyter/issues/16851
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     tags: '^[^@]+$|@mandatory'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: ''
           #   - jupyterConnection: remote
           #     python: python
           #     pythonVersion: '3.10'
@@ -314,12 +314,12 @@ jobs:
           #     tags: '^[^@]+$|@mandatory'
           #     os: ubuntu-latest
           #     ipywidgetsVersion: ''
-        #   - jupyterConnection: web //https://github.com/microsoft/vscode-jupyter/issues/16851
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     tags: '^[^@]+$|@mandatory'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: ''
+          #   - jupyterConnection: web //https://github.com/microsoft/vscode-jupyter/issues/16851
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     tags: '^[^@]+$|@mandatory'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: ''
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
