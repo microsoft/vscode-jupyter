@@ -26,9 +26,8 @@ async function generateConfig() {
         launchArgs: [workspaceFolder, '--enable-proposed-api'],
         env: {
             VSC_JUPYTER_FORCE_LOGGING: '1',
-            // VSC_JUPYTER_REMOTE_NATIVE_TEST: 'true',
-            // VSC_JUPYTER_NON_RAW_NATIVE_TEST: 'false',
-            // VSC_JUPYTER_CI_TEST_GREP: '@widgets',
+            // VSC_JUPYTER_REMOTE_NATIVE_TEST: 'true', // For debugging remote Jupyter tests
+            // VSC_JUPYTER_NON_RAW_NATIVE_TEST: 'false', // For debugging remote Jupyter tests
             CI_PYTHON_PATH: pythonPath,
             XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: '1',
             XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML: '1', //Enable to get full coverage repor (in coverage folder).
