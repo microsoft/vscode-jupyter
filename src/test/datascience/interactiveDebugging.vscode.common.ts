@@ -34,8 +34,7 @@ export function sharedIWDebuggerTests(
         suiteSetup?: (debuggerType: DebuggerType) => Promise<void>;
     }
 ) {
-    const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger'];
-    // const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger', 'JupyterProtocolDebugger'];
+    const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger', 'JupyterProtocolDebugger'];
     debuggerTypes.forEach((debuggerType) => {
         suite(`Debugging with ${debuggerType} @debugger`, async function () {
             this.timeout(120_000);
@@ -52,6 +51,10 @@ export function sharedIWDebuggerTests(
                 }
             };
             suiteSetup(async function () {
+                // https://github.com/microsoft/vscode-jupyter/issues/16860
+                if (debuggerType === 'JupyterProtocolDebugger') {
+                    return this.skip();
+                }
                 if ((IS_REMOTE_NATIVE_TEST() || isWeb()) && debuggerType === 'VSCodePythonDebugger') {
                     return this.skip();
                 }

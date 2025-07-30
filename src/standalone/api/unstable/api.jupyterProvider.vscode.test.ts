@@ -30,7 +30,7 @@ import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../../test/constants';
 import { isWeb } from '../../../platform/common/utils/misc';
 import { MultiStepInput } from '../../../platform/common/utils/multiStepInput';
 
-suite.skip('Jupyter Provider Tests', function () {
+suite('Jupyter Provider Tests', function () {
     // On conda these take longer for some reason.
     this.timeout(120_000);
     let api: IExtensionTestApi;

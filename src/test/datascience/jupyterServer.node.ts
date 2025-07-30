@@ -326,6 +326,9 @@ export class JupyterServer {
                         let url = '';
                         if (lineWithUrl) {
                             url = lineWithUrl.substring(lineWithUrl.indexOf('http'));
+                            if (url.includes('/tree?token')) {
+                                url = url.replace('/tree?token', '/?token');
+                            }
                         } else {
                             url = `http${useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
                         }

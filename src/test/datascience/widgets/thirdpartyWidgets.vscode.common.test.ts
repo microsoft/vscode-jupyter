@@ -34,6 +34,7 @@ import {
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
 import { hideOutputPanel, initializeWidgetComms, Utils } from './commUtils';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -100,7 +101,11 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
         });
 
-        test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
+        test('Button Widget with custom comm message rendering a matplotlib widget', async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/16861
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -119,6 +124,10 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
         test('Render AnyWidget (test js<-->kernel comms with binary data)', async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/16861
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -177,6 +186,10 @@ import { isWeb } from '../../../platform/common/utils/misc';
             );
         });
         test('Render matplotlib, widget', async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/16861
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -190,6 +203,10 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await assertOutputContainsHtml(cell, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
         test('Render matplotlib, widget in multiple cells', async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/16861
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
