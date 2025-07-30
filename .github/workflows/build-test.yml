@@ -327,12 +327,12 @@ jobs:
             os: windows-latest
             ipywidgetsVersion: ''
           # IPyWidgets 7 & 8
-        #   - jupyterConnection: raw
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     tags: '@widgets'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: '7'
+          #   - jupyterConnection: raw
+          #     python: python
+          #     pythonVersion: '3.10'
+          #     tags: '@widgets'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: '7'
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
