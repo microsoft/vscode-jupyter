@@ -51,6 +51,10 @@ export function sharedIWDebuggerTests(
                 }
             };
             suiteSetup(async function () {
+                // https://github.com/microsoft/vscode-jupyter/issues/16860
+                if (debuggerType === 'JupyterProtocolDebugger') {
+                    return this.skip();
+                }
                 if ((IS_REMOTE_NATIVE_TEST() || isWeb()) && debuggerType === 'VSCodePythonDebugger') {
                     return this.skip();
                 }
