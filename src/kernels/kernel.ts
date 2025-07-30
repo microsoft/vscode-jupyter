@@ -888,7 +888,7 @@ abstract class BaseKernel implements IBaseKernel {
                 this._ipywidgetsVersion = newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);
             } else {
-                logger.warn('Failed to determine IPyKernel Version', JSON.stringify(version));
+                logger.warn('Failed to determine IPyWidgets Version', JSON.stringify(version));
             }
         };
         await determineVersionImpl();

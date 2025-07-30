@@ -201,6 +201,7 @@ suite('Run By Line @debugger', function () {
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 
+    // https://github.com/microsoft/vscode-jupyter/issues/16860
     test.skip('Interrupt during debugging', async function () {
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = window.activeNotebookEditor?.notebook!;
@@ -219,6 +220,7 @@ suite('Run By Line @debugger', function () {
         );
     });
 
+    // https://github.com/microsoft/vscode-jupyter/issues/16860
     test.skip('Stops in same-cell function called from last line', async function () {
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = window.activeNotebookEditor?.notebook!;
