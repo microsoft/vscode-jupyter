@@ -113,12 +113,69 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     }
 
     public async dispose() {
-        logger.ci(`Disposing all kernels from kernel provider`);
-        const items = Array.from(this.pendingDisposables.values());
-        this.pendingDisposables.clear();
-        await Promise.all(items);
-        await Promise.all(this.kernels.map((k) => k.dispose()));
+        logger.ci(`Disposing kernel provider`);
+
+        // Check if we should preserve kernels during extension shutdown
+        const shouldPreserveKernels = this.shouldPreserveKernelsOnShutdown();
+
+        if (shouldPreserveKernels) {
+            logger.info(
+                `Preserving ${this.kernels.length} kernels during extension shutdown for potential reconnection`
+            );
+
+            // Save kernel states for all active kernels before shutdown
+            await Promise.all(
+                this.kernels.map(async (kernel) => {
+                    try {
+                        await this.saveKernelStateForReconnection(kernel, kernel.resourceUri);
+                    } catch (ex) {
+                        logger.debug(`Failed to save state for kernel ${kernel.id}`, ex);
+                    }
+                })
+            );
+
+            // Clear tracking maps but don't dispose the actual kernels
+            this.kernelsByNotebook = new WeakMap();
+            this.kernelsById.clear();
+
+            logger.ci(`Preserved ${this.kernels.length} kernels without disposal`);
+        } else {
+            logger.ci(`Disposing all ${this.kernels.length} kernels from kernel provider`);
+
+            // Proceed with normal disposal
+            const items = Array.from(this.pendingDisposables.values());
+            this.pendingDisposables.clear();
+            await Promise.all(items);
+            await Promise.all(this.kernels.map((k) => k.dispose()));
+        }
     }
+
+    /**
+     * Determine if kernels should be preserved during extension shutdown
+     */
+    protected shouldPreserveKernelsOnShutdown(): boolean {
+        // Check if persistent sessions are enabled
+        const persistentSessionsEnabled = workspace
+            .getConfiguration('jupyter')
+            .get<boolean>('enablePersistentSessions', true);
+
+        if (!persistentSessionsEnabled) {
+            logger.debug('Persistent sessions disabled, disposing all kernels');
+            return false;
+        }
+
+        // Check the killOnDisconnect setting
+        const killOnDisconnect = workspace.getConfiguration('jupyter').get<boolean>('kernels.killOnDisconnect', false);
+
+        if (killOnDisconnect) {
+            logger.debug('killOnDisconnect setting enabled, disposing all kernels');
+            return false;
+        }
+
+        logger.debug('Kernel preservation enabled for extension shutdown');
+        return true;
+    }
+
     public abstract getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
     protected storeKernel(notebook: NotebookDocument, options: KernelOptions, kernel: IKernel) {
         this.kernelsByNotebook.set(notebook, { options, kernel });
