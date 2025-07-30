@@ -792,6 +792,7 @@ abstract class BaseKernel implements IBaseKernel {
             // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
             // Restart sessions and retries might make this hard to do correctly otherwise.
             session.kernel?.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
             if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
                 // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
                 // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
@@ -853,7 +854,6 @@ abstract class BaseKernel implements IBaseKernel {
      */
     private async determineVersionOfIPyWidgets(session: IKernelSession) {
         if (!isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            logger.debug('Non-Python kernel detected');
             // For all other kernels, assume we are using the older version of IPyWidgets.
             // There are very few kernels that support IPyWidgets, however IPyWidgets 8 is very new
             // & it is unlikely that others have supported this new version.
@@ -883,7 +883,7 @@ abstract class BaseKernel implements IBaseKernel {
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
-                logger.debug(`Determined IPyWidgets Version as ${newVersion}`);
+                logger.trace(`Determined IPyWidgets Version as ${newVersion}`);
                 // If user does not have ipywidgets installed, then this event will never get fired.
                 this._ipywidgetsVersion = newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);

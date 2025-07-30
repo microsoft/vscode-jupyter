@@ -140,9 +140,7 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         httpClientResponse.catch((ex) =>
             logger.error(`Failed to download widget script source from (httpclient) ${script.toString(true)}`, ex)
         );
-        promise.catch((ex) =>
-            logger.error(`Failed to download widget script source from ${script.toString(true)}`, ex)
-        );
+        promise.catch(noop);
         return promise;
     }
     private async getWidgetScriptSourceUsingHttpClient(script: Uri): Promise<string> {
