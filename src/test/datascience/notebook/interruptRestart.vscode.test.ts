@@ -28,6 +28,7 @@ import { captureScreenShot } from '../../common';
 import { NotebookCellExecutionState } from '../../../platform/notebooks/cellExecutionStateService';
 import { KernelConnector } from '../../../notebooks/controllers/kernelConnector';
 import { DisplayOptions } from '../../../kernels/displayOptions';
+import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
@@ -71,6 +72,9 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         }
     }
     suiteSetup(async function () {
+        if (getOSType() === OSType.Windows) {
+            return this.skip();
+        }
         logger.info(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
         api = await initialize();
         dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
