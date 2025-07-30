@@ -327,24 +327,24 @@ jobs:
             os: windows-latest
             ipywidgetsVersion: ''
           # IPyWidgets 7 & 8
-          #   - jupyterConnection: raw
-          #     python: python
-          #     pythonVersion: '3.10'
-          #     tags: '@widgets'
-          #     os: ubuntu-latest
-          #     ipywidgetsVersion: '7'
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
             tags: '@widgets'
             os: ubuntu-latest
-            ipywidgetsVersion: '8'
+            ipywidgetsVersion: '7'
+          - jupyterConnection: raw
+            python: python
+            pythonVersion: '3.10'
+            tags: '@widgets'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
             tags: '@widgets'
             os: ubuntu-latest
-            ipywidgetsVersion: '8'
+            ipywidgetsVersion: ''
           # Conda
           - jupyterConnection: raw
             python: conda
@@ -431,16 +431,16 @@ jobs:
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
         uses: actions/cache@v4
-        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7'
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-ipywidgets7-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
       - name: Cache pip on linux
         uses: actions/cache@v4
-        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '7'
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
@@ -449,16 +449,16 @@ jobs:
 
       - name: Cache pip on mac
         uses: actions/cache@v4
-        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
+        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7'
         with:
           path: ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-ipywidgets7-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
       - name: Cache pip on mac
         uses: actions/cache@v4
-        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '7'
         with:
           path: ~/Library/Caches/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
@@ -467,16 +467,16 @@ jobs:
 
       - name: Cache pip on windows
         uses: actions/cache@v4
-        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
+        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7'
         with:
           path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-ipywidgets7-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
       - name: Cache pip on windows
         uses: actions/cache@v4
-        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '7'
         with:
           path: ~\AppData\Local\pip\Cache
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
@@ -523,11 +523,11 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8' && matrix.tags != '@notebookPerformance'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7' && matrix.tags != '@notebookPerformance'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
-          python -m pip --disable-pip-version-check install -r build/venv-test-requirements.txt
+          python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets7-requirements.txt
           python -m pip install packaging # required for installing debugpy
           python -m pip install --upgrade notebook
           python ./pythonFiles/install_debugpy.py
@@ -539,15 +539,13 @@ jobs:
           python -m pip install --upgrade jupyterlab notebook
 
       - name: Install Python Libs (IPyWidget 8)
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8' && matrix.tags != '@notebookPerformance'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '7' && matrix.tags != '@notebookPerformance'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
-          python -m pip install ipywidgets -U
           python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
           python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
-          python -m pip install ipywidgets -U
           python -m ipykernel install --user
 
       - name: Install Python Libs for conda
@@ -622,11 +620,13 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@notebookPerformance'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '7' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@notebookPerformance'
+        with:
+          IPyWidgetVersion: '7'
 
       - name: Create Virtual Env for Tests (ipywidgets 8)
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@notebookPerformance'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '7' && matrix.jupyterConnection != 'web' && matrix.jupyterConnection != 'remote' && matrix.tags != '@debugger' && matrix.tags != '@webview|@export|@lsp|@variableViewer' && matrix.tags != '@notebookPerformance'
         with:
           IPyWidgetVersion: '8'
 
