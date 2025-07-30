@@ -792,7 +792,7 @@ abstract class BaseKernel implements IBaseKernel {
             // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
             // Restart sessions and retries might make this hard to do correctly otherwise.
             session.kernel?.registerCommTarget(Identifiers.DefaultCommTarget, noop);
-
+            logger.debug('this.kernelConnectionMetadata.kind', this.kernelConnectionMetadata.kind);
             if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
                 // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
                 // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
@@ -854,6 +854,7 @@ abstract class BaseKernel implements IBaseKernel {
      */
     private async determineVersionOfIPyWidgets(session: IKernelSession) {
         if (!isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            logger.debug('Non-Python kernel detected');
             // For all other kernels, assume we are using the older version of IPyWidgets.
             // There are very few kernels that support IPyWidgets, however IPyWidgets 8 is very new
             // & it is unlikely that others have supported this new version.
@@ -868,12 +869,14 @@ abstract class BaseKernel implements IBaseKernel {
             print("${widgetVersionOutPrefix}" + _VSCODE_ipywidgets.__version__)
             del _VSCODE_ipywidgets
         except:
-            pass
+        pass
         `;
 
+            logger.debug('Requesting IPyWidgets version');
             const version = await this.executeSilently(session, [codeToDetermineIPyWidgetsVersion]).catch((ex) =>
                 logger.error('Failed to determine version of IPyWidgets', ex)
             );
+            logger.debug('Got IPyWidgets version', version, JSON.stringify(version));
             if (Array.isArray(version)) {
                 const isVersion8 = version.some(
                     (output) => (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
@@ -883,12 +886,13 @@ abstract class BaseKernel implements IBaseKernel {
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
-                logger.trace(`Determined IPyWidgets Version as ${newVersion}`);
+                logger.debug(`Determined IPyWidgets Version as ${newVersion}`);
                 // If user does not have ipywidgets installed, then this event will never get fired.
                 this._ipywidgetsVersion = newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);
             } else {
-                logger.warn('Failed to determine IPyKernel Version', JSON.stringify(version));
+                logger.debug(`Failed to determine IPyWidgets Version`);
+                logger.warn('Failed to determine IPyWidgets Version', JSON.stringify(version));
             }
         };
         await determineVersionImpl();
