@@ -1911,6 +1911,27 @@
                             ]
                         }
                     ]
+                },
+                "jupyter.enablePersistentSessions": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable kernel session persistence across VS Code restarts"
+                },
+                "jupyter.persistentSessionTimeout": {
+                    "type": "number",
+                    "default": 24,
+                    "description": "Hours after which to abandon reconnection attempts for persisted kernel sessions"
+                },
+                "jupyter.persistentSessionReviveProcess": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Attempt to restart kernel processes if not found during reconnection"
+                },
+                "jupyter.kernels.killOnDisconnect": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to terminate kernels when VS Code disconnects or restarts. When false, kernels are preserved for reconnection.",
+                    "scope": "application"
                 }
             }
         },

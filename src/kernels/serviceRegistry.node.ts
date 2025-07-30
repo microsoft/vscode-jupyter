@@ -48,6 +48,10 @@ import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
 import { KernelChatStartupCodeProvider } from './chat/kernelStartupCodeProvider';
 import { KernelWorkingDirectory } from './raw/session/kernelWorkingDirectory.node';
+import { IKernelPersistenceService, KernelPersistenceService } from './kernelPersistenceService';
+import { IKernelProcessDiscovery, KernelProcessDiscovery } from './kernelProcessDiscovery.node';
+import { IKernelConnectionRestorer, KernelConnectionRestorer } from './kernelConnectionRestorer';
+import { KernelReconnectionActivation } from './kernelReconnectionActivation';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
@@ -142,5 +146,14 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelChatStartupCodeProvider
+    );
+
+    // Kernel persistence and reconnection services
+    serviceManager.addSingleton<IKernelPersistenceService>(IKernelPersistenceService, KernelPersistenceService);
+    serviceManager.addSingleton<IKernelProcessDiscovery>(IKernelProcessDiscovery, KernelProcessDiscovery);
+    serviceManager.addSingleton<IKernelConnectionRestorer>(IKernelConnectionRestorer, KernelConnectionRestorer);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelReconnectionActivation
     );
 }

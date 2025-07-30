@@ -340,6 +340,31 @@ export interface IStartOptions extends IDisplayOptions {
      * If `true`, then do not trigger the onPostInitialized event.
      */
     ignoreTriggeringOnPostInitialized?: boolean;
+    /**
+     * Information for reconnecting to an existing kernel session
+     */
+    reconnectionInfo?: {
+        /**
+         * Existing session ID to reconnect to
+         */
+        sessionId?: string;
+        /**
+         * Existing kernel ID to reconnect to
+         */
+        kernelId?: string;
+        /**
+         * ZMQ connection file path for local kernels
+         */
+        connectionFile?: string;
+        /**
+         * Working directory to restore
+         */
+        workingDirectory?: string;
+        /**
+         * Last known execution count
+         */
+        executionCount?: number;
+    };
 }
 
 export interface IBaseKernel extends IAsyncDisposable {
@@ -708,6 +733,31 @@ export interface KernelSessionCreationOptions {
     kernelConnection: KernelConnectionMetadata;
     token: CancellationToken;
     creator: KernelActionSource;
+    /**
+     * Information for reconnecting to an existing kernel session
+     */
+    reconnectionInfo?: {
+        /**
+         * Existing session ID to reconnect to
+         */
+        sessionId?: string;
+        /**
+         * Existing kernel ID to reconnect to
+         */
+        kernelId?: string;
+        /**
+         * ZMQ connection file path for local kernels
+         */
+        connectionFile?: string;
+        /**
+         * Working directory to restore
+         */
+        workingDirectory?: string;
+        /**
+         * Last known execution count
+         */
+        executionCount?: number;
+    };
 }
 export interface LocaLKernelSessionCreationOptions {
     resource: Resource;
