@@ -301,12 +301,12 @@ jobs:
             isScheduled: ''
         include:
           # Mandatory tests
-          #   - jupyterConnection: remote //https://github.com/microsoft/vscode-jupyter/issues/16851
-          #     python: python
-          #     pythonVersion: '3.10'
-          #     tags: '^[^@]+$|@mandatory'
-          #     os: ubuntu-latest
-          #     ipywidgetsVersion: ''
+          - jupyterConnection: remote
+            python: python
+            pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           #   - jupyterConnection: remote
           #     python: python
           #     pythonVersion: '3.10'
@@ -314,19 +314,25 @@ jobs:
           #     tags: '^[^@]+$|@mandatory'
           #     os: ubuntu-latest
           #     ipywidgetsVersion: ''
-          #   - jupyterConnection: web //https://github.com/microsoft/vscode-jupyter/issues/16851
-          #     python: python
-          #     pythonVersion: '3.10'
-          #     tags: '^[^@]+$|@mandatory'
-          #     os: ubuntu-latest
-          #     ipywidgetsVersion: ''
+          - jupyterConnection: web
+            python: python
+            pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
             tags: '^[^@]+$|@mandatory'
             os: windows-latest
             ipywidgetsVersion: ''
-          # IPyWidgets 8
+          # IPyWidgets 7 & 8
+        #   - jupyterConnection: raw
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     tags: '@widgets'
+        #     os: ubuntu-latest
+        #     ipywidgetsVersion: '7'
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
@@ -361,12 +367,12 @@ jobs:
             os: ubuntu-latest
             ipywidgetsVersion: ''
           # Misc
-        #   - jupyterConnection: remote //https://github.com/microsoft/vscode-jupyter/issues/16851
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     tags: '@kernelCore'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: ''
+          - jupyterConnection: remote
+            python: python
+            pythonVersion: '3.10'
+            tags: '@kernelCore'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
 
     steps:
       - name: Checkout
@@ -523,13 +529,14 @@ jobs:
           python -c "import sys;print(sys.executable)"
           python -m pip --disable-pip-version-check install -r build/venv-test-requirements.txt
           python -m pip install packaging # required for installing debugpy
+          python -m pip install --upgrade notebook
           python ./pythonFiles/install_debugpy.py
           python -m ipykernel install --user
 
       - name: Install Jupyter Notebook and Lab
         if: matrix.jupyterConnection == 'remote' || matrix.jupyterConnection == 'web'
         run: |
-          python -m pip install jupyterlab notebook
+          python -m pip install --upgrade jupyterlab notebook
 
       - name: Install Python Libs (IPyWidget 8)
         if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8' && matrix.tags != '@notebookPerformance'
@@ -551,20 +558,20 @@ jobs:
           python -m pip install packaging # required for installing debugpy
           python ./pythonFiles/install_debugpy.py
 
-      - name: Install matplotlib widgets into user and system paths
-        if:
-          matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@notebookPerformance'
-          # This test will ensure widgets work when installed in 3 places
-          # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
-          # 2. In user's home folder (ipympl will be installed in there)
-          # 3. In system folder (all users) (matplotlib will be installed in there)
-        run: |
-          # Uninstall ipympl from the sys prefix folder and ensure the widget scripts are installed
-          # into the user directory.
-          export PYTHON_EXECUTABLE=$(which python)
-          echo $PYTHON_EXECUTABLE
-          python -m jupyter nbextension uninstall --sys-prefix --py ipympl
-          sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
+      #   - name: Install matplotlib widgets into user and system paths
+      #     if:
+      #       matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory' && matrix.tags != '@notebookPerformance'
+      #       # This test will ensure widgets work when installed in 3 places
+      #       # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
+      #       # 2. In user's home folder (ipympl will be installed in there)
+      #       # 3. In system folder (all users) (matplotlib will be installed in there)
+      #     run: |
+      #       # Uninstall ipympl from the sys prefix folder and ensure the widget scripts are installed
+      #       # into the user directory.
+      #       export PYTHON_EXECUTABLE=$(which python)
+      #       echo $PYTHON_EXECUTABLE
+      #       python -m jupyter nbextension uninstall --sys-prefix --py ipympl
+      #       sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
       # Run npm install (we need chrome to get downloaded)
       - name: npm ci
