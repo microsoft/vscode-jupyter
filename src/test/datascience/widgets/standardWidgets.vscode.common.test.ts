@@ -37,6 +37,7 @@ import { hideOutputPanel, initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 const templateRootPath: Uri =
     workspace.workspaceFolders && workspace.workspaceFolders.length > 0
@@ -312,7 +313,11 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // await executeCellAndWaitForOutput(cell, comms);
             // await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
         });
-        test('Nested Output Widgets', async () => {
+        test('Nested Output Widgets', async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/16861
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
