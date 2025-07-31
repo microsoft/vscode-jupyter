@@ -94,6 +94,7 @@ export class ProgressReporter implements IProgressReporter {
         this.updateProgressMessage();
     }
 
+    
     private updateProgressMessage() {
         if (!this.currentAction || this.progressReporters.length === 0) {
             return;
