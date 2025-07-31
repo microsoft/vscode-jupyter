@@ -15,6 +15,7 @@ export function disposeRegisteredReporters() {
     _reporters.clear();
 }
 
+
 function report(progress: Progress) {
     try {
         _reporters.forEach((item) => item.report(progress));
