@@ -102,4 +102,6 @@ export class ProgressReporter implements IProgressReporter {
             this.progressReporters.forEach((item) => item.report({ message }));
         }
     }
+
+    // What happened
 }
