@@ -24,7 +24,7 @@ import {
 import { Common } from '../../../platform/common/utils/localize';
 import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition, testMandatory } from '../../common.node';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -138,7 +138,7 @@ suite('Kernel Execution @kernelCore', function () {
         logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    testMandatory('Execute cell using VSCode Kernel', async () => {
+    test('Execute cell using VSCode Kernel @mandatory', async () => {
         const cell = await notebook.appendCodeCell('print("123412341234")');
         await kernelExecution.executeCell(cell);
 
