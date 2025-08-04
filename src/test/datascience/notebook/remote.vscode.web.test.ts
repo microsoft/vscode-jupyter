@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 import { logger } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, startJupyterServer, suiteMandatory, waitForCondition } from '../../common';
+import { captureScreenShot, startJupyterServer, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -27,7 +27,7 @@ import {
 } from './helper';
 import { isWeb } from '../../../platform/common/utils/misc';
 
-suiteMandatory('Remote Tests', function () {
+suite('Remote Tests', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     // Retry at least once, because ipywidgets can be flaky (network, comms, etc).

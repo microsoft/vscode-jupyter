@@ -5,9 +5,9 @@
 
 import { expect } from 'chai';
 import { ChildProcess, spawn } from 'child_process';
-import { ProcessService } from './proc.node';
-import { createDeferred, Deferred } from '../utils/async';
-import { PYTHON_PATH } from '../../../test/common.node';
+import { ProcessService } from '../../../../platform/common/process/proc.node';
+import { createDeferred, Deferred } from '../../../../platform/common/utils/async';
+import { PYTHON_PATH } from '../../../common.node';
 
 interface IProcData {
     proc: ChildProcess;
