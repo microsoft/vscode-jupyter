@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 // Importing a type to ensure this is treated as a module
-import type { } from 'vscode';
+import type {} from 'vscode';
 
 declare module './api' {
     /**
