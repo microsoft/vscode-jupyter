@@ -36,6 +36,17 @@ import { dispose } from '../../../../platform/common/utils/lifecycle';
             id: 'interpreterId'
         } as any
     });
+    const localKernelSpecWithInterpreter = LocalKernelSpecConnectionMetadata.create({
+        id: 'localKernelSpecWithInterpreter',
+        kernelSpec: mock<IJupyterKernelSpec>(),
+        interpreter: {
+            id: 'interpreterIdForKernelSpec'
+        } as any
+    });
+    const localKernelSpecWithoutInterpreter = LocalKernelSpecConnectionMetadata.create({
+        id: 'localKernelSpecWithoutInterpreter',
+        kernelSpec: mock<IJupyterKernelSpec>()
+    });
     const serverProviderHandle = { handle: 'handle', id: 'id', extensionId: '' };
     const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: '',
@@ -62,6 +73,9 @@ import { dispose } from '../../../../platform/common/utils/lifecycle';
             const environments = mock<PythonExtension['environments']>();
             when(mockedApi.environments).thenReturn(instance(environments));
             when(environments.resolveEnvironment(localPythonKernelSpec.interpreter.id)).thenResolve({
+                executable: { sysPrefix: __dirname }
+            } as any);
+            when(environments.resolveEnvironment(localKernelSpecWithInterpreter.interpreter!.id)).thenResolve({
                 executable: { sysPrefix: __dirname }
             } as any);
         });
@@ -91,6 +105,20 @@ import { dispose } from '../../../../platform/common/utils/lifecycle';
             when(kernel.kernelConnectionMetadata).thenReturn(remoteLiveKernel);
             const baseUrl = await provider.getNbExtensionsParentPath(instance(kernel));
             assert.strictEqual(baseUrl?.toString(), Uri.parse(remoteLiveKernel.baseUrl).toString());
+        });
+        test('Returns base url for local kernelspec with interpreter', async () => {
+            when(kernel.kernelConnectionMetadata).thenReturn(localKernelSpecWithInterpreter);
+            const baseUrl = await provider.getNbExtensionsParentPath(instance(kernel));
+            if (isWeb) {
+                assert.isUndefined(baseUrl);
+            } else {
+                assert.strictEqual(baseUrl?.toString(), Uri.file(path.join(__dirname, 'share', 'jupyter')).toString());
+            }
+        });
+        test('Returns undefined for local kernelspec without interpreter', async () => {
+            when(kernel.kernelConnectionMetadata).thenReturn(localKernelSpecWithoutInterpreter);
+            const baseUrl = await provider.getNbExtensionsParentPath(instance(kernel));
+            assert.isUndefined(baseUrl);
         });
     });
 });
