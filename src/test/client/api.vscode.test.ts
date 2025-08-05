@@ -22,6 +22,7 @@ import {
     waitForTextOutput,
     getDefaultKernelConnection
 } from '../datascience/notebook/helper.node';
+import { noop } from '../../platform/common/utils/misc';
 
 suite('3rd Party Kernel Service API @kernelCore', function () {
     let api: IExtensionTestApi;
@@ -157,7 +158,12 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
             resourceUri: shutdownNotebook.uri,
             controller
         });
-        await kernel.start();
+        await kernel.start({
+            disableUI: false,
+            onDidChangeDisableUI: () => ({
+                dispose: noop
+            })
+        });
 
         // Get kernel execution service
         const kernelExecution = kernelProvider.getKernelExecution(kernel);
