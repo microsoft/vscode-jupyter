@@ -8,7 +8,6 @@ import {
     Disposable,
     NotebookCellData,
     NotebookCellKind,
-    NotebookDocument,
     NotebookEdit,
     NotebookRange,
     Uri,
@@ -29,7 +28,6 @@ import { INotebookEditorProvider } from './types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
-import { isEqual } from '../platform/vscode-path/resources';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
@@ -99,22 +97,6 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
         );
         this.disposableRegistry.push(
             commands.registerCommand(
-                Commands.ShutdownKernel,
-                (context?: { notebookEditor: { notebookUri: Uri } } | Uri | NotebookDocument) => {
-                    if (context && 'notebookEditor' in context) {
-                        return this.shutdownKernel(context?.notebookEditor?.notebookUri).catch(noop);
-                    } else if (context && 'uri' in context) {
-                        // NotebookDocument case
-                        return this.shutdownKernel(context.uri).catch(noop);
-                    } else {
-                        // Uri case
-                        return this.shutdownKernel(context).catch(noop);
-                    }
-                }
-            )
-        );
-        this.disposableRegistry.push(
-            commands.registerCommand(
                 Commands.RestartKernelAndRunAllCells,
                 (context?: { notebookEditor: { notebookUri: Uri } }) => {
                     if (context && 'notebookEditor' in context) {
@@ -167,38 +149,6 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
             return;
         }
         await this.wrapKernelMethod('interrupt', kernel);
-    }
-
-    private async shutdownKernel(notebookUri: Uri | undefined): Promise<void> {
-        const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
-        const document = workspace.notebookDocuments.find((document) => uri && isEqual(document.uri, uri));
-
-        if (document === undefined) {
-            return;
-        }
-        logger.debug(`Command shutdown kernel for ${getDisplayPath(document.uri)}`);
-
-        const kernel = this.kernelProvider.get(document);
-        if (!kernel) {
-            logger.info(`Shutdown requested & no kernel.`);
-            return;
-        }
-
-        try {
-            logger.info(`Shutting down kernel for ${getDisplayPath(document.uri)}`);
-            await kernel.shutdown();
-        } catch (ex) {
-            logger.error(`Failed to shutdown kernel for ${getDisplayPath(document.uri)}`, ex);
-            throw ex;
-        }
-
-        try {
-            logger.info(`Disposing kernel for ${getDisplayPath(document.uri)}`);
-            await kernel.dispose();
-        } catch (ex) {
-            logger.error(`Failed to dispose kernel for ${getDisplayPath(document.uri)}`, ex);
-            throw ex;
-        }
     }
 
     private async restartKernelAndRunAllCells(notebookUri: Uri | undefined) {

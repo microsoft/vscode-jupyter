@@ -16,6 +16,9 @@ import {
 } from './helper.node';
 import { captureScreenShot } from '../../common';
 import { TestNotebookDocument, createKernelController } from './executionHelper';
+import { getKernelsApi } from '../../../standalone/api/kernels';
+import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { Kernels } from '../../../api';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Kernel Shutdown @kernelCore', function () {
@@ -23,12 +26,14 @@ suite('Kernel Shutdown @kernelCore', function () {
     let notebook: TestNotebookDocument;
     let kernel: IKernel;
     let api: IExtensionTestApi;
+    let kernels: Kernels;
     const disposables: IDisposable[] = [];
 
     suiteSetup(async function () {
         logger.info(`Start Test (file: Shutdown)`);
         this.timeout(120_000);
         api = await initialize();
+        kernels = await Promise.resolve(getKernelsApi(JVSC_EXTENSION_ID));
     });
 
     setup(async function () {
@@ -53,7 +58,7 @@ suite('Kernel Shutdown @kernelCore', function () {
 
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test('Can shutdown a kernel correctly', async function () {
+    test('Can shutdown a kernel correctly via API', async function () {
         // Create a simple test cell that we can execute
         const cell = await notebook.appendCodeCell('print("Hello from kernel")');
 
@@ -72,22 +77,22 @@ suite('Kernel Shutdown @kernelCore', function () {
         // Verify kernel is running
         assert.isFalse(kernel.disposed, 'Kernel should not be disposed before shutdown');
 
-        // Now shutdown the kernel
-        logger.info('Step 2: Shutdown kernel');
-        await kernel.shutdown();
+        // Get the API kernel instance (must execute code first for API to return kernel)
+        const apiKernel = await kernels.getKernel(notebook.uri);
+        assert.isNotEmpty(apiKernel, 'Should get kernel via API after code execution');
 
-        // Then dispose the kernel
-        logger.info('Step 3: Dispose kernel');
-        await kernel.dispose();
+        // Now shutdown the kernel via API
+        logger.info('Step 2: Shutdown kernel via API');
+        await apiKernel!.shutdown();
 
-        // After shutdown and disposal, the kernel should be disposed
+        // After shutdown, the kernel should be disposed
         await waitForCondition(
             async () => kernel.disposed,
             30_000,
-            'Kernel should be disposed after shutdown and disposal'
+            'Kernel should be disposed after API shutdown'
         );
 
-        logger.info('Step 4: Verify kernel is disposed');
-        assert.isTrue(kernel.disposed, 'Kernel should be disposed after shutdown and disposal');
+        logger.info('Step 3: Verify kernel is disposed');
+        assert.isTrue(kernel.disposed, 'Kernel should be disposed after API shutdown');
     });
 });

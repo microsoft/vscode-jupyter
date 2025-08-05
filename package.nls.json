@@ -96,8 +96,6 @@
     "jupyter.command.jupyter.interruptkernel.shorttitle": "Interrupt",
     "jupyter.command.jupyter.restartkernel.title": "Restart Kernel",
     "jupyter.command.jupyter.restartkernel.shorttitle": "Restart",
-    "jupyter.command.jupyter.shutdownkernel.title": "Shutdown Kernel",
-    "jupyter.command.jupyter.shutdownkernel.shorttitle": "Shutdown",
     "jupyter.command.jupyter.restartkernelandrunallcells.title": "Restart Kernel and Run All Cells",
     "jupyter.command.jupyter.restartkernelandrunallcells.shorttitle": "Restart and Run All",
     "jupyter.command.jupyter.restartkernelandrunuptoselectedcell.title": "Restart Kernel and Run Up To Selected Cell",

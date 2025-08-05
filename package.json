@@ -591,17 +591,6 @@
                 "enablement": "isWorkspaceTrusted && (jupyter.interactive.canRestartNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
             },
             {
-                "command": "jupyter.shutdownkernel",
-                "title": "%jupyter.command.jupyter.shutdownkernel.title%",
-                "shortTitle": "%jupyter.command.jupyter.shutdownkernel.shorttitle%",
-                "category": "Jupyter",
-                "icon": {
-                    "light": "resources/light/restart-kernel.svg",
-                    "dark": "resources/dark/restart-kernel.svg"
-                },
-                "enablement": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && jupyter.isnativeactive && jupyter.kernel.isjupyter"
-            },
-            {
                 "command": "jupyter.restartkernelandrunallcells",
                 "title": "%jupyter.command.jupyter.restartkernelandrunallcells.title%",
                 "shortTitle": "%jupyter.command.jupyter.restartkernelandrunallcells.shorttitle%",
@@ -1225,12 +1214,6 @@
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "category": "Jupyter",
                     "when": "(jupyter.ispythonorinteractiveeactive || jupyter.isnativeactive) && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.shutdownkernel",
-                    "title": "%jupyter.command.jupyter.shutdownkernel.title%",
-                    "category": "Jupyter",
-                    "when": "notebookType == 'jupyter-notebook' && jupyter.isnativeactive && jupyter.kernel.isjupyter && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.removeallcells",
