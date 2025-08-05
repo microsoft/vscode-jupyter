@@ -231,13 +231,6 @@ export interface Kernel {
      * @returns Async iterable of outputs, that completes when the execution is complete.
      */
     executeCode(code: string, token: CancellationToken): AsyncIterable<Output>;
-
-    /**
-     * Shuts down the kernel and all its associated resources.
-     * This operation will terminate the kernel process and cannot be undone.
-     * After shutdown, the kernel becomes unusable and should be disposed of.
-     */
-    shutdown(): Promise<void>;
 }
 export interface Kernels {
     /**

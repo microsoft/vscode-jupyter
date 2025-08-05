@@ -132,7 +132,16 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 return that.onDidReceiveDisplayUpdate.bind(this);
             },
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
-            shutdown: () => this.shutdown()
+            get shutdown() {
+                if (
+                    ![JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID, DATA_WRANGLER_EXTENSION_ID].includes(extensionId) &&
+                    !PROPOSED_API_ALLOWED_PUBLISHERS.includes(extensionId.split('.')[0])
+                ) {
+                    throw new Error(`Proposed API is not supported for extension ${extensionId}`);
+                }
+
+                return () => that.shutdown();
+            }
         });
     }
     static createApiKernel(

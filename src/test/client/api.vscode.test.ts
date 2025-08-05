@@ -179,7 +179,7 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
 
         // Now shutdown the kernel via API
         logger.info('Step 2: Shutdown kernel via API');
-        await apiKernel!.shutdown();
+        await (apiKernel as any)!.shutdown();
 
         // After shutdown, the kernel should be disposed
         await waitForCondition(async () => kernel.disposed, 30_000, 'Kernel should be disposed after API shutdown');
