@@ -39,6 +39,7 @@ suite('Jupyter Paths', () => {
     const oldJUPYTER_CONFIG_DIR = process.env['JUPYTER_CONFIG_DIR'];
     const oldJUPYTER_DATA_DIR = process.env['JUPYTER_DATA_DIR'];
     const oldALLUSERSPROFILE = process.env['ALLUSERSPROFILE'];
+    const oldXDG_DATA_HOME = process.env['XDG_DATA_HOME'];
     const windowsHomeDir = Uri.file('C:/users/username');
     const extensionUri = Uri.file('extension');
     const sysPrefix = `PythonEnv${path.sep}PythonSysPrefix`;
@@ -85,6 +86,7 @@ suite('Jupyter Paths', () => {
         delete process.env['JUPYTER_CONFIG_DIR'];
         delete process.env['JUPYTER_DATA_DIR'];
         delete process.env['ALLUSERSPROFILE'];
+        delete process.env['XDG_DATA_HOME'];
 
         const mockedApi = mock<PythonExtension>();
         sinon.stub(PythonExtension, 'api').resolves(resolvableInstance(mockedApi));
@@ -108,6 +110,7 @@ suite('Jupyter Paths', () => {
         process.env['JUPYTER_CONFIG_DIR'] = oldJUPYTER_CONFIG_DIR;
         process.env['JUPYTER_DATA_DIR'] = oldJUPYTER_DATA_DIR;
         process.env['ALLUSERSPROFILE'] = oldALLUSERSPROFILE;
+        process.env['XDG_DATA_HOME'] = oldXDG_DATA_HOME;
     });
     test('Get datadir for non-python kernel on Windows with APPDATA', async () => {
         when(platformService.homeDir).thenReturn(windowsHomeDir);
@@ -318,12 +321,13 @@ suite('Jupyter Paths', () => {
         when(platformService.osType).thenReturn(OSType.Windows);
         when(platformService.homeDir).thenReturn(windowsHomeDir);
         when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+        // Set APPDATA to match the expected path in the old test
+        const appDataDir = (process.env['APPDATA'] = 'C:/users/username/AppData/Roaming');
 
         const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
-        const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
         assert.strictEqual(paths.length, 1, `Expected 1 path, got ${paths.length}, ${JSON.stringify(paths)}`);
-        assert.strictEqual(paths[0].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+        assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(appDataDir), 'jupyter', 'kernels').toString());
     });
 
     test('Get kernelspec root paths on Windows with JUPYTER_PATH env variable', async () => {
@@ -332,13 +336,14 @@ suite('Jupyter Paths', () => {
         when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
         const jupyter_Paths = [__filename];
         process.env['JUPYTER_PATH'] = jupyter_Paths.join(path.delimiter);
+        // Set APPDATA to match the expected path in the old test
+        const appDataDir = (process.env['APPDATA'] = 'C:/users/username/AppData/Roaming');
 
         const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
-        const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
         assert.strictEqual(paths.length, 2, `Expected 2 path, got ${paths.length}, ${JSON.stringify(paths)}`);
         assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(__filename), 'kernels').toString());
-        assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+        assert.strictEqual(paths[1].toString(), Uri.joinPath(Uri.file(appDataDir), 'jupyter', 'kernels').toString());
     });
     test('Get kernelspec root paths on Windows with JUPYTER_PATH & ALLUSERSPROFILE env variable', async function () {
         when(platformService.osType).thenReturn(OSType.Windows);
@@ -347,16 +352,99 @@ suite('Jupyter Paths', () => {
         const jupyter_Paths = [__filename];
         process.env['JUPYTER_PATH'] = jupyter_Paths.join(path.delimiter);
         const allUserProfilePath = (process.env['PROGRAMDATA'] = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp'));
+        // Set APPDATA to match the expected path in the old test
+        const appDataDir = (process.env['APPDATA'] = 'C:/users/username/AppData/Roaming');
 
         const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
-        const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
         assert.strictEqual(paths.length, 3, `Expected 3 path, got ${paths.length}, ${JSON.stringify(paths)}`);
         assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(__filename), 'kernels').toString());
-        assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+        assert.strictEqual(paths[1].toString(), Uri.joinPath(Uri.file(appDataDir), 'jupyter', 'kernels').toString());
         assert.strictEqual(
             paths[2].toString(),
             Uri.file(path.join(allUserProfilePath, 'jupyter', 'kernels')).toString()
         );
+    });
+
+    test('Get kernelspec root path on Unix with XDG_DATA_HOME', async () => {
+        when(platformService.osType).thenReturn(OSType.Linux);
+        when(platformService.homeDir).thenReturn(unixHomeDir);
+        const xdgDataHome = (process.env['XDG_DATA_HOME'] = '/usr/xdgDataHome');
+
+        const rootPath = await jupyterPaths.getKernelSpecRootPath();
+
+        assert.ok(rootPath, 'Root path should not be undefined');
+        assert.strictEqual(rootPath!.toString(), Uri.joinPath(Uri.file(xdgDataHome), 'jupyter', 'kernels').toString());
+    });
+
+    test('Get kernelspec root path on Unix with JUPYTER_DATA_DIR', async () => {
+        when(platformService.osType).thenReturn(OSType.Linux);
+        when(platformService.homeDir).thenReturn(unixHomeDir);
+        const jupyterDataDir = (process.env['JUPYTER_DATA_DIR'] = '/tmp/jupyter');
+
+        const rootPath = await jupyterPaths.getKernelSpecRootPath();
+
+        assert.ok(rootPath, 'Root path should not be undefined');
+        assert.strictEqual(rootPath!.toString(), Uri.joinPath(Uri.file(jupyterDataDir), 'kernels').toString());
+    });
+
+    test('Get kernelspec root path on Unix with JUPYTER_DATA_DIR takes precedence over XDG_DATA_HOME', async () => {
+        when(platformService.osType).thenReturn(OSType.Linux);
+        when(platformService.homeDir).thenReturn(unixHomeDir);
+        const xdgDataHome = (process.env['XDG_DATA_HOME'] = '/usr/xdgDataHome');
+        const jupyterDataDir = (process.env['JUPYTER_DATA_DIR'] = '/tmp/jupyter');
+
+        const rootPath = await jupyterPaths.getKernelSpecRootPath();
+
+        assert.ok(rootPath, 'Root path should not be undefined');
+        // JUPYTER_DATA_DIR should take precedence
+        assert.strictEqual(rootPath!.toString(), Uri.joinPath(Uri.file(jupyterDataDir), 'kernels').toString());
+        assert.notStrictEqual(rootPath!.toString(), Uri.joinPath(Uri.file(xdgDataHome), 'jupyter', 'kernels').toString());
+    });
+
+    test('Get kernelspec root path on Unix defaults to ~/.local/share/jupyter/kernels without env vars', async () => {
+        when(platformService.osType).thenReturn(OSType.Linux);
+        when(platformService.homeDir).thenReturn(unixHomeDir);
+        // Ensure env vars are not set
+        delete process.env['XDG_DATA_HOME'];
+        delete process.env['JUPYTER_DATA_DIR'];
+
+        const rootPath = await jupyterPaths.getKernelSpecRootPath();
+
+        assert.ok(rootPath, 'Root path should not be undefined');
+        assert.strictEqual(rootPath!.toString(), Uri.joinPath(unixHomeDir, '.local', 'share', 'jupyter', 'kernels').toString());
+    });
+
+    test('Get kernelspec root path on Mac with JUPYTER_DATA_DIR', async () => {
+        when(platformService.osType).thenReturn(OSType.OSX);
+        when(platformService.homeDir).thenReturn(macHomeDir);
+        const jupyterDataDir = (process.env['JUPYTER_DATA_DIR'] = '/tmp/jupyter');
+
+        const rootPath = await jupyterPaths.getKernelSpecRootPath();
+
+        assert.ok(rootPath, 'Root path should not be undefined');
+        assert.strictEqual(rootPath!.toString(), Uri.joinPath(Uri.file(jupyterDataDir), 'kernels').toString());
+    });
+
+    test('Get kernelspec root path on Mac defaults to ~/Library/Jupyter/kernels without JUPYTER_DATA_DIR', async () => {
+        when(platformService.osType).thenReturn(OSType.OSX);
+        when(platformService.homeDir).thenReturn(macHomeDir);
+        delete process.env['JUPYTER_DATA_DIR'];
+
+        const rootPath = await jupyterPaths.getKernelSpecRootPath();
+
+        assert.ok(rootPath, 'Root path should not be undefined');
+        assert.strictEqual(rootPath!.toString(), Uri.joinPath(macHomeDir, 'Library', 'Jupyter', 'kernels').toString());
+    });
+
+    test('Get kernelspec root path on Windows with JUPYTER_DATA_DIR', async () => {
+        when(platformService.osType).thenReturn(OSType.Windows);
+        when(platformService.homeDir).thenReturn(windowsHomeDir);
+        const jupyterDataDir = (process.env['JUPYTER_DATA_DIR'] = 'C:/temp/jupyter');
+
+        const rootPath = await jupyterPaths.getKernelSpecRootPath();
+
+        assert.ok(rootPath, 'Root path should not be undefined');
+        assert.strictEqual(rootPath!.toString(), Uri.joinPath(Uri.file(jupyterDataDir), 'kernels').toString());
     });
 });

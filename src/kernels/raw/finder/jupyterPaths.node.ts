@@ -31,8 +31,6 @@ import { ResourceMap, ResourceSet } from '../../../platform/common/utils/map';
 import { getPythonEnvDisplayName, getSysPrefix } from '../../../platform/interpreter/helpers';
 import { getExtensionTempDir } from '../../../platform/common/temp';
 
-const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
-const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
 const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
 const winJupyterRuntimePath = path.join('AppData', 'Roaming', 'jupyter', 'runtime');
 const macJupyterRuntimePath = path.join('Library', 'Jupyter', 'runtime');
@@ -90,16 +88,15 @@ export class JupyterPaths {
             return cachedRootPath || this.cachedKernelSpecRootPath;
         }
         this.cachedKernelSpecRootPath = (async () => {
-            const userHomeDir = this.platformService.homeDir;
-            if (userHomeDir) {
+            // Use the same logic as getJupyterDataDir to respect XDG_DATA_HOME and JUPYTER_DATA_DIR
+            const jupyterDataDir = this.getJupyterDataDir();
+            if (jupyterDataDir) {
                 if (this.platformService.isWindows) {
                     // On windows the path is not correct if we combine those variables.
                     // It won't point to a path that you can actually read from.
-                    return tryGetRealPath(uriPath.joinPath(userHomeDir, winJupyterPath));
-                } else if (this.platformService.isMac) {
-                    return uriPath.joinPath(userHomeDir, macJupyterPath);
+                    return tryGetRealPath(uriPath.joinPath(jupyterDataDir, 'kernels'));
                 } else {
-                    return uriPath.joinPath(userHomeDir, linuxJupyterPath);
+                    return uriPath.joinPath(jupyterDataDir, 'kernels');
                 }
             }
         })();
@@ -353,7 +350,7 @@ export class JupyterPaths {
             }
         } else {
             // Unix based
-            const secondPart = this.platformService.isMac ? macJupyterPath : linuxJupyterPath;
+            const secondPart = this.platformService.isMac ? macJupyterPath : path.join('.local', 'share', 'jupyter', 'kernels');
 
             paths.add(Uri.file(path.join('/', 'usr', 'share', 'jupyter', 'kernels')));
             paths.add(Uri.file(path.join('/', 'usr', 'local', 'share', 'jupyter', 'kernels')));
