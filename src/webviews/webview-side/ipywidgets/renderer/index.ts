@@ -18,8 +18,35 @@ function convertVSCodeOutputToExecuteResultOrDisplayData(outputItem: OutputItem)
           _vsc_test_cellIndex?: number;
       })
     | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return outputItem.mime.toLowerCase().includes('json') ? outputItem.json() : (outputItem.text() as any);
+    try {
+        // Try to parse as JSON if mime type suggests it's JSON content
+        if (outputItem.mime.toLowerCase().includes('json')) {
+            const data = outputItem.json();
+            // Verify this actually looks like widget data
+            if (data && typeof data === 'object' && 'model_id' in data) {
+                return data;
+            }
+        }
+        
+        // Try to parse text content as JSON (for cases where mimetype might be wrong)
+        if (outputItem.text) {
+            const textData = outputItem.text();
+            if (textData) {
+                try {
+                    const parsed = JSON.parse(textData);
+                    if (parsed && typeof parsed === 'object' && 'model_id' in parsed) {
+                        return parsed;
+                    }
+                } catch {
+                    // Not valid JSON, continue
+                }
+            }
+        }
+    } catch (error) {
+        // If we can't parse the output, it's not a widget output
+    }
+    
+    return undefined;
 }
 
 /**
