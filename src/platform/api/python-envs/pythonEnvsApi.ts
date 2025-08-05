@@ -23,3 +23,7 @@ export async function getEnvExtApi(): Promise<PythonEnvironmentApi | undefined> 
     _extApi = extension.exports;
     return _extApi;
 }
+
+export function resetEnvExtApi(): void {
+    _extApi = undefined;
+}

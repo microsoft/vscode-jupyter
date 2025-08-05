@@ -7,7 +7,6 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { KernelAPI } from '@jupyterlab/services';
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import uuid from 'uuid/v4';
 import {
     CancellationTokenSource,
     CompletionContext,
@@ -106,6 +105,7 @@ import {
 } from '../../../platform/notebooks/cellExecutionStateService';
 import { disposeAsync } from '../../../platform/common/utils';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { generateUuid } from '../../../platform/common/uuid';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -213,7 +213,7 @@ export async function generateTemporaryFilePath(
     const rootUrl =
         rootFolder || platformService.tempDir || getRootFolder() || Uri.file('./').with({ scheme: 'vscode-test-web' });
 
-    const uri = urlPath.joinPath(rootUrl, `${prefix || ''}${uuid()}.${extension}`);
+    const uri = urlPath.joinPath(rootUrl, `${prefix || ''}${generateUuid()}.${extension}`);
     disposables.push({
         dispose: () => {
             void workspace.fs.delete(uri).then(noop, noop);

@@ -5,11 +5,11 @@ import { commands, Uri, workspace } from 'vscode';
 import { IDisposable } from '../platform/common/types';
 import { generateScreenShotFileName, initializeCommonApi } from './common';
 import { JUPYTER_SERVER_URI } from './constants';
-import uuid from 'uuid/v4';
 import { noop } from './core';
 import { initialize } from './initialize';
 import { isCI } from '../platform/common/constants';
 import { ClientAPI } from './web/clientApi';
+import { generateUuid } from '../platform/common/uuid';
 
 /**
  * Captures screenshots (png format) & dumpts into root directory (only on CI).
@@ -42,7 +42,7 @@ export function initializeCommonWebApi() {
                 // ignore if it exists..
             }
             const extension = options.extension || '.py';
-            const file = Uri.joinPath(tmpDir, `${uuid()}${extension}`);
+            const file = Uri.joinPath(tmpDir, `${generateUuid()}${extension}`);
             const contents = options.contents || '';
 
             await workspace.fs.writeFile(file, new TextEncoder().encode(contents));

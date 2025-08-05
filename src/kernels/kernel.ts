@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import uuid from 'uuid/v4';
+import { generateUuid } from '../platform/common/uuid';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { KernelMessage } from '@jupyterlab/services';
 import {
@@ -923,7 +923,7 @@ abstract class BaseKernel implements IBaseKernel {
                 this._ipywidgetsVersion = newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);
             } else {
-                logger.warn('Failed to determine IPyKernel Version', JSON.stringify(version));
+                logger.warn('Failed to determine IPyWidgets Version', JSON.stringify(version));
             }
         };
         await determineVersionImpl();
@@ -1100,7 +1100,7 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
         rawKernelSupported: IRawNotebookSupportedService | undefined
     ) {
         super(
-            `3rdPartyKernel_${uuid()}`,
+            `3rdPartyKernel_${generateUuid()}`,
             uri,
             resourceUri,
             kernelConnectionMetadata,
@@ -1136,7 +1136,7 @@ export class Kernel extends BaseKernel implements IKernel {
         rawKernelSupported: IRawNotebookSupportedService | undefined
     ) {
         super(
-            uuid(),
+            generateUuid(),
             notebook.uri,
             resourceUri,
             kernelConnectionMetadata,

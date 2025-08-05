@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
-import uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
 import { logger } from '../../../../platform/logging';
@@ -17,6 +16,7 @@ import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from '../types';
 import { shouldMessageBeMirroredWithRenderer } from '../../../../kernels/kernel';
 import { KernelSocketMap } from '../../../../kernels/kernelSocket';
 import type { IDisplayDataMsg } from '@jupyterlab/services/lib/kernel/messages';
+import { generateUuid } from '../../../../platform/common/uuid';
 
 type PendingMessage = {
     resultPromise: Deferred<void>;
@@ -367,7 +367,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private async onKernelSocketMessage(protocol: string | undefined, data: WebSocketData): Promise<void> {
         // Hooks expect serialized data as this normally comes from a WebSocket
 
-        const msgUuid = uuid();
+        const msgUuid = generateUuid();
         const promise = createDeferred<void>();
         this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
         let deserializedMessage: KernelMessage.IMessage | undefined = undefined;
@@ -590,7 +590,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private async messageHookCallback(msg: KernelMessage.IIOPubMessage): Promise<boolean> {
         const promise = createDeferred<boolean>();
-        const requestId = uuid();
+        const requestId = generateUuid();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const parentId = (msg.parent_header as any).msg_id;
         if (this.messageHooks.has(parentId)) {

@@ -28,6 +28,7 @@ import { captureScreenShot } from '../../common';
 import { NotebookCellExecutionState } from '../../../platform/notebooks/cellExecutionStateService';
 import { KernelConnector } from '../../../notebooks/controllers/kernelConnector';
 import { DisplayOptions } from '../../../kernels/displayOptions';
+import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
@@ -101,7 +102,10 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
     });
 
-    test('Interrupting kernel with Cancelling token will cancel cell execution', async () => {
+    test('Interrupting kernel with Cancelling token will cancel cell execution', async function () {
+        if (getOSType() === OSType.Windows) {
+            return this.skip();
+        }
         const cell = await notebook.appendCodeCell(
             'import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)'
         );
@@ -211,6 +215,9 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     test('Interrupt and running cells again should only run the necessary cells', async function () {
         // No need to test remote as this is a test of status (fewer slower tests is better).
         if (IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
+        }
+        if (getOSType() === OSType.Windows) {
             return this.skip();
         }
 

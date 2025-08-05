@@ -1,131 +1,90 @@
-# Jupyter Extension - Copilot Instructions
-
-This file provides repository-wide instructions for the Jupyter Extension. These guidelines help Copilot generate code, documentation, and suggestions that match the conventions, architecture, and workflows of the vscode-jupyter project.
-
+---
+applyTo: '**'
 ---
 
-## Project Overview
+# Jupyter Extension - Copilot Instructions
 
-The **Jupyter Extension for Visual Studio Code** is a comprehensive extension that brings the full power of Jupyter notebooks to VS Code. It provides:
+This file contains key information to help AI assistants work more efficiently with the VS Code Jupyter codebase.
 
--   **Multi-language support**: Works with any Jupyter kernel (Python, R, Julia, C#, etc.)
--   **Cross-platform compatibility**: Functions identically in desktop VS Code, vscode.dev, and GitHub Codespaces
--   **Rich data science features**: Interactive computing, variable exploration, debugging, and visualization
+### Required Before Each Commit
+- Run `npm run format-fix` before committing any changes to ensure proper code formatting
 
-## Tech Stack & Dependencies
+## Development Flow
+- **Compile**: `npm run compile` (required before testing code changes)
+- **Run all unit tests**: `npm run test:unittests`
+- **Run specific unit tests**: `npm run test:unittests -- --grep "pattern"`
+- **Linting**: `npm run lint` to check for linter issues
 
-### Core Technologies
+Read `.github/typescript-instructions.md` for detailed TypeScript development steps.
 
--   **TypeScript**: Primary language with strict type checking enabled
--   **Node.js**: Runtime for desktop functionality
--   **Inversify**: Dependency injection container
--   **VS Code Extension API**: Core platform integration
--   **Mocha + Chai**: Unit testing with assertion library
--   **ts-mockito**: Mocking framework for TypeScript
--   **VS Code Test Runner**: Integration testing in VS Code environment
--   **Sinon**: Test spies, stubs, and fake timers
+## Coding Standards
 
-### Build, Development & Testing Tools
-
--   Use `npm install` to install dependencies
--   Use `npm run compile` for development builds (but in watch mode)
--   Use `npm run compile-nowatch` for non-incremental builds (useful on CI or Agents)
--   Use `npm run test:unittests` for unit tests
--   Use `npm run lint` to check code style issues and use `npm run lint-fix` to fix issues before submitting changes
--   Use `npm run format-check` to check formatting issues and use `npm run format` to fix formatting issues before submitting changes
-
-## Coding Standards & Best Practices
-
-### Code Organization Principles/Guidelines
-
--   **Platform Implementations**:
-    -   **Desktop** (`*.node.ts`): Suffix intended for desktop implementations with full file system access, and Python environments.
-    -   **Web** (`*.web.ts`): Suffix intended for web implementations with browser-compatible APIs.
-    -   **Common** (`*.ts`): Suffix intended for shared logic that works across both platforms.
--   **Handle Limitations**: Gracefully degrade functionality in web environment
+### Platform Implementation
+- **Desktop** (`*.node.ts`): Full file system access, Python environments
+- **Web** (`*.web.ts`): Browser-compatible APIs
+- **Common** (`*.ts`): Shared cross-platform logic
 
 ### Dependency Injection
+- Inject interfaces, not concrete classes
+- Avoid circular dependencies
 
--   **Interface-Based**: Always inject interfaces, not concrete classes
--   **Lifecycle Management**: Use appropriate lifetime (singleton, transient, scoped)
--   **Circular Dependencies**: Avoid circular references through careful design
--   **Testing**: Use mock implementations for unit testing
+### Testing
+- Unit tests in `*.unit.test.ts`
+- Integration tests in `*.test.ts` (not `*.unit.test.ts`)
+- Look for existing test patterns before creating new structures
 
-### Testing Requirements
-
--   Write unit tests for all new features and bug fixes
--   Unit testing with assertion library (files ending with `*.unit.test.ts`)
--   Place alongside implementation as `<filename>.unit.test.ts`
--   VS Integration testing in VS Code environment (files ending with `*.test.ts`, but not `*.unit.test.ts`)
--   Use Mocha's TDD interface (`suite`, `test`, `setup`, `teardown`)
--   Follow AAA pattern (Arrange, Act, Assert)
-
-### Error Handling & Logging
-
--   All user-facing messages must use `l10n.t()` from `src/platform/common/utils/localize.ts`
--   Use typed error classes in `src/platform/errors/`
--   Use injected `ILogger` service, not console.log
--   Preserve error details for debugging while scrubbing PII
--   Use appropriate levels (trace for detailed debug, error for failures)
+### User Messages
+- Use `l10n.t()` for user facing strings
+- Use typed error classes in `src/platform/errors/`
+- Use `ILogger` service, not console.log
+- Preserve error details, scrub PII
 
 ### Code Quality
-
--   All files must include Microsoft copyright header
--   Prefer async/await over Promises, handle cancellation with CancellationToken
--   Use `npm run lint` and `npm run format-check` to ensure code style consistency.
-
+- Include Microsoft copyright header
+- Prefer async/await, handle cancellation with CancellationToken
+- Use lint/format tools
 
 ## Project Architecture
 
-### Directory Structure & Responsibilities
-
-**Root Level**
-
--   `package.json`: Extension manifest with commands, configuration, and activation events
--   `src/`: Main TypeScript source code
--   `build/`: Build scripts, webpack configs, and CI/CD tools
--   `pythonFiles/`: Python scripts for integration and helper functions
--   `resources/`: Static assets, icons, and walkthrough content
--   `types/`: TypeScript type definitions
-
-**Core Source Structure (`src/`)**
-
+### Core Structure
 ```
-src/
-├── extension.common.ts          # Shared extension activation logic
-├── extension.node.ts            # Desktop-specific entry point
-├── extension.web.ts             # Web browser entry point
-├── extension.node.proxy.ts      # Desktop proxy for bundle optimization
-├── platform/                   # Cross-platform abstractions
-│   ├── common/                 # Shared utilities and interfaces
-│   ├── ioc/                    # Dependency injection container
-│   ├── logging/                # Logging infrastructure
-│   ├── telemetry/              # Usage analytics
-│   ├── activation/             # Extension lifecycle management
-│   ├── interpreter/            # Python environment discovery
-│   ├── pythonEnvironments/     # Python environment management
-│   └── webviews/               # WebView communication layer
-├── kernels/                    # Kernel management and execution
-│   ├── common/                 # Shared kernel interfaces
-│   ├── jupyter/                # Jupyter protocol implementation
-│   ├── raw/                    # Direct kernel process management
-│   ├── execution/              # Cell execution logic
-│   ├── variables/              # Variable inspection and data viewer
-│   └── types.ts                # Kernel-related type definitions
-├── notebooks/                  # Notebook editing and management
-│   ├── controllers/            # VS Code notebook controllers
-│   ├── export/                 # Export to HTML, PDF, etc.
-│   ├── debugger/               # Notebook debugging support
-│   ├── languages/              # Language-specific features
-│   └── outputs/                # Cell output rendering
-├── interactive-window/         # Python Interactive window (REPL)
-│   ├── commands/               # Interactive window commands
-│   ├── debugger/               # Interactive debugging
-│   └── editor-integration/     # Integration with Python files
-├── webviews/                   # Rich UI components
-│   ├── extension-side/         # Extension-side webview logic
-│   └── webview-side/           # Frontend React/HTML components
-└── test/                       # Integration and end-to-end tests
+build/                              # Build scripts and CI/CD tools
+pythonFiles/                        # Python scripts for integration and helper functions
+src/                                # Source code for the extension
+├── platform/                       # Cross-platform abstractions
+│   ├── common/                     # Shared utilities and interfaces
+│   ├── ioc/                        # Dependency injection container
+│   ├── logging/                    # Logging infrastructure
+│   ├── telemetry/                  # Usage analytics
+│   ├── activation/                 # Extension lifecycle management
+│   ├── interpreter/                # Python environment discovery
+│   ├── pythonEnvironments/         # Python environment management
+│   └── webviews/                   # WebView communication layer
+├── kernels/                        # Kernel management and execution
+│   ├── common/                     # Shared kernel interfaces
+│   ├── jupyter/                    # Jupyter protocol implementation
+│   ├── raw/                        # Direct kernel process management
+│   ├── execution/                  # Cell execution logic
+│   ├── variables/                  # Variable inspection and data viewer
+│   └── types.ts                    # Kernel-related type definitions
+├── notebooks/                      # Notebook editing and management
+│   ├── controllers/                # VS Code notebook controllers
+│   │   └── ipywidgets/             # IPython widgets (interactive Notebook outputs)
+│   ├── export/                     # Export to HTML, PDF, etc.
+│   ├── debugger/                   # Notebook debugging support
+│   ├── languages/                  # Language-specific features
+│   └── outputs/                    # Cell output rendering
+├── interactive-window/             # Python Interactive window (REPL)
+│   ├── commands/                   # Interactive window commands
+│   ├── debugger/                   # Interactive debugging
+│   └── editor-integration/         # Integration with Python files
+├── standalone/                     # Standalone features
+├── webviews/                       # Rich UI components
+│   ├── extension-side/             # Extension-side webview logic
+│   │   └── ipywidgets/             # IPython widgets (interactive Notebook outputs) in extension-side
+│   └── webview-side/               # Frontend React/HTML components
+│       └── ipywidgets/             # IPython widgets (interactive Notebook outputs) in webview
+└── test/                           # Integration, unit and end-to-end tests
 ```
 
 ### Component-Specific Instructions
@@ -155,7 +114,3 @@ Each component has detailed guidelines that cover:
 | `src/webviews/webview-side/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | Before working with frontend widget rendering |
 
 **For AI/Copilot**: Always use the `read_file` tool to read the relevant instruction file(s) before analyzing, modifying, or creating code in these directories. This ensures adherence to component-specific patterns and prevents architectural violations.
-
----
-
-This extension is a complex, multi-layered system that provides comprehensive Jupyter notebook support within VS Code. Understanding the service architecture, contribution system, and separation between platform and extension layers is crucial for making effective changes.

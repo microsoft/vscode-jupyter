@@ -43,7 +43,9 @@ export enum ModuleInstallerType {
     Conda = 'Conda',
     Pip = 'Pip',
     Poetry = 'Poetry',
-    Pipenv = 'Pipenv'
+    Pipenv = 'Pipenv',
+    UV = 'UV',
+    PythonExt = 'PythonExt'
 }
 
 export enum ProductType {

@@ -4,9 +4,14 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CellAnalysis, ICellExecution, ILocationWithReferenceKind, NotebookDocumentSymbolTracker } from './symbols';
-import { PylanceExtension } from './common';
-import { activatePylance } from './pylance';
+import {
+    CellAnalysis,
+    ICellExecution,
+    ILocationWithReferenceKind,
+    NotebookDocumentSymbolTracker
+} from '../../../standalone/executionAnalysis/symbols';
+import { PylanceExtension } from '../../../standalone/executionAnalysis/common';
+import { activatePylance } from '../../../standalone/executionAnalysis/pylance';
 
 function withNotebookCells(data: [string, string][], fileName: string) {
     const cells: vscode.NotebookCell[] = data.map((cellDto) => {

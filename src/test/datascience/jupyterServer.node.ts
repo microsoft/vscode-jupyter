@@ -9,22 +9,36 @@
 import * as crypto from 'crypto';
 import * as tcpPortUsed from 'tcp-port-used';
 import getPort from 'get-port';
-import uuid from 'uuid/v4';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as child_process from 'child_process';
 import { Event, EventEmitter } from '@c4312/evt';
-const uuidToHex = require('uuid-to-hex') as typeof import('uuid-to-hex');
+import { generateUuid } from '../../platform/common/uuid';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { splitLines } from '../../platform/common/helpers';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 import { sleep } from '../core';
 import { noop } from '../../platform/common/utils/misc';
 import { dispose } from '../../platform/common/utils/lifecycle';
+import { isCI } from '../../platform/common/constants';
+
+const venvPath = path.join(
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    '.venv',
+    process.platform === 'win32' ? 'Scripts' : 'bin',
+    process.platform === 'win32' ? 'python.exe' : 'python'
+);
+let venvPathExists: boolean | undefined = undefined;
 
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return process.env.CI_PYTHON_PATH;
+    }
+    if (typeof venvPathExists === 'undefined') {
+        venvPathExists = fs.existsSync(venvPath);
+    }
+    if (venvPathExists) {
+        return venvPath;
     }
     // eslint-disable-next-line
     // TODO: Change this to python3.
@@ -88,7 +102,6 @@ export class JupyterServer {
     public async dispose() {
         this._jupyterServerWithToken = undefined;
         this._secondJupyterServerWithToken = undefined;
-        console.log(`Disposing jupyter server instance`);
         dispose(this._disposables);
         if (this.availablePort) {
             await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000).catch(noop);
@@ -186,7 +199,7 @@ export class JupyterServer {
     }
 
     private generateToken(): string {
-        return uuidToHex(uuid());
+        return generateUuid().replaceAll('-', '');
     }
     private async getFreePort() {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
@@ -294,7 +307,9 @@ export class JupyterServer {
                 let allOutput = '';
                 const subscription = result.out.onDidChange((output) => {
                     allOutput += output.out;
-                    console.log(`Jupyter Output > ${output.out}`);
+                    if (isCI) {
+                        console.log(`Jupyter Output > ${output.out}`);
+                    }
                     // When debugging Web Tests using VSCode dfebugger, we'd like to see this info.
                     // This way we can click the link in the output panel easily.
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels') >= 0) {
@@ -313,6 +328,9 @@ export class JupyterServer {
                         let url = '';
                         if (lineWithUrl) {
                             url = lineWithUrl.substring(lineWithUrl.indexOf('http'));
+                            if (url.includes('/tree?token')) {
+                                url = url.replace('/tree?token', '/?token');
+                            }
                         } else {
                             url = `http${useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
                         }

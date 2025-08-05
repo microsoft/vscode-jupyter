@@ -10,7 +10,6 @@ import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { isPromise } from '../platform/common/utils/async';
 import { computeHash } from '../platform/common/crypto';
-import { AsyncFunc, Func, Suite, Test } from 'mocha';
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
@@ -288,14 +287,4 @@ export async function generateScreenShotFileName(contextOrFileName: string | Moc
         typeof contextOrFileName === 'string' ? contextOrFileName : `${testTitle}_${fullTestNameHash}`;
     const name = `${fileNamePrefix}_${counter}`.replace(/[\W]+/g, '_');
     return `${name}-screenshot.png`;
-}
-
-const mandatoryTestFlag = '@mandatory';
-
-export function suiteMandatory(title: string, fn: (this: Suite) => void): Suite {
-    return suite(`${title} ${mandatoryTestFlag}`, fn);
-}
-
-export function testMandatory(title: string, fn?: Func): Test | AsyncFunc {
-    return test(`${title} ${mandatoryTestFlag}`, fn);
 }

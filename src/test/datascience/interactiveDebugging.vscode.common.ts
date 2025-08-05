@@ -51,6 +51,10 @@ export function sharedIWDebuggerTests(
                 }
             };
             suiteSetup(async function () {
+                // https://github.com/microsoft/vscode-jupyter/issues/16860
+                if (debuggerType === 'JupyterProtocolDebugger') {
+                    return this.skip();
+                }
                 if ((IS_REMOTE_NATIVE_TEST() || isWeb()) && debuggerType === 'VSCodePythonDebugger') {
                     return this.skip();
                 }
@@ -90,7 +94,6 @@ export function sharedIWDebuggerTests(
                 await closeNotebooksAndCleanUpAfterTests(disposables);
             });
 
-            // TODO: This should be a testMandatory
             test.skip('Debug a cell from a python file @mandatory', async () => {
                 // #11917
                 // Run a cell to get IW open

@@ -100,7 +100,8 @@ export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
 }
 
 export function isWeb() {
-    return process.platform.toString() === 'web'; // Webpack is modifying this to force this to happen
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return process.platform.toString() === 'web' || (process as any).browser === true; // Webpack is modifying this to force this to happen
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
