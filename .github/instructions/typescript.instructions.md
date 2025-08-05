@@ -35,3 +35,9 @@ mockInstance.then = undefined; // Ensure 'then' is undefined to prevent hanging
 - Use `npm run lint` to check for linter issues
 - Use `npm run format` to check code style
 - Use `npm run format-fix` to auto-fix formatting issues
+
+## PreCommit
+Always run the following scripts before committing changes:
+- `npm run format-fix` to ensure proper code formatting
+- `npm run lint` to check for linter issues and attempt to fix before committing.
+- `npm run test:unittests` to check for tests failures and attempt to fix before committing.
