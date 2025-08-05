@@ -79,18 +79,14 @@ suite('Kernel Shutdown @kernelCore', function () {
 
         // Get the API kernel instance (must execute code first for API to return kernel)
         const apiKernel = await kernels.getKernel(notebook.uri);
-        assert.isNotEmpty(apiKernel, 'Should get kernel via API after code execution');
+        assert.isDefined(apiKernel, 'Should get kernel via API after code execution');
 
         // Now shutdown the kernel via API
         logger.info('Step 2: Shutdown kernel via API');
         await apiKernel!.shutdown();
 
         // After shutdown, the kernel should be disposed
-        await waitForCondition(
-            async () => kernel.disposed,
-            30_000,
-            'Kernel should be disposed after API shutdown'
-        );
+        await waitForCondition(async () => kernel.disposed, 30_000, 'Kernel should be disposed after API shutdown');
 
         logger.info('Step 3: Verify kernel is disposed');
         assert.isTrue(kernel.disposed, 'Kernel should be disposed after API shutdown');
