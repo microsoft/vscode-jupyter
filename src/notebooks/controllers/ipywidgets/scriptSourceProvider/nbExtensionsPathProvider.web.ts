@@ -17,8 +17,11 @@ export class NbExtensionsPathProvider implements INbExtensionsPathProvider {
             case 'startUsingRemoteKernelSpec': {
                 return Uri.parse(kernel.kernelConnectionMetadata.baseUrl);
             }
+            case 'startUsingPythonInterpreter':
+            case 'startUsingLocalKernelSpec':
             default: {
                 // Not possible a possible code path in web.
+                // In web environment, only remote kernels are supported.
                 return;
             }
         }
