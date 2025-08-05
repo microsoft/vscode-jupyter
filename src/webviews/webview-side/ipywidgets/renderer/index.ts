@@ -27,7 +27,7 @@ function convertVSCodeOutputToExecuteResultOrDisplayData(outputItem: OutputItem)
                 return data;
             }
         }
-        
+
         // Try to parse text content as JSON (for cases where mimetype might be wrong)
         if (outputItem.text) {
             const textData = outputItem.text();
@@ -45,7 +45,7 @@ function convertVSCodeOutputToExecuteResultOrDisplayData(outputItem: OutputItem)
     } catch (error) {
         // If we can't parse the output, it's not a widget output
     }
-    
+
     return undefined;
 }
 
