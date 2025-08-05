@@ -592,5 +592,43 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // The first & second outputs should have been updated
             await assertOutputContainsHtml(cell, comms, ['Text Value is Bar']);
         });
+        test('Output Widget append_display_data', async function () {
+            // This test verifies the fix for issue #16739
+            // Output widgets should properly handle append_display_data() calls
+            // without showing "Model not found" errors
+            await initializeNotebookForWidgetTest(
+                disposables,
+                {
+                    templateFile: 'output_widget_append_display_data.ipynb'
+                },
+                editor
+            );
+            const cells = window.activeNotebookEditor!.notebook.getCells();
+            const [cell1, cell2, cell3, cell4] = cells;
+
+            // Execute first cell to create output widget
+            await executeCellAndWaitForOutput(cell1, comms);
+            
+            // Verify initial output widget content
+            await assertOutputContainsHtml(cell1, comms, ['Initial output from Output widget'], '.widget-output');
+
+            // Execute second cell to test append_display_data with HTML
+            await executeCellAndDontWaitForOutput(cell2);
+            
+            // Verify HTML content was appended to the output widget
+            await assertOutputContainsHtml(cell1, comms, ['HTML content from append_display_data'], '.test-html-content');
+
+            // Execute third cell to test append_display_data with Markdown
+            await executeCellAndDontWaitForOutput(cell3);
+            
+            // Verify Markdown content was appended (should be rendered as HTML)
+            await assertOutputContainsHtml(cell1, comms, ['Markdown content'], '.widget-output');
+
+            // Execute fourth cell to test async append_display_data
+            await executeCellAndDontWaitForOutput(cell4);
+            
+            // Verify async content was appended
+            await assertOutputContainsHtml(cell1, comms, ['Async content from background thread'], '.async-content');
+        });
     });
 });
