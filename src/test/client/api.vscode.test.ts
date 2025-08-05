@@ -10,33 +10,22 @@ import * as sinon from 'sinon';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, waitForCondition } from '../common.node';
 import { executeSilently } from '../../kernels/helpers';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
-import { TestNotebookDocument, createKernelController } from '../datascience/notebook/executionHelper';
+import { TestNotebookDocument } from '../datascience/notebook/executionHelper';
 import { IKernelProvider, LocalKernelConnectionMetadata } from '../../kernels/types';
 import { KernelConnectionMetadata } from '../../api';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { getKernelsApi } from '../../standalone/api/kernels';
-import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
-import { Kernels } from '../../api';
-import {
-    waitForExecutionCompletedSuccessfully,
-    waitForTextOutput,
-    getDefaultKernelConnection
-} from '../datascience/notebook/helper.node';
-import { noop } from '../../platform/common/utils/misc';
 
 suite('3rd Party Kernel Service API @kernelCore', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     let notebook: TestNotebookDocument;
-    let kernels: Kernels;
     suiteSetup(async function () {
         logger.info('Suite Setup 3rd Party Kernel Service API');
         this.timeout(120_000);
         try {
             api = await initialize();
             await startJupyterServer();
-            kernels = await Promise.resolve(getKernelsApi(JVSC_EXTENSION_ID));
             sinon.restore();
             notebook = new TestNotebookDocument();
             logger.info('Suite Setup (completed)');
@@ -140,57 +129,5 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
 
         assert.isNotOk(kernelInfo?.kernel);
         assert.isTrue(kernelInfo?.isDisposed, 'Not disposed');
-    });
-
-    test('Can shutdown a kernel correctly via API', async function () {
-        // Create a separate notebook for this test to avoid conflicts
-        const shutdownNotebook = new TestNotebookDocument();
-
-        // Create a simple test cell that we can execute
-        const cell = await shutdownNotebook.appendCodeCell('print("Hello from kernel")');
-
-        // Get a Python kernel for this test
-        const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const metadata = await getDefaultKernelConnection();
-        const controller = createKernelController();
-        const kernel = kernelProvider.getOrCreate(shutdownNotebook, {
-            metadata,
-            resourceUri: shutdownNotebook.uri,
-            controller
-        });
-        await kernel.start({
-            disableUI: false,
-            onDidChangeDisableUI: () => ({
-                dispose: noop
-            })
-        });
-
-        // Get kernel execution service
-        const kernelExecution = kernelProvider.getKernelExecution(kernel);
-
-        // First, start the kernel by executing a cell
-        logger.info('Step 1: Execute cell to ensure kernel is started');
-        await Promise.all([
-            kernelExecution.executeCell(cell),
-            waitForExecutionCompletedSuccessfully(cell),
-            waitForTextOutput(cell, 'Hello from kernel', 0, false)
-        ]);
-
-        // Verify kernel is running
-        assert.isFalse(kernel.disposed, 'Kernel should not be disposed before shutdown');
-
-        // Get the API kernel instance (must execute code first for API to return kernel)
-        const apiKernel = await kernels.getKernel(shutdownNotebook.uri);
-        assert.isDefined(apiKernel, 'Should get kernel via API after code execution');
-
-        // Now shutdown the kernel via API
-        logger.info('Step 2: Shutdown kernel via API');
-        await (apiKernel as any)!.shutdown();
-
-        // After shutdown, the kernel should be disposed
-        await waitForCondition(async () => kernel.disposed, 30_000, 'Kernel should be disposed after API shutdown');
-
-        logger.info('Step 3: Verify kernel is disposed');
-        assert.isTrue(kernel.disposed, 'Kernel should be disposed after API shutdown');
     });
 });

@@ -22,6 +22,7 @@ import { dispose } from '../../../platform/common/utils/lifecycle';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import {
     IKernelProvider,
+    IKernelSession,
     INotebookKernelExecution,
     KernelConnectionMetadata,
     type IKernel
@@ -30,6 +31,9 @@ import { createMockedNotebookDocument } from '../../../test/datascience/editor-i
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 import { createKernelApiForExtension } from './kernel';
 import { noop } from '../../../test/core';
+import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../../test/constants';
+import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
+import { NotebookCellOutput } from 'vscode';
 
 suite('Kernel Api', () => {
     let disposables: IDisposable[] = [];
@@ -80,9 +84,13 @@ suite('Kernel Api', () => {
         when(kernelConnection.kind).thenReturn('connectToLiveRemoteKernel');
         kernel = mock<IKernel>();
         when(kernel.kernelConnectionMetadata).thenReturn(instance(kernelConnection));
+        when(kernel.disposed).thenReturn(false);
         when(kernel.startedAtLeastOnce).thenReturn(true);
         notebook = createMockedNotebookDocument([]);
         when(kernel.notebook).thenReturn(notebook);
+        const kernelSession = mock<IKernelSession>();
+        when(kernel.session).thenReturn(instance(kernelSession));
+        when(kernelSession.kernel).thenReturn(instance(mock<IKernelConnection>()));
 
         const controllerRegistration = mock<IControllerRegistration>();
         when(serviceContainer.get<IControllerRegistration>(IControllerRegistration)).thenReturn(
@@ -92,6 +100,10 @@ suite('Kernel Api', () => {
         const controller = mock<NotebookController>();
         const execution = mock<INotebookKernelExecution>();
         const kernelProvider = mock<IKernelProvider>();
+        when(execution.executeCode(anything(), anything(), anything(), anything())).thenCall(async function* () {
+            // Yield a dummy NotebookCellOutput to match the expected type
+            yield new NotebookCellOutput([]);
+        });
         when(kernelProvider.getKernelExecution(instance(kernel))).thenReturn(instance(execution));
         when(serviceContainer.get<IKernelProvider>(IKernelProvider)).thenReturn(instance(kernelProvider));
         when(vscController.controller).thenReturn(instance(controller));
@@ -109,5 +121,18 @@ suite('Kernel Api', () => {
         } catch (ex) {
             assert.equal(ex.name, 'vscode.jupyter.apiAccessRevoked');
         }
+    });
+    test('Verify Kernel Shutdown', async () => {
+        when(kernel.status).thenReturn('idle');
+        when(kernel.shutdown()).thenResolve();
+        when(kernel.dispose()).thenCall(() => when(kernel.status).thenReturn('dead'));
+
+        const { api } = createKernelApiForExtension(JVSC_EXTENSION_ID_FOR_TESTS, instance(kernel));
+        for await (const _ of api.executeCode('bogus', token)) {
+            //
+        }
+        assert.equal(api.status, 'idle');
+        await api.shutdown();
+        assert.equal(api.status, 'dead');
     });
 });
