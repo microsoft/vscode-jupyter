@@ -146,7 +146,7 @@ jobs:
         run: npm run postinstall
 
       - name: Verify Translation files
-        run: npm run validateTranslationFiles
+        run: npx gulp validateTranslationFiles
 
       - name: Run linting on TypeScript code (eslint)
         run: npm run lint
@@ -166,8 +166,8 @@ jobs:
           python -m black . --check
         working-directory: pythonFiles
 
-      - name: Run gulp prePublishNonBundle
-        run: npm run prePublishNonBundle
+      - name: Compile
+        run: npm run compile
 
       - name: Check dependencies
         run: npm run checkDependencies
@@ -249,7 +249,7 @@ jobs:
         run: npm run postinstall
 
       - name: Compile if not cached
-        run: npm run prePublishNonBundle
+        run: npm run compile
         if: steps.out-cache.outputs.cache-hit != 'true'
 
       - name: Run TypeScript unit tests
@@ -592,7 +592,7 @@ jobs:
 
         # This step is slow.
       - name: Compile # if not cached
-        run: npm run prePublishNonBundle
+        run: npm run compile
         # Do not cache for web tests, as the code generated in the compiled code is different for each matrix in web tests
         # Rememeber the compiled code contains injected tests, and the injected tests are different for each matrix in the web
         # if: steps.out-cache.outputs.cache-hit != 'true' && matrix.jupyterConnection != 'web'

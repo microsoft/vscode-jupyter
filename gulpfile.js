@@ -200,15 +200,8 @@ gulp.task('updatePackageJsonForBundle', async () => {
     }
 });
 
-gulp.task('prePublishBundle', async () => {
-    await spawnAsync('npm', ['run', 'prePublishBundle']);
-});
 
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
-
-gulp.task('prePublishNonBundle', async () => {
-    await spawnAsync('npm', ['run', 'prePublishNonBundle']);
-});
 
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {

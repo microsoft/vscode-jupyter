@@ -29,9 +29,15 @@ const mockInstance = mock<YourType>();
 mockInstance.then = undefined; // Ensure 'then' is undefined to prevent hanging
 ```
 
+## Integration Tests
+- Use `npm run test:integration` to run integration tests with local Jupyter Kernels
+- Use `npm run test:integration:web` to run integration tests with Remote Jupyter Kernels and VSCode in browser
+
 ## Scripts
 - Use `npm install` to install dependencies if you changed `package.json`
 - Use `npm run test:unittests` for unit tests (add `--grep <pattern>` to filter tests)
+- Use `npm run test:integration` to run integration tests with local Jupyter Kernels
+- Use `npm run test:integration:web` to run integration tests with Remote Jupyter Kernels and VSCode in browser
 - Use `npm run lint` to check for linter issues
 - Use `npm run format` to check code style
 - Use `npm run format-fix` to auto-fix formatting issues
