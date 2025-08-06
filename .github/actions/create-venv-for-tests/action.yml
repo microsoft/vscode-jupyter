@@ -29,9 +29,12 @@ runs:
       run: |
         uv venv .venvnoreg
         uv venv .venvkernel
+        source .venvnoreg/bin/activate
+        uv pip install pip
         source .venvkernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
+        uv pip install pip
         uv pip install ipykernel
         python -m ipykernel install --user --name .venvkernel --display-name .venvkernel
         uv pip install pandas
@@ -41,6 +44,7 @@ runs:
         source .venvnokernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
+        uv pip install pip
         uv pip install ipykernel
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
       working-directory: src/test/datascience
@@ -55,11 +59,13 @@ runs:
       if: inputs.IPyWidgetVersion == '8'
       run: |
         uv venv .venvnoreg
-
         uv venv .venvkernel
+        source .venvnoreg/bin/activate
+        uv pip install pip
         source .venvkernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
+        uv pip install pip
         uv pip install ipykernel
         python -m ipykernel install --user --name .venvkernel --display-name .venvkernel
         uv pip install pandas
@@ -69,6 +75,7 @@ runs:
         source .venvnokernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
+        uv pip install pip
         uv pip install ipykernel
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
       working-directory: src/test/datascience

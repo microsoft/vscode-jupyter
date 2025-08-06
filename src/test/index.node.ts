@@ -104,7 +104,6 @@ function configure(): SetupOptions {
         grep,
         testFilesSuffix,
         // Force Mocha to exit after tests.
-        // It has been observed that this isn't sufficient, hence the reason for src/test/common/exitCIAfterTestReporter.ts
         exit: true
     };
 
@@ -112,8 +111,6 @@ function configure(): SetupOptions {
     // reporting to both the console (spec) and to a JUnit XML file. The xml file
     // written to is `test-report.xml` in the root folder by default, but can be
     // changed by setting env var `MOCHA_FILE` (we do this in our CI).
-    // Another reason for doing this is to setup the `exitCIAfterTestReporter.js`.
-    // Without that the smoke tests process doesn't exit after the tests complete.
     options.reporter = 'mocha-multi-reporters';
     const customReporterPath = path.join(__dirname, 'web', 'customReporter.js');
     options.reporterOptions = {
