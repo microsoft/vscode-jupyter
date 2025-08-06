@@ -91,7 +91,6 @@ type Message =
       };
 let currentPromise = Promise.resolve();
 const messages: Message[] = [];
-let url = '';
 
 function writeReportProgress(message: Message) {
     if (env.uiKind === UIKind.Desktop) {
@@ -102,7 +101,6 @@ function writeReportProgress(message: Message) {
                 ? Uri.joinPath(jupyterExtUri, 'logs')
                 : Uri.joinPath(extensions.getExtension(PerformanceExtensionId)!.extensionUri, '..', '..', '..', 'logs');
             const logFile = Uri.joinPath(logDir, 'testresults.json');
-            console.log(`Writing test results to ${logFile}`);
             const fs: typeof import('fs-extra') = require('fs-extra');
             // eslint-disable-next-line local-rules/dont-use-fspath
             fs.ensureDirSync(logDir.fsPath);
@@ -112,7 +110,6 @@ function writeReportProgress(message: Message) {
     } else {
         if (message.event === constants.EVENT_RUN_BEGIN) {
             ClientAPI.initialize();
-            console.error(`Started test reporter and writing to ${url}`);
         }
         currentPromise = currentPromise.finally(() =>
             ClientAPI.sendRawMessage(message).catch((_ex) => {
@@ -215,12 +212,10 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
     runner
         .once(constants.EVENT_RUN_BEGIN, () => {
             consoleHijacker.release();
-            console.error(`Started tests`);
             writeReportProgress({ event: constants.EVENT_RUN_BEGIN });
         })
         .once(constants.EVENT_RUN_END, () => {
             consoleHijacker.release();
-            console.error('Writing the end of the test run');
             writeReportProgress({ event: constants.EVENT_RUN_END, stats: runner.stats });
         })
         .on(constants.EVENT_SUITE_BEGIN, (suite: mochaTypes.Suite) => {
