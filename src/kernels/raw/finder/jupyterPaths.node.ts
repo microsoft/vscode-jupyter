@@ -330,8 +330,9 @@ export class JupyterPaths {
         }, this);
         promise
             .then((paths) => {
-                if (paths.length) {
+                if (this.cachedKernelSpecRootPaths?.promise === promise && paths.length) {
                     this.updateCachedKernelSpecPaths(paths).catch(noop);
+                    this.cachedKernelSpecRootPaths.promise = Promise.resolve(paths);
                 }
             })
             .catch(noop);
