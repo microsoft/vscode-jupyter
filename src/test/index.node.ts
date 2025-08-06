@@ -203,10 +203,7 @@ export async function run(): Promise<void> {
 
     // for performance tests, extension activation is part of the test run
     if (!IS_PERF_TEST()) {
-        /* eslint-disable no-console */
-        console.time('Time taken to activate the extension');
         await activateExtensionScript();
-        console.timeEnd('Time taken to activate the extension');
     }
 
     try {
