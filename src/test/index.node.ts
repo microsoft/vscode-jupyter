@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// Custom mocha reporter
-import './common/exitCIAfterTestReporter';
-
 // reflect-metadata is needed by inversify, this must come before any inversify references
 import '../platform/ioc/reflectMetadata';
 
@@ -118,10 +115,9 @@ function configure(): SetupOptions {
     // Another reason for doing this is to setup the `exitCIAfterTestReporter.js`.
     // Without that the smoke tests process doesn't exit after the tests complete.
     options.reporter = 'mocha-multi-reporters';
-    const reporterPath = path.join(__dirname, 'common', 'exitCIAfterTestReporter.js');
     const customReporterPath = path.join(__dirname, 'web', 'customReporter.js');
     options.reporterOptions = {
-        reporterEnabled: `spec,mocha-junit-reporter,${reporterPath},${customReporterPath}`
+        reporterEnabled: `spec,mocha-junit-reporter,${customReporterPath}`
     };
 
     // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
