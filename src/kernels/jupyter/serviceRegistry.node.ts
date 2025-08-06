@@ -51,6 +51,10 @@ import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFacto
 import { IRemoteKernelFinderController } from './finder/types';
 // eslint-disable-next-line import/no-restricted-paths
 import { JupyterServerProviderRegistry } from '../../codespaces';
+import { PersistentServerStorage } from './launcher/persistentServerStorage';
+import { PersistentJupyterServerProvider } from './launcher/persistentJupyterServerProvider.node';
+import { IPersistentServerStorage } from './launcher/persistentServerStorage';
+import { PersistentServerManager, IPersistentServerManager } from './launcher/persistentServerManager.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
@@ -122,4 +126,10 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IJupyterServerProviderRegistry,
         JupyterServerProviderRegistry
     );
+    serviceManager.addSingleton<IPersistentServerStorage>(IPersistentServerStorage, PersistentServerStorage);
+    serviceManager.addSingleton<PersistentJupyterServerProvider>(
+        PersistentJupyterServerProvider,
+        PersistentJupyterServerProvider
+    );
+    serviceManager.addSingleton<IPersistentServerManager>(IPersistentServerManager, PersistentServerManager);
 }

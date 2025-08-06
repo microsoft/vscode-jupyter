@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { EventEmitter, Memento, env } from 'vscode';
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
 import { logger } from '../../../platform/logging';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
@@ -10,6 +10,7 @@ import { IJupyterServerUriEntry, IJupyterServerUriStorage, JupyterServerProvider
 import { noop } from '../../../platform/common/utils/misc';
 import { DisposableBase } from '../../../platform/common/utils/lifecycle';
 import { Settings } from '../../../platform/common/constants';
+import { IPersistentServerStorage } from '../launcher/persistentServerStorage';
 
 export type StorageMRUItem = {
     displayName: string;
@@ -61,12 +62,19 @@ export class JupyterServerUriStorage extends DisposableBase implements IJupyterS
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
         @inject(IDisposableRegistry)
-        disposables: IDisposableRegistry
+        disposables: IDisposableRegistry,
+        @inject(IPersistentServerStorage) @optional() private readonly persistentServerStorage?: IPersistentServerStorage
     ) {
         super();
         disposables.push(this);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.newStorage = this._register(new NewStorage(globalMemento));
+        
+        // Listen to persistent server changes
+        if (this.persistentServerStorage) {
+            this._register(this.persistentServerStorage.onDidAdd(() => this._onDidChangeUri.fire()));
+            this._register(this.persistentServerStorage.onDidRemove(() => this._onDidChangeUri.fire()));
+        }
     }
     private hookupStorageEvents() {
         if (this.storageEventsHooked) {
@@ -80,12 +88,48 @@ export class JupyterServerUriStorage extends DisposableBase implements IJupyterS
     private updateStore(): IJupyterServerUriEntry[] {
         this.hookupStorageEvents();
         const previous = this._all;
-        this._all = this.newStorage.getAll();
+        const regularServers = this.newStorage.getAll();
+        const persistentServers = this.getPersistentServers();
+        
+        // Combine regular servers with persistent servers, avoiding duplicates
+        const allServers = [...regularServers, ...persistentServers];
+        const uniqueServers = allServers.filter((server, index, arr) => 
+            arr.findIndex(s => generateIdFromRemoteProvider(s.provider) === generateIdFromRemoteProvider(server.provider)) === index
+        );
+        
+        this._all = uniqueServers.sort((a, b) => b.time - a.time); // Sort by most recent first
+        
         if (previous.length !== this._all.length || JSON.stringify(this._all) !== JSON.stringify(previous)) {
             this._onDidLoad.fire();
         }
         return this._all;
     }
+    
+    private getPersistentServers(): IJupyterServerUriEntry[] {
+        if (!this.persistentServerStorage) {
+            return [];
+        }
+        
+        const persistentServers = this.persistentServerStorage.all;
+        return persistentServers
+            .filter(server => server.launchedByExtension) // Only show servers launched by the extension
+            .map(server => {
+                const serverHandle: JupyterServerProviderHandle = {
+                    id: 'persistent-server-provider',
+                    handle: server.serverId,
+                    extensionId: 'ms-toolsai.jupyter'
+                };
+                
+                const entry: IJupyterServerUriEntry = {
+                    provider: serverHandle,
+                    time: server.time,
+                    displayName: `${server.displayName} (Persistent)`
+                };
+                
+                return entry;
+            });
+    }
+    
     public async clear(): Promise<void> {
         this.hookupStorageEvents();
         await this.newStorage.clear();
@@ -106,12 +150,30 @@ export class JupyterServerUriStorage extends DisposableBase implements IJupyterS
     }
     public async update(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
-        await this.newStorage.update(server);
+        
+        // Check if this is a persistent server
+        if (server.id === 'persistent-server-provider' && this.persistentServerStorage) {
+            // Update persistent server time
+            await this.persistentServerStorage.update(server.handle, { time: Date.now() });
+        } else {
+            // Update regular server
+            await this.newStorage.update(server);
+        }
+        
         this.updateStore();
     }
     public async remove(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
-        await this.newStorage.remove(server);
+        
+        // Check if this is a persistent server
+        if (server.id === 'persistent-server-provider' && this.persistentServerStorage) {
+            // Remove from persistent storage
+            await this.persistentServerStorage.remove(server.handle);
+        } else {
+            // Remove from regular storage
+            await this.newStorage.remove(server);
+        }
+        
         this.updateStore();
     }
 }
