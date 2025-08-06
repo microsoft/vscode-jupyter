@@ -22,7 +22,11 @@ export const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDN
 export const GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN = 'IPYWidgetNotFoundOnCDN';
 export const GlobalStateKeyToNeverWarnAboutNoNetworkAccess = 'IPYWidgetNoNetWorkAccess';
 
-function moduleNameToCDNUrl(cdn: string, moduleName: string, moduleVersion: string) {
+function moduleNameToCDNUrl(cdn: WidgetCDNs, moduleName: string, moduleVersion: string) {
+    const cdnBaseUrl = getCDNPrefix(cdn);
+    if (!cdnBaseUrl) {
+        return undefined;
+    }
     let packageName = moduleName;
     let fileName = 'index'; // default filename
     // if a '/' is present, like 'foo/bar', packageName is changed to 'foo', and path to 'bar'
@@ -38,26 +42,34 @@ function moduleNameToCDNUrl(cdn: string, moduleName: string, moduleVersion: stri
         fileName = moduleName.substr(index + 1);
         packageName = moduleName.substr(0, index);
     }
-    if (cdn === jsdelivrUrl) {
-        // Js Delivr doesn't support ^ in the version. It needs an exact version
-        if (moduleVersion.startsWith('^')) {
+    if (cdnBaseUrl === jsdelivrUrl) {
+        cdn = {
+            url: cdnBaseUrl,
+            // Js Delivr doesn't support ^ in the version. It needs an exact version
+            requiresExactVersion: true,
+            // Js Delivr also needs the .js file on the end.
+            requiresExtension: true
+        };
+    }
+    if (cdn instanceof Object) {
+        if (cdn.requiresExactVersion && moduleVersion.startsWith('^')) {
             moduleVersion = moduleVersion.slice(1);
         }
-        // Js Delivr also needs the .js file on the end.
-        if (!fileName.endsWith('.js')) {
+        if (cdn.requiresExtension && !fileName.endsWith('.js')) {
             fileName = fileName.concat('.js');
         }
     }
-    return `${cdn}${packageName}@${moduleVersion}/dist/${fileName}`;
+    return `${cdnBaseUrl}${packageName}@${moduleVersion}/dist/${fileName}`;
 }
 
-function getCDNPrefix(cdn?: WidgetCDNs): string | undefined {
+function getCDNPrefix(cdn: WidgetCDNs): string | undefined {
     switch (cdn) {
         case 'unpkg.com':
             return unpgkUrl;
         case 'jsdelivr.com':
             return jsdelivrUrl;
         default:
+            if (cdn.url) return cdn.url;
             break;
     }
 }
@@ -151,11 +163,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         moduleVersion: string,
         cdn: WidgetCDNs
     ): Promise<string | undefined> {
-        const cdnBaseUrl = getCDNPrefix(cdn);
-        if (cdnBaseUrl) {
-            return moduleNameToCDNUrl(cdnBaseUrl, moduleName, moduleVersion);
-        }
-        return undefined;
+        return moduleNameToCDNUrl(cdn, moduleName, moduleVersion);
     }
 
     protected getModuleKey(moduleName: string, moduleVersion: string) {

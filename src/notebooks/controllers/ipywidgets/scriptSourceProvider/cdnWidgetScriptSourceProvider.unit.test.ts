@@ -319,7 +319,7 @@ suite('ipywidget - CDN', () => {
                 // Nock seems to fail randomly on CI builds. See bug
                 // https://github.com/microsoft/vscode-python/issues/11442
                 // eslint-disable-next-line no-invalid-this
-                suite.skip(cdn, () => {
+                suite.skip(cdn instanceof Object ? cdn.url : cdn, () => {
                     const moduleName = 'HelloWorld';
                     const moduleVersion = '1';
                     let baseUrl = '';

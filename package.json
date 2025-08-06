@@ -1452,14 +1452,39 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "type": "string",
-                        "enum": [
-                            "jsdelivr.com",
-                            "unpkg.com"
-                        ],
-                        "enumDescriptions": [
-                            "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.0%",
-                            "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1%"
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "const": "jsdelivr.com",
+                                "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.0%"
+                            },
+                            {
+                                "type": "string",
+                                "const": "unpkg.com",
+                                "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1%"
+                            },
+                            {
+                                "type": "object",
+                                "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.custom%",
+                                "properties": {
+                                    "url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.custom.url.description%"
+                                    },
+                                    "requiresExactVersion": {
+                                        "type": "boolean",
+                                        "default": false,
+                                        "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.custom.requiresExactVersion.description%"
+                                    },
+                                    "requiresExtension": {
+                                        "type": "boolean",
+                                        "default": false,
+                                        "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.custom.requiresExtension.description%"
+                                    }
+                                },
+                                "required": ["url"]
+                            }
                         ]
                     },
                     "uniqueItems": true,
