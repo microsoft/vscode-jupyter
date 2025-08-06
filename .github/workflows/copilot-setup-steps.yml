@@ -72,3 +72,14 @@ jobs:
             echo "Playwright not found, skipping browser installation"
           fi
         continue-on-error: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Setup Venv
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install pip
+          uv pip install -r build/venv-test-ipywidgets8-requirements.txt
+          uv pip install jupyter notebook ipykernel

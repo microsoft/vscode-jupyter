@@ -82,7 +82,7 @@ extends:
       - script: npm run clean
         displayName: Clean
 
-      - script: npm run prePublishBundlePreRelease
+      - script: npm run build:prerelease
         displayName: Build
         env:
           VSC_VSCE_TARGET: $(vsceTarget)

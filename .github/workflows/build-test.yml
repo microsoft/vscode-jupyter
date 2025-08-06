@@ -146,7 +146,7 @@ jobs:
         run: npm run postinstall
 
       - name: Verify Translation files
-        run: npm run validateTranslationFiles
+        run: npx gulp validateTranslationFiles
 
       - name: Run linting on TypeScript code (eslint)
         run: npm run lint
@@ -166,8 +166,8 @@ jobs:
           python -m black . --check
         working-directory: pythonFiles
 
-      - name: Run gulp prePublishNonBundle
-        run: npm run prePublishNonBundle
+      - name: Compile
+        run: npm run compile
 
       - name: Check dependencies
         run: npm run checkDependencies
@@ -176,7 +176,7 @@ jobs:
         run: npx gulp validatePackageLockJson
 
       - name: Validate TELEMETRY files
-        run: npm run validateTelemetry
+        run: npx gulp validateTelemetry
 
       - name: Verify usage of new Proposed API
         if: github.event_name == 'pull_request'
@@ -249,7 +249,7 @@ jobs:
         run: npm run postinstall
 
       - name: Compile if not cached
-        run: npm run prePublishNonBundle
+        run: npm run compile
         if: steps.out-cache.outputs.cache-hit != 'true'
 
       - name: Run TypeScript unit tests
@@ -257,7 +257,7 @@ jobs:
         run: npm run test:unittests
 
       - name: Verify there are no unhandled errors
-        run: npm run verifyUnhandledErrors
+        run: npx gulp verifyUnhandledErrors
 
   vscodeTests:
     name: Tests # These tests run with Python extension & real Jupyter
@@ -592,7 +592,7 @@ jobs:
 
         # This step is slow.
       - name: Compile # if not cached
-        run: npm run prePublishNonBundle
+        run: npm run compile
         # Do not cache for web tests, as the code generated in the compiled code is different for each matrix in web tests
         # Rememeber the compiled code contains injected tests, and the injected tests are different for each matrix in the web
         # if: steps.out-cache.outputs.cache-hit != 'true' && matrix.jupyterConnection != 'web'
@@ -659,7 +659,7 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
-          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
+          run: ${{ env.xvfbCommand }} npm run test:integration
         env:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
@@ -676,13 +676,11 @@ jobs:
       - name: Run Notebook Perf Test Without Jupyter
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
-          run: ${{ env.xvfbCommand }} npm run testPerfInVSCode
+          run: ${{ env.xvfbCommand }} npm run test:performance:notebook
         env:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_PERF_TEST: ${{ matrix.matrix == '@notebookPerformance' }}
-          VSC_JUPYTER_NOTEBOOK_PERF_TEST: ${{ matrix.matrix == '@notebookPerformance' }}
           VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT: ${{ matrix.matrix == '@notebookPerformance' }}
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
@@ -696,12 +694,11 @@ jobs:
       - name: Run Execution Perf Test With Jupyter
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
-          run: ${{ env.xvfbCommand }} npm run testExecPerfInVSCode
+          run: ${{ env.xvfbCommand }} npm run test:performance:execution
         env:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_PERF_TEST: ${{ matrix.matrix == '@executionPerformance' }}
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
@@ -720,7 +717,7 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter (web)
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
-          run: npm run testWebExtension
+          run: npm run test:integration:web
         env:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
@@ -735,8 +732,9 @@ jobs:
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (windows)
+        # Running tests on Windows is verys low, hence run only a few of the tests.
         run: |
-          npm run testNativeNotebooksInVSCodeWithoutTestSuffix
+          npm run test:integration:windows
         env:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
@@ -754,7 +752,7 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
-          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
+          run: ${{ env.xvfbCommand }} npm run test:integration:nonpython
         env:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
@@ -773,7 +771,7 @@ jobs:
 
       - name: Log test results
         if: always()
-        run: npm run printTestResults
+        run: npx gulp printTestResults
 
       - name: Upload test result, screenshots files
         uses: actions/upload-artifact@v4
@@ -784,7 +782,7 @@ jobs:
           retention-days: 60
 
       - name: Verify there are no unhandled errors
-        run: npm run verifyUnhandledErrors
+        run: npx gulp verifyUnhandledErrors
 
   smoke-tests:
     timeout-minutes: 30
@@ -857,4 +855,4 @@ jobs:
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
-          run: npm run testSmokeLogged
+          run: npm run test:smoke

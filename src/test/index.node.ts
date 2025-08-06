@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// Custom mocha reporter
-import './common/exitCIAfterTestReporter';
-
 // reflect-metadata is needed by inversify, this must come before any inversify references
 import '../platform/ioc/reflectMetadata';
 
@@ -107,7 +104,6 @@ function configure(): SetupOptions {
         grep,
         testFilesSuffix,
         // Force Mocha to exit after tests.
-        // It has been observed that this isn't sufficient, hence the reason for src/test/common/exitCIAfterTestReporter.ts
         exit: true
     };
 
@@ -115,13 +111,16 @@ function configure(): SetupOptions {
     // reporting to both the console (spec) and to a JUnit XML file. The xml file
     // written to is `test-report.xml` in the root folder by default, but can be
     // changed by setting env var `MOCHA_FILE` (we do this in our CI).
-    // Another reason for doing this is to setup the `exitCIAfterTestReporter.js`.
-    // Without that the smoke tests process doesn't exit after the tests complete.
     options.reporter = 'mocha-multi-reporters';
-    const reporterPath = path.join(__dirname, 'common', 'exitCIAfterTestReporter.js');
     const customReporterPath = path.join(__dirname, 'web', 'customReporter.js');
+    const reporterEnabled = ['spec', 'mocha-junit-reporter'];
+    if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
+        // If verbose logging is enabled, then the output would contain verbose logs as well as test results
+        // Hence enable a separate reporter. Else if we have this custom reporter too, we end up with duplicate messages in the terminal output.
+        reporterEnabled.push(customReporterPath);
+    }
     options.reporterOptions = {
-        reporterEnabled: `spec,mocha-junit-reporter,${reporterPath},${customReporterPath}`
+        reporterEnabled: reporterEnabled.join(',')
     };
 
     // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
@@ -210,10 +209,7 @@ export async function run(): Promise<void> {
 
     // for performance tests, extension activation is part of the test run
     if (!IS_PERF_TEST()) {
-        /* eslint-disable no-console */
-        console.time('Time taken to activate the extension');
         await activateExtensionScript();
-        console.timeEnd('Time taken to activate the extension');
     }
 
     try {
