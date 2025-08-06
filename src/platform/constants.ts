@@ -23,9 +23,10 @@ export const Exiting = {
 
 export const TestingKernelPickerProviderId = '_builtin.JupyterServerSelectorForTesting';
 export const UserJupyterServerPickerProviderId = '_builtin.jupyterServerUrlProvider';
+export const PersistentJupyterServerPickerProviderId = '_builtin.persistentJupyterServerProvider';
 
 export function isBuiltInJupyterProvider(id: string) {
-    return id === TestingKernelPickerProviderId || id === UserJupyterServerPickerProviderId;
+    return id === TestingKernelPickerProviderId || id === UserJupyterServerPickerProviderId || id === PersistentJupyterServerPickerProviderId;
 }
 
 let isCodeSpaceValue = false;

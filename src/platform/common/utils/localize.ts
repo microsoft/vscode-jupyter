@@ -726,6 +726,10 @@ export namespace DataScience {
     export const quickPickTitleForSelectionOfJupyterServer = l10n.t('Select a Jupyter Server');
     export const UserJupyterServerUrlProviderDisplayName = l10n.t('Existing Jupyter Server...');
     export const UserJupyterServerUrlProviderDetail = l10n.t('Connect to an existing Jupyter Server');
+    export const PersistentJupyterServerProviderDisplayName = l10n.t('Persistent Jupyter Server...');
+    export const PersistentJupyterServerProviderDetail = l10n.t('Manage persistent Jupyter servers that outlast VS Code sessions');
+    export const startNewPersistentServer = l10n.t('Start New Persistent Server');
+    export const managePersistentServers = l10n.t('Manage Persistent Servers');
     export const kernelPickerSelectKernelTitle = l10n.t('Select Kernel');
     export const kernelPickerSelectLocalKernelSpecTitle = l10n.t('Select a Jupyter Kernel');
     export const quickPickSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');

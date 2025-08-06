@@ -22,6 +22,7 @@ import { registerTypes as registerIntellisenseTypes } from './intellisense/servi
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
+import { PersistentServerUIProvider } from './persistentServer/persistentServerUIProvider.node';
 import { CommandRegistry as CodespaceCommandRegistry } from './codespace/commandRegistry';
 import { EagerlyActivateJupyterUriProviders } from './api/unstable/activateJupyterProviderExtensions';
 import { ExposeUsedAzMLServerHandles } from './api/unstable/usedAzMLServerHandles.deprecated';
@@ -96,6 +97,11 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         UserJupyterServerUrlProvider
+    );
+    // Persistent server UI provider
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PersistentServerUIProvider
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
