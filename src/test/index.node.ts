@@ -113,8 +113,14 @@ function configure(): SetupOptions {
     // changed by setting env var `MOCHA_FILE` (we do this in our CI).
     options.reporter = 'mocha-multi-reporters';
     const customReporterPath = path.join(__dirname, 'web', 'customReporter.js');
+    const reporterEnabled = ['spec', 'mocha-junit-reporter'];
+    if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
+        // If verbose logging is enabled, then the output would contain verbose logs as well as test results
+        // Hence enable a separate reporter.
+        reporterEnabled.push(customReporterPath);
+    }
     options.reporterOptions = {
-        reporterEnabled: `spec,mocha-junit-reporter,${customReporterPath}`
+        reporterEnabled: reporterEnabled.join(',')
     };
 
     // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.

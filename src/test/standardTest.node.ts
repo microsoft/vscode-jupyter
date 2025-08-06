@@ -228,9 +228,11 @@ start()
         process.exit(1);
     })
     .finally(() => {
-        console.log(
-            `Log file ${webTestSummaryJsonFile} ${
-                fs.existsSync(webTestSummaryJsonFile) ? 'has' : 'has not'
-            } been created`
-        );
+        if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
+            console.log(
+                `Log file ${webTestSummaryJsonFile} ${
+                    fs.existsSync(webTestSummaryJsonFile) ? 'has' : 'has not'
+                } been created`
+            );
+        }
     });
