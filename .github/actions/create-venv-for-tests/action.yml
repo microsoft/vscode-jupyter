@@ -15,6 +15,9 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+
     # Used by tests for installation of ipykernel.
     # Create a venv & register it as a kernel.
     # These tests are slow hence will only run on linux.
@@ -24,27 +27,26 @@ runs:
     - name: Create virtual environment without ipykernel
       if: inputs.IPyWidgetVersion == '7'
       run: |
-        python -m venv .venvnoreg
-
-        python -m venv .venvkernel
+        uv venv .venvnoreg
+        uv venv .venvkernel
         source .venvkernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
-        python -m pip install ipykernel
+        uv pip install ipykernel
         python -m ipykernel install --user --name .venvkernel --display-name .venvkernel
-        python -m pip uninstall jedi --yes
-        python -m pip install jedi==0.17.2
-        python -m pip install pandas
-        python -m pip install ipywidgets==7.7.2
+        uv pip uninstall jedi --yes
+        uv pip install jedi==0.17.2
+        uv pip install pandas
+        uv pip install ipywidgets==7.7.2
 
-        python -m venv .venvnokernel
+        uv venv .venvnokernel
         source .venvnokernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
-        python -m pip install ipykernel
+        uv pip install ipykernel
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
-        python -m pip uninstall jedi --yes
-        python -m pip install jedi==0.17.2
+        uv pip uninstall jedi --yes
+        uv pip install jedi==0.17.2
       working-directory: src/test/datascience
       shell: bash
     # Used by tests for installation of ipykernel.
@@ -56,26 +58,26 @@ runs:
     - name: Create virtual environment without ipykernel (ipywidgets 8)
       if: inputs.IPyWidgetVersion == '8'
       run: |
-        python -m venv .venvnoreg
+        uv venv .venvnoreg
 
-        python -m venv .venvkernel
+        uv venv .venvkernel
         source .venvkernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
-        python -m pip install ipykernel
+        uv pip install ipykernel
         python -m ipykernel install --user --name .venvkernel --display-name .venvkernel
-        python -m pip uninstall jedi --yes
-        python -m pip install jedi==0.17.2
-        python -m pip install pandas
-        python -m pip install ipywidgets -U
+        uv pip uninstall jedi --yes
+        uv pip install jedi==0.17.2
+        uv pip install pandas
+        uv pip install ipywidgets -U
 
-        python -m venv .venvnokernel
+        uv venv .venvnokernel
         source .venvnokernel/bin/activate
         python --version
         python -c "import sys;print(sys.executable)"
-        python -m pip install ipykernel
+        uv pip install ipykernel
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
-        python -m pip uninstall jedi --yes
-        python -m pip install jedi==0.17.2
+        uv pip uninstall jedi --yes
+        uv pip install jedi==0.17.2
       working-directory: src/test/datascience
       shell: bash
