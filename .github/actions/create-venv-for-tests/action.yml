@@ -34,8 +34,6 @@ runs:
         python -c "import sys;print(sys.executable)"
         uv pip install ipykernel
         python -m ipykernel install --user --name .venvkernel --display-name .venvkernel
-        uv pip uninstall jedi --yes
-        uv pip install jedi==0.17.2
         uv pip install pandas
         uv pip install ipywidgets==7.7.2
 
@@ -45,8 +43,6 @@ runs:
         python -c "import sys;print(sys.executable)"
         uv pip install ipykernel
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
-        uv pip uninstall jedi --yes
-        uv pip install jedi==0.17.2
       working-directory: src/test/datascience
       shell: bash
     # Used by tests for installation of ipykernel.
@@ -66,8 +62,6 @@ runs:
         python -c "import sys;print(sys.executable)"
         uv pip install ipykernel
         python -m ipykernel install --user --name .venvkernel --display-name .venvkernel
-        uv pip uninstall jedi --yes
-        uv pip install jedi==0.17.2
         uv pip install pandas
         uv pip install ipywidgets -U
 
@@ -77,7 +71,5 @@ runs:
         python -c "import sys;print(sys.executable)"
         uv pip install ipykernel
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
-        uv pip uninstall jedi --yes
-        uv pip install jedi==0.17.2
       working-directory: src/test/datascience
       shell: bash
