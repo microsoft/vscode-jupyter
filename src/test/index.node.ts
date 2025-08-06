@@ -116,7 +116,7 @@ function configure(): SetupOptions {
     const reporterEnabled = ['spec', 'mocha-junit-reporter'];
     if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
         // If verbose logging is enabled, then the output would contain verbose logs as well as test results
-        // Hence enable a separate reporter.
+        // Hence enable a separate reporter. Else if we have this custom reporter too, we end up with duplicate messages in the terminal output.
         reporterEnabled.push(customReporterPath);
     }
     options.reporterOptions = {
