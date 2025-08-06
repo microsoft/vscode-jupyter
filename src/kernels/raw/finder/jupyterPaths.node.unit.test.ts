@@ -6,7 +6,7 @@
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { anything, deepEqual, instance, mock, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, when, verify } from 'ts-mockito';
 import { CancellationTokenSource, ExtensionContext, Memento, Uri } from 'vscode';
 import { CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, JupyterPaths } from './jupyterPaths.node';
 import { dispose } from '../../../platform/common/utils/lifecycle';
@@ -48,6 +48,7 @@ suite('Jupyter Paths', () => {
     };
     const unixHomeDir = Uri.file('/users/username');
     const macHomeDir = Uri.file('/users/username');
+    const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
     let cancelToken: CancellationTokenSource;
     suiteSetup(function () {
         if (isWeb()) {
@@ -382,5 +383,195 @@ suite('Jupyter Paths', () => {
         
         // Fourth path should be the kernel spec root path
         assert.strictEqual(paths[3].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+    });
+
+    test('Get kernelspec root paths on Linux', async () => {
+        when(platformService.osType).thenReturn(OSType.Linux);
+        when(platformService.isWindows).thenReturn(false);
+        when(platformService.isMac).thenReturn(false);
+        when(platformService.homeDir).thenReturn(unixHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+        
+        // Clear environment variables that might affect the test
+        delete process.env['XDG_DATA_HOME'];
+        delete process.env['JUPYTER_DATA_DIR'];
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
+
+        // Should include data dirs + system paths, and possibly kernel spec root path
+        assert.isAtLeast(paths.length, 3, `Expected at least 3 paths, got ${paths.length}, ${JSON.stringify(paths)}`);
+        
+        // First path should be from data directory (without XDG_DATA_HOME, defaults to ~/.local/share/jupyter)
+        assert.strictEqual(paths[0].toString(), Uri.joinPath(unixHomeDir, '.local', 'share', 'jupyter', 'kernels').toString());
+        
+        // Should include system paths
+        const pathStrings = paths.map(p => p.toString());
+        assert.include(pathStrings, Uri.file('/usr/share/jupyter/kernels').toString());
+        assert.include(pathStrings, Uri.file('/usr/local/share/jupyter/kernels').toString());
+        
+        // May include kernel spec root path if available
+        const hasKernelSpecRootPath = pathStrings.some(p => p.includes(linuxJupyterPath));
+        if (hasKernelSpecRootPath) {
+            assert.include(pathStrings, Uri.joinPath(unixHomeDir, linuxJupyterPath).toString());
+        }
+    });
+
+    test('Get kernelspec root paths on macOS', async () => {
+        when(platformService.osType).thenReturn(OSType.OSX);
+        when(platformService.isWindows).thenReturn(false);
+        when(platformService.isMac).thenReturn(true);
+        when(platformService.homeDir).thenReturn(macHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+        
+        // Clear environment variables that might affect the test
+        delete process.env['XDG_DATA_HOME'];
+        delete process.env['JUPYTER_DATA_DIR'];
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
+
+        // Should include at least 3 paths: data dir + system paths
+        assert.isAtLeast(paths.length, 3, `Expected at least 3 paths, got ${paths.length}, ${JSON.stringify(paths)}`);
+        
+        // First path should be from data directory (macOS uses ~/Library/Jupyter)
+        assert.strictEqual(paths[0].toString(), Uri.joinPath(macHomeDir, 'Library', 'Jupyter', 'kernels').toString());
+        
+        // Should include system paths
+        const pathStrings = paths.map(p => p.toString());
+        assert.include(pathStrings, Uri.file('/usr/share/jupyter/kernels').toString());
+        assert.include(pathStrings, Uri.file('/usr/local/share/jupyter/kernels').toString());
+    });
+
+    test('Get kernelspec root paths on Linux with Python interpreter', async () => {
+        when(platformService.osType).thenReturn(OSType.Linux);
+        when(platformService.isWindows).thenReturn(false);
+        when(platformService.isMac).thenReturn(false);
+        when(platformService.homeDir).thenReturn(unixHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+
+        // Mock getDataDirs to return additional interpreter-specific paths
+        const mockDataDirs = [
+            Uri.joinPath(unixHomeDir, '.local', 'share', 'jupyter'),
+            Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter')
+        ];
+        sinon.stub(jupyterPaths, 'getDataDirs').resolves(mockDataDirs);
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
+
+        // Should include interpreter-specific data dirs converted to kernel paths
+        const pathStrings = paths.map(p => p.toString());
+        assert.include(pathStrings, Uri.joinPath(unixHomeDir, '.local', 'share', 'jupyter', 'kernels').toString());
+        assert.include(pathStrings, Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter', 'kernels').toString());
+        
+        sinon.restore();
+    });
+
+    test('Get kernelspec root paths handles cancellation token', async () => {
+        when(platformService.osType).thenReturn(OSType.Windows);
+        when(platformService.homeDir).thenReturn(windowsHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+
+        // Cancel the token immediately
+        cancelToken.cancel();
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
+
+        // Should return empty array when cancelled
+        assert.strictEqual(paths.length, 0, `Expected empty array when cancelled, got ${paths.length} paths`);
+    });
+
+    test('Get kernelspec root paths handles missing home directory gracefully', async () => {
+        when(platformService.osType).thenReturn(OSType.Linux);
+        when(platformService.isWindows).thenReturn(false);
+        when(platformService.isMac).thenReturn(false);
+        when(platformService.homeDir).thenReturn(undefined); // No home directory
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
+
+        // Should still return system paths even without home directory
+        const pathStrings = paths.map(p => p.toString());
+        assert.include(pathStrings, Uri.file('/usr/share/jupyter/kernels').toString());
+        assert.include(pathStrings, Uri.file('/usr/local/share/jupyter/kernels').toString());
+    });
+
+    test('Get kernelspec root paths deduplicates paths', async () => {
+        when(platformService.osType).thenReturn(OSType.Windows);
+        when(platformService.homeDir).thenReturn(windowsHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+
+        // Create a scenario where paths might be duplicated
+        const duplicatePath = Uri.joinPath(windowsHomeDir, '.jupyter', 'data');
+        const mockDataDirs = [
+            duplicatePath,
+            duplicatePath, // Duplicate
+            Uri.joinPath(windowsHomeDir, 'AppData', 'Roaming', 'jupyter')
+        ];
+        sinon.stub(jupyterPaths, 'getDataDirs').resolves(mockDataDirs);
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
+
+        // Should not contain duplicate paths
+        const pathStrings = paths.map(p => p.toString());
+        const uniquePaths = [...new Set(pathStrings)];
+        assert.strictEqual(pathStrings.length, uniquePaths.length, 'Paths should be deduplicated');
+        
+        sinon.restore();
+    });
+
+    test('Get kernelspec root paths with cached data', async () => {
+        const cachedPaths = [
+            Uri.joinPath(windowsHomeDir, 'cached1', 'kernels').toString(),
+            Uri.joinPath(windowsHomeDir, 'cached2', 'kernels').toString()
+        ];
+        when(platformService.osType).thenReturn(OSType.Windows);
+        when(platformService.homeDir).thenReturn(windowsHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn(cachedPaths);
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
+
+        // Should return cached data if available
+        assert.strictEqual(paths.length, 2);
+        assert.strictEqual(paths[0].toString(), cachedPaths[0]);
+        assert.strictEqual(paths[1].toString(), cachedPaths[1]);
+    });
+
+    test('Get kernelspec root paths with JUPYTER_PATH on Linux', async () => {
+        when(platformService.osType).thenReturn(OSType.Linux);
+        when(platformService.isWindows).thenReturn(false);
+        when(platformService.isMac).thenReturn(false);
+        when(platformService.homeDir).thenReturn(unixHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+        
+        const jupyter_Paths = ['/custom/jupyter/path1', '/custom/jupyter/path2'];
+        process.env['JUPYTER_PATH'] = jupyter_Paths.join(path.delimiter);
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
+
+        // First paths should be from JUPYTER_PATH with 'kernels' appended
+        assert.isAtLeast(paths.length, 2, `Expected at least 2 paths, got ${paths.length}`);
+        assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(jupyter_Paths[0]), 'kernels').toString());
+        assert.strictEqual(paths[1].toString(), Uri.joinPath(Uri.file(jupyter_Paths[1]), 'kernels').toString());
+    });
+
+    test('Enhanced caching behavior works correctly', async () => {
+        when(platformService.osType).thenReturn(OSType.Windows);
+        when(platformService.homeDir).thenReturn(windowsHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+
+        // First call
+        const paths1 = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
+        
+        // Verify caching method is called
+        verify(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).atLeast(1);
+
+        // Second call should use cached result (simulate by using same token)
+        const newCancelToken = new CancellationTokenSource();
+        disposables.push(newCancelToken);
+        const paths2 = await jupyterPaths.getKernelSpecRootPaths(newCancelToken.token);
+
+        assert.strictEqual(paths1.length, paths2.length);
+        paths1.forEach((path, index) => {
+            assert.strictEqual(path.toString(), paths2[index].toString());
+        });
     });
 });
