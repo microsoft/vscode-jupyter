@@ -9,7 +9,7 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { ignoreLogging, logValue, logger } from '../../../platform/logging';
+import { logValue, logger } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IMemento,
@@ -39,7 +39,7 @@ const macJupyterRuntimePath = path.join('Library', 'Jupyter', 'runtime');
 
 export const baseKernelPath = path.join('share', 'jupyter', 'kernels');
 const CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH = 'CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH.';
-export const CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS = 'CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS_.';
+export const CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS = 'CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS_';
 
 /**
  * Finds locations to search for jupyter kernels.
@@ -47,7 +47,6 @@ export const CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS = 'CACHE_KEY_FOR_JUPYTER_KERNEL_
 @injectable()
 export class JupyterPaths {
     private cachedKernelSpecRootPath?: Promise<Uri | undefined>;
-    private cachedJupyterKernelPaths?: Promise<Uri[]>;
     private cachedJupyterPaths?: Promise<Uri[]>;
     private cachedDataDirs = new Map<string, Promise<Uri[]>>();
     constructor(
@@ -62,7 +61,6 @@ export class JupyterPaths {
     ) {
         this.envVarsProvider.onDidEnvironmentVariablesChange(
             () => {
-                this.cachedJupyterKernelPaths = undefined;
                 this.cachedJupyterPaths = undefined;
             },
             this,
@@ -330,24 +328,42 @@ export class JupyterPaths {
                 this.cachedKernelSpecRootPaths = undefined;
             }
         }, this);
+        promise
+            .then((paths) => {
+                if (paths.length) {
+                    this.updateCachedKernelSpecPaths(paths).catch(noop);
+                }
+            })
+            .catch(noop);
         promise.finally(() => disposable.dispose()).catch(noop);
-        return promise;
+
+        // If we have something in cache use that.
+        const cached = this.getCachedKernelSpecPaths();
+        return cached.length ? cached : promise;
     }
     private async getKernelSpecRootPathsImpl(cancelToken: CancellationToken): Promise<Uri[]> {
+        const paths = new ResourceSet();
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
-        const paths = new ResourceSet(await this.getJupyterPathKernelPaths(cancelToken));
+        // Use the complete data directory paths (equivalent to Python's jupyter_path("kernels"))
+        // This includes JUPYTER_PATH, user directories, environment directories, and system paths
+        const [dataDirs, kernelSpecRootpath] = await Promise.all([
+            this.getDataDirs({ resource: undefined }),
+            this.getKernelSpecRootPath()
+        ]);
         if (cancelToken.isCancellationRequested) {
             return [];
         }
-        if (this.platformService.isWindows) {
-            const winPath = await this.getKernelSpecRootPath();
-            if (cancelToken.isCancellationRequested) {
-                return [];
-            }
-            if (winPath) {
-                paths.add(winPath);
-            }
 
+        // Convert data directories to kernel spec directories by appending 'kernels' subdirectory
+        for (const dataDir of dataDirs) {
+            const kernelSpecDir = uriPath.joinPath(dataDir, 'kernels');
+            paths.add(kernelSpecDir);
+        }
+        if (kernelSpecRootpath) {
+            paths.add(kernelSpecRootpath);
+        }
+        // Add platform-specific additional paths that might not be covered by getDataDirs
+        if (this.platformService.isWindows) {
             if (process.env.PROGRAMDATA) {
                 paths.add(Uri.file(path.join(process.env.PROGRAMDATA, 'jupyter', 'kernels')));
             }
@@ -368,17 +384,6 @@ export class JupyterPaths {
                 .join(', ')}`
         );
         return Array.from(paths);
-    }
-
-    private async getJupyterPathKernelPaths(@ignoreLogging() cancelToken?: CancellationToken): Promise<Uri[]> {
-        this.cachedJupyterKernelPaths =
-            this.cachedJupyterKernelPaths || this.getJupyterPathSubPaths(cancelToken, 'kernels');
-        this.cachedJupyterKernelPaths.then((value) => {
-            if (value.length > 0) {
-                this.updateCachedPaths(value).then(noop, noop);
-            }
-        }, noop);
-        return this.getCachedPaths().length > 0 ? this.getCachedPaths() : this.cachedJupyterKernelPaths;
     }
 
     private async getJupyterPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
@@ -419,11 +424,11 @@ export class JupyterPaths {
         return Array.from(paths);
     }
 
-    private getCachedPaths(): Uri[] {
+    private getCachedKernelSpecPaths(): Uri[] {
         return this.globalState.get<string[]>(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, []).map((s) => Uri.parse(s));
     }
 
-    private async updateCachedPaths(paths: Uri[]) {
+    private async updateCachedKernelSpecPaths(paths: Uri[]) {
         const currentValue = this.globalState.get<string[]>(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, []);
         const newValue = paths.map(Uri.toString);
         if (currentValue.join(',') !== newValue.join(',')) {

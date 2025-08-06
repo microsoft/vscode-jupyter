@@ -35,18 +35,6 @@
             }
         },
         {
-            "type": "npm",
-            "script": "compile-tsc-watch",
-            "group": "build",
-            "problemMatcher": "$tsc-watch",
-            "isBackground": true,
-            "label": "Unittest - Build",
-            "presentation": {
-                "group": "buildWatchers",
-                "reveal": "never"
-            }
-        },
-        {
             "label": "Run Unit Tests",
             "type": "npm",
             "script": "test:unittests",
