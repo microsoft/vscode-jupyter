@@ -659,7 +659,7 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
-          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
+          run: ${{ env.xvfbCommand }} npm run test:integration
         env:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
