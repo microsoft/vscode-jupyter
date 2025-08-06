@@ -407,6 +407,7 @@ export interface IBaseKernel extends IAsyncDisposable {
     start(options?: IStartOptions): Promise<IKernelSession>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
+    shutdown(): Promise<void>;
     addHook(
         event: 'didStart',
         hook: (session: IKernelSession | undefined, token: CancellationToken) => Promise<void>,

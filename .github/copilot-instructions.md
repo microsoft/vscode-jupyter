@@ -87,9 +87,9 @@ src/                                # Source code for the extension
 └── test/                           # Integration, unit and end-to-end tests
 ```
 
-### Component Instructions
+### Component-Specific Instructions
 
-**IMPORTANT**: Before modifying code in directories below, you **MUST** read the corresponding instruction file(s).
+**IMPORTANT**: Before modifying any code in the directories listed below, you **MUST** first read the corresponding instruction file to understand the specific conventions, patterns, and architectural requirements for that component.
 
 Each component has detailed guidelines that cover:
 - Architecture patterns and design principles
@@ -99,17 +99,18 @@ Each component has detailed guidelines that cover:
 - Error handling approaches
 - Component-specific best practices
 
+#### Required Reading by Directory
 
-| Directory | Instruction File | Purpose |
-|-----------|------------------|---------|
-| `src/platform/**` | `.github/instructions/platform.instructions.md` | Cross-platform abstractions |
-| `src/kernels/**` | `.github/instructions/kernel.instructions.md` | Kernel management |
-| `src/kernels/jupyter/**` | `.github/instructions/kernel-jupyter.instructions.md` | Jupyter protocol |
-| `src/notebooks/**` | `.github/instructions/notebooks.instructions.md` | Notebook controllers |
-| `src/interactive-window/**` | `.github/instructions/interactiveWindow.instructions.md` | REPL functionality |
-| `src/standalone/**` | `.github/instructions/standalone.instructions.md` | Standalone features |
-| `src/notebooks/controllers/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | IPython widgets (interactive Notebook outputs) |
-| `src/webviews/extension-side/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | IPython Widget (interactive Notebook outputs) communication |
-| `src/webviews/webview-side/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | IPython Widget (interactive Notebook outputs) rendering |
+| Directory/Component | Instruction File | When to Read |
+|-------------------|------------------|--------------|
+| `src/platform/**` | `.github/instructions/platform.instructions.md` | Before working with cross-platform abstractions, utilities, or core services |
+| `src/kernels/**` | `.github/instructions/kernel.instructions.md` | Before modifying kernel management, execution, or communication logic |
+| `src/kernels/jupyter/**` | `.github/instructions/kernel-jupyter.instructions.md` | Before working with Jupyter protocol implementation or Jupyter-specific features |
+| `src/notebooks/**` | `.github/instructions/notebooks.instructions.md` | Before modifying notebook controllers, editing, or management features |
+| `src/interactive-window/**` | `.github/instructions/interactiveWindow.instructions.md` | Before working with Python Interactive window (REPL) functionality |
+| `src/standalone/**` | `.github/instructions/standalone.instructions.md` | Before modifying standalone mode or isolated execution features |
+| `src/notebooks/controllers/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | Before working with IPython widget support |
+| `src/webviews/extension-side/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | Before modifying extension-side widget communication |
+| `src/webviews/webview-side/ipywidgets/**` | `.github/instructions/ipywidgets.instructions.md` | Before working with frontend widget rendering |
 
-**For AI/Copilot**: Always read the relevant instruction file(s) before modifying code in these directories to ensure adherence to component-specific patterns.
+**For AI/Copilot**: Always use the `read_file` tool to read the relevant instruction file(s) before analyzing, modifying, or creating code in these directories. This ensures adherence to component-specific patterns and prevents architectural violations.
