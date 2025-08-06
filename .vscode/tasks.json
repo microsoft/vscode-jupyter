@@ -9,12 +9,9 @@
     "tasks": [
         {
             "label": "Build",
-            "dependsOn": [
-                "Core - Build",
-                "Unittest - Build"
-            ],
+            "dependsOn": ["Core - Build", "Unittest - Build"],
             "presentation": {
-                "reveal": "never",
+                "reveal": "never"
             },
             "group": {
                 "kind": "build",
@@ -29,6 +26,18 @@
             "problemMatcher": "$esbuild-watch",
             "isBackground": true,
             "label": "Core - Build",
+            "presentation": {
+                "group": "buildWatchers",
+                "reveal": "never"
+            }
+        },
+        {
+            "type": "npm",
+            "script": "compile-tsc-watch",
+            "group": "build",
+            "problemMatcher": "$tsc-watch",
+            "isBackground": true,
+            "label": "Unittest - Build",
             "presentation": {
                 "group": "buildWatchers",
                 "reveal": "never"
