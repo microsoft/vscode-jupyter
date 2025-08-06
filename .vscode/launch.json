@@ -127,34 +127,6 @@
             }
         },
         {
-            "name": "Jedi LSP tests",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "${workspaceFolder}/src/test",
-                "--disable-extensions",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
-            ],
-            "env": {
-                "VSC_JUPYTER_CI_TEST_GREP": "Language Server:"
-            },
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
-            "preLaunchTask": "preTestJediLSP",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "presentation": {
-                "group": "2_tests",
-                "order": 4
-            }
-        },
-        {
             // Run this first: https://github.com/microsoft/vscode-jupyter/blob/main/src/test/datascience/setupTestEnvs.cmd
             // Then specify either a grep below or mark a test as 'test.only' to run the test that's failing.
             "name": "Tests (Jupyter+Python Extension installed, *.vscode.test.ts)",
@@ -309,7 +281,6 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
             ],
             "env": {
-                "VSC_JUPYTER_PERF_TEST": "1",
                 "VSC_JUPYTER_CI_TEST_GREP": "@notebookPerformance",
                 "VSC_JUPYTER_CI_TEST_VSC_CHANNEL": "insiders",
                 "TEST_FILES_SUFFIX": "*.vscode.common.test",
@@ -341,7 +312,6 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
             ],
             "env": {
-                "VSC_JUPYTER_PERF_TEST": "1",
                 "VSC_JUPYTER_CI_TEST_GREP": "@executionPerformance",
                 "VSC_JUPYTER_CI_TEST_VSC_CHANNEL": "insiders",
                 "CI_PYTHON_PATH": "",

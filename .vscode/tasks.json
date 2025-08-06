@@ -57,25 +57,6 @@
         },
         {
             "type": "npm",
-            "script": "preTestJediLSP",
-            "problemMatcher": [],
-            "label": "preTestJediLSP"
-        },
-        {
-            "type": "npm",
-            "script": "launchWebExtension",
-            "problemMatcher": [],
-            "label": "Launch Web Extension (Chrome)"
-        },
-        {
-            "type": "shell",
-            "problemMatcher": [],
-            "command": "npm",
-            "args": ["run", "launchWebExtension", "--", "--browser=webkit", "--port=3111"],
-            "label": "Launch Web Extension (Safari)"
-        },
-        {
-            "type": "npm",
             "script": "lint",
             "problemMatcher": ["$eslint-stylish"],
             "label": "npm: lint",

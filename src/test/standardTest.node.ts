@@ -49,7 +49,7 @@ function requiresPythonExtensionToBeInstalled() {
 }
 
 function isNotebookPerfTestWithoutJupyter() {
-    return !!process.env.VSC_JUPYTER_NOTEBOOK_PERF_TEST;
+    return process.env.VSC_JUPYTER_CI_TEST_GREP === '@notebookPerformance';
 }
 
 const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('stable')
