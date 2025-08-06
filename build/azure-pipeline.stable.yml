@@ -76,7 +76,7 @@ extends:
       - script: npm run clean
         displayName: Clean
 
-      - script: npm run prePublishBundleStable
+      - script: npm run build:stable
         displayName: Build
         env:
           VSC_VSCE_TARGET: $(vsceTarget)

@@ -20,6 +20,7 @@ const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datas
 import { sleep } from '../core';
 import { noop } from '../../platform/common/utils/misc';
 import { dispose } from '../../platform/common/utils/lifecycle';
+import { isCI } from '../../platform/common/constants';
 
 const venvPath = path.join(
     EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -101,7 +102,6 @@ export class JupyterServer {
     public async dispose() {
         this._jupyterServerWithToken = undefined;
         this._secondJupyterServerWithToken = undefined;
-        console.log(`Disposing jupyter server instance`);
         dispose(this._disposables);
         if (this.availablePort) {
             await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000).catch(noop);
@@ -307,7 +307,9 @@ export class JupyterServer {
                 let allOutput = '';
                 const subscription = result.out.onDidChange((output) => {
                     allOutput += output.out;
-                    console.log(`Jupyter Output > ${output.out}`);
+                    if (isCI) {
+                        console.log(`Jupyter Output > ${output.out}`);
+                    }
                     // When debugging Web Tests using VSCode dfebugger, we'd like to see this info.
                     // This way we can click the link in the output panel easily.
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels') >= 0) {

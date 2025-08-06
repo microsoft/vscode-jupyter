@@ -131,7 +131,17 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
 
                 return that.onDidReceiveDisplayUpdate.bind(this);
             },
-            executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token)
+            executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
+            get shutdown() {
+                if (
+                    ![JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID].includes(extensionId) &&
+                    !PROPOSED_API_ALLOWED_PUBLISHERS.includes(extensionId.split('.')[0])
+                ) {
+                    throw new Error(`Proposed API is not supported for extension ${extensionId}`);
+                }
+
+                return () => that.shutdown();
+            }
         });
     }
     static createApiKernel(
@@ -175,6 +185,26 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
         await this.checkAccess();
         for await (const output of this.executeCodeInternal(code, undefined, token)) {
             yield output;
+        }
+    }
+
+    async shutdown(): Promise<void> {
+        await this.checkAccess();
+        logger.debug(`Shutting down kernel ${this.kernel.id} via API for extension ${this.extensionId}`);
+        try {
+            // First shutdown the kernel
+            await this.kernel.shutdown();
+        } catch (ex) {
+            logger.error(`Failed to shutdown kernel ${this.kernel.id} for extension ${this.extensionId}`, ex);
+            throw ex;
+        }
+
+        try {
+            // Then dispose the kernel
+            await this.kernel.dispose();
+        } catch (ex) {
+            logger.error(`Failed to dispose kernel ${this.kernel.id} for extension ${this.extensionId}`, ex);
+            throw ex;
         }
     }
 

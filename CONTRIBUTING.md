@@ -48,7 +48,7 @@ Run the `watch` build Tasks from the [Run Build Task...](https://code.visualstud
 You can also compile from the command-line. For a full compile you can use:
 
 ```shell
-npx gulp prePublishNonBundle
+npm run compile
 ```
 
 For incremental builds it is recommended you use the `watch` build task (for better integration with VS Code).
