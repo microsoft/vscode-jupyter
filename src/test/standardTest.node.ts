@@ -93,7 +93,6 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
         console.info('Python Extension not required');
         return;
     }
-    console.info(`Installing Python Extension ${PythonExtension} to ${extensionsDir}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
     await installExtension(PythonExtension, cliPath, extensionsDir, ['--pre-release']);
 
@@ -106,7 +105,6 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
 
 // Make sure renderers is there too as we'll use it for widget tests
 async function installExtension(extension: string, cliPath: string, extensionsDir: string, args: string[] = []) {
-    console.info(`Installing ${extension} Extension to ${extensionsDir}`);
     args = ['--install-extension', extension, ...args, '--extensions-dir', extensionsDir, '--disable-telemetry'];
     const output =
         process.platform === 'win32'
