@@ -325,10 +325,10 @@ suite('Jupyter Paths', () => {
 
         // New implementation returns data dirs + kernel spec root path
         assert.strictEqual(paths.length, 2, `Expected 2 paths, got ${paths.length}, ${JSON.stringify(paths)}`);
-        
+
         // First path should be from data directory (.jupyter/data/kernels)
         assert.strictEqual(paths[0].toString(), Uri.joinPath(windowsHomeDir, '.jupyter', 'data', 'kernels').toString());
-        
+
         // Second path should be the kernel spec root path
         assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
     });
@@ -345,13 +345,13 @@ suite('Jupyter Paths', () => {
 
         // New implementation returns JUPYTER_PATH kernels + data dirs + kernel spec root path
         assert.strictEqual(paths.length, 3, `Expected 3 paths, got ${paths.length}, ${JSON.stringify(paths)}`);
-        
+
         // First path should be from JUPYTER_PATH
         assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(__filename), 'kernels').toString());
-        
+
         // Second path should be from data directory (.jupyter/data/kernels)
         assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, '.jupyter', 'data', 'kernels').toString());
-        
+
         // Third path should be the kernel spec root path
         assert.strictEqual(paths[2].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
     });
@@ -368,19 +368,19 @@ suite('Jupyter Paths', () => {
 
         // New implementation returns JUPYTER_PATH kernels + data dirs + PROGRAMDATA + kernel spec root path
         assert.strictEqual(paths.length, 4, `Expected 4 paths, got ${paths.length}, ${JSON.stringify(paths)}`);
-        
+
         // First path should be from JUPYTER_PATH
         assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(__filename), 'kernels').toString());
-        
-        // Second path should be from data directory (.jupyter/data/kernels) 
+
+        // Second path should be from data directory (.jupyter/data/kernels)
         assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, '.jupyter', 'data', 'kernels').toString());
-        
-        // Third path should be from PROGRAMDATA 
+
+        // Third path should be from PROGRAMDATA
         assert.strictEqual(
             paths[2].toString(),
             Uri.file(path.join(allUserProfilePath, 'jupyter', 'kernels')).toString()
         );
-        
+
         // Fourth path should be the kernel spec root path
         assert.strictEqual(paths[3].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
     });
@@ -391,7 +391,7 @@ suite('Jupyter Paths', () => {
         when(platformService.isMac).thenReturn(false);
         when(platformService.homeDir).thenReturn(unixHomeDir);
         when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
-        
+
         // Clear environment variables that might affect the test
         delete process.env['XDG_DATA_HOME'];
         delete process.env['JUPYTER_DATA_DIR'];
@@ -400,17 +400,20 @@ suite('Jupyter Paths', () => {
 
         // Should include data dirs + system paths, and possibly kernel spec root path
         assert.isAtLeast(paths.length, 3, `Expected at least 3 paths, got ${paths.length}, ${JSON.stringify(paths)}`);
-        
+
         // First path should be from data directory (without XDG_DATA_HOME, defaults to ~/.local/share/jupyter)
-        assert.strictEqual(paths[0].toString(), Uri.joinPath(unixHomeDir, '.local', 'share', 'jupyter', 'kernels').toString());
-        
+        assert.strictEqual(
+            paths[0].toString(),
+            Uri.joinPath(unixHomeDir, '.local', 'share', 'jupyter', 'kernels').toString()
+        );
+
         // Should include system paths
-        const pathStrings = paths.map(p => p.toString());
+        const pathStrings = paths.map((p) => p.toString());
         assert.include(pathStrings, Uri.file('/usr/share/jupyter/kernels').toString());
         assert.include(pathStrings, Uri.file('/usr/local/share/jupyter/kernels').toString());
-        
+
         // May include kernel spec root path if available
-        const hasKernelSpecRootPath = pathStrings.some(p => p.includes(linuxJupyterPath));
+        const hasKernelSpecRootPath = pathStrings.some((p) => p.includes(linuxJupyterPath));
         if (hasKernelSpecRootPath) {
             assert.include(pathStrings, Uri.joinPath(unixHomeDir, linuxJupyterPath).toString());
         }
@@ -422,7 +425,7 @@ suite('Jupyter Paths', () => {
         when(platformService.isMac).thenReturn(true);
         when(platformService.homeDir).thenReturn(macHomeDir);
         when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
-        
+
         // Clear environment variables that might affect the test
         delete process.env['XDG_DATA_HOME'];
         delete process.env['JUPYTER_DATA_DIR'];
@@ -431,12 +434,12 @@ suite('Jupyter Paths', () => {
 
         // Should include at least 3 paths: data dir + system paths
         assert.isAtLeast(paths.length, 3, `Expected at least 3 paths, got ${paths.length}, ${JSON.stringify(paths)}`);
-        
+
         // First path should be from data directory (macOS uses ~/Library/Jupyter)
         assert.strictEqual(paths[0].toString(), Uri.joinPath(macHomeDir, 'Library', 'Jupyter', 'kernels').toString());
-        
+
         // Should include system paths
-        const pathStrings = paths.map(p => p.toString());
+        const pathStrings = paths.map((p) => p.toString());
         assert.include(pathStrings, Uri.file('/usr/share/jupyter/kernels').toString());
         assert.include(pathStrings, Uri.file('/usr/local/share/jupyter/kernels').toString());
     });
@@ -458,10 +461,10 @@ suite('Jupyter Paths', () => {
         const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
 
         // Should include interpreter-specific data dirs converted to kernel paths
-        const pathStrings = paths.map(p => p.toString());
+        const pathStrings = paths.map((p) => p.toString());
         assert.include(pathStrings, Uri.joinPath(unixHomeDir, '.local', 'share', 'jupyter', 'kernels').toString());
         assert.include(pathStrings, Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter', 'kernels').toString());
-        
+
         sinon.restore();
     });
 
@@ -489,7 +492,7 @@ suite('Jupyter Paths', () => {
         const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
 
         // Should still return system paths even without home directory
-        const pathStrings = paths.map(p => p.toString());
+        const pathStrings = paths.map((p) => p.toString());
         assert.include(pathStrings, Uri.file('/usr/share/jupyter/kernels').toString());
         assert.include(pathStrings, Uri.file('/usr/local/share/jupyter/kernels').toString());
     });
@@ -511,10 +514,10 @@ suite('Jupyter Paths', () => {
         const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
 
         // Should not contain duplicate paths
-        const pathStrings = paths.map(p => p.toString());
+        const pathStrings = paths.map((p) => p.toString());
         const uniquePaths = [...new Set(pathStrings)];
         assert.strictEqual(pathStrings.length, uniquePaths.length, 'Paths should be deduplicated');
-        
+
         sinon.restore();
     });
 
@@ -541,7 +544,7 @@ suite('Jupyter Paths', () => {
         when(platformService.isMac).thenReturn(false);
         when(platformService.homeDir).thenReturn(unixHomeDir);
         when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
-        
+
         const jupyter_Paths = ['/custom/jupyter/path1', '/custom/jupyter/path2'];
         process.env['JUPYTER_PATH'] = jupyter_Paths.join(path.delimiter);
 
@@ -560,7 +563,7 @@ suite('Jupyter Paths', () => {
 
         // First call
         const paths1 = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
-        
+
         // Verify caching method is called
         verify(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).atLeast(1);
 
