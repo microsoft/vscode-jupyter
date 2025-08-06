@@ -200,7 +200,6 @@ gulp.task('updatePackageJsonForBundle', async () => {
     }
 });
 
-
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 
 function spawnAsync(command, args) {
