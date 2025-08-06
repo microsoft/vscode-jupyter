@@ -9,9 +9,12 @@
     "tasks": [
         {
             "label": "Build",
-            "dependsOn": ["Core - Build", "Unittest - Build"],
+            "dependsOn": [
+                "Core - Build",
+                "Unittest - Build"
+            ],
             "presentation": {
-                "reveal": "never"
+                "reveal": "never",
             },
             "group": {
                 "kind": "build",
