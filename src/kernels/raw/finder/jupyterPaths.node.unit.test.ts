@@ -322,8 +322,14 @@ suite('Jupyter Paths', () => {
         const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
         const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
-        assert.strictEqual(paths.length, 1, `Expected 1 path, got ${paths.length}, ${JSON.stringify(paths)}`);
-        assert.strictEqual(paths[0].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+        // New implementation returns data dirs + kernel spec root path
+        assert.strictEqual(paths.length, 2, `Expected 2 paths, got ${paths.length}, ${JSON.stringify(paths)}`);
+        
+        // First path should be from data directory (.jupyter/data/kernels)
+        assert.strictEqual(paths[0].toString(), Uri.joinPath(windowsHomeDir, '.jupyter', 'data', 'kernels').toString());
+        
+        // Second path should be the kernel spec root path
+        assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
     });
 
     test('Get kernelspec root paths on Windows with JUPYTER_PATH env variable', async () => {
@@ -336,9 +342,17 @@ suite('Jupyter Paths', () => {
         const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
         const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
-        assert.strictEqual(paths.length, 2, `Expected 2 path, got ${paths.length}, ${JSON.stringify(paths)}`);
+        // New implementation returns JUPYTER_PATH kernels + data dirs + kernel spec root path
+        assert.strictEqual(paths.length, 3, `Expected 3 paths, got ${paths.length}, ${JSON.stringify(paths)}`);
+        
+        // First path should be from JUPYTER_PATH
         assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(__filename), 'kernels').toString());
-        assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+        
+        // Second path should be from data directory (.jupyter/data/kernels)
+        assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, '.jupyter', 'data', 'kernels').toString());
+        
+        // Third path should be the kernel spec root path
+        assert.strictEqual(paths[2].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
     });
     test('Get kernelspec root paths on Windows with JUPYTER_PATH & ALLUSERSPROFILE env variable', async function () {
         when(platformService.osType).thenReturn(OSType.Windows);
@@ -351,12 +365,22 @@ suite('Jupyter Paths', () => {
         const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
         const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
-        assert.strictEqual(paths.length, 3, `Expected 3 path, got ${paths.length}, ${JSON.stringify(paths)}`);
+        // New implementation returns JUPYTER_PATH kernels + data dirs + PROGRAMDATA + kernel spec root path
+        assert.strictEqual(paths.length, 4, `Expected 4 paths, got ${paths.length}, ${JSON.stringify(paths)}`);
+        
+        // First path should be from JUPYTER_PATH
         assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(__filename), 'kernels').toString());
-        assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+        
+        // Second path should be from data directory (.jupyter/data/kernels) 
+        assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, '.jupyter', 'data', 'kernels').toString());
+        
+        // Third path should be from PROGRAMDATA 
         assert.strictEqual(
             paths[2].toString(),
             Uri.file(path.join(allUserProfilePath, 'jupyter', 'kernels')).toString()
         );
+        
+        // Fourth path should be the kernel spec root path
+        assert.strictEqual(paths[3].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
     });
 });
