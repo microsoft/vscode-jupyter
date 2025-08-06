@@ -25,6 +25,20 @@ export class NbExtensionsPathProvider implements INbExtensionsPathProvider {
                 }
                 return Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter');
             }
+            case 'startUsingLocalKernelSpec': {
+                // If the local kernelspec has an associated Python interpreter, 
+                // use the same logic as startUsingPythonInterpreter
+                if (kernel.kernelConnectionMetadata.interpreter) {
+                    const sysPrefix = await getSysPrefix(kernel.kernelConnectionMetadata.interpreter);
+                    if (!sysPrefix) {
+                        return;
+                    }
+                    return Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter');
+                }
+                // If no interpreter, we haven't come across scenarios with non-python kernels that use widgets
+                // & have custom widget sources. If we do, we can implement that as we come across them.
+                return;
+            }
             default: {
                 // We haven't come across scenarios with non-python kernels that use widgets
                 // & have custom widget sources. If we do, we can implement that as we come across them.
