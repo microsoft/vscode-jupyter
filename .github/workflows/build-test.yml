@@ -353,13 +353,13 @@ jobs:
             os: ubuntu-latest
             ipywidgetsVersion: ''
           # Pre-Release Versions
-          #   - jupyterConnection: raw
-          #     python: python
-          #     pythonVersion: '3.10'
-          #     packageVersion: 'prerelease'
-          #     tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
-          #     os: ubuntu-latest
-          #     ipywidgetsVersion: ''
+          - jupyterConnection: raw
+            python: python
+            pythonVersion: '3.10'
+            packageVersion: 'prerelease'
+            tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter|@widgets'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           # Without Python
           - jupyterConnection: raw
             python: noPython
