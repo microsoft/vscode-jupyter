@@ -244,6 +244,10 @@ export namespace Commands {
     export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
     export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
     export const ContinueEditSessionInCodespace = 'jupyter.continueEditSessionInCodespace';
+    export const StartPersistentServer = 'jupyter.startPersistentServer';
+    export const StopPersistentServer = 'jupyter.stopPersistentServer';
+    export const ConnectToPersistentServer = 'jupyter.connectToPersistentServer';
+    export const CleanupPersistentServers = 'jupyter.cleanupPersistentServers';
 }
 
 export namespace CodeLensCommands {

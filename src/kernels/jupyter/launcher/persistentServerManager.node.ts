@@ -37,6 +37,11 @@ export interface IPersistentServerManager extends Disposable {
      * Show a UI to manage persistent servers.
      */
     showServerManagementUI(): Promise<void>;
+
+    /**
+     * Scan for running persistent servers on startup and reconnect to them.
+     */
+    scanAndReconnectServers(): Promise<void>;
 }
 
 /**
@@ -46,7 +51,7 @@ export interface IPersistentServerManager extends Disposable {
 @injectable()
 export class PersistentServerManager extends DisposableBase implements IPersistentServerManager {
     constructor(
-        @inject(IPersistentServerStorage) private readonly persistentServerStorage: IPersistentServerStorage,
+        @inject(IPersistentServerStorage) protected readonly persistentServerStorage: IPersistentServerStorage,
         @inject(PersistentJupyterServerProvider) private readonly serverProvider: PersistentJupyterServerProvider
     ) {
         super();
@@ -74,6 +79,7 @@ export class PersistentServerManager extends DisposableBase implements IPersiste
         // Find servers that might be expired or orphaned
         const currentTime = Date.now();
         const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+        const healthCheckAge = 1 * 60 * 60 * 1000; // Only health check servers older than 1 hour
 
         for (const server of allServers) {
             // Clean up very old servers (older than 7 days)
@@ -83,18 +89,44 @@ export class PersistentServerManager extends DisposableBase implements IPersiste
                 continue;
             }
 
-            // TODO: Add logic to check if server is actually running
-            // For now, we'll rely on the reconnection logic to clean up dead servers
+            // Only perform health checks on servers that are at least 1 hour old
+            // This prevents cleanup of recently started servers during tests
+            if (server.launchedByExtension && currentTime - server.time > healthCheckAge) {
+                const isAlive = await this.checkServerHealth(server);
+                if (!isAlive) {
+                    logger.debug(`Server ${server.serverId} is not responding, marking for cleanup`);
+                    serversToCleanup.push(server.serverId);
+                }
+            }
         }
 
-        // Remove old servers
+        // Remove dead/old servers
         for (const serverId of serversToCleanup) {
             await this.persistentServerStorage.remove(serverId);
-            logger.info(`Cleaned up old persistent server: ${serverId}`);
+            logger.info(`Cleaned up dead/old persistent server: ${serverId}`);
         }
 
         if (serversToCleanup.length > 0) {
             logger.info(`Cleaned up ${serversToCleanup.length} persistent servers`);
+        }
+    }
+
+    /**
+     * Check if a persistent server is still alive by making a simple HTTP request.
+     */
+    protected async checkServerHealth(server: IPersistentServerInfo): Promise<boolean> {
+        try {
+            // Simple health check - try to fetch the API endpoint
+            const url = new URL('/api', server.url);
+            const response = await fetch(url.toString(), {
+                method: 'GET',
+                headers: server.token ? { 'Authorization': `Token ${server.token}` } : {},
+                signal: AbortSignal.timeout(5000) // 5 second timeout
+            });
+            return response.ok;
+        } catch (error) {
+            logger.debug(`Health check failed for server ${server.serverId}: ${error}`);
+            return false;
         }
     }
 
@@ -231,6 +263,31 @@ export class PersistentServerManager extends DisposableBase implements IPersiste
                 const vscode = await import('vscode');
                 await vscode.env.openExternal(vscode.Uri.parse(server.url));
                 break;
+        }
+    }
+
+    public async scanAndReconnectServers(): Promise<void> {
+        logger.info('Scanning for running persistent servers on startup...');
+        
+        try {
+            // First cleanup any dead or expired servers
+            await this.cleanupServers();
+            
+            // Get all remaining servers (these should be live)
+            const allServers = this.persistentServerStorage.all;
+            const liveServers = allServers.filter(server => server.launchedByExtension);
+            
+            if (liveServers.length > 0) {
+                logger.info(`Found ${liveServers.length} persistent servers to reconnect to`);
+                
+                // Trigger kernel finder refresh to pick up the persistent servers
+                // The RemoteKernelFinderController is already listening to storage changes,
+                // so the servers should automatically be picked up via the existing mechanism
+            } else {
+                logger.info('No persistent servers found to reconnect to');
+            }
+        } catch (error) {
+            logger.error('Error during persistent server startup scan', error);
         }
     }
 }

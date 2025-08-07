@@ -23,6 +23,7 @@ import { PythonExtensionRestartNotification } from './notification/pythonExtensi
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
 import { PersistentServerUIProvider } from './persistentServer/persistentServerUIProvider.node';
+import { PersistentServerCommandRegistry } from './persistentServer/commandRegistry';
 import { CommandRegistry as CodespaceCommandRegistry } from './codespace/commandRegistry';
 import { EagerlyActivateJupyterUriProviders } from './api/unstable/activateJupyterProviderExtensions';
 import { ExposeUsedAzMLServerHandles } from './api/unstable/usedAzMLServerHandles.deprecated';
@@ -102,6 +103,11 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         PersistentServerUIProvider
+    );
+    // Persistent server command registry
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PersistentServerCommandRegistry
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

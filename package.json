@@ -780,6 +780,30 @@
                 "title": "List Variables",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.startPersistentServer",
+                "title": "Start Persistent Jupyter Server",
+                "category": "Jupyter",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+            },
+            {
+                "command": "jupyter.stopPersistentServer",
+                "title": "Stop Persistent Jupyter Server",
+                "category": "Jupyter",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+            },
+            {
+                "command": "jupyter.connectToPersistentServer",
+                "title": "Connect to Persistent Jupyter Server",
+                "category": "Jupyter",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+            },
+            {
+                "command": "jupyter.cleanupPersistentServers",
+                "title": "Cleanup Persistent Jupyter Servers",
+                "category": "Jupyter",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             }
         ],
         "submenus": [

@@ -49,6 +49,10 @@ export interface ICommandNameArgumentTypeMapping {
     ['jupyter.selectLocalJupyterServer']: [] | [undefined | string];
     ['workbench.action.openSettings']: ['jupyter.kernels.excludePythonEnvironments'];
     ['jupyter.getUsedAzMLServerHandles']: [];
+    [DSCommands.StartPersistentServer]: [];
+    [DSCommands.StopPersistentServer]: [string | undefined]; // serverId
+    [DSCommands.ConnectToPersistentServer]: [];
+    [DSCommands.CleanupPersistentServers]: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.CreateNewInteractive]: [];

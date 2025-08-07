@@ -9,8 +9,17 @@ import { PersistentServerManager } from './persistentServerManager.node';
 import { IPersistentServerStorage, IPersistentServerInfo } from './persistentServerStorage';
 import { PersistentJupyterServerProvider } from './persistentJupyterServerProvider.node';
 
+// Test class that allows us to mock the health check
+class TestPersistentServerManager extends PersistentServerManager {
+    public healthCheckResults = new Map<string, boolean>();
+
+    protected override async checkServerHealth(server: IPersistentServerInfo): Promise<boolean> {
+        return this.healthCheckResults.get(server.serverId) ?? true; // Default to healthy
+    }
+}
+
 suite('Persistent Server Manager', () => {
-    let serverManager: PersistentServerManager;
+    let serverManager: TestPersistentServerManager;
     let persistentServerStorage: IPersistentServerStorage;
     let serverProvider: PersistentJupyterServerProvider;
 
@@ -60,7 +69,7 @@ suite('Persistent Server Manager', () => {
         when(serverProvider.getAllPersistentServers()).thenReturn([mockServer1, mockServer2]);
         when(serverProvider.stopPersistentServer(anything())).thenResolve();
 
-        serverManager = new PersistentServerManager(
+        serverManager = new TestPersistentServerManager(
             instance(persistentServerStorage),
             instance(serverProvider)
         );
@@ -72,6 +81,7 @@ suite('Persistent Server Manager', () => {
         disposables = dispose(disposables);
         reset(persistentServerStorage);
         reset(serverProvider);
+        serverManager?.healthCheckResults.clear();
     });
 
     test('Should get all servers from provider', () => {
@@ -115,9 +125,13 @@ suite('Persistent Server Manager', () => {
     });
 
     test('Should cleanup old servers', async () => {
+        // Set up health check results - server-1 should be healthy (and too recent to health check anyway)
+        serverManager.healthCheckResults.set('server-1', true);
+        serverManager.healthCheckResults.set('server-2', true); // server-2 will be cleaned up due to age, not health
+
         await serverManager.cleanupServers();
 
-        // Should remove server-2 (8 days old) but not server-3 (not launched by extension)
+        // Should remove server-2 (8 days old) but not server-3 (not launched by extension) or server-1 (recent)
         verify(persistentServerStorage.remove('server-2')).once();
         verify(persistentServerStorage.remove('server-1')).never();
         verify(persistentServerStorage.remove('server-3')).never();
@@ -128,6 +142,10 @@ suite('Persistent Server Manager', () => {
         const recentServer1 = { ...mockServer1, time: Date.now() - 1000 };
         const recentServer2 = { ...mockServer2, time: Date.now() - 1000 };
         when(persistentServerStorage.all).thenReturn([recentServer1, recentServer2]);
+
+        // Set up health check results (but they shouldn't be called since servers are too recent)
+        serverManager.healthCheckResults.set('server-1', true);
+        serverManager.healthCheckResults.set('server-2', true);
 
         await serverManager.cleanupServers();
 
@@ -194,6 +212,10 @@ suite('Persistent Server Manager', () => {
         };
 
         when(persistentServerStorage.all).thenReturn([recentServer, oldServer]);
+
+        // Set up health check results
+        serverManager.healthCheckResults.set('recent-server', true);
+        serverManager.healthCheckResults.set('old-server', true); // old server will be cleaned up due to age
 
         await serverManager.cleanupServers();
 

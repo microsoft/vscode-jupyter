@@ -94,6 +94,11 @@ export class PersistentServerUIProvider
                 await this.persistentServerManager.showServerManagementUI();
             })
         );
+
+        // Scan for running persistent servers on startup and clean up dead ones
+        this.persistentServerManager.scanAndReconnectServers().catch(error => {
+            logger.error('Failed to scan for persistent servers on startup', error);
+        });
     }
 
     async provideCommands(_value: string, _token: CancellationToken): Promise<JupyterServerCommand[]> {
