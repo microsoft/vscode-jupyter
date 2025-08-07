@@ -26,7 +26,7 @@ export class NbExtensionsPathProvider implements INbExtensionsPathProvider {
                 return Uri.joinPath(Uri.file(sysPrefix), 'share', 'jupyter');
             }
             case 'startUsingLocalKernelSpec': {
-                // If the local kernelspec has an associated Python interpreter, 
+                // If the local kernelspec has an associated Python interpreter,
                 // use the same logic as startUsingPythonInterpreter
                 if (kernel.kernelConnectionMetadata.interpreter) {
                     const sysPrefix = await getSysPrefix(kernel.kernelConnectionMetadata.interpreter);
