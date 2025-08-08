@@ -110,6 +110,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
     this.retries(1);
     let editor: NotebookEditor;
     let comms: Utils;
+    let ipyWidgetVersion: 7 | 8 | undefined;
     suiteSetup(async function () {
         logger.info('Suite Setup Standard IPyWidget Tests');
         this.timeout(120_000);
@@ -120,7 +121,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
         logger.info('Suite Setup Standard IPyWidget Tests, Step 3');
         await startJupyterServer();
         logger.info('Suite Setup Standard IPyWidget Tests, Step 4');
-        await prewarmNotebooks();
+        ({ ipyWidgetVersion } = await prewarmNotebooks());
         logger.info('Suite Setup Standard IPyWidget Tests, Step 5');
         sinon.restore();
         editor = (await createEmptyPythonNotebook(disposables, undefined, true)).editor;
@@ -592,5 +593,25 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // The first & second outputs should have been updated
             await assertOutputContainsHtml(cell, comms, ['Text Value is Bar']);
         });
+    });
+    test('Sync append_display_data renders', async function () {
+        if (ipyWidgetVersion === 7) {
+            return this.skip();
+        }
+        await initializeNotebookForWidgetTest(disposables, { templateFile: 'append_display_data_sync.ipynb' }, editor);
+        const [cell1, cell2] = window.activeNotebookEditor!.notebook.getCells();
+        await executeCellAndWaitForOutput(cell1, comms);
+        await executeCellAndDontWaitForOutput(cell2);
+        await assertOutputContainsHtml(cell1, comms, ['Content 0'], '.widget-output');
+    });
+    test('Async append_display_data renders', async function () {
+        if (ipyWidgetVersion === 7) {
+            return this.skip();
+        }
+        await initializeNotebookForWidgetTest(disposables, { templateFile: 'append_display_data_async.ipynb' }, editor);
+        const [cell] = window.activeNotebookEditor!.notebook.getCells();
+        await executeCellAndWaitForOutput(cell, comms);
+        // Check that at least one output widget rendered content
+        await assertOutputContainsHtml(cell, comms, ['Content 3'], '.widget-output');
     });
 });
