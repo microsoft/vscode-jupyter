@@ -1452,14 +1452,22 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "type": "string",
-                        "enum": [
-                            "jsdelivr.com",
-                            "unpkg.com"
-                        ],
-                        "enumDescriptions": [
-                            "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.0%",
-                            "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1%"
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "const": "jsdelivr.com",
+                                "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.0%"
+                            },
+                            {
+                                "type": "string",
+                                "const": "unpkg.com",
+                                "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1%"
+                            },
+                            {
+                                "type": "string",
+                                "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.custom%",
+                                "format": "uri"
+                            }
                         ]
                     },
                     "uniqueItems": true,
