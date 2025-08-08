@@ -19,6 +19,7 @@ import { TestEventHandler, createEventHandler } from '../../../test/common';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { sleep } from '../../../test/core';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
+import { IPersistentServerStorage, IPersistentServerInfo } from '../launcher/persistentServerStorage';
 
 suite('Server Uri Storage', async () => {
     let serverUriStorage: IJupyterServerUriStorage;
@@ -581,4 +582,154 @@ suite('Server Uri Storage', async () => {
         onDidAddEvent = createEventHandler(serverUriStorage, 'onDidAdd', disposables);
         return itemsInNewStorage;
     }
+
+    suite('Persistent Server Integration', () => {
+        let persistentServerStorage: IPersistentServerStorage;
+        let persistentAddEventEmitter: EventEmitter<IPersistentServerInfo>;
+        let persistentRemoveEventEmitter: EventEmitter<string>;
+        
+        const mockPersistentServer: IPersistentServerInfo = {
+            serverId: 'persistent-server-1',
+            displayName: 'Test Persistent Server',
+            url: 'http://localhost:8888/?token=test-token',
+            token: 'test-token',
+            workingDirectory: '/test/workspace',
+            launchedByExtension: true,
+            time: Date.now()
+        };
+
+        setup(() => {
+            persistentServerStorage = mock<IPersistentServerStorage>();
+            persistentAddEventEmitter = new EventEmitter<IPersistentServerInfo>();
+            persistentRemoveEventEmitter = new EventEmitter<string>();
+            disposables.push(persistentAddEventEmitter, persistentRemoveEventEmitter);
+
+            when(persistentServerStorage.all).thenReturn([mockPersistentServer]);
+            when(persistentServerStorage.onDidAdd).thenReturn(persistentAddEventEmitter.event);
+            when(persistentServerStorage.onDidRemove).thenReturn(persistentRemoveEventEmitter.event);
+            when(persistentServerStorage.remove(anything())).thenResolve();
+            when(persistentServerStorage.update(anything(), anything())).thenResolve();
+        });
+
+        test('Should include persistent servers in all list', () => {
+            generateDummyData(1);
+            // Create storage with persistent server storage
+            serverUriStorage = new JupyterServerUriStorage(instance(memento), disposables, instance(persistentServerStorage));
+            
+            const all = serverUriStorage.all;
+            
+            // Should have regular servers + persistent servers
+            assert.isTrue(all.length >= 2, 'Should include both regular and persistent servers');
+            
+            const persistentEntry = all.find(entry => 
+                entry.provider.id === 'persistent-server-provider' && 
+                entry.provider.handle === 'persistent-server-1'
+            );
+            
+            assert.isDefined(persistentEntry, 'Should find persistent server entry');
+            assert.isTrue(persistentEntry!.displayName!.includes('(Persistent)'), 'Should mark as persistent');
+        });
+
+        test('Should filter out non-extension persistent servers', () => {
+            const externalServer: IPersistentServerInfo = {
+                ...mockPersistentServer,
+                serverId: 'external-server',
+                launchedByExtension: false
+            };
+            
+            when(persistentServerStorage.all).thenReturn([mockPersistentServer, externalServer]);
+            generateDummyData(0);
+            serverUriStorage = new JupyterServerUriStorage(instance(memento), disposables, instance(persistentServerStorage));
+            
+            const all = serverUriStorage.all;
+            const persistentEntries = all.filter(entry => entry.provider.id === 'persistent-server-provider');
+            
+            assert.equal(persistentEntries.length, 1, 'Should only include extension-launched servers');
+            assert.equal(persistentEntries[0].provider.handle, 'persistent-server-1');
+        });
+
+        test('Should remove persistent server when requested', async () => {
+            generateDummyData(0);
+            serverUriStorage = new JupyterServerUriStorage(instance(memento), disposables, instance(persistentServerStorage));
+            
+            const persistentServerHandle: JupyterServerProviderHandle = {
+                id: 'persistent-server-provider',
+                handle: 'persistent-server-1',
+                extensionId: 'ms-toolsai.jupyter'
+            };
+            
+            await serverUriStorage.remove(persistentServerHandle);
+            
+            verify(persistentServerStorage.remove('persistent-server-1')).once();
+        });
+
+        test('Should update persistent server when requested', async () => {
+            generateDummyData(0);
+            serverUriStorage = new JupyterServerUriStorage(instance(memento), disposables, instance(persistentServerStorage));
+            
+            const persistentServerHandle: JupyterServerProviderHandle = {
+                id: 'persistent-server-provider',
+                handle: 'persistent-server-1',
+                extensionId: 'ms-toolsai.jupyter'
+            };
+            
+            await serverUriStorage.update(persistentServerHandle);
+            
+            verify(persistentServerStorage.update('persistent-server-1', anything())).once();
+        });
+
+        test('Should fire change events when persistent servers change', () => {
+            generateDummyData(0);
+            serverUriStorage = new JupyterServerUriStorage(instance(memento), disposables, instance(persistentServerStorage));
+            onDidChangeEvent = createEventHandler(serverUriStorage, 'onDidChange', disposables);
+            
+            const initialCount = onDidChangeEvent.count;
+            
+            // Simulate persistent server add event
+            persistentAddEventEmitter.fire(mockPersistentServer);
+            
+            assert.equal(onDidChangeEvent.count, initialCount + 1, 'Should fire change event on add');
+            
+            // Simulate persistent server remove event
+            persistentRemoveEventEmitter.fire('persistent-server-1');
+            
+            assert.equal(onDidChangeEvent.count, initialCount + 2, 'Should fire change event on remove');
+        });
+
+        test('Should work without persistent server storage', () => {
+            generateDummyData(1);
+            // Create storage without persistent server storage
+            serverUriStorage = new JupyterServerUriStorage(instance(memento), disposables);
+            
+            const all = serverUriStorage.all;
+            
+            // Should only have regular servers
+            const persistentEntries = all.filter(entry => entry.provider.id === 'persistent-server-provider');
+            assert.equal(persistentEntries.length, 0, 'Should not have persistent servers');
+        });
+
+        test('Should avoid duplicates between regular and persistent servers', () => {
+            // Create a regular server with same ID as persistent server
+            const regularServerData = [{
+                displayName: 'Regular Server',
+                serverHandle: {
+                    id: 'persistent-server-provider',
+                    handle: 'persistent-server-1',
+                    extensionId: 'ms-toolsai.jupyter'
+                },
+                time: Date.now() - 1000
+            }];
+            
+            when(memento.get(mementoKeyForStoringUsedJupyterProviders, anything())).thenReturn(regularServerData);
+            serverUriStorage = new JupyterServerUriStorage(instance(memento), disposables, instance(persistentServerStorage));
+            
+            const all = serverUriStorage.all;
+            const matchingEntries = all.filter(entry => 
+                entry.provider.id === 'persistent-server-provider' && 
+                entry.provider.handle === 'persistent-server-1'
+            );
+            
+            assert.equal(matchingEntries.length, 1, 'Should not have duplicates');
+        });
+    });
 });
