@@ -1,3 +1,4 @@
 .cell-output-ipywidget-background {
-    background: white !important;
+    /* Let the container inherit theme colors; bridge will set JupyterLab vars */
+    background: transparent !important;
 }
