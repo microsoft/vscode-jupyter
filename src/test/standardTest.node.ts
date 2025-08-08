@@ -18,13 +18,23 @@ import { DownloadPlatform } from '@vscode/test-electron/out/download';
 import { arch } from 'os';
 
 // Support for passing grep (specially for models or Copilot Coding Agent)
-process.env.VSC_JUPYTER_CI_TEST_GREP =
-    process.argv
-        .filter((arg) => arg.startsWith('--grep'))
-        .map((arg) => arg.split('=')[1])
-        .pop() ||
-    process.env.VSC_JUPYTER_CI_TEST_GREP ||
-    '';
+// Local Copilot or Copilot Coding Agent can use `--grep=XYZ` or `--grep XYZ`
+if (process.argv.some((arg) => arg.startsWith('--grep='))) {
+    process.env.VSC_JUPYTER_CI_TEST_GREP =
+        process.argv
+            .filter((arg) => arg.startsWith('--grep='))
+            .map((arg) => arg.split('=')[1])
+            .pop() ||
+        process.env.VSC_JUPYTER_CI_TEST_GREP ||
+        '';
+} else if (process.argv.some((arg) => arg === '--grep')) {
+    const indexOfGrep = process.argv.indexOf('--grep');
+    if (indexOfGrep !== -1 && process.argv.length > indexOfGrep + 1) {
+        process.env.VSC_JUPYTER_CI_TEST_GREP =
+            process.argv[indexOfGrep + 1] || process.env.VSC_JUPYTER_CI_TEST_GREP || '';
+    }
+}
+
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_JUPYTER_CI_TEST = '1';
 const workspacePath = process.env.CODE_TESTS_WORKSPACE
