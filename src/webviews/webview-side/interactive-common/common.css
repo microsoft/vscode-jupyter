@@ -189,7 +189,7 @@ html {
 }
 
 .cell-output-ipywidget-background {
-    background: white !important;
+    background: transparent !important;
 }
 
 .cell-output-plot-background * {

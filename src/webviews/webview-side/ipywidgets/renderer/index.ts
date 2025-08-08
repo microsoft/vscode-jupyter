@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import './styles.css';
+import './jupyterlabThemeBridge.css';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
 import { createDeferred, Deferred } from '../../../../platform/common/utils/async';

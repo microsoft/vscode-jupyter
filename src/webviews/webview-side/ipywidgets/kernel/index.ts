@@ -11,6 +11,9 @@ import { ScriptManager } from './scriptManager';
 import { IJupyterLabWidgetManagerCtor, INotebookModel } from './types';
 import { NotebookMetadata } from '../../../../platform/common/utils';
 
+// Ensure theme variables are available to any kernel-created containers
+import '../renderer/jupyterlabThemeBridge.css';
+
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
     private readonly scriptManager: ScriptManager;
