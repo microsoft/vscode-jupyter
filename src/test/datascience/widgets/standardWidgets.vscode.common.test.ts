@@ -593,4 +593,18 @@ suite('Standard IPyWidget Tests @widgets', function () {
             await assertOutputContainsHtml(cell, comms, ['Text Value is Bar']);
         });
     });
+    test('Sync append_display_data renders', async function () {
+        await initializeNotebookForWidgetTest(disposables, { templateFile: 'append_display_data_sync.ipynb' }, editor);
+        const [cell1, cell2] = window.activeNotebookEditor!.notebook.getCells();
+        await executeCellAndWaitForOutput(cell1, comms);
+        await executeCellAndDontWaitForOutput(cell2);
+        await assertOutputContainsHtml(cell1, comms, ['Content 0'], '.widget-output');
+    });
+    test('Async append_display_data renders', async function () {
+        await initializeNotebookForWidgetTest(disposables, { templateFile: 'append_display_data_async.ipynb' }, editor);
+        const [cell] = window.activeNotebookEditor!.notebook.getCells();
+        await executeCellAndWaitForOutput(cell, comms);
+        // Check that at least one output widget rendered content
+        await assertOutputContainsHtml(cell, comms, ['Content 3'], '.widget-output');
+    });
 });
