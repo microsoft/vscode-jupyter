@@ -48,7 +48,7 @@ function generateBasedEnvVariables() {
         : '';
     return {
         CI_PYTHON_PATH: pythonPath,
-        VSC_JUPYTER_FORCE_LOGGING: '1',
+        // VSC_JUPYTER_FORCE_LOGGING: '1',
         // VSC_JUPYTER_REMOTE_NATIVE_TEST: 'true',
         // VSC_JUPYTER_NON_RAW_NATIVE_TEST: 'false',
         // VSC_JUPYTER_CI_TEST_GREP: '@widgets',
