@@ -125,10 +125,7 @@ export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
 
-export type WidgetCDNs =
-    | 'unpkg.com'
-    | 'jsdelivr.com'
-    | { url: string; requiresExactVersion?: boolean; requiresExtension?: boolean };
+export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com' | string;
 
 export const IConfigurationService = Symbol('IConfigurationService');
 export interface IConfigurationService {

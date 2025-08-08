@@ -30,6 +30,17 @@ const sanitize = require('sanitize-filename');
 const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
 
+// Test class to access protected methods
+class TestCDNWidgetScriptSourceProvider extends CDNWidgetScriptSourceProvider {
+    public testGenerateDownloadUri(
+        moduleName: string,
+        moduleVersion: string,
+        cdn: WidgetCDNs
+    ): Promise<string | undefined> {
+        return super.generateDownloadUri(moduleName, moduleVersion, cdn);
+    }
+}
+
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('ipywidget - CDN', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
@@ -303,6 +314,21 @@ suite('ipywidget - CDN', () => {
         ).once();
     });
 
+    test('Create a valid URL from a custom CDN URL template', async () => {
+        const customTemplate =
+            'https://cdnjs.cloudflare.com/ajax/libs/${packageName}/${moduleVersion}/${fileNameWithExt}';
+        const testScriptSourceProvider = new TestCDNWidgetScriptSourceProvider(
+            instance(memento),
+            instance(configService)
+        );
+        const url = await testScriptSourceProvider.testGenerateDownloadUri(
+            'lodash.js/lodash.min',
+            '^4.17.21',
+            customTemplate
+        );
+        assert.deepEqual(url, 'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js');
+    });
+
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
             test('Script source will be empty if CDN is not a configured source of widget scripts in settings', async () => {
@@ -319,7 +345,7 @@ suite('ipywidget - CDN', () => {
                 // Nock seems to fail randomly on CI builds. See bug
                 // https://github.com/microsoft/vscode-python/issues/11442
                 // eslint-disable-next-line no-invalid-this
-                suite.skip(cdn instanceof Object ? cdn.url : cdn, () => {
+                suite.skip(cdn, () => {
                     const moduleName = 'HelloWorld';
                     const moduleVersion = '1';
                     let baseUrl = '';

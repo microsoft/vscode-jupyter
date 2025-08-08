@@ -1464,26 +1464,9 @@
                                 "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1%"
                             },
                             {
-                                "type": "object",
+                                "type": "string",
                                 "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.custom%",
-                                "properties": {
-                                    "url": {
-                                        "type": "string",
-                                        "format": "uri",
-                                        "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.custom.url.description%"
-                                    },
-                                    "requiresExactVersion": {
-                                        "type": "boolean",
-                                        "default": false,
-                                        "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.custom.requiresExactVersion.description%"
-                                    },
-                                    "requiresExtension": {
-                                        "type": "boolean",
-                                        "default": false,
-                                        "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.custom.requiresExtension.description%"
-                                    }
-                                },
-                                "required": ["url"]
+                                "format": "uri"
                             }
                         ]
                     },

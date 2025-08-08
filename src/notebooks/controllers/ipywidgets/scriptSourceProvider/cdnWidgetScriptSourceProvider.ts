@@ -22,9 +22,11 @@ export const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDN
 export const GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN = 'IPYWidgetNotFoundOnCDN';
 export const GlobalStateKeyToNeverWarnAboutNoNetworkAccess = 'IPYWidgetNoNetWorkAccess';
 
-function moduleNameToCDNUrl(cdn: WidgetCDNs, moduleName: string, moduleVersion: string) {
-    const cdnBaseUrl = getCDNPrefix(cdn);
-    if (!cdnBaseUrl) {
+const VARIABLE_PATTERN = /\$\{(.*?)\}/g;
+
+function moduleNameToCDNUrl(cdn: WidgetCDNs, moduleName: string, moduleVersionSpec: string) {
+    const cdnTemplate = getCDNTemplate(cdn);
+    if (!cdnTemplate) {
         return undefined;
     }
     let packageName = moduleName;
@@ -42,35 +44,44 @@ function moduleNameToCDNUrl(cdn: WidgetCDNs, moduleName: string, moduleVersion: 
         fileName = moduleName.substr(index + 1);
         packageName = moduleName.substr(0, index);
     }
-    if (cdnBaseUrl === jsdelivrUrl) {
-        cdn = {
-            url: cdnBaseUrl,
-            // Js Delivr doesn't support ^ in the version. It needs an exact version
-            requiresExactVersion: true,
-            // Js Delivr also needs the .js file on the end.
-            requiresExtension: true
-        };
-    }
-    if (cdn instanceof Object) {
-        if (cdn.requiresExactVersion && moduleVersion.startsWith('^')) {
-            moduleVersion = moduleVersion.slice(1);
+    const fileNameWithExt = !fileName.endsWith('.js') ? fileName.concat('.js') : fileName;
+    const moduleVersion = moduleVersionSpec.startsWith('^') ? moduleVersionSpec.slice(1) : moduleVersionSpec;
+    return cdnTemplate.replace(VARIABLE_PATTERN, (match: string, variable: string) => {
+        let result: string;
+        switch (variable) {
+            case 'packageName':
+                result = packageName;
+                break;
+            case 'fileName':
+                result = fileName;
+                break;
+            case 'fileNameWithExt':
+                result = fileNameWithExt;
+                break;
+            case 'moduleVersion':
+                result = moduleVersion;
+                break;
+            case 'moduleVersionSpec':
+                result = moduleVersionSpec;
+                break;
+            default:
+                result = match;
+                break;
         }
-        if (cdn.requiresExtension && !fileName.endsWith('.js')) {
-            fileName = fileName.concat('.js');
-        }
-    }
-    return `${cdnBaseUrl}${packageName}@${moduleVersion}/dist/${fileName}`;
+        return result;
+    });
 }
 
-function getCDNPrefix(cdn: WidgetCDNs): string | undefined {
+function getCDNTemplate(cdn: WidgetCDNs): string | undefined {
     switch (cdn) {
         case 'unpkg.com':
-            return unpgkUrl;
+            return `${unpgkUrl}\${packageName}@\${moduleVersionSpec}/dist/\${fileName}`;
         case 'jsdelivr.com':
-            return jsdelivrUrl;
+            // Js Delivr doesn't support ^ in the version. It needs an exact version
+            // Js Delivr also needs the .js file on the end.
+            return `${jsdelivrUrl}\${packageName}@\${moduleVersion}/dist/\${fileNameWithExt}`;
         default:
-            if (cdn.url) return cdn.url;
-            break;
+            return cdn;
     }
 }
 /**
