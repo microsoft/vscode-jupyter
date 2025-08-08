@@ -834,10 +834,10 @@ export async function waitForKernelToGetAutoSelectedImpl(
     return waitForKernelToChange(searchCriteria, notebookEditor!, timeout, skipAutoSelection);
 }
 
-const prewarmNotebooksDone = { done: false };
+let prewarmNotebooksDone: { ipyWidgetVersion: 7 | 8 | undefined } | undefined = undefined;
 export async function prewarmNotebooks() {
-    if (prewarmNotebooksDone.done) {
-        return;
+    if (prewarmNotebooksDone) {
+        return prewarmNotebooksDone;
     }
     const { serviceContainer } = await getServices();
     await closeActiveWindows();
@@ -855,11 +855,14 @@ export async function prewarmNotebooks() {
         const cell = window.activeNotebookEditor!.notebook.cellAt(0)!;
         logger.ci(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
+        const kernel = serviceContainer.get<IKernelProvider>(IKernelProvider).get(notebookEditor.notebook);
+        const ipyWidgetVersion = kernel?.ipywidgetsVersion;
         await closeActiveWindows();
         await shutdownAllNotebooks();
+        prewarmNotebooksDone = { ipyWidgetVersion };
+        return prewarmNotebooksDone;
     } finally {
         disposables.forEach((d) => d.dispose());
-        prewarmNotebooksDone.done = true;
     }
 }
 
