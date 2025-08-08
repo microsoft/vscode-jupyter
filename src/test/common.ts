@@ -95,9 +95,6 @@ export async function waitForCondition<T>(
         const timeout = setTimeout(() => {
             dispose(disposables);
             errorMessage = typeof errorMessage === 'string' ? errorMessage : errorMessage();
-            if (!cancelToken?.isCancellationRequested) {
-                console.log(`Test failing --- ${errorMessage}`);
-            }
             reject(new Error(errorMessage));
         }, timeoutMs);
         disposables.push({ dispose: () => clearTimeout(timeout) });
