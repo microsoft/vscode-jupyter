@@ -9,7 +9,7 @@ import { Disposable, NotebookDocument, NotebookEditor, NotebookRendererMessaging
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { WIDGET_MIMETYPE } from '../../../platform/common/constants';
+import { WIDGET_MIMETYPE, Identifiers } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -84,10 +84,22 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
                 jupyterLab.KernelMessage.isExecuteResultMsg(msg)
             ) {
                 this.trackModelId(kernel.notebook, msg);
+            } else if (
+                jupyterLab.KernelMessage.isCommOpenMsg(msg) &&
+                // Track widget model ids as soon as the comm opens to avoid races with renderer queries.
+                msg.content?.target_name === Identifiers.DefaultCommTarget &&
+                typeof msg.content?.comm_id === 'string'
+            ) {
+                this.addModelId(kernel.notebook, msg.content.comm_id);
             }
         };
         iopubMessage.connect(handler);
         this.disposables.push(new Disposable(() => iopubMessage.disconnect(handler)));
+    }
+    private addModelId(notebook: NotebookDocument, modelId: string) {
+        const set = this.widgetOutputsPerNotebook.get(notebook) || new Set<string>();
+        set.add(modelId);
+        this.widgetOutputsPerNotebook.set(notebook, set);
     }
     private trackModelId(
         notebook: NotebookDocument,
@@ -101,9 +113,7 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         if (output.data && typeof output.data === 'object' && WIDGET_MIMETYPE in output.data) {
             const widgetData = output.data[WIDGET_MIMETYPE] as WidgetData;
             if (widgetData && 'model_id' in widgetData) {
-                const set = this.widgetOutputsPerNotebook.get(notebook) || new Set<string>();
-                set.add(widgetData.model_id);
-                this.widgetOutputsPerNotebook.set(notebook, set);
+                this.addModelId(notebook, widgetData.model_id);
             }
         }
     }

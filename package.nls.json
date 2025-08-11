@@ -4,7 +4,7 @@
     "contributes.walkthroughs.jupyterWelcome.description": "Your first steps to set up a Jupyter project with all the powerful tools and features that the Jupyter Extension has to offer!",
     "contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.title": "Create or open a Jupyter Notebook",
     "contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.description": {
-        "message": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Create: New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:ipynb.newUntitledIpynb)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
+        "message": "Right-click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Create: New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:ipynb.newUntitledIpynb)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
         "comment": [
             "{Locked='command:workbench.action.showCommands'}",
             "{Locked='command:toSide:ipynb.newUntitledIpynb'}",
@@ -13,14 +13,14 @@
         ]
     },
     "contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.media.altText": "Creating a new Jupyter notebook",
-    "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.title": "Select a Jupyter kernel",
+    "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.title": "Select a Jupyter Kernel",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.description": {
         "message": "Click Select Kernel at the top right of the notebook and choose the environment in which to run your kernel. Or, with a notebook opened and in focus, open the [Command Palette](command:workbench.action.showCommands) and run the command: \n``Notebook: Select Notebook Kernel``. \n[Open Command Palette to Select a Jupyter Kernel](command:workbench.action.showCommands)",
         "comment": ["{Locked='command:workbench.action.showCommands'}"]
     },
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.media.altText": "Selecting or changing a notebook kernel",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.title": "Explore data and debug",
-    "contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.description": "📅 You can use the [Data Viewer](https://code.visualstudio.com/docs/datascience/data-science-tutorial#_prepare-the-data) to view, sort, and filter the rows of data. After loading your data, click \"Variables\" at the top right of notebook and click the Data Viewer icon to the left of the data table. \n \n[Learn about Data Viewer](https://code.visualstudio.com/docs/datascience/data-science-tutorial#_prepare-the-data)\n \n📒 Debug your notebook using the [Run by Line](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_run-by-line) mode to execute a cell one line at a time. Click the Run by Line icon from your cell (play button with lines) or hit F10. \n \n[Learn about Run by Line](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_run-by-line)",
+    "contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.description": "📅 You can use the [Data Viewer](https://code.visualstudio.com/docs/datascience/data-science-tutorial#_prepare-the-data) to view, sort, and filter the rows of data. After loading your data, click \"Variables\" at the top right of the notebook and click the Data Viewer icon to the left of the data table. \n \n[Learn about Data Viewer](https://code.visualstudio.com/docs/datascience/data-science-tutorial#_prepare-the-data)\n \n📒 Debug your notebook using the [Run by Line](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_run-by-line) mode to execute a cell one line at a time. Click the Run by Line icon from your cell (play button with lines) or hit F10. \n \n[Learn about Run by Line](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_run-by-line)",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.media.altText": "Opening data viewer",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.title": "Find out more!",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.description": {
@@ -125,21 +125,21 @@
     "jupyter.configuration.jupyter.logging.level.off": "No messages are logged with this level.",
     "jupyter.configuration.jupyter.logging.level.trace": "All messages are logged with this level.",
     "jupyter.configuration.jupyter.logging.level.debug": "Debug and higher severity messages are logged with this level.",
-    "jupyter.configuration.jupyter.logging.level.info": "Information, warning and error messages are logged with this level.",
+    "jupyter.configuration.jupyter.logging.level.info": "Information, warning, and error messages are logged with this level.",
     "jupyter.configuration.jupyter.logging.level.warn": "Warning and error messages are logged with this level.",
     "jupyter.configuration.jupyter.logging.level.error": "Only error messages are logged with this level.",
     "jupyter.configuration.jupyter.logging.level.description": "The logging level the extension logs at.",
-    "jupyter.configuration.jupyter.experiments.optInto.markdownDescription": "List of experiment to opt into. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
-    "jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
+    "jupyter.configuration.jupyter.experiments.optInto.markdownDescription": "List of experiments to opt into. If empty, the user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
+    "jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription": "List of experiments to opt out of. If empty, the user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
     "jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.0": "Loads widget (javascript) scripts from https://www.jsdelivr.com/",
     "jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1": "Loads widget (javascript) scripts from https://unpkg.com/",
-    "jupyter.configuration.jupyter.widgetScriptSources.markdownDescription": "Defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc). Not selecting any of these could result in widgets not rendering or function correctly. See [here](https://aka.ms/PVSCIPyWidgets) for more information. Once updated you will need to restart the Kernel.",
+    "jupyter.configuration.jupyter.widgetScriptSources.markdownDescription": "Defines the location and order of the sources where script files for widgets are downloaded from (e.g., ipywidgets, bqplot, beakerx, ipyleaflet, etc). Not selecting any of these could result in widgets not rendering or functioning correctly. See [here](https://aka.ms/PVSCIPyWidgets) for more information. Once updated, you will need to restart the Kernel.",
     "jupyter.configuration.jupyter.askForLargeDataFrames.description": "Warn the user before trying to open really large data frames.",
     "jupyter.configuration.jupyter.askForKernelRestart.description": "Warn the user before restarting a kernel.",
-    "jupyter.configuration.jupyter.exportWithOutputEnabled.description": "Enable exporting a python file into a jupyter notebook and run all cells when doing so.",
+    "jupyter.configuration.jupyter.exportWithOutputEnabled.description": "Enable exporting a Python file into a Jupyter notebook and run all cells when doing so.",
     "jupyter.configuration.jupyter.jupyterLaunchTimeout.description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
     "jupyter.configuration.jupyter.jupyterLaunchRetries.description": "Number of times to attempt to connect to the Jupyter Notebook",
-    "jupyter.configuration.jupyter.jupyterCommandLineArguments.description": "If and when a Jupyter server is started, these arguments will be passed to into the Jupyter Notebook CLI. By default this list is generated by the Jupyter Extension.",
+    "jupyter.configuration.jupyter.jupyterCommandLineArguments.description": "If and when a Jupyter server is started, these arguments will be passed to the Jupyter Notebook CLI. By default, this list is generated by the Jupyter extension.",
     "jupyter.configuration.jupyter.notebookFileRoot.description": "Set the root directory for Jupyter Notebooks and the Interactive Window running locally.  \n\n**Note:** This does not apply to Remote Jupyter Kernels.",
     "jupyter.configuration.jupyter.useDefaultConfigForJupyter.description": "When running Jupyter locally, create a default empty Jupyter config",
     "jupyter.configuration.jupyter.jupyterInterruptTimeout.description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
@@ -150,22 +150,22 @@
     "jupyter.configuration.jupyter.variableExplorerExclude.description": "Types to exclude from showing in the Interactive variable explorer",
     "jupyter.configuration.jupyter.codeRegularExpression.description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell.",
     "jupyter.configuration.jupyter.codeRegularExpression.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.cellMarker.codeRegex.",
-    "jupyter.configuration.jupyter.defaultCellMarker.description": "Cell marker used for delineating a cell in a python file.",
+    "jupyter.configuration.jupyter.defaultCellMarker.description": "Cell marker used for delineating a cell in a Python file.",
     "jupyter.configuration.jupyter.defaultCellMarker.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.cellMarker.default",
     "jupyter.configuration.jupyter.markdownRegularExpression.description": "Regular expression used to identify markdown cells. All comments after this expression are considered part of the markdown.",
     "jupyter.configuration.jupyter.markdownRegularExpression.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.cellMarker.markdownRegex.",
     "jupyter.configuration.jupyter.themeMatplotlibPlots.description": "In the Interactive window and Notebook Editor theme matplotlib outputs to match the VS Code editor theme.",
-    "jupyter.configuration.jupyter.decorateCells.description": "Draw a highlight behind the currently active cell, or all cells, in a python file.",
+    "jupyter.configuration.jupyter.decorateCells.description": "Draw a highlight behind the currently active cell, or all cells, in a Python file.",
     "jupyter.configuration.jupyter.decorateCells.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.cellMarker.decorateCells.",
-    "jupyter.configuration.jupyter.enableCellCodeLens.description": "Enables code lens for 'cells' in a python file.",
+    "jupyter.configuration.jupyter.enableCellCodeLens.description": "Enables code lens for 'cells' in a Python file.",
     "jupyter.configuration.jupyter.enableCellCodeLens.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.enable.",
     "jupyter.configuration.jupyter.enableAutoMoveToNextCell.description": "Enables moving to the next cell when clicking on a 'Run Cell' code lens.",
     "jupyter.configuration.jupyter.enableAutoMoveToNextCell.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.autoMoveToNextCell.",
-    "jupyter.configuration.jupyter.allowUnauthorizedRemoteConnection.description": "Allow for connecting the Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use for known and trusted servers.",
+    "jupyter.configuration.jupyter.allowUnauthorizedRemoteConnection.description": "Allow for connecting the Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use it for known and trusted servers.",
     "jupyter.configuration.jupyter.codeLenses.description": "Set of commands to put as code lens above a cell.",
     "jupyter.configuration.jupyter.codeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.commands.",
     "jupyter.configuration.jupyter.debugCodeLenses.description": "Set of debug commands to put as code lens above a cell while debugging.",
-    "jupyter.configuration.jupyter.debugCodeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLes.debugCommands.",
+    "jupyter.configuration.jupyter.debugCodeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.debugCommands.",
     "jupyter.configuration.jupyter.debugpyDistPath.description": "Path to debugpy bits for debugging cells.",
     "jupyter.configuration.jupyter.stopOnFirstLineWhileDebugging.description": "When debugging a cell, stop on the first line.",
     "jupyter.configuration.jupyter.disableJupyterAutoStart.description": "When true, disables Jupyter from being automatically started for you. You must instead run a cell to start Jupyter.",
@@ -174,7 +174,7 @@
         "comment": ["{Locked='Goto'}"]
     },
     "jupyter.configuration.jupyter.addGotoCodeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.enableGotoCell.",
-    "jupyter.configuration.jupyter.kernels.filter.markdownDescription": "List of Python environments to be excluded from the Kernel picker.",
+    "jupyter.configuration.jupyter.kernels.filter.markdownDescription": "List of Python environments to be excluded from the kernel picker.",
     "jupyter.configuration.jupyter.interactiveWindowMode.description": {
         "message": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
         "comment": ["{Locked='perFile'}", "{Locked=\"'single'\"}", "{Locked=\"'multiple'\"}"]
@@ -184,7 +184,7 @@
     "jupyter.configuration.jupyter.pythonCellFolding.description": "Enable folding regions for code cells in Python files. This setting requires a reload of VS Code.",
     "jupyter.configuration.jupyter.pythonCellFolding.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.cellFolding.",
     "jupyter.configuration.jupyter.interactiveWindowViewColumn.description": {
-        "message": "Where to open an Interactive Window that is not associated with a python file. 'beside' will open the interactive window to the right of the active editor. 'active' will open the interactive window in place of the active editor. 'secondGroup' will open the interactive window in the second editor group.",
+        "message": "Where to open an Interactive Window that is not associated with a Python file. 'beside' will open the interactive window to the right of the active editor. 'active' will open the interactive window in place of the active editor. 'secondGroup' will open the interactive window in the second editor group.",
         "comment": ["{Locked='beside'}", "{Locked=\"'active'\"}", "{Locked=\"'secondGroup'\"}"]
     },
     "jupyter.configuration.jupyter.interactiveWindowViewColumn.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.viewColumn.",
@@ -195,24 +195,24 @@
         "comment": ["{Locked=\"'direct'\"}", "{Locked=\"'commentMagics'\"}", "{Locked=\"'nbconvert'\"}"]
     },
     "jupyter.configuration.jupyter.runStartupCommands.description": {
-        "message": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever a Jupyter kernel is started or restarted. For instance, set this to '%load_ext autoreload\n%autoreload 2' to automatically reload changes made to imported files without having to restart the Jupyter Kernel.",
+        "message": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever a Jupyter kernel is started or restarted. For instance, set this to '%load_ext autoreload\n%autoreload 2' to automatically reload changes made to imported files without having to restart the Jupyter kernel.",
         "comment": ["{Locked='%load_ext autoreload\\n%autoreload 2'}"]
     },
     "jupyter.configuration.jupyter.debugJustMyCode.description": "When debugging, only step through user-written code. Disable this to allow stepping into library code.",
     "jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description": "Show the Outline button in the Jupyter notebook toolbar.",
     "jupyter.configuration.jupyter.newCellOnRunLast.description": "Append a new empty cell to an interactive window file on running the currently last cell.",
     "jupyter.configuration.jupyter.newCellOnRunLast.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.autoAddNewCell.",
-    "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description": "Characters which trigger auto completion on a python jupyter kernel.",
+    "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description": "Characters which trigger auto completion on a Python Jupyter kernel.",
     "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.deprecationMessage": "This setting has been deprecated in favor of jupyter.completionTriggerCharacters.",
-    "jupyter.configuration.jupyter.completionTriggerCharacters.markdownDescription": "Mapping of characters which trigger auto completion in a Jupyter Kernel language. Following is an example of trigger characters for rust and julia kernel languages:\n```json \n{\n  \"julia\": [\".\"],\n  \"rust\": [\".\",\":\"] \n}\n```",
-    "jupyter.configuration.jupyter.logKernelOutputSeparately.description": "Creates separate output panels for kernels/jupyter server console output",
+    "jupyter.configuration.jupyter.completionTriggerCharacters.markdownDescription": "Mapping of characters which trigger auto completion in a Jupyter kernel language. Following is an example of trigger characters for rust and julia kernel languages:\n```json \n{\n  \"julia\": [\".\"],\n  \"rust\": [\".\",\":\"] \n}\n```",
+    "jupyter.configuration.jupyter.logKernelOutputSeparately.description": "Creates separate output panels for kernels/Jupyter server console output",
     "jupyter.configuration.jupyter.excludeUserSitePackages.description": {
         "message": "Add PYTHONNOUSERSITE to kernels before starting. This prevents global/user site-packages from being used in the PYTHONPATH of the kernel.",
         "comment": ["{Locked='PYTHONNOUSERSITE'}", "{Locked='PYTHONPATH'}"]
     },
     "jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Python Jupyter kernels for Python (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
     "jupyter.configuration.jupyter.enableExtendedKernelCompletions.deprecationMessage": "This setting has been deprecated in favor of jupyter.enableExtendedPythonKernelCompletions.",
-    "jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription": "Enable code completions in Notebooks and Interactive Windows using results from the associated Jupyter Kernel.",
+    "jupyter.configuration.jupyter.enableKernelCompletions.markdownDescription": "Enable code completions in Notebooks and Interactive Windows using results from the associated Jupyter kernel.",
     "jupyter.configuration.jupyter.formatStackTraces.description": "Inject stack frame links into the stored traceback for the notebook.",
     "jupyter.configuration.jupyter.formatStackTraces.deprecationMessage": "This setting has been deprecated and will be removed in a future release.",
     "DataScience.exportDialogTitle": {
@@ -225,7 +225,7 @@
     "DataScience.notebookExportAs.shorttitle": "Export",
     "DataScience.interactiveCopyCell": "Copy Cell",
     "DataScience.runInDedicatedExtensionHost": "Run in Dedicated Extension Host",
-    "jupyter.configuration.jupyter.kernels.trusted.markdownDescription": "Enter fully qualified paths to Kernel specification files that are to be trusted. E.g. 'C:\\Program Data\\Jupyter\\kernels\\python3\\kernel.json'.  \n**Note**: Kernels can execute code with user privileges. Click [here](https://aka.ms/JupyterTrustedKernelPaths) for further details.",
+    "jupyter.configuration.jupyter.kernels.trusted.markdownDescription": "Enter fully qualified paths to kernel specification files that are to be trusted. E.g., 'C:\\Program Data\\Jupyter\\kernels\\python3\\kernel.json'.  \n**Note**: Kernels can execute code with user privileges. Click [here](https://aka.ms/JupyterTrustedKernelPaths) for further details.",
     "DataScience.latestExtension": "Download the latest version of the Jupyter Extension",
     "DataScience.refreshDataViewerCommandPalette": "Refresh Data Viewer",
     "DataScience.interactiveClearAllCells": "Clear All",
@@ -234,7 +234,7 @@
     "DataScience.installPythonExtensionViaKernelPickerTitle": "Install Python Extension",
     "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server",
     "jupyter.languageModelTools.configure_notebook.displayName": "Configure Jupyter Notebook",
-    "jupyter.languageModelTools.configure_notebook.userDescription": "Ensure Notebook to ensure it is ready for use such as running cells",
+    "jupyter.languageModelTools.configure_notebook.userDescription": "Ensure Notebook is ready for use, such as running cells.",
     "jupyter.languageModelTools.notebook_list_packages.userDescription": "Lists Python packages available in the selected Notebook Kernel.",
-    "jupyter.languageModelTools.notebook_install_packages.userDescription": "Installs a Python packages in the selected Notebook Kernel."
+    "jupyter.languageModelTools.notebook_install_packages.userDescription": "Installs Python packages in the selected Notebook Kernel."
 }
