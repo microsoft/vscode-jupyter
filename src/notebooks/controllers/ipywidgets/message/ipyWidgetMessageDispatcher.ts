@@ -383,9 +383,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 }
             }
         } else {
-            const dataToSend = serializeDataViews([data as any]);
-            const deSerialized = deserializeDataViews(dataToSend);
-            console.error(dataToSend, deSerialized);
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_binary_msg, {
                 id: msgUuid,
                 data: serializeDataViews([data as any])
