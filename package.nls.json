@@ -133,7 +133,14 @@
     "jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription": "List of experiments to opt out of. If empty, the user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
     "jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.0": "Loads widget (javascript) scripts from https://www.jsdelivr.com/",
     "jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1": "Loads widget (javascript) scripts from https://unpkg.com/",
-    "jupyter.configuration.jupyter.widgetScriptSources.markdownDescription": "Defines the location and order of the sources where script files for widgets are downloaded from (e.g., ipywidgets, bqplot, beakerx, ipyleaflet, etc). Not selecting any of these could result in widgets not rendering or functioning correctly. See [here](https://aka.ms/PVSCIPyWidgets) for more information. Once updated, you will need to restart the Kernel.",
+    "jupyter.configuration.jupyter.widgetScriptSources.items.custom": "Loads widget (javascript) scripts from a custom CDN, following the provided URL template. ",
+    "jupyter.configuration.jupyter.widgetScriptSources.markdownDescription": {
+        "message": "Defines the location and order of the sources where script files for widgets are downloaded from (e.g., ipywidgets, bqplot, beakerx, ipyleaflet, etc). Not selecting any of these could result in widgets not rendering or functioning correctly. See [here](https://aka.ms/PVSCIPyWidgets) for more information. Once updated, you will need to restart the Kernel. Custom values will be interpreted as URL templates where: \n- `${packageName}` will be replaced with the package name \n- `{fileName}` will be replaced with the file name \n- `${fileNameWithExt}` will be replaced with the file name including `.js` extension \n- `${moduleVersion}` will be replaced with the exact module version \n- `${moduleVersionSpec}` will be replaced with the module version specifier that may include `^` to indicate a range of compatible versions",
+        "comment": [
+            "{Locked='${...}'}",
+            "Do not translate what's inside of the '${..}'. It is an internal syntax for the extension"
+        ]
+    },
     "jupyter.configuration.jupyter.askForLargeDataFrames.description": "Warn the user before trying to open really large data frames.",
     "jupyter.configuration.jupyter.askForKernelRestart.description": "Warn the user before restarting a kernel.",
     "jupyter.configuration.jupyter.exportWithOutputEnabled.description": "Enable exporting a Python file into a Jupyter notebook and run all cells when doing so.",
