@@ -307,13 +307,13 @@ jobs:
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
-          #   - jupyterConnection: remote
-          #     python: python
-          #     pythonVersion: '3.10'
-          #     packageVersion: 'prerelease'
-          #     tags: '^[^@]+$|@mandatory'
-          #     os: ubuntu-latest
-          #     ipywidgetsVersion: ''
+          - jupyterConnection: remote
+            python: python
+            pythonVersion: '3.10'
+            packageVersion: 'prerelease'
+            tags: '^[^@]+$|@mandatory'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           - jupyterConnection: web
             python: python
             pythonVersion: '3.10'
@@ -382,6 +382,9 @@ jobs:
 
       - name: Generate Tag Variable
         run: echo "TAGSVAR=${{ matrix.tags }}}" >> $GITHUB_ENV
+
+      - name: Generate Package PreRelease Variable
+        run: echo "PACKAGE_PRE_RELEASE=${{ matrix.packageVersion }}" >> $GITHUB_ENV
 
       - name: Generate Friendly Variable
         run:
