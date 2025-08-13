@@ -20,7 +20,8 @@ import {
     JVSC_EXTENSION_ID,
     POWER_TOYS_EXTENSION_ID,
     PROPOSED_API_ALLOWED_PUBLISHERS,
-    PYTHON_LANGUAGE
+    PYTHON_LANGUAGE,
+    SENTINEL_EXTENSION_ID
 } from '../../../platform/common/constants';
 import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/generator';
 import {
@@ -132,15 +133,15 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 return that.onDidReceiveDisplayUpdate.bind(this);
             },
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
-            get shutdown() {
+            shutdown() {
                 if (
-                    ![JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID].includes(extensionId) &&
+                    ![JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID, SENTINEL_EXTENSION_ID].includes(extensionId) &&
                     !PROPOSED_API_ALLOWED_PUBLISHERS.includes(extensionId.split('.')[0])
                 ) {
                     throw new Error(`Proposed API is not supported for extension ${extensionId}`);
                 }
 
-                return () => that.shutdown();
+                return that.shutdown();
             }
         });
     }
