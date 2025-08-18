@@ -25,18 +25,18 @@ export class PlotViewHandler {
         if (notebook.isClosed) {
             return;
         }
-        
+
         // First try to find SVG
         const outputItem = getOutputItem(notebook, outputId, svgMimeType);
         let svgString: string | undefined;
-        
+
         if (outputItem) {
             svgString = new TextDecoder().decode(outputItem.data);
         } else {
             // Try to find any supported image format
             let imageOutput: NotebookCellOutputItem | undefined;
             let imageMimeType: string | undefined;
-            
+
             for (const mimeType of supportedImageMimeTypes) {
                 imageOutput = getOutputItem(notebook, outputId, mimeType);
                 if (imageOutput) {
@@ -44,15 +44,17 @@ export class PlotViewHandler {
                     break;
                 }
             }
-            
+
             if (!imageOutput || !imageMimeType) {
-                return logger.error(`No supported image format found to open ${getDisplayPath(notebook.uri)}, id: ${outputId}`);
+                return logger.error(
+                    `No supported image format found to open ${getDisplayPath(notebook.uri)}, id: ${outputId}`
+                );
             }
-            
+
             // Convert the image to SVG for display in plot viewer
             svgString = convertImageToSvg(imageOutput, imageMimeType);
         }
-        
+
         if (svgString) {
             await this.plotViewProvider.showPlot(svgString);
         }
@@ -78,9 +80,9 @@ function getOutputItem(
 function convertImageToSvg(imageOutput: NotebookCellOutputItem, mimeType: string): string {
     const imageBuffer = imageOutput.data;
     const imageData = uint8ArrayToBase64(imageBuffer);
-    
+
     let dims = { width: 800, height: 600 }; // Default dimensions
-    
+
     // Try to get actual dimensions for PNG images
     if (mimeType === pngMimeType && isPng(imageBuffer)) {
         try {
@@ -90,7 +92,7 @@ function convertImageToSvg(imageOutput: NotebookCellOutputItem, mimeType: string
             logger.warn('Failed to get PNG dimensions, using defaults', e);
         }
     }
-    
+
     // Of note here, we want the dims on the SVG element, and the image at 100% this is due to how the SVG control
     // in the plot viewer works. The injected svg is sized down to 100px x 100px on the plot selection list so if
     // dims are set on the image then it scales out of bounds

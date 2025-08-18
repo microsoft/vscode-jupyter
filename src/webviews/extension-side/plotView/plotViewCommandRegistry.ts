@@ -33,41 +33,45 @@ export class PlotViewCommandRegistry implements IExtensionSyncActivationService 
     private async openImageInPlotViewer(cell?: NotebookCell): Promise<void> {
         try {
             // If no cell provided, try to get the active cell
-            const targetCell = cell || window.activeNotebookEditor?.notebook.cellAt(window.activeNotebookEditor.selection.start);
-            
+            const targetCell =
+                cell || window.activeNotebookEditor?.notebook.cellAt(window.activeNotebookEditor.selection.start);
+
             if (!targetCell) {
-                window.showInformationMessage('No active notebook cell found. Please select a cell with image output.');
+                void window.showInformationMessage(
+                    'No active notebook cell found. Please select a cell with image output.'
+                );
                 return;
             }
 
             // Look for image outputs in the cell
             const imageOutputs = this.findImageOutputs(targetCell);
-            
+
             if (imageOutputs.length === 0) {
-                window.showInformationMessage('No image outputs found in the selected cell.');
+                void window.showInformationMessage('No image outputs found in the selected cell.');
                 return;
             }
 
             // If multiple images, open the first one (could be enhanced to show a picker)
             const firstImageOutput = imageOutputs[0];
             const notebook = targetCell.notebook;
-            
+
             await this.plotViewHandler.openPlot(notebook, firstImageOutput.outputId);
-            
         } catch (error) {
             logger.error('Failed to open image in plot viewer', error);
-            window.showErrorMessage(`Failed to open image: ${error instanceof Error ? error.message : String(error)}`);
+            void window.showErrorMessage(
+                `Failed to open image: ${error instanceof Error ? error.message : String(error)}`
+            );
         }
     }
 
     private findImageOutputs(cell: NotebookCell): Array<{ outputId: string; mimeType: string }> {
         const imageOutputs: Array<{ outputId: string; mimeType: string }> = [];
-        
+
         for (const output of cell.outputs) {
             if (!output.id) {
                 continue;
             }
-            
+
             for (const item of output.items) {
                 if (item.mime.startsWith('image/')) {
                     imageOutputs.push({
@@ -77,7 +81,7 @@ export class PlotViewCommandRegistry implements IExtensionSyncActivationService 
                 }
             }
         }
-        
+
         return imageOutputs;
     }
 }

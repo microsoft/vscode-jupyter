@@ -221,7 +221,7 @@ function translateDisplayDataOutput(
     */
     const metadata = getOutputMetadata(output);
     // If we have any image type, then add special metadata to indicate whether to display `open plot`
-    const hasImageData = Object.keys(output.data || {}).some(key => key.startsWith('image/'));
+    const hasImageData = Object.keys(output.data || {}).some((key) => key.startsWith('image/'));
     if (hasImageData) {
         metadata.__displayOpenPlotIcon = true;
     }
