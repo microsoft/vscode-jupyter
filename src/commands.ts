@@ -165,6 +165,7 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.GotoPrevCellInFile]: [];
     [DSCommands.ScrollToCell]: [Uri, string];
     [DSCommands.ViewJupyterOutput]: [];
+    [DSCommands.OpenImageInPlotViewer]: [NotebookCell | undefined];
     [DSCommands.ExportAsPythonScript]: [NotebookDocument | undefined, PythonEnvironment | undefined];
     [DSCommands.ExportToHTML]: [NotebookDocument | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.ExportToPDF]: [NotebookDocument | undefined, string | undefined, PythonEnvironment | undefined];

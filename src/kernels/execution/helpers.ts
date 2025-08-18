@@ -220,8 +220,9 @@ function translateDisplayDataOutput(
     }
     */
     const metadata = getOutputMetadata(output);
-    // If we have SVG or PNG, then add special metadata to indicate whether to display `open plot`
-    if ('image/svg+xml' in output.data || 'image/png' in output.data) {
+    // If we have any image type, then add special metadata to indicate whether to display `open plot`
+    const hasImageData = Object.keys(output.data || {}).some(key => key.startsWith('image/'));
+    if (hasImageData) {
         metadata.__displayOpenPlotIcon = true;
     }
     const items: NotebookCellOutputItem[] = [];

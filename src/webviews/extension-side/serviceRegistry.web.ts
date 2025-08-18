@@ -25,6 +25,7 @@ import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PlotSaveHandler } from './plotView/plotSaveHandler';
 import { PlotViewHandler } from './plotView/plotViewHandler';
+import { PlotViewCommandRegistry } from './plotView/plotViewCommandRegistry';
 import { RendererCommunication } from './plotView/rendererCommunication';
 import { IPlotSaveHandler } from './plotView/types';
 import { IPyWidgetRendererComms } from './ipywidgets/rendererComms';
@@ -54,6 +55,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
     serviceManager.addSingleton<IPlotSaveHandler>(IPlotSaveHandler, PlotSaveHandler);
     serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PlotViewCommandRegistry
+    );
 
     // Variables view
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);

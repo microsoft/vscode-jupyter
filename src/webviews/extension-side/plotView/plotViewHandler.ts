@@ -10,6 +10,12 @@ import { uint8ArrayToBase64 } from '../../../platform/common/utils/string';
 
 const svgMimeType = 'image/svg+xml';
 const pngMimeType = 'image/png';
+const jpegMimeType = 'image/jpeg';
+const jpgMimeType = 'image/jpg';
+const gifMimeType = 'image/gif';
+const webpMimeType = 'image/webp';
+
+const supportedImageMimeTypes = [pngMimeType, jpegMimeType, jpgMimeType, gifMimeType, webpMimeType];
 
 @injectable()
 export class PlotViewHandler {
@@ -19,21 +25,34 @@ export class PlotViewHandler {
         if (notebook.isClosed) {
             return;
         }
+        
+        // First try to find SVG
         const outputItem = getOutputItem(notebook, outputId, svgMimeType);
         let svgString: string | undefined;
-        if (!outputItem) {
-            // Didn't find svg, see if we have png we can convert
-            const pngOutput = getOutputItem(notebook, outputId, pngMimeType);
-
-            if (!pngOutput) {
-                return logger.error(`No SVG or PNG Plot to open ${getDisplayPath(notebook.uri)}, id: ${outputId}`);
-            }
-
-            // If we did find a PNG wrap it in an SVG element so that we can display it
-            svgString = convertPngToSvg(pngOutput);
-        } else {
+        
+        if (outputItem) {
             svgString = new TextDecoder().decode(outputItem.data);
+        } else {
+            // Try to find any supported image format
+            let imageOutput: NotebookCellOutputItem | undefined;
+            let imageMimeType: string | undefined;
+            
+            for (const mimeType of supportedImageMimeTypes) {
+                imageOutput = getOutputItem(notebook, outputId, mimeType);
+                if (imageOutput) {
+                    imageMimeType = mimeType;
+                    break;
+                }
+            }
+            
+            if (!imageOutput || !imageMimeType) {
+                return logger.error(`No supported image format found to open ${getDisplayPath(notebook.uri)}, id: ${outputId}`);
+            }
+            
+            // Convert the image to SVG for display in plot viewer
+            svgString = convertImageToSvg(imageOutput, imageMimeType);
         }
+        
         if (svgString) {
             await this.plotViewProvider.showPlot(svgString);
         }
@@ -55,19 +74,30 @@ function getOutputItem(
     }
 }
 
-// Wrap our PNG data into an SVG element so what we can display it in the current plot viewer
-function convertPngToSvg(pngOutput: NotebookCellOutputItem): string {
-    const imageBuffer = pngOutput.data;
+// Wrap image data into an SVG element so we can display it in the plot viewer
+function convertImageToSvg(imageOutput: NotebookCellOutputItem, mimeType: string): string {
+    const imageBuffer = imageOutput.data;
     const imageData = uint8ArrayToBase64(imageBuffer);
-    const dims = getPngDimensions(imageBuffer);
-
+    
+    let dims = { width: 800, height: 600 }; // Default dimensions
+    
+    // Try to get actual dimensions for PNG images
+    if (mimeType === pngMimeType && isPng(imageBuffer)) {
+        try {
+            dims = getPngDimensions(imageBuffer);
+        } catch (e) {
+            // Use default dimensions if we can't determine PNG dimensions
+            logger.warn('Failed to get PNG dimensions, using defaults', e);
+        }
+    }
+    
     // Of note here, we want the dims on the SVG element, and the image at 100% this is due to how the SVG control
     // in the plot viewer works. The injected svg is sized down to 100px x 100px on the plot selection list so if
     // dims are set on the image then it scales out of bounds
     return `<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <svg height="${dims.height}" width="${dims.width}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <g>
-        <image xmlns="http://www.w3.org/2000/svg" x="0" y="0" height="100%" width="100%" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="data:image/png;base64,${imageData}"/>
+        <image xmlns="http://www.w3.org/2000/svg" x="0" y="0" height="100%" width="100%" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="data:${mimeType};base64,${imageData}"/>
     </g>
 </svg>`;
 }

@@ -244,6 +244,11 @@
             {
                 "command": "jupyter.runByLineStop",
                 "key": "ctrl+enter"
+            },
+            {
+                "command": "jupyter.openImageInPlotViewer",
+                "key": "ctrl+shift+i",
+                "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == jupyter-notebook && isWorkspaceTrusted && notebookCellType == code"
             }
         ],
         "commands": [
@@ -315,6 +320,12 @@
                 "command": "jupyter.viewOutput",
                 "title": "%jupyter.command.jupyter.viewOutput.title%",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.openImageInPlotViewer",
+                "title": "Open Image in Plot Viewer",
+                "category": "Jupyter",
+                "enablement": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == jupyter-notebook && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.notebookeditor.export",

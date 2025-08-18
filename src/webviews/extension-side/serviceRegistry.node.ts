@@ -23,6 +23,7 @@ import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
 import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
 import { PlotViewHandler } from './plotView/plotViewHandler';
+import { PlotViewCommandRegistry } from './plotView/plotViewCommandRegistry';
 import { RendererCommunication } from './plotView/rendererCommunication';
 import { IPlotSaveHandler } from './plotView/types';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
@@ -54,6 +55,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
     serviceManager.addSingleton<IPlotSaveHandler>(IPlotSaveHandler, PlotSaveHandler);
     serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PlotViewCommandRegistry
+    );
 
     // Variable View
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
