@@ -33,6 +33,8 @@ import { KernelVariables } from './variables/kernelVariables';
 import { Identifiers } from '../platform/common/constants';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
+import { ExternalJupyterServerLauncher } from './externalServer/externalJupyterServerLauncher.node';
+import { ExternalServerCommandRegistry } from './externalServer/commandRegistry';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -93,10 +95,11 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     registerDevToolTypes(context, isDevMode);
 
     // User jupyter server url provider
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
+    serviceManager.addSingleton<UserJupyterServerUrlProvider>(
+        UserJupyterServerUrlProvider,
         UserJupyterServerUrlProvider
     );
+    serviceManager.addBinding(UserJupyterServerUrlProvider, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ExposeUsedAzMLServerHandles
@@ -115,5 +118,12 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         PreWarmActivatedJupyterEnvironmentVariables
+    );
+
+    // External Jupyter Server Launcher
+    serviceManager.addSingleton<ExternalJupyterServerLauncher>(ExternalJupyterServerLauncher, ExternalJupyterServerLauncher);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ExternalServerCommandRegistry
     );
 }

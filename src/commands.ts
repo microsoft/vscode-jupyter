@@ -185,4 +185,5 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.InstallPythonExtensionViaKernelPicker]: [];
     [DSCommands.InstallPythonViaKernelPicker]: [];
     [DSCommands.ContinueEditSessionInCodespace]: [];
+    [DSCommands.LaunchExternalJupyterServer]: [];
 }

@@ -244,6 +244,7 @@ export namespace Commands {
     export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
     export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
     export const ContinueEditSessionInCodespace = 'jupyter.continueEditSessionInCodespace';
+    export const LaunchExternalJupyterServer = 'jupyter.launchExternalJupyterServer';
 }
 
 export namespace CodeLensCommands {

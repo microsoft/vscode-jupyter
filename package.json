@@ -780,6 +780,13 @@
                 "title": "List Variables",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.launchExternalJupyterServer",
+                "title": "Launch External Jupyter Server",
+                "icon": "$(server-process)",
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension",
+                "category": "Jupyter"
             }
         ],
         "submenus": [

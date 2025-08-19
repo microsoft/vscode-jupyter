@@ -81,6 +81,11 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                                 label: DataScience.localPythonEnvironments,
                                 documentation: Uri.parse('https://aka.ms/vscodeJupyterExtKernelPickerPythonEnv'),
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
+                            },
+                            {
+                                label: DataScience.launchPersistentKernel,
+                                documentation: Uri.parse('https://aka.ms/vscodeJupyterExtKernelPickerExternalServer'),
+                                command: 'jupyter.launchExternalJupyterServer'
                             }
                         ];
                     }
@@ -94,6 +99,11 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                                 label: DataScience.localPythonEnvironments,
                                 documentation: Uri.parse('https://aka.ms/vscodeJupyterExtKernelPickerPythonEnv'),
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
+                            },
+                            {
+                                label: DataScience.launchPersistentKernel,
+                                documentation: Uri.parse('https://aka.ms/vscodeJupyterExtKernelPickerExternalServer'),
+                                command: 'jupyter.launchExternalJupyterServer'
                             }
                         ];
                     }

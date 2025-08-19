@@ -723,6 +723,7 @@ export namespace DataScience {
     export const localKernelSpecs = l10n.t('Jupyter Kernel...');
 
     export const localPythonEnvironments = l10n.t('Python Environments...');
+    export const launchPersistentKernel = l10n.t('Launch Persistent Kernel');
     export const quickPickTitleForSelectionOfJupyterServer = l10n.t('Select a Jupyter Server');
     export const UserJupyterServerUrlProviderDisplayName = l10n.t('Existing Jupyter Server...');
     export const UserJupyterServerUrlProviderDetail = l10n.t('Connect to an existing Jupyter Server');
