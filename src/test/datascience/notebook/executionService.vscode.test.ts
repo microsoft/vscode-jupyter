@@ -67,9 +67,6 @@ import { splitLines } from '../../../platform/common/helpers';
 import { isCI } from '../../../platform/vscode-path/platform';
 use(chaiAsPromised);
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
-
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Kernel Execution @kernelCore', function () {
     let api: IExtensionTestApi;
@@ -92,6 +89,8 @@ suite('Kernel Execution @kernelCore', function () {
         this.timeout(120_000);
         try {
             api = await initialize();
+            // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+            const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
             await hijackPrompt(
                 'showErrorMessage',
                 { endsWith: expectedPromptMessageSuffix },
