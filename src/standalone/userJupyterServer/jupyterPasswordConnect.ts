@@ -3,6 +3,7 @@
 
 import { CancellationError, ConfigurationTarget, QuickInputButtons, window } from 'vscode';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { IEncryptedStorage } from '../../platform/common/application/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { InputFlowAction } from '../../platform/common/utils/multiStepInput';
@@ -32,7 +33,8 @@ export class JupyterPasswordConnect {
         private readonly agentCreator: IJupyterRequestAgentCreator | undefined,
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly serverUriStorage: IJupyterServerUriStorage,
-        private readonly disposables: IDisposableRegistry
+        private readonly disposables: IDisposableRegistry,
+        private readonly encryptedStorage: IEncryptedStorage
     ) {
         // Sign up to see if servers are removed from our uri storage list
         this.serverUriStorage.onDidRemove(this.onDidRemoveServers, this, this.disposables);
@@ -110,31 +112,36 @@ export class JupyterPasswordConnect {
         const requiresPassword = await this.needPassword(options.url);
 
         if (requiresPassword || options.isTokenEmpty) {
-            // Get password first
+            // Try to get saved password first
             if (requiresPassword && options.isTokenEmpty) {
-                const input = window.createInputBox();
-                options.disposables.push(input);
-                input.title = DataScience.jupyterSelectPasswordTitle;
-                input.placeholder = DataScience.jupyterSelectPasswordPrompt;
-                input.ignoreFocusOut = true;
-                input.password = true;
-                input.validationMessage = options.validationErrorMessage || '';
-                input.show();
-                input.buttons = [QuickInputButtons.Back];
-                userPassword = await new Promise<string>((resolve, reject) => {
-                    input.onDidTriggerButton(
-                        (e) => {
-                            if (e === QuickInputButtons.Back) {
-                                reject(InputFlowAction.back);
-                            }
-                        },
-                        this,
-                        options.disposables
-                    );
-                    input.onDidChangeValue(() => (input.validationMessage = ''), this, options.disposables);
-                    input.onDidAccept(() => resolve(input.value), this, options.disposables);
-                    input.onDidHide(() => reject(InputFlowAction.cancel), this, options.disposables);
-                });
+                userPassword = await this.getSavedPassword(options.url);
+                
+                // If no saved password or validation error, prompt user
+                if (!userPassword || options.validationErrorMessage) {
+                    const input = window.createInputBox();
+                    options.disposables.push(input);
+                    input.title = DataScience.jupyterSelectPasswordTitle;
+                    input.placeholder = DataScience.jupyterSelectPasswordPrompt;
+                    input.ignoreFocusOut = true;
+                    input.password = true;
+                    input.validationMessage = options.validationErrorMessage || '';
+                    input.show();
+                    input.buttons = [QuickInputButtons.Back];
+                    userPassword = await new Promise<string>((resolve, reject) => {
+                        input.onDidTriggerButton(
+                            (e) => {
+                                if (e === QuickInputButtons.Back) {
+                                    reject(InputFlowAction.back);
+                                }
+                            },
+                            this,
+                            options.disposables
+                        );
+                        input.onDidChangeValue(() => (input.validationMessage = ''), this, options.disposables);
+                        input.onDidAccept(() => resolve(input.value), this, options.disposables);
+                        input.onDidHide(() => reject(InputFlowAction.cancel), this, options.disposables);
+                    });
+                }
             }
 
             if (typeof userPassword === undefined && !userPassword && options.isTokenEmpty) {
@@ -175,10 +182,70 @@ export class JupyterPasswordConnect {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
             const cookieString = `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue || ''}`;
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
+            
+            // Save password on successful authentication (only if user provided one)
+            if (userPassword && requiresPassword) {
+                await this.savePassword(options.url, userPassword);
+            }
+            
             return { requestHeaders, requiresPassword };
         } else {
             sendTelemetryEvent(Telemetry.GetPasswordFailure);
+            
+            // Remove saved password if authentication failed
+            if (requiresPassword && userPassword) {
+                await this.removeSavedPassword(options.url);
+            }
+            
             return { requiresPassword };
+        }
+    }
+
+    /**
+     * Generate a consistent storage key for a server URL
+     */
+    private getPasswordStorageKey(url: string): string {
+        // Normalize the URL to ensure consistent key generation
+        const normalizedUrl = addTrailingSlash(url).toLowerCase();
+        return `jupyter-server-password:${normalizedUrl}`;
+    }
+
+    /**
+     * Get saved password for a server URL
+     */
+    private async getSavedPassword(url: string): Promise<string | undefined> {
+        try {
+            const key = this.getPasswordStorageKey(url);
+            return await this.encryptedStorage.retrieve('vscode-jupyter', key);
+        } catch (error) {
+            logger.error(`Failed to retrieve saved password for ${url}`, error);
+            return undefined;
+        }
+    }
+
+    /**
+     * Save password for a server URL
+     */
+    private async savePassword(url: string, password: string): Promise<void> {
+        try {
+            const key = this.getPasswordStorageKey(url);
+            await this.encryptedStorage.store('vscode-jupyter', key, password);
+            logger.debug(`Saved password for server: ${url}`);
+        } catch (error) {
+            logger.error(`Failed to save password for ${url}`, error);
+        }
+    }
+
+    /**
+     * Remove saved password for a server URL
+     */
+    private async removeSavedPassword(url: string): Promise<void> {
+        try {
+            const key = this.getPasswordStorageKey(url);
+            await this.encryptedStorage.store('vscode-jupyter', key, undefined);
+            logger.debug(`Removed saved password for server: ${url}`);
+        } catch (error) {
+            logger.error(`Failed to remove password for ${url}`, error);
         }
     }
 
@@ -361,14 +428,31 @@ export class JupyterPasswordConnect {
     }
 
     /**
-     * When URIs are removed from the server list also remove them from
+     * When URIs are removed from the server list also remove them from our cache and saved passwords
      */
     private onDidRemoveServers(servers: JupyterServerProviderHandle[]) {
         servers.forEach((server) => {
             if (server.id.startsWith('_builtin')) {
                 this.savedConnectInfo.delete(server.handle);
+                // Also remove saved password for this server
+                this.removeSavedPasswordByHandle(server.handle).catch(noop);
             }
         });
+    }
+
+    /**
+     * Remove saved password by server handle (extracted from server provider)
+     */
+    private async removeSavedPasswordByHandle(handle: string): Promise<void> {
+        try {
+            // Extract URL from handle if possible (handle format may vary)
+            // For builtin servers, the handle typically contains the URL
+            if (handle && handle.includes('://')) {
+                await this.removeSavedPassword(handle);
+            }
+        } catch (error) {
+            logger.error(`Failed to remove password for handle ${handle}`, error);
+        }
     }
 }
 
