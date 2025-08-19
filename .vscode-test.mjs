@@ -8,6 +8,10 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+/**
+ * @param {string} label
+ * @param {Record<string, string | undefined>} env
+ */
 function generateConfig(label, env) {
     const workspaceFolder = join(__dirname, 'src', 'test', 'datascience');
     /** @type {import('@vscode/test-cli').TestConfiguration} */
@@ -70,7 +74,4 @@ function generateRemoteTestConfig() {
     return generateConfig('Remote Tests', env);
 }
 
-export default defineConfig([
-    generateLocalTestConfig()
-    //, generateRemoteTestConfig()
-]);
+export default defineConfig([generateLocalTestConfig(), generateRemoteTestConfig()]);
