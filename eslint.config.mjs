@@ -8,8 +8,6 @@ import noNullPlugin from 'eslint-plugin-no-null';
 import preferArrowPlugin from 'eslint-plugin-prefer-arrow';
 import reactPlugin from 'eslint-plugin-react';
 import noOnlyTestsPlugin from 'eslint-plugin-no-only-tests';
-import headerPlugin from 'eslint-plugin-header';
-// import localRulesPlugin from 'eslint-plugin-local-rules';
 import prettier from 'eslint-config-prettier';
 
 // Base configuration for all TypeScript files
@@ -32,8 +30,8 @@ const baseConfig = {
         'no-null': noNullPlugin,
         'prefer-arrow': preferArrowPlugin,
         'react': reactPlugin,
-        'no-only-tests': noOnlyTestsPlugin,
-        'header': headerPlugin
+        'no-only-tests': noOnlyTestsPlugin
+        // 'header': headerPlugin,
         // 'local-rules': localRulesPlugin
     },
     rules: {

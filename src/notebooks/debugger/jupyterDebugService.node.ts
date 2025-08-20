@@ -72,7 +72,7 @@ class JupyterDebugSession implements DebugSession {
     }
 }
 
-/* eslint-disable comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * This class is used for
  * - Fetching data when debugging a kernel
