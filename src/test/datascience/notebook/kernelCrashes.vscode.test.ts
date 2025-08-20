@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -42,7 +42,7 @@ app = IPython.Application.instance()
 app.kernel.do_shutdown(True)
 `;
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];

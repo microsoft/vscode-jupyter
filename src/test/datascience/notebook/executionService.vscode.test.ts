@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import { assert, expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as fs from 'fs';
@@ -67,7 +67,7 @@ import { splitLines } from '../../../platform/common/helpers';
 import { isCI } from '../../../platform/vscode-path/platform';
 use(chaiAsPromised);
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite('Kernel Execution @kernelCore', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -89,7 +89,7 @@ suite('Kernel Execution @kernelCore', function () {
         this.timeout(120_000);
         try {
             api = await initialize();
-            // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+             
             const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
             await hijackPrompt(
                 'showErrorMessage',
@@ -149,7 +149,7 @@ suite('Kernel Execution @kernelCore', function () {
         const cell = await notebook.appendCodeCell('print(__vsc_ipynb_file__)');
         await kernelExecution.executeCell(cell);
         const uri = notebook.uri;
-        // eslint-disable-next-line local-rules/dont-use-fspath
+         
         await Promise.all([kernelExecution.executeCell(cell), waitForTextOutput(cell, `${uri.fsPath}`)]);
     });
     test('Leading whitespace not suppressed', async () => {

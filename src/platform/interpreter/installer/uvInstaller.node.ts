@@ -16,7 +16,7 @@ import { getInterpreterInfo } from '../helpers';
 @injectable()
 export class UvInstaller extends ModuleInstaller {
     private isInstalledPromise: Promise<boolean>;
-    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+     
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory

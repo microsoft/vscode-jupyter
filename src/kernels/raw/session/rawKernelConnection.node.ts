@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
@@ -409,7 +409,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         return this.realKernel!.requestExecute(content, disposeOnDone, metadata);
     }
     public requestDebug(
-        // eslint-disable-next-line no-caller,no-eval
+         
         content: { seq: number; type: 'request'; command: string; arguments?: any },
         disposeOnDone?: boolean
     ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
@@ -642,7 +642,7 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
 
     // Dummy websocket we give to the underlying real kernel
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let socketInstance: IKernelSocket & IWebSocketLike & IDisposable;
     class RawSocketWrapper extends RawSocket {
         constructor() {
@@ -653,7 +653,7 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
 
     // Remap the server settings for the real kernel to use our dummy websocket
     const settings = jupyterLab.ServerConnection.makeSettings({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         WebSocket: RawSocketWrapper as any, // NOSONAR
         wsUrl: 'RAW',
         serializer: {

@@ -19,7 +19,7 @@ import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 import type { IDisposable } from '../../../platform/common/types';
 
-/* eslint-disable  */
+ 
 
 suite('Jupyter Interpreter Service', () => {
     let jupyterInterpreterService: JupyterInterpreterService;

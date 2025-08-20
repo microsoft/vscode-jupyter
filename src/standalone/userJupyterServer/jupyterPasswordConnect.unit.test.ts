@@ -15,7 +15,7 @@ import { noop } from '../../test/core';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 import { dispose } from '../../platform/common/utils/lifecycle';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, ,  */
+ 
 suite('JupyterServer Password Connect', () => {
     let jupyterPasswordConnect: JupyterPasswordConnect;
     let configService: ConfigurationService;
@@ -78,7 +78,7 @@ suite('JupyterServer Password Connect', () => {
     function createMockSetup(secure: boolean, ok: boolean, xsrfReponseStatusCode: 200 | 302 | 401 = 302) {
         const dsSettings = {
             allowUnauthorizedRemoteConnection: secure
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
         } as any;
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
 
@@ -198,7 +198,7 @@ suite('JupyterServer Password Connect', () => {
         });
         assert(result, 'Failed to get password');
         if (result) {
-            // eslint-disable-next-line
+             
             assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
         }
 
@@ -256,7 +256,7 @@ suite('JupyterServer Password Connect', () => {
         });
         assert(result, 'Failed to get password');
         if (result) {
-            // eslint-disable-next-line
+             
             assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
         }
 
@@ -314,7 +314,7 @@ suite('JupyterServer Password Connect', () => {
         });
         assert(result, 'Failed to get password');
         if (result) {
-            // eslint-disable-next-line
+             
             assert.isUndefined(result.requestHeaders);
             assert.isUndefined(result.requestHeaders);
             assert.isTrue(result.requiresPassword);
@@ -369,7 +369,7 @@ suite('JupyterServer Password Connect', () => {
         });
         assert(result, 'Failed to get password');
         if (result) {
-            // eslint-disable-next-line
+             
             assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
         }
 

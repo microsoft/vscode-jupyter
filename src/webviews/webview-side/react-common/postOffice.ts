@@ -44,7 +44,7 @@ class VsCodeMessageApi implements IMessageApi {
         this.messageCallback = msgCallback;
 
         // Only do this once as it crashes if we ask more than once
-        // eslint-disable-next-line
+         
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
             this.vscodeApi = acquireVsCodeApi(); // NOSONAR
             // eslint-disable-next-line @typescript-eslint/no-explicit-any,
@@ -132,7 +132,7 @@ class KernelMessageApi implements IMessageApi {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     private async handleKernelMessage(ev: unknown) {
         const msg = ev as unknown as WebviewMessage;
         if (msg && this.messageCallback) {
@@ -148,7 +148,7 @@ export type KernelMessagingApi = {
     postKernelMessage: (data: unknown) => void;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+ 
 export class PostOffice implements IDisposable {
     private messageApi: IMessageApi | undefined;
     private handlers: IMessageHandler[] = [];

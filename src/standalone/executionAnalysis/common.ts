@@ -149,7 +149,7 @@ export function areRangesEqual(a: Range | vscode.Range, b: Range | vscode.Range)
     );
 }
 
-// eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 export function noop() {}
 
 export const PylanceExtension = 'ms-python.vscode-pylance';

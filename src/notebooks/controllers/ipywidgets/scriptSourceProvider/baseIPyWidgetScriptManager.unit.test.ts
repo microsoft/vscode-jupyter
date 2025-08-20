@@ -8,7 +8,7 @@ import { extractRequireConfigFromWidgetEntry } from './baseIPyWidgetScriptManage
 import * as path from '../../../../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../../test/constants.node';
 
-/* eslint-disable , @typescript-eslint/no-explicit-any */
+ 
 suite('ipywidget - CDN', () => {
     [
         {

@@ -216,7 +216,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         if (this.widgetState) {
             view.initialize({ model, el: ele, options: {} });
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         return this.manager.display_view(data, view, { node: ele });
     }
     private initializeKernelAndWidgetManager(options: KernelSocketOptions, widgetState?: NotebookMetadata['widgets']) {
@@ -307,7 +307,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             WidgetManager.instance = this;
             WidgetManager._onDidChangeInstance.fire(this);
         } catch (ex) {
-            // eslint-disable-next-line no-console
+             
             console.error('Failed to initialize WidgetManager', ex);
         }
     }
@@ -316,7 +316,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleDisplayDataMessage(_sender: any, payload: KernelMessage.IIOPubMessage) {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
 
         if (

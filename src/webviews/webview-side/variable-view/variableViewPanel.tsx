@@ -11,7 +11,7 @@ import { actionCreators } from './redux/actions';
 
 import './variableViewPanel.css';
 
-/* eslint-disable  */
+ 
 export type IVariableViewPanelProps = IMainWithVariables & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainWithVariables {

@@ -15,7 +15,7 @@ import { JupyterNotebookView } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 suite(`Extension Recommendation`, () => {
     ['kernelspec', 'language_info'].forEach((whereIsLanguageDefined) => {
         ['csharp', 'fsharp', 'powershell'].forEach((languageToBeTested) => {

@@ -24,7 +24,7 @@ export type TraceInfo =
     | {
           elapsed: number; // milliseconds
           // Either returnValue or err will be set.
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           returnValue?: any;
           err?: Error;
       }
@@ -265,7 +265,7 @@ type ClassInstance = Object;
 const formattedParameters = new WeakMap<ClassInstance, Map<MethodName, ParameterLogInformation[]>>();
 export function logValue<T>(property: keyof T) {
     return (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         target: any,
         methodName: string | symbol,
         parameterIndex: number
@@ -289,7 +289,7 @@ export function logValue<T>(property: keyof T) {
 }
 export function ignoreLogging() {
     return (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         target: any,
         methodName: string | symbol,
         parameterIndex: number
@@ -338,7 +338,7 @@ function normalizeCall(call: CallInfo): CallInfo {
     return { kind, name, args, methodName: call.methodName || '', target: call.target || undefined };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function isUri(resource?: Uri | any): resource is Uri {
     if (!resource) {
         return false;
@@ -352,7 +352,7 @@ function removeUserPaths(value: string) {
     const indexOfStart = homeAsLowerCase ? value.toLowerCase().indexOf(homeAsLowerCase) : -1;
     return indexOfStart === -1 ? value : `~${value.substring(indexOfStart + homeAsLowerCase.length)}`;
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function formatArgument(target: Object, method: MethodName, arg: any, parameterIndex: number) {
     if (isUri(arg)) {
         // Where possible strip user names from paths, then users will be more likely to provide the logs.
@@ -369,7 +369,7 @@ function formatArgument(target: Object, method: MethodName, arg: any, parameterI
     if ('ignore' in info && info.ignore) {
         return '';
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let valueToLog: any = arg;
     if ('propertyOfParameterToLog' in info && info.propertyOfParameterToLog) {
         valueToLog = arg[info.propertyOfParameterToLog];

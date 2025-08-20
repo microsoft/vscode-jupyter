@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, CompletionList, Position, window } from 'vscode';
@@ -18,7 +18,7 @@ import {
 import { captureScreenShot, initialize, startJupyterServer } from '../../../common';
 import { getTextOutputValue } from '../../../../kernels/execution/helpers';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);

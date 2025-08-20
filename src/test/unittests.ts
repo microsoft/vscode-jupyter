@@ -14,7 +14,7 @@ import { setupCoverage } from './coverage.node';
 if (os.platform() === 'win32') {
     const proc = child_process.spawn('C:\\Windows\\System32\\Reg.exe', ['/?']);
     proc.on('error', () => {
-        // eslint-disable-next-line no-console
+         
         console.error('error during reg.exe');
     });
 }

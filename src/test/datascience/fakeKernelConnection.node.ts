@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
@@ -50,7 +50,7 @@ export function createKernelConnection(requestCreator: JupyterRequestCreator): {
         readonly OPEN: 1;
         readonly CLOSING: 2;
         readonly CLOSED: 3;
-        // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+         
         constructor(_url: string | URL, _protocols?: string | string[] | undefined) {
             FakeSocket.instance = this;
         }

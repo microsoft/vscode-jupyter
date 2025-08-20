@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable  */
+ 
 export namespace vscMockPosition {
     /**
      * A position in the editor. This interface is suitable for serialization.

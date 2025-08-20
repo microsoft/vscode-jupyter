@@ -105,7 +105,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         const cancellationTokenSource = new CancellationTokenSource();
         const disposables: IDisposable[] = [cancellationTokenSource];
         try {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+             
             const selector = new LocalPythonKernelSelector(notebook, cancellationTokenSource.token);
             disposables.push(selector);
             const kernel = await selector.selectKernel();

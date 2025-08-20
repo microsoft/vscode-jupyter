@@ -218,7 +218,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         const extraPaths: string[] = [];
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
-        // eslint-disable-next-line no-multi-str
+         
         let settingsPath = this.configService.getSettings(kernel.resourceUri).debugpyDistPath;
         // Escape windows path chars so they end up in the source escaped
         if (settingsPath) {

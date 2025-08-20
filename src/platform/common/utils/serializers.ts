@@ -14,7 +14,7 @@ export function serializeDataViews(buffers: undefined | (ArrayBuffer | ArrayBuff
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const newBufferView: any[] = [];
-    // eslint-disable-next-line @typescript-eslint/prefer-for-of
+     
     for (let i = 0; i < buffers.length; i += 1) {
         const item = buffers[i];
         if ('buffer' in item && 'byteOffset' in item) {
@@ -38,7 +38,7 @@ export function serializeDataViews(buffers: undefined | (ArrayBuffer | ArrayBuff
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return newBufferView;
 }
 
@@ -54,18 +54,18 @@ export function deserializeDataViews(buffers: undefined | (ArrayBuffer | ArrayBu
         return buffers;
     }
     const newBufferView: (ArrayBuffer | ArrayBufferView)[] = [];
-    // eslint-disable-next-line @typescript-eslint/prefer-for-of
+     
     for (let i = 0; i < buffers.length; i += 1) {
         const item = buffers[i];
         if ('buffer' in item && 'byteOffset' in item) {
             const buffer = new Uint8Array(item.buffer).buffer;
             // It is an ArrayBufferView
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             const bufferView = new DataView(buffer, item.byteOffset, item.byteLength);
             newBufferView.push(bufferView);
         } else {
             const buffer = new Uint8Array(item).buffer;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             newBufferView.push(buffer);
         }
     }

@@ -17,7 +17,7 @@ import {
 } from 'vscode';
 import { InteractiveWindowView, JupyterNotebookView, NotebookCellScheme } from '../../../platform/common/constants';
 
-/* eslint-disable , no-trailing-spaces, no-multi-str */
+ 
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 
 // Helper function to create a document and get line count and lines
@@ -104,7 +104,7 @@ export function createMockedDocument(
 
     // First set the metadata
     when(document.uri).thenReturn(uri);
-    // eslint-disable-next-line local-rules/dont-use-fspath
+     
     when(document.fileName).thenReturn(uri.path);
     when(document.version).thenReturn(fileVersion);
 

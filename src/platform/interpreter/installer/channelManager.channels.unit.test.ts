@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import assert from 'assert';
 import { ServiceContainer } from '../../ioc/container';

@@ -62,7 +62,7 @@ export interface ILinkClickAction {
     href: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export type CommonReducerArg<AT = CommonActionType | InteractiveWindowMessages, T = never | undefined> = ReducerArg<
     IMainState,
     AT,

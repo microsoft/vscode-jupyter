@@ -82,7 +82,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private updateTimeout?: NodeJS.Timer | number;
     private columnsContainingInfOrNaN = new Set<string>();
 
-    // eslint-disable-next-line
+     
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 

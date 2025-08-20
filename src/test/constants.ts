@@ -56,7 +56,7 @@ function isMultirootTest() {
         return false;
     }
     try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const vscode = require('vscode');
         const workspace = vscode.workspace;
         return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;

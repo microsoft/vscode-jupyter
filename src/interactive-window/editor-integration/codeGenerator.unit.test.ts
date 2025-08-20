@@ -12,7 +12,7 @@ import { IGeneratedCodeStore, InteractiveCellMetadata } from './types';
 import { GeneratedCodeStorage } from './generatedCodeStorage';
 import { dispose } from '../../platform/common/utils/lifecycle';
 
-// eslint-disable-next-line
+ 
 suite.skip('Code Generator Unit Tests', () => {
     let codeGenerator: CodeGenerator;
     let documentManager: MockDocumentManager;

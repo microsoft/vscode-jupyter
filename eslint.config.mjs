@@ -264,10 +264,9 @@ export default [
             globals: {
                 ...globals.node
             },
-            parser: tsParser,
-            parserOptions: {
-                sourceType: 'module'
-            }
+            // Use default JS parser for JS files, not TypeScript parser
+            ecmaVersion: 2022,
+            sourceType: 'module'
         },
         plugins: {
             'import': importPlugin
@@ -277,7 +276,13 @@ export default [
             'local-rules/dont-use-process': ['off'],
             'local-rules/dont-use-fspath': ['off'],
             'local-rules/dont-use-filename': ['off'],
-            'import/no-restricted-paths': ['off']
+            'import/no-restricted-paths': ['off'],
+            // Disable all TypeScript rules for JS files
+            '@typescript-eslint/no-var-requires': 'off',
+            '@typescript-eslint/no-unused-vars': 'off',
+            '@typescript-eslint/no-this-alias': 'off',
+            '@typescript-eslint/no-empty-function': 'off',
+            '@typescript-eslint/no-explicit-any': 'off'
         }
     },
     

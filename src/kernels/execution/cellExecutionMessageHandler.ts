@@ -296,7 +296,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (this.cell.document.isClosed) {
             return this.endCellExecution();
         }
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         if (!this.request && direction === 'recv') {
@@ -497,7 +497,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             logger.debug(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
             this.handleCommOpen(msg);
@@ -668,7 +668,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
                 parentHeaderMsgId &&
             cellOutput.items.every((item) =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 this.canMimeTypeBeRenderedByWidgetManager(item)
             )
         ) {
@@ -973,7 +973,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             return;
         }
 
-        // eslint-disable-next-line complexity
+         
         traceCellMessage(this.cell, `Update streamed output, new output '${msg.content.text.substring(0, 100)}'`);
         const task = this.getOrCreateExecutionTask(true);
 
@@ -1112,7 +1112,7 @@ export class CellExecutionMessageHandler implements IDisposable {
 
     @swallowExceptions()
     private handleReply(msg: KernelMessage.IShellControlMessage) {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         if (jupyterLab.KernelMessage.isExecuteReplyMsg(msg)) {

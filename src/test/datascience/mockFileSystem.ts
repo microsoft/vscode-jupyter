@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable local-rules/dont-use-fspath */
+ 
 
 import * as fsextra from 'fs-extra';
 import { FileStat, FileType } from 'vscode';

@@ -7,7 +7,7 @@ import { IPersistentState, IPersistentStateFactory } from '../../platform/common
 
 const PrefixesToStore = ['INTERPRETERS_CACHE'];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const persistedState = new Map<string, any>();
 
 class TestPersistentState<T> implements IPersistentState<T> {

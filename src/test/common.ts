@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import type { Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api';
@@ -138,7 +138,7 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
         isCancellationRequested: boolean;
         onCancellationRequested: (cb: Function) => IDisposable;
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     private readonly handledEvents: any[] = [];
     private readonly cancellationHandlers = new Set<Function>();
     constructor(
@@ -209,7 +209,7 @@ export function createEventHandler<T, K extends keyof T>(
     eventName: K,
     disposables: IDisposable[] = []
 ): T[K] extends Event<infer TArgs> ? TestEventHandler<TArgs> : TestEventHandler<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return new TestEventHandler(obj[eventName] as any, eventName as string, disposables) as any;
 }
 /**
@@ -230,7 +230,7 @@ export type CommonApi = {
     captureScreenShot?(contextOrFileName: string | Mocha.Context): Promise<void>;
     initialize(): Promise<IExtensionTestApi>;
 };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const API: CommonApi = {} as any;
 
 export function initializeCommonApi(api: CommonApi) {

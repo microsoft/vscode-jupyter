@@ -34,7 +34,7 @@ import { resolvableInstance } from '../../../test/datascience/helpers';
 import { logger } from '../../../platform/logging';
 use(chaiPromise);
 
-/* eslint-disable  */
+ 
 
 suite('Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterInterpreter: JupyterInterpreterService;
@@ -55,7 +55,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         const execFactory = mock(PythonExecutionFactory);
         execService = mock<IPythonExecutionService>();
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (instance(execService) as any).then = undefined;
         const output = new MockOutputChannel('');
         const out = createObservable<Output<string>>();
@@ -82,7 +82,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         );
 
         when(execService.execModuleObservable('jupyter', anything(), anything())).thenResolve(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             notebookStartResult as any
         );
         when(interpreterService.getActiveInterpreter()).thenResolve(activePythonInterpreter);
@@ -102,7 +102,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         disposables = dispose(disposables);
         sinon.restore();
     });
-    // eslint-disable-next-line
+     
     suite('Interpreter is not selected', () => {
         setup(() => {
             when(jupyterInterpreter.getSelectedInterpreter()).thenResolve(undefined);
@@ -249,7 +249,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
             );
         });
     });
-    // eslint-disable-next-line
+     
     suite('Interpreter is selected', () => {
         setup(() => {
             when(jupyterInterpreter.getSelectedInterpreter()).thenResolve(selectedJupyterInterpreter);

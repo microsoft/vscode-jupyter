@@ -42,7 +42,7 @@ class TypeScriptLanguageServiceHost implements ts.LanguageServiceHost {
         this._compilerOptions = compilerOptions;
     }
     readFile(path: string, encoding?: string | undefined): string | undefined {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         return fs.readFileSync(path, { encoding } as any).toString();
     }
     fileExists(path: string): boolean {
@@ -292,16 +292,16 @@ function comptePropertyGroupsFromReferenceNode(t: ts.TypeReferenceNode, typeChec
             type.aliasTypeArguments[0].symbol.declarations[0].kind === ts.SyntaxKind.TypeLiteral
         ) {
             const props = computePropertiesForLiteralType(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 type.aliasTypeArguments[0].symbol.declarations[0] as unknown as any,
                 typeChecker
             );
             props.forEach((prop) => (prop.isNullable = true));
             return props;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
         } else if (Array.isArray((type.aliasTypeArguments[0] as any).types)) {
             const allProps: TelemetryProperty[] = [];
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             (type.aliasTypeArguments[0] as any).types.map((item: any) => {
                 if (
                     Array.isArray(item.symbol?.declarations) &&

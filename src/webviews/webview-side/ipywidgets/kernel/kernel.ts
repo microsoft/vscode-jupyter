@@ -14,7 +14,7 @@ import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../messag
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { noop } from '../../../../platform/common/utils/misc';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Proxy kernel that wraps the default kernel. We need this entire class because
@@ -165,7 +165,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         });
 
         // Hook up to watch iopub messages from the real kernel
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const signaling = require('@lumino/signaling') as typeof import('@lumino/signaling');
         this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
@@ -246,7 +246,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         return this.realKernel.requestExecute(content, disposeOnDone, metadata);
     }
     public requestDebug(
-        // eslint-disable-next-line no-caller,no-eval
+         
         content: { seq: number; type: 'request'; command: string; arguments?: any },
         disposeOnDone?: boolean
     ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
@@ -459,9 +459,9 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         if (result !== undefined) {
             this.hookResults.delete(args.msg.header.msg_id);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             if ((result as any).then) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 (result as any).then((r: boolean) => {
                     this.postOffice.sendMessage<IInteractiveWindowMapping>(
                         IPyWidgetMessages.IPyWidgets_MessageHookResult,

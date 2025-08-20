@@ -44,9 +44,9 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
 
         when(interpreterService.getActiveInterpreter()).thenResolve(interpreter);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(interpreter);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (instance(pythonExecService) as any).then = undefined;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (pythonExecService as any).then = undefined;
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
     });
@@ -91,7 +91,7 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
                 anything()
             )
         ).thenReject(new Error('Not Found'));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything())).thenResolve(
             Common.install as any
         );

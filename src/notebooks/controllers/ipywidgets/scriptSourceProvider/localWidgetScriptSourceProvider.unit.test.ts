@@ -13,7 +13,7 @@ import {
 } from '../types';
 import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider.node';
 
-/* eslint-disable , @typescript-eslint/no-explicit-any */
+ 
 suite('ipywidget - Local Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let resourceConverter: ILocalResourceUriConverter;

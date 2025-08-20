@@ -120,7 +120,7 @@ export class JupyterServerHelper extends ObservableDisposable implements IJupyte
         return this.usablePythonInterpreter;
     }
 
-    /* eslint-disable complexity,  */
+     
     private startJupyterWithRetry(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
         const work = async () => {
             let connection: IJupyterConnection | undefined;

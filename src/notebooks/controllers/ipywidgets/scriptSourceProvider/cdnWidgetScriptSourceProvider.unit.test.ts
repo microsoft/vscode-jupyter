@@ -24,7 +24,7 @@ import { Common, DataScience } from '../../../../platform/common/utils/localize'
 import { computeHash } from '../../../../platform/common/crypto';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../../test/vscode-mock';
 
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
+ 
 const sanitize = require('sanitize-filename');
 
 const unpgkUrl = 'https://unpkg.com/';
@@ -41,7 +41,7 @@ class TestCDNWidgetScriptSourceProvider extends CDNWidgetScriptSourceProvider {
     }
 }
 
-/* eslint-disable , @typescript-eslint/no-explicit-any */
+ 
 suite('ipywidget - CDN', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let configService: IConfigurationService;
@@ -344,7 +344,7 @@ suite('ipywidget - CDN', () => {
             (['unpkg.com', 'jsdelivr.com'] as WidgetCDNs[]).forEach((cdn) => {
                 // Nock seems to fail randomly on CI builds. See bug
                 // https://github.com/microsoft/vscode-python/issues/11442
-                // eslint-disable-next-line no-invalid-this
+                 
                 suite.skip(cdn, () => {
                     const moduleName = 'HelloWorld';
                     const moduleVersion = '1';

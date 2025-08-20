@@ -12,7 +12,7 @@ import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebo
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { pruneCell } from '../../platform/common/utils';
 
-/* eslint-disable  */
+ 
 suite('Tests', () => {
     let configService: IConfigurationService;
     let settings: IWatchableJupyterSettings;
@@ -56,7 +56,7 @@ suite('Tests', () => {
                 metadata: {}
             };
             const result = pruneCell(cell);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, '23', 'Output execution count removed');
             const output = (result.outputs as nbformat.IOutput[])[0];
@@ -86,7 +86,7 @@ suite('Tests', () => {
             };
 
             const result = pruneCell(cell);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, 2, 'Output execution count removed');
             assert.deepEqual(result.outputs, cell.outputs, 'Outputs were modified');
@@ -107,7 +107,7 @@ suite('Tests', () => {
             };
 
             const result = pruneCell(cell);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, 2, 'Output execution count removed');
             assert.deepEqual(result.outputs, cell.outputs, 'Outputs were modified');
@@ -129,7 +129,7 @@ suite('Tests', () => {
             };
 
             const result = pruneCell(cell);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, 2, 'Output execution count removed');
             assert.deepEqual(result.outputs, cell.outputs, 'Outputs were modified');
@@ -158,7 +158,7 @@ suite('Tests', () => {
             };
 
             const result = pruneCell(cell);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, 2, 'Output execution count removed');
             assert.deepEqual(result.outputs, cell.outputs, 'Outputs were modified');
@@ -187,7 +187,7 @@ suite('Tests', () => {
             };
 
             const result = pruneCell(cell);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             assert.equal((result.outputs as any).length, 1, 'Outputs were removed');
             assert.equal(result.execution_count, 2, 'Output execution count removed');
             assert.deepEqual(result.outputs, cell.outputs, 'Outputs were modified');

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable  */
+ 
 
 import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';

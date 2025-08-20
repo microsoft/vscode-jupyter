@@ -108,7 +108,7 @@ export class IPyWidgetScriptSource {
     public initialize() {
         if (!this.jupyterLab) {
             // Lazy load jupyter lab for faster extension loading.
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
+             
             this.jupyterLab = require('@jupyterlab/services') as typeof jupyterlabService; // NOSONAR
         }
 

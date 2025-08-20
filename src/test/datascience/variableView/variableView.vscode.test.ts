@@ -53,7 +53,7 @@ suite('VariableView @variableViewer', function () {
             .getActiveInterpreter();
         activeInterpreter = interpreter!;
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
         logger.info('Suite Setup (completed)');
     });
@@ -79,7 +79,7 @@ suite('VariableView @variableViewer', function () {
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add one simple cell and execute it
@@ -107,7 +107,7 @@ suite('VariableView @variableViewer', function () {
         // https://github.com/microsoft/vscode-jupyter/issues/10559
         const varsToIgnore = ['matplotlib_inline', 'matplotlib'];
         // Sample output is `["test", "test2", "os", "sys"]`
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const vars = ((outputs[0].data as any)['text/plain'] as string)
             .trim()
             .substring(1)
@@ -126,7 +126,7 @@ suite('VariableView @variableViewer', function () {
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add cell that overrides print
@@ -152,7 +152,7 @@ suite('VariableView @variableViewer', function () {
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add one simple cell and execute it
@@ -200,7 +200,7 @@ suite('VariableView @variableViewer', function () {
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add some basic types
@@ -241,7 +241,7 @@ myClass = MyClass()
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add some basic types
@@ -280,7 +280,7 @@ mySet = {1, 2, 3}
 
         // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add one simple cell and execute it

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable no-invalid-this, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any, max-classes-per-file */
+ 
 
 import { EventEmitter as NodeEventEmitter } from 'events';
 import * as vscode from 'vscode';
@@ -307,7 +307,7 @@ export namespace vscMock {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+     
     export interface DebugAdapterExecutableOptions {
         env?: { [key: string]: string };
         cwd?: string;

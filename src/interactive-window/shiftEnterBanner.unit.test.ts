@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
+ 
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';

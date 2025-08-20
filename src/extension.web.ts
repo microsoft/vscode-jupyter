@@ -135,7 +135,7 @@ export function deactivate(): Thenable<void> {
 /////////////////////////////
 // activation helpers
 
-// eslint-disable-next-line
+ 
 function activateUnsafe(
     context: IExtensionContext,
     standardOutputChannel: OutputChannel
@@ -159,7 +159,7 @@ function activateUnsafe(
 /////////////////////////////
 // old activation code
 
-// eslint-disable-next-line
+ 
 // TODO: Gradually move simple initialization
 // and DI registration currently in this function over
 // to initializeComponents().  Likewise with complex

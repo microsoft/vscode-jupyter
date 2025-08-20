@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-use-before-define */
+ 
 
 import { inject, injectable } from 'inversify';
 import { logger } from '../platform/logging';

@@ -8,7 +8,7 @@ import { removeLinesFromFrontAndBack, stripComments } from '../../platform/commo
 
 const splitCode = (s: string) => splitLines(s, { removeEmptyEntries: false, trim: false });
 const splitMarkdown = (s: string) => splitLines(s, { removeEmptyEntries: false, trim: false });
-/* eslint-disable  */
+ 
 suite('CellFactory', () => {
     test('parsing cells', () => {
         let cells = generateCells(undefined, '#%%\na=1\na', true);
@@ -39,7 +39,7 @@ suite('CellFactory', () => {
         assert.equal(cells[0].languageId, 'markdown', 'Markdown cell not generated');
         assert.equal(splitMarkdown(cells[0].value).length, 3, 'Lines for cell not emitted');
 
-        // eslint-disable-next-line no-multi-str
+         
         const multilineCode = `#%%
 myvar = """ # Lorem Ipsum
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -50,7 +50,7 @@ Sed mattis dui diam, et blandit augue mattis vestibulum.
 Suspendisse ornare interdum velit. Suspendisse potenti.
 Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 """`;
-        // eslint-disable-next-line no-multi-str
+         
         const multilineTwo = `#%%
 """ # Lorem Ipsum
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -70,7 +70,7 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(cells.length, 1, 'code cell multline failed');
         assert.equal(cells[0].languageId, 'python', 'Code cell not generated');
         assert.equal(splitCode(cells[0].value).length, 9, 'Lines for cell not emitted');
-        // eslint-disable-next-line no-multi-str
+         
         const multilineMarkdown = `#%% [markdown]
 # ## Block of Interest
 #
@@ -98,7 +98,7 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(splitMarkdown(cells[0].value).length, 39, 'Lines for cell not emitted');
         assert.equal(splitMarkdown(cells[0].value)[34], '          - Item 1-a-3-c', 'Lines for markdown not emitted');
 
-        // eslint-disable-next-line no-multi-str
+         
         const multilineQuoteWithOtherDelimiter = `#%% [markdown]
 '''
 ### Take a look
@@ -112,7 +112,7 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(splitCode(cells[0].value).length, 5, 'Lines for cell not emitted');
         assert.equal(splitCode(cells[0].value)[4], '""" Not a comment delimiter', 'Lines for markdown not emitted');
 
-        // eslint-disable-next-line no-multi-str
+         
         const multilineQuoteInFunc = `#%%
 import requests
 def download(url, filename):
@@ -132,7 +132,7 @@ def download(url, filename):
             'Lines for cell not emitted'
         );
 
-        // eslint-disable-next-line no-multi-str
+         
         const multilineMarkdownWithCell = `#%% [markdown]
 # # Define a simple class
 class Pizza(object):

@@ -32,7 +32,7 @@ import { RunInDedicatedExtensionHostCommandHandler } from './application/command
 import { OldCacheCleaner } from './cache';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 
-// eslint-disable-next-line
+ 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 

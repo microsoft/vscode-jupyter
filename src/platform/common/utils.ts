@@ -123,7 +123,7 @@ export function translateKernelLanguageToMonaco(language: string): string {
  * Remember, there could be other notebooks such as GitHub Issues nb by VS Code.
  */
 export function isJupyterNotebook(document: NotebookDocument): boolean;
-// eslint-disable-next-line @typescript-eslint/unified-signatures
+ 
 export function isJupyterNotebook(viewType: string): boolean;
 export function isJupyterNotebook(option: NotebookDocument | string) {
     if (typeof option === 'string') {
@@ -280,7 +280,7 @@ export function formatStreamText(str: string): string {
 const SingleQuoteMultiline = "'''";
 const DoubleQuoteMultiline = '"""';
 
-// eslint-disable-next-line complexity
+ 
 export function parseForComments(
     lines: string[],
     foundCommentLine: (s: string, i: number) => void,

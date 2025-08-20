@@ -3,7 +3,7 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { NotebookCellOutput, NotebookCellOutputItem, NotebookCell, Position, Range } from 'vscode';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 import type { KernelMessage } from '@jupyterlab/services';
 import fastDeepEqual from 'fast-deep-equal';
 import * as path from '../../platform/vscode-path/path';
@@ -268,14 +268,14 @@ interface CellOutputMetadata {
     /**
      * Transient data from Jupyter.
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     transient?: {
         /**
          * This is used for updating the output in other cells.
          * We don't know of others properties, but this is definitely used.
          */
         display_id?: string;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
     };
     /**
      * Original cell output type
@@ -579,7 +579,7 @@ export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     return !!errorOutput;
 }
 
-// eslint-disable-next-line complexity
+ 
 export async function updateNotebookMetadataWithSelectedKernel(
     metadata?: nbformat.INotebookMetadata,
     kernelConnection?: KernelConnectionMetadata,

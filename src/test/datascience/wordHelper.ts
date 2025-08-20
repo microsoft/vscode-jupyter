@@ -46,7 +46,7 @@ export function ensureValidWordDefinition(wordDefinition?: RegExp | null): RegEx
             if (wordDefinition.multiline) {
                 flags += 'm';
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             if ((wordDefinition as any).unicode) {
                 flags += 'u';
             }
@@ -161,7 +161,7 @@ export function regExpLeadsToEndlessLoop(regexp: RegExp): boolean {
     // We check against an empty string. If the regular expression doesn't advance
     // (e.g. ends in an endless loop) it will match an empty string.
     const match = regexp.exec('');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return !!(match && <any>regexp.lastIndex === 0);
 }
 

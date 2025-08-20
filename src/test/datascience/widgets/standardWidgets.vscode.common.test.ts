@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as sinon from 'sinon';
 import {
@@ -100,7 +100,7 @@ export async function clickWidget(comms: Utils, cell: NotebookCell, selector: st
     await comms.click(cell, selector);
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite('Standard IPyWidget Tests @widgets', function () {
     const disposables: IDisposable[] = [];
 

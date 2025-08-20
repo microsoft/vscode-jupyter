@@ -58,7 +58,7 @@ suite('Run By Line @debugger', function () {
             sinon.restore();
             logger.debug('Step4');
             const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             logger.debug('Step5');
             variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
             debuggingManager = api.serviceContainer.get<IDebuggingManager>(INotebookDebuggingManager);

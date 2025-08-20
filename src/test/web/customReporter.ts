@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import type * as mochaTypes from 'mocha';
 import { env, extensions, UIKind, Uri } from 'vscode';
@@ -208,7 +208,7 @@ const consoleHijacker = new ConsoleHijacker();
 registerLogger(consoleHijacker);
 function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaTypes.MochaOptions) {
     defaultReporter.call(this, runner, options);
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+     
     runner
         .once(constants.EVENT_RUN_BEGIN, () => {
             consoleHijacker.release();

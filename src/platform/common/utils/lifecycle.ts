@@ -36,7 +36,7 @@ export function dispose<T extends IDisposable>(disposable: T | undefined): T | u
 export function dispose<T extends IDisposable, A extends Iterable<T> = Iterable<T>>(disposables: A): A;
 export function dispose<T extends IDisposable>(disposables: Array<T>): Array<T>;
 export function dispose<T extends IDisposable>(disposables: ReadonlyArray<T>): ReadonlyArray<T>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export function dispose<T extends IDisposable>(arg: T | Iterable<T> | undefined): any {
     if (Iterable.is(arg)) {
         for (const d of arg) {

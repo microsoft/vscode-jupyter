@@ -33,7 +33,7 @@ export class JupyterLabHelper extends ObservableDisposable {
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
+             
             this._jupyterlab = require('@jupyterlab/services');
         }
         return this._jupyterlab!;
@@ -70,7 +70,7 @@ export class JupyterLabHelper extends ObservableDisposable {
                     // Make sure it finishes startup.
                     await raceTimeout(10_000, this.sessionManager.ready);
 
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                     
                     this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
                 }
                 if (!this.kernelManager?.isDisposed) {

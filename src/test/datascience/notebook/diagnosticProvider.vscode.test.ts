@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import { assert } from 'chai';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { logger } from '../../../platform/logging';
@@ -13,7 +13,7 @@ import { NotebookDocument, Range, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from '../../../standalone/intellisense/diagnosticsProvider';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite('VSCode Notebook -', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];

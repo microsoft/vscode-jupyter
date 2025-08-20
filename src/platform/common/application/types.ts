@@ -20,7 +20,7 @@ import {
 } from 'vscode';
 import { Resource, type IDisposable } from '../types';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export const IWorkspaceService = Symbol('IWorkspaceService');
 
@@ -210,7 +210,7 @@ export interface IWebviewOptions {
      * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
      */
     additionalPaths?: Uri[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     settings?: any;
     // Instead of creating a webview we may be passed on already created by VS Code
     webviewHost?: vscodeWebviewView | vscodeWebviewPanel;

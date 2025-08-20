@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
+ 
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { KernelAPI } from '@jupyterlab/services';
@@ -396,7 +396,7 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     await initialize();
     VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
     // We could have untitled notebooks, close them by reverting changes.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const documents = new Set<NotebookDocument>(workspace.notebookDocuments);
     while (window.activeNotebookEditor) {
         documents.add(window.activeNotebookEditor.notebook);
@@ -1317,7 +1317,7 @@ export async function hijackPrompt(
     let clickButton = createDeferred<string | Uri>();
     const messageDisplayed: string[] = [];
     let displayCount = 0;
-    // eslint-disable-next-line
+     
     const stub = sinon.stub(window, promptType).callsFake(function (msg: string) {
         logger.info(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
         if (
@@ -1339,7 +1339,7 @@ export async function hijackPrompt(
                 return buttonToClick.dismissPrompt ? Promise.resolve(undefined) : clickButton.promise;
             }
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         return (window[promptType] as any).wrappedMethod.apply(window, arguments);
     } as any);
     const disposable = { dispose: () => stub.restore() };
@@ -1391,10 +1391,10 @@ export async function hijackSavePrompt(
                 return buttonToClick.dismissPrompt ? Promise.resolve(undefined) : clickButton.promise;
             }
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         return (window.showSaveDialog as any).wrappedMethod.apply(window, arguments);
     };
-    // eslint-disable-next-line
+     
     const stub1 = sinon.stub(window, 'showSaveDialog').callsFake(showSaveDialogFake as any);
     const disposable = new Disposable(() => stub1.restore());
     if (disposables) {

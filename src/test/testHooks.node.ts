@@ -17,7 +17,7 @@ export const rootHooks: Mocha.RootHookObject = {
             return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
         telemetryReporter = new reporter(AppinsightsKey);
     },

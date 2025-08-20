@@ -41,7 +41,7 @@ export class EncryptedStorage implements IEncryptedStorage {
             return this.testingState.get(`${service}#${key}`);
         }
         try {
-            // eslint-disable-next-line
+             
             const val = await this.extensionContext.secrets.get(`${service}.${key}`);
             return val;
         } catch (e) {

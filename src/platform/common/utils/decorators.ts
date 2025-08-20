@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, , no-invalid-this */
+/* eslint-disable @typescript-eslint/no-explicit-any, */
 
 import { isTestExecution } from '../constants';
 import { DataWithExpiry, getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
@@ -48,14 +48,14 @@ export function cache(expiryDurationMs: number) {
  * @returns void
  */
 export function swallowExceptions(scopeName?: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any,
+     
     return function (_target: any, propertyName: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value!;
         const errorMessage = `Jupyter Extension (Error in ${scopeName || propertyName}, method:${propertyName}):`;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any,
+         
         descriptor.value = function (...args: any[]) {
             try {
-                // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
+                 
                 const result = originalMethod.apply(this, args);
 
                 // If method being wrapped returns a promise then wait and swallow errors.
@@ -77,7 +77,7 @@ export function swallowExceptions(scopeName?: string) {
     };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type PromiseFunction = (...any: any[]) => Promise<any>;
 
 // Information about a function/method call.
@@ -85,7 +85,7 @@ export type CallInfo = {
     kind: string; // "Class", etc.
     name: string;
     methodName: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     args: any[];
     target: Object;
 };
@@ -97,12 +97,12 @@ function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logBeforeCall?: b
         if (logBeforeCall) {
             log(undefined);
         }
-        // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
+         
         const result = run();
 
         // If method being wrapped returns a promise then wait for it.
         if (isPromise(result)) {
-            // eslint-disable-next-line
+             
             (result as Promise<void>)
                 .then((data) => {
                     log({ elapsed: timer.elapsedTime, returnValue: data });
@@ -110,7 +110,7 @@ function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logBeforeCall?: b
                 })
                 .catch((ex) => {
                     log({ elapsed: timer.elapsedTime, err: ex });
-                    // eslint-disable-next-line
+                     
                     // TODO(GH-11645) Re-throw the error like we do
                     // in the non-Promise case.
                 });
@@ -125,10 +125,10 @@ function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logBeforeCall?: b
 }
 // Return a decorator that traces the decorated function.
 export function trace(log: (c: CallInfo, t: TraceInfo) => void, logBeforeCall?: boolean) {
-    // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+     
     return function (target: Object, methodName: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
-        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+         
         descriptor.value = function (...args: any[]) {
             const call = {
                 kind: 'Class',
@@ -137,7 +137,7 @@ export function trace(log: (c: CallInfo, t: TraceInfo) => void, logBeforeCall?: 
                 methodName,
                 target
             };
-            // eslint-disable-next-line @typescript-eslint/no-this-alias, no-invalid-this
+             
             const scope = this;
             return tracing(
                 // "log()"
@@ -154,10 +154,10 @@ export function trace(log: (c: CallInfo, t: TraceInfo) => void, logBeforeCall?: 
 
 // Mark a method to be used only in tests
 export function testOnlyMethod() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return function (_target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
-        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+         
         descriptor.value = function (...args: any[]) {
             if (!isTestExecution()) {
                 throw new Error(`Function: ${propertyKey} can only be called from test code`);
@@ -171,12 +171,12 @@ export function testOnlyMethod() {
 
 // Mark a method that returns a promise to chain it
 export function chainable() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return function (_target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
         const originalMethod = descriptor.value!;
         const chainedKey = `chainedPromiseFor_${propertyKey}`;
 
-        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+         
         descriptor.value = async function (...args: any[]) {
             // Check for promise in the object.
             let currentValue = (this as any)[chainedKey] as Promise<any>;

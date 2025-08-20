@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import { assert, use } from 'chai';
 
@@ -32,7 +32,7 @@ suite('Jupyter Connection Waiter', async () => {
     let configService: IConfigurationService;
     let fs: IFileSystemNode;
     let serviceContainer: IServiceContainer;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const dsSettings: IJupyterSettings = { jupyterLaunchTimeout: 10_000 } as any;
     const childProc = new events.EventEmitter();
     const notebookDir = Uri.file('someDir');
@@ -80,7 +80,7 @@ suite('Jupyter Connection Waiter', async () => {
         launchResult = {
             dispose: noop,
             out: observableOutput,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             proc: childProc as any
         };
         getServerInfoStub = sinon.stub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>();
@@ -106,7 +106,7 @@ suite('Jupyter Connection Waiter', async () => {
             launchResult,
             notebookDir,
             Uri.file(EXTENSION_ROOT_DIR),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             getServerInfoStub as any,
             instance(serviceContainer),
             undefined

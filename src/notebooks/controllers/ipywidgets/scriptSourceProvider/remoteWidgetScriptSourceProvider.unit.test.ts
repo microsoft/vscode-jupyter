@@ -8,7 +8,7 @@ import { IKernel, RemoteKernelSpecConnectionMetadata, IJupyterKernelSpec } from 
 import { IWidgetScriptSourceProvider, IIPyWidgetScriptManagerFactory, IIPyWidgetScriptManager } from '../types';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 
-/* eslint-disable , @typescript-eslint/no-explicit-any */
+ 
 suite('ipywidget - Remote Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let kernel: IKernel;

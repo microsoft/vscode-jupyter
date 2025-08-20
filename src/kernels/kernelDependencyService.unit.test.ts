@@ -23,9 +23,9 @@ import { PythonExtension } from '@vscode/python-extension';
 import { resolvableInstance } from '../test/datascience/helpers';
 import { setPythonApi } from '../platform/interpreter/helpers';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
-// eslint-disable-next-line
+ 
 suite('Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
     let installer: IInstaller;

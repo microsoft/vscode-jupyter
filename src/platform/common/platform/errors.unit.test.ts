@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable  */
+ 
 
 import { expect } from 'chai';
 import * as vscode from 'vscode';

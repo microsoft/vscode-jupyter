@@ -5,12 +5,12 @@ import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 
 export function getDefaultSettings(): IJupyterExtraSettings {
     // Default settings for tests
-    // eslint-disable-next-line
+     
     const result: Partial<IJupyterExtraSettings> = {
         experiments: { enabled: true, optInto: [], optOutFrom: [] },
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
-        // eslint-disable-next-line no-template-curly-in-string
+         
         notebookFileRoot: '${fileDirname}',
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,

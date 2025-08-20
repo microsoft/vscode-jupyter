@@ -14,5 +14,5 @@ export async function sleep(milliseconds: number, disposables?: IDisposable[]) {
     });
 }
 
-// eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 export function noop() {}

@@ -28,13 +28,13 @@ function getScriptsWithAValidScriptUriToBeRegistered(scripts: WidgetScriptSource
     return scripts
         .filter((source) => {
             if (source.scriptUri) {
-                // eslint-disable-next-line no-console
+                 
                 logMessage(
                     `Source for IPyWidget ${source.moduleName} found in ${source.source} @ ${source.scriptUri}.`
                 );
                 return true;
             } else {
-                // eslint-disable-next-line no-console
+                 
                 console.error(`Source for IPyWidget ${source.moduleName} not found.`);
                 return false;
             }

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
+ 
 import * as sinon from 'sinon';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { assert, expect } from 'chai';

@@ -31,7 +31,7 @@ import { EnvironmentVariablesService } from '../../../platform/common/variables/
 import { isWeb } from '../../../platform/common/utils/misc';
 import { isPythonKernelConnection } from '../../helpers';
 
-// eslint-disable-next-line
+ 
 suite('JupyterKernelService', () => {
     let kernelService: JupyterKernelService;
     let kernelDependencyService: IKernelDependencyService;

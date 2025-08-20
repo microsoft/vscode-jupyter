@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import assert from 'assert';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
@@ -24,7 +24,7 @@ import {
     waitForTextOutput
 } from './helper.node';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite('Non-Python Kernel @nonPython ', async function () {
     const denoNb = Uri.file(
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleDeno.ipynb')

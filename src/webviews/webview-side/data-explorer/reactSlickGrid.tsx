@@ -12,28 +12,28 @@ import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
 */
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+ 
 const slickgridJQ = require('slickgrid/lib/jquery-1.11.2.min');
 
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// eslint-disable-next-line import/order
+ 
 import 'slickgrid/slick.core';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// eslint-disable-next-line import/order
+ 
 import 'slickgrid/slick.dataview';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// eslint-disable-next-line import/order
+ 
 import 'slickgrid/slick.grid';
 import 'slickgrid/slick.editors';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// eslint-disable-next-line import/order
+ 
 import 'slickgrid/plugins/slick.autotooltips';
 import 'slickgrid/plugins/slick.headerbuttons';
 // Adding comments to ensure order of imports does not change due to auto formatters.
-// eslint-disable-next-line import/order
+ 
 import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
-// eslint-disable-next-line import/order
+ 
 import './reactSlickGrid.css';
 import { generateDisplayValue } from './cellFormatter';
 import { getLocString } from '../react-common/locReactSide';
@@ -190,7 +190,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.props.columnsUpdated.subscribe(this.updateColumns);
     }
 
-    // eslint-disable-next-line
+     
     public override componentDidMount = () => {
         window.addEventListener('resize', this.windowResized);
 
@@ -577,7 +577,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         // refresh the grid.
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     private filter(item: any, _args: any): boolean {
         const fields = Array.from(this.columnFilters.keys());
         for (const field of fields) {

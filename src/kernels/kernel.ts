@@ -933,7 +933,7 @@ abstract class BaseKernel implements IBaseKernel {
         // Hence we need to monitor messages that require widgets and the determine the version of widgets at that point in time.
         // This is not ideal, but its the best we can do.
         if (!this._ipywidgetsVersion && this.session?.kernel) {
-            const anyMessageHandler = // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const anyMessageHandler =  
                 (_: unknown, msg: IAnyMessageArgs) => {
                     if (msg.direction === 'send') {
                         return;

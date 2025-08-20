@@ -81,7 +81,7 @@ export function sharedIWDebuggerTests(
                 interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
                 logger.info(`Start Test (completed) ${this.currentTest?.title}`);
                 const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
             });
             teardown(async function () {

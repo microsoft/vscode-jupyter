@@ -26,7 +26,7 @@ export abstract class BaseProductPathsService implements IProductPathService {
         let moduleName: string | undefined;
         try {
             moduleName = this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
-            // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+             
         } catch {}
 
         // User may have customized the module name or provided the fully qualified path.
@@ -40,7 +40,7 @@ export abstract class BaseProductPathsService implements IProductPathService {
 
 @injectable()
 export class DataScienceProductPathService extends BaseProductPathsService {
-    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+     
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }

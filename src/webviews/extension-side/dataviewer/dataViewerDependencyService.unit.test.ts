@@ -128,7 +128,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
         const stub = sinon.stub(helpers, 'executeSilently');
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: '' }]));
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         when(mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything())).thenResolve(
             Common.install as any
         );

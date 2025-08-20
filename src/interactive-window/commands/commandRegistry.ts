@@ -682,7 +682,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
 
             // Scroll to cell in the one that has the cell. We need this so
             // we don't activate all of them.
-            // eslint-disable-next-line @typescript-eslint/prefer-for-of
+             
             for (let i = 0; i < possibles.length; i += 1) {
                 if (await possibles[i].hasCell(id)) {
                     possibles[i].scrollToCell(id);

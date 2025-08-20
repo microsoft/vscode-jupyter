@@ -156,7 +156,7 @@ suite('IPyWidget Script Manager @widgets', function () {
 
         // await del([nbExtensionsFolder]);
         const fsNode = api.serviceContainer.get<IFileSystemNode>(IFileSystemNode);
-        // eslint-disable-next-line local-rules/dont-use-fspath
+         
         await fsNode.delete(nbExtensionsFolder);
         assert.isFalse(await fs.exists(nbExtensionsFolder), `Directory '${nbExtensionsFolder}'does not exist`);
 

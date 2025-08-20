@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable  */
+ 
 import { vscMockPosition } from './position';
 import { vscMockRange } from './range';
 export namespace vscMockSelection {

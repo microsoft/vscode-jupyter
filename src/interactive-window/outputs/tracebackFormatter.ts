@@ -13,7 +13,7 @@ import { stripAnsi } from '../../platform/common/utils/regexp';
 import { IConfigurationService } from '../../platform/common/types';
 import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+ 
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
 const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
 
@@ -100,7 +100,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
             // Find the cell that matches the execution count in group 1
             let matchUri: Uri | undefined;
             let match: IGeneratedCode | undefined;
-            // eslint-disable-next-line no-restricted-syntax
+             
             for (let entry of generatedCodes) {
                 match = entry.generatedCodes.find((h) => h.executionCount === executionCount);
                 if (match) {

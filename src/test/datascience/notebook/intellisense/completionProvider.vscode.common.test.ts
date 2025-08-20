@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import { assert } from 'chai';
 import * as path from '../../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
@@ -23,7 +23,7 @@ import { IExtensionTestApi, initialize, startJupyterServer } from '../../../comm
 import { KernelCompletionProvider } from '../../../../standalone/intellisense/kernelCompletionProvider';
 import { IKernelProvider } from '../../../../kernels/types';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 [true, false].forEach((useJedi) => {
     suite(
         `DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) ${

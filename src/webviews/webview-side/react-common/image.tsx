@@ -50,7 +50,7 @@ export enum ImageName {
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
-/* eslint-disable @typescript-eslint/no-require-imports */
+ 
 const images: { [key: string]: { light: string; dark: string } } = {
     Cancel: {
         light: require('./images/Cancel/Cancel_16xMD_vscode.svg'),
@@ -108,7 +108,7 @@ const images: { [key: string]: { light: string; dark: string } } = {
         light: require('./images/Prev/previous.svg'),
         dark: require('./images/Prev/previous-inverse.svg')
     },
-    // eslint-disable-next-line
+     
     // Todo: Get new images from a designer. These are all temporary.
     Pan: {
         light: require('./images/Pan/pan.svg'),

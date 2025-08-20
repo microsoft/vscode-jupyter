@@ -69,7 +69,7 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
             })
         );
 
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         const handler = (kernelConnection: IKernelConnection, msg: IIOPubMessage<IOPubMessageType>) => {
             if (kernelConnection !== previousKernelConnection) {

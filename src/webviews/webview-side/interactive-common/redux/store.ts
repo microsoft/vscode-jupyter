@@ -29,7 +29,7 @@ function generateDefaultState(
         return generateTestState('', editable);
     } else {
         return {
-            // eslint-disable-next-line
+             
             skipDefault,
             testMode,
             baseTheme: baseTheme,
@@ -92,7 +92,7 @@ function createTestMiddleware(transformLoad: () => Promise<void>): Redux.Middlew
     // Make sure all dynamic imports are loaded.
     const transformPromise = transformLoad();
 
-    // eslint-disable-next-line complexity
+     
     return (store) => (next) => (action) => {
         const prevState = store.getState();
         const res = next(action);

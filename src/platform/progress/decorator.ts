@@ -37,7 +37,7 @@ export function reportAction(action: ReportableAction) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any,
         descriptor.value = async function (...args: any[]) {
             report({ action, phase: 'started' });
-            // eslint-disable-next-line no-invalid-this
+             
             return originalMethod.apply(this, args).finally(() => {
                 report({ action, phase: 'completed' });
             });

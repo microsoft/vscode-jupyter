@@ -70,7 +70,7 @@ export async function saveSvgToPdf(svg: string, fs: IFileSystemNode, file: Uri) 
     // Import here since pdfkit is so huge.
     const SVGtoPDF = (await import('svg-to-pdfkit')).default;
     const deferred = createDeferred<void>();
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');
     const doc = new pdfkit();
     const ws = fs.createLocalWriteStream(file.fsPath);

@@ -9,7 +9,7 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { getExtensionSettings } from '../../common.node';
 import { initialize } from '../../initialize.node';
 
-// eslint-disable-next-line
+ 
 suite('Configuration Service', () => {
     let serviceContainer: IServiceContainer;
     suiteSetup(async () => {

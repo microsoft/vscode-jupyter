@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable no-void */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
+ 
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import { assert } from 'chai';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { NotebookDocument, EventEmitter, NotebookController, Uri, Disposable } from 'vscode';

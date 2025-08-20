@@ -25,7 +25,7 @@ export class JupyterImporter implements INotebookImporter {
     public isDisposed: boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
     private readonly nbconvertBaseTemplateFormat =
-        // eslint-disable-next-line no-multi-str
+         
         `{%- extends '{0}' -%}
 {% block codecell %}
 {1}

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any, , no-invalid-this, max-classes-per-file */
+ 
 
 import { expect } from 'chai';
 import { ChildProcess, spawn } from 'child_process';
@@ -15,7 +15,7 @@ interface IProcData {
 }
 
 suite('Process - Process Service', function () {
-    // eslint-disable-next-line no-invalid-this
+     
     this.timeout(5000);
     const procsToKill: IProcData[] = [];
     teardown(() => {

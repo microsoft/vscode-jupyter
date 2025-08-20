@@ -2235,7 +2235,7 @@
         "test:integration:web": "node ./build/launchWebTest.js",
         "test:smoke": "cross-env VSC_JUPYTER_FORCE_LOGGING=true node --no-force-async-hooks-checks ./out/test/smokeTest.node.js",
         "lint": "eslint src",
-        "lint-fix": "eslint --fix src build pythonExtensionApi gulpfile.js",
+        "lint-fix": "eslint --fix src build gulpfile.js",
         "format": "prettier --check *.js *.json 'src/**/*.ts*' 'build/**/*.js' '.github/**/*.yml' 'build/**/*.yml' 'build/**/*.ts' 'build/**/*.json' gulpfile.js",
         "format-fix": "prettier --write *.js *.json 'src/**/*.ts*' 'build/**/*.js' '.github/**/*.yml' 'build/**/*.yml' 'build/**/*.ts' 'build/**/*.json' gulpfile.js",
         "download-api": "npx vscode-dts dev",

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable , no-trailing-spaces, no-multi-str, , @typescript-eslint/no-unused-expressions */
+ 
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
@@ -34,7 +34,7 @@ import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 import { IReplNotebookTrackerService } from '../../platform/notebooks/replNotebookTrackerService';
 import { CellRangeCache } from './cellRangeCache';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 function initializeMockTextEditor(codeWatcher: CodeWatcher, inputText: string): MockEditor {
     const fileName = Uri.file('test.py').fsPath;

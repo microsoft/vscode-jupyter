@@ -54,7 +54,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             console.log('Grep for Mocha testing is ', grep);
             mocha.setup({
                 ui: 'tdd',
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 reporter: CustomReporter as any,
                 grep
             });

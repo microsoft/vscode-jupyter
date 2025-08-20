@@ -8,7 +8,7 @@ import { getErrorTags } from './errors';
 import { getLastFrameFromPythonTraceback } from './errorUtils';
 import { getErrorCategory, TelemetryErrorProperties, BaseError, WrappedError } from './types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export async function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProperties>, error: Error) {
     props.failed = true;
     // Don't blow away what we already have.
@@ -31,7 +31,7 @@ export async function populateTelemetryWithErrorInfo(props: Partial<TelemetryErr
         // Helps us determine that we are rejecting with errors in some places, in which case we aren't getting meaningful errors/data.
         props.failureSubCategory = 'errorisstring';
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const stdErr = (error as BaseError).stdErr ? (error as BaseError).stdErr : error.stack || '';
     if (!stdErr) {
         return;

@@ -19,7 +19,7 @@ import { PythonExtension } from '@vscode/python-extension';
 import { resolvableInstance } from '../../../test/datascience/helpers';
 import { setPythonApi } from '../../../platform/interpreter/helpers';
 
-/* eslint-disable , @typescript-eslint/no-explicit-any */
+ 
 
 suite('Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
@@ -100,7 +100,7 @@ suite('Jupyter Interpreter Configuration', () => {
         when(
             mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything(), anything())
         ).thenResolve(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             DataScience.jupyterInstall as any
         );
         when(command.exec(anything(), anything())).thenReject(new Error('Not found'));
@@ -132,7 +132,7 @@ suite('Jupyter Interpreter Configuration', () => {
         when(
             mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything(), anything())
         ).thenResolve(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             DataScience.jupyterInstall as any
         );
         when(installer.install(anything(), anything(), anything(), anything(), anything())).thenResolve(
@@ -154,7 +154,7 @@ suite('Jupyter Interpreter Configuration', () => {
         when(
             mockedVSCodeNamespaces.window.showErrorMessage(anything(), anything(), anything(), anything())
         ).thenResolve(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             DataScience.jupyterInstall as any
         );
         when(installer.install(Product.jupyter, anything(), anything(), anything(), anything())).thenResolve(

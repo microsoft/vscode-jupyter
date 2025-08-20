@@ -10,7 +10,7 @@ import * as path from '../../platform/vscode-path/resources';
 import { splitLines } from '../common/helpers';
 import { SessionDisposedError } from './sessionDisposedError';
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+ 
 export class ErrorUtils {
     public static outputHasModuleNotInstalledError(moduleName: string, content?: string): boolean {
         return content &&
@@ -284,7 +284,7 @@ export function analyzeKernelErrors(
     pythonSysPrefix: string = '',
     filesInCwd: Uri[] = []
 ): KernelFailure | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const stdErrOrStackTrace = error instanceof BaseError ? error.stdErr || error.stack || '' : error.toString();
     const lastTwolinesOfError = getLastTwoLinesFromPythonTracebackWithErrorMessage(stdErrOrStackTrace);
     const stdErr = stdErrOrStackTrace.toLowerCase();

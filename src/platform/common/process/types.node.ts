@@ -28,7 +28,7 @@ export type ObservableExecutionResult<T extends string | Buffer> = {
     dispose(): void;
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
+ 
 export type SpawnOptions = ChildProcessSpawnOptions & {
     encoding?: string;
     token?: CancellationToken;
@@ -36,7 +36,7 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     throwOnStdErr?: boolean;
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
+ 
 export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean; token?: CancellationToken };
 
 export type ExecutionResult<T extends string | Buffer> = {

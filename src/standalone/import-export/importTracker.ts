@@ -108,7 +108,7 @@ export class ImportTracker implements IExtensionSyncActivationService {
         // If already scheduled, cancel.
         const currentTimeout = this.pendingChecks.get(file);
         if (currentTimeout) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             currentTimeout.dispose();
             this.pendingChecks.delete(file);
         }

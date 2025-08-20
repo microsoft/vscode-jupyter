@@ -51,7 +51,7 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         },
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
-        // eslint-disable-next-line no-template-curly-in-string
+         
         notebookFileRoot: '${fileDirname}',
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,
@@ -65,7 +65,7 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         jupyterCommandLineArguments: [],
         widgetScriptSources: [],
         interactiveWindowMode: 'single'
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
     } as any;
 }
 
@@ -339,7 +339,7 @@ export function uriEquals(expected: string | vscode.Uri) {
 
 export function resolvableInstance<T>(mockedValue: T): T {
     const instanceValue = instance<T>(mockedValue);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     (instanceValue as any).then = undefined;
     return instanceValue;
 }

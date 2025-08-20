@@ -7,7 +7,7 @@ import { clearCache, InMemoryCache } from '../../../platform/common/utils/cacheU
 
 type CacheUtilsTestScenario = {
     scenarioDesc: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     dataToStore: any;
 };
 
@@ -26,7 +26,7 @@ const scenariosToTest: CacheUtilsTestScenario[] = [
     }
 ];
 
-/* eslint-disable @typescript-eslint/no-explicit-any,  */
+ 
 suite('Common Utils - CacheUtils', () => {
     suite('InMemory Cache', () => {
         let clock: sinon.SinonFakeTimers;

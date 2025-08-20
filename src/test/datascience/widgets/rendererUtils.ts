@@ -12,7 +12,7 @@ import { VSCodeEvent } from 'vscode-notebook-renderer/events';
 
 const outputsByCellIndex = new Map<number, HTMLElement>();
 let rendererContext: RendererContext<unknown>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 (window as any).widgetEntryPoint = {
     initialize: (context: RendererContext<unknown>) => {
         console.log(`Initialize in Widget renderer`);
@@ -33,7 +33,7 @@ let rendererContext: RendererContext<unknown>;
     }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const handlers = new Map<string, (data: any) => void>();
 handlers.set('queryInnerHTML', queryInnerHTMLHandler);
 handlers.set('clickElement', clickHandler);
@@ -140,17 +140,17 @@ function convertVSCodeOutputToExecuteResultOrDisplayData(
         data: {
             [outputItem.mime]: outputItem.mime.toLowerCase().includes('json') ? outputItem.json() : outputItem.text()
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         metadata: (outputItem.metadata as any) || {},
         execution_count: null,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         output_type: (outputItem.metadata as any)?.outputType || 'execute_result'
     };
 }
 
 function getOutputCellIndex(outputItem: OutputItem): number | undefined {
     const output = convertVSCodeOutputToExecuteResultOrDisplayData(outputItem);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const model = output.data['application/vnd.jupyter.widget-view+json'] as any;
     if (model && '_vsc_test_cellIndex' in model) {
         return parseInt(model._vsc_test_cellIndex);
@@ -169,7 +169,7 @@ function hijackLogging() {
     }
     consoleLoggersHijacked = true;
     type ConsoleChannel = 'log' | 'warn' | 'error' | 'debug' | 'trace';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const logMessage = (channel: ConsoleChannel, args: any[]) => {
         let message = `WebView ${channel} Console:`;
         (args || []).forEach((arg) => {
@@ -191,11 +191,11 @@ function hijackLogging() {
         });
     };
     (['log', 'error', 'warn', 'debug', 'trace'] as ConsoleChannel[]).forEach((channel) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (console as any)[channel] = (...args: any[]) => {
             logMessage(channel, args);
         };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (globalThis.console as any)[channel] = (...args: any[]) => {
             logMessage(channel, args);
         };

@@ -85,7 +85,7 @@ export class ProcessService implements IProcessService {
         logger.ci(`Exec observable ${file}, ${args.join(' ')}`);
         const disposables: IDisposable[] = [];
         const disposable: IDisposable = {
-            // eslint-disable-next-line
+             
             dispose: function () {
                 if (proc && !proc.killed && !procExited) {
                     ProcessService.kill(proc.pid);

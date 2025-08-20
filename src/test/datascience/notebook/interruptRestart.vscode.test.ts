@@ -30,7 +30,7 @@ import { KernelConnector } from '../../../notebooks/controllers/kernelConnector'
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
+ 
 /*
  * This test focuses on interrupting, restarting kernels.
  * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.

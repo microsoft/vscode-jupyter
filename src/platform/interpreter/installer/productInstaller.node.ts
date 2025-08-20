@@ -237,7 +237,7 @@ export class ProductInstaller implements IInstaller {
         return this.createInstaller(product).isInstalled(product, interpreter);
     }
 
-    // eslint-disable-next-line class-methods-use-this
+     
     public translateProductToModuleName(product: Product): string {
         return translateProductToModule(product);
     }

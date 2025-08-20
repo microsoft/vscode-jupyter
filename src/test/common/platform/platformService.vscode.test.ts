@@ -8,7 +8,7 @@ import { OSType } from '../../../platform/common/utils/platform';
 
 use(chaiAsPromised);
 
-// eslint-disable-next-line
+ 
 suite('PlatformService', () => {
     const osType = getOSType();
 

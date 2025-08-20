@@ -20,7 +20,7 @@ import {
 } from '../../kernels/variables/types';
 import type { Kernel } from '@jupyterlab/services';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+ 
 
 // Regexes for parsing data from Python kernel. Not sure yet if other
 // kernels will add the ansi encoding.
@@ -365,7 +365,7 @@ export class KernelVariables implements IJupyterVariables {
 
         return deferred.promise;
     }
-    // eslint-disable-next-line complexity
+     
     private async getVariableValueFromKernel(
         targetVariable: IJupyterVariable,
         kernel: IKernel,

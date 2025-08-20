@@ -183,17 +183,17 @@ export interface IJupyterKernelService {
 
 export const IJupyterRequestAgentCreator = Symbol('IJupyterRequestAgentCreator');
 export interface IJupyterRequestAgentCreator {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     createHttpRequestAgent(): any;
 }
 
 export const IJupyterRequestCreator = Symbol('IJupyterRequestCreator');
 export interface IJupyterRequestCreator {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     getRequestCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeader?: () => any): ClassType<Request>;
     getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     getHeadersCtor(): ClassType<Headers>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     getWebsocketCtor(
         cookieString?: string,
         allowUnauthorized?: boolean,

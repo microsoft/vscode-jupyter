@@ -26,7 +26,7 @@ export class CondaInstaller extends ModuleInstaller {
 
     // Unfortunately inversify requires the number of args in constructor to be explictly
     // specified as more than its base class. So we need the constructor.
-    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+     
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }

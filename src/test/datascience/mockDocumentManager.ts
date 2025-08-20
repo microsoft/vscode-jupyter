@@ -27,7 +27,7 @@ import { MockDocument } from './mockDocument';
 import { MockEditor } from './mockTextEditor';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
+ 
 
 export class MockDocumentManager {
     public textDocuments: TextDocument[] = [];

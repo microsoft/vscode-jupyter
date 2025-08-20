@@ -153,7 +153,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     private rejectStartPromise(message: string | Error) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);

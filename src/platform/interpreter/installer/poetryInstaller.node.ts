@@ -20,22 +20,22 @@ export const poetryName = 'poetry';
  */
 @injectable()
 export class PoetryInstaller extends ModuleInstaller {
-    // eslint-disable-next-line class-methods-use-this
+     
     public get name(): string {
         return 'poetry';
     }
 
-    // eslint-disable-next-line class-methods-use-this
+     
     public get type(): ModuleInstallerType {
         return ModuleInstallerType.Poetry;
     }
 
-    // eslint-disable-next-line class-methods-use-this
+     
     public get displayName(): string {
         return poetryName;
     }
 
-    // eslint-disable-next-line class-methods-use-this
+     
     public get priority(): number {
         return 10;
     }

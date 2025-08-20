@@ -14,12 +14,12 @@ import { cache } from '../../../platform/common/utils/decorators';
 import { sleep } from '../../../test/core';
 use(chaiPromise);
 
-/* eslint-disable @typescript-eslint/no-explicit-any, , @typescript-eslint/no-extraneous-class */
+ 
 suite('Common Utils - Decorators', function () {
     // For some reason, sometimes we have timeouts on CI.
     // Note: setTimeout and similar functions are not guaranteed to execute
     // at the precise time prescribed.
-    // eslint-disable-next-line no-invalid-this
+     
     this.retries(3);
     suite('Cache Decorator', () => {
         const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();

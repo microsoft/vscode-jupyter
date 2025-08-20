@@ -15,11 +15,11 @@ export function isInsiders() {
     return vscode.env.appName.indexOf('Insider') > 0 || vscode.env.appName.indexOf('OSS') > 0;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export async function initialize(): Promise<IExtensionTestApi> {
     const api = await activateExtension();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return api as any as IExtensionTestApi;
 }
 
@@ -45,7 +45,7 @@ async function closeWindowsAndNotebooks(): Promise<void> {
         return;
     }
     // We could have untitled notebooks, close them by reverting changes.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     while (vscode.window.activeNotebookEditor || vscode.window.activeTextEditor) {
         await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
     }
@@ -106,7 +106,7 @@ function isANotebookOpen() {
     if (!isInsiders()) {
         return false;
     }
-    /* eslint-disable */
+     
     if (Array.isArray(vscode.window.visibleNotebookEditors) && vscode.window.visibleNotebookEditors.length) {
         return true;
     }

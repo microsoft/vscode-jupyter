@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { instance, mock, when } from 'ts-mockito';
-/* eslint-disable no-invalid-this, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
+ 
 
 import * as vscode from 'vscode';
 import { format } from '../platform/common/helpers';

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import * as sinon from 'sinon';
 import { commands, ConfigurationTarget, Memento, NotebookEditor, window, workspace } from 'vscode';
 import { logger } from '../../../platform/logging';
@@ -37,7 +37,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 [true, false].forEach((useCDN) => {
-    /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+     
     suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'} @widgets`, function () {
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];

@@ -121,7 +121,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
     public get kernel(): IKernel | undefined {
         if (this.dataProvider && 'kernel' in this.dataProvider) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             return this.dataProvider.kernel;
         }
     }

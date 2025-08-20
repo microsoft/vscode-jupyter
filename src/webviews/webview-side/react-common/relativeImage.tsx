@@ -19,7 +19,7 @@ export class RelativeImage extends React.Component<IRelativeImageProps> {
     }
 
     private getImageSource = () => {
-        // eslint-disable-next-line
+         
         if (typeof resolvePath === 'undefined') {
             return this.props.path;
         } else {

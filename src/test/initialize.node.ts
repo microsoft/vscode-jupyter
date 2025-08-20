@@ -35,7 +35,7 @@ export async function initializePython() {
 }
 
 let jupyterServerStarted = false;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
     initializeCommonNodeApi();
@@ -48,7 +48,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
     return api;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export async function initializeTest(): Promise<any> {
     await initializePython();
     await closeActiveWindows();

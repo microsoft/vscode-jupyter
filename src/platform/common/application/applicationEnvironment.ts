@@ -12,7 +12,7 @@ import { IExtensionContext } from '../types';
 @injectable()
 export class ApplicationEnvironment implements IApplicationEnvironment {
     public get extensionVersion(): string {
-        // eslint-disable-next-line
+         
         return this.extensionContext.extension.packageJSON.version;
     }
     constructor(@inject(IExtensionContext) private readonly extensionContext: vscode.ExtensionContext) {}

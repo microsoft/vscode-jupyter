@@ -73,7 +73,7 @@ export class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand
  * @class InterpreterJupyterKernelSpecCommand
  * @implements {IJupyterCommand}
  */
-// eslint-disable-next-line max-classes-per-file
+ 
 export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterCommand {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
@@ -184,7 +184,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
     }
 }
 
-// eslint-disable-next-line max-classes-per-file
+ 
 @injectable()
 export class JupyterCommandFactory implements IJupyterCommandFactory {
     constructor(@inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory) {}

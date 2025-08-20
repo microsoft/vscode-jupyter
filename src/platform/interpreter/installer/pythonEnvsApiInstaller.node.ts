@@ -24,7 +24,7 @@ import { logger } from '../../logging';
  */
 @injectable()
 export class PythonEnvsApiInstaller extends ModuleInstaller {
-    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+     
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }

@@ -108,8 +108,8 @@ export class CondaService {
         }
         return this.getCondaVersion()
 
-            .then((version) => (this.isAvailable = version !== undefined)) // eslint-disable-line no-return-assign
-            .catch(() => (this.isAvailable = false)); // eslint-disable-line no-return-assign
+            .then((version) => (this.isAvailable = version !== undefined))  
+            .catch(() => (this.isAvailable = false));  
     }
     private async updateCache() {
         if (!this._file || !this._version) {

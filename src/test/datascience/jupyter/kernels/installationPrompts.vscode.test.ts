@@ -63,7 +63,7 @@ import { BaseKernelError } from '../../../../kernels/errors/types';
 import { IControllerRegistration } from '../../../../notebooks/controllers/types';
 import type { PythonEnvironment } from '../../../../api';
 
-/* eslint-disable no-invalid-this, @typescript-eslint/no-explicit-any */
+ 
 suite('Install IPyKernel (install) @kernelCore', function () {
     const disposables: IDisposable[] = [];
     let nbFile: Uri;

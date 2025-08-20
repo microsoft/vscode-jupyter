@@ -52,7 +52,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private postOffice: PostOffice = new PostOffice();
     private currentValue: Value | undefined;
 
-    // eslint-disable-next-line
+     
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
         const images = !props.skipDefault ? [TestSvg, TestSvg, TestSvg] : [];
@@ -106,7 +106,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
             case PlotViewerMessages.SendPlot:

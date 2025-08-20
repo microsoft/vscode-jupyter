@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable , , @typescript-eslint/no-explicit-any */
+ 
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import { instance, mock, reset, verify, when } from 'ts-mockito';
@@ -115,7 +115,7 @@ suite('Telemetry', () => {
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
         await asyncAssertReporterState([eventName], [measures], [properties]);
@@ -135,7 +135,7 @@ suite('Telemetry', () => {
 
         setSharedProperty('one' as any, 'two' as any);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
         await asyncAssertReporterState([eventName], [measures], [expectedProperties]);
@@ -148,7 +148,7 @@ suite('Telemetry', () => {
 
         setSharedProperty('foo' as any, 'baz' as any);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
         await asyncAssertReporterState([eventName], [measures], [expectedProperties]);
@@ -160,7 +160,7 @@ suite('Telemetry', () => {
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
         await sleep(1);
         const expectedErrorProperties = {
@@ -205,7 +205,7 @@ suite('Telemetry', () => {
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
         await sleep(1);
         const expectedErrorProperties = {

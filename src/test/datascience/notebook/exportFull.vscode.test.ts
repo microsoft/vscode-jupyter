@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import { assert, expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as os from 'os';
@@ -35,7 +35,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { format } from '../../../platform/common/helpers';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite('Export @export', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -57,7 +57,7 @@ suite('Export @export', function () {
                 INbConvertInterpreterDependencyChecker
             );
             interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-            // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+             
             const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
             await hijackPrompt(

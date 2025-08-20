@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import * as path from '../../../platform/vscode-path/path';
 import { assert } from 'chai';
 import { logger } from '../../../platform/logging';
@@ -12,7 +12,7 @@ import { initialize } from '../../initialize.node';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { cellOutputToVSCCellOutput } from '../../../kernels/execution/helpers';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite('Validate Output order', function () {
     const templateIPynb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,

@@ -13,7 +13,7 @@ import { ICodeWatcher } from '../../interactive-window/editor-integration/types'
 import { IDebugLocationTracker } from '../../notebooks/debugger/debuggingTypes';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 
-// eslint-disable-next-line
+ 
 suite('DataScienceCodeLensProvider Unit Tests', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let configurationService: TypeMoq.IMock<IConfigurationService>;

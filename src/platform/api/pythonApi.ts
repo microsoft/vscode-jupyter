@@ -101,7 +101,7 @@ export function serializePythonEnvironment(
     }
 }
 
-/* eslint-disable max-classes-per-file */
+ 
 @injectable()
 export class OldPythonApiProvider implements IPythonApiProvider {
     private readonly api = createDeferred<PythonApi>();
@@ -299,7 +299,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 }
 
 type InterpreterId = string;
-// eslint-disable-next-line max-classes-per-file
+ 
 @injectable()
 export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();

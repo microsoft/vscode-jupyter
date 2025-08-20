@@ -52,7 +52,7 @@ process.on('unhandledRejection', (ex: Error, _a) => {
             message.push(ex.stack);
         }
     }
-    // eslint-disable-next-line no-console
+     
     const msg = `Unhandled Promise Rejection with the message ${message.join(', ')}`;
 
     if (
@@ -150,7 +150,7 @@ function activateExtensionScript() {
     });
     const initializationPromise = initialize();
     const promise = Promise.race([initializationPromise, failed]);
-    // eslint-disable-next-line no-console
+     
     promise.finally(() => clearTimeout(timer! as any)).catch((e) => console.error(e));
     return initializationPromise;
 }

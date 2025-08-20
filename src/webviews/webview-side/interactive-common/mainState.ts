@@ -32,7 +32,7 @@ export interface IFont {
     family: string;
 }
 
-// eslint-disable-next-line no-multi-str
+ 
 const darkStyle = `
         :root {
             --code-comment-color: #6A9955;

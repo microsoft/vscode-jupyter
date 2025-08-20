@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 import { Uri } from 'vscode';
 import { Resource } from '../common/types';
 import { ResourceSpecificTelemetryProperties } from '../../telemetry';

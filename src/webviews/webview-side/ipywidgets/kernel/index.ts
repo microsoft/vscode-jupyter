@@ -216,7 +216,7 @@ async function getWidgetManager(): Promise<WidgetManager> {
                 if (wm) {
                     const oldDispose = wm.dispose.bind(wm);
                     wm.dispose = () => {
-                        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+                         
                         widgetManagerPromise = undefined;
                         return oldDispose();
                     };
@@ -244,7 +244,7 @@ async function createWidgetView(
         const wm = await getWidgetManager();
         return await wm?.renderWidget(widgetData, element);
     } catch (ex) {
-        // eslint-disable-next-line no-console
+         
         logErrorMessage(`Error: Failed to render widget ${widgetData.model_id}, ${ex.toString()}`);
     }
 }
@@ -277,7 +277,7 @@ async function restoreWidgets(widgetState: NotebookMetadata['widgets']) {
         };
         return await wm?.restoreWidgets(model, { loadKernel: false, loadNotebook: true });
     } catch (ex) {
-        // eslint-disable-next-line no-console
+         
         logErrorMessage(`Error: Failed to render widget state ${widgetState}, ${ex.toString()}`);
     }
 }
@@ -300,7 +300,7 @@ function initialize(
         (window as any)._mgr = mgr;
         initialized = true;
     } catch (ex) {
-        // eslint-disable-next-line no-console
+         
         logErrorMessage(`Error: Exception initializing WidgetManager, ${ex.toString()}`);
     }
 }

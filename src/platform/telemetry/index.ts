@@ -25,7 +25,7 @@ export { JupyterCommands, Telemetry } from '../common/constants';
  */
 function isTelemetrySupported(): boolean {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const vsc = require('vscode');
         if (vsc === undefined) {
             return false;
@@ -243,7 +243,7 @@ export function capturePerfTelemetry<This, P extends IEventNamePropertyMapping, 
         descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>
     ) {
         const originalMethod = descriptor.value!;
-        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+         
         descriptor.value = function (this: This, ...args: any[]) {
             const props = properties || {};
 
@@ -253,13 +253,13 @@ export function capturePerfTelemetry<This, P extends IEventNamePropertyMapping, 
             const firstTime = !timesSeenThisEventWithSameProperties.has(key);
             timesSeenThisEventWithSameProperties.add(key);
 
-            // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
+             
             const result = originalMethod.apply(this, args);
 
             // If method being wrapped returns a promise then wait for it.
-            // eslint-disable-next-line
+             
             if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
-                // eslint-disable-next-line
+                 
                 (result as Promise<void>)
                     .then((data) => {
                         const propsToSend = { ...props };
@@ -273,9 +273,9 @@ export function capturePerfTelemetry<This, P extends IEventNamePropertyMapping, 
                         );
                         return data;
                     })
-                    // eslint-disable-next-line @typescript-eslint/promise-function-async
+                     
                     .catch((ex) => {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                         
                         const failedProps: P[E] = { ...props } as any;
                         (failedProps as any).failed = true;
                         sendTelemetryEvent(
@@ -319,12 +319,12 @@ export function captureUsageTelemetry<This, P extends IEventNamePropertyMapping,
         descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>
     ) {
         const originalMethod = descriptor.value!;
-        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+         
         descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
             sendTelemetryEvent(eventName, undefined, properties);
-            // eslint-disable-next-line no-invalid-this
+             
             return originalMethod.apply(this, args);
         };
 

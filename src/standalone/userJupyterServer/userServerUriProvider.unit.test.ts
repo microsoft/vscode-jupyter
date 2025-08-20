@@ -46,7 +46,7 @@ import { IJupyterServerUri, JupyterServerCollection } from '../../api';
 import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, ,  */
+ 
 suite('User Uri Provider', () => {
     let provider: UserJupyterServerUrlProvider;
     let configService: IConfigurationService;

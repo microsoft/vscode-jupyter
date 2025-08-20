@@ -4,7 +4,7 @@
 import { Action, AnyAction, Middleware, Reducer } from 'redux';
 import { BaseReduxActionPayload } from '../../types';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
+ 
 interface TypedAnyAction<T> extends Action<T> {
     // Allows any extra properties to be defined in an action.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

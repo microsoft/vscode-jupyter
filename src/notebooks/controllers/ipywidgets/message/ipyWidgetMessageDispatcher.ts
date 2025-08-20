@@ -104,7 +104,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         );
         this.mirrorSend = this.mirrorSend.bind(this);
         this.onKernelSocketMessage = this.onKernelSocketMessage.bind(this);
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const jupyterLabSerialize =
             require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
         this.deserialize = jupyterLabSerialize.deserialize;
@@ -179,7 +179,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     public initialize() {
         if (!this.jupyterLab) {
             // Lazy load jupyter lab for faster extension loading.
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
+             
             this.jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
         }
 
@@ -296,7 +296,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // If this is shell control message, mirror to the other side. This is how
         // we get the kernel in the UI to have the same set of futures we have on this side
         if (typeof data === 'string' && data.includes('shell') && data.includes('execute_request')) {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
+             
             const msg =
                 typeof data === 'string'
                     ? JSON.parse(data)
@@ -313,7 +313,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             }
         } else if (typeof data !== 'string') {
             try {
-                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                 
                 const msg = this.deserialize(data, protocol) as KernelMessage.IExecuteRequestMsg;
                 // const msg =  this.deserialize(data) as KernelMessage.IExecuteRequestMsg;
                 if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
@@ -588,7 +588,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private async messageHookCallback(msg: KernelMessage.IIOPubMessage): Promise<boolean> {
         const promise = createDeferred<boolean>();
         const requestId = generateUuid();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const parentId = (msg.parent_header as any).msg_id;
         if (this.messageHooks.has(parentId)) {
             this.messageHookRequests.set(requestId, promise);

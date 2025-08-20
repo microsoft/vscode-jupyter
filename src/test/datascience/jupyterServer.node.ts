@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 /* eslint-disable local-rules/node-imports */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 /** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
 
@@ -40,7 +40,7 @@ function getPythonPath(): string {
     if (venvPathExists) {
         return venvPath;
     }
-    // eslint-disable-next-line
+     
     // TODO: Change this to python3.
     // See https://github.com/microsoft/vscode-python/issues/10910.
     return 'python';
@@ -360,7 +360,7 @@ export class JupyterServer {
         let procExited = false;
         const disposables: IDisposable[] = [];
         const disposable: IDisposable = {
-            // eslint-disable-next-line
+             
             dispose: function () {
                 if (proc && !proc.killed && !procExited) {
                     JupyterServer.kill(proc.pid);

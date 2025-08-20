@@ -24,9 +24,9 @@ suite('Export File Opener', () => {
         fileSystem = mock<IFileSystem>();
         const reporter = mock(ProgressReporter);
         const editor = mock<TextEditor>();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (instance(editor) as any).then = undefined;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         when(reporter.createProgressIndicator(anything())).thenReturn(instance(mock<IDisposable>()) as any);
         when(mockedVSCodeNamespaces.workspace.openTextDocument(anything())).thenResolve();
         when(mockedVSCodeNamespaces.window.showTextDocument(anything())).thenReturn(Promise.resolve(instance(editor)));

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable , @typescript-eslint/no-explicit-any, @typescript-eslint/no-extraneous-class */
+/* eslint-disable , @typescript-eslint/no-explicit-any */
 
 import { injectable } from 'inversify';
 import {
@@ -59,7 +59,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     ignoreFocusOut?: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
+ 
 export interface InputBoxParameters {
     title: string;
     password?: boolean;

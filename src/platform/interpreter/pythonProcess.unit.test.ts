@@ -15,7 +15,7 @@ import { createPythonProcessService } from './pythonProcess.node';
 
 use(chaiAsPromised);
 
-// eslint-disable-next-line
+ 
 suite('PythonProcessService', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -31,7 +31,7 @@ suite('PythonProcessService', () => {
         const options = {};
         const observable = {
             proc: undefined,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             out: {} as any,
             dispose: () => {
                 noop();
@@ -54,7 +54,7 @@ suite('PythonProcessService', () => {
         const options = {};
         const observable = {
             proc: undefined,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             out: {} as any,
             dispose: () => {
                 noop();

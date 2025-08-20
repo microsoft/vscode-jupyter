@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -43,15 +43,15 @@ suite('File Converter @export', () => {
         settings = mock<IWatchableJupyterSettings>();
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         when(settings.pythonExportMethod).thenReturn('direct');
-        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+         
         when(mockedVSCodeNamespaces.window.showErrorMessage(anything())).thenResolve();
-        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         sinon.stub(ExportUtilNode.prototype, 'generateTempDir').resolves({ path: 'test', dispose: () => {} });
         sinon.stub(ExportUtilNode.prototype, 'makeFileInDirectory').resolves('foo');
         when(exportUtil.getTargetFile(anything(), anything(), anything())).thenResolve(Uri.file('bar'));
-        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         sinon.stub(ExportDialog.prototype, 'showDialog').callsFake((_, __, c) => {
             return c ? Promise.resolve(Uri.file('test.pdf')) : Promise.resolve(Uri.file('foo'));
         });
@@ -60,7 +60,7 @@ suite('File Converter @export', () => {
         sinon.stub(ServiceContainer, 'instance').get(() => ({
             get: (id: unknown) => (id == IFileSystem ? instance(fileSystem) : undefined)
         }));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
         fileConverter = new FileConverter(
             instance(exportUtil),

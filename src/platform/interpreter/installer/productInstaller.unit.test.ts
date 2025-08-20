@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
@@ -23,7 +23,7 @@ import { anything, when } from 'ts-mockito';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
 
 class AlwaysInstalledDataScienceInstaller extends DataScienceInstaller {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
+     
     public override async isInstalled(_product: Product, _resource?: InterpreterUri | Environment): Promise<boolean> {
         return true;
     }

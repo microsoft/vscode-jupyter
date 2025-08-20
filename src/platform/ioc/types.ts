@@ -4,25 +4,25 @@
 import { Container, interfaces } from 'inversify';
 import { IDisposable } from '../common/types';
 
-/* eslint-disable @typescript-eslint/prefer-function-type */
-// eslint-disable-next-line @typescript-eslint/naming-convention
+ 
+ 
 export interface Newable<T> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     new (...args: any[]): T;
 }
-/* eslint-enable @typescript-eslint/prefer-function-type */
+ 
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
+ 
 export interface Abstract<T> {
     prototype: T;
 }
 
-/* eslint-disable @typescript-eslint/prefer-function-type */
+ 
 export type ClassType<T> = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     new (...args: any[]): T;
 };
-/* eslint-enable @typescript-eslint/prefer-function-type */
+ 
 
 export const IServiceManager = Symbol('IServiceManager');
 

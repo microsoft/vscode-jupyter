@@ -453,7 +453,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         }
         if (!Array.isArray(kernelSpec.argv)) {
             logger.error('KernelSpec.argv in KernelProcess is undefined');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             this._launchKernelSpec = undefined;
         } else {
             // Copy our kernelspec and assign a new argv array

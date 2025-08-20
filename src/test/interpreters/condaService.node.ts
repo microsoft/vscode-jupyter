@@ -13,8 +13,8 @@ import { isCondaEnvironment } from './condaLocator.node';
 import { Uri } from 'vscode';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+ 
+ 
 const untildify: (value: string) => string = require('untildify');
 
 // This glob pattern will match all of the following:
@@ -25,11 +25,11 @@ type CondaInfo = {
     envs?: string[];
     'sys.version'?: string;
     'sys.prefix'?: string;
-    // eslint-disable-next-line camelcase
+     
     python_version?: string;
-    // eslint-disable-next-line camelcase
+     
     default_prefix?: string;
-    // eslint-disable-next-line camelcase
+     
     conda_version?: string;
 };
 type CondaEnvironmentInfo = {

@@ -52,7 +52,7 @@ suite('CellMatcher', () => {
     });
 
     const customSettings: IJupyterSettings = defaultDataScienceSettings();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     (<any>customSettings).defaultCellMarker = '# CODE HERE';
     const cusomMatcher = new CellMatcher(customSettings);
     const customCellMakers = ['# %%', '# CODE HERE', '   # CODE HERE    '];

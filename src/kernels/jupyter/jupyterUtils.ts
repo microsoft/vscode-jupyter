@@ -195,7 +195,7 @@ export function generateIdFromRemoteProvider(provider: JupyterServerProviderHand
 
         // For extensions that we support migration, like AzML and Jupyter extension and the like,
         // we can ignore storing the extension id in the url.
-        // eslint-disable-next-line
+         
         return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${provider.id}&${
             Identifiers.REMOTE_URI_HANDLE_PARAM
         }=${encodeURI(provider.handle)}`;

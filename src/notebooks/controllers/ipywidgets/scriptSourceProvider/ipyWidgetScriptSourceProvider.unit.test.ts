@@ -35,7 +35,7 @@ import { mockedVSCodeNamespaces } from '../../../../test/vscode-mock';
 import { JupyterConnection } from '../../../../kernels/jupyter/connection/jupyterConnection';
 import { resolvableInstance } from '../../../../test/datascience/helpers';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 
 suite('ipywidget - Widget Script Source Provider', () => {
     let scriptSourceProvider: IPyWidgetScriptSourceProvider;

@@ -20,7 +20,7 @@ import { workspace } from 'vscode';
  */
 @injectable()
 export class PipInstaller extends ModuleInstaller {
-    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+     
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }

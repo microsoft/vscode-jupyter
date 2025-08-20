@@ -19,12 +19,12 @@ export class HttpClient implements IHttpClient {
     }
 
     public async downloadFile(uri: string): Promise<Response> {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         return this.fetchImplementation(uri, this.requestOptions);
     }
 
     public async exists(uri: string): Promise<boolean> {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         try {
             const response = await this.downloadFile(uri);
             return response.status === 200;

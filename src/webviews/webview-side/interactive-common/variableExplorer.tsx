@@ -57,7 +57,7 @@ interface IFormatterArgs {
 }
 
 interface IGridRow {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     name: string;
     type: string;
     size: string;
@@ -245,7 +245,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     columns={this.gridColumns.map((c) => {
                         return { ...defaultColumnProperties, ...c };
                     })}
-                    // eslint-disable-next-line
+                     
                     rowGetter={this.getRow}
                     rowsCount={this.props.variables.length}
                     minHeight={newGridHeight || this.state.gridHeight}
@@ -403,7 +403,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         const newExecution =
             this.props.executionCount !== this.requestedPagesExecutionCount ||
             this.props.refreshCount !== this.requestedRefreshCount;
-        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+         
         const notRequested = !this.requestedPages.find((n) => n <= index && index < n + pageSize);
         if (!haveValue && (newExecution || notRequested)) {
             // Try to find a page of data around this index.

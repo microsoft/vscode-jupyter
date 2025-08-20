@@ -25,9 +25,9 @@ import { ConfigMigration } from './configMigration';
 import { noop } from './utils/misc';
 import { debounce } from './decorators';
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 
-// eslint-disable-next-line
+ 
 /**
  * Typesafe representation of the settings in the jupyter extension.
  */

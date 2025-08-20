@@ -245,7 +245,7 @@ export class ControllerPreferredService {
                 // However we can create this one as we have all of the necessary info.
                 if (!targetController) {
                     logger.debug(`Early registration of controller for Kernel connection ${preferredConnection.id}`);
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                     
                     this.registration.addOrUpdate(preferredConnection, [JupyterNotebookView]);
                 }
             } else if (document.notebookType === InteractiveWindowView) {
@@ -269,7 +269,7 @@ export class ControllerPreferredService {
             // See if the preferred connection is in our registered controllers, add the sufix for the interactive scenario
             let targetController: IVSCodeNotebookController | undefined;
             if (preferredConnection) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 targetController = this.registration.get(preferredConnection, document.notebookType as any);
             }
 

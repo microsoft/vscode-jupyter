@@ -133,7 +133,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         return result;
     }
     private async processSocketMessages(channel: Channel, readable: Subscriber | Dealer) {
-        // eslint-disable-next-line @typescript-eslint/await-thenable
+         
         for await (const msg of readable) {
             // Make sure to quit if we are disposed.
             if (this.closed) {
@@ -145,7 +145,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
 
     private generateChannels(connection: IKernelConnection): IChannels {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const zmq = getZeroMQ();
 
         // Need a routing id for them to share.

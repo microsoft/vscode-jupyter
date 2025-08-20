@@ -53,7 +53,7 @@ suite('Module Installer - Poetry', () => {
 
         shellExecute = sinon.stub(fileUtils, 'shellExecute');
         shellExecute.callsFake((command: string, options: ShellOptions) => {
-            // eslint-disable-next-line default-case
+             
             switch (command) {
                 case 'poetry env list --full-path':
                     return Promise.resolve<ExecutionResult<string>>({ stdout: '' });

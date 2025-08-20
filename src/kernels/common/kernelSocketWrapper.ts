@@ -131,12 +131,12 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
             this.receiveHooks = this.receiveHooks.filter((l) => l !== hook);
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         public addSendHook(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
             this.sendHooks.push(patch);
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         public removeSendHook(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
             this.sendHooks = this.sendHooks.filter((p) => p !== patch);
         }

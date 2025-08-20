@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import { assert } from 'chai';
 import { logger } from '../platform/logging';
 import { captureScreenShot, IExtensionTestApi } from './common.node';
@@ -26,7 +26,7 @@ class TypeScriptLanguageServiceHost implements ts.LanguageServiceHost {
         this._compilerOptions = compilerOptions;
     }
     readFile(path: string, encoding?: string | undefined): string | undefined {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         return fs.readFileSync(path, { encoding } as any).toString();
     }
     fileExists(path: string): boolean {
@@ -127,7 +127,7 @@ async function getSourceFiles() {
     return files;
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite('Verify serviceRegistry is correct', function () {
     let api: IExtensionTestApi;
     setup(async function () {

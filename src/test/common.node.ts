@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 
 import assert from 'assert';
 import * as fs from 'fs-extra';
@@ -25,7 +25,7 @@ export { sleep } from './core';
 
 export * from './common';
 
-/* eslint-disable no-invalid-this, @typescript-eslint/no-explicit-any */
+ 
 
 export const PYTHON_PATH = getPythonPath();
 // Useful to see on CI (when working with conda & non-conda, virtual envs & the like).
@@ -150,7 +150,7 @@ function getPythonPath(): string {
             return venv;
         }
     }
-    // eslint-disable-next-line
+     
     // TODO: Change this to python3.
     // See https://github.com/microsoft/vscode-python/issues/10910.
     return 'python';

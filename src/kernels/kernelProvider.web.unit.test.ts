@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -46,7 +46,7 @@ suite('Jupyter Session', () => {
             const registry = mock<IStartupCodeProviders>();
             when(registry.getProviders(anything())).thenReturn([]);
             return new KernelProvider(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 asyncDisposables as any,
                 disposables,
                 instance(sessionCreator),
@@ -62,7 +62,7 @@ suite('Jupyter Session', () => {
             const registry = mock<IStartupCodeProviders>();
             when(registry.getProviders(anything())).thenReturn([]);
             return new ThirdPartyKernelProvider(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 asyncDisposables as any,
                 disposables,
                 instance(sessionCreator),

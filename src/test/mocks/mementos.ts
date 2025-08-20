@@ -11,10 +11,10 @@ export class MockMemento implements Memento {
     private _keys: string[] = [];
     public get<T>(key: string, defaultValue?: T): T {
         const exists = this._value.hasOwnProperty(key);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         return exists ? (this._value[key] as any) : (defaultValue! as any);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     public update(key: string, value: any): Thenable<void> {
         this._value[key] = value;
         return Promise.resolve();

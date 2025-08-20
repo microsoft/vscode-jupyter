@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { warnAboutWidgetVersionsThatAreNotSupported } from './incompatibleWidgetHandler';
 
-/* eslint-disable , @typescript-eslint/no-explicit-any */
+ 
 suite('Incompatible Widgets', () => {
     suite('Using qgrid widget with CDN turned on', () => {
         async function testLoadingQgrid(versionToLoad: string, warningExpectedToBeDisplayed: boolean) {

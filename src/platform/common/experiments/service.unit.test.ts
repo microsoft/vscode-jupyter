@@ -43,7 +43,7 @@ suite('Experimentation service', () => {
                 optInto,
                 optOutFrom
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
         } as any);
     }
 
@@ -77,7 +77,7 @@ suite('Experimentation service', () => {
     });
 
     suite('In-experiment check', () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const experiment: any = 'Test Experiment - experiment';
         let telemetryEvents: { eventName: string; properties: object | undefined }[] = [];
         let sendTelemetryEventStub: sinon.SinonStub;
@@ -92,7 +92,7 @@ suite('Experimentation service', () => {
 
             sinon.stub(tasClient, 'getExperimentationService').returns({
                 getTreatmentVariable: () => true
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
             } as any);
         });
 
@@ -161,7 +161,7 @@ suite('Experimentation service', () => {
         setup(() => {
             sinon.stub(tasClient, 'getExperimentationService').returns({
                 getTreatmentVariable: () => 'value'
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
             } as any);
         });
 

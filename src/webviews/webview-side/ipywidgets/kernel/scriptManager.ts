@@ -147,7 +147,7 @@ export class ScriptManager extends EventEmitter {
      * Or check local FS then fall back to CDN (depending on the order defined by the user).
      */
     public async loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void> {
-        // eslint-disable-next-line no-console
+         
         logMessage(`Fetch IPyWidget source for ${moduleName}`);
         const isOnline = await this.isOnline.promise;
         let request = this.widgetSourceRequests.get(moduleName);
@@ -179,7 +179,7 @@ export class ScriptManager extends EventEmitter {
 
             request.timer = setTimeout(() => {
                 if (request && !request.deferred.resolved) {
-                    // eslint-disable-next-line no-console
+                     
                     console.error(`Timeout waiting to get widget source for ${moduleName}, ${moduleVersion}`);
                     this.handleLoadError(
                         '<class>',
@@ -232,7 +232,7 @@ export class ScriptManager extends EventEmitter {
                 );
             }
         } catch (ex) {
-            // eslint-disable-next-line no-console
+             
             console.error(`Failed to load Widget Script from Extension for ${moduleName}, ${moduleVersion}`, ex);
             // TODO: https://github.com/microsoft/vscode-jupyter/issues/12786
             // throw ex;

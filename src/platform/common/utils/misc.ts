@@ -7,7 +7,7 @@ import { InterpreterUri, Resource } from '../types';
 import { isPromise } from './async';
 import { Environment } from '@vscode/python-extension';
 
-// eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 export function noop() {}
 
 /**

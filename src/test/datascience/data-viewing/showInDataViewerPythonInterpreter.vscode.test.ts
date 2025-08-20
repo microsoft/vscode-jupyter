@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+ 
 import * as vscode from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
@@ -16,7 +16,7 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite.skip('DataViewer @webview', function () {
     const disposables: IDisposable[] = [];
     const testPythonFile = path.join(

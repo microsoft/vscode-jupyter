@@ -6,7 +6,7 @@ import * as fs from 'fs-extra';
 import { DebuggerType, sharedIWDebuggerTests } from './interactiveDebugging.vscode.common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+ 
 suite('Interactive Window Debugging @debugger', function () {
     const settingsFile = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,

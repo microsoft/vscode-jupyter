@@ -4,7 +4,7 @@
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
 
 export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
+     
     private values = new Map<string, any>();
 
     constructor(defaultSettings?: any) {
@@ -20,7 +20,7 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
     }
 
     public get<T>(key: string, defaultValue?: T): T | undefined {
-        // eslint-disable-next-line
+         
         if (this.values.has(key)) {
             return this.values.get(key);
         }

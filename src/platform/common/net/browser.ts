@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-var-requires */
+ 
 
 import { env, Uri } from 'vscode';
 import { noop } from '../utils/misc';
