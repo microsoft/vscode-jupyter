@@ -39,15 +39,15 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
 import { isWeb } from '../../../platform/common/utils/misc';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
-const templateRootPath: Uri =
-    workspace.workspaceFolders && workspace.workspaceFolders.length > 0
-        ? urlPath.joinPath(workspace.workspaceFolders[0].uri, 'widgets', 'notebooks')
-        : Uri.file('');
 export async function initializeNotebookForWidgetTest(
     disposables: IDisposable[],
     options: { templateFile: string } | { notebookFile: Uri },
     editor: NotebookEditor = window.activeNotebookEditor!
 ) {
+    const templateRootPath: Uri =
+        workspace.workspaceFolders && workspace.workspaceFolders.length > 0
+            ? urlPath.joinPath(workspace.workspaceFolders[0].uri, 'widgets', 'notebooks')
+            : Uri.file('');
     const nbUri =
         'templateFile' in options
             ? await createTemporaryNotebookFromFile(
