@@ -11,7 +11,7 @@ import { IJupyterVariables, IVariableDescription } from '../../kernels/variables
 suite('JupyterVariablesProvider', () => {
     let variables: IJupyterVariables;
     let kernelProvider: IKernelProvider;
-    let kernelEventEmitter = new EventEmitter<{ status: any; kernel: IKernel }>();
+    const kernelEventEmitter = new EventEmitter<{ status: any; kernel: IKernel }>();
     let provider: JupyterVariablesProvider;
     const notebook = mock<NotebookDocument>();
     const cancellationToken = new CancellationTokenSource().token;
@@ -70,7 +70,7 @@ suite('JupyterVariablesProvider', () => {
     }
 
     teardown(() => {
-        for (let d of disposables) {
+        for (const d of disposables) {
             d.dispose();
         }
         disposables = [];
@@ -105,7 +105,7 @@ suite('JupyterVariablesProvider', () => {
         setVariablesForParent(objectContaining({ root: 'myObject', propertyChain: ['myList'] }), listVariableItems);
 
         // pass each the result as the parent in the next call
-        let rootVariable = (await provideVariables(undefined))[0];
+        const rootVariable = (await provideVariables(undefined))[0];
         const listResult = (await provideVariables(rootVariable!.variable))[0];
         const listItems = await provideVariables(listResult!.variable, 2);
 
@@ -281,7 +281,7 @@ suite('JupyterVariablesProvider', () => {
     }
 
     test('Kernel restart should trigger variable changes', async () => {
-        let variablesChangedForNotebooks: string[] = [];
+        const variablesChangedForNotebooks: string[] = [];
         provider.onDidChangeVariables((e) => {
             variablesChangedForNotebooks.push(e.uri.toString());
         });
@@ -297,7 +297,7 @@ suite('JupyterVariablesProvider', () => {
     });
 
     test('Kernel restart should trigger variable changes for each notebook', async () => {
-        let variablesChangedForNotebooks: string[] = [];
+        const variablesChangedForNotebooks: string[] = [];
         provider.onDidChangeVariables((e) => {
             variablesChangedForNotebooks.push(e.uri.toString());
         });

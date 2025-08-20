@@ -282,7 +282,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         }
 
         sourcePath = path.normalize(sourcePath);
-        for (let [file, cell] of this.fileToCell.entries()) {
+        for (const [file, cell] of this.fileToCell.entries()) {
             if (isShortNamePath(file) && shortNameMatchesLongName(file, sourcePath)) {
                 return cell;
             }

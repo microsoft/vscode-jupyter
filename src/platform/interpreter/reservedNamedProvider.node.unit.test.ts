@@ -68,7 +68,7 @@ suite('Reserved Names Provider', () => {
 
         // Assume that a module named `overrideThirdPartyModule` has been installed into python, then
         // python will return that as an installed item as well.
-        let listPackagesCallCount = 0;
+        const listPackagesCallCount = 0;
 
         const uris = await reservedNamedProvider.getUriOverridingReservedPythonNames(cwd);
 

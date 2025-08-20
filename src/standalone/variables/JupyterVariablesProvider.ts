@@ -9,12 +9,16 @@ import {
     VariablesResult,
     EventEmitter
 } from 'vscode';
-import { IJupyterVariables, IRichVariableResult, IVariableDescription } from '../../kernels/variables/types';
+import {
+    IJupyterVariables,
+    IJupyterVariablesProvider,
+    IRichVariableResult,
+    IVariableDescription
+} from '../../kernels/variables/types';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { VariableResultCache, VariableSummaryCache } from './variableResultCache';
 import { inject, injectable, named } from 'inversify';
 import { Identifiers } from '../../platform/common/constants';
-import { IJupyterVariablesProvider } from '../../kernels/variables/types';
 
 @injectable()
 export class JupyterVariablesProvider implements IJupyterVariablesProvider {
@@ -141,7 +145,7 @@ export class JupyterVariablesProvider implements IJupyterVariablesProvider {
                 const executionCount = this.kernelProvider.getKernelExecution(kernel).executionCount;
                 let summary = this.variableSummaryCache.getResults(executionCount, cacheKey);
 
-                if (summary == undefined && result.variable.type === 'pandas.core.frame.DataFrame') {
+                if (summary === undefined && result.variable.type === 'pandas.core.frame.DataFrame') {
                     summary = await this.variables.getVariableValueSummary(
                         {
                             name: result.variable.name,

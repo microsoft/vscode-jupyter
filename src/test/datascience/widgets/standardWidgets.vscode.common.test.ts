@@ -538,8 +538,8 @@ suite('Standard IPyWidget Tests @widgets', function () {
             // One of the outputs if a custom mimetype.
             let mimeValues: string[] = [];
             let stdOut = '';
-            for (let output of cell.outputs) {
-                for (let item of output.items) {
+            for (const output of cell.outputs) {
+                for (const item of output.items) {
                     if (item.mime === 'application/vnd.custom') {
                         mimeValues.push(new TextDecoder().decode(item.data).toString().trim());
                     }
@@ -561,8 +561,8 @@ suite('Standard IPyWidget Tests @widgets', function () {
                         }
                         mimeValues = [];
                         stdOut = '';
-                        for (let output of cell.outputs) {
-                            for (let item of output.items) {
+                        for (const output of cell.outputs) {
+                            for (const item of output.items) {
                                 if (item.mime === 'application/vnd.custom') {
                                     mimeValues.push(new TextDecoder().decode(item.data).toString().trim());
                                 }

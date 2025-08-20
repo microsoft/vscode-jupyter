@@ -15,7 +15,7 @@ const computedHashes: Record<string, string> = {};
 let stopStoringHashes = false;
 
 let cryptoProvider: Crypto;
-declare var WorkerGlobalScope: Function | undefined;
+declare let WorkerGlobalScope: Function | undefined;
 // Web
 if (typeof window === 'object') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,7 +28,6 @@ else if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGloba
 }
 // Node
 else {
-    // eslint-disable-next-line local-rules/node-imports
     cryptoProvider = require('node:crypto').webcrypto;
 }
 

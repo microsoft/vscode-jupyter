@@ -74,8 +74,6 @@ export class PythonEnvKernelConnectionCreator {
               action: 'Back' | 'Cancel';
           }
     > {
-        let env: PythonEnvironment | undefined;
-
         const envResult = await this.createPythonEnvironment();
         if (this.cancelTokeSource.token.isCancellationRequested || envResult.action) {
             sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, { failed: true, reason: 'cancelled' });
@@ -85,7 +83,7 @@ export class PythonEnvKernelConnectionCreator {
             sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, { failed: true, reason: 'cancelled' });
             return { action: 'Cancel' };
         }
-        env = envResult.interpreter;
+        const env = envResult.interpreter;
         logger.debug(`Python Environment created ${env.id}`);
 
         const kernelConnection = await this.waitForPythonKernel(envResult.interpreter);

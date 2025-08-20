@@ -6,7 +6,7 @@ import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platf
 import { IKernel, ResumeCellExecutionInformation, isRemoteConnection } from '../types';
 import type { KernelMessage } from '@jupyterlab/services';
 import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
-import { dispose } from '../../platform/common/utils/lifecycle';
+import { DisposableBase, dispose } from '../../platform/common/utils/lifecycle';
 import { NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { swallowExceptions } from '../../platform/common/utils/misc';
 import { getParentHeaderMsgId } from './cellExecutionMessageHandler';
@@ -14,7 +14,6 @@ import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../jupyte
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { generateIdFromRemoteProvider } from '../jupyter/jupyterUtils';
-import { DisposableBase } from '../../platform/common/utils/lifecycle';
 
 const MAX_TRACKING_TIME = 1_000 * 60 * 60 * 24 * 2; // 2 days
 type CellExecutionInfo = Omit<ResumeCellExecutionInformation, 'token'> & { kernelId: string; cellIndex: number };

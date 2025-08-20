@@ -339,6 +339,7 @@ suite('Kernel API Tests @typescript', function () {
     ) {
         const disposables: IDisposable[] = [];
         const outputsReceived: string[] = [];
+        // eslint-disable-next-line no-async-promise-executor
         const outputPromise = new Promise<void>(async (resolve, reject) => {
             for await (const output of executionResult) {
                 output.items.forEach((item) => {

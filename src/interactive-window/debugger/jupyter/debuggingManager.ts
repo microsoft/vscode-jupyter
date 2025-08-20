@@ -174,7 +174,7 @@ export class InteractiveWindowDebuggingManager
     // TODO: This will likely be needed for mapping breakpoints and such
     public async updateSourceMaps(notebookEditor: NotebookEditor, hashes: IFileGeneratedCodes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
-        let debugSession = this.getDebugSession(notebookEditor.notebook);
+        const debugSession = this.getDebugSession(notebookEditor.notebook);
         if (debugSession) {
             logger.ci(`Sending debug request for source map`);
             await Promise.all(

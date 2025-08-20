@@ -41,7 +41,7 @@ suite(`Local Python and related kernels`, async () => {
     let extensionChecker: IPythonExtensionChecker;
     let kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder;
     let globalState: Memento;
-    let disposables: IDisposable[] = [];
+    const disposables: IDisposable[] = [];
     let env: IApplicationEnvironment;
     let trustedKernels: ITrustedKernelPaths;
     let clock: fakeTimers.InstalledClock;
@@ -49,9 +49,9 @@ suite(`Local Python and related kernels`, async () => {
     let onDidChangeKernelsFromKnownLocations: EventEmitter<void>;
     let onDidChangeInterpreters: EventEmitter<PythonEnvironment[]>;
     let onDidRemoveInterpreter: EventEmitter<{ id: string }>;
-    let tempDirForKernelSpecs = Uri.file('/tmp');
-    let findKernelSpecsInPathsReturnValue = new ResourceMap<Uri[]>();
-    let loadKernelSpecReturnValue = new ResourceMap<IJupyterKernelSpec>();
+    const tempDirForKernelSpecs = Uri.file('/tmp');
+    const findKernelSpecsInPathsReturnValue = new ResourceMap<Uri[]>();
+    const loadKernelSpecReturnValue = new ResourceMap<IJupyterKernelSpec>();
     const globalKernelRootPath = Uri.file('root');
     const condaInterpreter: PythonEnvironment = {
         id: 'conda',

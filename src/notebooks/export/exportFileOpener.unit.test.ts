@@ -34,7 +34,7 @@ suite('Export File Opener', () => {
         // reset(mockedVSCodeNamespaces.env);
         when(mockedVSCodeNamespaces.env.openExternal(anything())).thenReturn(Promise.resolve(true));
         sinon.stub(ServiceContainer, 'instance').get(() => ({
-            get: (id: unknown) => (id == IFileSystem ? instance(fileSystem) : undefined)
+            get: (id: unknown) => (id === IFileSystem ? instance(fileSystem) : undefined)
         }));
         disposables.push(new Disposable(() => sinon.restore()));
         fileOpener = new ExportFileOpener();

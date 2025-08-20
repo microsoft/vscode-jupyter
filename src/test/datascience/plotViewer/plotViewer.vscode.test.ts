@@ -74,7 +74,7 @@ plt.show()`,
 
         // Check if our metadata has __displayOpenPlotIcon
         assert(
-            plotCell.outputs.some((o) => o!.metadata!.__displayOpenPlotIcon == true),
+            plotCell.outputs.some((o) => o!.metadata!.__displayOpenPlotIcon === true),
             'Open Plot Icon missing from metadata'
         );
         // Check our output mime types

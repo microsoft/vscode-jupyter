@@ -33,7 +33,7 @@ export class KernelFinder extends DisposableBase implements IKernelFinder {
         return this._status;
     }
     public set status(value) {
-        if (this._status != value) {
+        if (this._status !== value) {
             this._status = value;
             this._onDidChangeStatus.fire();
         }

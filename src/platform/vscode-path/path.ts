@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable local-rules/dont-use-process */
-
 // NOTE: VSCode's copy of nodejs path library to be usable in common (non-node) namespace
 // Copied from: https://github.com/nodejs/node/blob/v14.16.0/lib/path.js
 

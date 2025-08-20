@@ -67,7 +67,7 @@ export function deserializePythonEnvironment(
 }
 export function pythonEnvToJupyterEnv(env: Environment): PythonEnvironment | undefined {
     let uri: Uri;
-    let id = env.id;
+    const id = env.id;
     if (!env.executable.uri) {
         if (getEnvironmentType(env) === EnvironmentType.Conda) {
             uri =
@@ -538,8 +538,11 @@ export class InterpreterService implements IInterpreterService {
                     return;
                 }
                 const env = await api.environments.resolveEnvironment(
-                    // eslint-disable-next-line local-rules/dont-use-fspath
-                    isUri(pythonPath) ? pythonPath.fsPath : typeof pythonPath == 'string' ? pythonPath : pythonPath.path
+                    isUri(pythonPath)
+                        ? pythonPath.fsPath
+                        : typeof pythonPath === 'string'
+                        ? pythonPath
+                        : pythonPath.path
                 );
                 return this.trackResolvedEnvironment(env);
             });

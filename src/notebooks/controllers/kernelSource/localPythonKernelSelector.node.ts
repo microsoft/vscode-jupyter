@@ -14,7 +14,7 @@ import {
 } from '../../../platform/interpreter/pythonEnvironmentPicker.node';
 import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBasedQuickPick';
 import { Environment, PythonExtension } from '@vscode/python-extension';
-import { PythonExtension as PythonExtensionId } from '../../../platform/common/constants';
+import { PythonExtension as PythonExtensionId, Commands } from '../../../platform/common/constants';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
@@ -22,7 +22,6 @@ import { PythonEnvironmentQuickPickItemProvider } from '../../../platform/interp
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { noop } from '../../../platform/common/utils/misc';
 import { findPreferredPythonEnvironment } from '../preferredKernelConnectionService.node';
-import { Commands } from '../../../platform/common/constants';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { logger } from '../../../platform/logging';
 import { DisposableBase } from '../../../platform/common/utils/lifecycle';

@@ -379,7 +379,7 @@ function sendCompletionTelemetry(
     properties: TelemetryProperties<Telemetry.KernelCodeCompletion>
 ) {
     let lastSentCompletionTime = lastSentCompletionTimes.get(kernel);
-    let timesExceededTimeout = lastTelemetryExceedingMaxTimeout.get(kernel)?.count || 0;
+    const timesExceededTimeout = lastTelemetryExceedingMaxTimeout.get(kernel)?.count || 0;
     if (measures.duration >= Settings.IntellisenseTimeout) {
         lastTelemetryExceedingMaxTimeout.set(kernel, { count: timesExceededTimeout + 1, measures, properties });
     }
@@ -647,7 +647,7 @@ export function generatePythonCompletions(
     const wordDot = word.endsWith('.') || isPreviousCharTriggerCharacter;
     const insideString =
         allowStringFilter &&
-        (triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(line, position));
+        (triggerCharacter === "'" || triggerCharacter === '"' || positionInsideString(line, position));
 
     logger.ci(`Jupyter completions filtering applied: ${insideString} on ${line}`);
 
@@ -657,7 +657,7 @@ export function generatePythonCompletions(
     const result = completions
         .map((r, i) => {
             let itemText = typeof r.label === 'string' ? r.label : r.label.label;
-            let label = typeof r.label === 'string' ? r.label : r.label.label;
+            const label = typeof r.label === 'string' ? r.label : r.label.label;
             if (label.startsWith('%') || label.startsWith('!')) {
                 return {
                     ...r,

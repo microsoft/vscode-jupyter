@@ -11,7 +11,7 @@ export async function tryGetRealPath(expectedPath: Uri): Promise<Uri> {
         let realPath = await fsExtra.realpath(expectedPath.fsPath);
 
         // Make sure on linux we use the correct separator
-        if (getOSType() != OSType.Windows) {
+        if (getOSType() !== OSType.Windows) {
             realPath = realPath.replace(/\\/g, '/');
         }
 

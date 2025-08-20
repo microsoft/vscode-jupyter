@@ -3,8 +3,7 @@
 
 import * as vscode from 'vscode';
 import { inject, injectable } from 'inversify';
-import { ICellRange, IConfigurationService } from '../../platform/common/types';
-import { IDisposable } from '../../platform/common/types';
+import { ICellRange, IDisposable, IConfigurationService } from '../../platform/common/types';
 import { generateCellRangesFromDocument } from './cellFactory';
 import { ConfigurationChangeEvent } from 'vscode';
 import { ContextKey } from '../../platform/common/contextKey';
@@ -56,7 +55,7 @@ export class CellRangeCache implements ICellRangeCache {
 
         if (
             !activeEditor ||
-            activeEditor.document.languageId != PYTHON_LANGUAGE ||
+            activeEditor.document.languageId !== PYTHON_LANGUAGE ||
             [NotebookCellScheme, InteractiveInputScheme].includes(activeEditor.document.uri.scheme)
         ) {
             // set the context to false so our command doesn't run for other files
@@ -80,7 +79,7 @@ export class CellRangeCache implements ICellRangeCache {
 
     private updateContextKeys(documentOrOverride?: vscode.TextDocument | boolean) {
         let hasCodeCells = false;
-        if (typeof documentOrOverride == 'boolean') {
+        if (typeof documentOrOverride === 'boolean') {
             hasCodeCells = documentOrOverride;
         } else {
             const document = documentOrOverride ?? vscode.window.activeTextEditor?.document;

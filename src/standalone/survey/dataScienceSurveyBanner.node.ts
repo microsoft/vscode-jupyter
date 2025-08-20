@@ -178,7 +178,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         openInBrowser(this.getSurveyLink(type));
     }
     private async disable(answer: DSSurveyLabelIndex, type: BannerType) {
-        let monthsTillNextPrompt = answer === DSSurveyLabelIndex.Yes ? 6 : 4;
+        const monthsTillNextPrompt = answer === DSSurveyLabelIndex.Yes ? 6 : 4;
 
         if (monthsTillNextPrompt) {
             await this.showBannerState.get(type)!.updateValue({

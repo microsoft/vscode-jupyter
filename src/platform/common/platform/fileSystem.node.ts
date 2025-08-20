@@ -121,7 +121,7 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
     override async copy(source: Uri, destination: Uri, options?: { overwrite: boolean }): Promise<void> {
         if (isLocalFile(source) && isLocalFile(destination)) {
             const overwrite =
-                typeof options === undefined || typeof options?.overwrite == undefined ? true : options?.overwrite;
+                typeof options === undefined || typeof options?.overwrite === undefined ? true : options?.overwrite;
             await fs.copy(getFilePath(source), getFilePath(destination), { overwrite });
         } else {
             await super.copy(source, destination, options);

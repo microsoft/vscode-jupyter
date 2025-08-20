@@ -141,12 +141,11 @@ export class CondaInstaller extends ModuleInstaller {
     }
 
     private getEnvironmentPath(interpreter: PythonEnvironment | Environment) {
-        let exeuctablePath: Uri;
         const env = getCachedEnvironment(interpreter);
         if (env?.environment?.folderUri) {
             return env.environment.folderUri.fsPath;
         }
-        exeuctablePath = env?.executable.uri || Uri.file(interpreter.id);
+        const exeuctablePath = env?.executable.uri || Uri.file(interpreter.id);
         const dir = path.dirname(exeuctablePath.fsPath);
 
         // If interpreter is in bin or Scripts, then go up one level

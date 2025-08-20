@@ -42,7 +42,7 @@ suite('Jupyter Completion Unit Tests', () => {
         assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
         assert.equal(filtered.length, 1, 'Wrong number of filtered results');
         assert.ok(
-            filtered.find((f) => f.label == '%bar' && f.sortText?.startsWith('ZZZ')),
+            filtered.find((f) => f.label === '%bar' && f.sortText?.startsWith('ZZZ')),
             'Magic not found and not sorted at end'
         );
     });
@@ -64,7 +64,7 @@ suite('Jupyter Completion Unit Tests', () => {
         assert.isNotEmpty(filtered, 'Filtered list should have items in it');
         assert.equal(filtered.length, 2, 'Wrong number of filtered results');
         assert.ok(
-            filtered.find((f) => f.label == 'BAZ'),
+            filtered.find((f) => f.label === 'BAZ'),
             'Labels not minimized'
         );
     });
@@ -81,7 +81,7 @@ suite('Jupyter Completion Unit Tests', () => {
         assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
         assert.equal(filtered.length, 4, 'Wrong number of filtered results');
         assert.ok(
-            filtered.find((f) => f.label == '.bit_count'),
+            filtered.find((f) => f.label === '.bit_count'),
             'bit_count not found'
         );
     });
@@ -95,7 +95,7 @@ suite('Jupyter Completion Unit Tests', () => {
         assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
         assert.equal(filtered.length, 2, 'Wrong number of filtered results');
         assert.ok(
-            filtered.find((f) => f.label == 'test.ipynb'),
+            filtered.find((f) => f.label === 'test.ipynb'),
             'Inside string should show paths'
         );
     });
@@ -117,11 +117,11 @@ suite('Jupyter Completion Unit Tests', () => {
         assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
         assert.equal(filtered.length, 3, 'Wrong number of filtered results');
         assert.ok(
-            filtered.find((f) => f.label == 'test.ipynb'),
+            filtered.find((f) => f.label === 'test.ipynb'),
             'Inside string didnt work'
         );
         assert.ok(
-            filtered.find((f) => f.label == 'foo/'),
+            filtered.find((f) => f.label === 'foo/'),
             'Inside string didnt work'
         );
     });
@@ -143,7 +143,7 @@ suite('Jupyter Completion Unit Tests', () => {
         assert.isNotEmpty(filtered, 'Filtered list should have items in it');
         assert.equal(filtered.length, 2, 'Wrong number of filtered results');
         assert.ok(
-            filtered.find((f) => f.label == 'value_count'),
+            filtered.find((f) => f.label === 'value_count'),
             'Multi-level Labels not minimized'
         );
     });

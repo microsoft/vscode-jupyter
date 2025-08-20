@@ -14,10 +14,10 @@ import { KernelProgressReporter } from '../platform/progress/kernelProgressRepor
 suite('Jupyter Execution', async () => {
     let kernelProvider: IKernelProvider;
     let restartMonitor: KernelAutoRestartMonitor;
-    let onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
-    let onDidStartKernel = new EventEmitter<IKernel>();
-    let onDidReStartKernel = new EventEmitter<IKernel>();
-    let onDidDisposeKernel = new EventEmitter<IKernel>();
+    const onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
+    const onDidStartKernel = new EventEmitter<IKernel>();
+    const onDidReStartKernel = new EventEmitter<IKernel>();
+    const onDidDisposeKernel = new EventEmitter<IKernel>();
     let disposables: IDisposable[] = [];
     const connectionMetadata = LocalKernelSpecConnectionMetadata.create({
         id: '123',

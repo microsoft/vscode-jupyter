@@ -13,7 +13,8 @@ import {
     SecretStorage,
     SecretStorageChangeEvent,
     type CancellationToken,
-    type NotebookDocument
+    type NotebookDocument,
+    NotebookCellOutput
 } from 'vscode';
 import { clearApiAccess } from './apiAccess';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
@@ -33,7 +34,6 @@ import { createKernelApiForExtension } from './kernel';
 import { noop } from '../../../test/core';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../../test/constants';
 import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
-import { NotebookCellOutput } from 'vscode';
 
 suite('Kernel Api', () => {
     let disposables: IDisposable[] = [];

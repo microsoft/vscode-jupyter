@@ -42,7 +42,6 @@ export function createDocument(
         .setup((d) => d.uri)
         .returns(() => uri)
         .verifiable(times);
-    // eslint-disable-next-line local-rules/dont-use-fspath
     document.setup((d) => d.fileName).returns(() => uri.fsPath);
     document
         .setup((d) => d.version)
@@ -104,7 +103,6 @@ export function createMockedDocument(
 
     // First set the metadata
     when(document.uri).thenReturn(uri);
-    // eslint-disable-next-line local-rules/dont-use-fspath
     when(document.fileName).thenReturn(uri.path);
     when(document.version).thenReturn(fileVersion);
 

@@ -5,9 +5,8 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import type WebSocketIsomorphic from 'isomorphic-ws';
-import { CancellationToken, Disposable, Event, type NotebookCellData } from 'vscode';
+import { CancellationToken, Disposable, Event, type NotebookCellData, Uri } from 'vscode';
 import { SemVer } from 'semver';
-import { Uri } from 'vscode';
 import { IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';

@@ -20,13 +20,14 @@ import * as vscode from 'vscode';
 import type { IExtensionApi } from '../../standalone/api';
 import type { IExtensionContext } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
+// eslint-disable-next-line no-duplicate-imports
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 const CustomReporter = require('./customReporter');
 import { sleep } from '../../platform/common/utils/async';
 
 let activatedResponse: undefined | IExtensionApi;
 
-declare var VSC_JUPYTER_CI_TEST_GREP: '';
+declare let VSC_JUPYTER_CI_TEST_GREP: '';
 function getMochaTestGrep() {
     try {
         if (typeof VSC_JUPYTER_CI_TEST_GREP === 'string') {
@@ -48,6 +49,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // imports mocha for the browser, defining the `mocha` global.
         require('mocha/mocha');
 
+        // eslint-disable-next-line no-async-promise-executor
         return new Promise<void>(async (resolve, reject) => {
             // Check for a grep setting. Might be running a subset of the tests
             const grep = getMochaTestGrep();

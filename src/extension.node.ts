@@ -37,6 +37,7 @@ import './platform/logging';
 
 import { commands, env, ExtensionMode, UIKind, workspace, type OutputChannel } from 'vscode';
 import { buildApi, IExtensionApi } from './standalone/api';
+// eslint-disable-next-line no-duplicate-imports
 import { logger, setHomeDirectory } from './platform/logging';
 import { IAsyncDisposableRegistry, IExtensionContext, IsDevMode } from './platform/common/types';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
@@ -88,7 +89,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
 
     activateNotebookTelemetry(stopWatch);
     setDisposableTracker(context.subscriptions);
-    setIsCodeSpace(env.uiKind == UIKind.Web);
+    setIsCodeSpace(env.uiKind === UIKind.Web);
     setIsWebExtension(false);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {

@@ -49,7 +49,7 @@ function getOrCreateExtensionAPI(extensionId: string) {
 
 function getWrappedKernel(kernel: IKernel, extensionId: string) {
     const extensionAPI = getOrCreateExtensionAPI(extensionId);
-    let wrappedKernel = extensionAPI.kernels.get(kernel) || createKernelApiForExtension(extensionId, kernel);
+    const wrappedKernel = extensionAPI.kernels.get(kernel) || createKernelApiForExtension(extensionId, kernel);
     extensionAPI.kernels.set(kernel, wrappedKernel);
     return wrappedKernel;
 }
@@ -57,7 +57,7 @@ function getWrappedKernel(kernel: IKernel, extensionId: string) {
 export function getKernelsApi(extensionId: string): Kernels {
     return {
         async getKernel(uri: Uri) {
-            let accessAllowed: boolean | undefined = undefined;
+            const accessAllowed: boolean | undefined = undefined;
 
             const kernelProvider = ServiceContainer.instance.get<IKernelProvider>(IKernelProvider);
             const notebook = workspace.notebookDocuments.find((item) => item.uri.toString() === uri.toString());

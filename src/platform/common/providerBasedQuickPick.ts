@@ -19,8 +19,7 @@ import { InputFlowAction } from './utils/multiStepInput';
 import { Common, DataScience } from './utils/localize';
 import { noop } from './utils/misc';
 import { IDisposable } from './types';
-import { dispose } from './utils/lifecycle';
-import { DisposableBase } from './utils/lifecycle';
+import { DisposableBase, dispose } from './utils/lifecycle';
 import { logger } from '../logging';
 
 abstract class BaseQuickPickItem implements QuickPickItem {
@@ -405,7 +404,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         this.rebuildQuickPickItems(quickPick);
     }
     private rebuildQuickPickItems(quickPick: QuickPick<QuickPickItem>) {
-        let recommendedItemQuickPick = this.recommended ? this.toQuickPickItem(this.recommended) : undefined;
+        const recommendedItemQuickPick = this.recommended ? this.toQuickPickItem(this.recommended) : undefined;
         const recommendedItems: QuickPickItem[] = [];
         if (recommendedItemQuickPick) {
             recommendedItems.push(

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
-import { NotebookCell, NotebookCellExecution, workspace, NotebookCellOutput } from 'vscode';
+import { NotebookCell, NotebookCellExecution, workspace } from 'vscode';
 
 import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
@@ -297,7 +297,6 @@ export class CellExecution implements ICellExecution, IDisposable {
 
         if (appendErrorToOutput) {
             let errorMessage: string | undefined;
-            let output: NotebookCellOutput | undefined;
             if (
                 error &&
                 !(error instanceof BaseError) &&
@@ -322,7 +321,7 @@ export class CellExecution implements ICellExecution, IDisposable {
                 );
                 errorMessage = failureInfo?.message;
             }
-            output = createOutputWithErrorMessageForDisplay(errorMessage || '');
+            const output = createOutputWithErrorMessageForDisplay(errorMessage || '');
             if (output) {
                 this.execution?.appendOutput(output).then(noop, noop);
             }
@@ -337,7 +336,7 @@ export class CellExecution implements ICellExecution, IDisposable {
     }
     private completedSuccessfully(completedTime?: number) {
         traceCellMessage(this.cell, 'Completed successfully');
-        let success: 'success' | 'failed' = 'success';
+        const success: 'success' | 'failed' = 'success';
         this.endCellTask('success', completedTime);
         traceCellMessage(this.cell, `Completed successfully & resolving with status = ${success}`);
         this._result.resolve();

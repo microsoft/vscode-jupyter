@@ -92,7 +92,7 @@ export function getTelemetryReporter(): TelemetryReporter {
 }
 
 function sanitizeProperties(eventName: string, data: Record<string, any>) {
-    let customProperties: Record<string, string> = {};
+    const customProperties: Record<string, string> = {};
     Object.getOwnPropertyNames(data).forEach((prop) => {
         if (data[prop] === undefined || data[prop] === null) {
             return;
@@ -176,7 +176,7 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
 ) {
     const reporter = getTelemetryReporter();
     let customProperties: Record<string, string> = {};
-    let eventNameSent = eventName as string;
+    const eventNameSent = eventName as string;
 
     if (ex) {
         // Include a property failed, to indicate there are errors.

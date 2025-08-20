@@ -32,7 +32,7 @@ import './platform/ioc/reflectMetadata';
 // Naive polyfill for setImmediate as it is required by @jupyterlab/services/lib/kernel/future.js
 // when running in a web worker as it selects either requestAnimationFrame or setImmediate, both of
 // which are not available in a worker in Safari.
-declare var self: {};
+declare let self: {};
 if (typeof requestAnimationFrame === 'undefined' && typeof setImmediate === 'undefined') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (self as any).setImmediate = (cb: (...args: any[]) => any) => setTimeout(cb);
@@ -48,6 +48,7 @@ import './platform/logging';
 
 import { commands, env, ExtensionMode, UIKind, workspace, type OutputChannel } from 'vscode';
 import { buildApi, IExtensionApi } from './standalone/api';
+// eslint-disable-next-line no-duplicate-imports
 import { logger } from './platform/logging';
 import { IAsyncDisposableRegistry, IExtensionContext, IsDevMode } from './platform/common/types';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
@@ -83,7 +84,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
 
     activateNotebookTelemetry(stopWatch);
     setDisposableTracker(context.subscriptions);
-    setIsCodeSpace(env.uiKind == UIKind.Web);
+    setIsCodeSpace(env.uiKind === UIKind.Web);
     setIsWebExtension(true);
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {

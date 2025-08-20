@@ -112,7 +112,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     public getCodeLenses() {
         const document = this.document;
-        if (document && document.version != this.version) {
+        if (document && document.version !== this.version) {
             this.codeLenses = this.codeLensFactory.createCodeLenses(document);
             this.cells = this.codeLensFactory.getCellRanges(document);
             this.version = document.version;
@@ -130,7 +130,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(window.activeTextEditor.selection, false, true);
     }
     public dispose() {
-        let perfMeasures = this.codeLensFactory.getPerfMeasures();
+        const perfMeasures = this.codeLensFactory.getPerfMeasures();
         if (perfMeasures && perfMeasures.codeLensUpdateCount > 0) {
             sendTelemetryEvent(Telemetry.DocumentWithCodeCells, {
                 codeLensUpdateTime: perfMeasures.totalCodeLensUpdateTimeInMs / perfMeasures.codeLensUpdateCount,

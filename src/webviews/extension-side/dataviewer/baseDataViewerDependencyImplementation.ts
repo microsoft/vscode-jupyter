@@ -43,11 +43,11 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
         tokenSource: CancellationTokenSource,
         version?: string
     ): Promise<void> {
-        let message = version
+        const message = version
             ? DataScience.pandasTooOldForViewingFormat(version, pandasMinimumVersionSupportedByVariableViewer)
             : DataScience.pandasRequiredForViewing(pandasMinimumVersionSupportedByVariableViewer);
 
-        let selection = isCodeSpace()
+        const selection = isCodeSpace()
             ? Common.install
             : await window.showErrorMessage(message, { modal: true }, Common.install);
 

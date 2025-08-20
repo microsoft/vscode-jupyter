@@ -201,7 +201,7 @@ export class DataViewerCommandRegistry implements IExtensionSyncActivationServic
     private getActiveKernel() {
         const activeNotebook = window.activeNotebookEditor?.notebook;
         const activeJupyterNotebookKernel =
-            activeNotebook?.notebookType == JupyterNotebookView ? this.kernelProvider.get(activeNotebook) : undefined;
+            activeNotebook?.notebookType === JupyterNotebookView ? this.kernelProvider.get(activeNotebook) : undefined;
 
         if (activeJupyterNotebookKernel) {
             return activeJupyterNotebookKernel;

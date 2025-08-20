@@ -133,11 +133,11 @@ suite('Remote Kernel Execution', function () {
     test('Remote kernels support intellisense @lsp', async function () {
         const { editor } = await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
-        let nbEditor = window.activeNotebookEditor!;
+        const nbEditor = window.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`
-        let cell2 = nbEditor.notebook.getCells()![1]!;
+        const cell2 = nbEditor.notebook.getCells()![1]!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell2),

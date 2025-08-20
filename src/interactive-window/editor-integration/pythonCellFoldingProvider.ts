@@ -46,7 +46,7 @@ export class PythonCellFoldingProvider implements IExtensionSyncActivationServic
         const codeWatcher = this.dataScienceCodeLensProvider.getCodeWatcher(document);
         if (codeWatcher) {
             const codeLenses = codeWatcher.getCodeLenses();
-            if (token.isCancellationRequested || codeLenses.length == 0) {
+            if (token.isCancellationRequested || codeLenses.length === 0) {
                 return undefined;
             }
             return codeLenses.map((codeLens) => {

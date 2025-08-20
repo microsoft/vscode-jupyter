@@ -9,7 +9,7 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { logValue, logger } from '../../../platform/logging';
+import { debugDecorator, logValue, logger } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IMemento,
@@ -19,7 +19,6 @@ import {
 } from '../../../platform/common/types';
 import { tryGetRealPath } from '../../../platform/common/utils.node';
 import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
-import { debugDecorator } from '../../../platform/logging';
 import { OSType } from '../../../platform/common/utils/platform.node';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -292,7 +291,7 @@ export class JupyterPaths {
         switch (this.platformService.osType) {
             case OSType.OSX:
                 return Uri.joinPath(this.platformService.homeDir, 'Library', 'Jupyter');
-            case OSType.Windows:
+            case OSType.Windows: {
                 const appData = process.env['APPDATA'] ? Uri.file(path.normalize(process.env['APPDATA'])) : '';
                 if (appData) {
                     return Uri.joinPath(appData, 'jupyter');
@@ -302,6 +301,7 @@ export class JupyterPaths {
                     return Uri.joinPath(configDir, 'data');
                 }
                 return Uri.joinPath(this.platformService.homeDir, 'Library', 'Jupyter');
+            }
             default: {
                 // Linux, non-OS X Unix, AIX, etc.
                 const xdgDataHome = process.env['XDG_DATA_HOME']

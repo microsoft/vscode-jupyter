@@ -16,7 +16,7 @@ suite('Process - ProcessServiceFactory', () => {
     let factory: ProcessServiceFactory;
     let envVariablesProvider: ICustomEnvironmentVariablesProvider;
     let disposableRegistry: IDisposable[] = [];
-    let oldDisposable = getDisposableTracker();
+    const oldDisposable = getDisposableTracker();
     setup(() => {
         envVariablesProvider = mock(CustomEnvironmentVariablesProvider);
         when(mockedVSCodeNamespaces.workspace.isTrusted).thenReturn(true);

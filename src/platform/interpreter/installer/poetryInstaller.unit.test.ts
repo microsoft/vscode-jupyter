@@ -6,7 +6,7 @@ import * as path from '../../../platform/vscode-path/path';
 import assert from 'assert';
 import { expect } from 'chai';
 import { anything, instance, mock, reset, when } from 'ts-mockito';
-import { Uri } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { ExecutionResult, ShellOptions } from '../../../platform/common/process/types.node';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
@@ -19,7 +19,6 @@ import { PoetryInstaller } from '../../../platform/interpreter/installer/poetryI
 import { ExecutionInstallArgs } from '../../../platform/interpreter/installer/moduleInstaller.node';
 import { ModuleInstallFlags } from '../../../platform/interpreter/installer/types';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
-import { Disposable } from 'vscode';
 import { dispose } from '../../common/utils/lifecycle';
 import { PythonExtension } from '@vscode/python-extension';
 import { resolvableInstance } from '../../../test/datascience/helpers';

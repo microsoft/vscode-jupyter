@@ -36,7 +36,7 @@ suite('Jupyter Provider Tests', function () {
     let api: IExtensionTestApi;
     let jupyterServerUrl = { url: '', dispose: noop };
     const disposables: IDisposable[] = [];
-    let nbProviders: { provider: NotebookKernelSourceActionProvider; disposable: IDisposable }[] = [];
+    const nbProviders: { provider: NotebookKernelSourceActionProvider; disposable: IDisposable }[] = [];
     let token: CancellationToken;
     const tokenForJupyterServer = 'TokenForJupyterServer';
     suiteSetup(async function () {

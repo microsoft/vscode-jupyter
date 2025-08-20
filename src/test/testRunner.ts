@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable local-rules/dont-use-filename */
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, , , @typescript-eslint/no-explicit-any, prefer-template, no-console */
 // Most of the source is in node_modules/vscode/lib/testrunner.js
 

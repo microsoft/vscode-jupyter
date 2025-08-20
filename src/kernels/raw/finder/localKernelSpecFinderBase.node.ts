@@ -303,7 +303,7 @@ export abstract class LocalKernelSpecFinderBase<
                 // Interpreters have to still exist
                 return this.fs.exists(kernel.interpreter.uri);
 
-            case 'startUsingLocalKernelSpec':
+            case 'startUsingLocalKernelSpec': {
                 // Spec files have to still exist and interpreters have to exist
                 const promiseSpec = kernel.kernelSpec.specFile
                     ? this.fs.exists(Uri.file(kernel.kernelSpec.specFile))
@@ -311,6 +311,7 @@ export abstract class LocalKernelSpecFinderBase<
                 return promiseSpec.then((r) => {
                     return r && kernel.interpreter ? this.fs.exists(kernel.interpreter.uri) : Promise.resolve(true);
                 });
+            }
         }
     }
 }

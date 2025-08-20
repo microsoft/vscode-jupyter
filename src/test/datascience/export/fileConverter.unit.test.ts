@@ -58,7 +58,7 @@ suite('File Converter @export', () => {
         when(exportInterpreterFinder.getExportInterpreter(anything())).thenResolve();
         exportFileOpener = sinon.stub(ExportFileOpener.prototype, 'openFile').resolves();
         sinon.stub(ServiceContainer, 'instance').get(() => ({
-            get: (id: unknown) => (id == IFileSystem ? instance(fileSystem) : undefined)
+            get: (id: unknown) => (id === IFileSystem ? instance(fileSystem) : undefined)
         }));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);

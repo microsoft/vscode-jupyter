@@ -11,8 +11,10 @@ import { JupyterInterpreterDependencyService } from './interpreter/jupyterInterp
 import { JupyterInterpreterSelectionCommand } from './interpreter/jupyterInterpreterSelectionCommand.node';
 import { JupyterInterpreterSelector } from './interpreter/jupyterInterpreterSelector.node';
 import { JupyterInterpreterService } from './interpreter/jupyterInterpreterService.node';
-import { MigrateJupyterInterpreterStateService } from './interpreter/jupyterInterpreterStateStore';
-import { JupyterInterpreterStateStore } from './interpreter/jupyterInterpreterStateStore';
+import {
+    MigrateJupyterInterpreterStateService,
+    JupyterInterpreterStateStore
+} from './interpreter/jupyterInterpreterStateStore';
 import { JupyterInterpreterSubCommandExecutionService } from './interpreter/jupyterInterpreterSubCommandExecutionService.node';
 import { NbConvertExportToPythonService } from './interpreter/nbconvertExportToPythonService.node';
 import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertInterpreterDependencyChecker.node';

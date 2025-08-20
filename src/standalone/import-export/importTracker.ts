@@ -3,7 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, NotebookCell, NotebookCellKind, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
-import { ResourceTypeTelemetryProperty, onDidChangeTelemetryEnablement, sendTelemetryEvent } from '../../telemetry';
+import {
+    isTelemetryDisabled,
+    ResourceTypeTelemetryProperty,
+    onDidChangeTelemetryEnablement,
+    sendTelemetryEvent
+} from '../../telemetry';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
@@ -12,7 +17,6 @@ import { noop } from '../../platform/common/utils/misc';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { isJupyterNotebook } from '../../platform/common/utils';
-import { isTelemetryDisabled } from '../../telemetry';
 import { ResourceMap } from '../../platform/common/utils/map';
 import { Delayer } from '../../platform/common/utils/async';
 import { NotebookCellExecutionState, notebookCellExecutions } from '../../platform/notebooks/cellExecutionStateService';
@@ -73,7 +77,7 @@ export class ImportTracker implements IExtensionSyncActivationService {
         this.disposables.add(
             notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
                 void delayer.trigger(() => {
-                    if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
+                    if (e.state === NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
                         this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
                     }
                 });

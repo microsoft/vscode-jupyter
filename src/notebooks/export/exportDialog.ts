@@ -27,26 +27,30 @@ export class ExportDialog {
         let fileExtensions: { [name: string]: string[] } = {};
         let extension: string | undefined;
         switch (format) {
-            case ExportFormat.python:
+            case ExportFormat.python: {
                 fileExtensions = PythonExtensions;
                 extension = '.py';
                 break;
+            }
 
-            case ExportFormat.pdf:
+            case ExportFormat.pdf: {
                 extension = '.pdf';
                 fileExtensions = PDFExtensions;
                 break;
+            }
 
-            case ExportFormat.html:
+            case ExportFormat.html: {
                 extension = '.html';
                 fileExtensions = HTMLExtensions;
                 break;
+            }
 
-            case ExportFormat.ipynb:
+            case ExportFormat.ipynb: {
                 extension = '.ipynb';
                 const filtersKey = localize.DataScience.exportDialogFilter;
                 fileExtensions[filtersKey] = ['ipynb'];
                 break;
+            }
 
             default:
                 return;

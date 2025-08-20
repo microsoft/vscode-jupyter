@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-use-before-define */
-/* eslint-disable local-rules/dont-use-fspath */
 
 import { Uri as URI } from 'vscode';
 import { CharCode } from './charCode';
@@ -259,8 +258,8 @@ export class ExtUri implements IExtUri {
             const relativePath = paths.relative(originalFSPath(from), originalFSPath(to));
             return isWindows ? extpath.toSlashes(relativePath) : relativePath;
         }
-        let fromPath = from.path || '/',
-            toPath = to.path || '/';
+        let fromPath = from.path || '/';
+        const toPath = to.path || '/';
         if (this._ignorePathCasing(from)) {
             // make casing of fromPath match toPath
             let i = 0;

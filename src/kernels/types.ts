@@ -42,9 +42,7 @@ export type LiveKernelModel = IJupyterKernel &
 
 async function getConnectionIdHash(connection: KernelConnectionMetadata) {
     if (!isWeb() && connection.interpreter?.uri) {
-        // eslint-disable-next-line local-rules/dont-use-fspath
         const interpreterPath = connection.interpreter.uri.fsPath;
-        // eslint-disable-next-line local-rules/dont-use-fspath
         const normalizedPath = getNormalizedInterpreterPath(connection.interpreter.uri).fsPath;
         // Connection ids can contain Python paths in them.
         const normalizedId = connection.id.replace(interpreterPath, normalizedPath);
@@ -943,7 +941,6 @@ function sendKernelTelemetry(kernel: KernelConnectionMetadata) {
     let isArgv0SameAsInterpreter: undefined | boolean = undefined;
     if (kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0) {
         argv0 = kernelSpec.argv[0];
-        // eslint-disable-next-line local-rules/dont-use-fspath
         isArgv0SameAsInterpreter = argv0.toLowerCase() === interpreter?.uri?.fsPath?.toLowerCase();
         if (path.basename(argv0) !== argv0) {
             argv0 = `<P>${path.basename(argv0)}`;

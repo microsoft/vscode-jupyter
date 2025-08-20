@@ -151,12 +151,12 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
                             : [];
                     const nonCurrentCells: vscode.Range[] = [];
                     if (settings.decorateCells === 'allCells')
-                        cells.forEach((cell) => {
+                        {cells.forEach((cell) => {
                             const cellTop = cell.range.start;
                             if (cellTop !== currentRange[0].start) {
                                 nonCurrentCells.push(new vscode.Range(cellTop, cellTop));
                             }
-                        });
+                        });}
                     if (window.activeTextEditor === editor) {
                         editor.setDecorations(this.currentCellTop, rangeTop);
                         editor.setDecorations(this.currentCellBottom, rangeBottom);

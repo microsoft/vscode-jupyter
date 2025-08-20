@@ -69,9 +69,9 @@ class TypeScriptLanguageServiceHost implements ts.LanguageServiceHost {
 }
 
 async function getInjectableClasses(fileNames: string[], options: ts.CompilerOptions) {
-    let host = new TypeScriptLanguageServiceHost(fileNames, options);
-    let languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
-    let program = languageService.getProgram();
+    const host = new TypeScriptLanguageServiceHost(fileNames, options);
+    const languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
+    const program = languageService.getProgram();
     const classes = new Set<string>();
 
     // Visit every sourceFile in the program

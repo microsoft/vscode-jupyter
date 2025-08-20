@@ -93,7 +93,6 @@ export function isPythonEnvInListOfHiddenEnvs(
             return false;
         }
         const displayInterpreterPath = getDisplayPath(interpreterUri).toLowerCase().replace(/\\/g, '/');
-        // eslint-disable-next-line local-rules/dont-use-fspath
         const interpreterPath = interpreterUri ? interpreterUri.fsPath.toLowerCase().replace(/\\/g, '/') : '';
         if (
             item === displayInterpreterPath ||

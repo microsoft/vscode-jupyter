@@ -38,7 +38,7 @@ export async function waitForIdleOnSession(
         token.onCancellationRequested(() => kernelStatus.reject(new CancellationError()), undefined, disposables);
         const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
             logger.trace(`Got status ${status} in waitForIdleOnSession`);
-            if (status == 'idle') {
+            if (status === 'idle') {
                 kernelStatus.resolve(status);
             }
         };
@@ -46,7 +46,7 @@ export async function waitForIdleOnSession(
         disposables.push(
             new Disposable(() => swallowExceptions(() => session.kernel?.statusChanged?.disconnect(handler)))
         );
-        if (session.kernel.status == 'idle') {
+        if (session.kernel.status === 'idle') {
             kernelStatus.resolve(session.kernel.status);
         }
         // Check for possibility that kernel has died.
@@ -68,7 +68,7 @@ export async function waitForIdleOnSession(
 
         logger.trace(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-        if (result == 'idle') {
+        if (result === 'idle') {
             return;
         }
         logger.error(

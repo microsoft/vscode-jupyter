@@ -26,7 +26,7 @@ function waitForNotebookControllersCreationForServer(
 ) {
     return new Promise<void>((resolve) => {
         controllerRegistration.onDidChange((e) => {
-            for (let controller of e.added) {
+            for (const controller of e.added) {
                 if (
                     isRemoteConnection(controller.connection) &&
                     controller.connection.serverProviderHandle.id === serverId.id &&
@@ -50,7 +50,7 @@ export function registerRemoteServerProvider(
     logger.error(
         `The API registerRemoteServerProvider has being deprecated and will be removed soon, please use createJupyterServerCollection (extension ${extensionId}).`
     );
-    if (extensionId.toLowerCase() != CodespaceExtensionId.toLowerCase()) {
+    if (extensionId.toLowerCase() !== CodespaceExtensionId.toLowerCase()) {
         throw new Error('Deprecated API');
     }
     sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
@@ -97,7 +97,7 @@ export async function addRemoteJupyterServer(providerId: string, handle: string,
         'The API addRemoteJupyterServer has being deprecated and will be removed soon, please use createJupyterServerCollection.'
     );
     const extensionId = extensions.determineExtensionFromCallStack().extensionId;
-    if (extensionId.toLowerCase() != CodespaceExtensionId.toLowerCase()) {
+    if (extensionId.toLowerCase() !== CodespaceExtensionId.toLowerCase()) {
         throw new Error('Deprecated API');
     }
     sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {

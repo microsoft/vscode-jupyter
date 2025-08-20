@@ -177,6 +177,7 @@ export function activate(context: ExtensionContext): API {
     return {
         executeNotebook: async (outputType: 'text' | 'html' | 'image') => {
             runAll(outputType);
+            // eslint-disable-next-line no-async-promise-executor
             await new Promise<void>(async (resolve) => {
                 while (getTimeElapsedSinceLastUpdate() < 10_000) {
                     await sleep(1000);

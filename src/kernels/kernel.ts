@@ -41,7 +41,12 @@ import {
     trackKernelResourceInformation
 } from './telemetry/helper';
 import { Telemetry } from '../telemetry';
-import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
+import {
+    executeSilently,
+    getDisplayNameOrNameOfKernelConnection,
+    SilentExecutionErrorOptions,
+    isPythonKernelConnection
+} from './helpers';
 import {
     IKernel,
     IKernelSession,
@@ -62,7 +67,6 @@ import {
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from './displayOptions';
-import { SilentExecutionErrorOptions } from './helpers';
 import dedent from 'dedent';
 import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getKernelInfo } from './kernelInfo';
@@ -97,7 +101,7 @@ export function isKernelDead(k: IBaseKernel) {
         (k.status === 'terminating' && !k.disposed && !k.disposing) ||
         (!k.disposed &&
             !k.disposing &&
-            (k.session?.status == 'unknown' || k.session?.kernel?.status == 'unknown') &&
+            (k.session?.status === 'unknown' || k.session?.kernel?.status === 'unknown') &&
             (k.session.kernel?.isDisposed || k.session.isDisposed))
     );
 }
@@ -107,7 +111,7 @@ export function isKernelSessionDead(k: IKernelSession) {
         k.status === 'dead' ||
         (k.status === 'terminating' && !k.isDisposed) ||
         (!k.isDisposed &&
-            (k.status == 'unknown' || k.kernel?.status == 'unknown') &&
+            (k.status === 'unknown' || k.kernel?.status === 'unknown') &&
             (k.kernel?.isDisposed || k.isDisposed))
     );
 }
@@ -666,7 +670,7 @@ abstract class BaseKernel implements IBaseKernel {
             throw new CancellationError();
         }
         Cancellation.throwIfCanceled(this.startCancellation.token);
-        let disposables: Disposable[] = [];
+        const disposables: Disposable[] = [];
         try {
             logger.info(`Starting Kernel ${getKernelStartupLogMessage(this, this.startupUI)}`);
             this.createProgressIndicator(disposables);
@@ -967,7 +971,7 @@ abstract class BaseKernel implements IBaseKernel {
         const startupCode = await Promise.all(
             this.startupCodeProviders.sort((a, b) => b.priority - a.priority).map((provider) => provider.getCode(this))
         );
-        for (let code of startupCode) {
+        for (const code of startupCode) {
             result.push(...code);
         }
 
@@ -1006,7 +1010,6 @@ abstract class BaseKernel implements IBaseKernel {
                     this.startCancellation.token
                 );
 
-                // eslint-disable-next-line local-rules/dont-use-fspath
                 const safeWorkingDirectory = toPythonSafePath(workingDirectory.fsPath);
                 const code = `
 import os as _VSCODE_os

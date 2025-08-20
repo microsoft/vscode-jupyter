@@ -9,12 +9,12 @@ import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import {
+    isTelemetryDisabled,
     onDidChangeTelemetryEnablement,
     ResourceTypeTelemetryProperty,
     sendTelemetryEvent,
     Telemetry
 } from '../../telemetry';
-import { isTelemetryDisabled } from '../../telemetry';
 import {
     NotebookCellExecutionState,
     notebookCellExecutions,

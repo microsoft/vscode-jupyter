@@ -14,9 +14,8 @@ import {
     Product,
     ProductType
 } from './types';
-import { logValue, debugDecorator } from '../../logging';
+import { logValue, debugDecorator, logger } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { logger } from '../../logging';
 import { IProcessServiceFactory } from '../../common/process/types.node';
 import {
     IConfigurationService,

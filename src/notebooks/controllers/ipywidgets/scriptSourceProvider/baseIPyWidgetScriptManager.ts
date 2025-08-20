@@ -31,7 +31,7 @@ const REQUIRE_PATTERNS = [
 ];
 export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderName: string, contents: string) {
     // Look for `require.config(` or `window["require"].config` or `window['requirejs'].config`
-    let patternsToLookFor = [...REQUIRE_PATTERNS];
+    const patternsToLookFor = [...REQUIRE_PATTERNS];
     const widgetFolderNameHash = await getTelemetrySafeHashedString(widgetFolderName);
     let indexOfRequireConfig = 0;
     let patternUsedToRegisterRequireConfig: string | undefined;
@@ -45,7 +45,7 @@ export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFo
 
     if (indexOfRequireConfig < 0) {
         // Try without the `{`
-        let patternsToLookFor = [...REQUIRE_PATTERNS].map((pattern) => pattern.substring(0, pattern.length - 2));
+        const patternsToLookFor = [...REQUIRE_PATTERNS].map((pattern) => pattern.substring(0, pattern.length - 2));
         while (indexOfRequireConfig <= 0 && patternsToLookFor.length) {
             patternUsedToRegisterRequireConfig = patternsToLookFor.pop();
             if (!patternUsedToRegisterRequireConfig) {

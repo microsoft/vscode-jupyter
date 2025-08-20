@@ -64,7 +64,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
         return this.nbExtensionsParentPath;
     }
     private async getNbExtensionsParentPathImpl(): Promise<Uri | undefined> {
-        let overwrite = this.overwriteExistingFiles;
+        const overwrite = this.overwriteExistingFiles;
 
         try {
             const stopWatch = new StopWatch();

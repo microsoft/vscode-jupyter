@@ -135,7 +135,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             cell,
             `NotebookKernelExecution.resumeCellExecution (start), ${getDisplayPath(cell.notebook.uri)}`
         );
-        if (cell.kind == NotebookCellKind.Markup) {
+        if (cell.kind === NotebookCellKind.Markup) {
             return;
         }
 
@@ -157,7 +157,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<void> {
         traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
         const stopWatch = new StopWatch();
-        if (cell.kind == NotebookCellKind.Markup) {
+        if (cell.kind === NotebookCellKind.Markup) {
             return;
         }
 

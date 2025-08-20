@@ -413,7 +413,7 @@ fourth line
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(testString),
-                    TypeMoq.It.is((u) => u.fsPath == fileName),
+                    TypeMoq.It.is((u) => u.fsPath === fileName),
                     TypeMoq.It.isValue(0)
                 )
             )
@@ -444,7 +444,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(0)
                 )
             )
@@ -455,7 +455,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(2)
                 )
             )
@@ -486,7 +486,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('testing0\n#%%\ntesting1'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(0)
                 )
             )
@@ -497,7 +497,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(3)
                 )
             )
@@ -532,7 +532,7 @@ testing3`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(0)
                 )
             )
@@ -546,7 +546,7 @@ testing3`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(2)
                 )
             )
@@ -560,7 +560,7 @@ testing3`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting3'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(4)
                 )
             )
@@ -596,7 +596,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(2)
                 )
             )
@@ -637,7 +637,7 @@ testing3`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText1),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(2)
                 )
             )
@@ -648,7 +648,7 @@ testing3`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText2),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(4)
                 )
             )
@@ -688,7 +688,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText1),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(1)
                 )
             )
@@ -699,7 +699,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText2),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(3)
                 )
             )
@@ -734,7 +734,7 @@ testing1`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(0)
                 )
             )
@@ -764,7 +764,7 @@ print('testing')`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isAny(),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isAnyNumber()
                 )
             )
@@ -802,7 +802,7 @@ testing3`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(2)
                 )
             )
@@ -842,7 +842,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('testing2'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(3)
                 )
             )
@@ -886,7 +886,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('text arg'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(3)
                 )
             )
@@ -921,7 +921,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(0)
                 )
             )
@@ -972,7 +972,7 @@ testing1
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1\n'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(0)
                 )
             )
@@ -1078,7 +1078,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText1),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(0)
                 )
             )
@@ -1089,7 +1089,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText2),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(2)
                 )
             )
@@ -1119,7 +1119,7 @@ testing2`; // Command tests override getText, so just need the ranges here
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(0)
                 )
             )
@@ -1130,7 +1130,7 @@ testing2`; // Command tests override getText, so just need the ranges here
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
-                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.is((u) => u.fsPath === fileName.fsPath),
                     TypeMoq.It.isValue(2)
                 )
             )

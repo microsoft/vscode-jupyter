@@ -282,7 +282,7 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
             ),
             waitForTextOutput(cell2, '1', 0, false),
             waitForCondition(
-                async () => getTextOutputValue(cell2.outputs[0]).trim() != cell2Output,
+                async () => getTextOutputValue(cell2.outputs[0]).trim() !== cell2Output,
                 30_000,
                 'Output of cell 2 has not changed after re-running it'
             )

@@ -223,7 +223,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
             const useNotebookModel = this.configService.getSettings(resource).interactiveReplNotebook;
 
             const viewType = useNotebookModel ? JupyterNotebookView : InteractiveWindowView;
-            let initialController = await this.controllerHelper.getInitialController(resource, viewType, connection);
+            const initialController = await this.controllerHelper.getInitialController(resource, viewType, connection);
 
             logger.info(
                 `Starting interactive window for resource '${getDisplayPath(
@@ -484,7 +484,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
 
     findAssociatedNotebookDocument(uri: Uri): NotebookDocument | undefined {
         const interactiveWindow = this._windows.find((w) => w.inputUri?.toString() === uri.toString());
-        let notebook = interactiveWindow?.notebookDocument;
+        const notebook = interactiveWindow?.notebookDocument;
         return notebook;
     }
 

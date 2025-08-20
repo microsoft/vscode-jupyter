@@ -988,7 +988,7 @@ export class KernelRankingHelper {
             if (cancelToken?.isCancellationRequested) {
                 return;
             }
-            let rankedKernels = await rankKernels(
+            const rankedKernels = await rankKernels(
                 kernels,
                 notebook,
                 notebookMetadata,

@@ -108,7 +108,7 @@ export function getLastFrameFromPythonTraceback(
     const file = lastFrame.substring(0, lastFrame.lastIndexOf('.py')) + '.py';
     const parts = file.replace(/\\/g, '/').split('/');
     const indexOfSitePackages = parts.indexOf('site-packages');
-    let packageName =
+    const packageName =
         indexOfSitePackages >= 0 && parts.length > indexOfSitePackages + 1 ? parts[indexOfSitePackages + 1] : '';
     const reversedParts = parts.reverse();
     if (reversedParts.length < 2) {
@@ -647,7 +647,6 @@ function isBuiltInModuleOverwritten(
         return;
     }
 
-    // eslint-disable-next-line local-rules/dont-use-fspath
     if (!workspaceFolders.some((folder) => fileName.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase()))) {
         return;
     }

@@ -11,7 +11,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
-import { InterpreterService } from '../../../platform/api/pythonApi';
+import { InterpreterService, PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import {
     createInterpreterKernelSpec,
     getInterpreterKernelSpecName,
@@ -41,7 +41,6 @@ import { loadKernelSpec } from './localKernelSpecFinderBase.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
-import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../kernelFinder';
 import { IJupyterServerUriStorage } from '../../jupyter/types';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';

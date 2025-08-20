@@ -1,4 +1,5 @@
-//@ts-check
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 import fs from 'fs';
 import { defineConfig } from '@vscode/test-cli';
@@ -15,7 +16,7 @@ const __dirname = dirname(__filename);
 function generateConfig(label, env) {
     const workspaceFolder = join(__dirname, 'src', 'test', 'datascience');
     /** @type {import('@vscode/test-cli').TestConfiguration} */
-    let config = {
+    const config = {
         label,
         files: ['out/**/*.vscode.test.js', 'out/**/*.vscode.common.test.js'],
         version: 'insiders',

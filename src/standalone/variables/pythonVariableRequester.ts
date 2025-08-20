@@ -121,7 +121,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         _cancelToken: CancellationToken | undefined,
         matchingVariable: IJupyterVariable | undefined
     ): Promise<{ [attributeName: string]: string }> {
-        let result: { [attributeName: string]: string } = {};
+        const result: { [attributeName: string]: string } = {};
         if (matchingVariable && matchingVariable.value) {
             result[`${word}`] = matchingVariable.value;
         }

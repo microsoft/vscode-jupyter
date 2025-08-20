@@ -41,7 +41,7 @@ export abstract class ExportUtilBase implements IExportUtil {
         source: Uri,
         defaultFileName?: string | undefined
     ): Promise<Uri | undefined> {
-        let target = await new ExportDialog().showDialog(format, source, defaultFileName);
+        const target = await new ExportDialog().showDialog(format, source, defaultFileName);
 
         return target;
     }

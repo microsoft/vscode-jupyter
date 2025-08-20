@@ -20,8 +20,8 @@ export function getInterpreterHash(interpreter: PythonEnvironment | {uri: Uri}){
  * This function will take that into account.
  */
 export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false){
-    const norm1 = getNormalizedInterpreterPath(path1, ostype, ostype == OSType.Windows || forceLowerCase);
-    const norm2 = getNormalizedInterpreterPath(path2, ostype, ostype == OSType.Windows || forceLowerCase);
+    const norm1 = getNormalizedInterpreterPath(path1, ostype, ostype === OSType.Windows || forceLowerCase);
+    const norm2 = getNormalizedInterpreterPath(path2, ostype, ostype === OSType.Windows || forceLowerCase);
     return norm1 === norm2 || uriPath.isEqual(norm1, norm2, true);
 }
 /**

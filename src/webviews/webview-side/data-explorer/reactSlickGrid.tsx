@@ -665,8 +665,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 // Modified version of https://github.com/6pac/SlickGrid/blob/master/slick.editors.js#L24
 // with some fixes to get things working in our context
 function readonlyCellEditor(this: any, args: any) {
-    var $input: any;
-    var defaultValue: any;
+    let $input: any;
+    let defaultValue: any;
 
     this.init = function init() {
         $input = slickgridJQ("<input type=text class='editor-text'/>")
@@ -711,8 +711,8 @@ function readonlyCellEditor(this: any, args: any) {
     };
 
     function handleKeyDown(this: any, e: KeyboardEvent) {
-        var cursorPosition = this.selectionStart;
-        var textLength = this.value.length;
+        const cursorPosition = this.selectionStart;
+        const textLength = this.value.length;
         // In the original SlickGrid TextEditor this references
         // $.ui.keyDown.LEFT which is undefined, so couldn't use
         // that out of the box if we wanted to allow the user

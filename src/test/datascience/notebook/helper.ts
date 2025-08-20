@@ -247,7 +247,7 @@ export async function createTemporaryNotebook(
     language?: string
 ): Promise<Uri> {
     cells =
-        cells.length == 0
+        cells.length === 0
             ? [
                   {
                       cell_type: 'code',
@@ -432,7 +432,7 @@ export async function waitForKernelToChange(
     skipAutoSelection?: boolean
 ) {
     // Wait for the previous kernel change to finish.
-    if (waitForKernelPendingPromise != undefined) {
+    if (waitForKernelPendingPromise !== undefined) {
         await waitForKernelPendingPromise;
     }
     waitForKernelPendingPromise = waitForKernelToChangeImpl(searchCriteria, notebookEditor, timeout, skipAutoSelection);
@@ -456,15 +456,15 @@ async function waitForKernelToChangeImpl(
     let controller: IVSCodeNotebookController | undefined;
     const isRightKernel = async () => {
         const criteria = typeof searchCriteria === 'function' ? await searchCriteria() : searchCriteria;
-        let labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
+        const labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
         if (labelOrId) {
             controller = controllerRegistration.registered
                 .filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
-                .find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId));
+                .find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id === labelOrId));
             if (!controller) {
                 // Try includes instead
                 controller = controllerRegistration.registered.find(
-                    (k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId)
+                    (k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id === labelOrId)
                 );
             }
         }
@@ -474,14 +474,11 @@ async function waitForKernelToChangeImpl(
                 .filter((k) => k.connection.interpreter)
                 .filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
                 .find((k) =>
-                    // eslint-disable-next-line local-rules/dont-use-fspath
                     k.connection.interpreter!.uri.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
                 );
             if (controller) {
-                // eslint-disable-next-line local-rules/dont-use-fspath
                 logger.debug(`Did match a controller that matches the interpreter ${interpreterPath.fsPath}`);
             } else {
-                // eslint-disable-next-line local-rules/dont-use-fspath
                 logger.warn(`Did not find a controller that matches the interpreter ${interpreterPath.fsPath}`);
             }
         }
@@ -491,8 +488,7 @@ async function waitForKernelToChangeImpl(
                     (c) =>
                         `${c.kind} with id ${c.id} and ${
                             'interpreter' in c
-                                ? // eslint-disable-next-line local-rules/dont-use-fspath
-                                  `has interpreter with details = ${c.interpreter?.id}:${c.interpreter?.uri.fsPath}`
+                                ? `has interpreter with details = ${c.interpreter?.id}:${c.interpreter?.uri.fsPath}`
                                 : 'does not have an interpreter'
                         } `
                 )
@@ -756,11 +752,9 @@ export async function waitForKernelToGetAutoSelectedImpl(
 
     const searchCriteria = async () => {
         // We don't have one, try to find the preferred one
-        let preferred: IVSCodeNotebookController | undefined;
-
         // Wait for one of them to have affinity as the preferred (this may not happen)
         await controllerPreferred.computePreferred(notebookEditor!.notebook);
-        preferred = controllerPreferred.getPreferred(notebookEditor!.notebook);
+        const preferred = controllerPreferred.getPreferred(notebookEditor!.notebook);
         if (!preferred) {
             logger.ci(`Did not find a controller with document affinity`);
         }
@@ -788,7 +782,7 @@ export async function waitForKernelToGetAutoSelectedImpl(
             logger.ci(`Manually pick a preferred kernel from all kernel specs`);
             const matches = notebookControllers.filter(
                 (d) =>
-                    d.connection.kind != 'connectToLiveRemoteKernel' &&
+                    d.connection.kind !== 'connectToLiveRemoteKernel' &&
                     language === d.connection.kernelSpec?.language?.toLowerCase() &&
                     (!useRemoteKernelSpec || d.connection.kind.includes('Remote'))
             );
@@ -984,7 +978,7 @@ export async function waitForCompletions(
     await waitForCondition(
         async () => {
             await sleep(500); // Give it some time since last ask.
-            let context: CompletionContext = {
+            const context: CompletionContext = {
                 triggerKind: triggerCharacter ? CompletionTriggerKind.TriggerCharacter : CompletionTriggerKind.Invoke,
                 triggerCharacter
             };

@@ -38,12 +38,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
     suiteSetup(async function () {
         api = await initialize();
         verifyPromptWasNotDisplayed();
-        if (
-            // eslint-disable-next-line local-rules/dont-use-process
-            !process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST ||
-            IS_REMOTE_NATIVE_TEST() ||
-            IS_NON_RAW_NATIVE_TEST()
-        ) {
+        if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
             return this.skip();
         }
         sinon.restore();

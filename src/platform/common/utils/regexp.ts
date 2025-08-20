@@ -56,7 +56,7 @@ export function stripAnsi(str: string) {
         throw new TypeError(`Expected a \`string\`, got \`${typeof str}\``);
     }
 
-    var ansiRegex = require('ansi-regex');
+    const ansiRegex = require('ansi-regex');
 
     // Special case ansiregex for running on test machines. Seems to not have a 'default'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

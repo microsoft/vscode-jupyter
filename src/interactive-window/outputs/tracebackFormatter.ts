@@ -101,7 +101,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
             let matchUri: Uri | undefined;
             let match: IGeneratedCode | undefined;
             // eslint-disable-next-line no-restricted-syntax
-            for (let entry of generatedCodes) {
+            for (const entry of generatedCodes) {
                 match = entry.generatedCodes.find((h) => h.executionCount === executionCount);
                 if (match) {
                     matchUri = entry.uri;

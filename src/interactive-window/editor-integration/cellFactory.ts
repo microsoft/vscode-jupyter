@@ -5,10 +5,9 @@ import { NotebookCellData, NotebookCellKind, NotebookDocument, Range, TextDocume
 import { CellMatcher } from './cellMatcher';
 import { ICellRange, IJupyterSettings } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
+import { getCellMetadata, parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
 import { splitLines } from '../../platform/common/helpers';
 import { isSysInfoCell } from '../systemInfoCell';
-import { getCellMetadata } from '../../platform/common/utils';
 
 export function uncommentMagicCommands(line: string): string {
     // Uncomment lines that are shell assignments (starting with #!),

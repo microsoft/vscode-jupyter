@@ -27,12 +27,12 @@ export const rootHooks: Mocha.RootHookObject = {
             !IS_CI_SERVER ||
             !process.env.GITHUB_REF_NAME ||
             process.env.GITHUB_REF_NAME !== 'main' ||
-            (process.env.VSC_JUPYTER_WARMUP && process.env.VSC_JUPYTER_WARMUP == 'true')
+            (process.env.VSC_JUPYTER_WARMUP && process.env.VSC_JUPYTER_WARMUP === 'true')
         ) {
             return;
         }
 
-        let result = this.currentTest?.isFailed() ? 'failed' : this.currentTest?.isPassed() ? 'passed' : 'skipped';
+        const result = this.currentTest?.isFailed() ? 'failed' : this.currentTest?.isPassed() ? 'passed' : 'skipped';
 
         const measures = this.currentTest?.duration ? { duration: this.currentTest.duration } : undefined;
 

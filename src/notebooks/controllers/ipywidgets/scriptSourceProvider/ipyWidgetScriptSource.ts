@@ -57,7 +57,7 @@ export class IPyWidgetScriptSource {
     ) {
         this.uriConverter = new ScriptUriConverter(isWebExtension(), (resource) => {
             if (!this.uriTranslationRequests.has(resource))
-                this.uriTranslationRequests.set(resource, createDeferred<Uri>());
+                {this.uriTranslationRequests.set(resource, createDeferred<Uri>());}
             this.postEmitter.fire({
                 message: InteractiveWindowMessages.ConvertUriForUseInWebViewRequest,
                 payload: resource

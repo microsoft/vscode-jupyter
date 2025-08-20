@@ -30,8 +30,8 @@ export function compareSubstring(
     bEnd: number = b.length
 ): number {
     for (; aStart < aEnd && bStart < bEnd; aStart++, bStart++) {
-        let codeA = a.charCodeAt(aStart);
-        let codeB = b.charCodeAt(bStart);
+        const codeA = a.charCodeAt(aStart);
+        const codeB = b.charCodeAt(bStart);
         if (codeA < codeB) {
             return -1;
         } else if (codeA > codeB) {

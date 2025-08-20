@@ -30,9 +30,11 @@ builtins.print("${delimiter}" + ipykernel.__version__ + "${delimiter}")`;
 
     // It is necessary to traverse all the output to determine the version of ipykernel, some jupyter servers may return extra status metadata
     for (const line of output) {
-        if (line.output_type !== 'stream') continue;
+        if (line.output_type !== 'stream') {
+            continue;
+        }
 
-        let lineText = line.text?.toString().trim() ?? '';
+        const lineText = line.text?.toString().trim() ?? '';
         if (!lineText.includes(delimiter)) {
             continue;
         }
@@ -78,7 +80,7 @@ export function getMessageSourceAndHookIt(
     ) => void
 ): void {
     switch (msg.type) {
-        case 'event':
+        case 'event': {
             const event = msg as DebugProtocol.Event;
             switch (event.event) {
                 case 'output':
@@ -94,10 +96,11 @@ export function getMessageSourceAndHookIt(
                     break;
             }
             break;
-        case 'request':
+        }
+        case 'request': {
             const request = msg as DebugProtocol.Request;
             switch (request.command) {
-                case 'setBreakpoints':
+                case 'setBreakpoints': {
                     const args = request.arguments as DebugProtocol.SetBreakpointsArguments;
                     const breakpoints = args.breakpoints;
                     if (breakpoints && breakpoints.length) {
@@ -110,6 +113,7 @@ export function getMessageSourceAndHookIt(
                         args.source = objForSource.source;
                     }
                     break;
+                }
                 case 'breakpointLocations':
                     // TODO this technically would have to be mapped to two different sources, in reality, I don't think that will happen in vscode
                     sourceHook(request.arguments as DebugProtocol.BreakpointLocationsArguments);
@@ -124,7 +128,8 @@ export function getMessageSourceAndHookIt(
                     break;
             }
             break;
-        case 'response':
+        }
+        case 'response': {
             const response = msg as DebugProtocol.Response;
             if (response.success && response.body) {
                 switch (response.command) {
@@ -160,6 +165,7 @@ export function getMessageSourceAndHookIt(
                 }
             }
             break;
+        }
     }
 }
 

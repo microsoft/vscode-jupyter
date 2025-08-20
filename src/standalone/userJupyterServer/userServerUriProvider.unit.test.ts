@@ -56,7 +56,7 @@ suite('User Uri Provider', () => {
     let globalMemento: Memento;
     let disposables: IDisposable[] = [];
     let asyncDisposables: IAsyncDisposable[] = [];
-    let asyncDisposableRegistry: IAsyncDisposableRegistry = {
+    const asyncDisposableRegistry: IAsyncDisposableRegistry = {
         dispose: async function () {
             await Promise.all(asyncDisposables.map((d) => d.dispose().catch(noop)));
             asyncDisposables = [];

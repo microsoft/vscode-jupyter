@@ -10,10 +10,9 @@ import { IConfigurationService, IDisposable, IExtensionContext } from '../platfo
 import { createEventHandler } from '../test/common';
 import { createKernelController, TestNotebookDocument } from '../test/datascience/notebook/executionHelper';
 import { IJupyterServerUriStorage } from './jupyter/types';
-import { KernelProvider } from './kernelProvider.web';
+import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import { IKernelSessionFactory, IKernelController, IStartupCodeProviders, KernelConnectionMetadata } from './types';
-import { ThirdPartyKernelProvider } from './kernelProvider.web';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { noop } from '../test/core';
 import { AsyncEmitter } from '../platform/common/utils/events';

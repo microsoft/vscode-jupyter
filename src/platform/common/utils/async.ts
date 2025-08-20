@@ -23,7 +23,6 @@ export async function waitForCondition(
 ): Promise<boolean> {
     // Set a timer that will resolve with null
     return new Promise<boolean>((resolve) => {
-        let finish: (result: boolean) => void;
         const timer = setTimeout(() => finish(false), timeout);
         const intervalId = setInterval(() => {
             condition()
@@ -34,7 +33,7 @@ export async function waitForCondition(
                 })
                 .catch((_e) => finish(false));
         }, interval);
-        finish = (result: boolean) => {
+        const finish = (result: boolean) => {
             clearTimeout(timer);
             clearInterval(intervalId);
             resolve(result);

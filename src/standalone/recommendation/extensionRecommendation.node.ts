@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Memento, NotebookDocument, commands, window, workspace } from 'vscode';
+import { extensions, Memento, NotebookDocument, commands, window, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../../platform/common/types';
@@ -17,7 +17,6 @@ import {
 } from '../../kernels/helpers';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
-import { extensions } from 'vscode';
 
 const mementoKeyToNeverPromptExtensionAgain = 'JVSC_NEVER_PROMPT_EXTENSIONS_LIST';
 const knownExtensionsToRecommend = new Map<string, { displayName: string; extensionLink: string }>([

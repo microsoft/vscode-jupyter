@@ -53,7 +53,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         silent?: boolean
     ): Promise<void> {
         const name =
-            typeof productOrModuleName == 'string'
+            typeof productOrModuleName === 'string'
                 ? productOrModuleName
                 : translateProductToModule(productOrModuleName);
         const args = await this.getExecutionArgs(name, interpreter, flags);

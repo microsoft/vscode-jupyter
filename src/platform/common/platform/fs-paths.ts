@@ -11,7 +11,6 @@ function getHomeDir() {
     if (isWeb()) {
         return undefined;
     }
-    // eslint-disable-next-line local-rules/node-imports
     return Uri.file(require('os').homedir()); // This is the only thing requiring a node version
 }
 export function getFilePath(file: Uri | undefined) {

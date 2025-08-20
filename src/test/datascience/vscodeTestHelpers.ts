@@ -47,8 +47,6 @@ export class OnMessageListener {
 
         const promise = createDeferred<void>();
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let handler: (m: string, p: any) => void;
         const timer = timeoutMs
             ? setTimeout(() => {
                   if (!promise.resolved) {
@@ -60,7 +58,7 @@ export class OnMessageListener {
         const dispatchedAction = `DISPATCHED_ACTION_${message}`;
         // Create the handler that we will hook up to the on message listener
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        handler = (m: string, payload: any) => {
+        const handler = (m: string, payload: any) => {
             if (m === message || m === dispatchedAction) {
                 // First verify the payload matches
                 if (options?.withPayload) {

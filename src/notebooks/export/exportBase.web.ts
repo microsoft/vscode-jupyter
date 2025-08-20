@@ -93,7 +93,7 @@ export class ExportBase implements IExportBase {
         const jupyter = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         const contentsManager = new jupyter.ContentsManager({ serverSettings });
 
-        let contents = await this.exportUtil.getContent(sourceDocument);
+        const contents = await this.exportUtil.getContent(sourceDocument);
 
         let fileExt = '';
 
@@ -214,12 +214,12 @@ export class ExportBase implements IExportBase {
         b64Data = b64Data.replace(/^[^,]+,/, '');
         b64Data = b64Data.replace(/\s/g, '');
         const byteCharacters = atob(b64Data);
-        let byteArrays = [];
+        const byteArrays = [];
 
         for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
             const slice = byteCharacters.slice(offset, offset + sliceSize);
 
-            let byteNumbers = new Array(slice.length);
+            const byteNumbers = new Array(slice.length);
             for (let i = 0; i < slice.length; i++) {
                 byteNumbers[i] = slice.charCodeAt(i);
             }

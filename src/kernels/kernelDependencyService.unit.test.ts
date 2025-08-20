@@ -4,7 +4,7 @@
 import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import { CancellationTokenSource, Disposable, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { Common, DataScience } from '../platform/common/utils/localize';
 import { createInterpreterKernelSpec } from './helpers';
 import { KernelDependencyService } from './kernelDependencyService.node';
@@ -17,7 +17,6 @@ import { DisplayOptions } from './displayOptions';
 import { IRawNotebookSupportedService } from './raw/types';
 import { getResourceType } from '../platform/common/utils';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../test/vscode-mock';
-import { Disposable } from 'vscode';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { PythonExtension } from '@vscode/python-extension';
 import { resolvableInstance } from '../test/datascience/helpers';

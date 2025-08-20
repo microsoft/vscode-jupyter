@@ -126,13 +126,13 @@ suite(`Interactive window Execution @iw`, async function () {
         await runInteractiveWindowInput('print("third")', activeInteractiveWindow, 3);
 
         await waitForLastCellToComplete(activeInteractiveWindow, 3, false);
-        let notebookFile = await generateTemporaryFilePath('ipynb', disposables);
+        const notebookFile = await generateTemporaryFilePath('ipynb', disposables);
         const promptOptions: WindowPromptStubButtonClickOptions = {
             result: notebookFile,
             clickImmediately: true
         };
-        let savePrompt = await hijackSavePrompt('Export', promptOptions, disposables);
-        let openFilePrompt = await hijackPrompt(
+        const savePrompt = await hijackSavePrompt('Export', promptOptions, disposables);
+        const openFilePrompt = await hijackPrompt(
             'showInformationMessage',
             { contains: 'Notebook written to' },
             { dismissPrompt: false },
@@ -149,7 +149,7 @@ suite(`Interactive window Execution @iw`, async function () {
         );
 
         const document = await vscode.workspace.openNotebookDocument(notebookFile);
-        let editor = await vscode.window.showNotebookDocument(document, { preserveFocus: false });
+        const editor = await vscode.window.showNotebookDocument(document, { preserveFocus: false });
 
         const cells = editor.notebook.getCells();
         assert.strictEqual(cells?.length, 3);

@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { format } from './helpers';
-import { fileToCommandArgument, toCommandArgument, trimQuotes } from './helpers';
+import { fileToCommandArgument, format, toCommandArgument, trimQuotes } from './helpers';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('String Extensions', () => {

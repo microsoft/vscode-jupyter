@@ -41,7 +41,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         }
         Object.keys(source).forEach((setting) => {
             const lowerCase = setting.toLowerCase();
-            if (lowerCase == 'pythonpath' || lowerCase == 'path') {
+            if (lowerCase === 'pythonpath' || lowerCase === 'path') {
                 // PATH can be path, Path, or PATH on the same OS depending
                 // upon the source so check all cases.
                 return;
@@ -91,7 +91,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         // It's been shown that the 'path' variable can have multiple casing even on the same platform
         // depending upon where the environment variable comes from (kernelspec might have 'PATH' whereas windows might use 'Path')
         const variableNameLower = variableName.toLowerCase();
-        const matchingKey = vars ? Object.keys(vars).find((k) => k.toLowerCase() == variableNameLower) : undefined;
+        const matchingKey = vars ? Object.keys(vars).find((k) => k.toLowerCase() === variableNameLower) : undefined;
         const existingValue = vars && matchingKey ? vars[matchingKey] : undefined;
         const setKey = matchingKey || variableName;
         if (existingValue && typeof existingValue === 'string' && existingValue.length > 0) {

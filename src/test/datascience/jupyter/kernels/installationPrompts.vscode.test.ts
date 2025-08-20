@@ -270,7 +270,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
     });
     test('Get a single prompt when running all cells in a .py file without ipykernel and will run all cells upon installation', async () => {
         // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
-        let prompt = await hijackPrompt(
+        const prompt = await hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
             {},
@@ -517,7 +517,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         ipykernelInstallRequirement: 'DoNotInstallIPyKernel' | 'ShouldInstallIPYKernel' = 'ShouldInstallIPYKernel'
     ) {
         // Highjack the IPyKernel not installed prompt and click the appropriate button.
-        let promptToInstall = await (interpreterOfNewKernelToSelect
+        const promptToInstall = await (interpreterOfNewKernelToSelect
             ? selectKernelFromIPyKernelPrompt()
             : clickInstallFromIPyKernelPrompt());
 

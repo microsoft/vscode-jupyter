@@ -76,8 +76,8 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
         if (isEmptyVendoredMimeType(outputItemB)) {
             indexOfMimeTypeB = -1;
         }
-        indexOfMimeTypeA = indexOfMimeTypeA == -1 ? 100 : indexOfMimeTypeA;
-        indexOfMimeTypeB = indexOfMimeTypeB == -1 ? 100 : indexOfMimeTypeB;
+        indexOfMimeTypeA = indexOfMimeTypeA === -1 ? 100 : indexOfMimeTypeA;
+        indexOfMimeTypeB = indexOfMimeTypeB === -1 ? 100 : indexOfMimeTypeB;
         return indexOfMimeTypeA - indexOfMimeTypeB;
     });
 }
@@ -105,7 +105,7 @@ export class NotebookCellStateTracker {
 }
 
 export function traceCellMessage(cell: NotebookCell, message: string | (() => string)) {
-    let messageToLog = typeof message === 'string' ? () => message : message;
+    const messageToLog = typeof message === 'string' ? () => message : message;
     logger.ci(
         () =>
             `Cell Index:${cell.index}, of document ${uriPath.basename(

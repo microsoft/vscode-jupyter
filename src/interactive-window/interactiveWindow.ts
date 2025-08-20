@@ -40,8 +40,7 @@ import { ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import { IInteractiveWindow, IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager } from './types';
-import { generateInteractiveCode } from './helpers';
-import { getInteractiveCellMetadata } from './helpers';
+import { generateInteractiveCode, getInteractiveCellMetadata } from './helpers';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import {
     ICodeGeneratorFactory,
@@ -224,7 +223,7 @@ export class InteractiveWindow implements IInteractiveWindow {
             group.tabs.find((tab) => {
                 if (
                     (tab.input instanceof TabInputNotebook || tab.input instanceof TabInputInteractiveWindow) &&
-                    tab.input.uri.toString() == this.notebookUri.toString()
+                    tab.input.uri.toString() === this.notebookUri.toString()
                 ) {
                     viewColumn = tab.group.viewColumn;
                 }
@@ -314,7 +313,7 @@ export class InteractiveWindow implements IInteractiveWindow {
             }
         }
 
-        let result = true;
+        const result = true;
 
         // Call the internal method if we were able to save
         if (saved) {
@@ -512,7 +511,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         // Add to the list of 'submitters' for this window.
-        if (!this._submitters.find((s) => s.toString() == file.toString())) {
+        if (!this._submitters.find((s) => s.toString() === file.toString())) {
             this._submitters.push(file);
         }
     }

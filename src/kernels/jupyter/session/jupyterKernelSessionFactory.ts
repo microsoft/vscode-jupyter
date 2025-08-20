@@ -3,7 +3,6 @@
 
 import { CancellationError, CancellationToken } from 'vscode';
 import { Cancellation, raceCancellationError } from '../../../platform/common/cancellation';
-import * as urlPath from '../../../platform/vscode-path/resources';
 import * as path from '../../../platform/vscode-path/resources';
 import {
     IJupyterConnection,
@@ -306,7 +305,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         ui: IDisplayOptions;
     }): Promise<Session.ISessionConnection> {
         const remoteSessionOptions = getRemoteSessionOptions(options.connection, options.resource);
-        let sessionPath = remoteSessionOptions?.path;
+        const sessionPath = remoteSessionOptions?.path;
 
         // If kernelName is empty this can cause problems for servers that don't
         // understand that empty kernel name means the default kernel.
@@ -373,7 +372,5 @@ function getRemoteIPynbSuffix(): string {
 function generateBackingIPyNbFileName(resource: Resource) {
     // Generate a more descriptive name
     const suffix = `${getRemoteIPynbSuffix()}${generateUuid()}.ipynb`;
-    return resource
-        ? `${urlPath.basename(resource, '.ipynb')}${suffix}`
-        : `${DataScience.defaultNotebookName}${suffix}`;
+    return resource ? `${path.basename(resource, '.ipynb')}${suffix}` : `${DataScience.defaultNotebookName}${suffix}`;
 }

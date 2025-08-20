@@ -180,7 +180,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             const interpreterDisplayName = getPythonEnvDisplayName(error.interpreter) || error.interpreter.id || '';
             const env = getCachedEnvironment(error.interpreter);
             const displayPath = getDisplayPath(env?.executable.uri);
-            let displayName = interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
+            const displayName = interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
             return DataScience.packageNotInstalledWindowsLongPathNotEnabledError(packageName, displayName);
         } else if (
             (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
@@ -381,7 +381,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             const extensionId = err.serverProviderHandle.extensionId;
             const id = err.serverProviderHandle.id;
             const collection = this.jupyterUriProviderRegistration.jupyterCollections.find(
-                (c) => c.extensionId === extensionId && c.id == id
+                (c) => c.extensionId === extensionId && c.id === id
             );
             if (
                 !collection ||

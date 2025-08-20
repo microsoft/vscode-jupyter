@@ -3,7 +3,12 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri, commands, env, window } from 'vscode';
-import { STANDARD_OUTPUT_CHANNEL, WIDGET_VERSION_NON_PYTHON_KERNELS } from '../../../../platform/common/constants';
+import {
+    Commands,
+    Commands,
+    STANDARD_OUTPUT_CHANNEL,
+    WIDGET_VERSION_NON_PYTHON_KERNELS
+} from '../../../../platform/common/constants';
 import { logger } from '../../../../platform/logging';
 import {
     IDisposableRegistry,
@@ -24,7 +29,6 @@ import {
 import { IServiceContainer } from '../../../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
-import { Commands } from '../../../../platform/common/constants';
 import { IKernel, IKernelProvider } from '../../../../kernels/types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from '../scriptSourceProvider/ipyWidgetScriptSource';

@@ -62,7 +62,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
 
             constructor(url: string, protocols?: string | string[] | undefined) {
                 super(url, protocols);
-                let timer: NodeJS.Timeout | undefined = undefined;
+                const timer: NodeJS.Timeout | undefined = undefined;
                 // Parse the url for the kernel id
                 const parsed = /.*\/kernels\/(.*)\/.*/.exec(url);
                 if (parsed && parsed.length > 1) {
@@ -132,7 +132,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
 
             constructor(url: string, protocols?: string | string[] | undefined) {
                 super(url, protocols);
-                let timer: NodeJS.Timeout | undefined = undefined;
+                const timer: NodeJS.Timeout | undefined = undefined;
                 // Parse the url for the kernel id
                 const parsed = /.*\/kernels\/(.*)\/.*/.exec(url);
                 if (parsed && parsed.length > 1) {

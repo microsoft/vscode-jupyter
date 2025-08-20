@@ -14,13 +14,13 @@ import {
     ICodeLensFactory,
     IDataScienceCodeLensProvider,
     ICodeGeneratorFactory,
-    ICellRangeCache
+    ICellRangeCache,
+    IGeneratedCodeStorageFactory
 } from './editor-integration/types';
 import { InteractiveWindowProvider, ReplNotebookTrackerService } from './interactiveWindowProvider';
 import { IInteractiveControllerHelper, IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
 import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
 import { GeneratedCodeStorageFactory } from './editor-integration/generatedCodeStorageFactory';
-import { IGeneratedCodeStorageFactory } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';

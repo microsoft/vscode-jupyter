@@ -46,10 +46,10 @@ export class PlotViewer extends PlotViewerBase {
                         await saveSvgToPdf(payload.svg, this.fsNode, file);
                         break;
 
-                    case '.png':
+                    case '.png':{
                         const buffer = base64ToUint8Array(payload.png.replace('data:image/png;base64', ''));
                         await this.fs.writeFile(file, buffer);
-                        break;
+                        break;}
 
                     default:
                     case '.svg':

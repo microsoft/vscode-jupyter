@@ -21,11 +21,11 @@ import { InteractiveWindow } from './interactiveWindow';
 export function getStartConnectMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
     const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
     if (displayName) {
-        return reason == SysInfoReason.Restart
+        return reason === SysInfoReason.Restart
             ? DataScience.restartingKernelCustomHeader(displayName)
             : DataScience.startingNewKernelCustomHeader(displayName);
     } else {
-        return reason == SysInfoReason.Restart
+        return reason === SysInfoReason.Restart
             ? DataScience.restartingKernelHeader
             : DataScience.startingNewKernelHeader;
     }
@@ -33,7 +33,7 @@ export function getStartConnectMessage(kernelMetadata: KernelConnectionMetadata,
 
 export function getFinishConnectMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
     const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
-    return reason == SysInfoReason.Restart
+    return reason === SysInfoReason.Restart
         ? DataScience.restartedKernelHeader(displayName || '')
         : DataScience.connectedKernelHeader(displayName || '');
 }

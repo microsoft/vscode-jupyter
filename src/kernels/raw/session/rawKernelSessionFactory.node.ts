@@ -29,7 +29,6 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
 
     public async create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession> {
         logger.trace(`Creating raw notebook for resource '${getDisplayPath(options.resource)}'`);
-        let session: RawSessionConnection | undefined;
         const cwdTracker = getNotebookTelemetryTracker(options.resource)?.computeCwd();
         const [workingDirectory] = await Promise.all([
             this.workingDirectoryComputer.computeWorkingDirectory(
@@ -44,7 +43,7 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
         ]);
         cwdTracker?.stop();
         const launchTimeout = this.configService.getSettings(options.resource).jupyterLaunchTimeout;
-        session = new RawSessionConnection(
+        const session = new RawSessionConnection(
             options.resource,
             this.kernelLauncher,
             workingDirectory,

@@ -31,7 +31,7 @@ suite('Custom Environment Variables Provider', () => {
     let pythonApi: PythonExtension;
     const envFile = Uri.joinPath(Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS), 'src', 'test', 'datascience', '.env');
     let contentsOfOldEnvFile: string;
-    let customPythonEnvFile = Uri.joinPath(
+    const customPythonEnvFile = Uri.joinPath(
         Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS),
         'src',
         'test',

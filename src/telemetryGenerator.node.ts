@@ -11,7 +11,6 @@ import glob from 'glob';
 import { initialize } from './test/vscode-mock';
 import { Parser } from 'json2csv';
 import colors from 'colors';
-// eslint-disable-next-line local-rules/node-imports
 import * as path from 'path';
 
 initialize();

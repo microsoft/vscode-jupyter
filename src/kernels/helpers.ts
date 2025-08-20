@@ -279,7 +279,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 return oldDisplayName;
             }
         }
-        case 'startUsingPythonInterpreter':
+        case 'startUsingPythonInterpreter': {
             const pythonVersion = (
                 getTelemetrySafeVersion(getCachedVersion(kernelConnection.interpreter)) || ''
             ).trim();
@@ -300,8 +300,8 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
             } else {
                 return `Python ${pythonVersion}`.trim();
             }
+        }
     }
-    return oldDisplayName;
 }
 export function getDisplayNameOrNameOfPythonKernelConnection(env: { id: string }) {
     if (getEnvironmentType(env) === EnvironmentType.Unknown) {

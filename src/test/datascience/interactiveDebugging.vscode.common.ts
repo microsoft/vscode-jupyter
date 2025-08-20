@@ -112,16 +112,16 @@ export function sharedIWDebuggerTests(
                     b.insert(new vscode.Position(1, 0), '\n# %%\n\n\nprint(43)');
                 });
 
-                let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
+                const codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
                 let stopped = false;
                 let stoppedOnLine5 = false;
                 debugAdapterTracker = {
                     onDidSendMessage: (message) => {
-                        if (message.event == 'stopped') {
+                        if (message.event === 'stopped') {
                             stopped = true;
                         }
-                        if (message.command == 'stackTrace' && !stoppedOnLine5) {
-                            stoppedOnLine5 = message.body.stackFrames[0].line == 5;
+                        if (message.command === 'stackTrace' && !stoppedOnLine5) {
+                            stoppedOnLine5 = message.body.stackFrames[0].line === 5;
                         }
                     }
                 };
@@ -135,7 +135,7 @@ export function sharedIWDebuggerTests(
                 // Wait for breakpoint to be hit
                 await waitForCondition(
                     async () => {
-                        return vscode.debug.activeDebugSession != undefined && stopped;
+                        return vscode.debug.activeDebugSession !== undefined && stopped;
                     },
                     defaultNotebookTestTimeout,
                     `Never hit stop event when waiting for debug cell`
@@ -182,15 +182,15 @@ export function sharedIWDebuggerTests(
                 let stoppedOnBreakpoint = false;
                 debugAdapterTracker = {
                     onDidSendMessage: (message) => {
-                        if (message.event == 'stopped') {
+                        if (message.event === 'stopped') {
                             stopped = true;
                         }
                         if (
-                            message.command == 'stackTrace' &&
+                            message.command === 'stackTrace' &&
                             !stoppedOnBreakpoint &&
                             message.body.stackFrames.length
                         ) {
-                            stoppedOnBreakpoint = message.body.stackFrames[0].line == 2;
+                            stoppedOnBreakpoint = message.body.stackFrames[0].line === 2;
                         }
                     }
                 };
@@ -204,7 +204,7 @@ export function sharedIWDebuggerTests(
                 // Wait for breakpoint to be hit
                 await waitForCondition(
                     async () => {
-                        return vscode.debug.activeDebugSession != undefined && stopped;
+                        return vscode.debug.activeDebugSession !== undefined && stopped;
                     },
                     defaultNotebookTestTimeout,
                     `Never hit stop event when waiting for debug cell`
@@ -248,7 +248,7 @@ export function sharedIWDebuggerTests(
                 let stopped = false;
                 debugAdapterTracker = {
                     onDidSendMessage: (message) => {
-                        if (message.event == 'stopped') {
+                        if (message.event === 'stopped') {
                             stopped = true;
                         }
                     }
@@ -263,7 +263,7 @@ export function sharedIWDebuggerTests(
                 // Wait for breakpoint to be hit
                 await waitForCondition(
                     async () => {
-                        return vscode.debug.activeDebugSession != undefined && stopped;
+                        return vscode.debug.activeDebugSession !== undefined && stopped;
                     },
                     defaultNotebookTestTimeout,
                     `Never hit stop event when waiting for debug cell`
@@ -350,7 +350,7 @@ export function sharedIWDebuggerTests(
                 let stopped = false;
                 debugAdapterTracker = {
                     onDidSendMessage: (message) => {
-                        if (message.event == 'stopped') {
+                        if (message.event === 'stopped') {
                             stopped = true;
                         }
                     }
@@ -359,13 +359,13 @@ export function sharedIWDebuggerTests(
                 // Try debugging the cell
                 assert.ok(codeLenses, `No code lenses found`);
                 assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
-                let args = codeLenses[2].command!.arguments || [];
+                const args = codeLenses[2].command!.arguments || [];
                 vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
                     async () => {
-                        return vscode.debug.activeDebugSession != undefined && stopped;
+                        return vscode.debug.activeDebugSession !== undefined && stopped;
                     },
                     defaultNotebookTestTimeout,
                     `Never hit stop event when waiting for debug cell`
@@ -404,16 +404,16 @@ b = 200
                     edit.insert(new vscode.Position(2, 0), leadingSpacesSource);
                 });
 
-                let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
+                const codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
                 let stopped = false;
                 let stoppedOnLine = false;
                 debugAdapterTracker = {
                     onDidSendMessage: (message) => {
-                        if (message.event == 'stopped') {
+                        if (message.event === 'stopped') {
                             stopped = true;
                         }
-                        if (message.command == 'stackTrace' && !stoppedOnLine) {
-                            stoppedOnLine = message.body.stackFrames[0].line == 7;
+                        if (message.command === 'stackTrace' && !stoppedOnLine) {
+                            stoppedOnLine = message.body.stackFrames[0].line === 7;
                         }
                     }
                 };
@@ -421,13 +421,13 @@ b = 200
                 // Try debugging the cell
                 assert.ok(codeLenses, `No code lenses found`);
                 assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
-                let args = codeLenses[2].command!.arguments || [];
+                const args = codeLenses[2].command!.arguments || [];
                 vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
                     async () => {
-                        return vscode.debug.activeDebugSession != undefined && stopped;
+                        return vscode.debug.activeDebugSession !== undefined && stopped;
                     },
                     defaultNotebookTestTimeout,
                     `Never hit stop event when waiting for debug cell`
@@ -465,30 +465,30 @@ def foo():
                     b.insert(new vscode.Position(8, 0), '\n# %%\nfoo()');
                 });
 
-                let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
+                const codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
                 let stopped = false;
                 let stoppedOnLine = false;
                 let targetLine = 9;
                 debugAdapterTracker = {
                     onDidSendMessage: (message) => {
-                        if (message.event == 'stopped') {
+                        if (message.event === 'stopped') {
                             stopped = true;
                         }
-                        if (message.command == 'stackTrace' && !stoppedOnLine) {
-                            stoppedOnLine = message.body.stackFrames[0].line == targetLine;
+                        if (message.command === 'stackTrace' && !stoppedOnLine) {
+                            stoppedOnLine = message.body.stackFrames[0].line === targetLine;
                         }
                     }
                 };
 
                 assert.ok(codeLenses, `No code lenses found`);
                 assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
-                let args = codeLenses[2].command!.arguments || [];
+                const args = codeLenses[2].command!.arguments || [];
                 vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
                     async () => {
-                        return vscode.debug.activeDebugSession != undefined && stopped;
+                        return vscode.debug.activeDebugSession !== undefined && stopped;
                     },
                     defaultNotebookTestTimeout,
                     `Never hit stop event when waiting for debug cell`
@@ -543,30 +543,30 @@ foo()
                 );
                 await waitForLastCellToComplete(activeInteractiveWindow, 2);
 
-                let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
+                const codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
                 let stopped = false;
                 let stoppedOnLine = false;
                 let targetLine = 7;
                 debugAdapterTracker = {
                     onDidSendMessage: (message) => {
-                        if (message.event == 'stopped') {
+                        if (message.event === 'stopped') {
                             stopped = true;
                         }
-                        if (message.command == 'stackTrace' && !stoppedOnLine) {
-                            stoppedOnLine = message.body.stackFrames[0].line == targetLine;
+                        if (message.command === 'stackTrace' && !stoppedOnLine) {
+                            stoppedOnLine = message.body.stackFrames[0].line === targetLine;
                         }
                     }
                 };
 
                 const debugCellCodeLenses = codeLenses.filter((c) => c.command?.command === Commands.DebugCell);
                 const debugCellCodeLens = debugCellCodeLenses[1];
-                let args = debugCellCodeLens.command!.arguments || [];
+                const args = debugCellCodeLens.command!.arguments || [];
                 vscode.commands.executeCommand(debugCellCodeLens.command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
                     async () => {
-                        return vscode.debug.activeDebugSession != undefined && stopped;
+                        return vscode.debug.activeDebugSession !== undefined && stopped;
                     },
                     defaultNotebookTestTimeout,
                     `Never hit stop event when waiting for debug cell`

@@ -704,7 +704,7 @@ async function waitForReady(
     // When our kernel connects and gets a status message it triggers the ready promise
     const deferred = createDeferred<'connected'>();
     const handler = (_: unknown, status: Kernel.ConnectionStatus) => {
-        if (status == 'connected') {
+        if (status === 'connected') {
             logger.trace('Raw session connected');
             deferred.resolve(status);
         } else {

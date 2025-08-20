@@ -139,7 +139,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
 
     private getMatchingKernels(document: vscode.TextDocument): IKernel[] {
         // First see if we have an interactive window who's owner is this document
-        let notebookUri = this.interactiveProvider.get(document.uri)?.notebookUri;
+        const notebookUri = this.interactiveProvider.get(document.uri)?.notebookUri;
         if (!notebookUri) {
             return [];
         }

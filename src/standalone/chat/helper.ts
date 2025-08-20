@@ -34,7 +34,6 @@ export function sendConfigureNotebookToolCallTelemetry(
         isPython?: boolean;
     }
 ) {
-    // eslint-disable-next-line local-rules/dont-use-fspath
     void getTelemetrySafeHashedString(resource.fsPath).then((resourceHash) => {
         sendTelemetryEvent(Telemetry.ConfigureNotebookToolCall, undefined, {
             resourceHash,
@@ -74,8 +73,7 @@ export abstract class BaseTool<T extends IBaseToolParams> implements LanguageMod
                     : 'error'
                 : undefined;
             const resourceHash = notebookUri
-                ? // eslint-disable-next-line local-rules/dont-use-fspath
-                  getTelemetrySafeHashedString(notebookUri.fsPath)
+                ? getTelemetrySafeHashedString(notebookUri.fsPath)
                 : Promise.resolve(undefined);
             void resourceHash.then((resourceHash) => {
                 sendTelemetryEvent(Telemetry.InvokeTool, undefined, {
@@ -116,15 +114,9 @@ async function resolveNotebookFromFilePath(filePath: string) {
         //
     }
     let notebook =
-        workspace.notebookDocuments.find(
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            (doc) => doc.uri.path === filePath || doc.uri.fsPath === filePath
-        ) ||
+        workspace.notebookDocuments.find((doc) => doc.uri.path === filePath || doc.uri.fsPath === filePath) ||
         workspace.notebookDocuments.find((doc) => isEqual(doc.uri, uri)) ||
-        workspace.notebookDocuments.find(
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            (doc) => doc.uri.path === filePath || doc.uri.fsPath === parsedUri.fsPath
-        ) ||
+        workspace.notebookDocuments.find((doc) => doc.uri.path === filePath || doc.uri.fsPath === parsedUri.fsPath) ||
         workspace.notebookDocuments.find((doc) => isEqual(doc.uri, parsedUri));
     notebook = notebook || (await workspace.openNotebookDocument(uri));
     if (!notebook) {

@@ -74,7 +74,7 @@ export class CellAnalysis {
     getPredecessorCells(cell: vscode.NotebookCell, forceReadNotebook: boolean = false): vscode.NotebookCell[] {
         // find last execution item index from cell list whose cell property matches cell
         const virtualCellList = forceReadNotebook ? this._notebookDocument.getCells() : this._getVirtualCellList(cell);
-        var i;
+        let i;
         for (
             i = virtualCellList.length - 1;
             i >= 0 && virtualCellList[i].document.uri.toString() !== cell.document.uri.toString();

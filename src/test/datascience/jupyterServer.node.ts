@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable local-rules/node-imports */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
@@ -113,6 +112,7 @@ export class JupyterServer {
 
     public async startJupyterWithCert(detached?: boolean): Promise<string> {
         if (!this._jupyterServerWithCert) {
+            // eslint-disable-next-line no-async-promise-executor
             this._jupyterServerWithCert = new Promise<string>(async (resolve, reject) => {
                 const token = this.generateToken();
                 const port = await getPort({ host: 'localhost', port: this.nextPort });
@@ -156,6 +156,7 @@ export class JupyterServer {
     public async startJupyterWithToken({ detached }: { detached?: boolean } = {}): Promise<string> {
         const token = this.generateToken();
         if (!this._jupyterServerWithToken) {
+            // eslint-disable-next-line no-async-promise-executor
             this._jupyterServerWithToken = new Promise<string>(async (resolve, reject) => {
                 const port = await this.getFreePort();
                 // Possible previous instance of jupyter has not completely shutdown.
@@ -178,6 +179,7 @@ export class JupyterServer {
     }
     public async startSecondJupyterWithToken(token = this.generateToken()): Promise<string> {
         if (!this._secondJupyterServerWithToken) {
+            // eslint-disable-next-line no-async-promise-executor
             this._secondJupyterServerWithToken = new Promise<string>(async (resolve, reject) => {
                 const port = await this.getSecondFreePort();
                 // Possible previous instance of jupyter has not completely shutdown.
@@ -233,6 +235,7 @@ export class JupyterServer {
         password?: string;
         detached?: boolean;
     }): Promise<{ url: string; dispose: () => void }> {
+        // eslint-disable-next-line no-async-promise-executor
         return new Promise<{ url: string; dispose: () => void }>(async (resolve, reject) => {
             try {
                 const args = [

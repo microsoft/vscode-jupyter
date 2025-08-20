@@ -103,7 +103,7 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
 
         await onDidChangeKernels.assertFiredExactly(1);
 
-        let kernels = kernelService?.getActiveKernels();
+        const kernels = kernelService?.getActiveKernels();
         assert.isAtLeast(kernels!.length, 1);
         assert.strictEqual(
             kernels![0].uri!.toString(),

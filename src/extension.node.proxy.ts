@@ -12,6 +12,7 @@ let realEntryPoint: {
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     const entryPoint = context.extensionMode === ExtensionMode.Test ? '../out/extension.node' : './extension.node';
     try {
+        // eslint-disable-next-line no-eval
         realEntryPoint = eval('require')(entryPoint); // CodeQL [SM04509] Usage of eval in this context is safe (we do not want bundlers to import code when it sees `require`).
         return realEntryPoint.activate(context);
     } catch (ex) {
@@ -19,6 +20,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             console.error('Failed to activate extension, falling back to `./extension.node`', ex);
         }
         // In smoke tests, we do not want to load the out/extension.node.
+        // eslint-disable-next-line no-eval
         realEntryPoint = eval('require')('./extension.node'); // CodeQL [SM04509] Usage of eval in this context is safe (we do not want bundlers to import code when it sees `require`)
         return realEntryPoint.activate(context);
     }

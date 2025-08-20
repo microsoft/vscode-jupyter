@@ -26,7 +26,7 @@ suite('Server Uri Storage', async () => {
     let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
     let disposables: IDisposable[] = [];
     let context: IExtensionContext;
-    let globalStorageUri = Uri.file('GlobalStorage');
+    const globalStorageUri = Uri.file('GlobalStorage');
     let onDidRemoveEvent: TestEventHandler<JupyterServerProviderHandle[]>;
     let onDidChangeEvent: TestEventHandler<void>;
     let onDidAddEvent: TestEventHandler<IJupyterServerUriEntry>;
@@ -538,7 +538,7 @@ suite('Server Uri Storage', async () => {
     });
 
     function generateDummyData(numberOfEntries: number = 2) {
-        let data: StorageMRUItem[] = [];
+        const data: StorageMRUItem[] = [];
         const uris: string[] = [];
         const itemsInNewStorage: StorageMRUItem[] = [];
         for (let index = 0; index < numberOfEntries; index += 1) {

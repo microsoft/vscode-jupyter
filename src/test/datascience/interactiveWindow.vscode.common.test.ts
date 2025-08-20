@@ -43,9 +43,8 @@ import {
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
-import { IS_REMOTE_NATIVE_TEST } from '../constants';
+import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../constants';
 import { sleep } from '../core';
-import { IPYTHON_VERSION_CODE } from '../constants';
 import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/execution/helpers';
 import dedent from 'dedent';
 import { generateCellRangesFromDocument } from '../../interactive-window/editor-integration/cellFactory';
@@ -177,7 +176,7 @@ suite(`Interactive window execution @iw`, async function () {
     test('Clear input box', async () => {
         const text = '42';
         // Create interactive window with no owner
-        let interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await insertIntoInputEditor(text, interactiveWindow);
 
         // Clear input and verify
@@ -204,7 +203,7 @@ suite(`Interactive window execution @iw`, async function () {
 
         await waitForCondition(
             async () => {
-                return notebookDocument?.cellCount == 5;
+                return notebookDocument?.cellCount === 5;
             },
             defaultNotebookTestTimeout,
             `Cells should be added`
@@ -297,7 +296,7 @@ ${actualCode}
                     notebookDocument?.getCells().forEach((c, i) => {
                         if (
                             c.document.uri.scheme === 'vscode-notebook-cell' &&
-                            c.kind == vscode.NotebookCellKind.Code
+                            c.kind === vscode.NotebookCellKind.Code
                         ) {
                             assertHasTextOutputInVSCode(c, `${i}`);
                         }
@@ -538,7 +537,7 @@ ${actualCode}
         await waitForLastCellToComplete(activeInteractiveWindow, 3, false);
 
         // the file is only saved on web, so handle the prompt if it appears, but don't wait for it
-        let notebookFile = await generateTemporaryFilePath('py', disposables);
+        const notebookFile = await generateTemporaryFilePath('py', disposables);
         const promptOptions: WindowPromptStubButtonClickOptions = {
             result: notebookFile,
             clickImmediately: true
@@ -550,9 +549,9 @@ ${actualCode}
         await waitForCondition(
             () => {
                 // open document is python file with 3 "cells"
-                let exportedDocument = vscode.window.visibleTextEditors.find((editor) => {
+                const exportedDocument = vscode.window.visibleTextEditors.find((editor) => {
                     const cells = generateCellRangesFromDocument(editor.document);
-                    return editor.document.languageId === 'python' && cells.length == 3;
+                    return editor.document.languageId === 'python' && cells.length === 3;
                 });
 
                 return exportedDocument !== undefined;
@@ -574,7 +573,7 @@ ${actualCode}
         await vscode.workspace.applyEdit(edit);
         await waitForCodeLenses(tempFile.file, Commands.DebugCell);
 
-        let runFilePromise = vscode.commands.executeCommand(Commands.RunAllCells);
+        const runFilePromise = vscode.commands.executeCommand(Commands.RunAllCells);
 
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         const mode = (await settings.get('interactiveWindow.creationMode')) as InteractiveWindowMode;

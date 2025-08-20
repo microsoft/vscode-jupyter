@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable local-rules/dont-use-process */
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';

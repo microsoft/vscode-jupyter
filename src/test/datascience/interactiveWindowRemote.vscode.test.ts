@@ -16,7 +16,7 @@ import {
 
 suite('Interactive window (remote) @iw', async () => {
     let interactiveWindowProvider: IInteractiveWindowProvider;
-    let disposables: Disposable[] = [];
+    const disposables: Disposable[] = [];
     setup(async function () {
         if (!IS_REMOTE_NATIVE_TEST()) {
             return this.skip();

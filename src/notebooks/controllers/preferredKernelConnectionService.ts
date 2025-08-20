@@ -56,7 +56,7 @@ export class PreferredKernelConnectionService {
             .getPreferredRemoteKernelId(notebook);
 
         const findLiveKernelConnection = async () => {
-            let liveKernelMatchingIdFromCurrentKernels = kernelFinder.kernels.find(
+            const liveKernelMatchingIdFromCurrentKernels = kernelFinder.kernels.find(
                 (item) => item.kind === 'connectToLiveRemoteKernel' && item.id === preferredRemoteKernelId
             ) as LiveRemoteKernelConnectionMetadata;
             if (liveKernelMatchingIdFromCurrentKernels) {
@@ -313,9 +313,7 @@ function findLocalPythonEnv(folder: Uri, kernelFinder: IContributedKernelFinder<
 
     const localEnvs = pythonEnvs.filter((p) =>
         isParentPath(
-            // eslint-disable-next-line local-rules/dont-use-fspath
             getCachedEnvironment(p.interpreter)?.environment?.folderUri?.fsPath || p.interpreter.uri.fsPath,
-            // eslint-disable-next-line local-rules/dont-use-fspath
             folder.fsPath
         )
     );

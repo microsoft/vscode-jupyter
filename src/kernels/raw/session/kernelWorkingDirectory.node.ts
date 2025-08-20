@@ -50,7 +50,7 @@ export async function computeLocalWorkingDirectory(
     configService: IConfigurationService,
     fs: IFileSystem
 ): Promise<string | undefined> {
-    let suggestedDir = await doComputeLocalWorkingDirectory(resource, configService, fs);
+    const suggestedDir = await doComputeLocalWorkingDirectory(resource, configService, fs);
     if (suggestedDir && (await fs.exists(Uri.file(suggestedDir)))) {
         return suggestedDir;
     } else if (resource && resource.scheme !== 'untitled' && (await fs.exists(resource))) {

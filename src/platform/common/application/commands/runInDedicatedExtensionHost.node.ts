@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { ConfigurationTarget, commands, extensions } from 'vscode';
+import { ConfigurationTarget, commands, extensions, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../activation/types';
 import { PythonExtension, PylanceExtension } from '../../constants';
 import { noop } from '../../utils/misc';
-import { workspace } from 'vscode';
 
 /**
  * Allows the jupyter extension to run in a different process than other extensions.
@@ -29,7 +28,7 @@ export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSync
 
         const targetAffinity = maxAffinity + 1;
 
-        let update: { [key: string]: number } = {
+        const update: { [key: string]: number } = {
             'ms-toolsai.jupyter': targetAffinity,
             'ms-toolsai.jupyter-renderers': targetAffinity
         };

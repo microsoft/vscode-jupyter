@@ -9,7 +9,7 @@ export function getErrorTags(stdErrOrStackTrace: string | string[]) {
     const tags: string[] = [];
 
     // This parameter might be either a string or a string array
-    let stdErrOrStackTraceLowered = Array.isArray(stdErrOrStackTrace)
+    const stdErrOrStackTraceLowered = Array.isArray(stdErrOrStackTrace)
         ? stdErrOrStackTrace[0].toLowerCase()
         : stdErrOrStackTrace.toLowerCase();
     taggers.forEach((tagger) => tagger(stdErrOrStackTraceLowered, tags));

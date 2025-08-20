@@ -4,7 +4,7 @@
 import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { NotebookDocument, Uri } from 'vscode';
+import { Disposable, NotebookDocument, Uri } from 'vscode';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
@@ -25,7 +25,6 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { createKernelController, TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { KernelConnector } from './kernelConnector';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../test/vscode-mock';
-import { Disposable } from 'vscode';
 import { PythonExtension } from '@vscode/python-extension';
 import { setPythonApi } from '../../platform/interpreter/helpers';
 import { resolvableInstance } from '../../test/datascience/helpers';
@@ -55,7 +54,7 @@ suite('Kernel Connector', () => {
     let kernel: IKernel;
     let errorHandler: IDataScienceErrorHandler;
     let kernelSession: IKernelSession;
-    let pythonKernelSpec = PythonKernelConnectionMetadata.create({
+    const pythonKernelSpec = PythonKernelConnectionMetadata.create({
         id: 'python',
         interpreter: {
             id: 'id',

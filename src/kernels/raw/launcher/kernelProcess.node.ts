@@ -189,7 +189,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         }
         logger.debug(`Kernel process ${proc?.pid}.`);
         let stderr = '';
-        let providedExitCode: number | null = null;
+        const providedExitCode: number | null = null;
         const deferred = createDeferred();
         deferred.promise.catch(noop);
 
@@ -446,7 +446,7 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             return this._launchKernelSpec;
         }
 
-        let kernelSpec = this._kernelConnectionMetadata.kernelSpec;
+        const kernelSpec = this._kernelConnectionMetadata.kernelSpec;
         // We always expect a kernel spec.
         if (!kernelSpec) {
             throw new Error('KernelSpec cannot be empty in KernelProcess.ts');
@@ -676,7 +676,7 @@ function stripUnwantedMessages(output: string) {
     //          warn(
     ///         .../site-packages/traitlets/traitlets.py:2157: FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use '841dde17-f6aa-4ea7-9c02-b3bb414b28b3' instead of 'b"841dde17-f6aa-4ea7-9c02-b3bb414b28b3"'.
     //          warn(
-    let lines = splitLines(output, { trim: true, removeEmptyEntries: true });
+    const lines = splitLines(output, { trim: true, removeEmptyEntries: true });
     if (
         (lines.some((line) =>
             line.includes(`FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0.`)

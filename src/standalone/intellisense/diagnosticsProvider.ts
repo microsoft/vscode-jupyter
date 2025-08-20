@@ -26,11 +26,10 @@ import {
     workspace
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { JupyterNotebookView } from '../../platform/common/constants';
 import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
 import { Delayer } from '../../platform/common/utils/async';
 

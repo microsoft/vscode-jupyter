@@ -705,9 +705,9 @@ export class CellExecutionMessageHandler implements IDisposable {
     private canMimeTypeBeRenderedByWidgetManager(outputItem: NotebookCellOutputItem) {
         const mime = outputItem.mime;
         if (
-            mime == CellOutputMimeTypes.stderr ||
-            mime == CellOutputMimeTypes.stdout ||
-            mime == CellOutputMimeTypes.error
+            mime === CellOutputMimeTypes.stderr ||
+            mime === CellOutputMimeTypes.stdout ||
+            mime === CellOutputMimeTypes.error
         ) {
             // These are plain text mimetypes that can be rendered by the Jupyter Lab widget manager.
             return true;
@@ -960,7 +960,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (
             getParentHeaderMsgId(msg) &&
             this.outputsAreSpecificToAWidget.length &&
-            this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ==
+            this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
                 getParentHeaderMsgId(msg)
         ) {
             // Stream messages will be handled by the Output Widget.

@@ -79,7 +79,7 @@ export class JupyterKernelService implements IJupyterKernelService {
             }
         }
 
-        var specFile: string | undefined = undefined;
+        let specFile: string | undefined = undefined;
 
         // If the spec file doesn't exist or is not defined, we need to register this kernel
         if (isLocalConnection(kernel)) {
@@ -93,7 +93,7 @@ export class JupyterKernelService implements IJupyterKernelService {
             else if (kernel.interpreter && specFile) {
                 // See if the specfile we started with (which might be the one registered in the interpreter)
                 // doesn't match the name of the spec file
-                if (path.basename(path.dirname(specFile)).toLowerCase() != kernel.kernelSpec.name.toLowerCase()) {
+                if (path.basename(path.dirname(specFile)).toLowerCase() !== kernel.kernelSpec.name.toLowerCase()) {
                     // This means the specfile for the kernelspec will not be found by jupyter. We need to
                     // register it
                     specFile = await this.registerKernel(kernel, cancelToken);

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable local-rules/dont-use-fspath */
 
 import { assert } from 'chai';
 import * as vscode from 'vscode';
@@ -215,7 +214,7 @@ export async function waitForInteractiveWindow(
             notebookDocument = vscode.workspace.notebookDocuments.find(
                 (doc) => doc.uri.toString() === interactiveWindow?.notebookUri?.toString()
             );
-            let inputBox = vscode.window.visibleTextEditors.find(
+            const inputBox = vscode.window.visibleTextEditors.find(
                 (e) => e.document.uri.path === interactiveWindow?.inputUri?.path
             );
             logger.debug(
@@ -272,7 +271,7 @@ export async function waitForLastCellToComplete(
 export async function waitForCodeLenses(document: vscode.Uri, command: string) {
     // First make sure the editor has focus
     const selection = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0));
-    let editor = vscode.window.visibleTextEditors.find((e) => arePathsSame(e.document.uri.fsPath, document.fsPath));
+    const editor = vscode.window.visibleTextEditors.find((e) => arePathsSame(e.document.uri.fsPath, document.fsPath));
     if (editor) {
         await vscode.window
             .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
@@ -294,7 +293,7 @@ export async function waitForCodeLenses(document: vscode.Uri, command: string) {
             return (
                 codeLenses &&
                 codeLenses.length > 0 &&
-                codeLenses.find((c) => c.command?.command === command) != undefined
+                codeLenses.find((c) => c.command?.command === command) !== undefined
             );
         },
         defaultNotebookTestTimeout,

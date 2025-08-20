@@ -234,7 +234,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             if (process.env.PYTHONPATH) {
                 env.PYTHONPATH = process.env.PYTHONPATH;
             }
-            let pathKey = customEnvVars ? Object.keys(customEnvVars).find((k) => k.toLowerCase() == 'path') : undefined;
+            const pathKey = customEnvVars
+                ? Object.keys(customEnvVars).find((k) => k.toLowerCase() === 'path')
+                : undefined;
             if (pathKey && customEnvVars![pathKey]) {
                 this.envVarsService.appendPath(env, customEnvVars![pathKey]!);
             }

@@ -7,9 +7,15 @@ import { getExperimentationService, IExperimentationService, TargetPopulation } 
 import { IApplicationEnvironment } from '../application/types';
 import { JVSC_EXTENSION_ID, isPreReleaseVersion } from '../constants';
 import { logger } from '../../logging';
-import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IJupyterSettings, IMemento } from '../types';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IExperimentService,
+    IJupyterSettings,
+    IMemento,
+    Experiments as ExperimentGroups
+} from '../types';
 import { Experiments } from '../utils/localize';
-import { Experiments as ExperimentGroups } from '../types';
 import { ExperimentationTelemetry } from './telemetry.node';
 import { getVSCodeChannel } from '../application/applicationEnvironment';
 

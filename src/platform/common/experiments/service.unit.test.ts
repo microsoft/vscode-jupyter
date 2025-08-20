@@ -9,10 +9,9 @@ import { ApplicationEnvironment } from '../application/applicationEnvironment';
 import { IApplicationEnvironment } from '../application/types';
 import { ConfigurationService } from '../configuration/service.node';
 import { ExperimentService } from './service';
-import { IConfigurationService } from '../types';
+import { Experiments, IConfigurationService } from '../types';
 import * as Telemetry from '../../telemetry/index';
 import { MockMemento } from '../../../test/mocks/mementos';
-import { Experiments } from '../types';
 import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 suite('Experimentation service', () => {
     let configurationService: IConfigurationService;

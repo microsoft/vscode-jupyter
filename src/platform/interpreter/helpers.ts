@@ -154,7 +154,6 @@ export function getCachedEnvironment(interpreter?: { id: string } | string) {
     }
     if (typeof interpreter === 'string') {
         return pythonApi.environments.known.find(
-            // eslint-disable-next-line local-rules/dont-use-fspath
             (i) => i.id === interpreter || i.path === interpreter || i.executable.uri?.fsPath === interpreter
         );
     }
@@ -232,7 +231,7 @@ export function resolvedPythonEnvToJupyterEnv(env?: Environment): PythonEnvironm
     }
     // Map the Python env tool to a Jupyter environment type.
     let uri: Uri;
-    let id = env.id;
+    const id = env.id;
     if (!env.executable.uri) {
         if (getEnvironmentType(env) === EnvironmentType.Conda) {
             uri =

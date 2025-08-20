@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable local-rules/dont-use-fspath */
-
 import * as path from '../../platform/vscode-path/path';
 import {
     DecorationRenderOptions,

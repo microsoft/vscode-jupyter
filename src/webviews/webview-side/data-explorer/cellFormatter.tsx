@@ -42,7 +42,7 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
     }
 
     private renderNumber(value: number) {
-        let val = generateDisplayValue(value);
+        const val = generateDisplayValue(value);
         const isIndexColumn = this.props.columnDef.id === '0';
 
         return (

@@ -93,7 +93,7 @@ suite.skip('Code Generator Unit Tests', () => {
         await sendCode(code, 1);
 
         // We should have a single hash
-        let generatedCodes = storage.all;
+        const generatedCodes = storage.all;
         assert.equal(generatedCodes.length, 1, 'No hashes found');
         assert.strictEqual(generatedCodes[0].generatedCodes[0].code.trim(), '%%latex\n$e^2$');
     });
@@ -108,7 +108,7 @@ suite.skip('Code Generator Unit Tests', () => {
         await sendCode(code, 1);
 
         // We should have a single hash
-        let generatedCodes = storage.all;
+        const generatedCodes = storage.all;
         assert.equal(generatedCodes.length, 1, 'No hashes found');
         assert.strictEqual(generatedCodes[0].generatedCodes[0].code.trim(), '%%latex\n$e^2$');
     });
@@ -123,7 +123,7 @@ suite.skip('Code Generator Unit Tests', () => {
         await sendCode(code, 1);
 
         // We should have a single hash
-        let generatedCodes = storage.all;
+        const generatedCodes = storage.all;
         assert.equal(generatedCodes.length, 1, 'No hashes found');
         assert.strictEqual(generatedCodes[0].generatedCodes[0].code.trim(), '%%html\n<button>Hello</button>');
     });

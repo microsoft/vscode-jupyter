@@ -41,8 +41,7 @@ suite('JupyterKernelService', () => {
     let testWorkspaceFolder: Uri;
     // PATH variable is forced upper case on Windows
     const pathVariable =
-        // eslint-disable-next-line local-rules/dont-use-process
-        process.platform === 'win32' ? 'PATH' : Object.keys(process.env).find((k) => k.toLowerCase() == 'path')!;
+        process.platform === 'win32' ? 'PATH' : Object.keys(process.env).find((k) => k.toLowerCase() === 'path')!;
 
     // Set of kernels. Generated this by running the localKernelFinder unit test and stringifying
     // the results returned.

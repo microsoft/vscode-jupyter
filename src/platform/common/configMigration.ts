@@ -44,7 +44,7 @@ export class ConfigMigration {
 
     public async migrateSettings() {
         const migratedSettings: Thenable<void>[] = [];
-        for (let prop of Object.keys(ConfigMigration.migratedSettings)) {
+        for (const prop of Object.keys(ConfigMigration.migratedSettings)) {
             migratedSettings.push(...this.migrateSetting(prop, ConfigMigration.migratedSettings[prop]));
         }
         migratedSettings.push(this.migrateIntellisenseSettings());

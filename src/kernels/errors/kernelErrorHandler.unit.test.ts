@@ -472,7 +472,7 @@ suite('Error Handler Unit Tests', () => {
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');
         });
         test('Unable to import <name> from user overriding module in workspace folder (unix)', async function () {
-            if (getOSType() == OSType.Windows) {
+            if (getOSType() === OSType.Windows) {
                 // Patsh get converted to `\` when using `Uri.file` as values for Workspace folder.
                 return this.skip();
             }

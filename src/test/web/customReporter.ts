@@ -102,9 +102,7 @@ function writeReportProgress(message: Message) {
                 : Uri.joinPath(extensions.getExtension(PerformanceExtensionId)!.extensionUri, '..', '..', '..', 'logs');
             const logFile = Uri.joinPath(logDir, 'testresults.json');
             const fs: typeof import('fs-extra') = require('fs-extra');
-            // eslint-disable-next-line local-rules/dont-use-fspath
             fs.ensureDirSync(logDir.fsPath);
-            // eslint-disable-next-line local-rules/dont-use-fspath
             fs.writeFileSync(logFile.fsPath, JSON.stringify(messages));
         }
     } else {

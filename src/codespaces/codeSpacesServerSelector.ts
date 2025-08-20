@@ -34,7 +34,7 @@ export class CodespacesJupyterServerSelector {
     ) {}
 
     public async addJupyterServer(provider: JupyterServerProviderHandle): Promise<void> {
-        if (provider.extensionId.toLowerCase() != CodespaceExtensionId.toLowerCase()) {
+        if (provider.extensionId.toLowerCase() !== CodespaceExtensionId.toLowerCase()) {
             throw new Error('Deprecated API');
         }
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized

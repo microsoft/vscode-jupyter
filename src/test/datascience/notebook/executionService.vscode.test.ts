@@ -149,7 +149,6 @@ suite('Kernel Execution @kernelCore', function () {
         const cell = await notebook.appendCodeCell('print(__vsc_ipynb_file__)');
         await kernelExecution.executeCell(cell);
         const uri = notebook.uri;
-        // eslint-disable-next-line local-rules/dont-use-fspath
         await Promise.all([kernelExecution.executeCell(cell), waitForTextOutput(cell, `${uri.fsPath}`)]);
     });
     test('Leading whitespace not suppressed', async () => {
@@ -868,7 +867,7 @@ suite('Kernel Execution @kernelCore', function () {
         ]);
 
         // Run cell 3 & it should run to completion.
-        await Promise.all([kernelExecution.executeCell(cell3), , waitForExecutionCompletedSuccessfully(cell3)]);
+        await Promise.all([kernelExecution.executeCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
         const lastExecutionOrderOfCell3 = cell3.executionSummary?.executionOrder!;
         assert.equal(lastExecutionOrderOfCell3, cell1.executionSummary!.executionOrder! + 3);
 
@@ -890,7 +889,7 @@ suite('Kernel Execution @kernelCore', function () {
         // https://github.com/microsoft/vscode/issues/130791
         assert.isTrue(
             cell3.executionSummary?.executionOrder === undefined ||
-                cell3.executionSummary?.executionOrder == lastExecutionOrderOfCell3,
+                cell3.executionSummary?.executionOrder === lastExecutionOrderOfCell3,
             'Cell 3 should not have run again, but execution cleared like Jupyter'
         );
     });
@@ -1040,7 +1039,7 @@ root.debug('debug test')`
     });
 
     test('Clearing output while executing will ensure output is cleared', async function () {
-        let onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
+        const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
         const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
         stub.get(() => onDidChangeNbEventHandler.event);
         disposables.push(onDidChangeNbEventHandler);

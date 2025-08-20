@@ -50,6 +50,7 @@ export async function waitForCondition<T>(
     throwOnError: boolean = false,
     cancelToken?: { isCancellationRequested: boolean; onCancellationRequested: Function }
 ): Promise<NonNullable<T>> {
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise<NonNullable<T>>(async (resolve, reject) => {
         const disposables: IDisposable[] = [];
         let timer: NodeJS.Timer;

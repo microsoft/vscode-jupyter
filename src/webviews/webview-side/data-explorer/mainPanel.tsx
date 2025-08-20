@@ -446,7 +446,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 r = {};
             }
             r[RowNumberColumnName] = this.state.fetchedRowCount + idx;
-            for (let [key, value] of Object.entries(r)) {
+            for (const [key, value] of Object.entries(r)) {
                 switch (value) {
                     case 'nan':
                         r[key] = NaN;

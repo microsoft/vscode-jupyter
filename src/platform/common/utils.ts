@@ -264,8 +264,8 @@ function fixBackspace(txt: string) {
 function fixCarriageReturn(txt: string) {
     txt = txt.replace(/\r+\n/gm, '\n'); // \r followed by \n --> newline
     while (txt.search(/\r[^$]/g) > -1) {
-        var base = txt.match(/^(.*)\r+/m)![1];
-        var insert = txt.match(/\r+(.*)$/m)![1];
+        const base = txt.match(/^(.*)\r+/m)![1];
+        let insert = txt.match(/\r+(.*)$/m)![1];
         insert = insert + base.slice(insert.length, base.length);
         txt = txt.replace(/\r+.*$/m, '\r').replace(/^.*\r/m, insert);
     }

@@ -33,7 +33,7 @@ export async function waitForVariablesToMatch(expected: IVariableInfo[], variabl
 // For the given html, verify that the expected variables are in it
 function variablesMatch(expected: IVariableInfo[], htmlVariables: IVariableInfo[]): boolean {
     // Check our size first
-    if (htmlVariables.length != expected.length) {
+    if (htmlVariables.length !== expected.length) {
         return false;
     }
 

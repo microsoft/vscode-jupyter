@@ -62,13 +62,12 @@ import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfC
 import { createDeferred } from '../../platform/common/utils/async';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
-import { dispose } from '../../platform/common/utils/lifecycle';
+import { DisposableBase, dispose } from '../../platform/common/utils/lifecycle';
 import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { isWeb } from '../../platform/vscode-path/platform';
-import { DisposableBase } from '../../platform/common/utils/lifecycle';
 import { trackRemoteServerDisplayName } from '../../kernels/jupyter/connection/jupyterServerProviderRegistry';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
@@ -395,8 +394,8 @@ export class UserJupyterServerUrlProvider
                             failedUrlPasswordCapture = false;
                             if (
                                 err instanceof CancellationError ||
-                                err == InputFlowAction.back ||
-                                err == InputFlowAction.cancel
+                                err === InputFlowAction.back ||
+                                err === InputFlowAction.cancel
                             ) {
                                 throw err;
                             } else if (JupyterSelfCertsError.isSelfCertsError(err)) {
@@ -496,8 +495,8 @@ export class UserJupyterServerUrlProvider
                             }
                             if (
                                 err instanceof CancellationError ||
-                                err == InputFlowAction.back ||
-                                err == InputFlowAction.cancel
+                                err === InputFlowAction.back ||
+                                err === InputFlowAction.cancel
                             ) {
                                 throw err;
                             } else if (JupyterSelfCertsError.isSelfCertsError(err)) {

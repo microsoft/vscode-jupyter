@@ -525,7 +525,6 @@ suite('Raw Session & Raw Kernel Connection', () => {
         let configService: IConfigurationService;
         let fs: IFileSystem;
         let settings: IWatchableJupyterSettings;
-        let workspaceFolder: WorkspaceFolder;
         setup(() => {
             configService = mock<IConfigurationService>();
             settings = mock<IWatchableJupyterSettings>();
@@ -535,7 +534,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
         teardown(() => {
             resetVSCodeMocks();
         });
-        workspaceFolder = { index: 0, name: 'one', uri: Uri.file(__dirname) };
+        const workspaceFolder = { index: 0, name: 'one', uri: Uri.file(__dirname) };
         test(`Has working folder`, async () => {
             when(settings.notebookFileRoot).thenReturn(__dirname);
             when(fs.exists(anything())).thenResolve(true);

@@ -135,10 +135,11 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             if (file) {
                 const ext = path.extname(file.path);
                 switch (ext.toLowerCase()) {
-                    case '.png':
+                    case '.png': {
                         const buffer = base64ToUint8Array(payload.png.replace('data:image/png;base64', ''));
                         await this.fs.writeFile(file, buffer);
                         break;
+                    }
 
                     default:
                     case '.svg':

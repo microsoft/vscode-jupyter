@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable local-rules/dont-use-process */
 
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';

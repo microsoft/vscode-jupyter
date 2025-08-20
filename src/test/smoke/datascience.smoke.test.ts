@@ -93,7 +93,7 @@ suite('Smoke Tests', function () {
         const notebook = await vscode.workspace.openNotebookDocument(vscode.Uri.file(file));
         await vscode.window.showNotebookDocument(notebook);
 
-        let pythonPath = PYTHON_PATH;
+        const pythonPath = PYTHON_PATH;
         const nb = vscode.window.activeNotebookEditor?.notebook;
         if (!nb) {
             throw new Error('No active notebook');

@@ -71,7 +71,7 @@ export abstract class FileConverterBase implements IFileConverter {
         candidateInterpreter?: PythonEnvironment
     ): Promise<void> {
         try {
-            let target = await this.exportUtil.getTargetFile(format, sourceDocument.uri, defaultFileName);
+            const target = await this.exportUtil.getTargetFile(format, sourceDocument.uri, defaultFileName);
             if (!target) {
                 return;
             }

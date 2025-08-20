@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { TextDocument, workspace } from 'vscode';
+import { TextDocument, workspace, window } from 'vscode';
 import { sendActivationTelemetry } from '../../platform/telemetry/envFileTelemetry.node';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
@@ -11,7 +11,6 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IFileSystem } from '../../platform/common/platform/types';
 import { noop } from '../../platform/common/utils/misc';
 import { getWorkspaceFolderIdentifier } from '../../platform/common/application/workspace.base';
-import { window } from 'vscode';
 
 /**
  * Responsible for sending workspace level telemetry.

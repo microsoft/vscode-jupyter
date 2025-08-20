@@ -21,8 +21,14 @@ import {
     workspace
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { dispose } from '../../platform/common/utils/lifecycle';
+import {
+    Commands,
+    Exiting,
+    InteractiveWindowView,
+    JupyterNotebookView,
+    PYTHON_LANGUAGE
+} from '../../platform/common/constants';
+import { DisposableStore, dispose } from '../../platform/common/utils/lifecycle';
 import { logger } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
@@ -37,7 +43,6 @@ import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../messageTypes';
@@ -76,7 +81,6 @@ import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyI
 import { LastCellExecutionTracker } from '../../kernels/execution/lastCellExecutionTracker';
 import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessageHandler';
-import { DisposableStore } from '../../platform/common/utils/lifecycle';
 import { openInBrowser } from '../../platform/common/net/browser';
 import { KernelError } from '../../kernels/errors/kernelError';
 import { getVersion } from '../../platform/interpreter/helpers';
@@ -255,7 +259,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // then ensure to mark the cell as busy and attach the outputs of the execution to the cell.
         let resumed = false;
         const localDisposables: IDisposable[] = [];
-        let disposeAnyHandler: IDisposable | undefined;
         const anyMessageHandler = (_: unknown, msg: IAnyMessageArgs) => {
             if (msg.direction === 'send' || resumed) {
                 return;
@@ -283,7 +286,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         };
         // Check if we're still getting messages for the previous execution.
         kernel.session.kernel.anyMessage.connect(anyMessageHandler);
-        disposeAnyHandler = new Disposable(() => {
+        const disposeAnyHandler = new Disposable(() => {
             swallowExceptions(() => kernel.session?.kernel?.anyMessage.disconnect(anyMessageHandler));
         });
         localDisposables.push(disposeAnyHandler);
@@ -346,7 +349,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // Do not set descriptions for the live kernels,
         // Descriptions contains date/time, and the controller never gets updated every second,
         // Hence having the date time is not going to work.
-        let description = this.connection.kind === 'connectToLiveRemoteKernel' ? '' : this.displayData.description;
+        const description = this.connection.kind === 'connectToLiveRemoteKernel' ? '' : this.displayData.description;
         this.controller.description = description;
         if (this.displayData.serverDisplayName) {
             // MRU kernel picker doesn't show controller kind/category, so add server name to description

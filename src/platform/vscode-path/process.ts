@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable local-rules/dont-use-process */
 
 import { globals, INodeProcess, isMacintosh, isWindows } from './platform';
 

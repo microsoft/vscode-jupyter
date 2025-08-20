@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Event, NotebookController, Uri } from 'vscode';
-import { WebviewViewProvider } from 'vscode';
+import { Event, NotebookController, Uri, WebviewViewProvider } from 'vscode';
 import { IJupyterSettings } from '../common/types';
 
 export interface IJupyterExtraSettings extends IJupyterSettings {

@@ -18,14 +18,12 @@ export async function getExtensionTempDir(context: IExtensionContext, fs?: IFile
         return Uri.joinPath(context.globalStorageUri, getCurrentTempDirName(context));
     } else {
         // Ensure we use the file scheme when dealing with the desktop version of VS Code.
-        // eslint-disable-next-line local-rules/dont-use-fspath
         let dir = Uri.joinPath(Uri.file(context.globalStorageUri.fsPath), getCurrentTempDirName(context));
         if (fs) {
             // Verify we can create this directory, this ensures the fact taht the user has permissions in this dir.
             try {
                 await fs.createDirectory(dir);
             } catch (ex) {
-                // eslint-disable-next-line local-rules/dont-use-fspath
                 logger.warn(`Failed to create temp directory (${dir.fsPath}), falling back to extension dir`, ex);
                 dir = Uri.joinPath(context.extensionUri, 'temp');
                 await fs.createDirectory(dir);

@@ -188,7 +188,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         if (process.env.PYTHONPATH) {
             mergedVars.PYTHONPATH = process.env.PYTHONPATH;
         }
-        let pathKey = customEnvVars ? Object.keys(customEnvVars).find((k) => k.toLowerCase() == 'path') : undefined;
+        const pathKey = customEnvVars ? Object.keys(customEnvVars).find((k) => k.toLowerCase() === 'path') : undefined;
         if (pathKey && customEnvVars![pathKey]) {
             this.envVarsService.appendPath(mergedVars!, customEnvVars![pathKey]!);
         }
