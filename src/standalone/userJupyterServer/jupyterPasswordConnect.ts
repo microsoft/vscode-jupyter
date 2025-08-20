@@ -29,7 +29,7 @@ export interface IJupyterPasswordConnectInfo {
 export class JupyterPasswordConnect {
     private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo>>();
     private static readonly SERVICE_NAME = 'jupyter-server-password';
-    
+
     constructor(
         private readonly configService: IConfigurationService,
         private readonly agentCreator: IJupyterRequestAgentCreator | undefined,
@@ -121,7 +121,7 @@ export class JupyterPasswordConnect {
             if (requiresPassword && options.isTokenEmpty) {
                 // Try to get stored password first
                 const storedPassword = await this.getStoredPassword(options.handle);
-                
+
                 if (storedPassword && !options.validationErrorMessage) {
                     // We have a stored password and no validation error, so try using it
                     userPassword = storedPassword;
@@ -151,7 +151,7 @@ export class JupyterPasswordConnect {
                         input.onDidAccept(() => resolve(input.value), this, options.disposables);
                         input.onDidHide(() => reject(InputFlowAction.cancel), this, options.disposables);
                     });
-                    
+
                     // If we had a stored password that failed, clear it
                     if (storedPassword && options.validationErrorMessage) {
                         await this.clearStoredPassword(options.handle);
@@ -195,23 +195,23 @@ export class JupyterPasswordConnect {
         // Remember session cookie can be empty, if both token and password are empty
         if (xsrfCookie && sessionCookieName && (sessionCookieValue || options.isTokenEmpty)) {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
-            
+
             // Save the password for future use if authentication was successful and we have a new password
             if (userPassword && !useStoredPassword) {
                 await this.storePassword(options.handle, userPassword);
             }
-            
+
             const cookieString = `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue || ''}`;
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
             return { requestHeaders, requiresPassword };
         } else {
             sendTelemetryEvent(Telemetry.GetPasswordFailure);
-            
+
             // If we used a stored password and it failed, clear it
             if (useStoredPassword) {
                 await this.clearStoredPassword(options.handle);
             }
-            
+
             return { requiresPassword };
         }
     }
@@ -421,7 +421,10 @@ export class JupyterPasswordConnect {
      */
     private async getStoredPassword(handle: string): Promise<string | undefined> {
         try {
-            return await this.encryptedStorage.retrieve(JupyterPasswordConnect.SERVICE_NAME, this.getPasswordStorageKey(handle));
+            return await this.encryptedStorage.retrieve(
+                JupyterPasswordConnect.SERVICE_NAME,
+                this.getPasswordStorageKey(handle)
+            );
         } catch (error) {
             logger.warn(`Failed to retrieve stored password for server ${handle}:`, error);
             return undefined;
@@ -433,7 +436,11 @@ export class JupyterPasswordConnect {
      */
     private async storePassword(handle: string, password: string): Promise<void> {
         try {
-            await this.encryptedStorage.store(JupyterPasswordConnect.SERVICE_NAME, this.getPasswordStorageKey(handle), password);
+            await this.encryptedStorage.store(
+                JupyterPasswordConnect.SERVICE_NAME,
+                this.getPasswordStorageKey(handle),
+                password
+            );
         } catch (error) {
             logger.warn(`Failed to store password for server ${handle}:`, error);
         }
@@ -444,7 +451,11 @@ export class JupyterPasswordConnect {
      */
     private async clearStoredPassword(handle: string): Promise<void> {
         try {
-            await this.encryptedStorage.store(JupyterPasswordConnect.SERVICE_NAME, this.getPasswordStorageKey(handle), undefined);
+            await this.encryptedStorage.store(
+                JupyterPasswordConnect.SERVICE_NAME,
+                this.getPasswordStorageKey(handle),
+                undefined
+            );
         } catch (error) {
             logger.warn(`Failed to clear stored password for server ${handle}:`, error);
         }

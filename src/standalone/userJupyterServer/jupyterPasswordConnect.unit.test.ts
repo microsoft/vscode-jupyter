@@ -508,7 +508,7 @@ suite('JupyterServer Password Connect', () => {
 
     test('Stores password after successful authentication', async () => {
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
-        
+
         // Mock our second call to get session cookie
         const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);
         const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
@@ -544,23 +544,23 @@ suite('JupyterServer Password Connect', () => {
             )
             .returns(() => Promise.resolve(mockSessionResponse.object));
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
-        
+
         // Mock that no password is stored initially
         when(encryptedStorage.retrieve(anything(), anything())).thenResolve(undefined);
-        
+
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://testname:8888/',
             isTokenEmpty: true,
             handle: 'test-server-handle'
         });
-        
+
         assert(result, 'Failed to get password');
         assert(result.requestHeaders, 'Expected request headers');
-        
+
         // Verify that the password was stored after successful authentication
         // The store method should have been called with the correct service, key, and password
         // Note: We can't easily verify the password value as it's user input, but we can verify the call was made
-        
+
         // Verfiy network calls
         mockXsrfHeaders.verifyAll();
         mockSessionHeaders.verifyAll();
@@ -572,7 +572,7 @@ suite('JupyterServer Password Connect', () => {
     test('Uses stored password when available', async () => {
         const storedPassword = 'stored-password';
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
-        
+
         // Mock our second call to get session cookie
         const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);
         const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
@@ -608,25 +608,27 @@ suite('JupyterServer Password Connect', () => {
             )
             .returns(() => Promise.resolve(mockSessionResponse.object));
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
-        
+
         // Mock that a password is stored
-        when(encryptedStorage.retrieve('jupyter-server-password', 'password-test-server-handle')).thenResolve(storedPassword);
-        
+        when(encryptedStorage.retrieve('jupyter-server-password', 'password-test-server-handle')).thenResolve(
+            storedPassword
+        );
+
         // Override the input box setup to NOT show input since we should use stored password
         inputBox.value = '';
-        
+
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://testname:8888/',
             isTokenEmpty: true,
             handle: 'test-server-handle'
         });
-        
+
         assert(result, 'Failed to get password');
         assert(result.requestHeaders, 'Expected request headers');
-        
+
         // Verify that retrieve was called to get the stored password
         // The method should have been called but we don't need to verify store since password was already stored
-        
+
         // Verfiy network calls
         mockXsrfHeaders.verifyAll();
         mockSessionHeaders.verifyAll();
