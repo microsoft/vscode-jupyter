@@ -5,7 +5,6 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri, commands, env, window } from 'vscode';
 import {
     Commands,
-    Commands,
     STANDARD_OUTPUT_CHANNEL,
     WIDGET_VERSION_NON_PYTHON_KERNELS
 } from '../../../../platform/common/constants';

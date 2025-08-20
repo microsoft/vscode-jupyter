@@ -11,8 +11,7 @@ import {
     Disposable,
     EventEmitter,
     Uri,
-    WorkspaceConfiguration,
-    type WorkspaceFolder
+    WorkspaceConfiguration
 } from 'vscode';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../types';
 import { noop } from '../../../test/core';
