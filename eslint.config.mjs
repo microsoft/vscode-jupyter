@@ -8,7 +8,9 @@ import noNullPlugin from 'eslint-plugin-no-null';
 import preferArrowPlugin from 'eslint-plugin-prefer-arrow';
 import reactPlugin from 'eslint-plugin-react';
 import noOnlyTestsPlugin from 'eslint-plugin-no-only-tests';
+import headerPlugin from 'eslint-plugin-header';
 import prettier from 'eslint-config-prettier';
+import localRulesPlugin from './local-rules-plugin.mjs';
 
 // Base configuration for all TypeScript files
 const baseConfig = {
@@ -30,9 +32,9 @@ const baseConfig = {
         'no-null': noNullPlugin,
         'prefer-arrow': preferArrowPlugin,
         'react': reactPlugin,
-        'no-only-tests': noOnlyTestsPlugin
-        // 'header': headerPlugin,
-        // 'local-rules': localRulesPlugin
+        'no-only-tests': noOnlyTestsPlugin,
+        'header': headerPlugin,
+        'local-rules': localRulesPlugin
     },
     rules: {
         // no-only-tests plugin rules
@@ -214,10 +216,10 @@ const baseConfig = {
                 ]
             }
         ],
-        // 'local-rules/node-imports': ['error', { allow: ['events'] }],
-        // 'local-rules/dont-use-process': ['error'],
-        // 'local-rules/dont-use-fspath': ['error'],
-        // 'local-rules/dont-use-filename': ['error'],
+        'local-rules/node-imports': ['error', { allow: ['events'] }],
+        'local-rules/dont-use-process': ['error'],
+        'local-rules/dont-use-fspath': ['error'],
+        'local-rules/dont-use-filename': ['error'],
         'strict': 'off'
         // 'header/header': [
         //     'error',
@@ -271,10 +273,10 @@ export default [
             'import': importPlugin
         },
         rules: {
-            // 'local-rules/node-imports': ['off'],
-            // 'local-rules/dont-use-process': ['off'],
-            // 'local-rules/dont-use-fspath': ['off'],
-            // 'local-rules/dont-use-filename': ['off'],
+            'local-rules/node-imports': ['off'],
+            'local-rules/dont-use-process': ['off'],
+            'local-rules/dont-use-fspath': ['off'],
+            'local-rules/dont-use-filename': ['off'],
             'import/no-restricted-paths': ['off']
         }
     },

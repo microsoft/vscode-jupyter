@@ -23,7 +23,7 @@ if (typeof window === 'object') {
 }
 // Web worker
 else if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     cryptoProvider = self.crypto;
 }
 // Node
