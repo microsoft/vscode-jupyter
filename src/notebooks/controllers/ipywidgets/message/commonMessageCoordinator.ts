@@ -155,7 +155,7 @@ export class CommonMessageCoordinator {
                             );
                         }
                     } else {
-                        // For non-python kernels, always assume version 7.
+                        // For non-python kernels, always assume version 8.
                         if (!deferred.completed) {
                             deferred.resolve(WIDGET_VERSION_NON_PYTHON_KERNELS);
                         }
