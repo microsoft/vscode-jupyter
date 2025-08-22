@@ -884,14 +884,11 @@ abstract class BaseKernel implements IBaseKernel {
     }
     /**
      * Determines the version of IPyWidgets used in the kernel
-     * For non-python kernels, we assume the version of IPyWidgets is 7.
+     * For non-python kernels, we assume the version of IPyWidgets is 8.
      * For Python we just run a block of Python code to determine the version.
      */
     private async determineVersionOfIPyWidgets(session: IKernelSession) {
         if (!isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            // For all other kernels, assume we are using the older version of IPyWidgets.
-            // There are very few kernels that support IPyWidgets, however IPyWidgets 8 is very new
-            // & it is unlikely that others have supported this new version.
             this._ipywidgetsVersion = WIDGET_VERSION_NON_PYTHON_KERNELS;
             this._onIPyWidgetVersionResolved.fire(WIDGET_VERSION_NON_PYTHON_KERNELS);
             return;
