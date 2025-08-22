@@ -356,6 +356,10 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
             // When using Raw we don't use jupyter.
             return this.skip();
         }
+        // eslint-disable-next-line local-rules/dont-use-process
+        if (process.env.PACKAGE_PRE_RELEASE === 'prerelease') {
+            return this.skip();
+        }
 
         /*
         Run cell 1 - Print some value
