@@ -494,7 +494,7 @@ export const defaultNotebookFormat = { major: 4, minor: 2 };
 
 export const WIDGET_MIMETYPE = 'application/vnd.jupyter.widget-view+json';
 export const WIDGET_STATE_MIMETYPE = 'application/vnd.jupyter.widget-state+json';
-export const WIDGET_VERSION_NON_PYTHON_KERNELS = 7;
+export const WIDGET_VERSION_NON_PYTHON_KERNELS = 8;
 
 /**
  * Used as a fallback when determinining the extension id that calls into the Jupyter extension API fails.
