@@ -87,7 +87,7 @@ suite('String Extensions', () => {
         expect(trimQuotes(quotedString3)).to.be.equal(expectedString);
         expect(trimQuotes(quotedString4)).to.be.equal(expectedString);
     });
-    
+
     // Tests for Windows paths with special characters (issue #16932)
     test('Should quote Windows paths with spaces in username', () => {
         const pathToTest = 'C:\\Users\\John Smith\\AppData\\Local\\env\\python.exe';
@@ -117,7 +117,7 @@ suite('String Extensions', () => {
         const pathWithLessThan = 'C:\\Users\\John<Jane\\python.exe';
         const pathWithGreaterThan = 'C:\\Users\\John>Jane\\python.exe';
         const pathWithCaret = 'C:\\Users\\John^Jane\\python.exe';
-        
+
         expect(toCommandArgument(pathWithAmpersand)).to.be.equal(`"${pathWithAmpersand}"`);
         expect(toCommandArgument(pathWithPipe)).to.be.equal(`"${pathWithPipe}"`);
         expect(toCommandArgument(pathWithLessThan)).to.be.equal(`"${pathWithLessThan}"`);
