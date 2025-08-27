@@ -87,4 +87,45 @@ suite('String Extensions', () => {
         expect(trimQuotes(quotedString3)).to.be.equal(expectedString);
         expect(trimQuotes(quotedString4)).to.be.equal(expectedString);
     });
+
+    // Tests for Windows paths with special characters (issue #16932)
+    test('Should quote Windows paths with spaces in username', () => {
+        const pathToTest = 'C:\\Users\\John Smith\\AppData\\Local\\env\\python.exe';
+        expect(toCommandArgument(pathToTest)).to.be.equal(`"${pathToTest}"`);
+    });
+    test('Should quote Windows paths with parentheses in username', () => {
+        const pathToTest = 'C:\\Users\\John(Contractor)\\AppData\\Local\\env\\python.exe';
+        expect(toCommandArgument(pathToTest)).to.be.equal(`"${pathToTest}"`);
+    });
+    test('Should quote Windows paths with both spaces and parentheses', () => {
+        const pathToTest = 'C:\\Users\\John Smith (Contractor)\\AppData\\Local\\env\\python.exe';
+        expect(toCommandArgument(pathToTest)).to.be.equal(`"${pathToTest}"`);
+    });
+    test('Should quote file paths with special characters and normalize slashes', () => {
+        const pathToTest = 'C:\\Users\\John(Contractor)\\AppData\\Local\\env\\python.exe';
+        const expectedPath = 'C:/Users/John(Contractor)/AppData/Local/env/python.exe';
+        expect(fileToCommandArgument(pathToTest)).to.be.equal(`"${expectedPath}"`);
+    });
+    test('Should handle already quoted paths correctly', () => {
+        const pathToTest = '"C:\\Users\\John(Contractor)\\AppData\\Local\\env\\python.exe"';
+        // toCommandArgument should not double-quote if already quoted
+        expect(toCommandArgument(pathToTest)).to.be.equal(pathToTest);
+    });
+    test('Should quote paths with other shell metacharacters', () => {
+        const pathWithAmpersand = 'C:\\Users\\John&Jane\\python.exe';
+        const pathWithPipe = 'C:\\Users\\John|Jane\\python.exe';
+        const pathWithLessThan = 'C:\\Users\\John<Jane\\python.exe';
+        const pathWithGreaterThan = 'C:\\Users\\John>Jane\\python.exe';
+        const pathWithCaret = 'C:\\Users\\John^Jane\\python.exe';
+
+        expect(toCommandArgument(pathWithAmpersand)).to.be.equal(`"${pathWithAmpersand}"`);
+        expect(toCommandArgument(pathWithPipe)).to.be.equal(`"${pathWithPipe}"`);
+        expect(toCommandArgument(pathWithLessThan)).to.be.equal(`"${pathWithLessThan}"`);
+        expect(toCommandArgument(pathWithGreaterThan)).to.be.equal(`"${pathWithGreaterThan}"`);
+        expect(toCommandArgument(pathWithCaret)).to.be.equal(`"${pathWithCaret}"`);
+    });
+    test('Should not quote paths without special characters', () => {
+        const normalPath = 'C:\\Users\\JohnSmith\\AppData\\Local\\env\\python.exe';
+        expect(toCommandArgument(normalPath)).to.be.equal(normalPath);
+    });
 });
