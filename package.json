@@ -2,7 +2,7 @@
     "name": "jupyter",
     "displayName": "Jupyter",
     "version": "2025.8.0",
-    "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
+    "description": "Jupyter notebook support, JupyterLab integration, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
         "name": "Microsoft Corporation"
