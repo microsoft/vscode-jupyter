@@ -238,22 +238,9 @@ export class InterpreterSpecificKernelSpecsFinder extends DisposableBase {
                 return;
             }
 
-            if (
-                jupyterKernelSpec.language === PYTHON_LANGUAGE &&
-                // Hide default kernel specs only if env variables are empty.
-                // If not empty, then user has modified them.
-                (!jupyterKernelSpec.env || Object.keys(jupyterKernelSpec.env).length === 0) &&
-                isDefaultKernelSpec(jupyterKernelSpec)
-            ) {
-                logger.trace(
-                    `Hiding default KernelSpec ${getDisplayPath(
-                        jupyterKernelSpec.argv[0]
-                    )} for interpreter ${getDisplayPath(
-                        jupyterKernelSpec.interpreterPath
-                    )} (KernelSpec file ${getDisplayPath(jupyterKernelSpec.specFile)})`
-                );
-                return;
-            }
+            // Note: Previously we hid default kernel specs, but users expect to see them in the kernel picker.
+            // See https://github.com/microsoft/vscode-jupyter/issues/15557
+            // Removed hiding logic to make all kernel specs visible to users.
             const kernelSpec = isKernelLaunchedViaLocalPythonIPyKernel(jupyterKernelSpec)
                 ? PythonKernelConnectionMetadata.create({
                       kernelSpec: jupyterKernelSpec,
