@@ -3,7 +3,7 @@
 
 import { injectable } from 'inversify';
 import * as os from 'os';
-import { SemVer } from 'semver';
+
 import { Uri } from 'vscode';
 import { getOSType, OSType } from '../utils/platform';
 import { getUserHomeDir } from '../utils/platform.node';
