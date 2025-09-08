@@ -36,7 +36,7 @@ suite('InputFlushStartupCodeProvider', () => {
     });
 
     test('Should return empty array for non-Python kernels', async () => {
-        // Arrange - Create a non-Python kernel connection metadata  
+        // Arrange - Create a non-Python kernel connection metadata
         const nonPythonConnection: KernelConnectionMetadata = {
             kind: 'startUsingLocalKernelSpec',
             id: 'test-non-python-kernel'
@@ -63,22 +63,22 @@ suite('InputFlushStartupCodeProvider', () => {
 
         // Assert
         const startupCode = code[0];
-        
+
         // Should import required modules
         expect(startupCode).to.contain('import builtins');
         expect(startupCode).to.contain('import sys');
-        
+
         // Should define wrapper function
         expect(startupCode).to.contain('def __vscode_input_with_flush');
-        
+
         // Should flush stdout before calling original input
         expect(startupCode).to.contain('sys.stdout.flush()');
         expect(startupCode).to.contain('__vscode_original_input(*args, **kwargs)');
-        
+
         // Should replace builtins.input with wrapper
         expect(startupCode).to.contain('__vscode_original_input = builtins.input');
         expect(startupCode).to.contain('builtins.input = __vscode_input_with_flush');
-        
+
         // Should clean up temporary variables
         expect(startupCode).to.contain('del __vscode_input_with_flush');
     });
