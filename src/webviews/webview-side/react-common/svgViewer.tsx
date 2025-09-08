@@ -4,7 +4,6 @@
 import * as React from 'react';
 import { POSITION_TOP, ReactSVGPanZoom, Tool, Value } from 'react-svg-pan-zoom';
 import { SvgLoader } from 'react-svgmt';
-import { AutoSizer } from 'react-virtualized';
 import './svgViewer.css';
 
 interface ISvgViewerProps {
@@ -25,6 +24,7 @@ interface ISvgViewerState {
 
 export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState> {
     private svgPanZoomRef: React.RefObject<ReactSVGPanZoom> = React.createRef<ReactSVGPanZoom>();
+
     constructor(props: ISvgViewerProps) {
         super(props);
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -58,33 +58,31 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
 
     public override render() {
         const plotBackground = this.props.themeMatplotlibPlots ? 'var(--vscode-notifications-background)' : 'white';
+        
         return (
-            <AutoSizer>
-                {({ height, width }) =>
-                    width === 0 || height === 0 ? null : (
-                        <ReactSVGPanZoom
-                            ref={this.svgPanZoomRef}
-                            width={width}
-                            height={height}
-                            toolbarProps={{ position: POSITION_TOP }}
-                            detectAutoPan={true}
-                            tool={this.state.tool}
-                            value={this.state.value}
-                            onChangeTool={this.changeTool}
-                            onChangeValue={this.changeValue}
-                            customToolbar={this.renderToolbar}
-                            customMiniature={this.renderMiniature}
-                            SVGBackground={'transparent'}
-                            background={plotBackground}
-                            detectWheel={true}
-                        >
-                            <svg width={this.props.size.width} height={this.props.size.height}>
-                                <SvgLoader svgXML={this.props.svg} />
-                            </svg>
-                        </ReactSVGPanZoom>
-                    )
-                }
-            </AutoSizer>
+            <div style={{ width: '100%', height: '100%' }}>
+                <ReactSVGPanZoom
+                    ref={this.svgPanZoomRef}
+                    width={800}
+                    height={600}
+                    toolbarProps={{ position: POSITION_TOP }}
+                    detectAutoPan={true}
+                    tool={this.state.tool}
+                    value={this.state.value}
+                    onChangeTool={this.changeTool}
+                    onChangeValue={this.changeValue}
+                    customToolbar={this.renderToolbar}
+                    customMiniature={this.renderMiniature}
+                    SVGBackground={'transparent'}
+                    background={plotBackground}
+                    detectWheel={true}
+                    style={{ width: '100%', height: '100%' }}
+                >
+                    <svg width={this.props.size.width} height={this.props.size.height}>
+                        <SvgLoader svgXML={this.props.svg} />
+                    </svg>
+                </ReactSVGPanZoom>
+            </div>
         );
     }
 
