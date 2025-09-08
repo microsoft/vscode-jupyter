@@ -58,7 +58,11 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
 
     public override render() {
         const plotBackground = this.props.themeMatplotlibPlots ? 'var(--vscode-notifications-background)' : 'white';
-        
+
+        // Use fixed dimensions for ReactSVGPanZoom instead of AutoSizer to fix panning issues.
+        // AutoSizer was constraining the viewport dimensions which caused problems when panning
+        // wide but short images horizontally after zooming in. Fixed dimensions provide stable 
+        // viewport calculations while CSS styling maintains responsiveness.
         return (
             <div style={{ width: '100%', height: '100%' }}>
                 <ReactSVGPanZoom
