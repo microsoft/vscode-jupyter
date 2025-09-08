@@ -48,7 +48,7 @@ import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBas
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { logger } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from '../../../kernels/jupyter/finder/types';
-import { raceCancellationError } from '../../../platform/common/cancellation';
+import { raceCancellationError, isCancellationError } from '../../../platform/common/cancellation';
 import { JupyterServer, JupyterServerCollection, JupyterServerCommand } from '../../../api';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -497,9 +497,19 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             return;
         }
 
-        const server = await Promise.resolve(
-            selectedSource.provider.commandProvider.handleCommand(selectedSource.command, token)
-        );
+        let server;
+        try {
+            server = await Promise.resolve(
+                selectedSource.provider.commandProvider.handleCommand(selectedSource.command, token)
+            );
+        } catch (error) {
+            // If handleCommand throws CancellationError, propagate it to dismiss the UI
+            if (isCancellationError(error)) {
+                throw error;
+            }
+            // For other errors, re-throw them
+            throw error;
+        }
 
         if (!server) {
             throw InputFlowAction.back;
