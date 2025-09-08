@@ -48,7 +48,7 @@ import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBas
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { logger } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from '../../../kernels/jupyter/finder/types';
-import { raceCancellationError, isCancellationError } from '../../../platform/common/cancellation';
+import { raceCancellationError } from '../../../platform/common/cancellation';
 import { JupyterServer, JupyterServerCollection, JupyterServerCommand } from '../../../api';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -468,9 +468,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                             lazyQuickPick.busy = true;
                         }
                         const ret = await this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
-                        if (lazyQuickPick) {
-                            lazyQuickPick.busy = false;
-                        }
                         return ret;
                     } catch (ex) {
                         if (ex === InputFlowAction.back && !defaultSelection) {
@@ -479,6 +476,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                             throw ex;
                         }
                     } finally {
+                        if (lazyQuickPick) {
+                            lazyQuickPick.busy = false;
+                        }
                         taskNb.dispose();
                     }
                 }
@@ -497,19 +497,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             return;
         }
 
-        let server;
-        try {
-            server = await Promise.resolve(
-                selectedSource.provider.commandProvider.handleCommand(selectedSource.command, token)
-            );
-        } catch (error) {
-            // If handleCommand throws CancellationError, propagate it to dismiss the UI
-            if (isCancellationError(error)) {
-                throw error;
-            }
-            // For other errors, re-throw them
-            throw error;
-        }
+        const server = await Promise.resolve(
+            selectedSource.provider.commandProvider.handleCommand(selectedSource.command, token)
+        );
 
         if (!server) {
             throw InputFlowAction.back;
