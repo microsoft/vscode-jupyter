@@ -93,7 +93,6 @@ export class CodeExecution implements ICodeExecution, IDisposable {
                 'Code has already been started yet CodeExecution.Start invoked again'
             );
             logger.error(`Code has already been started yet CodeExecution.Start invoked again ${this.executionId}`);
-            // TODO: Send telemetry this should never happen, if it does we have problems.
             return this.done;
         }
 

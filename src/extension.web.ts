@@ -156,16 +156,6 @@ function activateUnsafe(
     return [api, activationPromise, serviceContainer];
 }
 
-/////////////////////////////
-// old activation code
-
-// eslint-disable-next-line
-// TODO: Gradually move simple initialization
-// and DI registration currently in this function over
-// to initializeComponents().  Likewise with complex
-// init and activation: move them to activateComponents().
-// See https://github.com/microsoft/vscode-python/issues/10454.
-
 async function activateLegacy(
     context: IExtensionContext,
     serviceManager: IServiceManager,
