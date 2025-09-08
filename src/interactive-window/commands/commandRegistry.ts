@@ -85,6 +85,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         this.registerCommand(Commands.MoveCellsDown, this.moveCellsDown);
         this.registerCommand(Commands.ChangeCellToMarkdown, this.changeCellToMarkdown);
         this.registerCommand(Commands.ChangeCellToCode, this.changeCellToCode);
+        this.registerCommand(Commands.ChangeCellToRaw, this.changeCellToRaw);
         this.registerCommand(Commands.GotoNextCellInFile, this.gotoNextCellInFile);
         this.registerCommand(Commands.GotoPrevCellInFile, this.gotoPrevCellInFile);
         this.registerCommand(Commands.AddCellBelow, this.addCellBelow);
@@ -434,6 +435,10 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
 
     private async changeCellToCode(): Promise<void> {
         this.getCurrentCodeWatcher()?.changeCellToCode();
+    }
+
+    private async changeCellToRaw(): Promise<void> {
+        this.getCurrentCodeWatcher()?.changeCellToRaw();
     }
 
     private async gotoNextCellInFile(): Promise<void> {

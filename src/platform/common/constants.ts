@@ -213,6 +213,7 @@ export namespace Commands {
     export const MoveCellsDown = 'jupyter.moveCellsDown';
     export const ChangeCellToMarkdown = 'jupyter.changeCellToMarkdown';
     export const ChangeCellToCode = 'jupyter.changeCellToCode';
+    export const ChangeCellToRaw = 'jupyter.changeCellToRaw';
     export const GotoNextCellInFile = 'jupyter.gotoNextCellInFile';
     export const GotoPrevCellInFile = 'jupyter.gotoPrevCellInFile';
     export const ScrollToCell = 'jupyter.scrolltocell';
@@ -286,6 +287,7 @@ export namespace EditorContexts {
 export namespace RegExpValues {
     export const PythonCellMarker = /^(#\s*%%|#\s*\<codecell\>|#\s*In\[\d*?\]|#\s*In\[ \])/;
     export const PythonMarkdownCellMarker = /^(#\s*%%\s*\[markdown\]|#\s*\<markdowncell\>)/;
+    export const PythonRawCellMarker = /^(#\s*%%\s*\[raw\])/;
     export const UrlPatternRegEx =
         '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)';
     export const HttpPattern = /https?:\/\//;
@@ -315,6 +317,7 @@ export enum Telemetry {
     MoveCellsDown = 'DATASCIENCE.RUN_MOVE_CELLS_DOWN',
     ChangeCellToMarkdown = 'DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN',
     ChangeCellToCode = 'DATASCIENCE.RUN_CHANGE_CELL_TO_CODE',
+    ChangeCellToRaw = 'DATASCIENCE.RUN_CHANGE_CELL_TO_RAW',
     GotoNextCellInFile = 'DATASCIENCE.GOTO_NEXT_CELL_IN_FILE',
     GotoPrevCellInFile = 'DATASCIENCE.GOTO_PREV_CELL_IN_FILE',
     RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
