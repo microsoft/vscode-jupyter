@@ -72,7 +72,6 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
             commands.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
         );
         this.disposableRegistry.push(
-            // TODO: if contributed anywhere, add context support
             commands.registerCommand(Commands.RestartKernelAndRunUpToSelectedCell, () =>
                 this.restartKernelAndRunUpToSelectedCell()
             )

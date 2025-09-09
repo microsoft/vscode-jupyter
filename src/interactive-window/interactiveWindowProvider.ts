@@ -438,7 +438,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         });
     }
 
-    // TODO: we don't currently have a way to know when the VS Code InteractiveEditor
+    // We don't currently have a way to know when the VS Code InteractiveEditor
     // view state changes. Requires API (interactive.open should return the InteractiveEditorPanel)
     private raiseOnDidChangeActiveInteractiveWindow() {
         // Update last active window (remember changes to the active window)

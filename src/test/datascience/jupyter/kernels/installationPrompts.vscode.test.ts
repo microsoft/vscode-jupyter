@@ -201,9 +201,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
     test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed for '${path.basename(
         venvNoKernelPath.fsPath
     )}'`, async () => openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath));
-    test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed for '${path.basename(
-        venvNoRegPath.fsPath
-    )}'`, async () => openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath));
+
     test('Ensure ipykernel install prompt is displayed every time you try to run a cell in a Notebook', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();

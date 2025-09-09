@@ -40,9 +40,6 @@ function getPythonPath(): string {
     if (venvPathExists) {
         return venvPath;
     }
-    // eslint-disable-next-line
-    // TODO: Change this to python3.
-    // See https://github.com/microsoft/vscode-python/issues/10910.
     return 'python';
 }
 
