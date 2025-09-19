@@ -222,14 +222,4 @@ suite(`Interactive window Execution @iw`, async function () {
             await postSwitch();
         }
     });
-
-    // todo@joyceerhl
-    // test('Verify CWD', () => { });
-    // test('Multiple executes go to last active window', async () => { });
-    // test('Per file', async () => { });
-    // test('Per file asks and changes titles', async () => { });
-    // test('Debug cell with leading newlines', () => { });
-    // test('Debug cell with multiple function definitions', () => { });
-    // test('Should skip empty cells from #%% file or input box', () => { });
-    // test('Export', () => { });
 });
