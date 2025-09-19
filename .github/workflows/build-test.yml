@@ -399,7 +399,7 @@ jobs:
           python-version: ${{matrix.pythonVersion}}
 
       - name: Install Conda environment from environment.yml
-        uses: mamba-org/setup-micromamba@b09ef9b599704322748535812ca03efb2625677b # v2.0.5
+        uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2.0.7
         if: matrix.python == 'conda'
         with:
           cache-downloads: true
@@ -716,6 +716,10 @@ jobs:
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
         env:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
+
+      - name: Install playwright
+        run: npx playwright install
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (web)
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7

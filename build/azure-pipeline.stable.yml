@@ -92,8 +92,14 @@ extends:
           addToPath: true
           architecture: 'x64'
 
-      - script: npm ci --foreground-scripts
+      - script: npm ci --foreground-scripts --ignore-scripts
         displayName: npm ci
+        env:
+          npm_config_build_from_source: true
+          VSC_VSCE_TARGET: $(vsceTarget)
+
+      - script: npm run postinstall
+        displayName: npm postinstall
         env:
           npm_config_build_from_source: true
           VSC_VSCE_TARGET: $(vsceTarget)
