@@ -1,0 +1,91 @@
+/*
+  Bridge VS Code webview theme variables to JupyterLab CSS variables
+  ipywidgets reads JupyterLab variables like --jp-layout-color*, --jp-content-font-color*.
+  We scope these to the ipywidget output container to avoid leaking styles.
+*/
+
+/* Base scope */
+.cell-output-ipywidget-background {
+    /* Ensure readable default text */
+    color: var(--vscode-editor-foreground);
+    /* Fonts */
+    --jp-ui-font-family: var(--vscode-editor-font-family);
+    --jp-content-font-family: var(--vscode-editor-font-family);
+    --jp-code-font-family: var(--vscode-editor-font-family);
+    --jp-ui-font-size1: var(--vscode-font-size, 13px);
+    --jp-content-font-size1: var(--vscode-font-size, 14px);
+    --jp-code-font-size: var(--vscode-editor-font-size, 13px);
+
+    /* Foreground colors */
+    --jp-content-font-color0: var(--vscode-editor-foreground);
+    --jp-content-font-color1: var(--vscode-editor-foreground);
+    --jp-content-font-color2: var(--vscode-editor-foreground);
+    --jp-content-font-color3: var(--vscode-editor-foreground);
+    --jp-ui-font-color0: var(--vscode-editor-foreground);
+    --jp-ui-font-color1: var(--vscode-editor-foreground);
+    --jp-ui-font-color2: var(--vscode-editor-foreground);
+    --jp-ui-font-color3: var(--vscode-editor-foreground);
+
+    /* Inverse font colors are used on brand/success/etc backgrounds */
+    --jp-inverse-ui-font-color0: var(--vscode-button-foreground);
+    --jp-inverse-ui-font-color1: var(--vscode-button-foreground);
+    --jp-ui-inverse-font-color0: var(--vscode-button-foreground);
+    --jp-ui-inverse-font-color1: var(--vscode-button-foreground);
+
+    /* Brand colors and focus accents */
+    --jp-brand-color0: var(--vscode-button-background);
+    --jp-brand-color1: var(--vscode-textLink-foreground, var(--vscode-focusBorder));
+    --jp-brand-color2: var(--vscode-focusBorder);
+
+    /* Border width baseline */
+    --jp-border-width: 1px;
+
+    /* Inputs (text, select, etc.) */
+    --jp-widgets-input-color: var(--vscode-input-foreground, var(--vscode-editor-foreground));
+    /* Default to notebook cell editor bgcolor; dark theme overrides below */
+    --jp-widgets-input-background-color: var(--vscode-notebook-cellEditorBackground, var(--vscode-editor-background));
+    --jp-widgets-input-border-color: var(--vscode-input-border,
+            var(--vscode-panel-border, var(--vscode-editorPane-border)));
+    --jp-widgets-input-focus-border-color: var(--vscode-focusBorder);
+
+    /* Readout text (e.g., slider value) */
+    --jp-widgets-readout-color: var(--vscode-editor-foreground);
+
+    /* Links */
+    --jp-content-link-color: var(--vscode-textLink-foreground);
+
+    /* Borders */
+    --jp-border-color1: var(--vscode-panel-border, var(--vscode-editorPane-border));
+    --jp-border-color2: var(--vscode-panel-border, var(--vscode-editorPane-border));
+
+    /* Widgets */
+    --jp-widgets-color: var(--vscode-editor-foreground);
+    --jp-widgets-label-color: var(--vscode-editor-foreground);
+    --jp-widgets-font-size: var(--vscode-editor-font-size, 13px);
+}
+
+/* Light theme specifics */
+.vscode-light .cell-output-ipywidget-background {
+    /* In light theme, prefer the cell editor background to match notebook cells */
+    --jp-layout-color0: var(--vscode-notebook-cellEditorBackground);
+    --jp-layout-color1: var(--vscode-notebook-cellEditorBackground);
+    --jp-layout-color2: var(--vscode-notebook-cellEditorBackground);
+    --jp-layout-color3: var(--vscode-notebook-cellEditorBackground);
+    --jp-widgets-input-background-color: var(--vscode-notebook-cellEditorBackground);
+}
+
+/* Dark theme specifics */
+.vscode-dark .cell-output-ipywidget-background {
+    /* In dark theme, use input background which aligns well with controls */
+    --jp-layout-color0: var(--vscode-input-background);
+    --jp-layout-color1: var(--vscode-input-background);
+    --jp-layout-color2: var(--vscode-input-background);
+    --jp-layout-color3: var(--vscode-input-background);
+    --jp-widgets-input-background-color: var(--vscode-input-background);
+}
+
+/* High contrast adjustments */
+.vscode-high-contrast .cell-output-ipywidget-background {
+    --jp-border-color1: var(--vscode-contrastActiveBorder, var(--vscode-contrastBorder));
+    --jp-border-color2: var(--vscode-contrastBorder, var(--vscode-contrastActiveBorder));
+}
