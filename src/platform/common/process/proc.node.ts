@@ -22,6 +22,7 @@ import {
 import { logProcess } from './logger.node';
 import { noop } from '../utils/misc';
 import { dispose } from '../utils/lifecycle';
+import { fileToCommandArgument } from '../helpers';
 
 export class BufferDecoder implements IBufferDecoder {
     public decode(buffers: Buffer[]): string {
@@ -80,7 +81,7 @@ export class ProcessService implements IProcessService {
 
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const spawnOptions = this.getDefaultOptions(options);
-        const proc = spawn(file, args, spawnOptions);
+        const proc = spawn(fileToCommandArgument(file), args, spawnOptions);
         let procExited = false;
         logger.ci(`Exec observable ${file}, ${args.join(' ')}`);
         const disposables: IDisposable[] = [];
@@ -155,7 +156,7 @@ export class ProcessService implements IProcessService {
     }
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const spawnOptions = this.getDefaultOptions(options);
-        const proc = spawn(file, args, spawnOptions);
+        const proc = spawn(fileToCommandArgument(file), args, spawnOptions);
         const deferred = createDeferred<ExecutionResult<string>>();
         const disposable: IDisposable = {
             dispose: () => {
