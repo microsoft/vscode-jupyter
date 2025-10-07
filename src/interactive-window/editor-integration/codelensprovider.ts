@@ -12,8 +12,6 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { logger } from '../../platform/logging';
 import {
     CodeLensCommands,
-    InteractiveInputScheme,
-    NotebookCellScheme,
     Telemetry
 } from '../../platform/common/constants';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
@@ -71,9 +69,9 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     // CodeLensProvider interface
     // Some implementation based on DonJayamanne's jupyter extension work
     public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] {
-        if ([NotebookCellScheme, InteractiveInputScheme].includes(document.uri.scheme)) {
-            return [];
-        }
+        // if ([NotebookCellScheme, InteractiveInputScheme].includes(document.uri.scheme)) {
+        //     return [];
+        // }
         // Get the list of code lens for this document.
         return this.getCodeLensTimed(document);
     }

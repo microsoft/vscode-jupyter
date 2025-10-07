@@ -10,8 +10,6 @@ import { ConfigurationChangeEvent } from 'vscode';
 import { ContextKey } from '../../platform/common/contextKey';
 import {
     EditorContexts,
-    InteractiveInputScheme,
-    NotebookCellScheme,
     PYTHON_LANGUAGE
 } from '../../platform/common/constants';
 import { noop } from '../../platform/common/utils/misc';
@@ -25,6 +23,7 @@ export class CellRangeCache implements ICellRangeCache {
     private disposables: IDisposable[] = [];
 
     constructor(@inject(IConfigurationService) private readonly configService: IConfigurationService) {
+        
         this.cachedOwnsSetting = this.configService.getSettings(undefined).sendSelectionToInteractiveWindow;
         vscode.workspace.onDidChangeConfiguration(this.onSettingChanged, this, this.disposables);
         vscode.window.onDidChangeActiveTextEditor(this.onChangedActiveTextEditor, this, this.disposables);
@@ -56,8 +55,9 @@ export class CellRangeCache implements ICellRangeCache {
 
         if (
             !activeEditor ||
-            activeEditor.document.languageId != PYTHON_LANGUAGE ||
-            [NotebookCellScheme, InteractiveInputScheme].includes(activeEditor.document.uri.scheme)
+            activeEditor.document.languageId != PYTHON_LANGUAGE
+            // ||
+            // [NotebookCellScheme, InteractiveInputScheme].includes(activeEditor.document.uri.scheme)
         ) {
             // set the context to false so our command doesn't run for other files
             const hasCellsContext = new ContextKey(EditorContexts.HasCodeCells);

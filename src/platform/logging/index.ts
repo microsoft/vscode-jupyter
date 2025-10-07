@@ -4,19 +4,19 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Disposable, Uri, LogLevel, workspace, window } from 'vscode';
+import { Disposable, Uri, LogLevel, window } from 'vscode';
 import { isCI } from '../common/constants';
 import { Arguments, ILogger, TraceDecoratorType, TraceOptions } from './types';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
 import { argsToLogString, returnValueToLogString } from './util';
 import { splitLines } from '../common/helpers';
 import { getDisplayPath } from '../common/platform/fs-paths';
-import { trackDisposable } from '../common/utils/lifecycle';
 import { OutputChannelNames } from '../common/utils/localize';
 import { OutputChannelLogger } from './outputChannelLogger';
 import { ConsoleLogger } from './consoleLogger';
 
 let homeAsLowerCase = '';
+let consoleLoggerAdded = false;
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
 // Information about a traced function/method call.
@@ -31,7 +31,6 @@ export type TraceInfo =
     | undefined;
 
 let loggers: ILogger[] = [];
-let globalLoggingLevel: LogLevel = LogLevel.Info;
 export const logger: ILogger = {
     error: (message: string, ...data: Arguments) => logError(message, ...data),
     warn: (message: string, ...data: Arguments) => logWarning(message, ...data),
@@ -55,18 +54,11 @@ export function initializeLoggers(options: {
     arch?: string;
     homePath?: string;
 }) {
-    globalLoggingLevel = getLoggingLevelFromConfig();
-    trackDisposable(
-        workspace.onDidChangeConfiguration((e) => {
-            if (e.affectsConfiguration('jupyter.logging')) {
-                globalLoggingLevel = getLoggingLevelFromConfig();
-            }
-        })
-    );
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, { log: true });
     registerLogger(new OutputChannelLogger(standardOutputChannel, options?.homePathRegEx, options?.userNameRegEx));
 
     if (options.addConsoleLogger) {
+        consoleLoggerAdded = true;
         // In CI there's no need for the label.
         registerLogger(new ConsoleLogger(isCI ? undefined : 'Jupyter Extension:'));
     }
@@ -83,52 +75,13 @@ export function registerLogger(logger: ILogger): Disposable {
     };
 }
 
-type LoggingLevelSettingType = keyof typeof LogLevel | Lowercase<keyof typeof LogLevel> | 'warn' | 'Warn';
-function getLoggingLevelFromConfig() {
-    try {
-        const { level } = workspace
-            .getConfiguration('jupyter')
-            .get<{ level: LoggingLevelSettingType }>('logging', { level: 'Info' });
-        switch (level) {
-            case 'debug':
-            case 'Debug': {
-                return LogLevel.Debug;
-            }
-            case 'warn':
-            case 'Warn':
-            case 'warning':
-            case 'Warning': {
-                return LogLevel.Warning;
-            }
-            case 'Off':
-            case 'off': {
-                return LogLevel.Off;
-            }
-            case 'Error':
-            case 'error': {
-                return LogLevel.Error;
-            }
-            case 'Trace':
-            case 'trace': {
-                return LogLevel.Trace;
-            }
-            default: {
-                return LogLevel.Info;
-            }
-        }
-    } catch (ex) {
-        console.error('Failed to get logging level from configuration', ex);
-        return LogLevel.Info;
-    }
-}
 export function setHomeDirectory(homeDir: string) {
     homeAsLowerCase = homeDir.toLowerCase();
 }
 
 function formatErrors(...args: Arguments) {
     // Format the error message, if showing verbose then include all of the error stack & other details.
-    const formatError = globalLoggingLevel <= LogLevel.Debug ? false : true;
-    if (!formatError) {
+    if (!consoleLoggerAdded) {
         return args;
     }
     return args.map((arg) => {
@@ -189,33 +142,23 @@ function formatErrors(...args: Arguments) {
     });
 }
 function logError(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Error) {
-        args = formatErrors(...args);
-        loggers.forEach((l) => l.error(message, ...args));
-    }
+    args = formatErrors(...args);
+    loggers.forEach((l) => l.error(message, ...args));
 }
 
 function logWarning(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Warning) {
-        args = formatErrors(...args);
-        loggers.forEach((l) => l.warn(message, ...args));
-    }
+    args = formatErrors(...args);
+    loggers.forEach((l) => l.warn(message, ...args));
 }
 
 function logInfo(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Info) {
-        loggers.forEach((l) => l.info(message, ...args));
-    }
+    loggers.forEach((l) => l.info(message, ...args));
 }
 function logDebug(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Debug) {
-        loggers.forEach((l) => l.debug(message, ...args));
-    }
+    loggers.forEach((l) => l.debug(message, ...args));
 }
 function logTrace(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Trace) {
-        loggers.forEach((l) => l.trace(message, ...args));
-    }
+    loggers.forEach((l) => l.trace(message, ...args));
 }
 function logInfoIfCI(msg: () => [message: string, ...args: string[]] | string): void;
 function logInfoIfCI(message: string, ...args: string[]): void;

@@ -13,7 +13,7 @@ import {
     languages
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { InteractiveInputScheme, NotebookCellScheme, PYTHON_FILE_ANY_SCHEME } from '../../platform/common/constants';
+import { PYTHON_FILE_ANY_SCHEME } from '../../platform/common/constants';
 import { IConfigurationService, IExtensionContext } from '../../platform/common/types';
 import { IDataScienceCodeLensProvider } from './types';
 
@@ -39,9 +39,9 @@ export class PythonCellFoldingProvider implements IExtensionSyncActivationServic
         _context: FoldingContext,
         token: CancellationToken
     ): ProviderResult<FoldingRange[]> {
-        if ([NotebookCellScheme, InteractiveInputScheme].includes(document.uri.scheme)) {
-            return undefined;
-        }
+        // if ([NotebookCellScheme, InteractiveInputScheme].includes(document.uri.scheme)) {
+        //     return undefined;
+        // }
 
         const codeWatcher = this.dataScienceCodeLensProvider.getCodeWatcher(document);
         if (codeWatcher) {
