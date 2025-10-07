@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
 
       - name: Install Python libs
         run: python -m pip install requests
