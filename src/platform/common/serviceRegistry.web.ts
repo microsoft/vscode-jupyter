@@ -6,7 +6,6 @@ import { ExperimentService } from './experiments/service';
 import { FeatureManager } from './featureManager';
 import { PersistentStateFactory } from './persistentState';
 import {
-    IsWindows,
     IExperimentService,
     IFeaturesManager,
     IPersistentStateFactory,
@@ -30,7 +29,6 @@ import { IExtensionSyncActivationService } from '../activation/types';
 import { OldCacheCleaner } from './cache';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingletonInstance<boolean>(IsWindows, false);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
     serviceManager.addSingleton<IFeaturesManager>(IFeaturesManager, FeatureManager);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);

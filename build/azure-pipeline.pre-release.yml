@@ -35,28 +35,53 @@ extends:
       - name: Linux
         packageArch: arm64
         vsceTarget: linux-arm64
+        codesignPaths:
+          [
+            './dist/node_modules/zeromq/prebuilds/linux-arm64/node.napi.glibc.node',
+            './dist/node_modules/zeromq/prebuilds/linux-arm64/node.napi.musl.node'
+          ]
       - name: Linux
         packageArch: arm
         vsceTarget: linux-armhf
+        codesignPaths: ['./dist/node_modules/zeromq/prebuilds/linux-arm/node.napi.glibc.node']
       - name: Linux
         vsceTarget: alpine-x64
+        codesignPaths:
+          [
+            './dist/node_modules/zeromq/prebuilds/linux-x64/node.napi.glibc.node',
+            './dist/node_modules/zeromq/prebuilds/linux-x64/node.napi.musl.node'
+          ]
       - name: Linux
         vsceTarget: alpine-arm64
+        codesignPaths:
+          [
+            './dist/node_modules/zeromq/prebuilds/linux-arm64/node.napi.glibc.node',
+            './dist/node_modules/zeromq/prebuilds/linux-arm64/node.napi.musl.node'
+          ]
       - name: Linux
         packageArch: x64
         vsceTarget: linux-x64
+        codesignPaths:
+          [
+            './dist/node_modules/zeromq/prebuilds/linux-x64/node.napi.glibc.node',
+            './dist/node_modules/zeromq/prebuilds/linux-x64/node.napi.musl.node'
+          ]
       - name: MacOS
         packageArch: arm64
         vsceTarget: darwin-arm64
+        codesignPaths: ['./dist/node_modules/zeromq/prebuilds/darwin-arm64/node.napi.glibc.node']
       - name: MacOS
         packageArch: x64
         vsceTarget: darwin-x64
+        codesignPaths: ['./dist/node_modules/zeromq/prebuilds/darwin-x64/node.napi.glibc.node']
       - name: Windows
         packageArch: x64
         vsceTarget: win32-x64
+        codesignPaths: ['./dist/node_modules/zeromq/prebuilds/win32-x64/node.napi.glibc.node']
       - name: Windows
         packageArch: arm64
         vsceTarget: win32-arm64
+        codesignPaths: ['./dist/node_modules/zeromq/prebuilds/win32-arm64/node.napi.glibc.node']
     buildSteps:
       - script: |
           sudo apt-get update
@@ -73,8 +98,14 @@ extends:
           addToPath: true
           architecture: 'x64'
 
-      - script: npm ci --foreground-scripts
+      - script: npm ci --foreground-scripts --ignore-scripts
         displayName: npm ci
+        env:
+          npm_config_build_from_source: true
+          VSC_VSCE_TARGET: $(vsceTarget)
+
+      - script: npm run postinstall
+        displayName: npm postinstall
         env:
           npm_config_build_from_source: true
           VSC_VSCE_TARGET: $(vsceTarget)

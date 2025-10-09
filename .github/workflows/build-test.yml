@@ -69,7 +69,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -77,7 +77,7 @@ jobs:
         run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
@@ -112,7 +112,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -155,7 +155,7 @@ jobs:
         run: npm run format
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
@@ -201,7 +201,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -392,14 +392,14 @@ jobs:
           echo "TAGS_NAME=${TAGSVAR//[^a-zA-Z]/_}" >> $GITHUB_ENV
 
       - name: Use Python ${{matrix.pythonVersion}}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         id: setupPythonVersion
         if: matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           python-version: ${{matrix.pythonVersion}}
 
       - name: Install Conda environment from environment.yml
-        uses: mamba-org/setup-micromamba@b09ef9b599704322748535812ca03efb2625677b # v2.0.5
+        uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2.0.7
         if: matrix.python == 'conda'
         with:
           cache-downloads: true
@@ -421,7 +421,7 @@ jobs:
           PYTHON_VERSION: ${{matrix.pythonVersion}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -717,6 +717,10 @@ jobs:
         env:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
+      - name: Install playwright
+        run: npx playwright install
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
+
       - name: Run Native Notebook with VSCode & Jupyter (web)
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
@@ -808,7 +812,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         id: setupPythonVersion
         with:
           python-version: ${{matrix.python}}
@@ -818,7 +822,7 @@ jobs:
         run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{env.NODE_VERSION}}
 

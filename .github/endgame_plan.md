@@ -23,12 +23,19 @@
 - [ ] Sanity test release candidate VSIX against VS Code RC
   Tip: You can use the dev containers in the this repo for testing against linux (just open the repo and use thd command `Dev Containers: Reopen in Container`)
   - [ ] Windows
-    - [ ] win32-x64
+    - [ ] win32-x64 (tip: use https://devbox.microsoft.com/)
     - [ ] win32-arm64
   - [ ] macOS
-    - [ ] darwin-x64
     - [ ] darwin-arm64
-  - [ ] Linux
+    - [ ] darwin-x64 (tip: use rosetta mode, see below)
+> [!TIP]
+> Testing Mac x64 on Apple Silicon as follows
+> Install Mac Universal version of Code
+> Right click on the app in `finder` and select `Get Info`
+> Select the option `Open using Rosetta`
+> Open VS Code
+> Its very very slow, (some times just hangs forever, might crash/restart, after all its an emulation).
+  - [ ] Linux (tip: use VS Code sanity testing https://github.com/microsoft/vscode/wiki/Sanity-Check#linux-using-the-clitunnels)
     - [ ] linux-arm64
     - [ ] linux-armhf
     - [ ] linux-x64
