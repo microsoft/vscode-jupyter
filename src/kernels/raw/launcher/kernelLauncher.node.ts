@@ -49,7 +49,17 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise: Promise<number> | undefined;
+    private static cachedStartPort: number | undefined;
     private portChain: Promise<number[]> | undefined;
+
+    /**
+     * Reset the cached start port (for testing purposes)
+     * @internal
+     */
+    public static resetStartPort(): void {
+        KernelLauncher.startPortPromise = undefined;
+        KernelLauncher.cachedStartPort = undefined;
+    }
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
@@ -201,11 +211,14 @@ export class KernelLauncher implements IKernelLauncher {
     }
 
     private async getConnectionPorts(): Promise<number[]> {
+        // Get the configured start port from settings
+        const settings = this.configService.getSettings(undefined);
+        const configuredStartPort = settings.kernelPortRangeStartPort;
+
         // Have to wait for static port lookup (it handles case where two VS code instances are running)
-        // Initialize the promise lazily with the configured start port
-        if (!KernelLauncher.startPortPromise) {
-            const settings = this.configService.getSettings(undefined);
-            const configuredStartPort = settings.kernelPortRangeStartPort;
+        // Re-initialize if the configured port has changed
+        if (!KernelLauncher.startPortPromise || KernelLauncher.cachedStartPort !== configuredStartPort) {
+            KernelLauncher.cachedStartPort = configuredStartPort;
             KernelLauncher.startPortPromise = KernelLauncher.computeStartPort(configuredStartPort);
         }
         const startPort = await KernelLauncher.startPortPromise;
