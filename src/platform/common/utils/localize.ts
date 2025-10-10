@@ -837,7 +837,7 @@ export namespace Installer {
     export const noCondaOrPipInstaller = l10n.t(
         'There is no Conda or Pip installer available in the selected environment.'
     );
-    export const noPipInstaller = l10n.t('There is no Pip installer available in the selected environment.');
+    export const noPipInstaller = l10n.t('There is no Pip installer available in the selected environment.This may be caused by spaces or special characters in the workspace path, or an environment misconfiguration.');
     export const searchForHelp = l10n.t('Search for help');
 }
 
