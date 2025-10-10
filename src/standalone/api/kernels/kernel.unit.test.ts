@@ -128,6 +128,7 @@ suite('Kernel Api', () => {
         when(kernel.dispose()).thenCall(() => when(kernel.status).thenReturn('dead'));
 
         const { api } = createKernelApiForExtension(JVSC_EXTENSION_ID_FOR_TESTS, instance(kernel));
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const _ of api.executeCode('bogus', token)) {
             //
         }
