@@ -3,6 +3,7 @@
 
 import { BaseError } from './types';
 
+
 /**
  * Error thrown when a jupyter server is using an self signed certificate. This can be expected and we should ask if they want to allow it anyway.
  *
@@ -18,16 +19,19 @@ export class JupyterSelfCertsError extends BaseError {
     }
     public static isSelfCertsError(err: unknown) {
         const message = (err as undefined | { message: string })?.message ?? '';
+        const name = (err as undefined | { name: string })?.name ?? '';
+        const messageToCheck = `${name} ${message}`;
         return (
-            message.indexOf('reason: self signed certificate') >= 0 ||
+            messageToCheck.indexOf('reason: self signed certificate') >= 0 ||
             // https://github.com/microsoft/vscode-jupyter-hub/issues/36#issuecomment-1854097594
-            message.indexOf('reason: unable to verify the first certificate') >= 0 ||
+            messageToCheck.indexOf('reason: unable to verify the first certificate') >= 0 ||
             // https://github.com/microsoft/vscode-jupyter-hub/issues/36#issuecomment-1761234981
-            message.indexOf('reason: unable to get issuer certificate') >= 0 ||
+            messageToCheck.indexOf('reason: unable to get issuer certificate') >= 0 ||
             // https://github.com/microsoft/vscode-jupyter/issues/7558#issuecomment-993054968
-            message.indexOf("is not in the cert's list") >= 0 ||
+            messageToCheck.indexOf("is not in the cert's list") >= 0 ||
             // https://github.com/microsoft/vscode-jupyter/issues/16522
-            message.indexOf('unable to verify the first certificate') >= 0
+            messageToCheck.indexOf('unable to verify the first certificate') >= 0 ||
+            messageToCheck.indexOf('UNABLE_TO_GET_ISSUER_CERT') >= 0
         );
     }
 }
