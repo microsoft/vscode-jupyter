@@ -25,7 +25,9 @@ export class JupyterSelfCertsError extends BaseError {
             // https://github.com/microsoft/vscode-jupyter-hub/issues/36#issuecomment-1761234981
             message.indexOf('reason: unable to get issuer certificate') >= 0 ||
             // https://github.com/microsoft/vscode-jupyter/issues/7558#issuecomment-993054968
-            message.indexOf("is not in the cert's list") >= 0
+            message.indexOf("is not in the cert's list") >= 0 ||
+            // https://github.com/microsoft/vscode-jupyter/issues/16522
+            message.indexOf('unable to verify the first certificate') >= 0
         );
     }
 }
