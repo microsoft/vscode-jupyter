@@ -75,7 +75,7 @@ export class GlobalPythonExecutablePathService {
         // Add delimiters as sometimes, the python runtime can spit out warning/information messages as well.
         const { stdout } = await processService.exec(executable.fsPath, [
             '-c',
-            `import site;print("${delimiter}");print(site.${valueToUse});print("${delimiter}");`
+            `import site;print('${delimiter}');print(site.${valueToUse});print('${delimiter}');`
         ]);
         if (stdout.includes(delimiter)) {
             const output = stdout
