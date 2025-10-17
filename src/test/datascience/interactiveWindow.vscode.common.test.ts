@@ -273,7 +273,7 @@ ${actualCode}
         assert.equal(actualCellText, dedentedCode);
     });
 
-    test('Run current file in interactive window (with cells)', async () => {
+    test('Run current file in interactive window (with cells) @mandatory', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '#%%\na=1\nprint(a)\n#%%\nb=2\nprint(b)\n',
