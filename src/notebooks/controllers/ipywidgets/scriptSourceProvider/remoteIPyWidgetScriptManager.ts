@@ -130,39 +130,37 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         }
     }
     protected async getWidgetScriptSource(script: Uri): Promise<string> {
-        const httpClientResponse = this.getWidgetScriptSourceUsingHttpClient(script);
-        const fetchResponse = this.getWidgetScriptSourceUsingFetch(script);
-        const promise = httpClientResponse.catch(() => fetchResponse);
-        // If we fail to download using both mechanisms, then log an error.
-        fetchResponse.catch((ex) =>
-            logger.warn(`Failed to download widget script source from (fetch) ${script.toString(true)}`, ex)
-        );
-        httpClientResponse.catch((ex) =>
-            logger.error(`Failed to download widget script source from (httpclient) ${script.toString(true)}`, ex)
-        );
-        promise.catch(noop);
-        return promise;
-    }
-    private async getWidgetScriptSourceUsingHttpClient(script: Uri): Promise<string> {
-        const uri = script.toString(true);
-        const httpClient = new HttpClient();
-        const response = await httpClient.downloadFile(uri);
-        if (response.status === 200) {
-            return response.text();
-        } else {
-            throw new Error(`Error downloading from ${uri}: ${response.statusText}`);
+        try {
+            const connection = await this.connection.createConnectionInfo(this.kernelConnection.serverProviderHandle);
+            return await downloadFile(script, connection.settings.fetch as typeof fetch);
+        } catch (fetchErr: unknown) {
+            try {
+                return await downloadFile(script);
+            } catch (httpErr: unknown) {
+                const msg = `Failed to download widget script source ${script.toString(true)}`;
+                logger.error(msg, fetchErr);
+                logger.error(msg, httpErr);
+                throw new Error('Failed to download widget script source');
+            }
         }
     }
-    private async getWidgetScriptSourceUsingFetch(script: Uri): Promise<string> {
-        const connection = await this.connection.createConnectionInfo(this.kernelConnection.serverProviderHandle);
-        const uri = script.toString(true);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const httpClient = new HttpClient(connection.settings.fetch as any);
-        const response = await httpClient.downloadFile(uri);
-        if (response.status === 200) {
-            return response.text();
-        } else {
-            throw new Error(`Error downloading from ${uri} using custom fetch: ${response.statusText}`);
-        }
+}
+
+/**
+ * Download a file, optionally using a custom fetch implementation.
+ *
+ * @param script - The script URI to download.
+ * @param customFetch - The optionally provided custom fetch implementation tu use.
+ * @returns The body of the response for the download.
+ */
+async function downloadFile(script: Uri, customFetch: typeof fetch | undefined = undefined): Promise<string> {
+    const uri = script.toString(true);
+    const httpClient = new HttpClient(customFetch);
+    const response = await httpClient.downloadFile(uri);
+    if (response.status === 200) {
+        return response.text();
+    } else {
+        const customFetchPart = customFetch ? ' (using custom fetch)' : '';
+        throw new Error(`Error downloading from ${uri}${customFetchPart}: ${response.statusText}`);
     }
 }
