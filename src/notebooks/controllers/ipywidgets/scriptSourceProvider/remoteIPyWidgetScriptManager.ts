@@ -150,7 +150,7 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
  * Download a file, optionally using a custom fetch implementation.
  *
  * @param script - The script URI to download.
- * @param customFetch - The optionally provided custom fetch implementation tu use.
+ * @param customFetch - The optionally provided custom fetch implementation to use.
  * @returns The body of the response for the download.
  */
 async function downloadFile(script: Uri, customFetch: typeof fetch | undefined = undefined): Promise<string> {
