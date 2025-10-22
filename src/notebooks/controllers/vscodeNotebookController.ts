@@ -334,6 +334,17 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             } called from ${new Error('').stack}`
         );
         this.isDisposed = true;
+        // Dispose kernels associated with this controller.
+        workspace.notebookDocuments
+            .filter((doc) => this.associatedDocuments.has(doc))
+            .forEach((doc) => {
+                const kernel = this.kernelProvider.get(doc);
+                // If the kernel is associated with this document, and the controller is being disposed,
+                // then the kernel for this document must be disposed.
+                if (kernel) {
+                    kernel.dispose().catch(noop);
+                }
+            });
         this._onNotebookControllerSelectionChanged.dispose();
         this._onConnecting.dispose();
         this.controller.dispose();
