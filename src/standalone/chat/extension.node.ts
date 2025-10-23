@@ -104,44 +104,53 @@ export async function activate(context: vscode.ExtensionContext, serviceContaine
     context.subscriptions.push(
         vscode.commands.registerCommand('jupyter.listVariables', async (uri) => {
             const documentUri = uri ?? vscode.window.activeNotebookEditor?.notebook.uri;
+            logger.trace(`List Variables command invoked for ${documentUri?.toString()}`);
+            let numberOfVariables = 0;
+            try {
+                if (!documentUri) {
+                    return [];
+                }
 
-            if (!documentUri) {
+                const document = vscode.workspace.notebookDocuments.find(
+                    (item) => item.uri.toString() === documentUri.toString()
+                );
+
+                if (!document) {
+                    return [];
+                }
+
+                const controllerRegistry = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+                const controller = controllerRegistry.getSelected(document);
+                if (!controller) {
+                    return [];
+                }
+
+                const variablesProvider = controller.controller.variableProvider as JupyterVariablesProvider;
+                if (!variablesProvider) {
+                    return [];
+                }
+
+                const token = new vscode.CancellationTokenSource().token;
+                const variables = variablesProvider.provideVariablesWithSummarization(
+                    document,
+                    undefined,
+                    vscode.NotebookVariablesRequestKind.Named,
+                    0,
+                    token
+                );
+
+                const resolvedVariables = [];
+                for await (const variable of variables) {
+                    resolvedVariables.push(variable);
+                }
+                numberOfVariables = resolvedVariables.length;
+                return resolvedVariables;
+            } catch (ex) {
+                logger.warn(`Failed to list variables for ${documentUri?.toString()}`, ex);
                 return [];
+            } finally {
+                logger.trace(`List Variables (${numberOfVariables}) command completed for ${documentUri?.toString()}`);
             }
-
-            const document = vscode.workspace.notebookDocuments.find(
-                (item) => item.uri.toString() === documentUri.toString()
-            );
-
-            if (!document) {
-                return [];
-            }
-
-            const controllerRegistry = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-            const controller = controllerRegistry.getSelected(document);
-            if (!controller) {
-                return [];
-            }
-
-            const variablesProvider = controller.controller.variableProvider as JupyterVariablesProvider;
-            if (!variablesProvider) {
-                return [];
-            }
-
-            const token = new vscode.CancellationTokenSource().token;
-            const variables = variablesProvider.provideVariablesWithSummarization(
-                document,
-                undefined,
-                vscode.NotebookVariablesRequestKind.Named,
-                0,
-                token
-            );
-
-            const resolvedVariables = [];
-            for await (const variable of variables) {
-                resolvedVariables.push(variable);
-            }
-            return resolvedVariables;
         })
     );
 }
