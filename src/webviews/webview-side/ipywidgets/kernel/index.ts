@@ -83,6 +83,62 @@ class WidgetManagerComponent {
 const outputDisposables = new Map<string, { dispose(): void }>();
 const renderedWidgets = new Map<string, { container: HTMLElement; widget?: { dispose: Function }; modelId?: string }>();
 /**
+ * Ensures all interactive elements within a widget are keyboard accessible.
+ * This function adds tabindex and proper ARIA attributes to buttons and interactive elements
+ * that may be created by widget libraries (like matplotlib toolbars).
+ */
+function ensureWidgetKeyboardAccessibility(container: HTMLElement): void {
+    // Wait a bit for the widget to fully render before modifying it
+    setTimeout(() => {
+        // Find all buttons, links, and interactive elements that don't have tabindex
+        const interactiveSelectors = [
+            'button:not([tabindex])',
+            'a[href]:not([tabindex])',
+            '[role="button"]:not([tabindex])',
+            '[onclick]:not([tabindex])',
+            '.jupyter-button:not([tabindex])',
+            '.widget-button:not([tabindex])',
+            '.toolbar button',
+            '.toolbar-button'
+        ];
+
+        interactiveSelectors.forEach((selector) => {
+            const elements = container.querySelectorAll(selector);
+            elements.forEach((element) => {
+                if (element instanceof HTMLElement) {
+                    // Make element keyboard accessible
+                    if (!element.hasAttribute('tabindex') || element.getAttribute('tabindex') === '-1') {
+                        element.setAttribute('tabindex', '0');
+                    }
+                    // Add appropriate ARIA role if missing
+                    if (!element.hasAttribute('role') && element.tagName !== 'BUTTON' && element.tagName !== 'A') {
+                        element.setAttribute('role', 'button');
+                    }
+                    // Ensure buttons can be activated with Enter/Space keys
+                    if (!element.hasAttribute('data-keyboard-listener')) {
+                        element.setAttribute('data-keyboard-listener', 'true');
+                        element.addEventListener('keydown', (event: KeyboardEvent) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                (element as HTMLElement).click();
+                            }
+                        });
+                    }
+                }
+            });
+        });
+
+        // Also check for matplotlib toolbar buttons (they use specific classes)
+        const matplotlibToolbarButtons = container.querySelectorAll('.mpl-toolbar button, canvas + div button');
+        matplotlibToolbarButtons.forEach((button) => {
+            if (button instanceof HTMLElement && !button.hasAttribute('tabindex')) {
+                button.setAttribute('tabindex', '0');
+            }
+        });
+    }, 500); // Wait 500ms for widget rendering to complete
+}
+
+/**
  * Called from renderer to render output.
  * This will be exposed as a public method on window for renderer to render output.
  */
@@ -171,6 +227,10 @@ function renderIPyWidget(
             }
             const ele = document.createElement('div');
             ele.className = 'cell-output-ipywidget-background';
+            // Make the widget container keyboard accessible
+            ele.setAttribute('tabindex', '0');
+            ele.setAttribute('role', 'region');
+            ele.setAttribute('aria-label', 'Interactive widget output');
             container.appendChild(ele);
             ele.appendChild(output);
             renderedWidgets.set(outputId, { container, modelId: model.model_id });
@@ -184,6 +244,8 @@ function renderIPyWidget(
                     if (renderedWidgets.has(outputId)) {
                         renderedWidgets.get(outputId)!.widget = w;
                     }
+                    // Ensure keyboard accessibility for all interactive elements in the widget
+                    ensureWidgetKeyboardAccessibility(ele);
                     const disposable = {
                         dispose: () => {
                             // What if we render the same model in two cells.

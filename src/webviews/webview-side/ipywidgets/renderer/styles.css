@@ -1,3 +1,32 @@
 .cell-output-ipywidget-background {
     background: white !important;
 }
+
+/* Ensure all interactive elements in widgets are keyboard accessible */
+.cell-output-ipywidget-background button,
+.cell-output-ipywidget-background a,
+.cell-output-ipywidget-background input,
+.cell-output-ipywidget-background select,
+.cell-output-ipywidget-background textarea,
+.cell-output-ipywidget-background [role="button"],
+.cell-output-ipywidget-background [tabindex="0"],
+.cell-output-ipywidget-background .widget-button,
+.cell-output-ipywidget-background .jupyter-button,
+.cell-output-ipywidget-background .jupyter-widgets {
+    /* Ensure elements are focusable */
+    outline: none;
+}
+
+/* Add visible focus indicator for keyboard navigation */
+.cell-output-ipywidget-background button:focus,
+.cell-output-ipywidget-background a:focus,
+.cell-output-ipywidget-background input:focus,
+.cell-output-ipywidget-background select:focus,
+.cell-output-ipywidget-background textarea:focus,
+.cell-output-ipywidget-background [role="button"]:focus,
+.cell-output-ipywidget-background [tabindex="0"]:focus,
+.cell-output-ipywidget-background .widget-button:focus,
+.cell-output-ipywidget-background .jupyter-button:focus {
+    outline: 2px solid var(--vscode-focusBorder, #007ACC) !important;
+    outline-offset: 2px !important;
+}
