@@ -505,8 +505,8 @@ suite('Raw Session & Raw Kernel Connection', () => {
         test('Send and interrupt message', async () => {
             (kernelConnectionMetadata.kernelSpec as ReadWrite<IJupyterKernelSpec>).interrupt_mode = 'message';
             when(kernelProcess.canInterrupt).thenReturn(false);
-            let request: KernelMessage.IShellMessage<KernelMessage.ShellMessageType> | undefined;
-            when(kernel.sendShellMessage(anything(), anything(), anything())).thenCall((msg) => {
+            let request: KernelMessage.IControlMessage<KernelMessage.ControlMessageType> | undefined;
+            when(kernel.sendControlMessage(anything(), anything(), anything())).thenCall((msg) => {
                 request = msg;
                 return { done: Promise.resolve() } as any;
             });
@@ -514,7 +514,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             await session.kernel?.interrupt();
 
             verify(kernelProcess.interrupt()).never();
-            verify(kernel.sendShellMessage(anything(), anything(), anything())).once();
+            verify(kernel.sendControlMessage(anything(), anything(), anything())).once();
             assert.strictEqual(request?.header.msg_type, 'interrupt_request');
         });
     });

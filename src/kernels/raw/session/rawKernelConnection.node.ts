@@ -357,16 +357,16 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         if (this.kernelProcess?.canInterrupt) {
             return this.kernelProcess?.interrupt();
         } else if (this.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
-            logger.info(`Interrupting kernel with a shell message`);
+            logger.info(`Interrupting kernel with a control message`);
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
             const msg = jupyterLab.KernelMessage.createMessage({
                 msgType: 'interrupt_request' as any,
-                channel: 'shell',
+                channel: 'control',
                 username: this.realKernel!.username,
                 session: this.realKernel!.clientId,
                 content: {}
-            }) as any as KernelMessage.IShellMessage<'inspect_request'>;
-            await this.realKernel!.sendShellMessage<'interrupt_request'>(msg as any, true, true).done.catch((ex) =>
+            }) as any as KernelMessage.IControlMessage<'interrupt_request'>;
+            await this.realKernel!.sendControlMessage<'interrupt_request'>(msg as any, true, true).done.catch((ex) =>
                 logger.error('Failed to interrupt via a message', ex)
             );
         } else {
