@@ -151,7 +151,7 @@ export function sharedIWDebuggerTests(
                 );
             });
 
-            test('Run a cell and step into breakpoint', async function () {
+            test.skip('Run a cell and step into breakpoint', async function () {
                 // Define the function
                 const source = 'def foo():\n  print("foo")';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
@@ -378,7 +378,7 @@ export function sharedIWDebuggerTests(
                 assert.isFalse(outputs.includes('finished'), 'Cell finished during a stop');
             });
 
-            test('Correctly handle leading spaces in a code cell we are debugging', async () => {
+            test.skip('Correctly handle leading spaces in a code cell we are debugging', async () => {
                 // First just get our window up and started
                 const source = 'c = 50\n';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(

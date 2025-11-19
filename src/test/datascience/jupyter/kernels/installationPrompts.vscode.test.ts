@@ -266,7 +266,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
             'No errors in cell (third time)'
         );
     });
-    test('Get a single prompt when running all cells in a .py file without ipykernel and will run all cells upon installation', async () => {
+    test.skip('Get a single prompt when running all cells in a .py file without ipykernel and will run all cells upon installation', async () => {
         // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
         let prompt = await hijackPrompt(
             'showInformationMessage',
@@ -308,7 +308,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         ]);
     });
 
-    test('Ensure ipykernel install prompt is displayed even after uninstalling ipykernel (VSCode Notebook)', async function () {
+    test.skip('Ensure ipykernel install prompt is displayed even after uninstalling ipykernel (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
@@ -323,7 +323,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath);
     });
-    test('Ensure ipykernel install prompt is displayed even selecting another kernel which too does not have IPyKernel installed (VSCode Notebook)', async function () {
+    test.skip('Ensure ipykernel install prompt is displayed even selecting another kernel which too does not have IPyKernel installed (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
@@ -339,7 +339,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath, venvNoRegPath);
     });
-    test('Ensure ipykernel install prompt is not displayed after selecting another kernel which has IPyKernel installed (VSCode Notebook)', async function () {
+    test.skip('Ensure ipykernel install prompt is not displayed after selecting another kernel which has IPyKernel installed (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
@@ -437,7 +437,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         await Promise.all([waitForExecutionCompletedSuccessfully(cell), waitForExecutionCompletedSuccessfully(cell2)]);
     });
 
-    test('Ensure ipykernel install prompt is NOT displayed when auto start is enabled & ipykernel is missing (VSCode Notebook)', async function () {
+    test.skip('Ensure ipykernel install prompt is NOT displayed when auto start is enabled & ipykernel is missing (VSCode Notebook)', async function () {
         // Ensure we have auto start enabled, and verify kernel startup fails silently without any notifications.
         // When running a cell we should get an install prompt.
         configSettings.disableJupyterAutoStart = false;

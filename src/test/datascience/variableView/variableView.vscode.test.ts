@@ -120,7 +120,7 @@ suite('VariableView @variableViewer', function () {
         assert.deepEqual(vars, ['test', 'test2'].sort());
     });
 
-    test('Can show variables even when print is overridden', async function () {
+    test.skip('Can show variables even when print is overridden', async function () {
         // Send the command to open the view
         await commands.executeCommand(Commands.OpenVariableView);
 

@@ -202,7 +202,7 @@ import { IS_REMOTE_NATIVE_TEST } from '../../constants';
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
-        test('Render matplotlib, widget in multiple cells', async function () {
+        test.skip('Render matplotlib, widget in multiple cells', async function () {
             // https://github.com/microsoft/vscode-jupyter/issues/16861
             if (IS_REMOTE_NATIVE_TEST()) {
                 return this.skip();

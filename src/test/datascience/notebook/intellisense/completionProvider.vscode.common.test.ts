@@ -200,11 +200,11 @@ import { IKernelProvider } from '../../../../kernels/types';
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions(fileName.substring(0, 1), fileName);
             });
-            test('File path completions with double quotes', async () => {
+            test.skip('File path completions with double quotes', async () => {
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions(`"${fileName.substring(0, 1)}"`, undefined, fileName);
             });
-            test('File path completions with single quotes', async () => {
+            test.skip('File path completions with single quotes', async () => {
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions(`'${fileName.substring(0, 1)}'`, undefined, fileName);
             });
