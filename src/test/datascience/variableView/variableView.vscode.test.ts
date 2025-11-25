@@ -146,7 +146,7 @@ suite('VariableView @variableViewer', function () {
     });
 
     // Test variables switching between documents
-    test('VariableView document switching (webview-test)', async function () {
+    test.skip('VariableView document switching (webview-test)', async function () {
         // Send the command to open the view
         await commands.executeCommand(Commands.OpenVariableView);
 

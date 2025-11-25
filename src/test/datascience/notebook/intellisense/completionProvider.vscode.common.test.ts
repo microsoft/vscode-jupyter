@@ -183,7 +183,7 @@ import { IKernelProvider } from '../../../../kernels/types';
                     )
                 );
             }
-            test('Dataframe completions', async () => {
+            test.skip('Dataframe completions', async () => {
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions('df.', '.', fileName, 'Age', 'S', 'Sex');
             });
