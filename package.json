@@ -2185,6 +2185,15 @@
                 },
                 "when": "false"
             }
+        ],
+        "chatParticipants": [
+            {
+                "id": "jupyter.jupyterAgent",
+                "fullName": "Jupyter",
+                "name": "jupyter",
+                "description": "%jupyter.chatParticipant.description%",
+                "isSticky": true
+            }
         ]
     },
     "enabledApiProposals": [

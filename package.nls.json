@@ -243,5 +243,6 @@
     "jupyter.languageModelTools.configure_notebook.displayName": "Configure Jupyter Notebook",
     "jupyter.languageModelTools.configure_notebook.userDescription": "Ensure Notebook is ready for use, such as running cells.",
     "jupyter.languageModelTools.notebook_list_packages.userDescription": "Lists Python packages available in the selected Notebook Kernel.",
-    "jupyter.languageModelTools.notebook_install_packages.userDescription": "Installs Python packages in the selected Notebook Kernel."
+    "jupyter.languageModelTools.notebook_install_packages.userDescription": "Installs Python packages in the selected Notebook Kernel.",
+    "jupyter.chatParticipant.description": "Ask questions about Jupyter notebooks, kernels, and data science in VS Code."
 }

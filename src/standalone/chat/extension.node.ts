@@ -16,8 +16,12 @@ import { ConfigurePythonNotebookTool } from './configureNotebook.python.node';
 import { ConfigureNonPythonNotebookTool } from './configureNotebook.other.node';
 import { RestartKernelTool } from './restartKernelTool.node';
 import { INotebookCommandHandler } from '../../notebooks/notebookCommandListener';
+import { registerJupyterChatAgent } from './agent.node';
 
 export async function activate(context: vscode.ExtensionContext, serviceContainer: IServiceContainer): Promise<void> {
+    // Register the Jupyter Chat Agent
+    registerJupyterChatAgent(context);
+
     context.subscriptions.push(
         vscode.lm.registerTool(
             InstallPackagesTool.toolName,
