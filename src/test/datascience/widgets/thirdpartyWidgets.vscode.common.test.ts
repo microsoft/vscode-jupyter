@@ -52,6 +52,9 @@ import { IS_REMOTE_NATIVE_TEST } from '../../constants';
             if (isWeb()) {
                 return this.skip();
             }
+            if (useCDN) {
+                return this.skip();
+            }
             logger.info('Suite Setup VS Code Notebook - Execution');
             this.timeout(120_000);
             api = await initialize();

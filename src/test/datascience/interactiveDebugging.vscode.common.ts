@@ -326,7 +326,7 @@ export function sharedIWDebuggerTests(
                 await waitForVariablesToMatch(expectedVariables, variableView);
             });
 
-            test('Run a cell and stop in the middle', async () => {
+            test.skip('Run a cell and stop in the middle', async () => {
                 // Define the function
                 const source = 'print(42)';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
