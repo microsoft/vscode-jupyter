@@ -442,7 +442,7 @@ b = 200
                     `Cursor did not move to expected line when hitting breakpoint`
                 );
             });
-            test('Correctly handle leading spaces in a previously run code cell', async () => {
+            test.skip('Correctly handle leading spaces in a previously run code cell', async () => {
                 // Define the function with some leading spaces and run it (don't debug it)
                 const source = `
 

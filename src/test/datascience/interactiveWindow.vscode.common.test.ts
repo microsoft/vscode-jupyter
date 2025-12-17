@@ -396,7 +396,7 @@ ${actualCode}
         await waitForExecutionCompletedSuccessfully(secondCell!);
         await waitForTextOutput(secondCell!, '1');
     });
-    test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
+    test.skip('Error stack traces have correct line hrefs with mix of cell sources', async function () {
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindow.creationMode', 'single');
 

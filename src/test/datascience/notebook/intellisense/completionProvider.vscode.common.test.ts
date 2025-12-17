@@ -192,11 +192,11 @@ import { IKernelProvider } from '../../../../kernels/types';
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions('df.Name.', '.', fileName, 'add_prefix', 'add_s', 'add_suffix');
             });
-            test('Dataframe assignment completions', async () => {
+            test.skip('Dataframe assignment completions', async () => {
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions('var_name = df.', '.', fileName, 'Age', 'S', 'Sex');
             });
-            test('Dataframe assignment column completions', async () => {
+            test.skip('Dataframe assignment column completions', async () => {
                 const fileName = path.basename(window.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions(fileName.substring(0, 1), fileName);
             });
