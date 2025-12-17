@@ -101,7 +101,7 @@ export async function clickWidget(comms: Utils, cell: NotebookCell, selector: st
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite.skip('Standard IPyWidget Tests @widgets', function () {
+suite('Standard IPyWidget Tests @widgets', function () {
     const disposables: IDisposable[] = [];
 
     this.timeout(120_000);

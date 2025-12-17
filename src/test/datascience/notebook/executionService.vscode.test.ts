@@ -997,7 +997,7 @@ suite('Kernel Execution @kernelCore', function () {
         await waitForTextOutput(cell2, 'HI Z', 1, false);
     });
 
-    test.skip('Streamed output is added into the right cell (#16381)', async function () {
+    test('Streamed output is added into the right cell (#16381)', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/16381#issuecomment-2603496123
         const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
         const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
