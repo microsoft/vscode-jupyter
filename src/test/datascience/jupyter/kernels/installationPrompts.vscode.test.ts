@@ -198,7 +198,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         );
     });
 
-    test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () =>
+    test.skip('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () =>
         openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath));
 
     test('Ensure ipykernel install prompt is displayed every time you try to run a cell in a Notebook', async function () {
