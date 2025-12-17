@@ -33,6 +33,8 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     constructor(pickedItem: string) {
         this._pickedItem = pickedItem;
     }
+    prompt: string | undefined;
+    keepScrollPosition?: boolean | undefined;
 
     public get onDidTriggerItemButton(): Event<QuickPickItemButtonEvent<QuickPickItem>> {
         return this.didTriggerItemButton.event;

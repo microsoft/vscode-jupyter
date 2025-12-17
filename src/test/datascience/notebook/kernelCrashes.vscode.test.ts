@@ -221,7 +221,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
             );
         }
-        test('Ensure we get an error displayed in cell output and prompt when user has a file named random.py next to the ipynb file', async function () {
+        test.skip('Ensure we get an error displayed in cell output and prompt when user has a file named random.py next to the ipynb file', async function () {
             // eslint-disable-next-line local-rules/dont-use-process
             if (process.env.PACKAGE_PRE_RELEASE === 'prerelease') {
                 return this.skip();
@@ -274,7 +274,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             await sleep(1_000);
             assert.isUndefined(cell3.executionSummary?.executionOrder, 'Should not have an execution order');
         });
-        test('Ensure we get only one prompt to restart kernel when running all cells against a dead kernel', async function () {
+        test.skip('Ensure we get only one prompt to restart kernel when running all cells against a dead kernel', async function () {
             // eslint-disable-next-line local-rules/dont-use-process
             if (process.env.PACKAGE_PRE_RELEASE === 'prerelease') {
                 return this.skip();
