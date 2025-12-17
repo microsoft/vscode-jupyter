@@ -225,13 +225,31 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.kernel.iopubMessage.connect(this.onKernelIOPubMessage, this);
 
         if (request) {
-            request.onIOPub = () => {
+            request.onIOPub = (msg) => {
                 // Cell has been deleted or the like.
                 if (this.cell.document.isClosed && !this.completedExecution) {
                     request.dispose();
                 }
+                const parentMsgId = getParentHeaderMsgId(msg);
+                traceCellMessage(
+                    this.cell,
+                    `request.onIOPub => ${msg.channel}.${msg.header.msg_type}.${
+                        msg.header.msg_id
+                    }.(parentMsgId=${parentMsgId}).\nmsg.content = ${JSON.stringify(
+                        msg.content
+                    )}.\nmsgn.parent_header = ${JSON.stringify(msg.parent_header)}`
+                );
             };
             request.onReply = (msg) => {
+                const parentMsgId = getParentHeaderMsgId(msg);
+                traceCellMessage(
+                    this.cell,
+                    `request.onReply => ${msg.channel}.${msg.header.msg_type}.${
+                        msg.header.msg_id
+                    }.(parentMsgId=${parentMsgId}).\nmsg.content = ${JSON.stringify(
+                        msg.content
+                    )}.\nmsgn.parent_header = ${JSON.stringify(msg.parent_header)}`
+                );
                 // Cell has been deleted or the like.
                 if (this.cell.document.isClosed) {
                     request.dispose();

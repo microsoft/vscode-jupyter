@@ -434,6 +434,9 @@ export class CellExecution implements ICellExecution, IDisposable {
             traceCellMessage(this.cell, `Sent for execution ${this.request.msg.header.msg_id}`);
             // Don't want dangling promises.
             this.request.done.then(noop, noop);
+            this.request.done.catch((ex) => {
+                traceCellMessage(this.cell, `CellExecution, this.request.done.catch ${String(ex)}`);
+            });
         } catch (ex) {
             logger.error(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
             return this.completedWithErrors(ex);
