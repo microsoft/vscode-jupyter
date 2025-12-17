@@ -42,6 +42,7 @@ export async function isCDNReachable() {
 
 async function isWebSiteReachable(url: string, signal: AbortSignal) {
     let retries = 1;
+    const started = Date.now();
     try {
         for (retries = 0; retries <= 5; retries++) {
             const response = await fetch(url, { signal });
@@ -51,7 +52,10 @@ async function isWebSiteReachable(url: string, signal: AbortSignal) {
         }
         return false;
     } catch (ex) {
-        logErrorMessage(`Failed to access CDN ${url} after ${retries} attempt(s), ${(ex || '').toString()}`);
+        const elapsed = Date.now() - started;
+        logErrorMessage(
+            `Failed to access CDN ${url} after ${retries} attempt(s) (${elapsed}ms), ${(ex || '').toString()}`
+        );
         return false;
     }
 }
