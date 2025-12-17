@@ -62,6 +62,10 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
     ) => void | Thenable<void>;
     let controller: NotebookController;
     suiteSetup(async function () {
+        if (IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
+            return this.skip();
+        }
+
         logger.info('Suite Setup');
         this.timeout(120_000);
         try {
@@ -158,151 +162,144 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
         sinon.restore();
         return closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    suite('Raw Kernels', () => {
-        setup(function () {
-            if (IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
-                return this.skip();
+    async function runAndFailWithKernelCrash() {
+        const cell1 = await notebook.appendCodeCell('print("123412341234")');
+        const cell2 = await notebook.appendCodeCell(codeToKillKernel);
+
+        await Promise.all([
+            cellExecutionHandler([cell1], notebook, controller),
+            waitForExecutionCompletedSuccessfully(cell1)
+        ]);
+        const kernel = kernelProvider.get(notebook)!;
+        const terminatingEventFired = createDeferred<boolean>();
+        const deadEventFired = createDeferred<boolean>();
+        const expectedErrorMessage = DataScience.kernelDiedWithoutError(
+            getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+        );
+        const prompt = await hijackPrompt(
+            'showErrorMessage',
+            {
+                exactMatch: expectedErrorMessage
+            },
+            { dismissPrompt: true },
+            disposables
+        );
+
+        kernel.onStatusChanged((status) => {
+            if (status === 'terminating') {
+                terminatingEventFired.resolve();
+            }
+            if (status === 'dead') {
+                deadEventFired.resolve();
             }
         });
-        async function runAndFailWithKernelCrash() {
-            const cell1 = await notebook.appendCodeCell('print("123412341234")');
-            const cell2 = await notebook.appendCodeCell(codeToKillKernel);
+        // Run cell that will kill the kernel.
+        await Promise.all([
+            cellExecutionHandler([cell2], notebook, controller),
+            waitForExecutionCompletedSuccessfully(cell2)
+        ]);
+        // Confirm we get the terminating & dead events.
+        // Kernel must die immediately, lets just wait for 10s.
+        await Promise.race([
+            Promise.all([terminatingEventFired, deadEventFired, prompt.displayed]),
+            sleep(10_000).then(() => Promise.reject(new Error('Did not fail')))
+        ]);
+        prompt.dispose();
 
-            await Promise.all([
-                cellExecutionHandler([cell1], notebook, controller),
-                waitForExecutionCompletedSuccessfully(cell1)
-            ]);
-            const kernel = kernelProvider.get(notebook)!;
-            const terminatingEventFired = createDeferred<boolean>();
-            const deadEventFired = createDeferred<boolean>();
-            const expectedErrorMessage = DataScience.kernelDiedWithoutError(
-                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-            );
-            const prompt = await hijackPrompt(
-                'showErrorMessage',
-                {
-                    exactMatch: expectedErrorMessage
-                },
-                { dismissPrompt: true },
-                disposables
-            );
-
-            kernel.onStatusChanged((status) => {
-                if (status === 'terminating') {
-                    terminatingEventFired.resolve();
-                }
-                if (status === 'dead') {
-                    deadEventFired.resolve();
-                }
-            });
-            // Run cell that will kill the kernel.
-            await Promise.all([
-                cellExecutionHandler([cell2], notebook, controller),
-                waitForExecutionCompletedSuccessfully(cell2)
-            ]);
-            // Confirm we get the terminating & dead events.
-            // Kernel must die immediately, lets just wait for 10s.
-            await Promise.race([
-                Promise.all([terminatingEventFired, deadEventFired, prompt.displayed]),
-                sleep(10_000).then(() => Promise.reject(new Error('Did not fail')))
-            ]);
-            prompt.dispose();
-
-            // Verify we have output in the cell to indicate the cell crashed.
-            await waitForCondition(
-                async () => {
-                    const output = getCellOutputs(cell2);
-                    return (
-                        output.includes(kernelCrashFailureMessageInCell) &&
-                        output.includes('https://aka.ms/vscodeJupyterKernelCrash')
-                    );
-                },
-                defaultNotebookTestTimeout,
-                () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
-            );
+        // Verify we have output in the cell to indicate the cell crashed.
+        await waitForCondition(
+            async () => {
+                const output = getCellOutputs(cell2);
+                return (
+                    output.includes(kernelCrashFailureMessageInCell) &&
+                    output.includes('https://aka.ms/vscodeJupyterKernelCrash')
+                );
+            },
+            defaultNotebookTestTimeout,
+            () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
+        );
+    }
+    test.only('Ensure we get an error displayed in cell output and prompt when user has a file named random.py next to the ipynb file', async function () {
+        // eslint-disable-next-line local-rules/dont-use-process
+        if (process.env.PACKAGE_PRE_RELEASE === 'prerelease') {
+            return this.skip();
         }
-        test.skip('Ensure we get an error displayed in cell output and prompt when user has a file named random.py next to the ipynb file', async function () {
-            // eslint-disable-next-line local-rules/dont-use-process
-            if (process.env.PACKAGE_PRE_RELEASE === 'prerelease') {
-                return this.skip();
-            }
-            await runAndFailWithKernelCrash();
-            const cell3 = await notebook.appendCodeCell('print("123412341234")');
-            const kernel = kernelProvider.get(notebook)!;
-            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead(
-                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-            );
-            const restartPrompt = await hijackPrompt(
-                'showErrorMessage',
-                {
-                    exactMatch: expectedErrorMessage
-                },
-                { result: DataScience.restartKernel, clickImmediately: true },
-                disposables
-            );
-            // Confirm we get a prompt to restart the kernel, and it gets restarted.
-            // & also confirm the cell completes execution with an execution count of 1 (thats how we tell kernel restarted).
-            await Promise.all([
-                restartPrompt.displayed,
-                cellExecutionHandler([cell3], notebook, controller),
-                waitForExecutionCompletedSuccessfully(cell3)
-            ]);
-            // If execution order is 1, then we know the kernel restarted.
-            assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
-        });
-        test('Ensure cell output does not have errors when execution fails due to dead kernel', async function () {
-            // eslint-disable-next-line local-rules/dont-use-process
-            if (process.env.PACKAGE_PRE_RELEASE === 'prerelease') {
-                return this.skip();
-            }
-            await runAndFailWithKernelCrash();
-            const cell3 = await notebook.appendCodeCell('print("123412341234")');
-            const kernel = kernelProvider.get(notebook)!;
-            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead(
-                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-            );
-            const restartPrompt = await hijackPrompt(
-                'showErrorMessage',
-                {
-                    exactMatch: expectedErrorMessage
-                },
-                { dismissPrompt: true, clickImmediately: true },
-                disposables
-            );
-            // Confirm we get a prompt to restart the kernel, dismiss the prompt.
-            await Promise.all([restartPrompt.displayed, cellExecutionHandler([cell3], notebook, controller)]);
-            await sleep(1_000);
-            assert.isUndefined(cell3.executionSummary?.executionOrder, 'Should not have an execution order');
-        });
-        test.skip('Ensure we get only one prompt to restart kernel when running all cells against a dead kernel', async function () {
-            // eslint-disable-next-line local-rules/dont-use-process
-            if (process.env.PACKAGE_PRE_RELEASE === 'prerelease') {
-                return this.skip();
-            }
-            await runAndFailWithKernelCrash();
-            await notebook.appendCodeCell('print("123412341234")');
-            const kernel = kernelProvider.get(notebook)!;
-            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead(
-                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-            );
-            const restartPrompt = await hijackPrompt(
-                'showErrorMessage',
-                {
-                    exactMatch: expectedErrorMessage
-                },
-                { dismissPrompt: true, clickImmediately: true },
-                disposables
-            );
-            // Delete the killing cell
-            notebook.cells.splice(1, 1);
+        await runAndFailWithKernelCrash();
+        const cell3 = await notebook.appendCodeCell('print("123412341234")');
+        const kernel = kernelProvider.get(notebook)!;
+        const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead(
+            getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+        );
+        const restartPrompt = await hijackPrompt(
+            'showErrorMessage',
+            {
+                exactMatch: expectedErrorMessage
+            },
+            { result: DataScience.restartKernel, clickImmediately: true },
+            disposables
+        );
+        // Confirm we get a prompt to restart the kernel, and it gets restarted.
+        // & also confirm the cell completes execution with an execution count of 1 (thats how we tell kernel restarted).
+        await Promise.all([
+            restartPrompt.displayed,
+            cellExecutionHandler([cell3], notebook, controller),
+            waitForExecutionCompletedSuccessfully(cell3)
+        ]);
+        // If execution order is 1, then we know the kernel restarted.
+        assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
+    });
+    test('Ensure cell output does not have errors when execution fails due to dead kernel', async function () {
+        // eslint-disable-next-line local-rules/dont-use-process
+        if (process.env.PACKAGE_PRE_RELEASE === 'prerelease') {
+            return this.skip();
+        }
+        await runAndFailWithKernelCrash();
+        const cell3 = await notebook.appendCodeCell('print("123412341234")');
+        const kernel = kernelProvider.get(notebook)!;
+        const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead(
+            getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+        );
+        const restartPrompt = await hijackPrompt(
+            'showErrorMessage',
+            {
+                exactMatch: expectedErrorMessage
+            },
+            { dismissPrompt: true, clickImmediately: true },
+            disposables
+        );
+        // Confirm we get a prompt to restart the kernel, dismiss the prompt.
+        await Promise.all([restartPrompt.displayed, cellExecutionHandler([cell3], notebook, controller)]);
+        await sleep(1_000);
+        assert.isUndefined(cell3.executionSummary?.executionOrder, 'Should not have an execution order');
+    });
+    test.skip('Ensure we get only one prompt to restart kernel when running all cells against a dead kernel', async function () {
+        // eslint-disable-next-line local-rules/dont-use-process
+        if (process.env.PACKAGE_PRE_RELEASE === 'prerelease') {
+            return this.skip();
+        }
+        await runAndFailWithKernelCrash();
+        await notebook.appendCodeCell('print("123412341234")');
+        const kernel = kernelProvider.get(notebook)!;
+        const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead(
+            getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+        );
+        const restartPrompt = await hijackPrompt(
+            'showErrorMessage',
+            {
+                exactMatch: expectedErrorMessage
+            },
+            { dismissPrompt: true, clickImmediately: true },
+            disposables
+        );
+        // Delete the killing cell
+        notebook.cells.splice(1, 1);
 
-            // Confirm we get a prompt to restart the kernel, dismiss the prompt.
-            // Confirm the cell isn't executed & there's no output (in the past we'd have s stack trace with errors indicating session has been disposed).
-            await Promise.all([restartPrompt.displayed, cellExecutionHandler(notebook.cells, notebook, controller)]);
-            // Wait a while, it shouldn't take 1s, but things could be slow on CI, hence wait a bit longer.
-            await sleep(1_000);
+        // Confirm we get a prompt to restart the kernel, dismiss the prompt.
+        // Confirm the cell isn't executed & there's no output (in the past we'd have s stack trace with errors indicating session has been disposed).
+        await Promise.all([restartPrompt.displayed, cellExecutionHandler(notebook.cells, notebook, controller)]);
+        // Wait a while, it shouldn't take 1s, but things could be slow on CI, hence wait a bit longer.
+        await sleep(1_000);
 
-            assert.strictEqual(restartPrompt.getDisplayCount(), 1, 'Should only have one restart prompt');
-        });
+        assert.strictEqual(restartPrompt.getDisplayCount(), 1, 'Should only have one restart prompt');
     });
 });
