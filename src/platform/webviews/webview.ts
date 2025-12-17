@@ -85,6 +85,8 @@ export abstract class Webview implements IWebview {
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
                 <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob: ${
                     this.webviewHost.webview.cspSource
+                }; connect-src 'self' https: http: ${
+                    this.webviewHost.webview.cspSource
                 }; default-src 'unsafe-inline' 'unsafe-eval' data: https: http: blob: ${
                     this.webviewHost.webview.cspSource
                 };">
