@@ -198,7 +198,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         );
     });
 
-    test.skip('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () =>
+    test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () =>
         openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath));
 
     test('Ensure ipykernel install prompt is displayed every time you try to run a cell in a Notebook', async function () {
@@ -314,12 +314,16 @@ suite('Install IPyKernel (install) @kernelCore', function () {
 
         // Verify we can open a notebook, run a cell and ipykernel prompt should be displayed.
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath);
+        await captureScreenShot(this);
         await closeNotebooksAndCleanUpAfterTests();
+        await captureScreenShot(this);
 
         // Un-install IpyKernel
         await uninstallIPyKernel(venvNoKernelPath.fsPath);
+        await captureScreenShot(this);
 
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
+        await captureScreenShot(this);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath);
     });
     test.skip('Ensure ipykernel install prompt is displayed even selecting another kernel which too does not have IPyKernel installed (VSCode Notebook)', async function () {
@@ -329,13 +333,18 @@ suite('Install IPyKernel (install) @kernelCore', function () {
 
         // Verify we can open a notebook, run a cell and ipykernel prompt should be displayed.
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath);
+        await captureScreenShot(this);
         await closeNotebooksAndCleanUpAfterTests();
+        await captureScreenShot(this);
 
         // Un-install IpyKernel
         await uninstallIPyKernel(venvNoKernelPath.fsPath);
+        await captureScreenShot(this);
         await uninstallIPyKernel(venvNoRegPath.fsPath);
+        await captureScreenShot(this);
 
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
+        await captureScreenShot(this);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath, venvNoRegPath);
     });
     test.skip('Ensure ipykernel install prompt is not displayed after selecting another kernel which has IPyKernel installed (VSCode Notebook)', async function () {
@@ -345,13 +354,18 @@ suite('Install IPyKernel (install) @kernelCore', function () {
 
         // Verify we can open a notebook, run a cell and ipykernel prompt should be displayed.
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath);
+        await captureScreenShot(this);
         await closeNotebooksAndCleanUpAfterTests();
+        await captureScreenShot(this);
 
         // Un-install IpyKernel
         await uninstallIPyKernel(venvNoKernelPath.fsPath);
+        await captureScreenShot(this);
         await installIPyKernel(venvNoRegPath.fsPath);
+        await captureScreenShot(this);
 
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
+        await captureScreenShot(this);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath, venvNoRegPath, 'DoNotInstallIPyKernel');
     });
     test('Ensure ipykernel install prompt is displayed and we can select another kernel after uninstalling IPyKernel from a live notebook and then restarting the kernel (VSCode Notebook)', async function () {
@@ -409,6 +423,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         );
 
         const { editor } = await openNotebook(nbFile);
+        await captureScreenShot(this);
 
         // Hijack the select kernel functionality so it selects the correct kernel
         const stub = sinon.stub(kernelSelector, 'selectKernel').callsFake(async function () {
@@ -421,18 +436,23 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         }
 
         await waitForKernelToChange({ interpreterPath: venvNoKernelPath }, editor);
+        await captureScreenShot(this);
         const cell = editor.notebook.cellAt(0)!;
         assert.equal(cell.outputs.length, 0);
 
         // Insert another cell so we can test run all
         const cell2 = await insertCodeCell('print("foo")');
+        await captureScreenShot(this);
 
         // The prompt should be displayed when we run a cell.
         const runPromise = runAllCellsInActiveNotebook(false, editor);
+        await captureScreenShot(this);
         await waitForCondition(async () => prompt.displayed.then(() => true), 10_000, 'Prompt not displayed');
+        await captureScreenShot(this);
 
         // Now the run should finish
         await runPromise;
+        await captureScreenShot(this);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell), waitForExecutionCompletedSuccessfully(cell2)]);
     });
 
@@ -443,16 +463,20 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         const promptToInstall = await clickInstallFromIPyKernelPrompt();
         const kernelStartSpy = sinon.spy(Kernel.prototype, 'start');
         await uninstallIPyKernel(venvNoKernelPath.fsPath);
+        await captureScreenShot(this);
         const { editor } = await openNotebook(nbFile);
         await waitForKernelToChange({ interpreterPath: venvNoKernelPath }, editor);
+        await captureScreenShot(this);
         await waitForCondition(
             async () => kernelStartSpy.callCount > 0,
             delayForUITest,
             'Did not attempt to auto start the kernel'
         );
+        await captureScreenShot(this);
         // Wait for kernel startup to fail & verify the error.
         try {
             await kernelStartSpy.getCall(0).returnValue;
+            await captureScreenShot(this);
             assert.fail('Did not fail as expected');
         } catch (ex) {
             const err = WrappedError.unwrap(ex) as BaseKernelError;

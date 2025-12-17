@@ -194,6 +194,10 @@ export class CellExecutionMessageHandler implements IDisposable {
     ) {
         this._completed.promise.catch(noop);
         this.executeRequestMessageId = executionMessageId;
+        traceCellMessage(
+            this.cell,
+            `CellExecutionMessageHandler.ctor this.executeRequestMessageId=${this.executeRequestMessageId}`
+        );
         this.ownedRequestMsgIds.add(executionMessageId);
         workspace.onDidChangeNotebookDocument(
             (e) => {
@@ -278,6 +282,7 @@ export class CellExecutionMessageHandler implements IDisposable {
      * as a result of the response we get some new output.
      */
     private endCellExecution() {
+        traceCellMessage(this.cell, 'End Cell Execution invoked');
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
         // Assume you have a long running cell, then reload vscode, next this cell continues running.
@@ -298,9 +303,16 @@ export class CellExecutionMessageHandler implements IDisposable {
         }
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-
+        const parentMsgId = getParentHeaderMsgId(msg);
+        traceCellMessage(
+            this.cell,
+            `Any message ${direction} => ${msg.channel}.${msg.header.msg_type}.${
+                msg.header.msg_id
+            }.(parentMsgId=${parentMsgId}).\nmsg.content = ${JSON.stringify(
+                msg.content
+            )}.\nmsgn.parent_header = ${JSON.stringify(msg.parent_header)}`
+        );
         if (!this.request && direction === 'recv') {
-            const parentMsgId = getParentHeaderMsgId(msg);
             // In @jupyterlab/services/lib/kernel/future.js a request is marked as completed when we receive a status message with execution_state = 'idle' and have received a reply in shell chanel.
             if (
                 jupyterLab.KernelMessage.isStatusMsg(msg) &&
@@ -400,6 +412,10 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (this.cell.document.isClosed) {
             return this.endCellExecution();
         }
+        traceCellMessage(
+            this.cell,
+            `IOPub message => ${msg.channel}.${msg.header.msg_type}${msg.header.msg_id}.${JSON.stringify(msg.content)}`
+        );
 
         // We're only interested in messages after execution has completed.
         // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
