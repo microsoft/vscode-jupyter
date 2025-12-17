@@ -940,7 +940,8 @@ abstract class BaseKernel implements IBaseKernel {
                         message.content &&
                         'data' in message.content &&
                         message.content.data &&
-                        (message.content.data[WIDGET_MIMETYPE] ||
+                        typeof message.content.data === 'object' &&
+                        ((message.content.data as Record<string, unknown>)[WIDGET_MIMETYPE] ||
                             ('target_name' in message.content &&
                                 message.content.target_name === Identifiers.DefaultCommTarget))
                     ) {
