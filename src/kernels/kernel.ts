@@ -867,6 +867,7 @@ abstract class BaseKernel implements IBaseKernel {
             try {
                 logger.debug('Requesting Kernel info');
                 this._info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento);
+                logger.debug(`Got Kernel info ${this._info?.status}`);
             } catch (ex) {
                 logger.warn('Failed to request KernelInfo', ex);
             }
