@@ -55,7 +55,7 @@ import { IS_REMOTE_NATIVE_TEST } from '../../constants';
             if (useCDN) {
                 return this.skip();
             }
-            if (!useCDN && IS_REMOTE_NATIVE_TEST()){
+            if (!useCDN && IS_REMOTE_NATIVE_TEST()) {
                 return this.skip();
             }
             logger.info('Suite Setup VS Code Notebook - Execution');
