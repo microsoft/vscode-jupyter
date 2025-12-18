@@ -236,7 +236,11 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 this.kernelProcess ? disposeAsync(this.kernelProcess) : Promise.resolve(),
                 this.realKernel
                     ?.shutdown()
-                    .catch((ex) => logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex))
+                    .catch((ex) =>
+                        postStartToken.token.isCancellationRequested
+                            ? undefined
+                            : logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex)
+                    )
             ]);
             if (kernelExitedError) {
                 throw kernelExitedError;
@@ -594,7 +598,9 @@ async function postStartKernel(
                     sleep(Math.min(launchTimeout, 500)).then(noop)
                 );
             } catch (ex) {
-                logger.error('Failed to request kernel info', ex);
+                if (!token.isCancellationRequested) {
+                    logger.error('Failed to request kernel info', ex);
+                }
                 throw ex;
             }
 
