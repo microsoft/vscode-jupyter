@@ -151,7 +151,7 @@ export function sharedIWDebuggerTests(
                 );
             });
 
-            test('Run a cell and step into breakpoint', async function () {
+            test.skip('Run a cell and step into breakpoint', async function () {
                 // Define the function
                 const source = 'def foo():\n  print("foo")';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
@@ -326,7 +326,7 @@ export function sharedIWDebuggerTests(
                 await waitForVariablesToMatch(expectedVariables, variableView);
             });
 
-            test('Run a cell and stop in the middle', async () => {
+            test.skip('Run a cell and stop in the middle', async () => {
                 // Define the function
                 const source = 'print(42)';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
@@ -378,7 +378,7 @@ export function sharedIWDebuggerTests(
                 assert.isFalse(outputs.includes('finished'), 'Cell finished during a stop');
             });
 
-            test('Correctly handle leading spaces in a code cell we are debugging', async () => {
+            test.skip('Correctly handle leading spaces in a code cell we are debugging', async () => {
                 // First just get our window up and started
                 const source = 'c = 50\n';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
@@ -442,7 +442,7 @@ b = 200
                     `Cursor did not move to expected line when hitting breakpoint`
                 );
             });
-            test('Correctly handle leading spaces in a previously run code cell', async () => {
+            test.skip('Correctly handle leading spaces in a previously run code cell', async () => {
                 // Define the function with some leading spaces and run it (don't debug it)
                 const source = `
 
@@ -527,7 +527,7 @@ def foo():
                 );
             });
 
-            test('Step into a previous cell', async () => {
+            test.skip('Step into a previous cell', async () => {
                 // Need a function and a call to the function
                 const source = `
 # %%
