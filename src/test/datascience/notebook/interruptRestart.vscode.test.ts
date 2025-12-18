@@ -30,12 +30,13 @@ import {
     getDefaultKernelConnection
 } from './helper.node';
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../kernels/execution/helpers';
-import { TestNotebookDocument, createKernelController } from './executionHelper';
+import { TestNotebookDocument, createKernelController, deleteAllCellsAndNotify } from './executionHelper';
 import { captureScreenShot } from '../../common';
 import { NotebookCellExecutionState } from '../../../platform/notebooks/cellExecutionStateService';
 import { KernelConnector } from '../../../notebooks/controllers/kernelConnector';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
@@ -99,25 +100,11 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     });
     setup(async function () {
         logger.info(`Start Test ${this.currentTest?.title}`);
+        deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
         if (previousTestFailed) {
             logger.info(`Start Running Test Suite again for ${this.currentTest?.title}`);
             await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
             await initSuite();
-        }
-        sinon.restore();
-        if (notebook.cells.length) {
-            onDidChangeNbEventHandler.fire({
-                contentChanges: [
-                    {
-                        addedCells: [],
-                        range: new NotebookRange(0, notebook.cells.length),
-                        removedCells: notebook.cells
-                    }
-                ],
-                cellChanges: [],
-                notebook,
-                metadata: {}
-            });
         }
         notebook.cells.length = 0;
         // Disable the prompt (when attempting to restart kernel).
@@ -125,6 +112,8 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(function () {
+        deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
+        dispose(disposables);
         previousTestFailed = this.currentTest?.isFailed();
         logger.info(`End Test (completed) ${this.currentTest?.title}`);
     });

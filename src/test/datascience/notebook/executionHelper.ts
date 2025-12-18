@@ -5,6 +5,7 @@
 import { instance, mock, when } from 'ts-mockito';
 import {
     CancellationToken,
+    EventEmitter,
     NotebookCell,
     NotebookCellExecution,
     NotebookCellExecutionSummary,
@@ -12,6 +13,7 @@ import {
     NotebookCellOutput,
     NotebookCellOutputItem,
     NotebookDocument,
+    NotebookDocumentChangeEvent,
     NotebookRange,
     TextDocument,
     Uri,
@@ -21,6 +23,7 @@ import { IKernelController } from '../../../kernels/types';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { ReadWrite } from '../../../platform/common/types';
 import { MockNotebookDocuments } from './helper';
+import { logger } from '../../../platform/logging';
 
 export function createKernelController(controllerId = '1'): IKernelController {
     return {
@@ -214,5 +217,27 @@ export class TestNotebookCell implements NotebookCell {
         this.kind = kind;
         this.metadata = {};
         this.outputs = [];
+    }
+}
+
+export function deleteAllCellsAndNotify(
+    notebook: TestNotebookDocument,
+    onDidChangeNbEventHandler: EventEmitter<NotebookDocumentChangeEvent>
+) {
+    if (notebook.cells.length) {
+        logger.info(`Delete all tests before test`);
+        onDidChangeNbEventHandler.fire({
+            contentChanges: [
+                {
+                    addedCells: [],
+                    range: new NotebookRange(0, notebook.cells.length),
+                    removedCells: notebook.cells
+                }
+            ],
+            cellChanges: [],
+            notebook,
+            metadata: {}
+        });
+        notebook.cells.length = 0;
     }
 }
