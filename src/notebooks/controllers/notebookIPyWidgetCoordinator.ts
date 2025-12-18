@@ -11,6 +11,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IWebviewCommunication } from '../../platform/webviews/types';
 import { CommonMessageCoordinator } from './ipywidgets/message/commonMessageCoordinator';
 import { isJupyterNotebook } from '../../platform/common/utils';
+import { logger } from '../../platform/logging';
 
 /**
  * Posts/Receives messages from the renderer in order to have kernel messages available in the webview
@@ -136,13 +137,16 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
     }
     private initializeNotebookCommunication(editor: NotebookEditor, controller: IVSCodeNotebookController | undefined) {
         if (editor.notebook.isClosed || !isJupyterNotebook(editor.notebook)) {
+            logger.trace('Notebook is closed or not a Jupyter notebook, skipping IPyWidget communication setup.');
             return;
         }
         const notebook = editor.notebook;
         if (!controller) {
+            logger.trace('No controller for notebook, skipping IPyWidget communication setup.');
             return;
         }
         if (this.notebookCommunications.has(editor)) {
+            logger.trace('Notebook communication already initialized for this editor.');
             return;
         }
         const comms = new NotebookCommunication(editor, controller);
@@ -152,9 +156,11 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         // entire VS code session, we have a map of notebook document to message coordinator
         let coordinator = this.messageCoordinators.get(notebook);
         if (!coordinator) {
+            logger.trace('Creating new CommonMessageCoordinator for notebook.');
             coordinator = new CommonMessageCoordinator(notebook, this.serviceContainer);
             this.messageCoordinators.set(notebook, coordinator);
         }
+        logger.trace('Attaching notebook communication to CommonMessageCoordinator.');
         coordinator.attach(comms);
     }
     private addNotebookDisposables(notebook: NotebookDocument, disposables: IDisposable[]) {
