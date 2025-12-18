@@ -3,14 +3,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import {
-    EventEmitter,
-    NotebookDocumentChangeEvent,
-    window,
-    workspace,
-    Disposable as VSCodeDisposable,
-    NotebookRange
-} from 'vscode';
+import { EventEmitter, NotebookDocumentChangeEvent, window, workspace, Disposable as VSCodeDisposable } from 'vscode';
 import { logger } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -118,21 +111,7 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         logger.info(`End Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {
-        if (notebook.cells.length) {
-            onDidChangeNbEventHandler.fire({
-                contentChanges: [
-                    {
-                        addedCells: [],
-                        range: new NotebookRange(0, notebook.cells.length),
-                        removedCells: notebook.cells
-                    }
-                ],
-                cellChanges: [],
-                notebook,
-                metadata: {}
-            });
-        }
-        notebook.cells.length = 0;
+        deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
         if (dsSettings) {
             dsSettings.askForKernelRestart = oldAskForRestart === true;
         }
