@@ -343,7 +343,6 @@ export class CellExecution implements ICellExecution, IDisposable {
         this._result.resolve();
     }
     private endCellTask(success: 'success' | 'failed' | 'cancelled', completedTime = new Date().getTime()) {
-        traceCellMessage(this.cell, 'End Cell Task');
         if (this._completed) {
             return;
         }
@@ -432,12 +431,8 @@ export class CellExecution implements ICellExecution, IDisposable {
                 false,
                 metadata
             );
-            traceCellMessage(this.cell, `Sent for execution ${this.request.msg.header.msg_id}`);
             // Don't want dangling promises.
             this.request.done.then(noop, noop);
-            this.request.done.catch((ex) => {
-                traceCellMessage(this.cell, `CellExecution, this.request.done.catch ${String(ex)}`);
-            });
         } catch (ex) {
             logger.error(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
             return this.completedWithErrors(ex);

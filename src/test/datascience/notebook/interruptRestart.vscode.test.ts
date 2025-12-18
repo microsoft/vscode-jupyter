@@ -3,14 +3,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import {
-    EventEmitter,
-    NotebookDocumentChangeEvent,
-    window,
-    workspace,
-    Disposable as VSCodeDisposable,
-    NotebookRange
-} from 'vscode';
+import { EventEmitter, NotebookDocumentChangeEvent, window, workspace, Disposable as VSCodeDisposable } from 'vscode';
 import { logger } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
