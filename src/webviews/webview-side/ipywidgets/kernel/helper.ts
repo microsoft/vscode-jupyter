@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { logErrorMessage } from '../../react-common/logger';
+import { logErrorMessage, logMessage } from '../../react-common/logger';
 
 const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/requirejs@2.3.6/bin/r.min.js';
@@ -42,16 +42,22 @@ export async function isCDNReachable() {
 
 async function isWebSiteReachable(url: string, signal: AbortSignal) {
     let retries = 1;
+    const started = Date.now();
     try {
         for (retries = 0; retries <= 5; retries++) {
             const response = await fetch(url, { signal });
             if (response.ok) {
+                const elapsed = Date.now() - started;
+                logMessage(`Managed to access CDN ${url} after ${retries} attempt(s) (${elapsed}ms)`);
                 return true;
             }
         }
         return false;
     } catch (ex) {
-        logErrorMessage(`Failed to access CDN ${url} after ${retries} attempt(s), ${(ex || '').toString()}`);
+        const elapsed = Date.now() - started;
+        logErrorMessage(
+            `Failed to access CDN ${url} after ${retries} attempt(s) (${elapsed}ms), ${(ex || '').toString()}`
+        );
         return false;
     }
 }

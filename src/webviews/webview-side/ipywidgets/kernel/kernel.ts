@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
+import { CommsOverSubshells, Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import type { ISignal, Signal } from '@lumino/signaling';
@@ -285,6 +285,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     ): void {
         return this.realKernel.removeCommTarget(targetName, callback);
     }
+    commsOverSubshells?: CommsOverSubshells | undefined;
     requestCreateSubshell(
         _content: KernelMessage.ICreateSubshellRequestMsg['content'],
         _disposeOnDone?: boolean
