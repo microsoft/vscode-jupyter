@@ -44,13 +44,13 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Cache npm files
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Cache the out/ directory
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
