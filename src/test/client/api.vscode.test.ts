@@ -10,16 +10,27 @@ import * as sinon from 'sinon';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, waitForCondition } from '../common.node';
 import { executeSilently } from '../../kernels/helpers';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
-import { TestNotebookDocument } from '../datascience/notebook/executionHelper';
+import { deleteAllCellsAndNotify, TestNotebookDocument } from '../datascience/notebook/executionHelper';
 import { IKernelProvider, LocalKernelConnectionMetadata } from '../../kernels/types';
 import { KernelConnectionMetadata } from '../../api';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { EventEmitter, NotebookDocumentChangeEvent, Disposable as VSCodeDisposable, workspace } from 'vscode';
 
 suite('3rd Party Kernel Service API @kernelCore', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     let notebook: TestNotebookDocument;
+    const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
+    let onDidChangeNotebookDocumentStub: sinon.SinonStub<
+        [
+            listener: (e: NotebookDocumentChangeEvent) => any,
+            thisArgs?: any,
+            disposables?: VSCodeDisposable[] | undefined
+        ],
+        VSCodeDisposable
+    >;
+
     suiteSetup(async function () {
         logger.info('Suite Setup 3rd Party Kernel Service API');
         this.timeout(120_000);
@@ -37,7 +48,10 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
-        notebook.cells.length = 0;
+        onDidChangeNotebookDocumentStub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
+        onDidChangeNotebookDocumentStub.get(() => onDidChangeNbEventHandler.event);
+        disposables.push(onDidChangeNbEventHandler);
+        deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
         const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         const controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         // Wait till deno kernel has been discovered.
@@ -61,6 +75,7 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
+        deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
         logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
