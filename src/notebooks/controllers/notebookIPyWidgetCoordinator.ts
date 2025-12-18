@@ -137,16 +137,23 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
     }
     private initializeNotebookCommunication(editor: NotebookEditor, controller: IVSCodeNotebookController | undefined) {
         if (editor.notebook.isClosed || !isJupyterNotebook(editor.notebook)) {
-            logger.trace('Notebook is closed or not a Jupyter notebook, skipping IPyWidget communication setup.');
+            logger.trace(
+                'Notebook is closed or not a Jupyter notebook, skipping IPyWidget communication setup. ' +
+                    editor.notebook.uri.toString()
+            );
             return;
         }
         const notebook = editor.notebook;
         if (!controller) {
-            logger.trace('No controller for notebook, skipping IPyWidget communication setup.');
+            logger.trace(
+                'No controller for notebook, skipping IPyWidget communication setup. ' + editor.notebook.uri.toString()
+            );
             return;
         }
         if (this.notebookCommunications.has(editor)) {
-            logger.trace('Notebook communication already initialized for this editor.');
+            logger.trace(
+                'Notebook communication already initialized for this editor. ' + editor.notebook.uri.toString()
+            );
             return;
         }
         const comms = new NotebookCommunication(editor, controller);
@@ -173,6 +180,13 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         // This can happen when users split editors.
         e.forEach((editor) => {
             const controller = this.controllerManager.getSelected(editor.notebook);
+            if (!controller) {
+                logger.trace(
+                    'No controller for notebook, skipping IPyWidget communication setup in onDidChangeVisibleNotebookEditors. ' +
+                        editor.notebook.uri.toString()
+                );
+                return;
+            }
             this.initializeNotebookCommunication(editor, controller);
         });
     }

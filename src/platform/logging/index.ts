@@ -37,7 +37,7 @@ export const logger: ILogger = {
     warn: (message: string, ...data: Arguments) => logWarning(message, ...data),
     info: (message: string, ...data: Arguments) => logInfo(message, ...data),
     debug: (message: string, ...data: Arguments) => logDebug(message, ...data),
-    trace: (message: string, ...data: Arguments) => logTrace(message, ...data),
+    trace: (message: string, ...data: Arguments) => logDebug(message, ...data),
     ci: (arg1: any, ...data: string[]) => {
         if (data && Array.isArray(data)) {
             logInfoIfCI(arg1, ...data);
@@ -210,11 +210,6 @@ function logInfo(message: string, ...args: Arguments): void {
 function logDebug(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Debug) {
         loggers.forEach((l) => l.debug(message, ...args));
-    }
-}
-function logTrace(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Debug) {
-        loggers.forEach((l) => l.trace(message, ...args));
     }
 }
 function logInfoIfCI(msg: () => [message: string, ...args: string[]] | string): void;
