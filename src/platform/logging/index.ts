@@ -213,7 +213,7 @@ function logDebug(message: string, ...args: Arguments): void {
     }
 }
 function logTrace(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Trace) {
+    if (globalLoggingLevel <= LogLevel.Debug) {
         loggers.forEach((l) => l.trace(message, ...args));
     }
 }
