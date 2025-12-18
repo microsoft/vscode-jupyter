@@ -17,7 +17,13 @@ import { RawSocket } from './rawSocket.node';
 import { IKernelSocket, LocalKernelConnectionMetadata } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { Signal } from '@lumino/signaling';
-import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
+import type {
+    IInterruptRequestMsg,
+    IIOPubMessage,
+    IMessage,
+    IOPubMessageType,
+    MessageType
+} from '@jupyterlab/services/lib/kernel/messages';
 import { CancellationError, CancellationToken, CancellationTokenSource, Uri, workspace } from 'vscode';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -386,14 +392,14 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         } else if (this.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
             logger.info(`Interrupting kernel with a control message`);
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-            const msg = jupyterLab.KernelMessage.createMessage({
+            const msg = jupyterLab.KernelMessage.createMessage<IInterruptRequestMsg>({
                 msgType: 'interrupt_request' as any,
                 channel: 'control',
                 username: this.realKernel!.username,
                 session: this.realKernel!.clientId,
                 content: {}
-            }) as any as KernelMessage.IControlMessage<'interrupt_request'>;
-            await this.realKernel!.sendControlMessage<'interrupt_request'>(msg as any, true, true).done.catch((ex) =>
+            });
+            await this.realKernel!.sendControlMessage<'interrupt_request'>(msg, true, true).done.catch((ex) =>
                 logger.error('Failed to interrupt via a message', ex)
             );
         } else {
