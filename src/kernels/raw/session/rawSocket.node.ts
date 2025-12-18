@@ -282,8 +282,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         this.sendChain.catch(noop);
     }
 
-    private postToSocket(channel: string, data: any) {
-        const socket = (this.channels as any)[channel];
+    private postToSocket(channel: Channel, data: any) {
+        const socket = this.channels[channel];
         if (socket) {
             (socket as Dealer).send(data).catch((exc) => {
                 logger.error(`Error communicating with the kernel`, exc);
