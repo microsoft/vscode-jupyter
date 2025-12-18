@@ -451,7 +451,7 @@ export interface ResumeCellExecutionInformation {
     startTime: number;
     executionCount: number;
 }
-export interface INotebookKernelExecution {
+export interface INotebookKernelExecution extends IDisposable {
     /**
      * Total execution count on this kernel
      */
