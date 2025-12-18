@@ -19,7 +19,8 @@ import {
     NotebookEdit,
     Uri,
     workspace,
-    WorkspaceEdit
+    WorkspaceEdit,
+    Disposable as VSCodeDisposable
 } from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
 import { logger } from '../../../platform/logging';
@@ -60,11 +61,12 @@ import {
     translateCellErrorOutput
 } from '../../../kernels/execution/helpers';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
-import { createKernelController, TestNotebookDocument } from './executionHelper';
+import { createKernelController, deleteAllCellsAndNotify, TestNotebookDocument } from './executionHelper';
 import { noop } from '../../core';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 import { splitLines } from '../../../platform/common/helpers';
 import { isCI } from '../../../platform/vscode-path/platform';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 use(chaiAsPromised);
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -79,6 +81,16 @@ suite('Kernel Execution @kernelCore', function () {
     let notebook: TestNotebookDocument;
     let kernel: IKernel;
     let kernelExecution: INotebookKernelExecution;
+    const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
+    let onDidChangeNotebookDocumentStub: sinon.SinonStub<
+        [
+            listener: (e: NotebookDocumentChangeEvent) => any,
+            thisArgs?: any,
+            disposables?: VSCodeDisposable[] | undefined
+        ],
+        VSCodeDisposable
+    >;
+    const suiteDisposables: IDisposable[] = [];
     suiteSetup(async function () {
         // No need to run this test on windows on CI.
         // Running these is very slow on windows & we have other tests that run on windows (interrupts and restarts).
@@ -95,7 +107,7 @@ suite('Kernel Execution @kernelCore', function () {
                 'showErrorMessage',
                 { endsWith: expectedPromptMessageSuffix },
                 { result: Common.install, clickImmediately: true },
-                disposables
+                suiteDisposables
             );
             if (!IS_REMOTE_NATIVE_TEST() && !isWeb()) {
                 await workspace
@@ -106,6 +118,10 @@ suite('Kernel Execution @kernelCore', function () {
             await startJupyterServer();
             logger.debug('After starting Jupyter');
             sinon.restore();
+            suiteDisposables.push(new Disposable(() => sinon.restore()));
+            onDidChangeNotebookDocumentStub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
+            onDidChangeNotebookDocumentStub.get(() => onDidChangeNbEventHandler.event);
+            suiteDisposables.push(onDidChangeNbEventHandler);
             notebook = new TestNotebookDocument(templateNbPath);
             const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
             logger.debug('Before creating kernel connection');
@@ -126,7 +142,7 @@ suite('Kernel Execution @kernelCore', function () {
         }
     });
     setup(function () {
-        notebook.cells.length = 0;
+        deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
         logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -134,9 +150,11 @@ suite('Kernel Execution @kernelCore', function () {
             // For a flaky interrupt test.
             await captureScreenShot(this);
         }
+        deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
+        dispose(disposables);
         logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables)));
     test('Execute cell using VSCode Kernel @mandatory', async () => {
         const cell = await notebook.appendCodeCell('print("123412341234")');
         await kernelExecution.executeCell(cell);
@@ -1040,11 +1058,6 @@ root.debug('debug test')`
     });
 
     test('Clearing output while executing will ensure output is cleared', async function () {
-        let onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
-        const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
-        stub.get(() => onDidChangeNbEventHandler.event);
-        disposables.push(onDidChangeNbEventHandler);
-
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
         // Cell output should now start printing output from 51 onwards, & not 1.
