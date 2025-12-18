@@ -55,6 +55,7 @@ import { format } from 'util';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 import { isSysInfoCell } from '../../interactive-window/systemInfoCell';
 import { getNotebookUriFromInputBoxUri } from '../../standalone/intellisense/notebookPythonPathService';
+import { Schemas } from '../../platform/vscode-path/utils';
 
 suite(`Interactive window execution @iw`, async function () {
     this.timeout(120_000);
@@ -261,42 +262,44 @@ ${actualCode}
 
 
 `;
-        logger.ci('Before submitting');
+        logger.info('Before submitting');
         const { activeInteractiveWindow: interactiveWindow } = await submitFromPythonFile(
             interactiveWindowProvider,
             codeWithWhitespace,
             disposables
         );
-        logger.ci('After submitting');
+        logger.info('After submitting');
         const lastCell = await waitForLastCellToComplete(interactiveWindow);
         const actualCellText = lastCell.document.getText();
         assert.equal(actualCellText, dedentedCode);
     });
 
     test('Run current file in interactive window (with cells)', async () => {
+        logger.info('Running test Run current file in interactive window (with cells)');
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '#%%\na=1\nprint(a)\n#%%\nb=2\nprint(b)\n',
             disposables
         );
-
+        logger.info('Submitted file to interactive window');
         await waitForLastCellToComplete(activeInteractiveWindow);
-
+        logger.info('Last cell completed');
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
 
         // Should have two cells in the interactive window
         assert.equal(notebookDocument?.cellCount, 3, `Running a whole file did not split cells`);
-
+        logger.info('Verified cell count');
         // Make sure it output something
         let lastErrorMessage = 'No output found';
+        logger.info('Waiting for outputs');
         await waitForCondition(
             async () => {
                 try {
                     notebookDocument?.getCells().forEach((c, i) => {
                         if (
-                            c.document.uri.scheme === 'vscode-notebook-cell' &&
+                            c.document.uri.scheme === Schemas.vscodeNotebookCell &&
                             c.kind == vscode.NotebookCellKind.Code
                         ) {
                             assertHasTextOutputInVSCode(c, `${i}`);
