@@ -437,7 +437,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         }
         traceCellMessage(
             this.cell,
-            `IOPub message => ${msg.channel}.${msg.header.msg_type}${msg.header.msg_id}.${JSON.stringify(msg.content)}`
+            `IOPub message => ${msg.channel}.${msg.header.msg_type}.${msg.header.msg_id}.${JSON.stringify(msg.content)}`
         );
 
         // We're only interested in messages after execution has completed.

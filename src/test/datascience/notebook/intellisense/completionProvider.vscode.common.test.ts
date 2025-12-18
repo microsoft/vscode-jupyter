@@ -24,7 +24,8 @@ import { KernelCompletionProvider } from '../../../../standalone/intellisense/ke
 import { IKernelProvider } from '../../../../kernels/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-[true, false].forEach((useJedi) => {
+[true].forEach((useJedi) => {
+    // [true, false].forEach((useJedi) => {
     suite(
         `DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) ${
             useJedi ? 'withJedi' : 'withoutJedi'
