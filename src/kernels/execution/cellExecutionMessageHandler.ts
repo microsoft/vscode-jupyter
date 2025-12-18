@@ -288,6 +288,11 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (this.request) {
             this.clearLastUsedStreamOutput();
         }
+        if (this.request) {
+            this.request.onIOPub = noop;
+            this.request.onReply = noop;
+            this.request.onStdin = noop;
+        }
         this.execution = undefined;
         this.kernel.anyMessage.disconnect(this.onKernelAnyMessage, this);
         this.kernel.iopubMessage.disconnect(this.onKernelIOPubMessage, this);

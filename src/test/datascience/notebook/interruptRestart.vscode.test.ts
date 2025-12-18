@@ -3,7 +3,14 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { window } from 'vscode';
+import {
+    EventEmitter,
+    NotebookDocumentChangeEvent,
+    window,
+    workspace,
+    Disposable as VSCodeDisposable,
+    NotebookRange
+} from 'vscode';
 import { logger } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -71,7 +78,19 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
             throw ex;
         }
     }
+    const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
+    let onDidChangeNotebookDocumentStub: sinon.SinonStub<
+        [
+            listener: (e: NotebookDocumentChangeEvent) => any,
+            thisArgs?: any,
+            disposables?: VSCodeDisposable[] | undefined
+        ],
+        VSCodeDisposable
+    >;
     suiteSetup(async function () {
+        onDidChangeNotebookDocumentStub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
+        onDidChangeNotebookDocumentStub.get(() => onDidChangeNbEventHandler.event);
+        suiteDisposables.push(onDidChangeNbEventHandler);
         logger.info(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
         api = await initialize();
         dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
@@ -86,6 +105,20 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
             await initSuite();
         }
         sinon.restore();
+        if (notebook.cells.length) {
+            onDidChangeNbEventHandler.fire({
+                contentChanges: [
+                    {
+                        addedCells: [],
+                        range: new NotebookRange(0, notebook.cells.length),
+                        removedCells: notebook.cells
+                    }
+                ],
+                cellChanges: [],
+                notebook,
+                metadata: {}
+            });
+        }
         notebook.cells.length = 0;
         // Disable the prompt (when attempting to restart kernel).
         dsSettings.askForKernelRestart = false;
@@ -96,6 +129,21 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         logger.info(`End Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {
+        if (notebook.cells.length) {
+            onDidChangeNbEventHandler.fire({
+                contentChanges: [
+                    {
+                        addedCells: [],
+                        range: new NotebookRange(0, notebook.cells.length),
+                        removedCells: notebook.cells
+                    }
+                ],
+                cellChanges: [],
+                notebook,
+                metadata: {}
+            });
+        }
+        notebook.cells.length = 0;
         if (dsSettings) {
             dsSettings.askForKernelRestart = oldAskForRestart === true;
         }
