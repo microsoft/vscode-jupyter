@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
+import { CommsOverSubshells, Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import type { ISignal, Signal } from '@lumino/signaling';
@@ -285,6 +285,30 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     ): void {
         return this.realKernel.removeCommTarget(targetName, callback);
     }
+    commsOverSubshells?: CommsOverSubshells | undefined;
+    requestCreateSubshell(
+        _content: KernelMessage.ICreateSubshellRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.ICreateSubshellRequestMsg, KernelMessage.ICreateSubshellReplyMsg> {
+        throw new Error('Method not implemented.');
+    }
+    requestDeleteSubshell(
+        _content: KernelMessage.IDeleteSubshellRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDeleteSubshellRequestMsg, KernelMessage.IDeleteSubshellReplyMsg> {
+        throw new Error('Method not implemented.');
+    }
+    requestListSubshell(
+        _content: KernelMessage.IListSubshellRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IListSubshellRequestMsg, KernelMessage.IListSubshellReplyMsg> {
+        throw new Error('Method not implemented.');
+    }
+    get supportsSubshells(): boolean {
+        return false;
+    }
+    subshellId: string | null;
+
     public dispose(): void {
         this.postOffice.removeHandler(this);
         return this.realKernel.dispose();
