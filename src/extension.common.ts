@@ -179,5 +179,9 @@ export async function postActivateLegacy(context: IExtensionContext, serviceCont
     const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
     featureManager.initialize();
     context.subscriptions.push(featureManager);
-    setLogKernelMessages(serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(workspace.workspaceFolders?.[0].uri).logKernelMessages === true);
+    setLogKernelMessages(
+        serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(workspace.workspaceFolders?.[0].uri).logKernelMessages === true
+    );
 }
