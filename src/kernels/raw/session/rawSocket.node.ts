@@ -14,6 +14,7 @@ import type { Channel } from '@jupyterlab/services/lib/kernel/messages';
 import { getZeroMQ } from './zeromq.node';
 import type { IDisposable } from '../../../platform/common/types';
 import { generateUuid } from '../../../platform/common/uuid';
+import { logKernelMessages } from '../../../platform/common/constants';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
     const portDelimiter = config.transport === 'tcp' ? ':' : '-';
@@ -220,7 +221,9 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
         // Make sure it has a channel on it
         message.channel = channel as any;
-        logger.debug(`Incoming message on zmq channel ${channel}`, this.serialize(message));
+        if (logKernelMessages) {
+            logger.debug(`Incoming message on zmq channel ${channel}`, this.serialize(message));
+        }
         if (this.receiveHooks.length) {
             // Stick the receive hooks into the message chain. We use chain
             // to ensure that:
@@ -254,7 +257,9 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private sendMessage(msg: KernelMessage.IMessage, bypassHooking: boolean) {
         // First encode the message.
         const data = wireProtocol.encode(msg as any, this.connection.key, this.connection.signature_scheme);
-        logger.debug(`Sending message on zmq channel ${msg.channel}`, this.serialize(msg));
+        if (logKernelMessages) {
+            logger.debug(`Sending message on zmq channel ${msg.channel}`, this.serialize(msg));
+        }
         // Then send through our hooks, and then post to the real zmq socket
         if (!bypassHooking && this.sendHooks.length) {
             // Separate encoding for ipywidgets. It expects the same result a WebSocket would generate.
