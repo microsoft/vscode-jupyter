@@ -62,6 +62,7 @@ import { hasErrorOutput, translateCellErrorOutput } from '../../../../kernels/ex
 import { BaseKernelError } from '../../../../kernels/errors/types';
 import { IControllerRegistration } from '../../../../notebooks/controllers/types';
 import type { PythonEnvironment } from '../../../../api';
+import { logger } from '../../../../platform/logging';
 
 /* eslint-disable no-invalid-this, @typescript-eslint/no-explicit-any */
 suite('Install IPyKernel (install) @kernelCore', function () {
@@ -169,7 +170,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         console.log(`Start Test completed ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        console.log(`End test ${this.currentTest?.title}`);
+        console.log(`End test ${this.currentTest?.title} (${this.currentTest?.isFailed() ? 'Failed' : 'Passed'})`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
@@ -537,6 +538,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
         interpreterOfNewKernelToSelect?: Uri,
         ipykernelInstallRequirement: 'DoNotInstallIPyKernel' | 'ShouldInstallIPYKernel' = 'ShouldInstallIPYKernel'
     ) {
+        logger.info('Starting openNotebookAndInstallIpyKernelWhenRunningCell (1)');
         // Highjack the IPyKernel not installed prompt and click the appropriate button.
         let promptToInstall = await (interpreterOfNewKernelToSelect
             ? selectKernelFromIPyKernelPrompt()
@@ -546,13 +548,16 @@ suite('Install IPyKernel (install) @kernelCore', function () {
 
         let selectADifferentKernelStub: undefined | sinon.SinonStub<any[], any>;
         try {
+            logger.info('Starting openNotebookAndInstallIpyKernelWhenRunningCell (2)');
             if (
                 !workspace.notebookDocuments.some(
                     (item) => item.uri.fsPath.toLowerCase() === nbFile.fsPath.toLowerCase()
                 )
             ) {
                 const { editor } = await openNotebook(nbFile);
+                logger.info('Starting openNotebookAndInstallIpyKernelWhenRunningCell (3)');
                 await waitForKernelToChange({ interpreterPath }, editor);
+                logger.info('Starting openNotebookAndInstallIpyKernelWhenRunningCell (4)');
             }
 
             if (interpreterOfNewKernelToSelect) {
@@ -566,6 +571,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
                 selectADifferentKernelStub = result.selectADifferentKernelStub;
             }
             const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
+            logger.info('Starting openNotebookAndInstallIpyKernelWhenRunningCell (5)');
 
             await Promise.all([
                 runAllCellsInActiveNotebook(),
@@ -580,6 +586,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
                 waitForExecutionCompletedSuccessfully(cell),
                 waitForCellHavingOutput(cell)
             ]);
+            logger.info('Starting openNotebookAndInstallIpyKernelWhenRunningCell (6)');
 
             // Verify the kernel points to the expected interpreter.
             const output = getCellOutputs(cell).trim();
@@ -609,6 +616,7 @@ suite('Install IPyKernel (install) @kernelCore', function () {
                 }
             }
         } finally {
+            logger.info('Starting openNotebookAndInstallIpyKernelWhenRunningCell (7)');
             promptToInstall.dispose();
             selectADifferentKernelStub?.restore();
             installerSpy.restore();
