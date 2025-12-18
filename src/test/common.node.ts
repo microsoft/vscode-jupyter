@@ -16,6 +16,7 @@ import { IDisposable } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/misc';
 import { JupyterServer } from './datascience/jupyterServer.node';
 import type { ConfigurationTarget, TextDocument, Uri } from 'vscode';
+import { logger } from '../platform/logging';
 
 export { createEventHandler } from './common';
 
@@ -197,6 +198,7 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
         'logs',
         await generateScreenShotFileName(contextOrFileName)
     );
+    logger.info(`Capturing screenshot into ${filename}`);
     try {
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });
