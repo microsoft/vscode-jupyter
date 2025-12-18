@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
+import type { Kernel, KernelSpec, KernelMessage, ServerConnection, CommsOverSubshells } from '@jupyterlab/services';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import { logger } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
@@ -119,6 +119,29 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             id: this.id
         };
     }
+    commsOverSubshells?: CommsOverSubshells | undefined;
+    requestCreateSubshell(
+        _content: KernelMessage.ICreateSubshellRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.ICreateSubshellRequestMsg, KernelMessage.ICreateSubshellReplyMsg> {
+        throw new Error('Method not implemented.');
+    }
+    requestDeleteSubshell(
+        _content: KernelMessage.IDeleteSubshellRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDeleteSubshellRequestMsg, KernelMessage.IDeleteSubshellReplyMsg> {
+        throw new Error('Method not implemented.');
+    }
+    requestListSubshell(
+        _content: KernelMessage.IListSubshellRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IListSubshellRequestMsg, KernelMessage.IListSubshellReplyMsg> {
+        throw new Error('Method not implemented.');
+    }
+    get supportsSubshells(): boolean {
+        return false;
+    }
+    subshellId: string | null;
     public async restart(): Promise<void> {
         this.stopHandlingKernelMessages();
         this._isDisposed = false;
@@ -213,7 +236,11 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 this.kernelProcess ? disposeAsync(this.kernelProcess) : Promise.resolve(),
                 this.realKernel
                     ?.shutdown()
-                    .catch((ex) => logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex))
+                    .catch((ex) =>
+                        postStartToken.token.isCancellationRequested
+                            ? undefined
+                            : logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex)
+                    )
             ]);
             if (kernelExitedError) {
                 throw kernelExitedError;
@@ -569,7 +596,9 @@ async function postStartKernel(
                     sleep(Math.min(launchTimeout, 500)).then(noop)
                 );
             } catch (ex) {
-                logger.error('Failed to request kernel info', ex);
+                if (!token.isCancellationRequested) {
+                    logger.error('Failed to request kernel info', ex);
+                }
                 throw ex;
             }
 
