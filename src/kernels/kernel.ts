@@ -525,7 +525,11 @@ abstract class BaseKernel implements IBaseKernel {
                 });
                 return session;
             } catch (ex) {
-                logger.ci(`Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.uri)}`);
+                if (!isCancellationError(ex)) {
+                    logger.ci(
+                        `Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.uri)}`
+                    );
+                }
                 // If we fail also clear the promise.
                 this.startCancellation.cancel();
                 this._jupyterSessionPromise = undefined;
@@ -940,7 +944,8 @@ abstract class BaseKernel implements IBaseKernel {
                         message.content &&
                         'data' in message.content &&
                         message.content.data &&
-                        (message.content.data[WIDGET_MIMETYPE] ||
+                        typeof message.content.data === 'object' &&
+                        ((message.content.data as Record<string, unknown>)[WIDGET_MIMETYPE] ||
                             ('target_name' in message.content &&
                                 message.content.target_name === Identifiers.DefaultCommTarget))
                     ) {

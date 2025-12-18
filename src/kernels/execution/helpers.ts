@@ -111,7 +111,7 @@ export function traceCellMessage(cell: NotebookCell, message: string | (() => st
             `Cell Index:${cell.index}, of document ${uriPath.basename(
                 cell.notebook.uri
             )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${cell.executionSummary
-                ?.executionOrder}. ${messageToLog()}. called from ${getExtensionSpecificStack()}`
+                ?.executionOrder}. ${messageToLog()}. ${getExtensionSpecificStack()}`
     );
 }
 
