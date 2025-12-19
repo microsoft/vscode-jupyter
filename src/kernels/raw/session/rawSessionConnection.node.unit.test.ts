@@ -4,7 +4,7 @@
 import { ISignal, Signal } from '@lumino/signaling';
 import * as sinon from 'sinon';
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
-import { mock, when, instance, verify, anything } from 'ts-mockito';
+import { mock, when, instance, verify, anything, resetCalls } from 'ts-mockito';
 import {
     CancellationError,
     CancellationTokenSource,
@@ -510,6 +510,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
                 request = msg;
                 return { done: Promise.resolve() } as any;
             });
+            resetCalls(kernel);
 
             await session.kernel?.interrupt();
 
