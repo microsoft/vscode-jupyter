@@ -212,6 +212,7 @@ function logDebug(message: string, ...args: Arguments): void {
         loggers.forEach((l) => l.debug(message, ...args));
     }
 }
+
 function logInfoIfCI(msg: () => [message: string, ...args: string[]] | string): void;
 function logInfoIfCI(message: string, ...args: string[]): void;
 function logInfoIfCI(arg1: any, ...args: Arguments): void {

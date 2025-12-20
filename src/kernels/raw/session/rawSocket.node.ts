@@ -219,7 +219,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             : (wireProtocol.decode(data, this.connection.key, this.connection.signature_scheme) as any);
 
         // Make sure it has a channel on it
-        message.channel = channel as any;
+        message.channel = channel;
+
         if (this.receiveHooks.length) {
             // Stick the receive hooks into the message chain. We use chain
             // to ensure that:
