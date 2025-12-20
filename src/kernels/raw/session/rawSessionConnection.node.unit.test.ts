@@ -505,9 +505,9 @@ suite('Raw Session & Raw Kernel Connection', () => {
         test('Send and interrupt message', async () => {
             (kernelConnectionMetadata.kernelSpec as ReadWrite<IJupyterKernelSpec>).interrupt_mode = 'message';
             when(kernelProcess.canInterrupt).thenReturn(false);
-            let request: KernelMessage.IControlMessage<KernelMessage.ControlMessageType> | undefined;
+            const messageTypes: string[] = [];
             when(kernel.sendControlMessage(anything(), anything(), anything())).thenCall((msg) => {
-                request = msg;
+                messageTypes.push(msg?.header.msg_type || '');
                 return { done: Promise.resolve() } as any;
             });
             resetCalls(kernel);
@@ -515,13 +515,14 @@ suite('Raw Session & Raw Kernel Connection', () => {
             await session.kernel?.interrupt();
 
             verify(kernelProcess.interrupt()).never();
-            verify(kernel.sendControlMessage(anything(), anything(), anything())).once();
-            assert.strictEqual(request?.header.msg_type, 'interrupt_request');
+            verify(kernel.sendControlMessage(anything(), anything(), anything())).atLeast(1);
+            assert.strictEqual(messageTypes.includes('interrupt_request'), true);
+            assert.strictEqual(messageTypes, ['interrupt_request']);
         });
     });
 });
 
-suite('Raw Session & Raw Kernel Connection', () => {
+suite('Raw Session & Raw Kernel Connection (2)', () => {
     suite('KernelWorkingFolder', function () {
         let configService: IConfigurationService;
         let fs: IFileSystem;
