@@ -517,7 +517,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             verify(kernelProcess.interrupt()).never();
             verify(kernel.sendControlMessage(anything(), anything(), anything())).atLeast(1);
             assert.strictEqual(messageTypes.includes('interrupt_request'), true);
-            assert.strictEqual(messageTypes, ['interrupt_request']);
+            assert.deepEqual(messageTypes, ['interrupt_request']);
         });
     });
 });
