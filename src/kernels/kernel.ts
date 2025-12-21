@@ -525,7 +525,11 @@ abstract class BaseKernel implements IBaseKernel {
                 });
                 return session;
             } catch (ex) {
-                logger.ci(`Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.uri)}`);
+                if (!isCancellationError(ex)) {
+                    logger.ci(
+                        `Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.uri)}`
+                    );
+                }
                 // If we fail also clear the promise.
                 this.startCancellation.cancel();
                 this._jupyterSessionPromise = undefined;

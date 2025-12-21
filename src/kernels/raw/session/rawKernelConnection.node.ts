@@ -17,7 +17,13 @@ import { RawSocket } from './rawSocket.node';
 import { IKernelSocket, LocalKernelConnectionMetadata } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { Signal } from '@lumino/signaling';
-import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
+import type {
+    IInterruptRequestMsg,
+    IIOPubMessage,
+    IMessage,
+    IOPubMessageType,
+    MessageType
+} from '@jupyterlab/services/lib/kernel/messages';
 import { CancellationError, CancellationToken, CancellationTokenSource, Uri, workspace } from 'vscode';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -236,7 +242,11 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 this.kernelProcess ? disposeAsync(this.kernelProcess) : Promise.resolve(),
                 this.realKernel
                     ?.shutdown()
-                    .catch((ex) => logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex))
+                    .catch((ex) =>
+                        postStartToken.token.isCancellationRequested
+                            ? undefined
+                            : logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex)
+                    )
             ]);
             if (kernelExitedError) {
                 throw kernelExitedError;
@@ -380,17 +390,16 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         if (this.kernelProcess?.canInterrupt) {
             return this.kernelProcess?.interrupt();
         } else if (this.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
-            logger.info(`Interrupting kernel with a shell message`);
+            logger.info(`Interrupting kernel with a control message`);
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-            const msg = jupyterLab.KernelMessage.createMessage({
+            const msg = jupyterLab.KernelMessage.createMessage<IInterruptRequestMsg>({
                 msgType: 'interrupt_request' as any,
-                channel: 'shell',
+                channel: 'control',
                 username: this.realKernel!.username,
                 session: this.realKernel!.clientId,
                 content: {}
-            }) as any as KernelMessage.IShellMessage<'inspect_request'>;
-            // @ts-ignore Will be fixed in separate PR https://github.com/microsoft/vscode-jupyter/pull/17144
-            await this.realKernel!.sendShellMessage<'interrupt_request'>(msg as any, true, true).done.catch((ex) =>
+            });
+            await this.realKernel!.sendControlMessage<'interrupt_request'>(msg, true, true).done.catch((ex) =>
                 logger.error('Failed to interrupt via a message', ex)
             );
         } else {
@@ -593,7 +602,9 @@ async function postStartKernel(
                     sleep(Math.min(launchTimeout, 500)).then(noop)
                 );
             } catch (ex) {
-                logger.error('Failed to request kernel info', ex);
+                if (!token.isCancellationRequested) {
+                    logger.error('Failed to request kernel info', ex);
+                }
                 throw ex;
             }
 
