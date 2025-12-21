@@ -155,6 +155,7 @@ async function createSettings(): Promise<string> {
         'python.showStartPage': false,
         // Disable the restart ask so that restart just happens
         'jupyter.askForKernelRestart': false,
+        'jupyter.logKernelMessages': true, // Log kernel messages for test purposes.
         // To get widgets working.
         'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com'],
         'notebook.stickyScroll.enabled': true, // Required for perf tests

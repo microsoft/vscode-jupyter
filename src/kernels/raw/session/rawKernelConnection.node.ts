@@ -570,6 +570,7 @@ async function postStartKernel(
             channel: 'control' as unknown as 'shell',
             username: kernel.username,
             session: kernel.clientId,
+            subshellId: kernel.subshellId,
             content: {}
         });
         kernel

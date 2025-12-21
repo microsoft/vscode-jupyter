@@ -52,6 +52,11 @@ export function setCI(enabled: boolean) {
     isCI = enabled;
 }
 
+export let logKernelMessages = false;
+export function setLogKernelMessages(enabled: boolean) {
+    logKernelMessages = enabled;
+}
+
 let _isTestExecution = false;
 export function isTestExecution(): boolean {
     return _isTestExecution || isUnitTestExecution();
