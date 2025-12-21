@@ -937,23 +937,11 @@ export async function waitForCellExecutionState(
         disposable.dispose();
     }
 }
-export async function waitForOutputs(
-    cell: NotebookCell,
-    expectedNumberOfOutputs: number,
-    timeout: number = defaultNotebookTestTimeout
-) {
-    await waitForCondition(
-        async () => cell.outputs.length === expectedNumberOfOutputs,
-        timeout,
-        () =>
-            `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
-                cell
-            )}`
-    );
-}
+
 export async function waitForExecutionCompletedSuccessfully(
     cell: NotebookCell,
-    timeout: number = defaultNotebookTestTimeout
+    timeout: number = defaultNotebookTestTimeout,
+    additionalMessage: string = ''
 ) {
     assert.ok(cell, 'No notebook cell to wait for');
     await Promise.all([
@@ -961,9 +949,13 @@ export async function waitForExecutionCompletedSuccessfully(
             async () => assertHasExecutionCompletedSuccessfully(cell),
             timeout,
             () =>
-                `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
+                `Cell ${cell.index + 1} of ${getDisplayPath(
+                    cell.notebook.uri
+                )} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
                     cell
-                )}, & state = ${NotebookCellStateTracker.getCellState(cell)}`
+                )}, & state = ${NotebookCellStateTracker.getCellState(cell)}, ${additionalMessage}, Notebook has ${
+                    cell.notebook.cellCount
+                } cells and cell Content = ${cell.document.getText()}`
         ),
         waitForCellExecutionToComplete(cell)
     ]);
