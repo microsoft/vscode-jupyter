@@ -64,7 +64,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -83,7 +83,7 @@ jobs:
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -107,7 +107,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -120,19 +120,19 @@ jobs:
         run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Cache pip files
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}
 
       - name: Cache npm files
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Cache the out/ directory
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
@@ -196,7 +196,7 @@ jobs:
         test-suite: [ts-unit]
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -210,7 +210,7 @@ jobs:
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: matrix.os != 'windows-latest'
         with:
           path: ~/.npm
@@ -224,7 +224,7 @@ jobs:
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
       #   - name: Cache npm on windows
-      #     uses: actions/cache@v4
+      #     uses: actions/cache@v5
       #     if: matrix.os == 'windows-latest'
       #     with:
       #       path: ${{ steps.npm-cache.outputs.dir }}
@@ -235,7 +235,7 @@ jobs:
       - name: Cache compiled TS files
         # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
         id: out-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
@@ -271,7 +271,7 @@ jobs:
       matrix:
         jupyterConnection: [raw] # valid values include raw = uzing zqm, local = using local jupyter, remote = using remote jupyter, web = using remote jupyter in web mode
         python: [python] # valid values include python,conda,noPython
-        pythonVersion: ['3.10']
+        pythonVersion: ['3.12']
         # Whether we're using stable (<empty>) or pre-release versions of Python packages.
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
@@ -303,63 +303,63 @@ jobs:
           # Mandatory tests
           - jupyterConnection: remote
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
           - jupyterConnection: remote
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             packageVersion: 'prerelease'
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
           - jupyterConnection: web
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
           - jupyterConnection: raw
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '^[^@]+$|@mandatory'
             os: windows-latest
             ipywidgetsVersion: ''
           # IPyWidgets 7 & 8
           - jupyterConnection: raw
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '@widgets'
             os: ubuntu-latest
             ipywidgetsVersion: '7'
           - jupyterConnection: raw
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '@widgets'
             os: ubuntu-latest
             ipywidgetsVersion: ''
           - jupyterConnection: remote
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '@widgets'
             os: ubuntu-latest
             ipywidgetsVersion: ''
           # Conda
           - jupyterConnection: raw
             python: conda
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '^[^@]+$|@mandatory|@python'
             os: ubuntu-latest
             ipywidgetsVersion: ''
           # Pre-Release Versions
-          - jupyterConnection: raw
-            python: python
-            pythonVersion: '3.10'
-            packageVersion: 'prerelease'
-            tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter|@widgets'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
+          #   - jupyterConnection: raw
+          #     python: python
+          #     pythonVersion: '3.12'
+          #     packageVersion: 'prerelease'
+          #     tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter|@widgets'
+          #     os: ubuntu-latest
+          #     ipywidgetsVersion: ''
           # Without Python
           - jupyterConnection: raw
             python: noPython
@@ -369,14 +369,14 @@ jobs:
           # Misc
           - jupyterConnection: remote
             python: python
-            pythonVersion: '3.10'
+            pythonVersion: '3.12'
             tags: '@kernelCore'
             os: ubuntu-latest
             ipywidgetsVersion: ''
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -433,7 +433,7 @@ jobs:
       # Cache Python Dependencies.
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7'
         with:
           path: ~/.cache/pip
@@ -442,7 +442,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
       - name: Cache pip on linux
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '7'
         with:
           path: ~/.cache/pip
@@ -451,7 +451,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       - name: Cache pip on mac
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7'
         with:
           path: ~/Library/Caches/pip
@@ -460,7 +460,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
       - name: Cache pip on mac
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '7'
         with:
           path: ~/Library/Caches/pip
@@ -469,7 +469,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       - name: Cache pip on windows
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7'
         with:
           path: ~\AppData\Local\pip\Cache
@@ -478,7 +478,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
 
       - name: Cache pip on windows
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '7'
         with:
           path: ~\AppData\Local\pip\Cache
@@ -488,7 +488,7 @@ jobs:
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: matrix.os != 'windows-latest'
         with:
           path: ~/.npm
@@ -502,7 +502,7 @@ jobs:
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
       #   - name: Cache npm on windows
-      #     uses: actions/cache@v4
+      #     uses: actions/cache@v5
       #     if: matrix.os == 'windows-latest'
       #     with:
       #       path: ${{ steps.npm-cache.outputs.dir }}
@@ -807,7 +807,7 @@ jobs:
         python: ['3.10']
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 

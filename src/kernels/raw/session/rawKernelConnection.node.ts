@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
+import type { Kernel, KernelSpec, KernelMessage, ServerConnection, CommsOverSubshells } from '@jupyterlab/services';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import { logger } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
@@ -17,7 +17,13 @@ import { RawSocket } from './rawSocket.node';
 import { IKernelSocket, LocalKernelConnectionMetadata } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { Signal } from '@lumino/signaling';
-import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
+import type {
+    IInterruptRequestMsg,
+    IIOPubMessage,
+    IMessage,
+    IOPubMessageType,
+    MessageType
+} from '@jupyterlab/services/lib/kernel/messages';
 import { CancellationError, CancellationToken, CancellationTokenSource, Uri, workspace } from 'vscode';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -119,6 +125,29 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             id: this.id
         };
     }
+    commsOverSubshells?: CommsOverSubshells | undefined;
+    requestCreateSubshell(
+        _content: KernelMessage.ICreateSubshellRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.ICreateSubshellRequestMsg, KernelMessage.ICreateSubshellReplyMsg> {
+        throw new Error('Method not implemented.');
+    }
+    requestDeleteSubshell(
+        _content: KernelMessage.IDeleteSubshellRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDeleteSubshellRequestMsg, KernelMessage.IDeleteSubshellReplyMsg> {
+        throw new Error('Method not implemented.');
+    }
+    requestListSubshell(
+        _content: KernelMessage.IListSubshellRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IListSubshellRequestMsg, KernelMessage.IListSubshellReplyMsg> {
+        throw new Error('Method not implemented.');
+    }
+    get supportsSubshells(): boolean {
+        return false;
+    }
+    subshellId: string | null;
     public async restart(): Promise<void> {
         this.stopHandlingKernelMessages();
         this._isDisposed = false;
@@ -213,7 +242,11 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 this.kernelProcess ? disposeAsync(this.kernelProcess) : Promise.resolve(),
                 this.realKernel
                     ?.shutdown()
-                    .catch((ex) => logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex))
+                    .catch((ex) =>
+                        postStartToken.token.isCancellationRequested
+                            ? undefined
+                            : logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex)
+                    )
             ]);
             if (kernelExitedError) {
                 throw kernelExitedError;
@@ -357,16 +390,16 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         if (this.kernelProcess?.canInterrupt) {
             return this.kernelProcess?.interrupt();
         } else if (this.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
-            logger.info(`Interrupting kernel with a shell message`);
+            logger.info(`Interrupting kernel with a control message`);
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-            const msg = jupyterLab.KernelMessage.createMessage({
+            const msg = jupyterLab.KernelMessage.createMessage<IInterruptRequestMsg>({
                 msgType: 'interrupt_request' as any,
-                channel: 'shell',
+                channel: 'control',
                 username: this.realKernel!.username,
                 session: this.realKernel!.clientId,
                 content: {}
-            }) as any as KernelMessage.IShellMessage<'inspect_request'>;
-            await this.realKernel!.sendShellMessage<'interrupt_request'>(msg as any, true, true).done.catch((ex) =>
+            });
+            await this.realKernel!.sendControlMessage<'interrupt_request'>(msg, true, true).done.catch((ex) =>
                 logger.error('Failed to interrupt via a message', ex)
             );
         } else {
@@ -569,7 +602,9 @@ async function postStartKernel(
                     sleep(Math.min(launchTimeout, 500)).then(noop)
                 );
             } catch (ex) {
-                logger.error('Failed to request kernel info', ex);
+                if (!token.isCancellationRequested) {
+                    logger.error('Failed to request kernel info', ex);
+                }
                 throw ex;
             }
 
