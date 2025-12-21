@@ -143,6 +143,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                 }
                 if (this.executions.get(kernel) === execution) {
                     execution.dispose();
+                    this.executions.delete(kernel);
                 }
                 this.pendingDisposables.delete(kernel);
             },
