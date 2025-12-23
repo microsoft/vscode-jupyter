@@ -29,7 +29,7 @@
 ```shell
 git clone https://github.com/microsoft/vscode-jupyter
 cd vscode-jupyter
-npm ci
+npm ci --ignore-scripts && npm run postinstall
 # Run this to setup the necessary pre-commit hooks.
 npm run setup-precommit-hook
 python3 -m venv .venv
