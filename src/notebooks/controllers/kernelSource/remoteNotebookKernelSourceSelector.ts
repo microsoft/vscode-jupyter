@@ -468,9 +468,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                             lazyQuickPick.busy = true;
                         }
                         const ret = await this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
-                        if (lazyQuickPick) {
-                            lazyQuickPick.busy = false;
-                        }
                         return ret;
                     } catch (ex) {
                         if (ex === InputFlowAction.back && !defaultSelection) {
@@ -479,6 +476,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                             throw ex;
                         }
                     } finally {
+                        if (lazyQuickPick) {
+                            lazyQuickPick.busy = false;
+                        }
                         taskNb.dispose();
                     }
                 }
