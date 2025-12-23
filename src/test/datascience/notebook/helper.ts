@@ -937,7 +937,6 @@ export async function waitForCellExecutionState(
         disposable.dispose();
     }
 }
-
 export async function waitForExecutionCompletedSuccessfully(
     cell: NotebookCell,
     timeout: number = defaultNotebookTestTimeout,
