@@ -25,7 +25,7 @@ import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { getExtensionSpecificStack } from '../../platform/errors/errors';
 import { getCachedEnvironment, getVersion } from '../../platform/interpreter/helpers';
 import { base64ToUint8Array, uint8ArrayToBase64 } from '../../platform/common/utils/string';
-import type { NotebookCellExecutionState } from '../../platform/notebooks/cellExecutionStateService';
+import { NotebookCellExecutionState } from '../../platform/notebooks/cellExecutionStateService';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -82,6 +82,19 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
     });
 }
 
+export function cellExecutionStateToString(state: NotebookCellExecutionState | undefined) {
+    switch (state) {
+        case NotebookCellExecutionState.Idle:
+            return 'Idle';
+        case NotebookCellExecutionState.Executing:
+            return 'Executing';
+        case NotebookCellExecutionState.Pending:
+            return 'Pending';
+        default:
+            return 'Unknown';
+    }
+}
+
 /**
  * This class is used to track state of cells, used in logging & tests.
  */
@@ -99,7 +112,11 @@ export class NotebookCellStateTracker {
     public static setCellState(cell: NotebookCell, state: NotebookCellExecutionState) {
         const stopWatch = NotebookCellStateTracker.cellStates.get(cell)?.start || new StopWatch();
         const previousState = NotebookCellStateTracker.cellStates.get(cell)?.stateTransition || [];
-        previousState.push(`${state} ${previousState.length === 0 ? '@ start' : `After ${stopWatch.elapsedTime}ms`}`);
+        previousState.push(
+            `${cellExecutionStateToString(state)} ${
+                previousState.length === 0 ? '@ start' : `After ${stopWatch.elapsedTime}ms`
+            }`
+        );
         NotebookCellStateTracker.cellStates.set(cell, { stateTransition: previousState, state, start: stopWatch });
     }
 }
