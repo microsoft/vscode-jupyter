@@ -1018,10 +1018,6 @@ suite('Kernel Execution @kernelCore', function () {
     test.skip('Streamed output is added into the right cell (#16381, disabled due to #17194)', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/16381#issuecomment-2603496123
         // https://github.com/microsoft/vscode-jupyter/issues/17194
-        const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
-        const stub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
-        stub.get(() => onDidChangeNbEventHandler.event);
-        disposables.push(onDidChangeNbEventHandler);
         const cell = await notebook.appendCodeCell(
             dedent`
 import logging.handlers

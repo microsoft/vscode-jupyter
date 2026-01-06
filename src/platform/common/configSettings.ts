@@ -105,6 +105,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             this.disableJupyterAutoStart = true;
         }
     }
+    completionTriggerCharacters?: Record<string, string[]> | undefined;
+    public logKernelMessages: boolean = false;
 
     public static getInstance(
         resource: Uri | undefined,

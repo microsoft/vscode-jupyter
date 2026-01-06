@@ -278,6 +278,74 @@ suite(`Notebook Controller`, function () {
 
         verify(mockedVSCodeNamespaces.workspace.applyEdit(anything())).once();
     });
+    suite('dispose', () => {
+        let controllerInstance: VSCodeNotebookController;
+        setup(() => {
+            controllerInstance = new VSCodeNotebookController(
+                instance(kernelConnection),
+                '1',
+                'jupyter-notebook',
+                instance(kernelProvider),
+                instance(context),
+                disposables,
+                instance(languageService),
+                instance(configService),
+                instance(extensionChecker),
+                instance(serviceContainer),
+                displayDataProvider
+            );
+            notebook = new TestNotebookDocument(undefined, 'jupyter-notebook');
+        });
+        test('Disposes the kernel of the associated notebook', async function () {
+            const kernel1 = mock<IKernel>();
+            const kernel2 = mock<IKernel>();
+            when(kernel1.dispose()).thenResolve();
+            when(kernel2.dispose()).thenResolve();
+            const notebook1 = new TestNotebookDocument();
+            const notebook2 = new TestNotebookDocument();
+            when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([notebook1, notebook2]);
+            when(kernelProvider.get(notebook1)).thenReturn(instance(kernel1));
+            when(kernelProvider.get(notebook2)).thenReturn(instance(kernel2));
+            when(kernel1.kernelConnectionMetadata).thenReturn(instance(kernelConnection));
+            when(kernel2.kernelConnectionMetadata).thenReturn(instance(kernelConnection));
+
+            // Associate the controller with notebook1
+            onDidChangeSelectedNotebooks.fire({ notebook: notebook1, selected: true });
+            await clock.runAllAsync();
+
+            // Dispose the controller
+            controllerInstance.dispose();
+
+            // Verify that only the kernel associated with notebook1 is disposed
+            verify(kernel1.dispose()).once();
+            verify(kernel2.dispose()).never();
+        });
+        test('Disposes all kernels associated with this controller', async function () {
+            const kernel1 = mock<IKernel>();
+            const kernel2 = mock<IKernel>();
+            when(kernel1.dispose()).thenResolve();
+            when(kernel2.dispose()).thenResolve();
+            const notebook1 = new TestNotebookDocument();
+            const notebook2 = new TestNotebookDocument();
+            when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([notebook1, notebook2]);
+            when(kernelProvider.get(notebook1)).thenReturn(instance(kernel1));
+            when(kernelProvider.get(notebook2)).thenReturn(instance(kernel2));
+            when(kernel1.kernelConnectionMetadata).thenReturn(instance(kernelConnection));
+            when(kernel2.kernelConnectionMetadata).thenReturn(instance(kernelConnection));
+
+            // Associate the controller with both notebooks
+            onDidChangeSelectedNotebooks.fire({ notebook: notebook1, selected: true });
+            onDidChangeSelectedNotebooks.fire({ notebook: notebook2, selected: true });
+            await clock.runAllAsync();
+
+            // Dispose the controller
+            controllerInstance.dispose();
+
+            // Verify that both kernels are disposed
+            verify(kernel1.dispose()).once();
+            verify(kernel2.dispose()).once();
+        });
+    });
     suite('Unsupported Python Versions', () => {
         let disposables: IDisposable[] = [];
         let environments: PythonExtension['environments'];
