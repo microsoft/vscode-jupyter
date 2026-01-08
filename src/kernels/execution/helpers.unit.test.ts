@@ -10,7 +10,7 @@ import {
     getNotebookCellOutputMetadata,
     updateNotebookMetadataWithSelectedKernel
 } from './helpers';
-import { IJupyterKernelSpec, PythonKernelConnectionMetadata } from '../types';
+import { IJupyterKernelSpec, PythonKernelConnectionMetadata, RemoteKernelSpecConnectionMetadata, LiveRemoteKernelConnectionMetadata } from '../types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { PythonExtension } from '@vscode/python-extension';
 import { instance, mock, when } from 'ts-mockito';
@@ -230,6 +230,116 @@ suite(`UpdateNotebookMetadata`, () => {
 
         // Should be no change here
         assert.strictEqual(value.changed, false);
+    });
+
+    test('Remote Kernel without interpreter should preserve existing language_info', async () => {
+        const notebookMetadata: nbformat.INotebookMetadata = {
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'Python 3 (ipykernel)', language: 'python', name: 'python3' },
+            language_info: {
+                name: 'python',
+                version: '3.10.13',
+                codemirror_mode: {
+                    name: 'ipython',
+                    version: 3
+                },
+                file_extension: '.py',
+                mimetype: 'text/x-python',
+                nbconvert_exporter: 'python',
+                pygments_lexer: 'ipython3'
+            }
+        };
+        const remoteKernelSpec: IJupyterKernelSpec = {
+            argv: ['python', '-f', '{connection_file}'],
+            display_name: 'Python 3 (ipykernel)',
+            name: 'python3',
+            language: 'python',
+            executable: 'python'
+        };
+        // Create remote kernel connection without interpreter (typical for remote servers)
+        const kernelConnection = RemoteKernelSpecConnectionMetadata.create({
+            kernelSpec: remoteKernelSpec,
+            baseUrl: 'http://localhost:8888',
+            id: 'remote-python3',
+            serverProviderHandle: { handle: 'test', id: 'test', extensionId: 'test' }
+            // Note: no interpreter provided, which is typical for remote servers
+        });
+        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
+
+        // Verify language_info is preserved and not cleared to undefined
+        verifyMetadata(notebookMetadata, {
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'Python 3 (ipykernel)', language: 'python', name: 'python3' },
+            language_info: {
+                name: 'python',
+                version: '3.10.13',
+                codemirror_mode: {
+                    name: 'ipython',
+                    version: 3
+                },
+                file_extension: '.py',
+                mimetype: 'text/x-python',
+                nbconvert_exporter: 'python',
+                pygments_lexer: 'ipython3'
+            }
+        });
+        // Should be no change since we're preserving existing metadata
+        assert.strictEqual(value.changed, false);
+    });
+
+    test('Live Remote Kernel without interpreter should preserve existing language_info', async () => {
+        const notebookMetadata: nbformat.INotebookMetadata = {
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'Python 3 (ipykernel)', language: 'python', name: 'python3' },
+            language_info: {
+                name: 'python',
+                version: '3.10.13',
+                codemirror_mode: {
+                    name: 'ipython',
+                    version: 3
+                },
+                file_extension: '.py',
+                mimetype: 'text/x-python',
+                nbconvert_exporter: 'python',
+                pygments_lexer: 'ipython3'
+            }
+        };
+        const kernelModel = {
+            id: 'kernel-id',
+            name: 'python3',
+            display_name: 'python3',
+            language: 'python'
+        } as any;
+        // Create live remote kernel connection without interpreter (typical for remote servers)
+        const kernelConnection = LiveRemoteKernelConnectionMetadata.create({
+            kernelModel: kernelModel,
+            baseUrl: 'http://localhost:8888',
+            id: 'live-remote-python3',
+            serverProviderHandle: { handle: 'test', id: 'test', extensionId: 'test' }
+            // Note: no interpreter provided, which is typical for remote servers
+        });
+        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
+
+        // Verify language_info is preserved and not cleared to undefined
+        // Also verify that the kernelspec display_name gets updated to match the kernel model
+        verifyMetadata(notebookMetadata, {
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'python3', language: 'python', name: 'python3' },
+            language_info: {
+                name: 'python',
+                version: '3.10.13',
+                codemirror_mode: {
+                    name: 'ipython',
+                    version: 3
+                },
+                file_extension: '.py',
+                mimetype: 'text/x-python',
+                nbconvert_exporter: 'python',
+                pygments_lexer: 'ipython3'
+            }
+        });
+        // Should have changed due to kernelspec update, but language_info should be preserved
+        assert.strictEqual(value.changed, true);
     });
 });
 
