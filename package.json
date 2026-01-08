@@ -1523,6 +1523,14 @@
                     "default": 10000,
                     "description": "%jupyter.configuration.jupyter.jupyterInterruptTimeout.description%"
                 },
+                "jupyter.kernels.portRange.startPort": {
+                    "type": "number",
+                    "default": 9000,
+                    "minimum": 1024,
+                    "maximum": 65535,
+                    "description": "%jupyter.configuration.jupyter.kernels.portRange.startPort.description%",
+                    "scope": "machine"
+                },
                 "jupyter.interactiveWindow.textEditor.executeSelection": {
                     "type": "boolean",
                     "default": false,
