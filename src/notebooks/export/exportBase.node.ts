@@ -92,7 +92,7 @@ export class ExportBase implements IExportBase {
             '--to',
             format,
             '--output',
-            path.basename(tempTarget.filePath),
+            path.basename(tempTarget.filePath, path.extname(tempTarget.filePath)),
             '--output-dir',
             path.dirname(tempTarget.filePath),
             '--debug'
