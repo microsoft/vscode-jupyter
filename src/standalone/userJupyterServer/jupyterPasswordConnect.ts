@@ -16,6 +16,7 @@ import {
 } from '../../kernels/jupyter/types';
 import { dispose } from '../../platform/common/utils/lifecycle';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
+import { IEncryptedStorage } from '../../platform/common/application/types';
 
 export interface IJupyterPasswordConnectInfo {
     requiresPassword: boolean;
@@ -27,12 +28,15 @@ export interface IJupyterPasswordConnectInfo {
  */
 export class JupyterPasswordConnect {
     private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo>>();
+    private static readonly SERVICE_NAME = 'jupyter-server-password';
+
     constructor(
         private readonly configService: IConfigurationService,
         private readonly agentCreator: IJupyterRequestAgentCreator | undefined,
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly serverUriStorage: IJupyterServerUriStorage,
-        private readonly disposables: IDisposableRegistry
+        private readonly disposables: IDisposableRegistry,
+        private readonly encryptedStorage: IEncryptedStorage
     ) {
         // Sign up to see if servers are removed from our uri storage list
         this.serverUriStorage.onDidRemove(this.onDidRemoveServers, this, this.disposables);
@@ -59,6 +63,7 @@ export class JupyterPasswordConnect {
             result = this.getJupyterConnectionInfo({
                 url: newUrl,
                 isTokenEmpty: options.isTokenEmpty,
+                handle: options.handle,
                 disposables,
                 validationErrorMessage: options.validationErrorMessage
             }).then((value) => {
@@ -98,6 +103,7 @@ export class JupyterPasswordConnect {
     private async getJupyterConnectionInfo(options: {
         url: string;
         isTokenEmpty: boolean;
+        handle: string;
         validationErrorMessage?: string;
         disposables: IDisposable[];
     }): Promise<IJupyterPasswordConnectInfo> {
@@ -105,36 +111,52 @@ export class JupyterPasswordConnect {
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
         let userPassword: string | undefined = undefined;
+        let useStoredPassword = false;
 
         // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
         const requiresPassword = await this.needPassword(options.url);
 
         if (requiresPassword || options.isTokenEmpty) {
-            // Get password first
+            // Get password first - try stored password if available
             if (requiresPassword && options.isTokenEmpty) {
-                const input = window.createInputBox();
-                options.disposables.push(input);
-                input.title = DataScience.jupyterSelectPasswordTitle;
-                input.placeholder = DataScience.jupyterSelectPasswordPrompt;
-                input.ignoreFocusOut = true;
-                input.password = true;
-                input.validationMessage = options.validationErrorMessage || '';
-                input.show();
-                input.buttons = [QuickInputButtons.Back];
-                userPassword = await new Promise<string>((resolve, reject) => {
-                    input.onDidTriggerButton(
-                        (e) => {
-                            if (e === QuickInputButtons.Back) {
-                                reject(InputFlowAction.back);
-                            }
-                        },
-                        this,
-                        options.disposables
-                    );
-                    input.onDidChangeValue(() => (input.validationMessage = ''), this, options.disposables);
-                    input.onDidAccept(() => resolve(input.value), this, options.disposables);
-                    input.onDidHide(() => reject(InputFlowAction.cancel), this, options.disposables);
-                });
+                // Try to get stored password first
+                const storedPassword = await this.getStoredPassword(options.handle);
+
+                if (storedPassword && !options.validationErrorMessage) {
+                    // We have a stored password and no validation error, so try using it
+                    userPassword = storedPassword;
+                    useStoredPassword = true;
+                } else {
+                    // No stored password or previous validation failed, prompt user
+                    const input = window.createInputBox();
+                    options.disposables.push(input);
+                    input.title = DataScience.jupyterSelectPasswordTitle;
+                    input.placeholder = DataScience.jupyterSelectPasswordPrompt;
+                    input.ignoreFocusOut = true;
+                    input.password = true;
+                    input.validationMessage = options.validationErrorMessage || '';
+                    input.show();
+                    input.buttons = [QuickInputButtons.Back];
+                    userPassword = await new Promise<string>((resolve, reject) => {
+                        input.onDidTriggerButton(
+                            (e) => {
+                                if (e === QuickInputButtons.Back) {
+                                    reject(InputFlowAction.back);
+                                }
+                            },
+                            this,
+                            options.disposables
+                        );
+                        input.onDidChangeValue(() => (input.validationMessage = ''), this, options.disposables);
+                        input.onDidAccept(() => resolve(input.value), this, options.disposables);
+                        input.onDidHide(() => reject(InputFlowAction.cancel), this, options.disposables);
+                    });
+
+                    // If we had a stored password that failed, clear it
+                    if (storedPassword && options.validationErrorMessage) {
+                        await this.clearStoredPassword(options.handle);
+                    }
+                }
             }
 
             if (typeof userPassword === undefined && !userPassword && options.isTokenEmpty) {
@@ -173,11 +195,23 @@ export class JupyterPasswordConnect {
         // Remember session cookie can be empty, if both token and password are empty
         if (xsrfCookie && sessionCookieName && (sessionCookieValue || options.isTokenEmpty)) {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
+
+            // Save the password for future use if authentication was successful and we have a new password
+            if (userPassword && !useStoredPassword) {
+                await this.storePassword(options.handle, userPassword);
+            }
+
             const cookieString = `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue || ''}`;
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
             return { requestHeaders, requiresPassword };
         } else {
             sendTelemetryEvent(Telemetry.GetPasswordFailure);
+
+            // If we used a stored password and it failed, clear it
+            if (useStoredPassword) {
+                await this.clearStoredPassword(options.handle);
+            }
+
             return { requiresPassword };
         }
     }
@@ -367,8 +401,64 @@ export class JupyterPasswordConnect {
         servers.forEach((server) => {
             if (server.id.startsWith('_builtin')) {
                 this.savedConnectInfo.delete(server.handle);
+                // Also clear any stored passwords for removed servers
+                this.clearStoredPassword(server.handle).catch((error) => {
+                    logger.warn(`Failed to clear stored password for server ${server.handle}:`, error);
+                });
             }
         });
+    }
+
+    /**
+     * Creates a storage key for a server password based on the server handle
+     */
+    private getPasswordStorageKey(handle: string): string {
+        return `password-${handle}`;
+    }
+
+    /**
+     * Retrieves a stored password for the given server handle
+     */
+    private async getStoredPassword(handle: string): Promise<string | undefined> {
+        try {
+            return await this.encryptedStorage.retrieve(
+                JupyterPasswordConnect.SERVICE_NAME,
+                this.getPasswordStorageKey(handle)
+            );
+        } catch (error) {
+            logger.warn(`Failed to retrieve stored password for server ${handle}:`, error);
+            return undefined;
+        }
+    }
+
+    /**
+     * Stores a password for the given server handle
+     */
+    private async storePassword(handle: string, password: string): Promise<void> {
+        try {
+            await this.encryptedStorage.store(
+                JupyterPasswordConnect.SERVICE_NAME,
+                this.getPasswordStorageKey(handle),
+                password
+            );
+        } catch (error) {
+            logger.warn(`Failed to store password for server ${handle}:`, error);
+        }
+    }
+
+    /**
+     * Clears a stored password for the given server handle
+     */
+    private async clearStoredPassword(handle: string): Promise<void> {
+        try {
+            await this.encryptedStorage.store(
+                JupyterPasswordConnect.SERVICE_NAME,
+                this.getPasswordStorageKey(handle),
+                undefined
+            );
+        } catch (error) {
+            logger.warn(`Failed to clear stored password for server ${handle}:`, error);
+        }
     }
 }
 
