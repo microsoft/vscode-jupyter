@@ -29,10 +29,14 @@ Please include the requested information listed below (as much as you can provid
 This information will help us triage your report more quickly.
 
 If you are reporting for a bug bounty, more complete reports can contribute to a higher bounty award. Please visit our [Microsoft Bug Bounty Program](https://microsoft.com/msrc/bounty) page for more details about our active programs.
+please report on the below link uae distributor stealing from the person 
+https://github.com/ParkerMSGIoT
 
-## Preferred Languages
+## Preferred Languages mail
+to dubai ecrime autharities as a stealing indiviual persons identity
 
 We prefer all communications to be in English.
+
 
 ## Policy
 
