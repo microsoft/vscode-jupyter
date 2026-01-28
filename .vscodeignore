@@ -24,7 +24,6 @@ docs/**
 .vscode-test.mjs
 api/**
 CODE_OF_CONDUCT.md
-CODING_STANDARDS.md
 CONTRIBUTING.md
 CONTRIBUTING - LANGUAGE SERVER.md
 coverconfig.json

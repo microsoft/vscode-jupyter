@@ -1,6 +1,6 @@
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.169.0/containers/python-3-miniconda/.devcontainer/base.Dockerfile
 
-FROM node:20.17.0-bullseye-slim
+FROM node:22.15.1-bullseye-slim
 
 RUN apt-get -y update
 RUN apt-get -y install apt-utils git gnupg2 curl locales ca-certificates sudo
@@ -26,15 +26,4 @@ RUN bash /tmp/library-scripts/common-debian.sh "${INSTALL_ZSH}" "${USERNAME}" "$
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts
 
 # # Finally install npm
-RUN echo "npm i -g npm@10.8.2" | bash
-
-RUN apt install curl -y
-RUN sh -c "$(curl -fsSL https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)" -- \
-    -t powerlevel10k/powerlevel10k \
-    -p git \
-    -p git-extras \
-    -p https://github.com/zsh-users/zsh-completions
-RUN git clone https://github.com/romkatv/powerlevel10k $HOME/.oh-my-zsh/custom/themes/powerlevel10k
-RUN curl https://raw.githubusercontent.com/DonJayamanne/vscode-jupyter/containerChanges/.devcontainer/.p10k.zsh > ~/.p10k.zsh
-RUN echo "# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh." >> ~/.zshrc
-RUN echo "[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh" >> ~/.zshrc
+RUN echo "npm i -g npm@10.9.2" | bash

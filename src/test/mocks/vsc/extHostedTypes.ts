@@ -10,7 +10,7 @@ import { SnippetTextEdit } from 'vscode';
 import { vscMockHtmlContent } from './htmlContent';
 import { vscMockStrings } from './strings';
 import { vscUri } from './uri';
-import { generateUuid } from './uuid';
+import { generateUuid } from '../../../platform/common/uuid';
 
 export namespace vscMockExtHostedTypes {
     export class NotebookCellOutputItem {
@@ -793,12 +793,11 @@ export namespace vscMockExtHostedTypes {
 
         get(uri: vscUri.URI): TextEdit[] {
             if (!this._textEdits.has(uri.toString())) {
-                // @ts-ignore
-                return undefined;
+                return [];
             }
             // @ts-ignore
             const { edits } = this._textEdits.get(uri.toString());
-            return edits ? edits.slice() : undefined;
+            return edits ? edits.slice() : [];
         }
 
         entries(): [vscUri.URI, TextEdit[]][] {

@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import { logger } from '../platform/logging';
-import { captureScreenShot, IExtensionTestApi, testMandatory } from './common.node';
+import { captureScreenShot, IExtensionTestApi } from './common.node';
 
 import * as ts from 'typescript';
 import * as fs from 'fs-extra';
@@ -144,7 +144,7 @@ suite('Verify serviceRegistry is correct', function () {
         logger.info(`Ended Test ${this.currentTest?.title}`);
         logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    testMandatory('Verify all classes with inject on them are in the container', async () => {
+    test('Verify all classes with inject on them are in the container @mandatory', async () => {
         assert.ok(
             api.serviceContainer,
             `Service container not created. Extension should fail to activate. See inversify output`

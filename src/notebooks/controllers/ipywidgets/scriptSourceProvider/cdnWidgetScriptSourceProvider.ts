@@ -22,7 +22,13 @@ export const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDN
 export const GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN = 'IPYWidgetNotFoundOnCDN';
 export const GlobalStateKeyToNeverWarnAboutNoNetworkAccess = 'IPYWidgetNoNetWorkAccess';
 
-function moduleNameToCDNUrl(cdn: string, moduleName: string, moduleVersion: string) {
+const VARIABLE_PATTERN = /\$\{(.*?)\}/g;
+
+function moduleNameToCDNUrl(cdn: WidgetCDNs, moduleName: string, moduleVersionSpec: string) {
+    const cdnTemplate = getCDNTemplate(cdn);
+    if (!cdnTemplate) {
+        return undefined;
+    }
     let packageName = moduleName;
     let fileName = 'index'; // default filename
     // if a '/' is present, like 'foo/bar', packageName is changed to 'foo', and path to 'bar'
@@ -38,27 +44,44 @@ function moduleNameToCDNUrl(cdn: string, moduleName: string, moduleVersion: stri
         fileName = moduleName.substr(index + 1);
         packageName = moduleName.substr(0, index);
     }
-    if (cdn === jsdelivrUrl) {
-        // Js Delivr doesn't support ^ in the version. It needs an exact version
-        if (moduleVersion.startsWith('^')) {
-            moduleVersion = moduleVersion.slice(1);
+    const fileNameWithExt = !fileName.endsWith('.js') ? fileName.concat('.js') : fileName;
+    const moduleVersion = moduleVersionSpec.startsWith('^') ? moduleVersionSpec.slice(1) : moduleVersionSpec;
+    return cdnTemplate.replace(VARIABLE_PATTERN, (match: string, variable: string) => {
+        let result: string;
+        switch (variable) {
+            case 'packageName':
+                result = packageName;
+                break;
+            case 'fileName':
+                result = fileName;
+                break;
+            case 'fileNameWithExt':
+                result = fileNameWithExt;
+                break;
+            case 'moduleVersion':
+                result = moduleVersion;
+                break;
+            case 'moduleVersionSpec':
+                result = moduleVersionSpec;
+                break;
+            default:
+                result = match;
+                break;
         }
-        // Js Delivr also needs the .js file on the end.
-        if (!fileName.endsWith('.js')) {
-            fileName = fileName.concat('.js');
-        }
-    }
-    return `${cdn}${packageName}@${moduleVersion}/dist/${fileName}`;
+        return result;
+    });
 }
 
-function getCDNPrefix(cdn?: WidgetCDNs): string | undefined {
+function getCDNTemplate(cdn: WidgetCDNs): string | undefined {
     switch (cdn) {
         case 'unpkg.com':
-            return unpgkUrl;
+            return `${unpgkUrl}\${packageName}@\${moduleVersionSpec}/dist/\${fileName}`;
         case 'jsdelivr.com':
-            return jsdelivrUrl;
+            // Js Delivr doesn't support ^ in the version. It needs an exact version
+            // Js Delivr also needs the .js file on the end.
+            return `${jsdelivrUrl}\${packageName}@\${moduleVersion}/dist/\${fileNameWithExt}`;
         default:
-            break;
+            return cdn;
     }
 }
 /**
@@ -151,11 +174,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         moduleVersion: string,
         cdn: WidgetCDNs
     ): Promise<string | undefined> {
-        const cdnBaseUrl = getCDNPrefix(cdn);
-        if (cdnBaseUrl) {
-            return moduleNameToCDNUrl(cdnBaseUrl, moduleName, moduleVersion);
-        }
-        return undefined;
+        return moduleNameToCDNUrl(cdn, moduleName, moduleVersion);
     }
 
     protected getModuleKey(moduleName: string, moduleVersion: string) {

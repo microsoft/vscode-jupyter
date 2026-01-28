@@ -28,7 +28,6 @@ import { logger } from '../../../platform/logging';
 import { DisposableBase } from '../../../platform/common/utils/lifecycle';
 import type { IDisposable } from '../../../platform/common/types';
 import { INotebookPythonEnvironmentService } from '../../types';
-import { IPythonChatTools } from '../../../platform/api/pythonApi';
 
 export class LocalPythonKernelSelector extends DisposableBase {
     private readonly pythonEnvPicker: BaseProviderBasedQuickPick<Environment>;
@@ -42,7 +41,6 @@ export class LocalPythonKernelSelector extends DisposableBase {
         const filter = ServiceContainer.instance.get<PythonEnvironmentFilter>(PythonEnvironmentFilter);
         const pythonExtensionChecker = ServiceContainer.instance.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         const pythonApiProvider = ServiceContainer.instance.get<IPythonApiProvider>(IPythonApiProvider);
-        const pythonChatTools = ServiceContainer.instance.get<IPythonChatTools>(IPythonChatTools);
         const notebookEnvironment = ServiceContainer.instance.get<INotebookPythonEnvironmentService>(
             INotebookPythonEnvironmentService
         );
@@ -116,8 +114,7 @@ export class LocalPythonKernelSelector extends DisposableBase {
                 this.notebook,
                 this.pythonApi,
                 filter,
-                notebookEnvironment,
-                pythonChatTools
+                notebookEnvironment
             );
             createEnvCommand?.dispose();
             createEnvCommand = undefined;

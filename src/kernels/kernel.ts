@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import uuid from 'uuid/v4';
+import { generateUuid } from '../platform/common/uuid';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { KernelMessage } from '@jupyterlab/services';
 import {
@@ -449,6 +449,41 @@ abstract class BaseKernel implements IBaseKernel {
             Promise.all(Array.from(this.hooks.get('restartCompleted') || new Set<Hook>()).map((h) => h())).catch(noop);
         }
     }
+
+    public async shutdown(): Promise<void> {
+        try {
+            logger.info(`Shutdown requested ${getDisplayPath(this.uri)}`);
+
+            // Cancel any pending starts
+            this.startCancellation.cancel();
+            this.startCancellation.dispose();
+
+            // Get the current session if it exists
+            const session = this._jupyterSessionPromise
+                ? await this._jupyterSessionPromise.catch(() => undefined)
+                : undefined;
+
+            if (session) {
+                logger.info('Shutting down kernel session');
+                try {
+                    await session.shutdown();
+                } catch (ex) {
+                    logger.warn(`Failed to shutdown kernel session ${getDisplayPath(this.uri)}`, ex);
+                    // Continue with disposal even if shutdown fails
+                }
+            }
+
+            // Clean up the session references
+            this._session = undefined;
+            this._jupyterSessionPromise = undefined;
+            this._postInitializedOnStartPromise = undefined;
+
+            logger.info(`Shutdown completed ${getDisplayPath(this.uri)}`);
+        } catch (ex) {
+            logger.error(`Failed to shutdown kernel ${getDisplayPath(this.uri)}`, ex);
+            throw ex;
+        }
+    }
     protected async startJupyterSession(options: IDisplayOptions = new DisplayOptions(false)): Promise<IKernelSession> {
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
@@ -490,7 +525,11 @@ abstract class BaseKernel implements IBaseKernel {
                 });
                 return session;
             } catch (ex) {
-                logger.ci(`Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.uri)}`);
+                if (!isCancellationError(ex)) {
+                    logger.ci(
+                        `Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.uri)}`
+                    );
+                }
                 // If we fail also clear the promise.
                 this.startCancellation.cancel();
                 this._jupyterSessionPromise = undefined;
@@ -849,15 +888,12 @@ abstract class BaseKernel implements IBaseKernel {
     }
     /**
      * Determines the version of IPyWidgets used in the kernel
-     * For non-python kernels, we assume the version of IPyWidgets is 7.
+     * For non-python kernels, we assume the version of IPyWidgets is 8.
      * For Python we just run a block of Python code to determine the version.
      */
     private async determineVersionOfIPyWidgets(session: IKernelSession) {
         if (!isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            // For all other kernels, assume we are using the older version of IPyWidgets.
-            // There are very few kernels that support IPyWidgets, however IPyWidgets 8 is very new
-            // & it is unlikely that others have supported this new version.
-            this._ipywidgetsVersion == WIDGET_VERSION_NON_PYTHON_KERNELS;
+            this._ipywidgetsVersion = WIDGET_VERSION_NON_PYTHON_KERNELS;
             this._onIPyWidgetVersionResolved.fire(WIDGET_VERSION_NON_PYTHON_KERNELS);
             return;
         }
@@ -885,10 +921,10 @@ abstract class BaseKernel implements IBaseKernel {
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
                 logger.trace(`Determined IPyWidgets Version as ${newVersion}`);
                 // If user does not have ipywidgets installed, then this event will never get fired.
-                this._ipywidgetsVersion == newVersion;
+                this._ipywidgetsVersion = newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);
             } else {
-                logger.warn('Failed to determine IPyKernel Version', JSON.stringify(version));
+                logger.warn('Failed to determine IPyWidgets Version', JSON.stringify(version));
             }
         };
         await determineVersionImpl();
@@ -908,7 +944,8 @@ abstract class BaseKernel implements IBaseKernel {
                         message.content &&
                         'data' in message.content &&
                         message.content.data &&
-                        (message.content.data[WIDGET_MIMETYPE] ||
+                        typeof message.content.data === 'object' &&
+                        ((message.content.data as Record<string, unknown>)[WIDGET_MIMETYPE] ||
                             ('target_name' in message.content &&
                                 message.content.target_name === Identifiers.DefaultCommTarget))
                     ) {
@@ -1065,7 +1102,7 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
         rawKernelSupported: IRawNotebookSupportedService | undefined
     ) {
         super(
-            `3rdPartyKernel_${uuid()}`,
+            `3rdPartyKernel_${generateUuid()}`,
             uri,
             resourceUri,
             kernelConnectionMetadata,
@@ -1101,7 +1138,7 @@ export class Kernel extends BaseKernel implements IKernel {
         rawKernelSupported: IRawNotebookSupportedService | undefined
     ) {
         super(
-            uuid(),
+            generateUuid(),
             notebook.uri,
             resourceUri,
             kernelConnectionMetadata,

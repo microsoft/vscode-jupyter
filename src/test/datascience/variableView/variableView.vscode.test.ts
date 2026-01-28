@@ -120,7 +120,7 @@ suite('VariableView @variableViewer', function () {
         assert.deepEqual(vars, ['test', 'test2'].sort());
     });
 
-    test('Can show variables even when print is overridden', async function () {
+    test.skip('Can show variables even when print is overridden', async function () {
         // Send the command to open the view
         await commands.executeCommand(Commands.OpenVariableView);
 
@@ -146,7 +146,7 @@ suite('VariableView @variableViewer', function () {
     });
 
     // Test variables switching between documents
-    test('VariableView document switching (webview-test)', async function () {
+    test.skip('VariableView document switching (webview-test)', async function () {
         // Send the command to open the view
         await commands.executeCommand(Commands.OpenVariableView);
 

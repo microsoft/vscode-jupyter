@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import uuid from 'uuid/v4';
 import { CancellationToken, Uri, workspace } from 'vscode';
 import { inject, injectable, optional } from 'inversify';
 import { logger } from '../../../platform/logging';
@@ -26,6 +25,7 @@ import { getRootFolder } from '../../../platform/common/application/workspace.ba
 import { computeWorkingDirectory } from '../../../platform/common/application/workspace.node';
 import { disposeAsync } from '../../../platform/common/utils';
 import { ObservableDisposable } from '../../../platform/common/utils/lifecycle';
+import { generateUuid } from '../../../platform/common/uuid';
 
 /**
  * Jupyter server implementation that uses the JupyterExecutionBase class to launch Jupyter.
@@ -174,7 +174,7 @@ export class JupyterServerHelper extends ObservableDisposable implements IJupyte
         const rootFolder = getRootFolder();
         const workingDirectory = expandWorkingDir(
             workingDir,
-            rootFolder ? urlPath.joinPath(rootFolder, `${uuid()}.txt`) : undefined,
+            rootFolder ? urlPath.joinPath(rootFolder, `${generateUuid()}.txt`) : undefined,
             settings
         );
 

@@ -3,7 +3,6 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
-import uuid from 'uuid/v4';
 import type * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
 import { logger } from '../../../platform/logging';
@@ -14,6 +13,7 @@ import { IKernelConnection } from '../types';
 import type { Channel } from '@jupyterlab/services/lib/kernel/messages';
 import { getZeroMQ } from './zeromq.node';
 import type { IDisposable } from '../../../platform/common/types';
+import { generateUuid } from '../../../platform/common/uuid';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
     const portDelimiter = config.transport === 'tcp' ? ':' : '-';
@@ -149,7 +149,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         const zmq = getZeroMQ();
 
         // Need a routing id for them to share.
-        const routingId = uuid();
+        const routingId = generateUuid();
 
         // Wire up all of the different channels.
         const result: IChannels = {
@@ -219,7 +219,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             : (wireProtocol.decode(data, this.connection.key, this.connection.signature_scheme) as any);
 
         // Make sure it has a channel on it
-        message.channel = channel as any;
+        message.channel = channel;
 
         if (this.receiveHooks.length) {
             // Stick the receive hooks into the message chain. We use chain
@@ -282,8 +282,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         this.sendChain.catch(noop);
     }
 
-    private postToSocket(channel: string, data: any) {
-        const socket = (this.channels as any)[channel];
+    private postToSocket(channel: Channel, data: any) {
+        const socket = this.channels[channel];
         if (socket) {
             (socket as Dealer).send(data).catch((exc) => {
                 logger.error(`Error communicating with the kernel`, exc);

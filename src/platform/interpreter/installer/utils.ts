@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { WrappedError } from '../../errors/types';
 import { Product } from './types';
 
 // Licensed under the MIT License.
@@ -23,7 +24,11 @@ export function translateProductToModule(product: Product): string {
         case Product.ensurepip:
             return 'ensurepip';
         default: {
-            throw new Error(`Product ${product} cannot be installed as a Python Module.`);
+            throw new WrappedError(
+                `Product ${product} cannot be installed as a Python Module.`,
+                undefined,
+                'unknownProduct'
+            );
         }
     }
 }

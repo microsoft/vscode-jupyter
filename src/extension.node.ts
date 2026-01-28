@@ -58,7 +58,7 @@ import {
     activate as activateExecutionAnalysis,
     deactivate as deactivateExecutionAnalysis
 } from './standalone/executionAnalysis/extension';
-import { activate as activateChat, deactivate as deactivateChat } from './standalone/chat/extension';
+import { activate as activateChat } from './standalone/chat/extension.node';
 import { setDisposableTracker } from './platform/common/utils/lifecycle';
 import { initializeLoggers, handleError, initializeGlobals, postActivateLegacy } from './extension.common';
 import { activateNotebookTelemetry } from './kernels/telemetry/notebookTelemetry';
@@ -140,7 +140,6 @@ export function deactivate(): Thenable<void> {
     }
 
     deactivateExecutionAnalysis();
-    deactivateChat();
 
     return Promise.resolve();
 }
@@ -200,16 +199,6 @@ function tryGetHomePath() {
         );
     }
 }
-
-/////////////////////////////
-// old activation code
-
-// eslint-disable-next-line
-// TODO: Gradually move simple initialization
-// and DI registration currently in this function over
-// to initializeComponents().  Likewise with complex
-// init and activation: move them to activateComponents().
-// See https://github.com/microsoft/vscode-python/issues/10454.
 
 async function activateLegacy(
     context: IExtensionContext,

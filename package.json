@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2025.5.0",
+    "version": "2025.10.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.101.0"
+        "vscode": "^1.106.0"
     },
     "l10n": "./l10n",
     "extensionKind": [
@@ -56,7 +56,10 @@
         "onNotebook:jupyter-notebook",
         "onNotebook:interactive",
         "onWebviewPanel:jupyter-variables",
-        "onWebviewPanel:jupyter"
+        "onWebviewPanel:jupyter",
+        "onLanguageModelTool:configure_notebook",
+        "onLanguageModelTool:notebook_list_packages",
+        "onLanguageModelTool:notebook_install_packages"
     ],
     "main": "./dist/extension.node.proxy.js",
     "browser": "./dist/extension.web.bundle.js",
@@ -554,32 +557,14 @@
                 "enablement": "isWorkspaceTrusted"
             },
             {
-                "command": "jupyter.importnotebook",
-                "title": "%jupyter.command.jupyter.importnotebook.title%",
-                "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
-            },
-            {
                 "command": "jupyter.importnotebookfile",
                 "title": "%jupyter.command.jupyter.importnotebookfile.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
-                "command": "jupyter.exportoutputasnotebook",
-                "title": "%jupyter.command.jupyter.exportoutputasnotebook.title%",
-                "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
-            },
-            {
                 "command": "jupyter.exportfileasnotebook",
                 "title": "%jupyter.command.jupyter.exportfileasnotebook.title%",
-                "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
-            },
-            {
-                "command": "jupyter.exportfileandoutputasnotebook",
-                "title": "%jupyter.command.jupyter.exportfileandoutputasnotebook.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
@@ -810,19 +795,9 @@
                     "group": "Jupyter2"
                 },
                 {
-                    "when": "editorFocus && editorLangId == python && resourceExtname == .ipynb && !notebookEditorFocused && isWorkspaceTrusted",
-                    "command": "jupyter.importnotebook",
-                    "group": "Jupyter3@1"
-                },
-                {
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && isWorkspaceTrusted",
                     "command": "jupyter.exportfileasnotebook",
                     "group": "Jupyter3@2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && isWorkspaceTrusted",
-                    "command": "jupyter.exportfileandoutputasnotebook",
-                    "group": "Jupyter3@3"
                 }
             ],
             "editor.interactiveWindow.context": [
@@ -1229,20 +1204,8 @@
                     "when": "editorLangId == python && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.importnotebook",
-                    "title": "%jupyter.command.jupyter.importnotebook.title%",
-                    "category": "Jupyter",
-                    "when": "isWorkspaceTrusted"
-                },
-                {
                     "command": "jupyter.exportfileasnotebook",
                     "title": "%jupyter.command.jupyter.exportfileasnotebook.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.exportfileandoutputasnotebook",
-                    "title": "%jupyter.command.jupyter.exportfileandoutputasnotebook.title%",
                     "category": "Jupyter",
                     "when": "jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
                 },
@@ -1275,12 +1238,6 @@
                     "command": "jupyter.collapseallcells",
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
                     "shortTitle": "%jupyter.command.jupyter.collapseallcells.shorttitle%",
-                    "category": "Jupyter",
-                    "when": "jupyter.isinteractiveactive"
-                },
-                {
-                    "command": "jupyter.exportoutputasnotebook",
-                    "title": "%jupyter.command.jupyter.exportoutputasnotebook.title%",
                     "category": "Jupyter",
                     "when": "jupyter.isinteractiveactive"
                 },
@@ -1495,14 +1452,22 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "type": "string",
-                        "enum": [
-                            "jsdelivr.com",
-                            "unpkg.com"
-                        ],
-                        "enumDescriptions": [
-                            "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.0%",
-                            "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1%"
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "const": "jsdelivr.com",
+                                "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.0%"
+                            },
+                            {
+                                "type": "string",
+                                "const": "unpkg.com",
+                                "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1%"
+                            },
+                            {
+                                "type": "string",
+                                "description": "%jupyter.configuration.jupyter.widgetScriptSources.items.custom%",
+                                "format": "uri"
+                            }
                         ]
                     },
                     "uniqueItems": true,
@@ -2053,12 +2018,92 @@
         ],
         "languageModelTools": [
             {
+                "name": "configure_notebook",
+                "displayName": "%jupyter.languageModelTools.configure_notebook.displayName%",
+                "modelDescription": "Tool used to configure a Notebook. ALWAYS use this tool before running/executing any Notebook Cells for the first time or before listing/installing packages in Notebooks for the first time. I.e. there is no need to use this tool more than once for the same notebook.",
+                "userDescription": "%jupyter.languageModelTools.configure_notebook.userDescription%",
+                "toolReferenceName": "configureNotebook",
+                "tags": [
+                    "python environment",
+                    "jupyter environment",
+                    "extension_installed_by_tool",
+                    "jupyter",
+                    "notebooks"
+                ],
+                "icon": "$(notebook)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "filePath": {
+                            "description": "The absolute path of the notebook with the active kernel.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "filePath"
+                    ]
+                },
+                "when": "workspacePlatform != webworker"
+            },
+            {
+                "name": "configure_python_notebook",
+                "displayName": "Start Notebook Kernel",
+                "modelDescription": "Selects a Python Kernel and starts it.",
+                "tags": [
+                    "extension_installed_by_tool",
+                    "install python package",
+                    "notebooks"
+                ],
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "filePath": {
+                            "description": "The absolute path of the notebook with the active kernel.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "filePath"
+                    ]
+                },
+                "when": "false"
+            },
+            {
+                "name": "configure_non_python_notebook",
+                "displayName": "Start Notebook Kernel",
+                "modelDescription": "Selects the Notebook Kernel and starts it.",
+                "tags": [
+                    "extension_installed_by_tool",
+                    "jupyter",
+                    "notebooks"
+                ],
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "filePath": {
+                            "description": "The absolute path of the notebook with the active kernel.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "filePath"
+                    ]
+                },
+                "when": "false"
+            },
+            {
                 "name": "notebook_list_packages",
                 "displayName": "List Notebook Kernel Packages",
-                "modelDescription": "List the installed packages that are currently available in the selected kernel for a notebook editor. This tool should be used when working with a jupyter notebook with python code cells. Do not use this tool if not already working with a notebook, or for a language other than python.",
+                "modelDescription": "List the installed packages that are currently available in the selected kernel for a notebook editor. This tool should be used when working with a jupyter notebook with python code cells. Do not use this tool if not already working with a notebook, or for a language other than python. If the tool configure_notebooks exists, then ensure to call configure_notebooks before using this tool.",
+                "userDescription": "%jupyter.languageModelTools.notebook_list_packages.userDescription%",
                 "toolReferenceName": "listNotebookPackages",
                 "tags": [
-                    "notebooks"
+                    "python environment",
+                    "jupyter environment",
+                    "extension_installed_by_tool",
+                    "notebooks",
+                    "enable_other_tool_configure_notebook"
                 ],
                 "icon": "$(package)",
                 "canBeReferencedInPrompt": true,
@@ -2078,10 +2123,15 @@
             {
                 "name": "notebook_install_packages",
                 "displayName": "Install Packages for Notebook",
-                "modelDescription": "Install a list of packages on a notebook kernel to be used within that notebook. This tool should be used when working with a jupyter notebook with python code cells. Do not use this tool if not already working with a notebook, or for a language other than python.",
+                "modelDescription": "Install a list of packages on a notebook kernel to be used within that notebook. This tool should be used when working with a jupyter notebook with python code cells. Do not use this tool if not already working with a notebook, or for a language other than python. If the tool configure_notebooks exists, then ensure to call configure_notebooks before using this tool.",
+                "userDescription": "%jupyter.languageModelTools.notebook_install_packages.userDescription%",
                 "toolReferenceName": "installNotebookPackages",
                 "tags": [
-                    "notebooks"
+                    "python environment",
+                    "jupyter environment",
+                    "extension_installed_by_tool",
+                    "notebooks",
+                    "enable_other_tool_configure_notebook"
                 ],
                 "icon": "$(package)",
                 "canBeReferencedInPrompt": true,
@@ -2105,6 +2155,35 @@
                         "packageList"
                     ]
                 }
+            },
+            {
+                "name": "restart_notebook_kernel",
+                "displayName": "Restart Notebook",
+                "modelDescription": "Tool used to restart a Notebook kernel. Some packages require a restart of the kernel after being installed. Use this if after installing a package if you know the package requires a restart, or if still getting an error about a missing package after installing.",
+                "toolReferenceName": "restartNotebookKernel",
+                "tags": [
+                    "extension_installed_by_tool",
+                    "jupyter",
+                    "notebooks"
+                ],
+                "icon": "$(notebook)",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "filePath": {
+                            "description": "The absolute path of the notebook with the active kernel.",
+                            "type": "string"
+                        },
+                        "reason": {
+                            "description": "The reason for restarting the kernel.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "filePath"
+                    ]
+                },
+                "when": "false"
             }
         ]
     },
@@ -2124,62 +2203,47 @@
         "notebookReplDocument"
     ],
     "scripts": {
-        "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
-        "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
-        "prePublishBundleStable": "cross-env IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=false gulp prePublishBundle",
-        "prePublishBundlePreRelease": "cross-env IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=true gulp prePublishBundle",
-        "createNycFolder": "gulp createNycFolder",
-        "validateTranslationFiles": "gulp validateTranslationFiles",
-        "preprePublishBundle": "gulp clean",
-        "prePublishBundle": "concurrently npm:compile-release npm:updatePackageJsonForBundle",
-        "preprePublishNonBundle": "gulp clean",
+        "package": "gulp clean && npm run build && vsce package -o ms-toolsai-jupyter-insiders.vsix",
+        "build:stable": "cross-env IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=false npm run build",
+        "build:prerelease": "cross-env IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=true npm run build",
+        "build": "concurrently npm:compile-release npm:updatePackageJsonForBundle",
         "updatePackageJsonForBundle": "gulp updatePackageJsonForBundle",
-        "prePublishNonBundle": "concurrently npm:compile-out npm:esbuild-all",
-        "compile": "concurrently \"tsc --watch -p ./\" \"npx tsx build/esbuild/build.ts --watch\"",
+        "clean": "gulp clean",
+        "compile": "concurrently npm:compile-tsc npm:esbuild-all",
+        "watch": "concurrently \"tsc --watch -p ./\" \"npx tsx build/esbuild/build.ts --watch\"",
+        "watch-all": "concurrently \"tsc --watch -p ./\" \"npx tsx build/esbuild/build.ts --watch-all\"",
         "compile-esbuild-watch": "npx tsx build/esbuild/build.ts --watch",
         "compile-tsc-watch": "tsc -p . --watch",
-        "compile-watch-all": "concurrently \"tsc --watch -p ./\" \"npx tsx build/esbuild/build.ts --watch-all\"",
-        "compile-out": "tsc -p ./",
-        "compile-web-test": "webpack --mode development --config ./build/webpack/webpack.extension.web.config.js",
-        "compile-web-test-watch": "webpack --mode development --config ./build/webpack/webpack.extension.web.config.js --stats-error-details --watch --progress",
-        "compile-release": "concurrently npm:compile-out npm:esbuild-release",
+        "compile-tsc": "tsc -p ./",
+        "compile-release": "concurrently npm:compile-tsc npm:esbuild-release",
         "esbuild-all": "npx tsx build/esbuild/build.ts",
         "esbuild-release": "npx tsx build/esbuild/build.ts --production",
         "checkDependencies": "gulp checkDependencies",
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js",
+        "test": "npm run test:unittests",
         "test:unittests": "mocha --config ./build/.mocha.unittests.js.json ./out/**/*.unit.test.js",
         "test:cover:report": "nyc report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
-        "preTestJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js",
-        "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_JUPYTER_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js && node ./out/test/languageServers/jedi/lspTeardown.node.js",
-        "pretestNativeNotebooksInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
-        "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
-        "pretestPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@notebookPerformance VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true VSC_JUPYTER_PERF_TEST=1 VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
-        "testPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@notebookPerformance VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true VSC_JUPYTER_NOTEBOOK_PERF_TEST=true VSC_JUPYTER_PERF_TEST=1 CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
-        "pretestExecPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@executionPerformance VSC_JUPYTER_PERF_TEST=1 VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
-        "testExecPerfInVSCode": "cross-env VSC_JUPYTER_CI_TEST_GREP=@executionPerformance VSC_JUPYTER_PERF_TEST=1 CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING= node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
-        "testNativeNotebooksInVSCodeWithoutTestSuffix": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_FORCE_LOGGING=1 node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
-        "pretestNativeNotebooksWithoutPythonInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
-        "testNativeNotebooksWithoutPythonInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_CI_TEST_GREP=@nonPython VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
-        "testNativeNotebooksAndWebviews": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_CI_TEST_GREP=webview-test node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
-        "testWebExtension": "node ./build/launchWebTest.js",
-        "launchWebExtension": "node ./build/launchWeb.js",
-        "testSmoke": "node ./out/test/testBootstrap.node.js ./out/test/smokeTest.node.js",
-        "testSmokeLogged": "cross-env VSC_JUPYTER_FORCE_LOGGING=true node --no-force-async-hooks-checks ./out/test/testBootstrap.node.js ./out/test/smokeTest.node.js",
+        "pretest:integration": "node ./out/test/datascience/dsTestSetup.js",
+        "test:integration": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test node ./out/test/standardTest.node.js",
+        "pretest:performance:notebook": "cross-env VSC_JUPYTER_CI_TEST_GREP=@notebookPerformance VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true node ./out/test/datascience/dsTestSetup.js",
+        "test:performance:notebook": "cross-env VSC_JUPYTER_CI_TEST_GREP=@notebookPerformance VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true CODE_TESTS_WORKSPACE=src/test/datascience TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test node ./out/test/standardTest.node.js",
+        "pretest:performance:execution": "cross-env VSC_JUPYTER_CI_TEST_GREP=@executionPerformance node ./out/test/datascience/dsTestSetup.js",
+        "test:performance:execution": "cross-env VSC_JUPYTER_CI_TEST_GREP=@executionPerformance CODE_TESTS_WORKSPACE=src/test/datascience TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING= node ./out/test/standardTest.node.js",
+        "test:integration:windows": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience node ./out/test/standardTest.node.js",
+        "pretest:integration:nonpython": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
+        "test:integration:nonpython": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_CI_TEST_GREP=@nonPython VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true node ./out/test/standardTest.node.js",
+        "test:integration:web": "node ./build/launchWebTest.js",
+        "test:smoke": "cross-env VSC_JUPYTER_FORCE_LOGGING=true node --no-force-async-hooks-checks ./out/test/smokeTest.node.js",
         "lint": "eslint --ext .ts,.js src",
         "lint-fix": "eslint --fix --ext .ts,.js src build pythonExtensionApi gulpfile.js",
-        "format": "prettier --write *.js *.json 'src/**/*.ts*' 'build/**/*.js' '.github/**/*.yml' 'build/**/*.yml' 'build/**/*.ts' 'build/**/*.json' gulpfile.js",
-        "format-check": "prettier --check *.js *.json 'src/**/*.ts*' 'build/**/*.js' '.github/**/*.yml' 'build/**/*.yml' 'build/**/*.ts' 'build/**/*.json' gulpfile.js",
-        "clean": "gulp clean",
-        "webpack": "webpack",
+        "format": "prettier --check *.js *.json 'src/**/*.ts*' 'build/**/*.js' '.github/**/*.yml' 'build/**/*.yml' 'build/**/*.ts' 'build/**/*.json' gulpfile.js",
+        "format-fix": "prettier --write *.js *.json 'src/**/*.ts*' 'build/**/*.js' '.github/**/*.yml' 'build/**/*.yml' 'build/**/*.ts' 'build/**/*.json' gulpfile.js",
         "download-api": "npx vscode-dts dev",
         "postdownload-api": "npx vscode-dts main",
         "generateTelemetry": "gulp generateTelemetry",
         "openInBrowser": "vscode-test-web --extensionDevelopmentPath=. ./src/test/datascience",
         "startJupyterServer": "node build/preDebugWebTest.js",
         "stopJupyterServer": "node build/postDebugWebTest.js",
-        "validateTelemetry": "gulp validateTelemetry",
-        "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
-        "printTestResults": "gulp printTestResults",
         "setup-precommit-hook": "husky install"
     },
     "dependencies": {
@@ -2195,12 +2259,10 @@
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.7.7",
         "@vscode/python-extension": "^1.0.4",
-        "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",
         "bootstrap": "^5.0.0",
         "bootstrap-less": "^3.3.8",
         "cross-fetch": "^3.1.5",
-        "decompress-response": "^4.2.0",
         "encoding": "^0.1.13",
         "fast-deep-equal": "^2.0.1",
         "format-util": "^1.0.5",
@@ -2219,7 +2281,6 @@
         "pdfkit": "^0.13.0",
         "pidtree": "^0.6.0",
         "portfinder": "^1.0.25",
-        "re-resizable": "~6.5.5",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
         "react-dom": "^16.5.2",
@@ -2235,17 +2296,12 @@
         "semver": "^5.7.2",
         "slickgrid": "^2.4.17",
         "stack-trace": "0.0.10",
-        "string-argv": "^0.3.1",
         "strip-comments": "^2.0.1",
         "styled-components": "^5.2.1",
-        "sudo-prompt": "^9.2.1",
         "svg-to-pdfkit": "^0.1.8",
         "tcp-port-used": "^1.0.1",
-        "tmp": "^0.0.29",
-        "uint64be": "^1.0.1",
-        "underscore": "^1.12.1",
+        "tmp": "^0.2.4",
         "url-parse": "^1.5.10",
-        "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.41.0",
         "vscode-languageclient": "8.0.2-next.5",
         "vscode-tas-client": "^0.1.84",
@@ -2254,10 +2310,9 @@
         "zeromqold": "npm:zeromq@^6.0.0-beta.6"
     },
     "devDependencies": {
-        "@actions/core": "^1.9.1",
-        "@actions/github": "^4.0.0",
-        "@actions/glob": "^0.3.0",
-        "@babel/polyfill": "^7.4.4",
+        "@actions/core": "^1.11.1",
+        "@actions/github": "^6.0.1",
+        "@actions/glob": "^0.5.0",
         "@istanbuljs/nyc-config-typescript": "^1.0.2",
         "@sinonjs/fake-timers": "^6.0.1",
         "@types/ansi-regex": "^4.0.0",
@@ -2275,13 +2330,12 @@
         "@types/glob": "^5.0.35",
         "@types/json2csv": "^5.0.3",
         "@types/loadable__component": "^5.10.0",
-        "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
         "@types/memoize-one": "^4.1.1",
         "@types/mocha": "^10.0.10",
         "@types/nock": "^10.0.3",
-        "@types/node": "^20.17.0",
-        "@types/node-fetch": "^2.5.7",
+        "@types/node": "^22.15.1",
+        "@types/node-fetch": "^2.6.12",
         "@types/pdfkit": "^0.11.0",
         "@types/promisify-node": "^0.4.0",
         "@types/react": "^16.4.14",
@@ -2291,7 +2345,6 @@
         "@types/react-virtualized": "^9.21.2",
         "@types/redux-logger": "^3.0.7",
         "@types/semver": "^5.5.0",
-        "@types/shortid": "^0.0.29",
         "@types/sinon": "^10.0.15",
         "@types/sinonjs__fake-timers": "^6.0.1",
         "@types/stack-trace": "0.0.29",
@@ -2302,9 +2355,7 @@
         "@types/tmp": "^0.2.3",
         "@types/url-parse": "^1.4.8",
         "@types/uuid": "^3.4.3",
-        "@types/uuid-to-hex": "^1.1.0",
         "@types/vscode-notebook-renderer": "^1.60.0",
-        "@types/webpack-env": "^1.18.1",
         "@types/ws": "^6.0.1",
         "@typescript-eslint/eslint-plugin": "^6.9.0",
         "@typescript-eslint/eslint-plugin-tslint": "^6.9.0",
@@ -2312,10 +2363,9 @@
         "@vscode/dts": "^0.4.0",
         "@vscode/test-cli": "^0.0.8",
         "@vscode/test-electron": "^2.3.9",
-        "@vscode/test-web": "^0.0.61",
+        "@vscode/test-web": "^0.0.71",
         "@vscode/zeromq": "^0.2.3",
         "acorn": "^8.9.0",
-        "babel-polyfill": "^6.26.0",
         "buffer": "^6.0.3",
         "bufferutil": "^4.0.6",
         "chai": "^4.3.10",
@@ -2326,12 +2376,12 @@
         "colors": "^1.4.0",
         "concurrently": "^8.2.2",
         "cross-env": "^7.0.3",
-        "css-loader": "^6.8.1",
         "dedent": "^0.7.0",
         "del": "^3.0.0",
         "es-abstract": "^1.19.1",
         "es5-ext": "^0.10.63",
         "esbuild": "^0.25.1",
+        "esbuild-plugin-import-glob": "^0.1.1",
         "esbuild-plugin-less": "^1.3.19",
         "eslint": "^8.52.0",
         "eslint-config-airbnb": "^19.0.4",
@@ -2347,7 +2397,6 @@
         "eslint-plugin-prettier": "^5.0.1",
         "eslint-plugin-react": "^7.33.2",
         "eslint-plugin-react-hooks": "^4.6.0",
-        "expose-loader": "^4.1.0",
         "flat": "^5.0.1",
         "get-port": "^3.2.0",
         "glob-parent": "^6.0.2",
@@ -2359,7 +2408,6 @@
         "jsonschema": "^1.4.1",
         "keyv": "^4.1.0",
         "less": "^4.1.3",
-        "less-loader": "^11.1.3",
         "less-plugin-inline-urls": "^1.2.0",
         "lolex": "^6.0.0",
         "lru-cache": "^10.0.0",
@@ -2369,37 +2417,23 @@
         "nock": "^13.3.1",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^6.1.13",
-        "node-polyfill-webpack-plugin": "^4.0.0",
+        "node-stdlib-browser": "^1.3.1",
         "nyc": "^15.1.0",
-        "popper.js": "^1.16.1",
-        "postcss": "^8.4.49",
-        "postcss-import": "^15.1.0",
-        "postcss-loader": "^7.3.3",
-        "postcss-preset-env": "^8.5.1",
         "prettier": "^3.0.0",
         "relative": "^3.0.2",
         "rimraf": "^5.0.1",
-        "screenshot-desktop": "^1.14.0",
+        "screenshot-desktop": "^1.15.2",
         "sinon": "^15.2.0",
         "source-map": "^0.7.4",
         "source-map-support": "^0.5.21",
-        "style-loader": "^3.3.3",
-        "svg-inline-loader": "^0.8.2",
-        "thread-loader": "^4.0.2",
-        "transform-loader": "^0.2.4",
-        "ts-loader": "^9.2.8",
         "ts-mock-imports": "^1.3.0",
         "ts-mockito": "^2.6.1",
-        "tsconfig-paths-webpack-plugin": "^3.2.0",
-        "tsx": "^3.13.0",
+        "tsx": "^4.19.4",
         "typemoq": "^2.1.0",
-        "typescript": "^5.7.2",
+        "typescript": "^5.8.3",
         "unicode-properties": "^1.3.1",
         "utf-8-validate": "^5.0.8",
-        "util": "^0.12.4",
-        "uuid-to-hex": "^1.1.1",
-        "webpack": "^5.94.0",
-        "webpack-cli": "^5.1.4"
+        "util": "^0.12.4"
     },
     "optionalDependencies": {
         "fsevents": "^2.3.2"

@@ -30,6 +30,8 @@ export class EnvironmentCreationCommand implements IExtensionSyncActivationServi
                 id: result.kernelConnection.id,
                 extension: JVSC_EXTENSION_ID
             });
+
+            return result.kernelConnection.interpreter.id;
         });
     }
 }

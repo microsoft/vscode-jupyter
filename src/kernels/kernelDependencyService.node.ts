@@ -84,11 +84,13 @@ export class KernelDependencyService implements IKernelDependencyService {
             )}, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
         );
         const checkForPackages = async () => {
-            const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
-                resource,
-                DataScience.validatingKernelDependencies,
-                () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
-            );
+            const alreadyInstalled = ui.disableUI
+                ? await this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
+                : await KernelProgressReporter.wrapAndReportProgress(
+                      resource,
+                      DataScience.validatingKernelDependencies,
+                      () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
+                  );
             if (alreadyInstalled) {
                 return KernelInterpreterDependencyResponse.ok;
             }
@@ -117,29 +119,32 @@ export class KernelDependencyService implements IKernelDependencyService {
                 cancelTokenSource.cancel();
                 disposable.dispose();
             });
-            promise = KernelProgressReporter.wrapAndReportProgress(
-                resource,
-                DataScience.installingMissingDependencies,
-                async () => {
-                    if (installWithoutPrompting) {
-                        const result = await checkForPackages();
-                        if (
-                            result === KernelInterpreterDependencyResponse.ok ||
-                            result === KernelInterpreterDependencyResponse.cancel
-                        ) {
-                            return result;
-                        }
+            const install = async () => {
+                if (installWithoutPrompting) {
+                    const result = await checkForPackages();
+                    if (
+                        result === KernelInterpreterDependencyResponse.ok ||
+                        result === KernelInterpreterDependencyResponse.cancel
+                    ) {
+                        return result;
                     }
-                    return this.runInstaller(
-                        resource,
-                        kernelConnection.interpreter!,
-                        ui,
-                        cancelTokenSource,
-                        cannotChangeKernels,
-                        installWithoutPrompting
-                    );
                 }
-            );
+                return this.runInstaller(
+                    resource,
+                    kernelConnection.interpreter!,
+                    ui,
+                    cancelTokenSource,
+                    cannotChangeKernels,
+                    installWithoutPrompting
+                );
+            };
+            promise = ui.disableUI
+                ? install()
+                : KernelProgressReporter.wrapAndReportProgress(
+                      resource,
+                      DataScience.installingMissingDependencies,
+                      install
+                  );
             promise
                 .finally(() => {
                     disposable.dispose();
@@ -224,7 +229,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             }, cancelTokenSource.token.isCancellationRequested=${cancelTokenSource.token.isCancellationRequested}`
         );
         // If there's no UI, then cancel installation.
-        if (ui.disableUI) {
+        if (ui.disableUI && !installWithoutPrompting) {
             return KernelInterpreterDependencyResponse.uiHidden;
         }
         const interpreterType = getEnvironmentType(interpreter);
@@ -339,7 +344,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                         interpreter,
                         cancelTokenSource,
                         isModulePresent === true,
-                        isPipAvailableForNonConda === false
+                        isPipAvailableForNonConda === false,
+                        ui.disableUI === true
                     )
                 );
                 if (response === InstallerResponse.Installed) {

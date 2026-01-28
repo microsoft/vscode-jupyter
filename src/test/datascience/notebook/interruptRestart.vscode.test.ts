@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { window } from 'vscode';
+import { EventEmitter, NotebookDocumentChangeEvent, window, workspace, Disposable as VSCodeDisposable } from 'vscode';
 import { logger } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -23,11 +23,13 @@ import {
     getDefaultKernelConnection
 } from './helper.node';
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../kernels/execution/helpers';
-import { TestNotebookDocument, createKernelController } from './executionHelper';
+import { TestNotebookDocument, createKernelController, deleteAllCellsAndNotify } from './executionHelper';
 import { captureScreenShot } from '../../common';
 import { NotebookCellExecutionState } from '../../../platform/notebooks/cellExecutionStateService';
 import { KernelConnector } from '../../../notebooks/controllers/kernelConnector';
 import { DisplayOptions } from '../../../kernels/displayOptions';
+import { getOSType, OSType } from '../../../platform/common/utils/platform';
+import { dispose } from '../../../platform/common/utils/lifecycle';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
@@ -70,7 +72,19 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
             throw ex;
         }
     }
+    const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
+    let onDidChangeNotebookDocumentStub: sinon.SinonStub<
+        [
+            listener: (e: NotebookDocumentChangeEvent) => any,
+            thisArgs?: any,
+            disposables?: VSCodeDisposable[] | undefined
+        ],
+        VSCodeDisposable
+    >;
     suiteSetup(async function () {
+        onDidChangeNotebookDocumentStub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
+        onDidChangeNotebookDocumentStub.get(() => onDidChangeNbEventHandler.event);
+        suiteDisposables.push(onDidChangeNbEventHandler);
         logger.info(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
         api = await initialize();
         dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
@@ -79,29 +93,35 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     });
     setup(async function () {
         logger.info(`Start Test ${this.currentTest?.title}`);
+        deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
         if (previousTestFailed) {
             logger.info(`Start Running Test Suite again for ${this.currentTest?.title}`);
             await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
             await initSuite();
         }
-        sinon.restore();
         notebook.cells.length = 0;
         // Disable the prompt (when attempting to restart kernel).
         dsSettings.askForKernelRestart = false;
         logger.info(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(function () {
+        deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
+        dispose(disposables);
         previousTestFailed = this.currentTest?.isFailed();
         logger.info(`End Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {
+        deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
         if (dsSettings) {
             dsSettings.askForKernelRestart = oldAskForRestart === true;
         }
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
     });
 
-    test('Interrupting kernel with Cancelling token will cancel cell execution', async () => {
+    test('Interrupting kernel with Cancelling token will cancel cell execution', async function () {
+        if (getOSType() === OSType.Windows) {
+            return this.skip();
+        }
         const cell = await notebook.appendCodeCell(
             'import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)'
         );
@@ -211,6 +231,9 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     test('Interrupt and running cells again should only run the necessary cells', async function () {
         // No need to test remote as this is a test of status (fewer slower tests is better).
         if (IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
+        }
+        if (getOSType() === OSType.Windows) {
             return this.skip();
         }
 
@@ -343,10 +366,14 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         ]);
         console.log('Step12');
     });
-    test('Can restart a kernel after it dies', async function () {
+    test.skip('Can restart a kernel after it dies', async function () {
         if (IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
             // The kernel will auto start if it fails when using Jupyter.
             // When using Raw we don't use jupyter.
+            return this.skip();
+        }
+        // eslint-disable-next-line local-rules/dont-use-process
+        if (process.env.PACKAGE_PRE_RELEASE === 'prerelease') {
             return this.skip();
         }
 

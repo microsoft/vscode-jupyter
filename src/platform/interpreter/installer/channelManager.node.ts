@@ -7,7 +7,7 @@ import {} from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
 import { Installer } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
-import { IInstallationChannelManager, IModuleInstaller, Product } from './types';
+import { IInstallationChannelManager, IModuleInstaller, ModuleInstallerType, Product } from './types';
 import { Uri, env, window } from 'vscode';
 import { getEnvironmentType } from '../helpers';
 
@@ -44,7 +44,10 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         // group by priority and pick supported from the highest priority
         installers.sort((a, b) => b.priority - a.priority);
         let currentPri = installers[0].priority;
-        for (const mi of installers) {
+        // Check uv and Python ext installer only if there are no other options, hence exclude them initially.
+        for (const mi of installers.filter(
+            (m) => m.type !== ModuleInstallerType.UV && m.type !== ModuleInstallerType.PythonExt
+        )) {
             if (mi.priority !== currentPri) {
                 if (supportedInstallers.length > 0) {
                     break; // return highest priority supported installers
@@ -56,7 +59,22 @@ export class InstallationChannelManager implements IInstallationChannelManager {
                 supportedInstallers.push(mi);
             }
         }
-        return supportedInstallers;
+
+        if (supportedInstallers.length > 0) {
+            return supportedInstallers; // Return the highest priority supported installers.
+        }
+
+        const pythonExtInstaller = installers.find((m) => m.type === ModuleInstallerType.PythonExt);
+        const uvInstaller = installers.find((m) => m.type === ModuleInstallerType.UV);
+
+        if (pythonExtInstaller && (await pythonExtInstaller.isSupported(interpreter))) {
+            return [pythonExtInstaller]; // If PythonExt is supported, return it.
+        }
+        if (uvInstaller && (await uvInstaller.isSupported(interpreter))) {
+            return [uvInstaller]; // If UV is supported, return it.
+        }
+
+        return []; // No supported installers found.
     }
 
     public async showNoInstallersMessage(interpreter: PythonEnvironment): Promise<void> {

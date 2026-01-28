@@ -25,7 +25,6 @@ import {
 import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE, isWebExtension } from '../platform/common/constants';
 import { logger } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
-import uuid from 'uuid/v4';
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import { IKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../kernels/types';
@@ -33,6 +32,7 @@ import { chainable } from '../platform/common/utils/decorators';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
 import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred } from '../platform/common/utils/async';
+import { generateUuid } from '../platform/common/uuid';
 import { IServiceContainer } from '../platform/ioc/types';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
@@ -549,7 +549,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         const metadata: InteractiveCellMetadata = {
             interactiveWindowCellMarker,
             interactive,
-            id: uuid()
+            id: generateUuid()
         };
         notebookCellData.metadata = metadata;
 

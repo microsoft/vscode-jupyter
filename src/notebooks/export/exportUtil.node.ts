@@ -5,10 +5,10 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from '../../platform/vscode-path/path';
-import uuid from 'uuid/v4';
 import { TemporaryDirectory } from '../../platform/common/platform/types';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { sleep } from '../../platform/common/utils/async';
+import { generateUuid } from '../../platform/common/uuid';
 import { ExportUtilBase } from './exportUtil';
 import { ExportFormat } from './types';
 import { Uri } from 'vscode';
@@ -44,7 +44,7 @@ export class ExportUtil extends ExportUtilBase {
 
 export class ExportUtilNode {
     public async generateTempDir(): Promise<TemporaryDirectory> {
-        const resultDir = Uri.file(path.join(os.tmpdir(), uuid()));
+        const resultDir = Uri.file(path.join(os.tmpdir(), generateUuid()));
         const fs = ServiceContainer.instance.get<IFileSystemNode>(IFileSystemNode);
         await fs.createDirectory(resultDir);
 

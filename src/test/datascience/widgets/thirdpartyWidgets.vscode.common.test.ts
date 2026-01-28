@@ -34,10 +34,12 @@ import {
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
 import { hideOutputPanel, initializeWidgetComms, Utils } from './commUtils';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 [true, false].forEach((useCDN) => {
+    const suiteSuffix = `${useCDN ? 'with CDN' : 'without CDN'}`;
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-    suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'} @widgets`, function () {
+    suite(`Third party IPyWidget Tests ${suiteSuffix} @widgets`, function () {
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];
 
@@ -49,6 +51,12 @@ import { isWeb } from '../../../platform/common/utils/misc';
         let comms: Utils;
         suiteSetup(async function () {
             if (isWeb()) {
+                return this.skip();
+            }
+            if (useCDN) {
+                return this.skip();
+            }
+            if (!useCDN && IS_REMOTE_NATIVE_TEST()) {
                 return this.skip();
             }
             logger.info('Suite Setup VS Code Notebook - Execution');
@@ -93,14 +101,18 @@ import { isWeb } from '../../../platform/common/utils/misc';
             logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
         });
         suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
-        test('Slider Widget', async function () {
+        test(`Slider Widget ${suiteSuffix}`, async function () {
             await initializeNotebookForWidgetTest(disposables, { templateFile: 'slider_widgets.ipynb' }, editor);
             const cell = window.activeNotebookEditor?.notebook.cellAt(0)!;
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
         });
 
-        test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
+        test(`Button Widget with custom comm message rendering a matplotlib widget ${suiteSuffix}`, async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/16861
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -118,7 +130,11 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await clickWidget(comms, cell0, 'button');
             await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
-        test('Render AnyWidget (test js<-->kernel comms with binary data)', async function () {
+        test(`Render AnyWidget (test js<-->kernel comms with binary data) ${suiteSuffix}`, async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/16861
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -148,7 +164,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await executeCellAndDontWaitForOutput(cell4);
             await assertOutputContainsHtml(cell1, comms, ['Value from Python']);
         });
-        test('Render matplotlib, interactive inline', async function () {
+        test(`Render matplotlib, interactive inline ${suiteSuffix}`, async function () {
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -161,7 +177,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="']);
         });
-        test('Render matplotlib, non-interactive inline', async function () {
+        test(`Render matplotlib, non-interactive inline ${suiteSuffix}`, async function () {
             await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'matplotlib_widgets_inline.ipynb'
             });
@@ -176,7 +192,11 @@ import { isWeb } from '../../../platform/common/utils/misc';
                 () => `Timeout waiting for matplotlib inline image, got ${mimTypes()}`
             );
         });
-        test('Render matplotlib, widget', async function () {
+        test(`Render matplotlib, widget ${suiteSuffix}`, async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/16861
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {
@@ -189,7 +209,11 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
-        test('Render matplotlib, widget in multiple cells', async function () {
+        test.skip(`Render matplotlib, widget in multiple cells ${suiteSuffix}`, async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/16861
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
             await initializeNotebookForWidgetTest(
                 disposables,
                 {

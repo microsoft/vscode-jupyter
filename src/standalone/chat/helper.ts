@@ -1,116 +1,144 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as vscode from 'vscode';
-import { IKernel, IKernelProvider } from '../../kernels/types';
-import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
-import { getEnvExtApi } from '../../platform/api/python-envs/pythonEnvsApi';
-import { raceTimeout } from '../../platform/common/utils/async';
-import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { raceCancellation } from '../../platform/common/cancellation';
-import { DisposableStore } from '../../platform/common/utils/lifecycle';
+import {
+    CancellationToken,
+    LanguageModelTextPart,
+    LanguageModelTool,
+    LanguageModelToolInvocationOptions,
+    LanguageModelToolInvocationPrepareOptions,
+    LanguageModelToolResult,
+    NotebookDocument,
+    PreparedToolInvocation,
+    ProviderResult,
+    Uri,
+    window,
+    workspace
+} from 'vscode';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
+import { isEqual } from '../../platform/vscode-path/resources';
+import { isJupyterNotebook } from '../../platform/common/utils';
+import { BaseError, WrappedError } from '../../platform/errors/types';
+import { isCancellationError } from '../../platform/common/cancellation';
 
-export async function sendPipListRequest(kernel: IKernel, token: vscode.CancellationToken) {
-    const codeToExecute = `import subprocess
-proc = subprocess.Popen(["pip", "list", "--format", "json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-stdout, stderr = proc.communicate()
-return stdout
-`.split('\n');
-
-    try {
-        const packages = await execCodeInBackgroundThread<packageDefinition[]>(kernel, codeToExecute, token);
-        return packages;
-    } catch (ex) {
-        throw ex;
-    }
+export interface IBaseToolParams {
+    filePath: string;
 }
 
-export async function sendPipInstallRequest(kernel: IKernel, packages: string[], token: vscode.CancellationToken) {
-    const packageList = packages.join('", "');
-    const codeToExecute = `import subprocess
-proc = subprocess.Popen(["pip", "install", "${packageList}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-stdout, stderr = proc.communicate()
-return {"result": stdout}
-`.split('\n');
-
-    try {
-        const result = await execCodeInBackgroundThread<{ result: string }>(kernel, codeToExecute, token);
-        return result?.result;
-    } catch (ex) {
-        throw ex;
+export function sendConfigureNotebookToolCallTelemetry(
+    resource: Uri,
+    telemetry: {
+        createdEnv?: boolean;
+        installedPythonExtension?: boolean;
+        isPython?: boolean;
     }
-}
-
-export async function getPackagesFromEnvsExtension(kernelUri: vscode.Uri): Promise<packageDefinition[] | undefined> {
-    const envsApi = await getEnvExtApi();
-    if (!envsApi) {
-        return;
-    }
-
-    const environment = await envsApi.resolveEnvironment(kernelUri);
-    if (!environment) {
-        return;
-    }
-
-    return await envsApi.getPackages(environment);
-}
-
-export async function installPackageThroughEnvsExtension(kernelUri: vscode.Uri, packages: string[]): Promise<boolean> {
-    const envsApi = await getEnvExtApi();
-    if (!envsApi) {
-        return false;
-    }
-
-    const environment = await envsApi.resolveEnvironment(kernelUri);
-    if (!environment) {
-        return false;
-    }
-
-    await envsApi.managePackages(environment, { install: packages });
-    return true;
-}
-
-export type packageDefinition = { name: string; version?: string };
-
-export async function ensureKernelSelectedAndStarted(
-    notebook: vscode.NotebookDocument,
-    controllerRegistration: IControllerRegistration,
-    kernelProvider: IKernelProvider,
-    token: vscode.CancellationToken
 ) {
-    if (!kernelProvider.get(notebook)) {
-        const disposables = new DisposableStore();
+    // eslint-disable-next-line local-rules/dont-use-fspath
+    void getTelemetrySafeHashedString(resource.fsPath).then((resourceHash) => {
+        sendTelemetryEvent(Telemetry.ConfigureNotebookToolCall, undefined, {
+            resourceHash,
+            createdEnv: telemetry.createdEnv === true,
+            installedPythonExtension: telemetry.installedPythonExtension === true,
+            isPython: telemetry.isPython === true
+        });
+    });
+}
+
+export abstract class BaseTool<T extends IBaseToolParams> implements LanguageModelTool<T> {
+    constructor(private readonly toolName: string) {}
+
+    public async invoke(options: LanguageModelToolInvocationOptions<T>, token: CancellationToken) {
+        if (!workspace.isTrusted) {
+            return new LanguageModelToolResult([
+                new LanguageModelTextPart('Cannot use this tool in an untrusted workspace.')
+            ]);
+        }
+
+        let error: Error | undefined;
+        let notebookUri: Uri | undefined;
         try {
-            const selectedPromise = new Promise<void>((resolve) =>
-                disposables.add(
-                    controllerRegistration.onControllerSelected((e) =>
-                        e.notebook === notebook ? resolve() : undefined
-                    )
-                )
-            );
-
-            if (
-                !vscode.window.visibleNotebookEditors.some((e) => e.notebook.uri.toString() === notebook.uri.toString())
-            ) {
-                await vscode.window.showNotebookDocument(notebook);
-            }
-
-            await raceCancellation(
-                token,
-                vscode.commands.executeCommand('notebook.selectKernel', {
-                    notebookUri: notebook.uri,
-                    skipIfAlreadySelected: true
-                })
-            );
-
-            await raceTimeout(200, raceCancellation(token, selectedPromise));
+            const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+            return await this.invokeImpl(options, notebook, token);
+        } catch (ex) {
+            error = ex;
+            throw ex;
         } finally {
-            disposables.dispose();
+            const isCancelled = token.isCancellationRequested || (error ? isCancellationError(error, true) : false);
+            const failed = !!error || isCancelled ? 'true' : 'false';
+            const failureCategory = isCancelled
+                ? 'cancelled'
+                : error
+                ? error instanceof BaseError
+                    ? error.category
+                    : 'error'
+                : undefined;
+            const resourceHash = notebookUri
+                ? // eslint-disable-next-line local-rules/dont-use-fspath
+                  getTelemetrySafeHashedString(notebookUri.fsPath)
+                : Promise.resolve(undefined);
+            void resourceHash.then((resourceHash) => {
+                sendTelemetryEvent(Telemetry.InvokeTool, undefined, {
+                    toolName: this.toolName,
+                    resourceHash,
+                    failed,
+                    failureCategory
+                });
+            });
         }
     }
 
-    const controller = controllerRegistration.getSelected(notebook);
-    if (controller) {
-        return raceCancellation(token, controller.startKernel(notebook));
+    async prepareInvocation(
+        options: LanguageModelToolInvocationPrepareOptions<T>,
+        token: CancellationToken
+    ): Promise<PreparedToolInvocation> {
+        const notebook = await resolveNotebookFromFilePath(options.input.filePath);
+        return this.prepareInvocationImpl(options, notebook, token);
     }
+    protected abstract invokeImpl(
+        options: LanguageModelToolInvocationOptions<T>,
+        notebook: NotebookDocument,
+        token: CancellationToken
+    ): ProviderResult<LanguageModelToolResult>;
+    protected abstract prepareInvocationImpl(
+        options: LanguageModelToolInvocationPrepareOptions<T>,
+        notebook: NotebookDocument,
+        token: CancellationToken
+    ): Promise<PreparedToolInvocation>;
+}
+
+async function resolveNotebookFromFilePath(filePath: string) {
+    const uri = Uri.file(filePath);
+    let parsedUri = uri;
+    try {
+        parsedUri = Uri.parse(filePath);
+    } catch {
+        //
+    }
+    let notebook =
+        workspace.notebookDocuments.find(
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            (doc) => doc.uri.path === filePath || doc.uri.fsPath === filePath
+        ) ||
+        workspace.notebookDocuments.find((doc) => isEqual(doc.uri, uri)) ||
+        workspace.notebookDocuments.find(
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            (doc) => doc.uri.path === filePath || doc.uri.fsPath === parsedUri.fsPath
+        ) ||
+        workspace.notebookDocuments.find((doc) => isEqual(doc.uri, parsedUri));
+    notebook = notebook || (await workspace.openNotebookDocument(uri));
+    if (!notebook) {
+        throw new WrappedError(`Unable to find notebook at ${filePath}.`, undefined, 'notebookNotFound');
+    }
+    if (!isJupyterNotebook(notebook)) {
+        throw new WrappedError(
+            `The notebook at ${filePath} is not a Jupyter notebook This tool can only be used with Jupyter Notebooks.`,
+            undefined,
+            'nonJupyterNotebook'
+        );
+    }
+    if (!window.visibleNotebookEditors.find((e) => e.notebook === notebook)) {
+        await window.showNotebookDocument(notebook);
+    }
+    return notebook;
 }

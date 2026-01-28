@@ -30,6 +30,17 @@ const sanitize = require('sanitize-filename');
 const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
 
+// Test class to access protected methods
+class TestCDNWidgetScriptSourceProvider extends CDNWidgetScriptSourceProvider {
+    public testGenerateDownloadUri(
+        moduleName: string,
+        moduleVersion: string,
+        cdn: WidgetCDNs
+    ): Promise<string | undefined> {
+        return super.generateDownloadUri(moduleName, moduleVersion, cdn);
+    }
+}
+
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('ipywidget - CDN', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
@@ -301,6 +312,21 @@ suite('ipywidget - CDN', () => {
         verify(
             mockedVSCodeNamespaces.window.showWarningMessage(expectedMessage, anything(), anything(), anything())
         ).once();
+    });
+
+    test('Create a valid URL from a custom CDN URL template', async () => {
+        const customTemplate =
+            'https://cdnjs.cloudflare.com/ajax/libs/${packageName}/${moduleVersion}/${fileNameWithExt}';
+        const testScriptSourceProvider = new TestCDNWidgetScriptSourceProvider(
+            instance(memento),
+            instance(configService)
+        );
+        const url = await testScriptSourceProvider.testGenerateDownloadUri(
+            'lodash.js/lodash.min',
+            '^4.17.21',
+            customTemplate
+        );
+        assert.deepEqual(url, 'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js');
     });
 
     [true, false].forEach((localLaunch) => {

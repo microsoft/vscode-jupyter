@@ -36,6 +36,13 @@ import { dispose } from '../../../../platform/common/utils/lifecycle';
             id: 'interpreterId'
         } as any
     });
+    const localKernelSpecWithPythonInterpreter = LocalKernelSpecConnectionMetadata.create({
+        id: 'localKernelSpecWithPythonInterpreter',
+        kernelSpec: mock<IJupyterKernelSpec>(),
+        interpreter: {
+            id: 'interpreterId'
+        } as any
+    });
     const serverProviderHandle = { handle: 'handle', id: 'id', extensionId: '' };
     const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: '',
@@ -75,6 +82,15 @@ import { dispose } from '../../../../platform/common/utils/lifecycle';
         });
         test('Returns base url for local python kernelspec', async () => {
             when(kernel.kernelConnectionMetadata).thenReturn(localPythonKernelSpec);
+            const baseUrl = await provider.getNbExtensionsParentPath(instance(kernel));
+            if (isWeb) {
+                assert.isUndefined(baseUrl);
+            } else {
+                assert.strictEqual(baseUrl?.toString(), Uri.file(path.join(__dirname, 'share', 'jupyter')).toString());
+            }
+        });
+        test('Returns base url for local kernelspec with python interpreter', async () => {
+            when(kernel.kernelConnectionMetadata).thenReturn(localKernelSpecWithPythonInterpreter);
             const baseUrl = await provider.getNbExtensionsParentPath(instance(kernel));
             if (isWeb) {
                 assert.isUndefined(baseUrl);

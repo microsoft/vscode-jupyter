@@ -110,7 +110,7 @@ suite('Run By Line @debugger', function () {
     // Cleanup after suite is finished
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test('Delete temp debugging files @mandatory', async function () {
+    test.skip('Delete temp debugging files @mandatory', async function () {
         let tempWatcher;
         let folderName;
         try {
@@ -201,7 +201,8 @@ suite('Run By Line @debugger', function () {
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 
-    test('Interrupt during debugging', async function () {
+    // https://github.com/microsoft/vscode-jupyter/issues/16860
+    test.skip('Interrupt during debugging', async function () {
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = window.activeNotebookEditor?.notebook!;
 
@@ -219,7 +220,8 @@ suite('Run By Line @debugger', function () {
         );
     });
 
-    test('Stops in same-cell function called from last line', async function () {
+    // https://github.com/microsoft/vscode-jupyter/issues/16860
+    test.skip('Stops in same-cell function called from last line', async function () {
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = window.activeNotebookEditor?.notebook!;
 

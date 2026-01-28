@@ -9,7 +9,6 @@ import { ISystemVariables } from './variables/types';
 export const IsDevMode = Symbol('IsDevMode');
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel {}
-export const IsWindows = Symbol('IS_WINDOWS');
 export const IDisposableRegistry = Symbol('IDisposableRegistry');
 export type IDisposableRegistry = Disposable[];
 export const IMemento = Symbol('IGlobalMemento');
@@ -99,6 +98,8 @@ export interface IJupyterSettings {
      */
     readonly completionTriggerCharacters?: Record<string, string[]>;
     readonly interactiveReplNotebook: boolean;
+    /** Used only for debugging, logs the kernel messages */
+    readonly logKernelMessages: boolean;
 }
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {
@@ -125,7 +126,7 @@ export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
 
-export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
+export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com' | string;
 
 export const IConfigurationService = Symbol('IConfigurationService');
 export interface IConfigurationService {

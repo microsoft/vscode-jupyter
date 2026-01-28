@@ -21,7 +21,7 @@ import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.node'
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.node';
 import { KernelStartupTelemetry } from './kernelStartupTelemetry.node';
-import { KernelStatusProvider } from './kernelStatusProvider';
+import { IKernelStatusProvider, KernelStatusProvider } from './kernelStatusProvider';
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './raw/finder/localKnownPathKernelSpecFinder.node';
@@ -89,7 +89,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         LocalPythonAndRelatedNonPythonKernelSpecFinder
     );
 
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
+    serviceManager.addSingleton<IKernelStatusProvider>(IKernelStatusProvider, KernelStatusProvider);
+    serviceManager.addBinding(IKernelStatusProvider, IExtensionSyncActivationService);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
 
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);

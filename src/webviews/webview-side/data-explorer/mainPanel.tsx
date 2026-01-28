@@ -18,8 +18,8 @@ import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.css';
 import { SliceControl } from './sliceControl';
 import debounce from 'lodash/debounce';
-import uuid from 'uuid/v4';
 
+import { generateUuid } from '../../../platform/common/uuid';
 import { SharedMessages } from '../../../messageTypes';
 import {
     IDataViewerMapping,
@@ -36,7 +36,7 @@ import {
 import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);
-const RowNumberColumnName = uuid(); // Unique key for our column containing row numbers
+const RowNumberColumnName = generateUuid(); // Unique key for our column containing row numbers
 
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {

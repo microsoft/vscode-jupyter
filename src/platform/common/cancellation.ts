@@ -7,6 +7,8 @@ import { isPromiseLike } from './utils/async';
 import { Common } from './utils/localize';
 import { dispose } from './utils/lifecycle';
 
+const canceledName = 'Canceled';
+
 export function isCancellationError(ex: Error, includeErrorsWithTheMessageCanceled = false) {
     if (typeof ex !== 'object' || !ex) {
         return false;
@@ -15,8 +17,10 @@ export function isCancellationError(ex: Error, includeErrorsWithTheMessageCancel
         return true;
     }
     if (
-        includeErrorsWithTheMessageCanceled &&
-        (ex.message.includes('Canceled') || ex.message.includes(Common.canceled))
+        (includeErrorsWithTheMessageCanceled &&
+            ex instanceof Error &&
+            (ex.message.includes('Canceled') || ex.message.includes(Common.canceled))) ||
+        (ex.name === canceledName && ex.message === canceledName)
     ) {
         return true;
     }

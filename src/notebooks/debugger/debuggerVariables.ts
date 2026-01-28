@@ -274,8 +274,6 @@ export class DebuggerVariables
         } else if (message.type === 'response' && message.command === 'variables' && message.body) {
             if (this.currentSeqNumsForVariables.has(message.request_seq)) {
                 // If using the interactive debugger, update our variables.
-                // TODO: Figure out what resource to use
-
                 // Only update variables if it came from a "scopes" command and not a "hover"
                 // 1. Scopes command will come first with a variablesReference number
                 // 2. onWillReceiveMessage will have that variablesReference and

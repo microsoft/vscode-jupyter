@@ -3,7 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { inject, injectable, named, optional } from 'inversify';
-import uuid from 'uuid/v4';
 import {
     CancellationError,
     CancellationToken,
@@ -46,6 +45,7 @@ import {
     IMemento
 } from '../../platform/common/types';
 import { Common, DataScience } from '../../platform/common/utils/localize';
+import { generateUuid } from '../../platform/common/uuid';
 import { noop } from '../../platform/common/utils/misc';
 import { logger } from '../../platform/logging';
 import { JupyterPasswordConnect } from './jupyterPasswordConnect';
@@ -341,7 +341,7 @@ export class UserJupyterServerUrlProvider
             let failedUrlPasswordCapture = false;
             while (true) {
                 try {
-                    handle = uuid();
+                    handle = generateUuid();
                     if (nextStep === 'Get Url') {
                         initialUrlWasValid = false;
                         nextStep = 'Check Passwords';

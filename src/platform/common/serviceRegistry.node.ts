@@ -14,14 +14,12 @@ import { CryptoUtils } from './crypto';
 import { ExperimentService } from './experiments/service';
 import { FeatureManager } from './featureManager';
 import { PersistentStateFactory } from './persistentState';
-import { IS_WINDOWS } from './platform/constants.node';
 import {
     IAsyncDisposableRegistry,
     ICryptoUtils,
     IExtensions,
     IFeaturesManager,
-    IPersistentStateFactory,
-    IsWindows
+    IPersistentStateFactory
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { LanguageInitializer } from '../telemetry/languageInitializer';
@@ -34,8 +32,6 @@ import { ApplicationEnvironment } from './application/applicationEnvironment';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
-
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);

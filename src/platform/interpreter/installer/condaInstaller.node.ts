@@ -72,9 +72,10 @@ export class CondaInstaller extends ModuleInstaller {
         productOrModuleName: Product | string,
         interpreter: PythonEnvironment | Environment,
         cancelTokenSource: CancellationTokenSource,
-        flags?: ModuleInstallFlags
+        flags?: ModuleInstallFlags,
+        silent?: boolean
     ): Promise<void> {
-        await super.installModule(productOrModuleName, interpreter, cancelTokenSource, flags);
+        await super.installModule(productOrModuleName, interpreter, cancelTokenSource, flags, silent);
 
         // If we just installed a package into a conda env without python init, then Python may have gotten installed
         // We now need to ensure the conda env gets updated as a result of this.

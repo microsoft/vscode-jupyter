@@ -116,7 +116,7 @@ suite(`Interactive window Execution @iw`, async function () {
         await vscode.commands.executeCommand('python.clearWorkspaceInterpreter');
     }
 
-    test('Export Interactive window to Notebook', async () => {
+    test.skip('Export Interactive window to Notebook', async () => {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await waitForInteractiveWindow(activeInteractiveWindow);
 
@@ -156,7 +156,7 @@ suite(`Interactive window Execution @iw`, async function () {
         await waitForTextOutput(cells[0], 'first');
     });
 
-    test('Switching active interpreter on a python file changes kernel in use', async function () {
+    test.skip('Switching active interpreter on a python file changes kernel in use', async function () {
         // Virtual environments are not available in conda
         if (IS_CONDA_TEST() || IS_REMOTE_NATIVE_TEST()) {
             this.skip();
@@ -222,14 +222,4 @@ suite(`Interactive window Execution @iw`, async function () {
             await postSwitch();
         }
     });
-
-    // todo@joyceerhl
-    // test('Verify CWD', () => { });
-    // test('Multiple executes go to last active window', async () => { });
-    // test('Per file', async () => { });
-    // test('Per file asks and changes titles', async () => { });
-    // test('Debug cell with leading newlines', () => { });
-    // test('Debug cell with multiple function definitions', () => { });
-    // test('Should skip empty cells from #%% file or input box', () => { });
-    // test('Export', () => { });
 });

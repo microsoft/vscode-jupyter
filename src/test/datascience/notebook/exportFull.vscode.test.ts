@@ -35,9 +35,6 @@ import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { format } from '../../../platform/common/helpers';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
-
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Export @export', function () {
     let api: IExtensionTestApi;
@@ -60,6 +57,9 @@ suite('Export @export', function () {
                 INbConvertInterpreterDependencyChecker
             );
             interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+            // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+            const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
+
             await hijackPrompt(
                 'showErrorMessage',
                 { endsWith: expectedPromptMessageSuffix },
@@ -249,7 +249,7 @@ suite('Export @export', function () {
             'test.ipynb'
         );
         const importFile = Uri.file(testFilePath);
-        await commands.executeCommand('jupyter.importnotebook', importFile);
+        await commands.executeCommand('jupyter.importnotebookfile', importFile);
 
         // Wait until our active document changes
         await deferred.promise;
@@ -287,7 +287,7 @@ suite('Export @export', function () {
             'test.ipynb'
         );
         const importFile = Uri.file(testFilePath);
-        await commands.executeCommand('jupyter.importnotebook', importFile);
+        await commands.executeCommand('jupyter.importnotebookfile', importFile);
 
         // Wait until our active document changes
         await deferred.promise;

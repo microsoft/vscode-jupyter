@@ -13,9 +13,9 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 20.17.0
-2. [npm](https://www.npmjs.com/) 10.8.2
-3. [Python](https://www.python.org/) 3.6 or later
+1. [Node.js](https://nodejs.org/) 22.15.1
+2. [npm](https://www.npmjs.com/) 10.9.2
+3. [Python](https://www.python.org/) Minimum supported version as defined [here](https://devguide.python.org/versions/)
 4. Windows, macOS, or Linux
 5. [Visual Studio Code](https://code.visualstudio.com/)
 6. The following VS Code extensions:
@@ -29,7 +29,7 @@
 ```shell
 git clone https://github.com/microsoft/vscode-jupyter
 cd vscode-jupyter
-npm ci
+npm ci --ignore-scripts && npm run postinstall
 # Run this to setup the necessary pre-commit hooks.
 npm run setup-precommit-hook
 python3 -m venv .venv
@@ -48,7 +48,7 @@ Run the `watch` build Tasks from the [Run Build Task...](https://code.visualstud
 You can also compile from the command-line. For a full compile you can use:
 
 ```shell
-npx gulp prePublishNonBundle
+npm run compile
 ```
 
 For incremental builds it is recommended you use the `watch` build task (for better integration with VS Code).
@@ -57,10 +57,10 @@ Optionally you can use the following commands depending on your needs:
 ```shell
 # This will compile everything, but only watch for changes to the desktop bundle.
 # Note: Its advisable to use the `watch` task instead of this one (for integration with VS Code, e.g. view errors in problems window).
-npm run compile
+npm run watch
 # This watches changes to all files, webviews, web version of extension, node version of extension, etc
 # This can be resource intensive, as there are a number of bundles created, thus requiring monitoring of files for each of these numerous bundles.
-npm run compile-watch-all
+npm run watch-all
 ```
 
 Sometimes you will need to run `npm run clean` and even `rm -r out dist`.
@@ -204,9 +204,6 @@ To run only the functional tests:
 Clone the repo into any directory, open that directory in VSCode, and use the `Extension` launch option within VSCode.
 
 ### Coding Standards
-
-Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-jupyter/blob/main/CODING_STANDARDS.md).
-We have CI tests to ensure the code committed will adhere to the above coding standards.
 
 Messages displayed to the user must be localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-jupyter/blob/main/src/platform/common/utils/localize.ts) file.
 

@@ -12,7 +12,7 @@ export class MockMemento implements Memento {
     public get<T>(key: string, defaultValue?: T): T {
         const exists = this._value.hasOwnProperty(key);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return exists ? this._value[key] : (defaultValue! as any);
+        return exists ? (this._value[key] as any) : (defaultValue! as any);
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public update(key: string, value: any): Thenable<void> {

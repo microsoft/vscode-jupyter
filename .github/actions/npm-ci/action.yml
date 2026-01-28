@@ -4,7 +4,7 @@ description: 'npm install (with GITHUB_TOKEN to run postinstall step)'
 runs:
   using: 'composite'
   steps:
-    - run: npm ci --foreground-scripts --prefer-offline
+    - run: npm ci --foreground-scripts --prefer-offline --ignore-scripts
       env:
         npm_config_build_from_source: true
       shell: bash

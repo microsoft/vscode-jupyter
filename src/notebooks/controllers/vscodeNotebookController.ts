@@ -334,6 +334,13 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             } called from ${new Error('').stack}`
         );
         this.isDisposed = true;
+        // Dispose kernels associated with this controller.
+        // If the kernel is associated with this document, and the controller is being disposed,
+        // then the kernel for this document must be disposed.
+        workspace.notebookDocuments
+            .map((doc) => (this.associatedDocuments.has(doc) ? this.kernelProvider.get(doc) : undefined))
+            .filter((kernel) => kernel?.kernelConnectionMetadata.id === this.kernelConnection.id)
+            .forEach((kernel) => (kernel ? kernel.dispose().catch(noop) : undefined));
         this._onNotebookControllerSelectionChanged.dispose();
         this._onConnecting.dispose();
         this.controller.dispose();
@@ -566,7 +573,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         let kernel: IKernel | undefined;
         try {
             logger.trace(`Connect to Kernel ${getDisplayPath(doc.uri)}. Step 2`);
-            kernel = await this.connectToKernel(doc, new DisplayOptions(false));
+            kernel = await this.startKernel(doc);
             logger.trace(`Connected to Kernel ${getDisplayPath(doc.uri)}. Step 3`);
             if (kernel.disposing) {
                 throw new CancellationError();
@@ -780,22 +787,25 @@ async function updateNotebookDocumentMetadata(
     }
 }
 
+const MINIMUM_SUPPORTED_PYTHON_VERSION = [3, 9] as const; // 3.9, as defined here https://devguide.python.org/versions/
 export async function warnWhenUsingOutdatedPython(kernelConnection: KernelConnectionMetadata) {
     const pyVersion = await getVersion(kernelConnection.interpreter, true);
+    if (!pyVersion) {
+        return;
+    }
     const major = pyVersion?.major || 0;
     const minor = pyVersion?.minor || 0;
     if (
-        !pyVersion ||
-        major >= 4 ||
         major <= 0 || // Invalid versions from Python extension
-        minor <= -1 || // Invalid versions from Python extension
-        (kernelConnection.kind !== 'startUsingLocalKernelSpec' &&
-            kernelConnection.kind !== 'startUsingPythonInterpreter')
+        minor <= -1 // Invalid versions from Python extension
     ) {
         return;
     }
 
-    if (major < 3 || (major === 3 && minor <= 5)) {
+    if (
+        major < MINIMUM_SUPPORTED_PYTHON_VERSION[0] ||
+        (major === MINIMUM_SUPPORTED_PYTHON_VERSION[0] && minor <= MINIMUM_SUPPORTED_PYTHON_VERSION[1])
+    ) {
         window
             .showWarningMessage(DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion, Common.learnMore)
             .then((selection) => {

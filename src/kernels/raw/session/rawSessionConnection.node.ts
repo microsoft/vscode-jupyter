@@ -3,7 +3,6 @@
 
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { Signal } from '@lumino/signaling';
-import uuid from 'uuid/v4';
 import { logger } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { Telemetry } from '../../../telemetry';
@@ -15,6 +14,7 @@ import { getNameOfKernelConnection } from '../../helpers';
 import { CancellationToken, Uri } from 'vscode';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { RawKernelConnection } from './rawKernelConnection.node';
+import { generateUuid } from '../../../platform/common/uuid';
 
 /*
 RawSession class implements a jupyterlab ISession object
@@ -90,7 +90,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
         public readonly type: 'notebook' | 'console'
     ) {
         // Unique ID for this session instance
-        this.id = uuid();
+        this.id = generateUuid();
         this.name = getNameOfKernelConnection(this.kernelConnectionMetadata) || 'python3';
         this.path = this.resource?.fsPath || this.kernelConnectionMetadata.interpreter?.uri.fsPath || 'kernel_path';
         // ID for our client JMP connection

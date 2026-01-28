@@ -8,6 +8,9 @@ import type { BuildOptions, Charset, Loader, Plugin, SameShape } from 'esbuild';
 import { lessLoader } from 'esbuild-plugin-less';
 import fs from 'fs-extra';
 import { getZeroMQPreBuildsFoldersToKeep, getBundleConfiguration, bundleConfiguration } from '../webpack/common';
+import ImportGlobPlugin from 'esbuild-plugin-import-glob';
+const plugin = require('node-stdlib-browser/helpers/esbuild/plugin');
+const stdLibBrowser = require('node-stdlib-browser');
 
 // These will not be in the main desktop bundle, but will be in the web bundle.
 // In desktop, we will bundle/copye each of these separately into the node_modules folder.
@@ -151,8 +154,28 @@ function createConfig(
     watch: boolean
 ): SameShape<BuildOptions, BuildOptions> {
     const inject: string[] = [];
+    const isWebTestSource = source.endsWith(path.join('web', 'index.ts'));
+    const plugins: Plugin[] = [];
+    let define: SameShape<BuildOptions, BuildOptions>['define'] = undefined;
     if (target === 'web') {
-        inject.push(path.join(__dirname, isDevbuild ? 'process.development.js' : 'process.production.js'));
+        plugins.push(style());
+        plugins.push(lessLoader());
+
+        define = {
+            BROWSER: 'true', // From webacpk scripts we had.
+            global: 'this'
+        };
+
+        if (isWebTestSource) {
+            define.global = 'global'; // global:'global' is required for mocha tests to work in the browser.
+            define.process = 'process';
+            define.Buffer = 'Buffer';
+            plugins.push(ImportGlobPlugin());
+            plugins.push(plugin(stdLibBrowser));
+            inject.push(require.resolve('node-stdlib-browser/helpers/esbuild/shim'));
+        } else {
+            inject.push(path.join(__dirname, isDevbuild ? 'process.development.js' : 'process.production.js'));
+        }
     }
     if (source.endsWith(path.join('data-explorer', 'index.tsx'))) {
         inject.push(path.join(__dirname, 'jquery.js'));
@@ -176,22 +199,16 @@ function createConfig(
         bundle: true,
         external,
         alias,
-        format: target === 'desktop' || source.endsWith('extension.web.ts') ? 'cjs' : 'esm',
+        format: target === 'desktop' || source.endsWith('extension.web.ts') || isWebTestSource ? 'cjs' : 'esm',
         metafile: isDevbuild && !watch,
-        define:
-            target === 'desktop'
-                ? undefined
-                : {
-                      BROWSER: 'true', // From webacpk scripts we had.
-                      global: 'this'
-                  },
+        define,
         target: target === 'desktop' ? 'node18' : 'es2018',
         platform: target === 'desktop' ? 'node' : 'browser',
         minify: !isDevbuild,
         logLevel: 'info',
         sourcemap: isDevbuild,
         inject,
-        plugins: target === 'desktop' ? [] : [style(), lessLoader()],
+        plugins,
         loader: target === 'desktop' ? {} : loader
     };
 }
@@ -301,6 +318,13 @@ async function buildAll() {
             build(
                 path.join(extensionFolder, 'src', 'extension.web.ts'),
                 path.join(extensionFolder, 'dist', 'extension.web.bundle.js'),
+                { target: 'web', watch: watchAll }
+            )
+        );
+        builders.push(
+            build(
+                path.join(extensionFolder, 'src', 'test', 'web', 'index.ts'),
+                path.join(extensionFolder, 'out', 'extension.web.bundle.js'),
                 { target: 'web', watch: watchAll }
             )
         );

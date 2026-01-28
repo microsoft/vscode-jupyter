@@ -7,7 +7,6 @@ import { l10n, CancellationToken, Event, EventEmitter, NotebookCellOutput, type 
 import { Kernel, KernelStatus, Output } from '../../../api';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
-import { isPythonKernelConnection } from '../../../kernels/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { DisposableBase, dispose } from '../../../platform/common/utils/lifecycle';
 import { noop } from '../../../platform/common/utils/misc';
@@ -21,7 +20,8 @@ import {
     JVSC_EXTENSION_ID,
     POWER_TOYS_EXTENSION_ID,
     PROPOSED_API_ALLOWED_PUBLISHERS,
-    PYTHON_LANGUAGE
+    PYTHON_LANGUAGE,
+    SENTINEL_EXTENSION_ID
 } from '../../../platform/common/constants';
 import { ChatMime, generatePythonCodeToInvokeCallback } from '../../../kernels/chat/generator';
 import {
@@ -133,11 +133,16 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
                 return that.onDidReceiveDisplayUpdate.bind(this);
             },
             executeCode: (code: string, token: CancellationToken) => this.executeCode(code, token),
-            executeChatCode: (
-                code: string,
-                handlers: Record<string, (data?: string) => Promise<string | undefined>>,
-                token: CancellationToken
-            ) => this.executeChatCode(code, handlers, token)
+            shutdown() {
+                if (
+                    ![JVSC_EXTENSION_ID, POWER_TOYS_EXTENSION_ID, SENTINEL_EXTENSION_ID].includes(extensionId) &&
+                    !PROPOSED_API_ALLOWED_PUBLISHERS.includes(extensionId.split('.')[0])
+                ) {
+                    throw new Error(`Proposed API is not supported for extension ${extensionId}`);
+                }
+
+                return that.shutdown();
+            }
         });
     }
     static createApiKernel(
@@ -183,21 +188,24 @@ class WrappedKernelPerExtension extends DisposableBase implements Kernel {
             yield output;
         }
     }
-    async *executeChatCode(
-        code: string,
-        handlers: Record<string, (data?: string) => Promise<string | undefined>>,
-        token: CancellationToken
-    ): AsyncGenerator<Output, void, unknown> {
+
+    async shutdown(): Promise<void> {
         await this.checkAccess();
-        const allowedList = ['ms-vscode.dscopilot-agent', JVSC_EXTENSION_ID];
-        if (!allowedList.includes(this.extensionId.toLowerCase())) {
-            throw new Error(`Proposed API is not supported for extension ${this.extensionId}`);
+        logger.debug(`Shutting down kernel ${this.kernel.id} via API for extension ${this.extensionId}`);
+        try {
+            // First shutdown the kernel
+            await this.kernel.shutdown();
+        } catch (ex) {
+            logger.error(`Failed to shutdown kernel ${this.kernel.id} for extension ${this.extensionId}`, ex);
+            throw ex;
         }
-        if (!isPythonKernelConnection(this.kernel.kernelConnectionMetadata)) {
-            throw new Error('Chat code execution is only supported for Python kernels');
-        }
-        for await (const output of this.executeCodeInternal(code, handlers, token)) {
-            yield output;
+
+        try {
+            // Then dispose the kernel
+            await this.kernel.dispose();
+        } catch (ex) {
+            logger.error(`Failed to dispose kernel ${this.kernel.id} for extension ${this.extensionId}`, ex);
+            throw ex;
         }
     }
 

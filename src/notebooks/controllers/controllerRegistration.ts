@@ -37,8 +37,6 @@ import { IJupyterVariablesProvider } from '../../kernels/variables/types';
  */
 @injectable()
 export class ControllerRegistration implements IControllerRegistration, IExtensionSyncActivationService {
-    // Promise to resolve when we have loaded our controllers
-    private controllersPromise: Promise<void>;
     private registeredControllers = new Map<string, IVSCodeNotebookController>();
     private changeEmitter = new EventEmitter<IVSCodeNotebookControllerUpdateEvent>();
     private registeredMetadatas = new Map<string, KernelConnectionMetadata>();
@@ -96,18 +94,12 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         this.serverUriStorage.onDidChange(this.onDidChangeUri, this, this.disposables);
         this.serverUriStorage.onDidRemove(this.onDidRemoveServers, this, this.disposables);
         this.loadControllers();
-    }
-    private loadControllers() {
-        this.controllersPromise = this.loadControllersImpl();
         sendKernelListTelemetry(this.registered.map((v) => v.connection));
 
         logger.ci(`Providing notebook controllers with length ${this.registered.length}.`);
     }
-    public get loaded() {
-        return this.controllersPromise;
-    }
 
-    private async loadControllersImpl() {
+    private loadControllers() {
         const connections = this.kernelFinder.kernels;
         this.createNotebookControllers(connections);
 

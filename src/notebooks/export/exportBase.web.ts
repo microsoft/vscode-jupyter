@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import uuid from 'uuid/v4';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { Contents, ContentsManager } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Uri, CancellationToken, NotebookDocument } from 'vscode';
 import * as path from '../../platform/vscode-path/path';
 import { DisplayOptions } from '../../kernels/displayOptions';
+import { generateUuid } from '../../platform/common/uuid';
 import { executeSilently, jvscIdentifier } from '../../kernels/helpers';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { concatMultilineString } from '../../platform/common/utils';
@@ -25,12 +25,12 @@ import * as urlPath from '../../platform/vscode-path/resources';
 import { DataScience } from '../../platform/common/utils/localize';
 
 function getRemoteIPynbSuffix(): string {
-    return `${jvscIdentifier}${uuid()}`;
+    return `${jvscIdentifier}${generateUuid()}`;
 }
 
 function generateBackingIPyNbFileName(resource: Resource) {
     // Generate a more descriptive name
-    const suffix = `${getRemoteIPynbSuffix()}${uuid()}.ipynb`;
+    const suffix = `${getRemoteIPynbSuffix()}${generateUuid()}.ipynb`;
     return resource
         ? `${urlPath.basename(resource, '.ipynb')}${suffix}`
         : `${DataScience.defaultNotebookName}${suffix}`;

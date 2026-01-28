@@ -4,7 +4,7 @@
 import { ISignal, Signal } from '@lumino/signaling';
 import * as sinon from 'sinon';
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
-import { mock, when, instance, verify, anything } from 'ts-mockito';
+import { mock, when, instance, verify, anything, resetCalls } from 'ts-mockito';
 import {
     CancellationError,
     CancellationTokenSource,
@@ -505,22 +505,24 @@ suite('Raw Session & Raw Kernel Connection', () => {
         test('Send and interrupt message', async () => {
             (kernelConnectionMetadata.kernelSpec as ReadWrite<IJupyterKernelSpec>).interrupt_mode = 'message';
             when(kernelProcess.canInterrupt).thenReturn(false);
-            let request: KernelMessage.IShellMessage<KernelMessage.ShellMessageType> | undefined;
-            when(kernel.sendShellMessage(anything(), anything(), anything())).thenCall((msg) => {
-                request = msg;
+            const messageTypes: string[] = [];
+            when(kernel.sendControlMessage(anything(), anything(), anything())).thenCall((msg) => {
+                messageTypes.push(msg?.header.msg_type || '');
                 return { done: Promise.resolve() } as any;
             });
+            resetCalls(kernel);
 
             await session.kernel?.interrupt();
 
             verify(kernelProcess.interrupt()).never();
-            verify(kernel.sendShellMessage(anything(), anything(), anything())).once();
-            assert.strictEqual(request?.header.msg_type, 'interrupt_request');
+            verify(kernel.sendControlMessage(anything(), anything(), anything())).atLeast(1);
+            assert.strictEqual(messageTypes.includes('interrupt_request'), true);
+            assert.deepStrictEqual(messageTypes, ['interrupt_request']);
         });
     });
 });
 
-suite('Raw Session & Raw Kernel Connection', () => {
+suite('Raw Session & Raw Kernel Connection (2)', () => {
     suite('KernelWorkingFolder', function () {
         let configService: IConfigurationService;
         let fs: IFileSystem;

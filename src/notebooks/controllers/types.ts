@@ -51,10 +51,6 @@ export const IControllerRegistration = Symbol('IControllerRegistration');
 
 export interface IControllerRegistration {
     /**
-     * Promise resolved when controllers are done being loaded (refresh makes this promise update)
-     */
-    readonly loaded: Promise<void>;
-    /**
      * Gets the registered list of all of the controllers (the ones shown by VS code)
      */
     registered: IVSCodeNotebookController[];
@@ -71,6 +67,10 @@ export interface IControllerRegistration {
         controller: IVSCodeNotebookController;
         selected: boolean;
     }>;
+    /**
+     * Event fired when controllers are added or removed
+     */
+    readonly onDidChange: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
     getSelected(document: vscode.NotebookDocument): IVSCodeNotebookController | undefined;
     /**
      * Keeps track of controllers created for the active interpreter.
@@ -94,10 +94,6 @@ export interface IControllerRegistration {
         connection: KernelConnectionMetadata,
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): IVSCodeNotebookController | undefined;
-    /**
-     * Event fired when controllers are added or removed
-     */
-    onDidChange: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
 }
 
 // Flag enum for the reason why a kernel was logged as an exact match

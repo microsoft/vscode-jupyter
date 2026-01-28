@@ -161,7 +161,7 @@ export class LastCellExecutionTracker extends DisposableBase implements IExtensi
                 return;
             }
             const notebookId = cell.notebook.uri.toString();
-            if (store[notebookId].cellIndex === cell.index) {
+            if (store[notebookId]?.cellIndex === cell.index) {
                 delete store[notebookId];
                 this.staleState = store;
                 await this.fs.writeFile(this.storageFile, JSON.stringify(store));

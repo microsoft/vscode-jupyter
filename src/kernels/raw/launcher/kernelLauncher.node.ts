@@ -6,7 +6,6 @@ import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import { promisify } from 'util';
-import uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, raceCancellationError } from '../../../platform/common/cancellation';
@@ -41,6 +40,7 @@ import { UsedPorts, ignorePortForwarding } from '../../common/usedPorts';
 import { isPythonKernelConnection } from '../../helpers';
 import { once } from '../../../platform/common/utils/events';
 import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
+import { generateUuid } from '../../../platform/common/uuid';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -212,7 +212,7 @@ export class KernelLauncher implements IKernelLauncher {
     ): Promise<IKernelConnection> {
         const ports = await this.chainGetConnectionPorts();
         return {
-            key: uuid(),
+            key: generateUuid(),
             signature_scheme: 'hmac-sha256',
             transport: 'tcp',
             ip: '127.0.0.1',

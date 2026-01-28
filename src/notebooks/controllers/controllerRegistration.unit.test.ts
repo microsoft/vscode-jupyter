@@ -217,7 +217,6 @@ suite('Controller Registration', () => {
 
                 registration.activate();
                 await clock.runAllAsync();
-                await registration.loaded;
 
                 assert.isFalse(addOrUpdateCalled, 'addOrUpdate should not be called');
                 assert.isFalse(stubCtor.called, 'VSCodeNotebookController should not be called');
@@ -235,7 +234,6 @@ suite('Controller Registration', () => {
 
                 registration.activate();
                 await clock.runAllAsync();
-                await registration.loaded;
 
                 assert.isFalse(addOrUpdateCalled, 'addOrUpdate should not be called');
                 assert.isFalse(stubCtor.called, 'VSCodeNotebookController should not be called');
@@ -261,7 +259,6 @@ suite('Controller Registration', () => {
 
                 registration.activate();
                 await clock.runAllAsync();
-                await registration.loaded;
 
                 assert.isFalse(addOrUpdateCalled, 'addOrUpdate should not be called');
                 assert.equal(stubCtor.callCount, 3);
@@ -325,7 +322,6 @@ suite('Controller Registration', () => {
 
                 registration.activate();
                 await clock.runAllAsync();
-                await registration.loaded;
 
                 assert.isFalse(addOrUpdateCalled, 'addOrUpdate should not be called');
                 assert.equal(stubCtor.callCount, 6);
@@ -333,7 +329,6 @@ suite('Controller Registration', () => {
                 // Trigger a change even though nothing has changed.
                 onDidChangeKernels.fire();
                 await clock.runAllAsync();
-                await registration.loaded;
 
                 // We should see no difference in the controllers.
                 assert.isFalse(addOrUpdateCalled, 'addOrUpdate should not be called');
@@ -346,7 +341,6 @@ suite('Controller Registration', () => {
                 when(kernelFinder.kernels).thenReturn([activePythonConnection, javaKernelConnection]);
                 onDidChangeKernels.fire();
                 await clock.runAllAsync();
-                await registration.loaded;
 
                 verify(activeInterpreterController.dispose()).never();
                 verify(condaController.dispose()).atLeast(1);
@@ -404,7 +398,6 @@ suite('Controller Registration', () => {
 
                 registration.activate();
                 await clock.runAllAsync();
-                await registration.loaded;
 
                 assert.isFalse(addOrUpdateCalled, 'addOrUpdate should not be called');
                 assert.equal(stubCtor.callCount, 6);
@@ -414,7 +407,6 @@ suite('Controller Registration', () => {
                 // Trigger a change even though nothing has changed.
                 onDidChangeKernels.fire();
                 await clock.runAllAsync();
-                await registration.loaded;
 
                 // We should see no difference in the controllers.
                 assert.isFalse(addOrUpdateCalled, 'addOrUpdate should not be called');

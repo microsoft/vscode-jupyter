@@ -7,7 +7,6 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { KernelAPI } from '@jupyterlab/services';
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import uuid from 'uuid/v4';
 import {
     CancellationTokenSource,
     CompletionContext,
@@ -106,6 +105,7 @@ import {
 } from '../../../platform/notebooks/cellExecutionStateService';
 import { disposeAsync } from '../../../platform/common/utils';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { generateUuid } from '../../../platform/common/uuid';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -213,7 +213,7 @@ export async function generateTemporaryFilePath(
     const rootUrl =
         rootFolder || platformService.tempDir || getRootFolder() || Uri.file('./').with({ scheme: 'vscode-test-web' });
 
-    const uri = urlPath.joinPath(rootUrl, `${prefix || ''}${uuid()}.${extension}`);
+    const uri = urlPath.joinPath(rootUrl, `${prefix || ''}${generateUuid()}.${extension}`);
     disposables.push({
         dispose: () => {
             void workspace.fs.delete(uri).then(noop, noop);
@@ -834,10 +834,10 @@ export async function waitForKernelToGetAutoSelectedImpl(
     return waitForKernelToChange(searchCriteria, notebookEditor!, timeout, skipAutoSelection);
 }
 
-const prewarmNotebooksDone = { done: false };
+let prewarmNotebooksDone: { ipyWidgetVersion: 7 | 8 | undefined } | undefined = undefined;
 export async function prewarmNotebooks() {
-    if (prewarmNotebooksDone.done) {
-        return;
+    if (prewarmNotebooksDone) {
+        return prewarmNotebooksDone;
     }
     const { serviceContainer } = await getServices();
     await closeActiveWindows();
@@ -855,11 +855,14 @@ export async function prewarmNotebooks() {
         const cell = window.activeNotebookEditor!.notebook.cellAt(0)!;
         logger.ci(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
+        const kernel = serviceContainer.get<IKernelProvider>(IKernelProvider).get(notebookEditor.notebook);
+        const ipyWidgetVersion = kernel?.ipywidgetsVersion;
         await closeActiveWindows();
         await shutdownAllNotebooks();
+        prewarmNotebooksDone = { ipyWidgetVersion };
+        return prewarmNotebooksDone;
     } finally {
         disposables.forEach((d) => d.dispose());
-        prewarmNotebooksDone.done = true;
     }
 }
 
@@ -934,23 +937,10 @@ export async function waitForCellExecutionState(
         disposable.dispose();
     }
 }
-export async function waitForOutputs(
-    cell: NotebookCell,
-    expectedNumberOfOutputs: number,
-    timeout: number = defaultNotebookTestTimeout
-) {
-    await waitForCondition(
-        async () => cell.outputs.length === expectedNumberOfOutputs,
-        timeout,
-        () =>
-            `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
-                cell
-            )}`
-    );
-}
 export async function waitForExecutionCompletedSuccessfully(
     cell: NotebookCell,
-    timeout: number = defaultNotebookTestTimeout
+    timeout: number = defaultNotebookTestTimeout,
+    additionalMessage: string = ''
 ) {
     assert.ok(cell, 'No notebook cell to wait for');
     await Promise.all([
@@ -958,9 +948,13 @@ export async function waitForExecutionCompletedSuccessfully(
             async () => assertHasExecutionCompletedSuccessfully(cell),
             timeout,
             () =>
-                `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
+                `Cell ${cell.index + 1} of ${getDisplayPath(
+                    cell.notebook.uri
+                )} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
                     cell
-                )}, & state = ${NotebookCellStateTracker.getCellState(cell)}`
+                )}, & state = ${NotebookCellStateTracker.getCellState(cell)}, ${additionalMessage}, Notebook has ${
+                    cell.notebook.cellCount
+                } cells and cell Content = ${cell.document.getText()}`
         ),
         waitForCellExecutionToComplete(cell)
     ]);
@@ -1416,6 +1410,7 @@ export async function hijackSavePrompt(
 }
 
 export class MockQuickPick implements QuickPick<QuickPickItem> {
+    prompt: string | undefined;
     value: string;
     placeholder: string | undefined;
     get onDidChangeValue(): Event<string> {

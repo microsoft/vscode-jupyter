@@ -17,6 +17,24 @@ import {
 import { DownloadPlatform } from '@vscode/test-electron/out/download';
 import { arch } from 'os';
 
+// Support for passing grep (specially for models or Copilot Coding Agent)
+// Local Copilot or Copilot Coding Agent can use `--grep=XYZ` or `--grep XYZ`
+if (process.argv.some((arg) => arg.startsWith('--grep='))) {
+    process.env.VSC_JUPYTER_CI_TEST_GREP =
+        process.argv
+            .filter((arg) => arg.startsWith('--grep='))
+            .map((arg) => arg.split('=')[1])
+            .pop() ||
+        process.env.VSC_JUPYTER_CI_TEST_GREP ||
+        '';
+} else if (process.argv.some((arg) => arg === '--grep')) {
+    const indexOfGrep = process.argv.indexOf('--grep');
+    if (indexOfGrep !== -1 && process.argv.length > indexOfGrep + 1) {
+        process.env.VSC_JUPYTER_CI_TEST_GREP =
+            process.argv[indexOfGrep + 1] || process.env.VSC_JUPYTER_CI_TEST_GREP || '';
+    }
+}
+
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_JUPYTER_CI_TEST = '1';
 const workspacePath = process.env.CODE_TESTS_WORKSPACE
@@ -49,12 +67,12 @@ function requiresPythonExtensionToBeInstalled() {
 }
 
 function isNotebookPerfTestWithoutJupyter() {
-    return !!process.env.VSC_JUPYTER_NOTEBOOK_PERF_TEST;
+    return process.env.VSC_JUPYTER_CI_TEST_GREP === '@notebookPerformance';
 }
 
-const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
-    ? 'insiders'
-    : 'stable';
+const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('stable')
+    ? 'stable'
+    : 'insiders';
 
 function computePlatform() {
     switch (process.platform) {
@@ -85,7 +103,6 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
         console.info('Python Extension not required');
         return;
     }
-    console.info(`Installing Python Extension ${PythonExtension} to ${extensionsDir}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
     await installExtension(PythonExtension, cliPath, extensionsDir, ['--pre-release']);
 
@@ -98,7 +115,6 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
 
 // Make sure renderers is there too as we'll use it for widget tests
 async function installExtension(extension: string, cliPath: string, extensionsDir: string, args: string[] = []) {
-    console.info(`Installing ${extension} Extension to ${extensionsDir}`);
     args = ['--install-extension', extension, ...args, '--extensions-dir', extensionsDir, '--disable-telemetry'];
     const output =
         process.platform === 'win32'
@@ -128,7 +144,7 @@ async function createSettings(): Promise<string> {
     const settingsFile = path.join(userDataDirectory, 'User', 'settings.json');
     const defaultSettings: Record<string, string | boolean | string[]> = {
         'python.insidersChannel': 'off',
-        'jupyter.logging.level': 'debug',
+        'jupyter.logging.level': 'trace',
         'python.logging.level': 'debug',
         'files.autoSave': 'off',
         'python.experiments.enabled': true,
@@ -139,6 +155,7 @@ async function createSettings(): Promise<string> {
         'python.showStartPage': false,
         // Disable the restart ask so that restart just happens
         'jupyter.askForKernelRestart': false,
+        'jupyter.logKernelMessages': true, // Log kernel messages for test purposes.
         // To get widgets working.
         'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com'],
         'notebook.stickyScroll.enabled': true, // Required for perf tests
@@ -222,9 +239,11 @@ start()
         process.exit(1);
     })
     .finally(() => {
-        console.log(
-            `Log file ${webTestSummaryJsonFile} ${
-                fs.existsSync(webTestSummaryJsonFile) ? 'has' : 'has not'
-            } been created`
-        );
+        if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
+            console.log(
+                `Log file ${webTestSummaryJsonFile} ${
+                    fs.existsSync(webTestSummaryJsonFile) ? 'has' : 'has not'
+                } been created`
+            );
+        }
     });

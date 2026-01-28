@@ -197,6 +197,7 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
         'logs',
         await generateScreenShotFileName(contextOrFileName)
     );
+    console.info(`Capturing screenshot into ${filename}`);
     try {
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });

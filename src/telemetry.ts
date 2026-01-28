@@ -3706,6 +3706,25 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
+     * Telemetry to verify whether we can use Uri instead of url-parse
+     */
+    [Telemetry.JupyterUriCanBeParsedAsUri]: TelemetryEventInfo<{
+        /**
+         * Reason for failure to compare Uri with url-parse.
+         */
+        failureReason: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failureReason: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
      * Telemetry sent when an extension uses our 3rd party Kernel Execution API.
      */
     [Telemetry.NewJupyterKernelApiUsage]: TelemetryEventInfo<{
@@ -4394,6 +4413,99 @@ export class IEventNamePropertyMapping {
                 purpose: 'PerformanceAndHealth',
                 comment: 'Total number of markdown cells.',
                 isMeasurement: true
+            }
+        }
+    };
+    /**
+     * Telemetry sent with details of LM toolcalls.
+     */
+    [Telemetry.InvokeTool]: TelemetryEventInfo<{
+        /**
+         * Tool name.
+         * One of configure_notebook, configure_non_python_notebook, configure_python_notebook, notebook_install_packages, notebook_list_packages, restart_notebook_kernel, select_recommended_python_environment
+         */
+        toolName: string;
+        /**
+         * Hash of the resource (notebook.uri associated with this).
+         */
+        resourceHash: string | undefined;
+        /**
+         * Whether there was a failure.
+         * Common to most of the events.
+         */
+        failed: 'true' | 'false';
+        /**
+         * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
+         * Common to most of the events.
+         */
+        failureCategory?: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            toolName: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight',
+                comment: 'The name of the tool that was called.'
+            },
+            resourceHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            },
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'Whether there was a failure. Common to most of the events.'
+            },
+            failureCategory: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment:
+                    'A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error. Common to most of the events.'
+            }
+        }
+    };
+    /**
+     * Telemetry sent with details of LM toolcalls.
+     */
+    [Telemetry.ConfigureNotebookToolCall]: TelemetryEventInfo<{
+        /**
+         * Hash of the resource (notebook.uri associated with this).
+         */
+        resourceHash: string;
+        /**
+         * Whether the tool installed Python extension or not
+         */
+        installedPythonExtension: boolean;
+        /**
+         * Whether this is a Python notebook/kernel or not.
+         */
+        isPython: boolean;
+        /**
+         * Whether a new Env was created
+         */
+        createdEnv: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            resourceHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            },
+            installedPythonExtension: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            isPython: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            createdEnv: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
             }
         }
     };

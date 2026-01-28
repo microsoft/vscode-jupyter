@@ -295,20 +295,29 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 ) {
                     return kernelConnection.kernelSpec.display_name;
                 }
-                // If this is a conda environment without Python, then don't display `Python` in it.
-                const isCondaEnvWithoutPython = isCondaEnvironmentWithoutPython(kernelConnection.interpreter);
-                const pythonDisplayName = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
-                const envName = getPythonEnvironmentName(kernelConnection.interpreter);
-                if (isCondaEnvWithoutPython && envName) {
-                    return envName;
-                }
-                return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
+
+                return getDisplayNameOrNameOfPythonKernelConnection(kernelConnection.interpreter);
             } else {
                 return `Python ${pythonVersion}`.trim();
             }
     }
     return oldDisplayName;
 }
+export function getDisplayNameOrNameOfPythonKernelConnection(env: { id: string }) {
+    if (getEnvironmentType(env) === EnvironmentType.Unknown) {
+        return '';
+    }
+    const pythonVersion = (getTelemetrySafeVersion(getCachedVersion(env)) || '').trim();
+    // If this is a conda environment without Python, then don't display `Python` in it.
+    const isCondaEnvWithoutPython = isCondaEnvironmentWithoutPython(env);
+    const pythonDisplayName = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
+    const envName = getPythonEnvironmentName(env);
+    if (isCondaEnvWithoutPython && envName) {
+        return envName;
+    }
+    return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
+}
+
 function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
     if (!kernelConnection) {
         return '';
@@ -593,9 +602,25 @@ export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata
         kernelConnection.kind === 'startUsingRemoteKernelSpec'
     ) {
         const parsed = new url(kernelConnection.baseUrl);
+        verifyIfUrlIsSameAsUri(kernelConnection.baseUrl);
         return parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1';
     }
     return false;
+}
+
+function verifyIfUrlIsSameAsUri(urlValue: string) {
+    const parsed = new url(urlValue);
+    let failureReason = '';
+    try {
+        const uri = Uri.parse(urlValue);
+        if (parsed.hostname.toLocaleLowerCase() !== uri.authority) {
+            failureReason = 'different';
+        }
+    } catch (ex) {
+        failureReason = 'parseFailure';
+    }
+
+    sendTelemetryEvent(Telemetry.JupyterUriCanBeParsedAsUri, { failureReason });
 }
 
 // Options for error reporting from kernel silent execution

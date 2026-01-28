@@ -18,7 +18,7 @@ import {
     ScriptLoader
 } from './types';
 import { KernelSocketOptions } from '../../../../kernels/types';
-import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
+import { Deferred, createDeferred, raceTimeout } from '../../../../platform/common/utils/async';
 import { IInteractiveWindowMapping, IPyWidgetMessages, InteractiveWindowMessages } from '../../../../messageTypes';
 import { WIDGET_MIMETYPE, WIDGET_STATE_MIMETYPE } from '../../../../platform/common/constants';
 import { NotebookMetadata } from '../../../../platform/common/utils';
@@ -181,7 +181,13 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // Check if we have processed the data for this model.
         // If not wait.
         if (!this.modelIdsToBeDisplayed.has(modelId)) {
-            this.modelIdsToBeDisplayed.set(modelId, createDeferred());
+            const deferred = createDeferred<void>();
+            this.modelIdsToBeDisplayed.set(modelId, deferred);
+            // Try to get the model if available.
+            const modelPromise = this.manager.get_model(modelId);
+            if (modelPromise && (await raceTimeout(1_000, modelPromise.catch(noop)))) {
+                deferred.resolve();
+            }
         }
         // Wait until it is flagged as ready to be processed.
         // This widget manager must have received this message and performed all operations before this.
@@ -315,17 +321,21 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
 
         if (
             !jupyterLab.KernelMessage.isDisplayDataMsg(payload) &&
+            !jupyterLab.KernelMessage.isUpdateDisplayDataMsg?.(payload) &&
             !jupyterLab.KernelMessage.isExecuteResultMsg(payload)
         ) {
             return;
         }
-        const displayMsg = payload as KernelMessage.IDisplayDataMsg | KernelMessage.IExecuteResultMsg;
+        const displayMsg = payload as
+            | KernelMessage.IDisplayDataMsg
+            | KernelMessage.IUpdateDisplayDataMsg
+            | KernelMessage.IExecuteResultMsg;
 
         if (displayMsg.content && displayMsg.content.data && displayMsg.content.data[WIDGET_MIMETYPE]) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = displayMsg.content.data[WIDGET_MIMETYPE] as any;
             const modelId = data.model_id;
-            logMessage(`Received display data message ${modelId}`);
+            logMessage(`Received display/update data message ${modelId}`);
             let deferred = this.modelIdsToBeDisplayed.get(modelId);
             if (!deferred) {
                 deferred = createDeferred();
@@ -337,8 +347,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             const modelPromise = this.manager.get_model(data.model_id);
             if (modelPromise) {
                 try {
-                    const m = await modelPromise;
-                    console.log(m);
+                    await modelPromise;
                     deferred.resolve();
                 } catch (ex) {
                     deferred.reject(ex);

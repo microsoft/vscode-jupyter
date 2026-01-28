@@ -3,7 +3,6 @@
 
 import { CancellationError, CancellationToken } from 'vscode';
 import { Cancellation, raceCancellationError } from '../../../platform/common/cancellation';
-import uuid from 'uuid/v4';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as path from '../../../platform/vscode-path/resources';
 import {
@@ -46,7 +45,7 @@ import { waitForCondition } from '../../../platform/common/utils/async';
 import { JupyterLabHelper } from './jupyterLabHelper';
 import { JupyterSessionWrapper, getRemoteSessionOptions } from './jupyterSession';
 import { disposeAsync } from '../../../platform/common/utils';
-
+import { generateUuid } from '../../../platform/common/uuid';
 @injectable()
 export class JupyterKernelSessionFactory implements IKernelSessionFactory {
     constructor(
@@ -331,7 +330,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             const fileExtension = options.resource ? path.extname(options.resource) : '';
             sessionName = `${
                 options.resource ? path.basename(options.resource, fileExtension) : ''
-            }-${uuid()}${fileExtension}`;
+            }-${generateUuid()}${fileExtension}`;
         }
 
         // Create our session options using this temporary notebook and our connection info
@@ -368,12 +367,12 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
 }
 
 function getRemoteIPynbSuffix(): string {
-    return `${jvscIdentifier}${uuid()}`;
+    return `${jvscIdentifier}${generateUuid()}`;
 }
 
 function generateBackingIPyNbFileName(resource: Resource) {
     // Generate a more descriptive name
-    const suffix = `${getRemoteIPynbSuffix()}${uuid()}.ipynb`;
+    const suffix = `${getRemoteIPynbSuffix()}${generateUuid()}.ipynb`;
     return resource
         ? `${urlPath.basename(resource, '.ipynb')}${suffix}`
         : `${DataScience.defaultNotebookName}${suffix}`;
