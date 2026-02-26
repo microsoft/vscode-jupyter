@@ -57,6 +57,12 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
     public async create(options: KernelSessionCreationOptions): Promise<IJupyterKernelSession> {
+        const createStartTime = Date.now();
+        logger.info(
+            `[KernelStartup] JupyterKernelSessionFactory.create() entered at ${new Date().toISOString()} for ${getNameOfKernelConnection(
+                options.kernelConnection
+            )}`
+        );
         const disposables: IDisposable[] = [];
         let progressReporter: IDisposable | undefined;
         const createProgressReporter = () => {
@@ -101,6 +107,11 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             disposablesIfAnyErrors.push(sessionManager);
 
             await raceCancellationError(options.token, this.validateRemoteServer(options, sessionManager));
+            logger.info(
+                `[KernelStartup] Jupyter server/connection ready at ${new Date().toISOString()} (elapsed ${
+                    Date.now() - createStartTime
+                } ms)`
+            );
 
             // Disposing session manager will dispose all sessions that were started by that session manager.
             // Hence Session managers should be disposed only if the corresponding session is shutdown.
@@ -113,6 +124,11 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 idleTimeout,
                 connection
             });
+            logger.info(
+                `[KernelStartup] Jupyter session connected/created at ${new Date().toISOString()} (total elapsed ${
+                    Date.now() - createStartTime
+                } ms since create() entered)`
+            );
             if (options.token.isCancellationRequested) {
                 // Even if this is a remote kernel, we should shut this down as it's not needed.
                 await session.shutdown().catch(noop);
@@ -141,6 +157,11 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             this.asyncDisposables.push(disposable);
             return wrapperSession;
         } catch (ex) {
+            logger.info(
+                `[KernelStartup] Jupyter session did NOT connect at ${new Date().toISOString()} (elapsed ${
+                    Date.now() - createStartTime
+                } ms since create() entered)`
+            );
             dispose(disposablesIfAnyErrors);
 
             if (isRemoteConnection(options.kernelConnection)) {

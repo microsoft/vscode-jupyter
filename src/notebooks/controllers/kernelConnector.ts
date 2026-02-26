@@ -478,6 +478,13 @@ export class KernelConnector {
                     };
                 } else {
                     onAction(currentContext, kernel);
+                    if (currentContext === 'start') {
+                        logger.info(
+                            `[KernelStartup] Kernel start requested at ${new Date().toISOString()} for ${getDisplayNameOrNameOfKernelConnection(
+                                metadata
+                            )}`
+                        );
+                    }
                     await currentMethod(kernel);
 
                     if ('notebook' in notebookResource && notebookResource.notebook.isClosed) {

@@ -21,6 +21,7 @@ import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.node'
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.node';
 import { KernelStartupTelemetry } from './kernelStartupTelemetry.node';
+import { KernelStartupMonitor } from './kernelStartupMonitor';
 import { IKernelStatusProvider, KernelStatusProvider } from './kernelStatusProvider';
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
@@ -48,6 +49,8 @@ import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
 import { KernelChatStartupCodeProvider } from './chat/kernelStartupCodeProvider';
 import { KernelWorkingDirectory } from './raw/session/kernelWorkingDirectory.node';
+import { KernelAccessService } from './access/kernelAccessService';
+import { IKernelAccessService } from './access/types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
@@ -111,6 +114,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         KernelStartupTelemetry
     );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStartupMonitor);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<IThirdPartyKernelProvider>(IThirdPartyKernelProvider, ThirdPartyKernelProvider);
 
@@ -143,4 +147,5 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         KernelChatStartupCodeProvider
     );
+    serviceManager.addSingleton<IKernelAccessService>(IKernelAccessService, KernelAccessService);
 }

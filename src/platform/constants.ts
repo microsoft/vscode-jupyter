@@ -23,9 +23,14 @@ export const Exiting = {
 
 export const TestingKernelPickerProviderId = '_builtin.JupyterServerSelectorForTesting';
 export const UserJupyterServerPickerProviderId = '_builtin.jupyterServerUrlProvider';
+export const MeeshoKernelPickerProviderId = 'meesho.inhouseNotebookProvider';
 
 export function isBuiltInJupyterProvider(id: string) {
-    return id === TestingKernelPickerProviderId || id === UserJupyterServerPickerProviderId;
+    return (
+        id === TestingKernelPickerProviderId ||
+        id === UserJupyterServerPickerProviderId ||
+        id === MeeshoKernelPickerProviderId
+    );
 }
 
 let isCodeSpaceValue = false;

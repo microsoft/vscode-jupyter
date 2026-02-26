@@ -163,6 +163,12 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         }
     }
     public async start(token: CancellationToken): Promise<void> {
+        const startRequestTime = Date.now();
+        logger.info(
+            `[KernelStartup] Raw kernel start() entered at ${new Date().toISOString()} for ${getDisplayNameOrNameOfKernelConnection(
+                this.kernelConnectionMetadata
+            )}`
+        );
         const disposables: IDisposable[] = [];
         const postStartToken = wrapCancellationTokens(token);
         disposables.push(postStartToken);
@@ -187,6 +193,13 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                         token
                     )
             ));
+            logger.info(
+                `[KernelStartup] Raw kernel process launched at ${new Date().toISOString()} (elapsed ${
+                    Date.now() - startRequestTime
+                } ms since start() entered) for ${getDisplayNameOrNameOfKernelConnection(
+                    this.kernelConnectionMetadata
+                )}`
+            );
             if (token.isCancellationRequested) {
                 throw new CancellationError();
             }
@@ -227,6 +240,13 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                     ).finally(() => tracker?.stop());
                 }
             );
+            logger.info(
+                `[KernelStartup] Raw kernel connected (idle) at ${new Date().toISOString()} (total elapsed ${
+                    Date.now() - startRequestTime
+                } ms since start() entered) for ${getDisplayNameOrNameOfKernelConnection(
+                    this.kernelConnectionMetadata
+                )}`
+            );
             if (kernelExitedError) {
                 throw kernelExitedError;
             }
@@ -260,8 +280,18 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 throw new KernelConnectionTimeoutError(this.kernelConnectionMetadata);
             }
             if (isCancellationError(error) || token.isCancellationRequested) {
+                logger.info(
+                    `[KernelStartup] Raw kernel did NOT connect (cancelled) at ${new Date().toISOString()} (elapsed ${
+                        Date.now() - startRequestTime
+                    } ms) for ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`
+                );
                 logger.debug('Starting of raw session cancelled by user');
             } else {
+                logger.info(
+                    `[KernelStartup] Raw kernel did NOT connect (error) at ${new Date().toISOString()} (elapsed ${
+                        Date.now() - startRequestTime
+                    } ms) for ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`
+                );
                 logger.error(`Failed to connect raw kernel session: ${error}`);
             }
             throw error;

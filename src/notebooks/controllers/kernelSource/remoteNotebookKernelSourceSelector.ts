@@ -561,8 +561,14 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             label: DataScience.failedToFetchKernelSpecsRemoteErrorMessageForQuickPickLabel,
             detail: DataScience.failedToFetchKernelSpecsRemoteErrorMessageForQuickPickDetail
         });
+
+        // Wrap the source with access-control filtering
+        const filteredSource = source.then(async (finder) => {
+            return this.createAccessFilteredProvider(finder);
+        });
+
         const remoteKernelPicker = new BaseProviderBasedQuickPick(
-            source,
+            filteredSource,
             quickPickFactory,
             getCategory,
             { supportsBack: true },
@@ -580,5 +586,124 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             })
             .catch((ex) => logger.error(`Failed to determine preferred remote kernel`, ex));
         return remoteKernelPicker.selectItem(token);
+    }
+
+    /**
+     * Creates a filtered provider that wraps an IRemoteKernelFinder and applies
+     * kernel access control. The API at /api/v1/kernels/{name}/access/verify
+     * is the single source of truth for whether a user can see a kernel.
+     */
+    private async createAccessFilteredProvider(finder: IRemoteKernelFinder): Promise<IRemoteKernelFinder> {
+        try {
+            const { ServiceContainer } = await import('../../../platform/ioc/container');
+            const { IKernelAccessService } = await import('../../../kernels/access/types');
+            const accessService =
+                ServiceContainer.instance.get<import('../../../kernels/access/types').IKernelAccessService>(
+                    IKernelAccessService
+                );
+
+            let userEmail = accessService.getUserEmail();
+            if (!userEmail) {
+                // Try to get email from kernel base URLs
+                for (const kernel of finder.kernels) {
+                    const baseUrl = kernel.baseUrl;
+                    if (baseUrl) {
+                        const match = baseUrl.match(/\/user\/([^/]+)\//);
+                        if (match && match[1]) {
+                            const user = match[1];
+                            userEmail = user.includes('@') ? user : `${user}@meesho.com`;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!userEmail) {
+                logger.warn('RemoteKernelSourceSelector: No user email found, skipping access control');
+                return finder;
+            }
+
+            logger.debug(`RemoteKernelSourceSelector: Applying access control for ${userEmail}`);
+
+            // Pre-check access for all current kernels
+            let filteredItems: RemoteKernelConnectionMetadata[] = await this.filterKernelsByAccess(
+                finder.kernels,
+                accessService,
+                userEmail
+            );
+
+            logger.debug(
+                `RemoteKernelSourceSelector: Filtered ${finder.kernels.length} kernels to ${filteredItems.length} for ${userEmail}`
+            );
+
+            // Create a proxy that wraps the finder but returns filtered items
+            const _onDidChange = new EventEmitter<void>();
+
+            // When the finder's kernels change, re-filter
+            finder.onDidChange(() => {
+                this.filterKernelsByAccess(finder.kernels, accessService, userEmail!)
+                    .then((newFiltered) => {
+                        filteredItems = newFiltered;
+                        _onDidChange.fire();
+                    })
+                    .catch((ex) => {
+                        logger.error('RemoteKernelSourceSelector: Error re-filtering kernels', ex);
+                        filteredItems = finder.kernels;
+                        _onDidChange.fire();
+                    });
+            });
+
+            // Return a proxy object that delegates everything to the original finder
+            // except `items` and `kernels` which return the filtered list
+            return new Proxy(finder, {
+                get(target, prop, receiver) {
+                    if (prop === 'items' || prop === 'kernels') {
+                        return filteredItems;
+                    }
+                    if (prop === 'onDidChange') {
+                        return _onDidChange.event;
+                    }
+                    return Reflect.get(target, prop, receiver);
+                }
+            });
+        } catch (error) {
+            logger.error(
+                'RemoteKernelSourceSelector: Error setting up access control, returning unfiltered finder',
+                error
+            );
+            return finder;
+        }
+    }
+
+    private async filterKernelsByAccess(
+        kernels: RemoteKernelConnectionMetadata[],
+        accessService: import('../../../kernels/access/types').IKernelAccessService,
+        userEmail: string
+    ): Promise<RemoteKernelConnectionMetadata[]> {
+        const results = await Promise.all(
+            kernels.map(async (kernel) => {
+                // LiveRemoteKernelConnectionMetadata has kernelModel, RemoteKernelSpecConnectionMetadata has kernelSpec
+                let kernelName = '';
+                if (kernel.kind === 'connectToLiveRemoteKernel') {
+                    kernelName = kernel.kernelModel.name || kernel.kernelModel.display_name || '';
+                } else {
+                    kernelName = kernel.kernelSpec?.name || kernel.kernelSpec?.display_name || '';
+                }
+                if (!kernelName) {
+                    return { kernel, hasAccess: true };
+                }
+                try {
+                    const hasAccess = await accessService.verifyAccess(kernelName, userEmail);
+                    logger.debug(
+                        `RemoteKernelSourceSelector: Access check '${kernelName}' for ${userEmail}: ${hasAccess}`
+                    );
+                    return { kernel, hasAccess };
+                } catch (ex) {
+                    logger.error(`RemoteKernelSourceSelector: Error checking access for '${kernelName}'`, ex);
+                    return { kernel, hasAccess: true }; // Allow on error
+                }
+            })
+        );
+        return results.filter((r) => r.hasAccess).map((r) => r.kernel);
     }
 }

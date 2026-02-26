@@ -13,10 +13,10 @@ import {
     PythonKernelConnectionMetadata,
     IJupyterKernelSpec
 } from './types';
-import { NotebookCellOutput, Uri, workspace } from 'vscode';
+import { NotebookCellOutput, Uri } from 'vscode';
 import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { logger } from '../platform/logging';
-import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
+import { getFilePath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../platform/telemetry/helpers';
@@ -408,17 +408,11 @@ export function getRemoteKernelSessionInformation(
 }
 
 export function getKernelConnectionDisplayPath(
-    kernelConnection: KernelConnectionMetadata | undefined,
-    platform: IPlatformService
+    _kernelConnection: KernelConnectionMetadata | undefined,
+    _platform: IPlatformService
 ) {
-    if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
-        return undefined;
-    }
-    const kernelPath = getKernelDisplayPathFromKernelConnection(kernelConnection);
-    // If we have just one workspace folder opened, then ensure to use relative paths
-    // where possible (e.g. for virtual environments).
-    const folders = workspace.workspaceFolders ? workspace.workspaceFolders : [];
-    return kernelPath ? getDisplayPath(kernelPath, folders, platform.homeDir) : '';
+    // Always return empty string to hide kernel paths in the UI
+    return '';
 }
 
 export function getInterpreterFromKernelConnectionMetadata(

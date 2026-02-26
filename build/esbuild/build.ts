@@ -345,24 +345,20 @@ async function buildAll() {
                 { target: 'desktop', watch: false }
             )
         );
-        builders.push(
-            ...deskTopNodeModulesToExternalize
-                // zeromq will be manually bundled.
-                .filter((module) => !['zeromq', 'zeromqold', 'vscode-jsonrpc'].includes(module))
-
-                .map(async (module) => {
-                    const fullPath = require.resolve(module);
-                    return build(
-                        fullPath,
-                        path.join(extensionFolder, 'dist', 'node_modules', `${path.join(module, 'index.js')}`),
-                        {
-                            target: 'desktop',
-                            // These almost never change, easier to re-run copmilation if packges change.
-                            watch: false
-                        }
-                    );
-                })
-        );
+        for (const module of deskTopNodeModulesToExternalize.filter(
+            (module) => !['zeromq', 'zeromqold', 'vscode-jsonrpc'].includes(module)
+        )) {
+            const fullPath = require.resolve(module);
+            await build(
+                fullPath,
+                path.join(extensionFolder, 'dist', 'node_modules', `${path.join(module, 'index.js')}`),
+                {
+                    target: 'desktop',
+                    // These almost never change, easier to re-run copmilation if packges change.
+                    watch: false
+                }
+            );
+        }
         builders.push(
             copyJQuery(),
             copyAminya(),

@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.106.0"
+        "vscode": "^1.105.0"
     },
     "l10n": "./l10n",
     "extensionKind": [
@@ -59,7 +59,8 @@
         "onWebviewPanel:jupyter",
         "onLanguageModelTool:configure_notebook",
         "onLanguageModelTool:notebook_list_packages",
-        "onLanguageModelTool:notebook_install_packages"
+        "onLanguageModelTool:notebook_install_packages",
+        "onCommand:jupyter.meeshoConnect"
     ],
     "main": "./dist/extension.node.proxy.js",
     "browser": "./dist/extension.web.bundle.js",
@@ -527,6 +528,20 @@
                 "enablement": "isWorkspaceTrusted"
             },
             {
+                "command": "workbench.action.reloadWindow",
+                "title": "%jupyter.command.workbench.reloadWindow.title%",
+                "shortTitle": "%jupyter.command.workbench.reloadWindow.shorttitle%",
+                "category": "Jupyter",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "jupyter.meeshoConnect",
+                "title": "%jupyter.command.jupyter.meeshoConnect.title%",
+                "shortTitle": "%jupyter.command.jupyter.meeshoConnect.shorttitle%",
+                "category": "Jupyter",
+                "icon": "$(cloud)"
+            },
+            {
                 "command": "jupyter.runallcellsabove",
                 "title": "%jupyter.command.jupyter.runallcellsabove.title%",
                 "category": "Jupyter",
@@ -869,6 +884,16 @@
                 }
             ],
             "notebook/toolbar": [
+                {
+                    "command": "jupyter.meeshoConnect",
+                    "group": "navigation/execute@0",
+                    "when": "notebookType == 'jupyter-notebook'"
+                },
+                {
+                    "command": "workbench.action.reloadWindow",
+                    "group": "navigation/execute@1",
+                    "when": "notebookType == 'jupyter-notebook'"
+                },
                 {
                     "command": "jupyter.restartkernel",
                     "group": "navigation/execute@5",
@@ -2215,7 +2240,7 @@
         "compile-esbuild-watch": "npx tsx build/esbuild/build.ts --watch",
         "compile-tsc-watch": "tsc -p . --watch",
         "compile-tsc": "tsc -p ./",
-        "compile-release": "concurrently npm:compile-tsc npm:esbuild-release",
+        "compile-release": "npm run compile-tsc && npm run esbuild-release",
         "esbuild-all": "npx tsx build/esbuild/build.ts",
         "esbuild-release": "npx tsx build/esbuild/build.ts --production",
         "checkDependencies": "gulp checkDependencies",

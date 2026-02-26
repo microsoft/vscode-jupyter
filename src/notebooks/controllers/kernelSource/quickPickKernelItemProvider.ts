@@ -88,9 +88,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         }
         finder.onDidChangeKernels(
             () => {
-                this.kernels.length = 0;
-                this.kernels.push(...this.filteredKernels(finder.kernels));
-                this._onDidChange.fire();
+                this.updateKernelsWithAccessControl(finder.kernels);
             },
             this,
             this.disposables
@@ -106,9 +104,9 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
                 this._onDidFailToListKernels.fire(finder.lastError);
             }
         });
-        this.kernels.length = 0;
-        this.kernels.push(...this.filteredKernels(finder.kernels));
-        this._onDidChange.fire();
+
+        // Initial kernel population with access control
+        this.updateKernelsWithAccessControl(finder.kernels);
         this._onDidChangeStatus.fire();
 
         // We need a cancellation in case the user aborts the quick pick
@@ -124,6 +122,108 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
             this.computePreferredLocalKernel(finder, preferred, cancellationToken.token);
         }
     }
+
+    private updateKernelsWithAccessControl(kernels: KernelConnectionMetadata[]): void {
+        this.filteredKernelsWithAccessControl(kernels)
+            .then((filtered) => {
+                this.kernels.length = 0;
+                this.kernels.push(...filtered);
+                this._onDidChange.fire();
+            })
+            .catch((ex) => {
+                logger.error('Failed to filter kernels with access control', ex);
+                // Fallback to basic filtering
+                this.kernels.length = 0;
+                this.kernels.push(...this.filteredKernels(kernels));
+                this._onDidChange.fire();
+            });
+    }
+    private async filteredKernelsWithAccessControl(
+        kernels: KernelConnectionMetadata[]
+    ): Promise<KernelConnectionMetadata[]> {
+        // First apply Python environment filter
+        const filter = this.pythonEnvFilter;
+        let filtered = kernels;
+        if (filter) {
+            filtered = kernels.filter(
+                (k) => k.kind !== 'startUsingPythonInterpreter' || !filter!.isPythonEnvironmentExcluded(k.interpreter)
+            );
+        }
+
+        // Then apply access control filter — only for remote kernels
+        try {
+            const { ServiceContainer } = await import('../../../platform/ioc/container');
+            const { IKernelAccessService } = await import('../../../kernels/access/types');
+            const accessService =
+                ServiceContainer.instance.get<import('../../../kernels/access/types').IKernelAccessService>(
+                    IKernelAccessService
+                );
+
+            let userEmail = accessService.getUserEmail();
+            if (!userEmail) {
+                // Try to extract from kernels (Meesho specific)
+                userEmail = this.getUserEmailFromKernels(filtered);
+            }
+
+            if (!userEmail) {
+                logger.warn('QuickPickKernelItemProvider: No user email found, skipping access control');
+                return filtered;
+            }
+
+            // For each kernel, check access dynamically via the API.
+            // Local kernels are always allowed; only remote kernels are checked.
+            const accessChecks = await Promise.all(
+                filtered.map(async (kernel) => {
+                    // Only apply access control to remote kernels
+                    if (kernel.kind !== 'connectToLiveRemoteKernel' && kernel.kind !== 'startUsingRemoteKernelSpec') {
+                        return { kernel, hasAccess: true };
+                    }
+
+                    const kernelName = this.getKernelName(kernel);
+                    if (!kernelName) {
+                        logger.warn(`QuickPickKernelItemProvider: Kernel has no name, allowing by default`);
+                        return { kernel, hasAccess: true };
+                    }
+
+                    // Use the kernel spec name directly as the category — the API is the source of truth
+                    const hasAccess = await accessService.verifyAccess(kernelName, userEmail!);
+                    logger.debug(`QuickPickKernelItemProvider: Access check for '${kernelName}': ${hasAccess}`);
+                    return { kernel, hasAccess };
+                })
+            );
+
+            const accessibleKernels = accessChecks.filter((check) => check.hasAccess).map((check) => check.kernel);
+
+            logger.debug(
+                `QuickPickKernelItemProvider: Filtered ${filtered.length} kernels to ${accessibleKernels.length} accessible kernels for user ${userEmail}`
+            );
+
+            return accessibleKernels;
+        } catch (error) {
+            logger.error(
+                'QuickPickKernelItemProvider: Error applying access control, returning all filtered kernels',
+                error
+            );
+            return filtered;
+        }
+    }
+
+    private getUserEmailFromKernels(kernels: KernelConnectionMetadata[]): string | undefined {
+        for (const kernel of kernels) {
+            if (kernel.kind === 'connectToLiveRemoteKernel' || kernel.kind === 'startUsingRemoteKernelSpec') {
+                const baseUrl = kernel.baseUrl;
+                if (baseUrl) {
+                    const match = baseUrl.match(/\/user\/([^/]+)\//);
+                    if (match && match[1]) {
+                        const user = match[1];
+                        return user.includes('@') ? user : `${user}@meesho.com`;
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
     private filteredKernels(kernels: KernelConnectionMetadata[]) {
         const filter = this.pythonEnvFilter;
         if (!filter) {
@@ -133,6 +233,14 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
             (k) => k.kind !== 'startUsingPythonInterpreter' || !filter!.isPythonEnvironmentExcluded(k.interpreter)
         );
     }
+
+    private getKernelName(kernel: KernelConnectionMetadata): string {
+        if (kernel.kind === 'connectToLiveRemoteKernel') {
+            return kernel.kernelModel.name || kernel.kernelModel.display_name || '';
+        }
+        return kernel.kernelSpec?.name || kernel.kernelSpec?.display_name || '';
+    }
+
     private computePreferredRemoteKernel(
         finder: IContributedKernelFinder,
         preferred: PreferredKernelConnectionService,

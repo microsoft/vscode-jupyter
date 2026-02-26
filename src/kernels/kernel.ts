@@ -517,6 +517,11 @@ abstract class BaseKernel implements IBaseKernel {
 
         if (!this._jupyterSessionPromise) {
             const stopWatch = new StopWatch();
+            logger.info(
+                `[KernelStartup] Kernel.start() entered at ${new Date().toISOString()}, creating session for ${getDisplayNameOrNameOfKernelConnection(
+                    this.kernelConnectionMetadata
+                )}`
+            );
             this._jupyterSessionPromise = this.createJupyterSession();
             try {
                 const session = await this._jupyterSessionPromise;
@@ -672,6 +677,12 @@ abstract class BaseKernel implements IBaseKernel {
         Cancellation.throwIfCanceled(this.startCancellation.token);
         let disposables: Disposable[] = [];
         try {
+            const createSessionStartTime = Date.now();
+            logger.info(
+                `[KernelStartup] createJupyterSession started at ${new Date().toISOString()} for ${getDisplayNameOrNameOfKernelConnection(
+                    this.kernelConnectionMetadata
+                )}`
+            );
             logger.info(`Starting Kernel ${getKernelStartupLogMessage(this, this.startupUI)}`);
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
@@ -687,6 +698,11 @@ abstract class BaseKernel implements IBaseKernel {
                 throw new CancellationError();
             }
             Cancellation.throwIfCanceled(this.startCancellation.token);
+            logger.info(
+                `[KernelStartup] Session created at ${new Date().toISOString()} (elapsed ${
+                    Date.now() - createSessionStartTime
+                } ms since createJupyterSession start), initializing...`
+            );
             await this.initializeAfterStart(session);
             if (this.disposing) {
                 throw new CancellationError();
@@ -694,9 +710,19 @@ abstract class BaseKernel implements IBaseKernel {
             this.sendKernelStartedTelemetry();
             this._session = session;
             this._onStarted.fire();
+            logger.info(
+                `[KernelStartup] Kernel connected and ready at ${new Date().toISOString()} (total elapsed ${
+                    Date.now() - createSessionStartTime
+                } ms since createJupyterSession start)`
+            );
             logger.info(`Kernel successfully started`);
             return session;
         } catch (ex) {
+            logger.info(
+                `[KernelStartup] Kernel did NOT connect (createJupyterSession failed) at ${new Date().toISOString()} for ${getDisplayNameOrNameOfKernelConnection(
+                    this.kernelConnectionMetadata
+                )}`
+            );
             // Don't log errors if UI is disabled (e.g. auto starting a kernel)
             // Else we just pollute the logs with lots of noise.
             if (this.startupUI.disableUI) {

@@ -97,11 +97,24 @@ export class KernelLauncher implements IKernelLauncher {
         workingDirectory: string,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
+        const launchRequestTime = Date.now();
+        logger.info(
+            `[KernelStartup] KernelLauncher.launch() entered at ${new Date().toISOString()} for ${
+                kernelConnectionMetadata.kernelSpec?.display_name ||
+                kernelConnectionMetadata.kernelSpec?.name ||
+                'kernel'
+            }`
+        );
         logIPyKernelPath(resource, kernelConnectionMetadata, this.pythonExecFactory, cancelToken).catch(noop);
         const stopWatch = new StopWatch();
         const tracker = getNotebookTelemetryTracker(resource)?.getConnection();
         const connection = await raceCancellationError(cancelToken, this.getKernelConnection(kernelConnectionMetadata));
         tracker?.stop();
+        logger.info(
+            `[KernelStartup] KernelLauncher: connection ports obtained at ${new Date().toISOString()} (elapsed ${
+                Date.now() - launchRequestTime
+            } ms)`
+        );
         // Create a new output channel for this kernel
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);
@@ -138,10 +151,20 @@ export class KernelLauncher implements IKernelLauncher {
         try {
             await raceCancellationError(cancelToken, kernelProcess.launch(workingDirectory, timeout, cancelToken));
         } catch (ex) {
+            logger.info(
+                `[KernelStartup] KernelLauncher: process launch did NOT complete at ${new Date().toISOString()} (elapsed ${
+                    Date.now() - launchRequestTime
+                } ms)`
+            );
             await kernelProcess.dispose();
             Cancellation.throwIfCanceled(cancelToken);
             throw ex;
         }
+        logger.info(
+            `[KernelStartup] KernelLauncher: process started at ${new Date().toISOString()} (elapsed ${
+                Date.now() - launchRequestTime
+            } ms)`
+        );
 
         const disposable = once(kernelProcess.exited)(
             ({ exitCode, reason }) => {

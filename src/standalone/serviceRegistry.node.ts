@@ -33,6 +33,7 @@ import { KernelVariables } from './variables/kernelVariables';
 import { Identifiers } from '../platform/common/constants';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
+import { MeeshoInhouseConnect } from './meesho/meeshoInhouseConnect';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -97,6 +98,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         UserJupyterServerUrlProvider
     );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, MeeshoInhouseConnect);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ExposeUsedAzMLServerHandles
