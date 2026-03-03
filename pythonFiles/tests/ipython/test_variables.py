@@ -56,8 +56,7 @@ def test_dataframe_info(capsys):
     from IPython import get_ipython
 
     # Setup some different types
-    get_ipython().run_cell(
-        """
+    get_ipython().run_cell("""
 import pandas as pd
 import numpy as np
 ls = list([10, 20, 30, 40])
@@ -76,8 +75,7 @@ dfInit['idx'] = idx
 df2 = pd.DataFrame(dfInit).set_index('idx')
 df3 = df2.iloc[:, [0,1]]
 se2 = df2.loc[df2.index[0], :]
-"""
-    )
+""")
     vars = get_variables(capsys)
     df = get_variable_value(vars, "df", capsys)
     se = get_variable_value(vars, "se", capsys)
@@ -141,8 +139,7 @@ def test_dataframe_rows(capsys):
     rows = get_data_frame_rows(info, 100, 200, capsys)
     assert rows
     assert rows["data"][0]["+h2"] == "Fy3 W[pMT["
-    get_ipython().run_cell(
-        """
+    get_ipython().run_cell("""
 import pandas as pd
 import numpy as np
 ls = list([10, 20, 30, 40])
@@ -151,8 +148,7 @@ se = pd.Series(ls)
 np1 = np.array(ls)
 np2 = np.array([[1, 2, 3], [4, 5, 6]])
 obj = {}
-"""
-    )
+""")
     vars = get_variables(capsys)
     np2 = get_variable_value(vars, "np2", capsys)
     assert np2
