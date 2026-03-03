@@ -10,7 +10,6 @@ import logging
 import logging.config
 import time  # Add time import for sleep function
 
-
 # This comes from here:
 # https://github.com/Pylons/hupper/blob/master/src/hupper/winapi.py
 import ctypes
