@@ -265,7 +265,7 @@ def main():
     parser.add_option(
         "--uc", "--catch", type="str", help="Catch control-C and display results"
     )
-    (opts, _) = parser.parse_args()
+    opts, _ = parser.parse_args()
 
     sys.path[0] = os.getcwd()
     if opts.result_port:
