@@ -2457,6 +2457,7 @@
         "@jupyterlab/services": {
             "ws": "7.5.10"
         },
+        "serialize-javascript": "^7.0.3",
         "d3-color": "3.1.0"
     }
 }
