@@ -2273,7 +2273,7 @@
         "isomorphic-ws": "^4.0.1",
         "jquery": "^3.6.0",
         "jsonc-parser": "^2.0.3",
-        "lodash": "^4.17.21",
+        "lodash": "^4.17.23",
         "marked": "^4.0.10",
         "node-fetch": "^2.6.7",
         "node-gyp-build": "^4.6.0",
