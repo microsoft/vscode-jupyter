@@ -2310,9 +2310,9 @@
         "zeromqold": "npm:zeromq@^6.0.0-beta.6"
     },
     "devDependencies": {
-        "@actions/core": "^1.11.1",
-        "@actions/github": "^6.0.1",
-        "@actions/glob": "^0.5.0",
+        "@actions/core": "^3.0.0",
+        "@actions/github": "^9.0.0",
+        "@actions/glob": "^0.6.1",
         "@istanbuljs/nyc-config-typescript": "^1.0.2",
         "@sinonjs/fake-timers": "^6.0.1",
         "@types/ansi-regex": "^4.0.0",
@@ -2372,7 +2372,6 @@
         "chai-arrays": "^2.2.0",
         "chai-as-promised": "^7.1.1",
         "chai-exclude": "^2.1.0",
-        "codecov": "^3.7.1",
         "colors": "^1.4.0",
         "concurrently": "^8.2.2",
         "cross-env": "^7.0.3",
@@ -2457,6 +2456,9 @@
         "@jupyterlab/services": {
             "ws": "7.5.10"
         },
-        "d3-color": "3.1.0"
+        "d3-color": "3.1.0",
+        "serialize-javascript": ">=7.0.3",
+        "diff": ">=8.0.3",
+        "js-yaml@<3.14.2": "3.14.2"
     }
 }
