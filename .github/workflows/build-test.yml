@@ -96,7 +96,7 @@ jobs:
         uses: ./.github/actions/build-vsix
         id: build-vsix
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
           path: 'ms-toolsai-jupyter-insiders.vsix'
@@ -769,7 +769,7 @@ jobs:
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
 
       - name: Upload VS code logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}-${{matrix.ipywidgetsVersion}}
@@ -781,7 +781,7 @@ jobs:
         run: npx gulp printTestResults
 
       - name: Upload test result, screenshots files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}-${{matrix.ipywidgetsVersion}}
