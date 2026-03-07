@@ -69,7 +69,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -112,7 +112,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -201,7 +201,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -421,7 +421,7 @@ jobs:
           PYTHON_VERSION: ${{matrix.pythonVersion}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -822,7 +822,7 @@ jobs:
         run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{env.NODE_VERSION}}
 
