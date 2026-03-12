@@ -3,7 +3,7 @@
 
 import { Context } from 'mocha';
 import { AppinsightsKey, Telemetry } from '../platform/common/constants';
-import TelemetryReporter from '@vscode/extension-telemetry';
+import { TelemetryReporter } from '@vscode/extension-telemetry';
 import { IS_CI_SERVER } from './ciConstants.node';
 import { sleep } from '../platform/common/utils/async';
 import { logger } from '../platform/logging';
@@ -18,8 +18,8 @@ export const rootHooks: Mocha.RootHookObject = {
         }
 
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
-        telemetryReporter = new reporter(AppinsightsKey);
+        const ReporterClass = require('@vscode/extension-telemetry').TelemetryReporter as typeof TelemetryReporter;
+        telemetryReporter = new ReporterClass(AppinsightsKey);
     },
     afterEach(this: Context) {
         logger.ci('Root afterEach');
