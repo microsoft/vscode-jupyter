@@ -1,0 +1,41 @@
+{
+    "version": 1,
+    "hooks": {
+        "sessionStart": [
+            {
+                "type": "command",
+                "bash": "touch /Users/donjayamanne/development/vsc/vscode-jupyter/.github/hooks/test.worktree-sessionStart"
+            }
+        ],
+        "sessionEnd": [
+            {
+                "type": "command",
+                "bash": "touch /Users/donjayamanne/development/vsc/vscode-jupyter/.github/hooks/test.worktree-sessionEnd"
+            }
+        ],
+        "agentStop": [
+            {
+                "type": "command",
+                "bash": "touch /Users/donjayamanne/development/vsc/vscode-jupyter/.github/hooks/test.worktree-agentStop"
+            }
+        ],
+        "userPromptSubmitted": [
+            {
+                "type": "command",
+                "bash": "touch /Users/donjayamanne/development/vsc/vscode-jupyter/.github/hooks/test.worktree-userPromptSubmitted"
+            }
+        ],
+        "preToolUse": [
+            {
+                "type": "command",
+                "bash": "touch /Users/donjayamanne/development/vsc/vscode-jupyter/.github/hooks/test.worktree-preToolUse"
+            }
+        ],
+        "postToolUse": [
+            {
+                "type": "command",
+                "bash": "touch /Users/donjayamanne/development/vsc/vscode-jupyter/.github/hooks/test.worktree-postToolUse"
+            }
+        ]
+    }
+}

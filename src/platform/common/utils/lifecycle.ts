@@ -33,7 +33,9 @@ export function trackDisposable<T extends IDisposable>(x: T): T {
  */
 export function dispose<T extends IDisposable>(disposable: T): T;
 export function dispose<T extends IDisposable>(disposable: T | undefined): T | undefined;
-export function dispose<T extends IDisposable, A extends Iterable<T> = Iterable<T>>(disposables: A): A;
+export function dispose<T extends IDisposable, A extends Iterable<T> = Iterabl
+
+e<T>>(disposables: A): A;
 export function dispose<T extends IDisposable>(disposables: Array<T>): Array<T>;
 export function dispose<T extends IDisposable>(disposables: ReadonlyArray<T>): ReadonlyArray<T>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

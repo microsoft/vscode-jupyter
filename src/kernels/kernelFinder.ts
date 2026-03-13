@@ -26,6 +26,9 @@ export class KernelFinder extends DisposableBase implements IKernelFinder {
         IContributedKernelFinder
     >();
 
+
+    
+
     private _onDidChangeKernels = this._register(new EventEmitter<void>());
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
     private _status: 'idle' | 'discovering' = 'idle';
