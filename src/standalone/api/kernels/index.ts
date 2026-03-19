@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import { Uri, workspace, EventEmitter, CancellationToken } from 'vscode';
-import { Kernel, Kernels } from '../../../api';
+import { Kernel, KernelEnvironmentVariablesProvider, Kernels } from '../../../api';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
+import { IKernelEnvVarsContributorRegistry } from '../../../kernels/raw/launcher/kernelEnvVarsContributor';
 import { createKernelApiForExtension as createKernelApiForExtension } from './kernel';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import {
@@ -138,6 +139,12 @@ export function getKernelsApi(extensionId: string): Kernels {
             }
 
             return extensionAPI.onDidStart.event;
+        },
+        registerEnvironmentVariablesProvider(provider: KernelEnvironmentVariablesProvider) {
+            const registry =
+                ServiceContainer.instance.get<IKernelEnvVarsContributorRegistry>(IKernelEnvVarsContributorRegistry);
+            logger.debug(`Extension ${extensionId} registered a KernelEnvironmentVariablesProvider`);
+            return registry.register(provider);
         }
     };
 }
