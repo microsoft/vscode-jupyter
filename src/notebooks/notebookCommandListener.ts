@@ -111,6 +111,10 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
     private runAllCells() {
         if (window.activeNotebookEditor) {
             commands.executeCommand('notebook.execute').then(noop, noop);
+        } else {
+            // For interactive windows (Python files with # %% cells), use the
+            // interactive window's run all cells command via the code watcher.
+            commands.executeCommand(Commands.RunAllCells).then(noop, noop);
         }
     }
 
