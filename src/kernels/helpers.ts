@@ -37,6 +37,7 @@ import {
 import { cellOutputToVSCCellOutput } from './execution/helpers';
 import { handleTensorBoardDisplayDataOutput } from './execution/executionHelpers';
 import { once } from '../platform/common/utils/functional';
+import { raceTimeout } from '../platform/common/utils/async';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -623,20 +624,24 @@ function verifyIfUrlIsSameAsUri(urlValue: string) {
     sendTelemetryEvent(Telemetry.JupyterUriCanBeParsedAsUri, { failureReason });
 }
 
-// Options for error reporting from kernel silent execution
-export type SilentExecutionErrorOptions = {
+// Options for kernel silent execution
+export type SilentExecutionOptions = {
     // Setting this will log jupyter errors from silent execution as errors as opposed to warnings
     traceErrors?: boolean;
     // This optional message will be displayed as a prefix for the error or warning message
     traceErrorsMessage?: string;
     // Setting this will log telemetry on the given name
     telemetryName?: Telemetry.InteractiveWindowDebugSetupCodeFailure | Telemetry.PythonVariableFetchingCodeFailure;
+    // Number of times to retry on timeout
+    retryCount?: number;
+    // Timeout for each attempt in ms
+    timeout?: number;
 };
 
 export async function executeSilently(
     kernelConnection: Kernel.IKernelConnection,
     code: string,
-    errorOptions?: SilentExecutionErrorOptions
+    options?: SilentExecutionOptions
 ): Promise<nbformat.IOutput[]> {
     logger.trace(
         `Executing silently Code (${kernelConnection.status}) = ${splitLines(code.substring(0, 100)).join('\\n')}`
@@ -644,84 +649,104 @@ export async function executeSilently(
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
-    const request = kernelConnection.requestExecute(
-        {
-            code: code.replace(/\r\n/g, '\n'),
-            silent: false,
-            stop_on_error: false,
-            allow_stdin: true,
-            store_history: false
-        },
-        true
-    );
     const outputs: nbformat.IOutput[] = [];
-    request.onIOPub = (msg) => {
-        if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-            logger.ci(`Got io pub message (stream), ${splitLines(msg.content.text.substr(0, 100)).join('\\n')}`);
-            if (
-                outputs.length > 0 &&
-                outputs[outputs.length - 1].output_type === 'stream' &&
-                outputs[outputs.length - 1].name === msg.content.name
-            ) {
-                const streamOutput = outputs[outputs.length - 1] as nbformat.IStream;
-                streamOutput.text += msg.content.text;
-            } else {
-                const streamOutput: nbformat.IStream = {
-                    name: msg.content.name,
-                    text: msg.content.text,
-                    output_type: 'stream'
+    const maxAttempts = options?.retryCount ?? 1;
+    const timeout = options?.timeout;
+
+    for (let i = 0; i < maxAttempts; i++) {
+        outputs.length = 0; // Clear outputs for retry
+        const request = kernelConnection.requestExecute(
+            {
+                code: code.replace(/\r\n/g, '\n'),
+                silent: false,
+                stop_on_error: false,
+                allow_stdin: true,
+                store_history: false
+            },
+            true
+        );
+
+        request.onIOPub = (msg) => {
+            if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+                logger.ci(`Got io pub message (stream), ${splitLines(msg.content.text.substr(0, 100)).join('\\n')}`);
+                if (
+                    outputs.length > 0 &&
+                    outputs[outputs.length - 1].output_type === 'stream' &&
+                    outputs[outputs.length - 1].name === msg.content.name
+                ) {
+                    const streamOutput = outputs[outputs.length - 1] as nbformat.IStream;
+                    streamOutput.text += msg.content.text;
+                } else {
+                    const streamOutput: nbformat.IStream = {
+                        name: msg.content.name,
+                        text: msg.content.text,
+                        output_type: 'stream'
+                    };
+                    outputs.push(streamOutput);
+                }
+            } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+                logger.ci(`Got io pub message (execresult)}`);
+                const output: nbformat.IExecuteResult = {
+                    data: msg.content.data,
+                    execution_count: msg.content.execution_count,
+                    metadata: msg.content.metadata,
+                    output_type: 'execute_result'
                 };
-                outputs.push(streamOutput);
-            }
-        } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-            logger.ci(`Got io pub message (execresult)}`);
-            const output: nbformat.IExecuteResult = {
-                data: msg.content.data,
-                execution_count: msg.content.execution_count,
-                metadata: msg.content.metadata,
-                output_type: 'execute_result'
-            };
-            outputs.push(output);
-        } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-            logger.ci(`Got io pub message (displaydata)}`);
-            const output: nbformat.IDisplayData = {
-                data: msg.content.data,
-                metadata: msg.content.metadata,
-                output_type: 'display_data'
-            };
-            outputs.push(output);
-        } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-            logger.ci(
-                `Got io pub message (error), ${msg.content.ename},${msg.content.evalue}, ${msg.content.traceback
-                    .join()
-                    .substring(0, 100)}}`
-            );
-            if (errorOptions?.traceErrors) {
-                const errorMessage = `${
-                    errorOptions.traceErrorsMessage || 'Failed to execute (silent) code against the kernel'
-                }, \nCode = ${code}\nError details: `;
-                logger.error(
-                    `${errorMessage} ${msg.content.ename},${msg.content.evalue}, ${msg.content.traceback.join()}`
+                outputs.push(output);
+            } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+                logger.ci(`Got io pub message (displaydata)}`);
+                const output: nbformat.IDisplayData = {
+                    data: msg.content.data,
+                    metadata: msg.content.metadata,
+                    output_type: 'display_data'
+                };
+                outputs.push(output);
+            } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+                logger.ci(
+                    `Got io pub message (error), ${msg.content.ename},${msg.content.evalue}, ${msg.content.traceback
+                        .join()
+                        .substring(0, 100)}}`
                 );
+                if (options?.traceErrors) {
+                    const errorMessage = `${
+                        options.traceErrorsMessage || 'Failed to execute (silent) code against the kernel'
+                    }, \nCode = ${code}\nError details: `;
+                    logger.error(
+                        `${errorMessage} ${msg.content.ename},${msg.content.evalue}, ${msg.content.traceback.join()}`
+                    );
+                }
+                const output: nbformat.IError = {
+                    ename: msg.content.ename,
+                    evalue: msg.content.evalue,
+                    traceback: msg.content.traceback,
+                    output_type: 'error'
+                };
+                outputs.push(output);
+            } else {
+                logger.ci(`Got io pub message (${msg.header.msg_type})`);
             }
-            const output: nbformat.IError = {
-                ename: msg.content.ename,
-                evalue: msg.content.evalue,
-                traceback: msg.content.traceback,
-                output_type: 'error'
-            };
-            outputs.push(output);
+        };
+
+        if (timeout !== undefined) {
+            const success = await raceTimeout(timeout, false, request.done.then(() => true).catch(() => false));
+            if (success) {
+                break;
+            }
+            if (i === maxAttempts - 1) {
+                throw new Error('Timeout waiting for silent execution');
+            }
+            logger.info(`Retrying executeSilently, attempt ${i + 1}`);
         } else {
-            logger.ci(`Got io pub message (${msg.header.msg_type})`);
+            await request.done;
+            break;
         }
-    };
-    await request.done;
+    }
 
     const codeForLogging = splitLines(code.substring(0, 100)).join('\\n');
 
     // Handle any errors logged in the output if needed
-    if (errorOptions) {
-        handleExecuteSilentErrors(outputs, errorOptions, codeForLogging);
+    if (options) {
+        handleExecuteSilentErrors(outputs, options, codeForLogging);
     }
 
     logger.trace(`Executing silently Code (completed) = ${codeForLogging} with ${outputs.length} output(s)`);
@@ -809,7 +834,7 @@ export function executeSilentlyAndEmitOutput(
 
 function handleExecuteSilentErrors(
     outputs: nbformat.IOutput[],
-    errorOptions: SilentExecutionErrorOptions,
+    options: SilentExecutionOptions,
     codeForLogging: string
 ) {
     outputs
@@ -821,16 +846,16 @@ function handleExecuteSilentErrors(
             const outputMessage = `${errorOutput.ename}: ${errorOutput.evalue} \n ${errorOutput.traceback
                 .map((line) => `    ${line}`)
                 .join('\n')}`;
-            const fullMessage = `${errorOptions.traceErrorsMessage || ''} ${codeForLogging} ${outputMessage}`;
-            if (errorOptions.traceErrors) {
+            const fullMessage = `${options.traceErrorsMessage || ''} ${codeForLogging} ${outputMessage}`;
+            if (options.traceErrors) {
                 logger.error(fullMessage);
             } else {
                 logger.warn(fullMessage);
             }
 
             // Send telemetry if requested, no traceback for PII
-            if (errorOptions.telemetryName) {
-                sendTelemetryEvent(errorOptions.telemetryName);
+            if (options.telemetryName) {
+                sendTelemetryEvent(options.telemetryName);
             }
         });
 }

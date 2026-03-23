@@ -1501,6 +1501,16 @@
                     "default": 3,
                     "description": "%jupyter.configuration.jupyter.jupyterLaunchRetries.description%"
                 },
+                "jupyter.executeSilentlyRetryCount": {
+                    "type": "number",
+                    "default": 3,
+                    "description": "Number of times to retry silent execution requests that time out."
+                },
+                "jupyter.executeSilentlyTimeout": {
+                    "type": "number",
+                    "default": 9000,
+                    "description": "Timeout in milliseconds for each silent execution request attempt."
+                },
                 "jupyter.jupyterCommandLineArguments": {
                     "type": "array",
                     "default": [],

@@ -86,6 +86,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public poetryPath: string = '';
     public excludeUserSitePackages: boolean = false;
     public enableExtendedPythonKernelCompletions: boolean = false;
+    public executeSilentlyRetryCount: number = 3;
+    public executeSilentlyTimeout: number = 9000;
     public formatStackTraces: boolean = false;
     public interactiveReplNotebook: boolean = false;
     // Privates should start with _ so that they are not read from the settings.json

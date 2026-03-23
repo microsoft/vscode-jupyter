@@ -90,6 +90,8 @@ export interface IJupyterSettings {
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
     readonly enableExtendedPythonKernelCompletions: boolean;
+    readonly executeSilentlyRetryCount: number;
+    readonly executeSilentlyTimeout: number;
     readonly formatStackTraces: boolean;
     /**
      * Trigger characters for Jupyter completion, per language.

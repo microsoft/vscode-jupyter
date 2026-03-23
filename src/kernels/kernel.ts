@@ -897,7 +897,11 @@ abstract class BaseKernel implements IBaseKernel {
             this._onIPyWidgetVersionResolved.fire(WIDGET_VERSION_NON_PYTHON_KERNELS);
             return;
         }
-        const determineVersionImpl = async () => {
+        const config = workspace.getConfiguration('jupyter', this.resourceUri);
+        const retryCount = config.get<number>('executeSilentlyRetryCount', 3);
+        const timeout = config.get<number>('executeSilentlyTimeout', 9000);
+
+        const determineVersionImpl = async (): Promise<boolean> => {
             const codeToDetermineIPyWidgetsVersion = dedent`
         try:
             import ipywidgets as _VSCODE_ipywidgets
@@ -907,9 +911,10 @@ abstract class BaseKernel implements IBaseKernel {
             pass
         `;
 
-            const version = await this.executeSilently(session, [codeToDetermineIPyWidgetsVersion]).catch((ex) =>
-                logger.error('Failed to determine version of IPyWidgets', ex)
-            );
+            const version = await this.executeSilently(session, [codeToDetermineIPyWidgetsVersion], {
+                retryCount,
+                timeout
+            }).catch((ex) => logger.error('Failed to determine version of IPyWidgets', ex));
             if (Array.isArray(version)) {
                 const isVersion8 = version.some(
                     (output) => (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
@@ -922,12 +927,14 @@ abstract class BaseKernel implements IBaseKernel {
                 logger.trace(`Determined IPyWidgets Version as ${newVersion}`);
                 // If user does not have ipywidgets installed, then this event will never get fired.
                 this._ipywidgetsVersion = newVersion;
-                this._onIPyWidgetVersionResolved.fire(newVersion);
+                return true;
             } else {
                 logger.warn('Failed to determine IPyWidgets Version', JSON.stringify(version));
+                return false;
             }
         };
         await determineVersionImpl();
+        this._onIPyWidgetVersionResolved.fire(this._ipywidgetsVersion);
 
         // If we do not have the version of IPyWidgets, its possible the user has not installed it.
         // However while running cells users can install IPykernel via `!pip install ipywidgets` or the like.
