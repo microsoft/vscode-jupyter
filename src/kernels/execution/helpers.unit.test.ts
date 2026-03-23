@@ -10,7 +10,7 @@ import {
     getNotebookCellOutputMetadata,
     updateNotebookMetadataWithSelectedKernel
 } from './helpers';
-import { IJupyterKernelSpec, PythonKernelConnectionMetadata } from '../types';
+import { IJupyterKernelSpec, LiveRemoteKernelConnectionMetadata, PythonKernelConnectionMetadata } from '../types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { PythonExtension } from '@vscode/python-extension';
 import { instance, mock, when } from 'ts-mockito';
@@ -229,6 +229,40 @@ suite(`UpdateNotebookMetadata`, () => {
         });
 
         // Should be no change here
+        assert.strictEqual(value.changed, false);
+    });
+
+    test('No Change when selecting live remote kernel with matching kernelspec', async () => {
+        // Regression test: selecting a live remote kernel (e.g. from jupyterServerProvider)
+        // on a notebook that already has a matching kernelspec should NOT mark the notebook dirty.
+        const notebookMetadata: nbformat.INotebookMetadata = {
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'My Remote Kernel', language: 'python', name: 'myremotekernel' },
+            language_info: { name: 'python' }
+        };
+        const kernelConnection = LiveRemoteKernelConnectionMetadata.create({
+            id: 'live-kernel-connection-id',
+            baseUrl: 'http://localhost:8888',
+            serverProviderHandle: { id: 'someProvider', handle: 'someHandle', extensionId: 'someExtension' },
+            kernelModel: {
+                id: 'running-kernel-uuid-1234',
+                name: 'myremotekernel',
+                display_name: 'My Remote Kernel',
+                language: 'python',
+                lastActivityTime: new Date('2024-01-01'),
+                numberOfConnections: 1,
+                model: undefined
+            }
+        });
+        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
+
+        // Verify no changes since kernelspec already matches
+        verifyMetadata(notebookMetadata, {
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'My Remote Kernel', language: 'python', name: 'myremotekernel' },
+            language_info: { name: 'python' }
+        });
+        // Should be no change here - notebook should NOT be marked dirty
         assert.strictEqual(value.changed, false);
     });
 });
