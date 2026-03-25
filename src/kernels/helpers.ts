@@ -632,7 +632,7 @@ export type SilentExecutionOptions = {
     traceErrorsMessage?: string;
     // Setting this will log telemetry on the given name
     telemetryName?: Telemetry.InteractiveWindowDebugSetupCodeFailure | Telemetry.PythonVariableFetchingCodeFailure;
-    // Number of times to retry on timeout
+    // Number of times to retry on timeout (Note: only set this for idempotent operations)
     retryCount?: number;
     // Timeout for each attempt in ms
     timeout?: number;
@@ -752,6 +752,18 @@ export async function executeSilently(
     logger.trace(`Executing silently Code (completed) = ${codeForLogging} with ${outputs.length} output(s)`);
 
     return outputs;
+}
+
+export async function executeSilentlyWithRetry(
+    kernelConnection: Kernel.IKernelConnection,
+    code: string,
+    options?: SilentExecutionOptions
+): Promise<nbformat.IOutput[]> {
+    return executeSilently(kernelConnection, code, {
+        retryCount: 3,
+        timeout: 9000,
+        ...options
+    });
 }
 
 export function executeSilentlyAndEmitOutput(

@@ -41,7 +41,7 @@ import {
     trackKernelResourceInformation
 } from './telemetry/helper';
 import { Telemetry } from '../telemetry';
-import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
+import { executeSilently, executeSilentlyWithRetry, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
     IKernel,
     IKernelSession,
@@ -62,7 +62,7 @@ import {
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from './displayOptions';
-import { SilentExecutionErrorOptions } from './helpers';
+import { SilentExecutionOptions } from './helpers';
 import dedent from 'dedent';
 import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getKernelInfo } from './kernelInfo';
@@ -897,11 +897,11 @@ abstract class BaseKernel implements IBaseKernel {
             this._onIPyWidgetVersionResolved.fire(WIDGET_VERSION_NON_PYTHON_KERNELS);
             return;
         }
-        const config = workspace.getConfiguration('jupyter', this.resourceUri);
-        const retryCount = config.get<number>('executeSilentlyRetryCount', 3);
-        const timeout = config.get<number>('executeSilentlyTimeout', 9000);
-
-        const determineVersionImpl = async (): Promise<boolean> => {
+        const determineVersionImpl = async () => {
+            if (!session.kernel) {
+                logger.trace('Not determining IPyWidgets version as there is no session kernel');
+                return;
+            }
             const codeToDetermineIPyWidgetsVersion = dedent`
         try:
             import ipywidgets as _VSCODE_ipywidgets
@@ -911,10 +911,9 @@ abstract class BaseKernel implements IBaseKernel {
             pass
         `;
 
-            const version = await this.executeSilently(session, [codeToDetermineIPyWidgetsVersion], {
-                retryCount,
-                timeout
-            }).catch((ex) => logger.error('Failed to determine version of IPyWidgets', ex));
+            const version = await executeSilentlyWithRetry(session.kernel, codeToDetermineIPyWidgetsVersion).catch((ex) =>
+                logger.error('Failed to determine version of IPyWidgets', ex)
+            );
             if (Array.isArray(version)) {
                 const isVersion8 = version.some(
                     (output) => (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
@@ -927,10 +926,8 @@ abstract class BaseKernel implements IBaseKernel {
                 logger.trace(`Determined IPyWidgets Version as ${newVersion}`);
                 // If user does not have ipywidgets installed, then this event will never get fired.
                 this._ipywidgetsVersion = newVersion;
-                return true;
             } else {
                 logger.warn('Failed to determine IPyWidgets Version', JSON.stringify(version));
-                return false;
             }
         };
         await determineVersionImpl();
@@ -1077,11 +1074,7 @@ del _VSCODE_os
         return [];
     }
 
-    protected async executeSilently(
-        session: IKernelSession,
-        code: string[],
-        errorOptions?: SilentExecutionErrorOptions
-    ) {
+    protected async executeSilently(session: IKernelSession, code: string[], errorOptions?: SilentExecutionOptions) {
         if (code.join('').trim().length === 0) {
             return;
         }
