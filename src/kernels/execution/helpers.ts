@@ -620,11 +620,8 @@ export async function updateNotebookMetadataWithSelectedKernel(
         default:
             break;
     }
-    if (metadata.language_info?.name !== language && language) {
+    if (metadata.language_info?.name !== language && language && metadata.language_info != null) {
         logger.warn(`[DIRTY-FLAG-DEBUG] CHANGED: language_info.name '${metadata.language_info?.name}' !== '${language}'`);
-        if (!metadata.language_info) {
-            metadata.language_info = { name: '' };
-        }
         metadata.language_info.name = language;
         changed = true;
     }

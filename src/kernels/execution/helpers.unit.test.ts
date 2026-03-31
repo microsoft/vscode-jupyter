@@ -68,12 +68,12 @@ suite(`UpdateNotebookMetadata`, () => {
         const value = await updateNotebookMetadataWithSelectedKernel();
         assert.strictEqual(value.changed, false);
     });
-    test('Ensure Language', async () => {
+    test('Ensure Language not force-created when language_info is absent', async () => {
         const notebookMetadata = { orig_nbformat: 4 };
         const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata);
 
-        // Verify lang info added
-        verifyMetadata(notebookMetadata, { orig_nbformat: 4, language_info: { name: '' } });
+        // language_info should NOT be created from nothing (prevents dirty flag on Fabric/Synapse notebooks)
+        verifyMetadata(notebookMetadata, { orig_nbformat: 4 });
         assert.strictEqual(value.changed, false);
     });
     test('Update Language', async () => {
