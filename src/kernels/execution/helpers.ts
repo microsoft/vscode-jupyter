@@ -596,9 +596,7 @@ export async function updateNotebookMetadataWithSelectedKernel(
     );
 
     // If language isn't specified in the metadata, ensure we have that.
-    // But only if language_info already exists as an object — don't force-create it from null/undefined
-    // (e.g. Fabric/Synapse notebooks may have language_info: null)
-    if (metadata.language_info != null && !metadata.language_info.name) {
+    if (!metadata?.language_info?.name) {
         logger.warn(
             `[DIRTY-FLAG-DEBUG] language_info.name is empty/missing, initializing. Current language_info=${JSON.stringify(metadata.language_info)}`
         );
@@ -620,7 +618,7 @@ export async function updateNotebookMetadataWithSelectedKernel(
         default:
             break;
     }
-    if (metadata.language_info?.name !== language && language && metadata.language_info != null) {
+    if (metadata.language_info.name !== language && language) {
         logger.warn(`[DIRTY-FLAG-DEBUG] CHANGED: language_info.name '${metadata.language_info?.name}' !== '${language}'`);
         metadata.language_info.name = language;
         changed = true;
@@ -648,18 +646,10 @@ export async function updateNotebookMetadataWithSelectedKernel(
         ) {
             metadata.language_info.version = version;
             changed = true;
-        } else if (
-            !interpreter &&
-            metadata?.language_info &&
-            isPythonConnection &&
-            kernelConnection?.kind !== 'connectToLiveRemoteKernel' &&
-            kernelConnection?.kind !== 'startUsingRemoteKernelSpec'
-        ) {
+        } else if (!interpreter && metadata?.language_info && isPythonConnection) {
             // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
             // for this case clear out old invalid language_info entries as they are related to the previous execution
             // However we should clear previous language info only if language is python, else just leave it as is.
-            // Note: for live/remote kernels we never have a local interpreter,
-            // so we must not clear language_info in that case.
             metadata.language_info = undefined;
             changed = true;
         }
@@ -746,7 +736,8 @@ export async function updateNotebookMetadataWithSelectedKernel(
         if (
             metadata.kernelspec.name !== name ||
             metadata.kernelspec.language !== language ||
-            metadata.kernelspec.display_name !== displayName
+            metadata.kernelspec.display_name !== displayName ||
+            kernelId !== kernelSpecOrModel.id
         ) {
             changed = true;
             metadata.kernelspec.name = name;
@@ -767,6 +758,7 @@ export async function updateNotebookMetadataWithSelectedKernel(
     );
     return { changed, kernelId };
 }
+
 export async function endCellAndDisplayErrorsInCell(
     cell: NotebookCell,
     controller: IKernelController,

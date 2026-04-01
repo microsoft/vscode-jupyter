@@ -10,12 +10,7 @@ import {
     getNotebookCellOutputMetadata,
     updateNotebookMetadataWithSelectedKernel
 } from './helpers';
-import {
-    IJupyterKernelSpec,
-    LiveRemoteKernelConnectionMetadata,
-    PythonKernelConnectionMetadata,
-    RemoteKernelSpecConnectionMetadata
-} from '../types';
+import { IJupyterKernelSpec, PythonKernelConnectionMetadata } from '../types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { PythonExtension } from '@vscode/python-extension';
 import { instance, mock, when } from 'ts-mockito';
@@ -68,12 +63,12 @@ suite(`UpdateNotebookMetadata`, () => {
         const value = await updateNotebookMetadataWithSelectedKernel();
         assert.strictEqual(value.changed, false);
     });
-    test('Ensure Language not force-created when language_info is absent', async () => {
+    test('Ensure Language', async () => {
         const notebookMetadata = { orig_nbformat: 4 };
         const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata);
 
-        // language_info should NOT be created from nothing (prevents dirty flag on Fabric/Synapse notebooks)
-        verifyMetadata(notebookMetadata, { orig_nbformat: 4 });
+        // Verify lang info added
+        verifyMetadata(notebookMetadata, { orig_nbformat: 4, language_info: { name: '' } });
         assert.strictEqual(value.changed, false);
     });
     test('Update Language', async () => {
@@ -235,147 +230,6 @@ suite(`UpdateNotebookMetadata`, () => {
 
         // Should be no change here
         assert.strictEqual(value.changed, false);
-    });
-
-    test('No Change when selecting live remote kernel with matching kernelspec', async () => {
-        // Regression test: selecting a live remote kernel (e.g. from jupyterServerProvider)
-        // on a notebook that already has a matching kernelspec should NOT mark the notebook dirty.
-        const notebookMetadata: nbformat.INotebookMetadata = {
-            orig_nbformat: 4,
-            kernelspec: { display_name: 'My Remote Kernel', language: 'python', name: 'myremotekernel' },
-            language_info: { name: 'python' }
-        };
-        const kernelConnection = LiveRemoteKernelConnectionMetadata.create({
-            id: 'live-kernel-connection-id',
-            baseUrl: 'http://localhost:8888',
-            serverProviderHandle: { id: 'someProvider', handle: 'someHandle', extensionId: 'someExtension' },
-            kernelModel: {
-                id: 'running-kernel-uuid-1234',
-                name: 'myremotekernel',
-                display_name: 'My Remote Kernel',
-                language: 'python',
-                lastActivityTime: new Date('2024-01-01'),
-                numberOfConnections: 1,
-                model: undefined
-            }
-        });
-        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
-
-        // Verify no changes since kernelspec already matches
-        verifyMetadata(notebookMetadata, {
-            orig_nbformat: 4,
-            kernelspec: { display_name: 'My Remote Kernel', language: 'python', name: 'myremotekernel' },
-            language_info: { name: 'python' }
-        });
-        // Should be no change here - notebook should NOT be marked dirty
-        assert.strictEqual(value.changed, false);
-    });
-
-    test('No Change when language_info is null (Fabric/Synapse notebooks)', async () => {
-        // Fabric/Synapse notebooks from the service have language_info: null
-        // Selecting a remote kernel should NOT force-create language_info and mark dirty
-        const notebookMetadata: nbformat.INotebookMetadata = {
-            orig_nbformat: 4,
-            kernelspec: { display_name: 'PySpark', language: 'Python', name: 'synapse_pyspark' },
-            language_info: null as any
-        };
-        const kernelConnection = RemoteKernelSpecConnectionMetadata.create({
-            id: 'remote-kernelspec-id',
-            baseUrl: 'http://localhost:8888',
-            serverProviderHandle: { id: 'someProvider', handle: 'someHandle', extensionId: 'someExtension' },
-            kernelSpec: {
-                argv: [],
-                display_name: 'PySpark',
-                name: 'synapse_pyspark',
-                executable: '',
-                language: 'Python'
-            }
-        });
-        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
-
-        // language_info should remain null — not be force-created
-        assert.strictEqual(notebookMetadata.language_info, null, 'language_info should stay null');
-        // kernelspec already matches, so no change
-        assert.strictEqual(value.changed, false, 'should not be changed');
-    });
-
-    test('No Change when language_info is undefined', async () => {
-        const notebookMetadata: nbformat.INotebookMetadata = {
-            orig_nbformat: 4,
-            kernelspec: { display_name: 'PySpark', language: 'Python', name: 'synapse_pyspark' }
-        };
-        delete (notebookMetadata as any).language_info;
-        const kernelConnection = RemoteKernelSpecConnectionMetadata.create({
-            id: 'remote-kernelspec-id-2',
-            baseUrl: 'http://localhost:8888',
-            serverProviderHandle: { id: 'someProvider', handle: 'someHandle', extensionId: 'someExtension' },
-            kernelSpec: {
-                argv: [],
-                display_name: 'PySpark',
-                name: 'synapse_pyspark',
-                executable: '',
-                language: 'Python'
-            }
-        });
-        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
-
-        // language_info should remain undefined
-        assert.strictEqual(notebookMetadata.language_info, undefined, 'language_info should stay undefined');
-        assert.strictEqual(value.changed, false, 'should not be changed');
-    });
-
-    test('No Change for startUsingRemoteKernelSpec with matching kernelspec', async () => {
-        const notebookMetadata: nbformat.INotebookMetadata = {
-            orig_nbformat: 4,
-            kernelspec: { display_name: 'PySpark', language: 'Python', name: 'synapse_pyspark' },
-            language_info: { name: 'Python' }
-        };
-        const kernelConnection = RemoteKernelSpecConnectionMetadata.create({
-            id: 'remote-kernelspec-id-3',
-            baseUrl: 'http://localhost:8888',
-            serverProviderHandle: { id: 'someProvider', handle: 'someHandle', extensionId: 'someExtension' },
-            kernelSpec: {
-                argv: [],
-                display_name: 'PySpark',
-                name: 'synapse_pyspark',
-                executable: '',
-                language: 'Python'
-            }
-        });
-        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
-
-        verifyMetadata(notebookMetadata, {
-            orig_nbformat: 4,
-            kernelspec: { display_name: 'PySpark', language: 'Python', name: 'synapse_pyspark' },
-            language_info: { name: 'Python' }
-        });
-        assert.strictEqual(value.changed, false, 'should not be changed');
-    });
-
-    test('Do not clear language_info for startUsingRemoteKernelSpec', async () => {
-        const notebookMetadata: nbformat.INotebookMetadata = {
-            orig_nbformat: 4,
-            kernelspec: { display_name: 'PySpark', language: 'python', name: 'synapse_pyspark' },
-            language_info: { name: 'python', version: '3.10.0' }
-        };
-        const kernelConnection = RemoteKernelSpecConnectionMetadata.create({
-            id: 'remote-kernelspec-id-4',
-            baseUrl: 'http://localhost:8888',
-            serverProviderHandle: { id: 'someProvider', handle: 'someHandle', extensionId: 'someExtension' },
-            kernelSpec: {
-                argv: [],
-                display_name: 'PySpark',
-                name: 'synapse_pyspark',
-                executable: '',
-                language: 'python'
-            }
-        });
-        const value = await updateNotebookMetadataWithSelectedKernel(notebookMetadata, kernelConnection);
-
-        // language_info should NOT be cleared for remote kernel specs
-        assert.ok(notebookMetadata.language_info, 'language_info should not be cleared');
-        assert.strictEqual(notebookMetadata.language_info!.name, 'python');
-        assert.strictEqual(value.changed, false, 'should not be changed');
     });
 });
 
