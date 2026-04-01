@@ -646,10 +646,18 @@ export async function updateNotebookMetadataWithSelectedKernel(
         ) {
             metadata.language_info.version = version;
             changed = true;
-        } else if (!interpreter && metadata?.language_info && isPythonConnection) {
+        } else if (
+            !interpreter &&
+            metadata?.language_info &&
+            isPythonConnection &&
+            kernelConnection?.kind !== 'startUsingRemoteKernelSpec' &&
+            kernelConnection?.kind !== 'connectToLiveRemoteKernel'
+        ) {
             // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
             // for this case clear out old invalid language_info entries as they are related to the previous execution
             // However we should clear previous language info only if language is python, else just leave it as is.
+            // Skip for remote kernels — they never have a local interpreter, but their language_info
+            // (from the service/notebook metadata) is still valid and should be preserved.
             metadata.language_info = undefined;
             changed = true;
         }
