@@ -46,6 +46,7 @@ export interface IJupyterSettings {
     readonly experiments: IExperiments;
     readonly allowUnauthorizedRemoteConnection: boolean;
     readonly jupyterInterruptTimeout: number;
+    readonly kernelPortRangeStartPort: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;
     readonly notebookFileRoot: string;
