@@ -87,7 +87,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             const response = await this.session.customRequest('dumpCell', { code });
 
             // We know jupyter will strip out leading white spaces, hence take that into account.
-            const norm = path.normalize((response as IDumpCellResponse).sourcePath);
+            const norm = (response as IDumpCellResponse).sourcePath;
             this.fileToCell.set(norm, Uri.parse(metadata.interactive.uristring));
 
             // If this cell doesn't have a cell marker, then
