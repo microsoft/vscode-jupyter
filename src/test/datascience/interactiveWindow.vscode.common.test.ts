@@ -592,6 +592,46 @@ ${actualCode}
         assert.equal(output.trim(), '1', 'original value should have been printed');
     });
 
+    test('Restart kernel and run all cells executes all cells (#17330)', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/17330
+        const source = ['# %%', "print('cell1')", '# %%', "print('cell2')", ''].join('\n');
+        const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
+        disposables.push(tempFile);
+        const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
+        await vscode.window.showTextDocument(untitledPythonFile);
+
+        // First run all cells to start the kernel and create the interactive window
+        const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
+            untitledPythonFile.uri
+        )) as InteractiveWindow;
+        const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
+        await vscode.commands.executeCommand(Commands.RunAllCells, untitledPythonFile.uri);
+        await waitForLastCellToComplete(activeInteractiveWindow, -1, false);
+
+        const cellCountAfterFirstRun = notebook.getCells().filter((c) => c.kind === vscode.NotebookCellKind.Code).length;
+        assert.isAtLeast(cellCountAfterFirstRun, 2, 'Should have at least 2 code cells after first run');
+
+        // Now execute "Restart Kernel and Run All Cells"
+        // Focus the .py file (not the interactive window) to reproduce the bug
+        await vscode.window.showTextDocument(untitledPythonFile);
+        await vscode.commands.executeCommand(Commands.RestartKernelAndRunAllCells);
+
+        // Wait for new cells to appear after restart
+        await waitForCondition(
+            async () => {
+                const codeCells = notebook.getCells().filter((c) => c.kind === vscode.NotebookCellKind.Code);
+                return codeCells.length > cellCountAfterFirstRun;
+            },
+            defaultNotebookTestTimeout,
+            'Cells were not executed after Restart Kernel and Run All Cells'
+        );
+
+        // Verify the last cell executed successfully
+        const codeCells = notebook.getCells().filter((c) => c.kind === vscode.NotebookCellKind.Code);
+        const lastCell = codeCells[codeCells.length - 1];
+        await waitForExecutionCompletedSuccessfully(lastCell);
+    });
+
     test.skip('Get the notebook resource for the IW input box', async () => {
         const { activeInteractiveWindow, untitledPythonFile } = await runNewPythonFile(
             interactiveWindowProvider,
