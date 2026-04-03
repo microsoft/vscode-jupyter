@@ -94,11 +94,12 @@ export class KernelProvider extends BaseCoreKernelProvider {
             this,
             this.disposables
         );
-        this.executions.set(kernel, new NotebookKernelExecution(kernel, this.context, this.formatters, notebook));
+        const execution = new NotebookKernelExecution(kernel, this.context, this.formatters, notebook);
+        this.executions.set(kernel, execution);
         this.asyncDisposables.push(kernel);
         this.storeKernel(notebook, options, kernel);
 
-        this.deleteMappingIfKernelIsDisposed(kernel);
+        this.deleteMappingIfKernelIsDisposed(kernel, execution);
         return kernel;
     }
 }
