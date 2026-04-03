@@ -338,8 +338,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // If the kernel is associated with this document, and the controller is being disposed,
         // then the kernel for this document must be disposed.
         workspace.notebookDocuments
-            .map((doc) => (this.associatedDocuments.has(doc) ? this.kernelProvider.get(doc) : undefined))
-            .filter((kernel) => kernel?.kernelConnectionMetadata.id === this.kernelConnection.id)
+            .map((doc) => this.notebookKernels.get(doc))
+            .filter((kernel) => kernel?.controller.id === this.id)
             .forEach((kernel) => (kernel ? kernel.dispose().catch(noop) : undefined));
         this._onNotebookControllerSelectionChanged.dispose();
         this._onConnecting.dispose();
@@ -413,8 +413,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!event.selected) {
             // If user has selected another controller, then kill the current kernel.
             // Possible user selected a controller that's not contributed by us at all.
-            const kernel = this.kernelProvider.get(event.notebook);
-            if (kernel?.kernelConnectionMetadata.id === this.kernelConnection.id) {
+            const kernel = this.notebookKernels.get(event.notebook);
+            if (kernel?.controller.id === this.id) {
                 logger.info(
                     `Disposing kernel ${this.kernelConnection.id} for notebook ${getDisplayPath(
                         event.notebook.uri
@@ -668,13 +668,15 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions): Promise<IKernel> {
         const tracker = getNotebookTelemetryTracker(doc)?.startKernel();
         this._onConnecting.fire();
-        return KernelConnector.connectToNotebookKernel(
+        const kernel = await KernelConnector.connectToNotebookKernel(
             this.kernelConnection,
             this.serviceContainer,
             { resource: doc.uri, notebook: doc, controller: this.controller },
             options,
             this.disposables
         ).finally(() => tracker?.stop());
+        this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
+        return kernel;
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
@@ -755,6 +757,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             controller: this.controller,
             resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
         });
+        this.updateKernelInfoInNotebookWhenAvailable(newKernel, document);
         logger.debug(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
 
         // If this is a Python notebook and Python isn't installed, then don't auto-start the kernel.
