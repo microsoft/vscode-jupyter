@@ -18,6 +18,7 @@ import { IJupyterKernelSpec } from '../../types';
 import { CancellationToken, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
+import { IKernelEnvVarsContributorRegistry } from './kernelEnvVarsContributor';
 
 /**
  * Class used to fetch environment variables for a kernel.
@@ -30,7 +31,9 @@ export class KernelEnvironmentVariablesService {
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
         @inject(ICustomEnvironmentVariablesProvider)
         private readonly customEnvVars: ICustomEnvironmentVariablesProvider,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IKernelEnvVarsContributorRegistry)
+        private readonly envVarsContributors: IKernelEnvVarsContributorRegistry
     ) {}
     /**
      * Generates the environment variables for the kernel.
@@ -143,6 +146,15 @@ export class KernelEnvironmentVariablesService {
         // env variables in kernelSpecs can contain variables that need to be substituted
         for (const [key, value] of Object.entries(kernelSpecVariablesRequiringSubstitution)) {
             mergedVars[key] = substituteEnvVars(key, value, mergedVars);
+        }
+
+        // Let other extensions contribute additional environment variables.
+        // These are merged last so they take highest priority.
+        const contributed = await this.envVarsContributors.getContributions(resource, token);
+        Object.assign(mergedVars, contributed);
+
+        if (token?.isCancellationRequested) {
+            return;
         }
 
         return mergedVars;
