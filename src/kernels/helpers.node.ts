@@ -10,7 +10,7 @@ import { Resource } from '../platform/common/types';
 import { concatMultilineString } from '../platform/common/utils';
 import { trackKernelResourceInformation } from './telemetry/helper';
 import { areInterpreterPathsSame } from '../platform/pythonEnvironments/info/interpreter';
-import { executeSilently, isPythonKernelConnection } from './helpers';
+import { executeSilentlyWithRetry, isPythonKernelConnection } from './helpers';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 
@@ -36,7 +36,7 @@ export async function sendTelemetryForPythonKernelExecutable(
     }
     const stopWatch = new StopWatch();
     try {
-        const outputs = await executeSilently(
+        const outputs = await executeSilentlyWithRetry(
             session.kernel,
             'import sys as _VSCODE_sys\nprint(_VSCODE_sys.executable); del _VSCODE_sys'
         );
