@@ -24,6 +24,7 @@ import {
 import { splitLines } from './helpers';
 import { toPromise } from './utils/events';
 import type { IDisposable } from './types';
+import { logger } from '../logging';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -190,15 +191,15 @@ export function getNotebookFormat(document: NotebookDocument): {
 }
 
 export async function updateNotebookMetadata(document: NotebookDocument, metadata: NotebookMetadata) {
+    const newDocumentMetadata = sortObjectPropertiesRecursively({
+        ...(document.metadata || {}),
+        metadata
+    });
+    logger.warn(
+        `[DIRTY-FLAG-DEBUG] updateNotebookMetadata APPLYING EDIT for ${document.uri.toString()}\n  current metadata: ${JSON.stringify(document.metadata)}\n  new metadata:     ${JSON.stringify(newDocumentMetadata)}`
+    );
     const edit = new WorkspaceEdit();
-    edit.set(document.uri, [
-        NotebookEdit.updateNotebookMetadata(
-            sortObjectPropertiesRecursively({
-                ...(document.metadata || {}),
-                metadata
-            })
-        )
-    ]);
+    edit.set(document.uri, [NotebookEdit.updateNotebookMetadata(newDocumentMetadata)]);
     await workspace.applyEdit(edit);
 }
 

@@ -591,8 +591,15 @@ export async function updateNotebookMetadataWithSelectedKernel(
         return { changed, kernelId };
     }
 
+    logger.warn(
+        `[DIRTY-FLAG-DEBUG] updateNotebookMetadataWithSelectedKernel START\n  kernelConnection.kind=${kernelConnection?.kind}\n  metadata.kernelspec=${JSON.stringify(metadata.kernelspec)}\n  metadata.language_info=${JSON.stringify(metadata.language_info)}`
+    );
+
     // If language isn't specified in the metadata, ensure we have that.
     if (!metadata?.language_info?.name) {
+        logger.warn(
+            `[DIRTY-FLAG-DEBUG] language_info.name is empty/missing, initializing. Current language_info=${JSON.stringify(metadata.language_info)}`
+        );
         metadata.language_info = metadata.language_info || { name: '' };
     }
 
@@ -612,6 +619,7 @@ export async function updateNotebookMetadataWithSelectedKernel(
             break;
     }
     if (metadata.language_info.name !== language && language) {
+        logger.warn(`[DIRTY-FLAG-DEBUG] CHANGED: language_info.name '${metadata.language_info?.name}' !== '${language}'`);
         metadata.language_info.name = language;
         changed = true;
     }
@@ -638,10 +646,18 @@ export async function updateNotebookMetadataWithSelectedKernel(
         ) {
             metadata.language_info.version = version;
             changed = true;
-        } else if (!interpreter && metadata?.language_info && isPythonConnection) {
+        } else if (
+            !interpreter &&
+            metadata?.language_info &&
+            isPythonConnection &&
+            kernelConnection?.kind !== 'startUsingRemoteKernelSpec' &&
+            kernelConnection?.kind !== 'connectToLiveRemoteKernel'
+        ) {
             // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
             // for this case clear out old invalid language_info entries as they are related to the previous execution
             // However we should clear previous language info only if language is python, else just leave it as is.
+            // Skip for remote kernels — they never have a local interpreter, but their language_info
+            // (from the service/notebook metadata) is still valid and should be preserved.
             metadata.language_info = undefined;
             changed = true;
         }
@@ -745,6 +761,9 @@ export async function updateNotebookMetadataWithSelectedKernel(
             // Noop.
         }
     }
+    logger.warn(
+        `[DIRTY-FLAG-DEBUG] updateNotebookMetadataWithSelectedKernel END: changed=${changed}, kernelId=${kernelId}\n  final metadata.kernelspec=${JSON.stringify(metadata.kernelspec)}\n  final metadata.language_info=${JSON.stringify(metadata.language_info)}`
+    );
     return { changed, kernelId };
 }
 

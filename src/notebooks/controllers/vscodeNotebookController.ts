@@ -447,9 +447,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         logger.ci(
             `Controller ${this.connection.kind}:${this.id} associated with nb ${getDisplayPath(event.notebook.uri)}`
         );
+        logger.warn(`[DIRTY-FLAG-DEBUG] onDidChangeSelectedNotebooks: notebook isDirty BEFORE onDidSelectController = ${event.notebook.isDirty}`);
         this.associatedDocuments.set(event.notebook, deferred.promise);
         await this.onDidSelectController(event.notebook);
+        logger.warn(`[DIRTY-FLAG-DEBUG] onDidChangeSelectedNotebooks: notebook isDirty AFTER onDidSelectController = ${event.notebook.isDirty}`);
         await this.updateCellLanguages(event.notebook);
+        logger.warn(`[DIRTY-FLAG-DEBUG] onDidChangeSelectedNotebooks: notebook isDirty AFTER updateCellLanguages = ${event.notebook.isDirty}`);
 
         // If this NotebookController was selected, fire off the event
         this._onNotebookControllerSelectionChanged.fire({
@@ -738,8 +741,10 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 );
         }
 
+        logger.warn(`[DIRTY-FLAG-DEBUG] onDidSelectController: isDirty BEFORE updateNotebookDocumentMetadata = ${document.isDirty}`);
         // Before we start the notebook, make sure the metadata is set to this new kernel.
         await updateNotebookDocumentMetadata(document, selectedKernelConnectionMetadata);
+        logger.warn(`[DIRTY-FLAG-DEBUG] onDidSelectController: isDirty AFTER updateNotebookDocumentMetadata = ${document.isDirty}`);
 
         if (document.notebookType === InteractiveWindowView) {
             // Possible its an interactive window, in that case we'll create the kernel manually.
@@ -780,9 +785,16 @@ async function updateNotebookDocumentMetadata(
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
+    logger.warn(
+        `[DIRTY-FLAG-DEBUG] updateNotebookDocumentMetadata called for ${getDisplayPath(document.uri)}\n  kernelConnection.kind=${kernelConnection?.kind}, id=${kernelConnection?.id}\n  metadata BEFORE: ${JSON.stringify(getNotebookMetadata(document))}\n  document.metadata: ${JSON.stringify(document.metadata)}`
+    );
     const metadata: INotebookMetadata = getNotebookMetadata(document) || {};
     const { changed } = await updateNotebookMetadataWithSelectedKernel(metadata, kernelConnection, kernelInfo);
+    logger.warn(
+        `[DIRTY-FLAG-DEBUG] updateNotebookMetadataWithSelectedKernel returned changed=${changed}\n  metadata AFTER: ${JSON.stringify(metadata)}`
+    );
     if (changed) {
+        logger.warn(`[DIRTY-FLAG-DEBUG] calling updateNotebookMetadata because changed=${changed}`);
         await updateNotebookMetadata(document, metadata);
     }
 }
