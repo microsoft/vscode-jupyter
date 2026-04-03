@@ -61,8 +61,8 @@
         "onLanguageModelTool:notebook_list_packages",
         "onLanguageModelTool:notebook_install_packages"
     ],
-    "main": "./dist/extension.node.proxy.js",
-    "browser": "./dist/extension.web.bundle.js",
+    "main": "./out/extension.node.js",
+    "browser": "./out/extension.web.bundle.js",
     "capabilities": {
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
@@ -1424,7 +1424,7 @@
                         "%jupyter.configuration.jupyter.logging.level.debug%",
                         "%jupyter.configuration.jupyter.logging.level.trace%"
                     ],
-                    "description": "%jupyter.configuration.jupyter.logging.level.description%"
+                    "description": "%jupyter.configuration.jupyter.logging.level.description%","scope": "resource"
                 },
                 "jupyter.experiments.optInto": {
                     "type": "array",
