@@ -189,6 +189,9 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     public async ensureInitialized() {
+        logger.debug(
+            `IW.ensureInitialized enter hasNotebook=${!!this.notebookDocument} hasController=${!!this.controller}`
+        );
         if (!this.notebookDocument) {
             logger.debug(`Showing Interactive editor to initialize codeGenerator from notebook document`);
             await this.showInteractiveEditor();
@@ -207,12 +210,15 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         if (this.controller.controller) {
+            logger.debug(`IW.ensureInitialized starting kernel & resolving sysInfo`);
             this.controller.startKernel().catch(noop);
             await this.controller.resolveSysInfoCell();
+            logger.debug(`IW.ensureInitialized sysInfo resolved`);
         } else {
             logger.info('No controller selected for Interactive Window initialization');
             this.controller.setInfoMessageCell(DataScience.selectKernelForEditor);
         }
+        logger.debug(`IW.ensureInitialized exit`);
     }
 
     /**
@@ -325,8 +331,16 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     private async submitCode(code: string, fileUri: Uri, line: number, isDebug: boolean) {
+        const submitId = generateUuid().slice(0, 8);
+        logger.debug(
+            `IW.submitCode[${submitId}] enter file=${getFilePath(fileUri)} line=${line} isDebug=${isDebug} codeLen=${code.length}`
+        );
         // Do not execute or render empty cells
         if (this.cellMatcher.isEmptyCell(code) || !this.controller?.controller) {
+            logger.debug(
+                `IW.submitCode[${submitId}] skipped (empty=${this.cellMatcher.isEmptyCell(code)} hasController=${!!this
+                    .controller?.controller})`
+            );
             return true;
         }
 
@@ -356,15 +370,32 @@ export class InteractiveWindow implements IInteractiveWindow {
                 : [code];
 
         // Multiple cells that have split our code.
-        const promises = cells.map((c) => {
+        logger.debug(`IW.submitCode[${submitId}] queuing ${cells.length} sub-cell(s)`);
+        const promises = cells.map((c, idx) => {
             const deferred = createDeferred<void>();
+            logger.debug(`IW.submitCode[${submitId}] subCell=${idx} setPendingCellAdd`);
             this.controller!.setPendingCellAdd(deferred.promise);
             // Add the cell first. We don't need to wait for this part as we want to add them
             // as quickly as possible
             const notebookCellPromise = this.addNotebookCell(c, fileUri, line);
+            notebookCellPromise.then(
+                (cell) =>
+                    logger.debug(
+                        `IW.submitCode[${submitId}] subCell=${idx} addNotebookCell resolved index=${cell.index}`
+                    ),
+                (ex) => logger.warn(`IW.submitCode[${submitId}] subCell=${idx} addNotebookCell rejected: ${ex}`)
+            );
 
             // Queue up execution
+            logger.debug(`IW.submitCode[${submitId}] subCell=${idx} createExecutionPromise queued`);
             const promise = this.createExecutionPromise(notebookCellPromise, isDebug);
+            promise.then(
+                (r) => logger.debug(`IW.submitCode[${submitId}] subCell=${idx} createExecutionPromise resolved=${r}`),
+                (ex) =>
+                    logger.debug(
+                        `IW.submitCode[${submitId}] subCell=${idx} createExecutionPromise rejected: ${ex?.message ?? ex}`
+                    )
+            );
             promise
                 .catch((ex) => {
                     // If execution fails due to a failure in another cell, then log that error against the cell.
@@ -388,6 +419,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     }
                 })
                 .finally(() => {
+                    logger.debug(`IW.submitCode[${submitId}] subCell=${idx} resolving pendingCellAdd deferred`);
                     deferred?.resolve();
                 });
             return promise;
@@ -399,18 +431,29 @@ export class InteractiveWindow implements IInteractiveWindow {
 
     @chainable()
     private async createExecutionPromise(notebookCellPromise: Promise<NotebookCell>, isDebug: boolean) {
+        const execId = generateUuid().slice(0, 8);
+        logger.debug(`IW.createExecutionPromise[${execId}] start (chainable invoked)`);
         if (!this.controller || !this.notebookDocument) {
+            logger.debug(
+                `IW.createExecutionPromise[${execId}] aborted hasController=${!!this.controller} hasNotebook=${!!this
+                    .notebookDocument}`
+            );
             return false;
         }
         logger.ci('InteractiveWindow.ts.createExecutionPromise.start');
         // Kick of starting kernels early.
+        logger.debug(`IW.createExecutionPromise[${execId}] requesting kernel`);
         const kernelPromise = this.controller.startKernel();
         const cell = await notebookCellPromise;
+        logger.debug(`IW.createExecutionPromise[${execId}] notebookCell ready index=${cell.index}`);
 
         let success = true;
         let detachKernel = async () => noop();
         try {
             const kernel = await kernelPromise;
+            logger.debug(
+                `IW.createExecutionPromise[${execId}] kernel resolved id=${kernel?.kernelConnectionMetadata?.id}`
+            );
             await this.generateCodeAndAddMetadata(cell, isDebug, kernel);
             if (isDebug && this.useNewDebugMode()) {
                 // New ipykernel 7 debugger using the Jupyter protocol.
@@ -432,18 +475,25 @@ export class InteractiveWindow implements IInteractiveWindow {
             logger.ci('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             const iwCellMetadata = getInteractiveCellMetadata(cell);
             const execution = this.kernelProvider.getKernelExecution(kernel!);
+            logger.debug(`IW.createExecutionPromise[${execId}] calling executeCell index=${cell.index}`);
             success = await execution.executeCell(cell, iwCellMetadata?.generatedCode?.code).then(
                 () => true,
-                () => false
+                (ex) => {
+                    logger.debug(`IW.createExecutionPromise[${execId}] executeCell rejected: ${ex?.message ?? ex}`);
+                    return false;
+                }
             );
+            logger.debug(`IW.createExecutionPromise[${execId}] executeCell finished success=${success}`);
             logger.ci('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
         } finally {
             await detachKernel();
+            logger.debug(`IW.createExecutionPromise[${execId}] end success=${success}`);
             logger.ci('InteractiveWindow.ts.createExecutionPromise.end');
         }
 
         if (!success) {
             // Throw to break out of the promise chain
+            logger.debug(`IW.createExecutionPromise[${execId}] throwing InteractiveCellResultError to break chain`);
             throw new InteractiveCellResultError(cell);
         }
         return success;
@@ -522,6 +572,9 @@ export class InteractiveWindow implements IInteractiveWindow {
         if (!notebookDocument) {
             throw new Error('No notebook document');
         }
+        logger.debug(
+            `IW.addNotebookCell starting nb=${notebookDocument.uri.toString()} cellCountBefore=${notebookDocument.cellCount}`
+        );
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
         const settings = this.configuration.getSettings(this.owningResource);
@@ -554,11 +607,16 @@ export class InteractiveWindow implements IInteractiveWindow {
         notebookCellData.metadata = metadata;
 
         let index: number | undefined;
+        logger.debug(`IW.addNotebookCell calling chainWithPendingUpdates to insert cell`);
         await chainWithPendingUpdates(notebookDocument, async (edit) => {
             index = await this.getAppendIndex();
+            logger.debug(`IW.addNotebookCell chainWithPendingUpdates inserting at index=${index}`);
             const nbEdit = NotebookEdit.insertCells(index, [notebookCellData]);
             edit.set(notebookDocument.uri, [nbEdit]);
         });
+        logger.debug(
+            `IW.addNotebookCell chainWithPendingUpdates resolved cellCountAfter=${notebookDocument.cellCount} insertedAt=${index}`
+        );
         return notebookDocument.cellAt(index!);
     }
 

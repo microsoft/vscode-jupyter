@@ -175,14 +175,29 @@ export function chainable() {
     return function (_target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
         const originalMethod = descriptor.value!;
         const chainedKey = `chainedPromiseFor_${propertyKey}`;
+        const chainCounterKey = `chainedCounterFor_${propertyKey}`;
 
         // eslint-disable-next-line , @typescript-eslint/no-explicit-any
         descriptor.value = async function (...args: any[]) {
             // Check for promise in the object.
             let currentValue = (this as any)[chainedKey] as Promise<any>;
+            const callIndex = ((this as any)[chainCounterKey] = ((this as any)[chainCounterKey] ?? 0) + 1);
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { logger: chainLogger } = require('../../logging');
             if (currentValue) {
-                currentValue = currentValue.then(() => originalMethod.apply(this, args));
+                chainLogger?.debug?.(
+                    `chainable(${propertyKey}) call #${callIndex}: queued behind prior promise`
+                );
+                currentValue = currentValue.then(() => {
+                    chainLogger?.debug?.(
+                        `chainable(${propertyKey}) call #${callIndex}: prior resolved, invoking original`
+                    );
+                    return originalMethod.apply(this, args);
+                });
             } else {
+                chainLogger?.debug?.(
+                    `chainable(${propertyKey}) call #${callIndex}: no prior, invoking immediately`
+                );
                 currentValue = originalMethod.apply(this, args);
             }
 
@@ -191,8 +206,14 @@ export function chainable() {
 
             // If promise fails, clear it.
             const promise = currentValue
-                .then((r) => r)
+                .then((r) => {
+                    chainLogger?.debug?.(`chainable(${propertyKey}) call #${callIndex}: resolved`);
+                    return r;
+                })
                 .catch((e) => {
+                    chainLogger?.debug?.(
+                        `chainable(${propertyKey}) call #${callIndex}: rejected (${e?.message ?? e}); clearing chain`
+                    );
                     (this as any)[chainedKey] = undefined;
                     throw e;
                 });
