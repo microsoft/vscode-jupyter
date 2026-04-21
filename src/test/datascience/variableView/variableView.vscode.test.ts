@@ -235,7 +235,7 @@ myClass = MyClass()
         await waitForVariablesToMatch(expectedVariables, variableView);
     });
 
-    test('VariableView basic types B (webview-test)', async function () {
+    test('VariableView basic types B (webview-test), flaky?', async function () {
         // Send the command to open the view
         await commands.executeCommand(Commands.OpenVariableView);
 
