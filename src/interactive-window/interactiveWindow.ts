@@ -368,10 +368,12 @@ export class InteractiveWindow implements IInteractiveWindow {
 
         // Multiple cells that have split our code.
         logger.trace(`IW.submitCode[${submitId}] queuing ${cells.length} sub-cell(s)`);
+        // Register a single pending-cell-add covering all sub-cells in this submission.
+        const deferreds = cells.map(() => createDeferred<void>());
+        logger.trace(`IW.submitCode[${submitId}] setPendingCellAdd for all ${cells.length} sub-cell(s)`);
+        this.controller!.setPendingCellAdd(Promise.all(deferreds.map((d) => d.promise)).then(noop));
         const promises = cells.map((c, idx) => {
-            const deferred = createDeferred<void>();
-            logger.trace(`IW.submitCode[${submitId}] subCell=${idx} setPendingCellAdd`);
-            this.controller!.setPendingCellAdd(deferred.promise);
+            const deferred = deferreds[idx];
             // Add the cell first. We don't need to wait for this part as we want to add them
             // as quickly as possible
             const notebookCellPromise = this.addNotebookCell(c, fileUri, line);
