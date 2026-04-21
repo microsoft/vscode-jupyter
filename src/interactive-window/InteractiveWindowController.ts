@@ -165,12 +165,12 @@ export class InteractiveWindowController {
     public setPendingCellAdd(cellAddedPromise: Promise<void>) {
         if (this.metadata && this.interactiveWindow.notebookDocument) {
             const controller = this.controllerService.getRegisteredController(this.metadata);
-            logger.debug(
+            logger.trace(
                 `IWController.setPendingCellAdd notebook=${this.interactiveWindow.notebookDocument.uri.toString()} hasController=${!!controller}`
             );
             controller?.setPendingCellAddition(this.interactiveWindow.notebookDocument, cellAddedPromise);
             cellAddedPromise.then(
-                () => logger.debug(`IWController.setPendingCellAdd: pending-cell-add resolved`),
+                () => logger.trace(`IWController.setPendingCellAdd: pending-cell-add resolved`),
                 (ex) => logger.debug(`IWController.setPendingCellAdd: pending-cell-add rejected: ${ex}`)
             );
         } else {

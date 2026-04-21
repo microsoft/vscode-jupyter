@@ -313,10 +313,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             throw new Error('setPendingCellAddition only applies to the Interactive Window');
         }
 
-        const hadPrevious = this.pendingCellAdditions.has(notebook);
-        logger.debug(
-            `VSCodeNBController.setPendingCellAddition notebook=${notebook.uri.toString()} overwritingPrevious=${hadPrevious}`
-        );
         this.pendingCellAdditions.set(notebook, promise);
     }
 
@@ -374,13 +370,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         tracker?.cellExecutionCount(cells.length);
         const telemetryTracker = tracker?.preExecuteCellTelemetry();
         if (this.pendingCellAdditions.has(notebook)) {
-            logger.debug(
-                `VSCodeNBController.handleExecution awaiting pendingCellAdditions for ${cells.length} cell(s) idx=${cells
-                    .map((c) => c.index)
-                    .join(',')}`
-            );
             await this.pendingCellAdditions.get(notebook);
-            logger.debug(`VSCodeNBController.handleExecution pendingCellAdditions resolved`);
         }
 
         // Found on CI that sometimes VS Code calls this with old deleted cells.
@@ -564,13 +554,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // Start execution now (from the user's point of view)
         // Creating these execution objects marks the cell as queued for execution (vscode will update cell UI).
         type CellExec = { cell: NotebookCell; exec: NotebookCellExecution };
-        const queued = this.cellQueue.get(doc) || [];
-        logger.debug(
-            `VSCodeNBController.executeQueuedCells nb=${doc.uri.toString()} count=${queued.length} idx=${queued
-                .map((c) => c.index)
-                .join(',')}`
-        );
-        const cellExecs: CellExec[] = queued.map((cell) => {
+        const cellExecs: CellExec[] = (this.cellQueue.get(doc) || []).map((cell) => {
             const exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));
             return { cell, exec };
         });

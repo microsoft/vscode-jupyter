@@ -301,7 +301,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         const { inputUri, notebookEditor } = (await commands.executeCommand(
             'interactive.open',
             // Keep focus on the owning file if there is one
-            { viewColumn: ViewColumn.Active, preserveFocus },
+            { viewColumn, preserveFocus },
             undefined,
             preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined,
             title

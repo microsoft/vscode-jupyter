@@ -189,20 +189,16 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     public async ensureInitialized() {
-        logger.debug(
-            `IW.ensureInitialized enter hasNotebook=${!!this.notebookDocument} hasController=${!!this.controller}`
-        );
-        if (!this.notebookDocument) {
+        let notebookDocument = this.notebookDocument;
+        if (!notebookDocument) {
             logger.debug(`Showing Interactive editor to initialize codeGenerator from notebook document`);
-            await this.showInteractiveEditor();
-
-            if (!this.notebookDocument) {
-                throw new Error('Could not open notebook document for Interactive Window');
-            }
+            const editor = await this.showInteractiveEditor();
+            notebookDocument = editor.notebook;
+            this._notebookDocument = notebookDocument;
         }
 
-        if (!this.codeGeneratorFactory.get(this.notebookDocument)) {
-            this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
+        if (!this.codeGeneratorFactory.get(notebookDocument)) {
+            this.codeGeneratorFactory.getOrCreate(notebookDocument);
         }
 
         if (!this.controller) {
@@ -210,15 +206,14 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         if (this.controller.controller) {
-            logger.debug(`IW.ensureInitialized starting kernel & resolving sysInfo`);
+            logger.trace(`IW.ensureInitialized starting kernel & resolving sysInfo`);
             this.controller.startKernel().catch(noop);
             await this.controller.resolveSysInfoCell();
-            logger.debug(`IW.ensureInitialized sysInfo resolved`);
+            logger.trace(`IW.ensureInitialized sysInfo resolved`);
         } else {
             logger.info('No controller selected for Interactive Window initialization');
             this.controller.setInfoMessageCell(DataScience.selectKernelForEditor);
         }
-        logger.debug(`IW.ensureInitialized exit`);
     }
 
     /**
@@ -332,12 +327,14 @@ export class InteractiveWindow implements IInteractiveWindow {
 
     private async submitCode(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         const submitId = generateUuid().slice(0, 8);
-        logger.debug(
-            `IW.submitCode[${submitId}] enter file=${getFilePath(fileUri)} line=${line} isDebug=${isDebug} codeLen=${code.length}`
+        logger.trace(
+            `IW.submitCode[${submitId}] enter file=${getFilePath(fileUri)} line=${line} isDebug=${isDebug} codeLen=${
+                code.length
+            }`
         );
         // Do not execute or render empty cells
         if (this.cellMatcher.isEmptyCell(code) || !this.controller?.controller) {
-            logger.debug(
+            logger.trace(
                 `IW.submitCode[${submitId}] skipped (empty=${this.cellMatcher.isEmptyCell(code)} hasController=${!!this
                     .controller?.controller})`
             );
@@ -370,34 +367,35 @@ export class InteractiveWindow implements IInteractiveWindow {
                 : [code];
 
         // Multiple cells that have split our code.
-        logger.debug(`IW.submitCode[${submitId}] queuing ${cells.length} sub-cell(s)`);
+        logger.trace(`IW.submitCode[${submitId}] queuing ${cells.length} sub-cell(s)`);
         const promises = cells.map((c, idx) => {
             const deferred = createDeferred<void>();
-            logger.debug(`IW.submitCode[${submitId}] subCell=${idx} setPendingCellAdd`);
+            logger.trace(`IW.submitCode[${submitId}] subCell=${idx} setPendingCellAdd`);
             this.controller!.setPendingCellAdd(deferred.promise);
             // Add the cell first. We don't need to wait for this part as we want to add them
             // as quickly as possible
             const notebookCellPromise = this.addNotebookCell(c, fileUri, line);
             notebookCellPromise.then(
                 (cell) =>
-                    logger.debug(
+                    logger.trace(
                         `IW.submitCode[${submitId}] subCell=${idx} addNotebookCell resolved index=${cell.index}`
                     ),
                 (ex) => logger.warn(`IW.submitCode[${submitId}] subCell=${idx} addNotebookCell rejected: ${ex}`)
             );
 
             // Queue up execution
-            logger.debug(`IW.submitCode[${submitId}] subCell=${idx} createExecutionPromise queued`);
+            logger.trace(`IW.submitCode[${submitId}] subCell=${idx} createExecutionPromise queued`);
             const promise = this.createExecutionPromise(notebookCellPromise, isDebug);
-            promise.then(
-                (r) => logger.debug(`IW.submitCode[${submitId}] subCell=${idx} createExecutionPromise resolved=${r}`),
-                (ex) =>
-                    logger.debug(
-                        `IW.submitCode[${submitId}] subCell=${idx} createExecutionPromise rejected: ${ex?.message ?? ex}`
-                    )
-            );
             promise
+                .then((r) =>
+                    logger.trace(`IW.submitCode[${submitId}] subCell=${idx} createExecutionPromise resolved=${r}`)
+                )
                 .catch((ex) => {
+                    logger.debug(
+                        `IW.submitCode[${submitId}] subCell=${idx} createExecutionPromise rejected: ${
+                            ex?.message ?? ex
+                        }`
+                    );
                     // If execution fails due to a failure in another cell, then log that error against the cell.
                     if (ex instanceof InteractiveCellResultError) {
                         notebookCellPromise
@@ -573,7 +571,9 @@ export class InteractiveWindow implements IInteractiveWindow {
             throw new Error('No notebook document');
         }
         logger.debug(
-            `IW.addNotebookCell starting nb=${notebookDocument.uri.toString()} cellCountBefore=${notebookDocument.cellCount}`
+            `IW.addNotebookCell starting nb=${notebookDocument.uri.toString()} cellCountBefore=${
+                notebookDocument.cellCount
+            }`
         );
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files

@@ -125,22 +125,20 @@ export class CellExecutionCreator {
     static getOrCreate(cell: NotebookCell, controller: IKernelController, clearOutputOnStartWithTime = false) {
         let cellExecution: NotebookCellExecutionWrapper | undefined;
         cellExecution = this.get(cell);
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { logger } = require('../../platform/logging');
         if (!cellExecution) {
-            logger?.debug?.(
+            logger.trace(
                 `CellExecutionCreator.getOrCreate creating new wrapper cellIndex=${cell.index} controllerId=${controller.id}`
             );
             cellExecution = CellExecutionCreator.create(cell, controller, clearOutputOnStartWithTime);
         } else {
-            logger?.debug?.(
+            logger.trace(
                 `CellExecutionCreator.getOrCreate reusing wrapper cellIndex=${cell.index} existingControllerId=${cellExecution.controllerId} requestedControllerId=${controller.id}`
             );
             // Cell execution may already exist, but its controller may be different
             if (cellExecution.controllerId !== controller.id) {
                 // Stop the old execution so we don't have more than one for a cell at a time.
                 const oldExecution = cellExecution;
-                logger?.debug?.(
+                logger.trace(
                     `CellExecutionCreator.getOrCreate replacing wrapper for cellIndex=${cell.index} (controller mismatch)`
                 );
                 oldExecution.end(undefined);
