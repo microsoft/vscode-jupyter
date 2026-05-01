@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
 import { execCodeInBackgroundThread } from '../api/kernels/backgroundExecution';
 import { getEnvExtApi } from '../../platform/api/python-envs/pythonEnvsApi';
-import { raceTimeout } from '../../platform/common/utils/async';
+import { raceTimeout, raceTimeoutError } from '../../platform/common/utils/async';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { raceCancellation } from '../../platform/common/cancellation';
 import { DisposableStore } from '../../platform/common/utils/lifecycle';
@@ -78,6 +78,24 @@ export async function installPackageThroughEnvsExtension(kernelUri: vscode.Uri, 
 
 export type packageDefinition = { name: string; version?: string };
 
+/**
+ * Maximum time (in ms) to wait for a kernel to start before returning to the caller.
+ * If the kernel hasn't started in this time, the tool returns a message to the LLM
+ * indicating the kernel is still starting (the kernel start itself continues in the background).
+ */
+export const KERNEL_START_TIMEOUT_MS = 20_000;
+
+/**
+ * Error thrown when a kernel start exceeds {@link KERNEL_START_TIMEOUT_MS}.
+ * The underlying kernel start is not cancelled and may still complete in the background.
+ */
+export class KernelStartTimeoutError extends Error {
+    constructor() {
+        super('Timed out waiting for the kernel to start');
+        this.name = 'KernelStartTimeoutError';
+    }
+}
+
 export async function ensureKernelSelectedAndStarted(
     notebook: vscode.NotebookDocument,
     controllerRegistration: IControllerRegistration,
@@ -120,7 +138,11 @@ export async function ensureKernelSelectedAndStarted(
     const controller = controllerRegistration.getSelected(notebook);
     if (controller) {
         logger.trace(`Kernel selected for notebook ${getDisplayPath(notebook.uri)}`);
-        return raceCancellation(token, controller.startKernel(notebook));
+        return raceTimeoutError(
+            KERNEL_START_TIMEOUT_MS,
+            new KernelStartTimeoutError(),
+            raceCancellation(token, controller.startKernel(notebook))
+        );
     } else {
         logger.warn(`No kernel controller selected for notebook ${getDisplayPath(notebook.uri)}`);
     }
@@ -165,7 +187,11 @@ export async function selectKernelAndStart(
 
     const controller = controllerRegistration.getSelected(notebook);
     if (controller && startKernel) {
-        return raceCancellation(token, controller.startKernel(notebook));
+        return raceTimeoutError(
+            KERNEL_START_TIMEOUT_MS,
+            new KernelStartTimeoutError(),
+            raceCancellation(token, controller.startKernel(notebook))
+        );
     }
 }
 
