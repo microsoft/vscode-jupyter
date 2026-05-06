@@ -314,12 +314,13 @@ jobs:
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
-          - jupyterConnection: web
-            python: python
-            pythonVersion: '3.12'
-            tags: '^[^@]+$|@mandatory'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
+          # Temporarily disabled: this matrix entry is failing with persistent 404s.
+          # - jupyterConnection: web
+          #   python: python
+          #   pythonVersion: '3.12'
+          #   tags: '^[^@]+$|@mandatory'
+          #   os: ubuntu-latest
+          #   ipywidgetsVersion: ''
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.12'

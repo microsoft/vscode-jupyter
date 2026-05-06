@@ -2051,7 +2051,6 @@
                 "displayName": "Start Notebook Kernel",
                 "modelDescription": "Selects a Python Kernel and starts it.",
                 "tags": [
-                    "extension_installed_by_tool",
                     "install python package",
                     "notebooks"
                 ],
@@ -2074,7 +2073,6 @@
                 "displayName": "Start Notebook Kernel",
                 "modelDescription": "Selects the Notebook Kernel and starts it.",
                 "tags": [
-                    "extension_installed_by_tool",
                     "jupyter",
                     "notebooks"
                 ],
