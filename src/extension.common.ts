@@ -21,11 +21,13 @@ import {
     PylanceExtension,
     PythonExtension,
     Telemetry,
-    PythonEnvironmentExtension
+    PythonEnvironmentExtension,
+    setLogKernelMessages
 } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
+    IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
     IExtensionContext,
@@ -177,4 +179,9 @@ export async function postActivateLegacy(context: IExtensionContext, serviceCont
     const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
     featureManager.initialize();
     context.subscriptions.push(featureManager);
+    setLogKernelMessages(
+        serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(workspace.workspaceFolders?.[0]?.uri).logKernelMessages === true
+    );
 }
