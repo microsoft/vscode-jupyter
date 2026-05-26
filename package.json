@@ -2051,7 +2051,6 @@
                 "displayName": "Start Notebook Kernel",
                 "modelDescription": "Selects a Python Kernel and starts it.",
                 "tags": [
-                    "extension_installed_by_tool",
                     "install python package",
                     "notebooks"
                 ],
@@ -2074,7 +2073,6 @@
                 "displayName": "Start Notebook Kernel",
                 "modelDescription": "Selects the Notebook Kernel and starts it.",
                 "tags": [
-                    "extension_installed_by_tool",
                     "jupyter",
                     "notebooks"
                 ],
@@ -2257,7 +2255,7 @@
         "@jupyterlab/services": "^7.2.4",
         "@lumino/widgets": "^2.4.0",
         "@nteract/messaging": "^7.0.0",
-        "@vscode/extension-telemetry": "^0.7.7",
+        "@vscode/extension-telemetry": "^1.5.1",
         "@vscode/python-extension": "^1.0.4",
         "ansi-to-html": "^0.6.7",
         "bootstrap": "^5.0.0",
@@ -2273,7 +2271,7 @@
         "isomorphic-ws": "^4.0.1",
         "jquery": "^3.6.0",
         "jsonc-parser": "^2.0.3",
-        "lodash": "^4.17.23",
+        "lodash": "^4.18.1",
         "marked": "^4.0.10",
         "node-fetch": "^2.6.7",
         "node-gyp-build": "^4.6.0",
