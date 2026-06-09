@@ -20,6 +20,7 @@ function generateConfig(label, env) {
         files: ['out/**/*.vscode.test.js', 'out/**/*.vscode.common.test.js'],
         version: 'insiders',
         srcDir: 'src',
+        extensionDevelopmentPath: __dirname,
         workspaceFolder,
         launchArgs: [workspaceFolder, '--enable-proposed-api'],
         env,

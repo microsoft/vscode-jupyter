@@ -5,7 +5,6 @@ import os
 import json
 import sys
 
-
 # Last argument is the target file into which we'll write the env variables as json.
 json_file = sys.argv[-1]
 

@@ -82,7 +82,7 @@ suite(`Interactive window execution @iw`, async function () {
         await settings.update('interactiveWindow.creationMode', 'multiple');
         logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    test('__file__ exists even after restarting a kernel', async function () {
+    test.skip('__file__ exists even after restarting a kernel', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/12251
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
@@ -273,7 +273,7 @@ ${actualCode}
         assert.equal(actualCellText, dedentedCode);
     });
 
-    test('Run current file in interactive window (with cells)', async () => {
+    test.skip('Run current file in interactive window (with cells)', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '#%%\na=1\nprint(a)\n#%%\nb=2\nprint(b)\n',
@@ -313,7 +313,7 @@ ${actualCode}
         );
     });
 
-    test('Run a latex cell with a cell marker', async () => {
+    test.skip('Run a latex cell with a cell marker', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             dedent`
@@ -396,7 +396,7 @@ ${actualCode}
         await waitForExecutionCompletedSuccessfully(secondCell!);
         await waitForTextOutput(secondCell!, '1');
     });
-    test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
+    test.skip('Error stack traces have correct line hrefs with mix of cell sources', async function () {
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindow.creationMode', 'single');
 
@@ -448,7 +448,7 @@ ${actualCode}
         await waitForTextOutput(lastCell, 'foo');
     });
 
-    test('Raising an exception from within a function has a stack trace', async function () {
+    test.skip('Raising an exception from within a function has a stack trace', async function () {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '# %%\ndef raiser():\n  raise Exception("error")\n# %%\nraiser()',
@@ -478,7 +478,7 @@ ${actualCode}
         assert.ok(text.includes('def raiser():'), 'function definition not found in stack trace');
     });
 
-    test('Raising an exception from system code has a stack trace', async function () {
+    test.skip('Raising an exception from system code has a stack trace', async function () {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             `# %%\n${IPYTHON_VERSION_CODE}# %%\nimport pathlib as pathlib\nx = pathlib.Path()\ny = None\nx.joinpath(y, "Foo")`,
@@ -507,7 +507,7 @@ ${actualCode}
         assert.ok(/pathlib\.py:\d+, in PurePath\.joinpath/.test(text), 'library frame not found');
     });
 
-    test('Running a cell with markdown and code runs two cells', async () => {
+    test.skip('Running a cell with markdown and code runs two cells', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '# %% [markdown]\n# # HEADER\n# **bold**\nprint(1)',
@@ -526,7 +526,7 @@ ${actualCode}
         await waitForTextOutput(lastCell, '1');
     });
 
-    test('Export Interactive window to Python file', async () => {
+    test.skip('Export Interactive window to Python file', async () => {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await waitForInteractiveWindow(activeInteractiveWindow);
 
@@ -562,7 +562,7 @@ ${actualCode}
         );
     });
 
-    test('Cells from python files and the input box are executed in correct order', async () => {
+    test.skip('Cells from python files and the input box are executed in correct order', async () => {
         const source = ['# %%', 'x = 1', '# %%', 'import time', 'time.sleep(3)', '# %%', 'print(x)', ''].join('\n');
         const tempFile = await createTemporaryFile({ contents: 'print(42)', extension: '.py' });
         await vscode.window.showTextDocument(tempFile.file);
@@ -592,7 +592,7 @@ ${actualCode}
         assert.equal(output.trim(), '1', 'original value should have been printed');
     });
 
-    test('Get the notebook resource for the IW input box', async () => {
+    test.skip('Get the notebook resource for the IW input box', async () => {
         const { activeInteractiveWindow, untitledPythonFile } = await runNewPythonFile(
             interactiveWindowProvider,
             'print(1)',

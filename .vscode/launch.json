@@ -133,6 +133,7 @@
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
+            "testConfiguration": "${workspaceFolder}/.vscode-test.mjs",
             "args": [
                 "${workspaceFolder}/src/test/datascience",
                 "--enable-proposed-api",

@@ -98,6 +98,8 @@ export interface IJupyterSettings {
      */
     readonly completionTriggerCharacters?: Record<string, string[]>;
     readonly interactiveReplNotebook: boolean;
+    /** Used only for debugging, logs the kernel messages */
+    readonly logKernelMessages: boolean;
 }
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {

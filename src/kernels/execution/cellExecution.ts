@@ -110,6 +110,7 @@ export class CellExecution implements ICellExecution, IDisposable {
                         )}`
                     );
                     try {
+                        this.cancelRequested = true;
                         this.request?.dispose(); // NOSONAR
                     } catch (e) {
                         logger.error(`Error during cell execution dispose: ${e}`);
