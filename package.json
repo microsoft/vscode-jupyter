@@ -584,10 +584,7 @@
                 "title": "%jupyter.command.jupyter.restartkernel.title%",
                 "shortTitle": "%jupyter.command.jupyter.restartkernel.shorttitle%",
                 "category": "Jupyter",
-                "icon": {
-                    "light": "resources/light/restart-kernel.svg",
-                    "dark": "resources/dark/restart-kernel.svg"
-                },
+                "icon": "$(refresh)",
                 "enablement": "isWorkspaceTrusted && (jupyter.interactive.canRestartNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
             },
             {
