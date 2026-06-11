@@ -67,6 +67,7 @@ export interface IJupyterSettings {
     readonly debugpyDistPath: string;
     readonly stopOnFirstLineWhileDebugging: boolean;
     readonly magicCommandsAsComments: boolean;
+    readonly magicCommandsRegex: string;
     readonly pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert';
     readonly stopOnError: boolean;
     readonly addGotoCodeLenses: boolean;
