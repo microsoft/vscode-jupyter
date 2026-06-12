@@ -9,7 +9,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
 import { Telemetry } from '../../telemetry';
-import { executeSilently, SilentExecutionErrorOptions } from '../../kernels/helpers';
+import { executeSilently, SilentExecutionOptions } from '../../kernels/helpers';
 import { IKernel } from '../../kernels/types';
 import { IKernelVariableRequester, IJupyterVariable, IVariableDescription } from '../../kernels/variables/types';
 import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../../platform/common/types';
@@ -20,7 +20,7 @@ import { DataFrameSplitFormat, parseDataFrame } from '../../kernels/variables/he
 async function safeExecuteSilently(
     kernel: IKernel,
     { code, initializeCode, cleanupCode }: { code: string; initializeCode?: string; cleanupCode?: string },
-    errorOptions?: SilentExecutionErrorOptions
+    errorOptions?: SilentExecutionOptions
 ): Promise<nbformat.IOutput[]> {
     if (
         kernel.disposed ||

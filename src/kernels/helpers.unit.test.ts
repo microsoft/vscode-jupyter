@@ -5,7 +5,9 @@ import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { when, instance, mock, anything } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { getDisplayNameOrNameOfKernelConnection } from './helpers';
+import { getDisplayNameOrNameOfKernelConnection, executeSilently, executeSilentlyWithRetry } from './helpers';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import { createDeferred } from '../platform/common/utils/async';
 import {
     IJupyterKernelSpec,
     LiveRemoteKernelConnectionMetadata,
@@ -644,6 +646,118 @@ suite('Kernel Connection Helpers', () => {
                 })
             );
             assert.strictEqual(name, '.env (Python 9.8.7)');
+        });
+    });
+
+    suite('executeSilently', () => {
+        let kernelConnection: Kernel.IKernelConnection;
+        setup(() => {
+            kernelConnection = mock<Kernel.IKernelConnection>();
+            when(kernelConnection.status).thenReturn('idle');
+        });
+
+        test('Resolves immediately if code completes', async () => {
+            const deferred = createDeferred<void>();
+            deferred.resolve();
+            const request = {
+                onIOPub: undefined,
+                get done() {
+                    return deferred.promise;
+                }
+            } as unknown as Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
+            let executionCount = 0;
+            when(kernelConnection.requestExecute(anything(), anything())).thenCall(() => {
+                executionCount++;
+                return request;
+            });
+
+            await executeSilently(instance(kernelConnection), 'print("hello")');
+            assert.strictEqual(executionCount, 1);
+        });
+
+        test('Retries and resolves before maxAttempts if code completes eventually', async () => {
+            let deferred1 = createDeferred<void>();
+            let deferred2 = createDeferred<void>();
+            const request1 = {
+                onIOPub: undefined,
+                get done() {
+                    return deferred1.promise;
+                }
+            } as unknown as Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
+            const request2 = {
+                onIOPub: undefined,
+                get done() {
+                    return deferred2.promise;
+                }
+            } as unknown as Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
+            let executionCount = 0;
+            when(kernelConnection.requestExecute(anything(), anything())).thenCall(() => {
+                executionCount++;
+                if (executionCount === 1) {
+                    return request1;
+                }
+                setTimeout(() => deferred2.resolve(), 10);
+                return request2;
+            });
+
+            await executeSilently(instance(kernelConnection), 'print("hello")', { retryCount: 3, timeout: 50 });
+            assert.strictEqual(executionCount, 2);
+        });
+
+        test('Exhausts retries and throws timeout error', async () => {
+            let executionCount = 0;
+            when(kernelConnection.requestExecute(anything(), anything())).thenCall(() => {
+                executionCount++;
+                return {
+                    onIOPub: undefined,
+                    get done() {
+                        return createDeferred<void>().promise; // Never resolves
+                    }
+                } as unknown as Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
+            });
+
+            try {
+                await executeSilently(instance(kernelConnection), 'print("hello")', { retryCount: 3, timeout: 50 });
+                assert.fail('Should have thrown timeout error');
+            } catch (ex) {
+                assert.include((ex as Error).message, 'Timeout waiting for silent execution');
+            }
+            assert.strictEqual(executionCount, 3);
+        });
+
+        test('executeSilentlyWithRetry resolves', async () => {
+            const deferred = createDeferred<void>();
+            deferred.resolve();
+            const request = {
+                onIOPub: undefined,
+                get done() {
+                    return deferred.promise;
+                }
+            } as unknown as Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
+            when(kernelConnection.requestExecute(anything(), anything())).thenReturn(request);
+
+            await executeSilentlyWithRetry(instance(kernelConnection), 'print("hello")');
+        });
+
+        test('executeSilentlyWithRetry retries 3 times by default', async () => {
+            let executionCount = 0;
+            when(kernelConnection.requestExecute(anything(), anything())).thenCall(() => {
+                executionCount++;
+                return {
+                    onIOPub: undefined,
+                    get done() {
+                        return createDeferred<void>().promise; // Never resolves
+                    }
+                } as unknown as Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
+            });
+
+            try {
+                await executeSilentlyWithRetry(instance(kernelConnection), 'print("hello")', { timeout: 10 }); // Overriding timeout to make it fast
+                assert.fail('Should have thrown timeout error');
+            } catch (ex) {
+                assert.include((ex as Error).message, 'Timeout waiting for silent execution');
+            }
+            assert.strictEqual(executionCount, 3);
         });
     });
 });
