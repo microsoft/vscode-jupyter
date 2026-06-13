@@ -366,7 +366,7 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         ]);
         console.log('Step12');
     });
-    test.skip('Can restart a kernel after it dies', async function () {
+    test('Can restart a kernel after it dies', async function () {
         if (IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
             // The kernel will auto start if it fails when using Jupyter.
             // When using Raw we don't use jupyter.

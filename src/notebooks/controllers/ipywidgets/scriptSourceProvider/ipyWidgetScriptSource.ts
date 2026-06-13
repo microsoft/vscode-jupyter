@@ -86,6 +86,7 @@ export class IPyWidgetScriptSource {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload?: any): void {
+        logger.ci(`IPyWidgetScriptSource.onMessage ${message} => ${JSON.stringify(payload)}`);
         if (message === InteractiveWindowMessages.ConvertUriForUseInWebViewResponse) {
             const response: undefined | { request: Uri; response: Uri } = payload;
             if (response && this.uriTranslationRequests.has(response.request)) {
