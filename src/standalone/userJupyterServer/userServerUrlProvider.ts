@@ -130,7 +130,8 @@ export class UserJupyterServerUrlProvider
             agentCreator,
             requestCreator,
             serverUriStorage,
-            disposables
+            disposables,
+            encryptedStorage
         );
         this.jupyterHubPasswordConnect = new JupyterHubPasswordConnect(configService, agentCreator, requestCreator);
     }
