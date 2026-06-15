@@ -161,6 +161,7 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.MoveCellsDown]: [];
     [DSCommands.ChangeCellToMarkdown]: [];
     [DSCommands.ChangeCellToCode]: [];
+    [DSCommands.ChangeCellToRaw]: [];
     [DSCommands.GotoNextCellInFile]: [];
     [DSCommands.GotoPrevCellInFile]: [];
     [DSCommands.ScrollToCell]: [Uri, string];
