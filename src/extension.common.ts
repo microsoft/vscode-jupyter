@@ -21,11 +21,13 @@ import {
     PylanceExtension,
     PythonExtension,
     Telemetry,
-    PythonEnvironmentExtension
+    PythonEnvironmentExtension,
+    setLogKernelMessages
 } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
+    IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
     IExtensionContext,
@@ -177,4 +179,14 @@ export async function postActivateLegacy(context: IExtensionContext, serviceCont
     const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
     featureManager.initialize();
     context.subscriptions.push(featureManager);
+
+    // Enable kernel message logging based on user settings.
+    // This is useful for debugging kernel communication issues by logging all messages
+    // exchanged between the extension and kernel processes.
+    // The setting jupyter.logKernelMessages controls this behavior.
+    setLogKernelMessages(
+        serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(workspace.workspaceFolders?.[0]?.uri).logKernelMessages === true
+    );
 }
