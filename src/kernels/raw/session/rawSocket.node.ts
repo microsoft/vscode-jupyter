@@ -254,7 +254,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private sendMessage(msg: KernelMessage.IMessage, bypassHooking: boolean) {
         // First encode the message.
         const data = wireProtocol.encode(msg as any, this.connection.key, this.connection.signature_scheme);
-
         // Then send through our hooks, and then post to the real zmq socket
         if (!bypassHooking && this.sendHooks.length) {
             // Separate encoding for ipywidgets. It expects the same result a WebSocket would generate.
