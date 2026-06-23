@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationError, CancellationToken, NotebookDocument, commands, extensions, workspace } from 'vscode';
+import { CancellationError, CancellationToken, NotebookDocument, commands, extensions, window, workspace } from 'vscode';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -21,6 +21,7 @@ import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/a
 import { PythonEnvironmentQuickPickItemProvider } from '../../../platform/interpreter/pythonEnvironmentQuickPickProvider.node';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { noop } from '../../../platform/common/utils/misc';
+import { getOSType, OSType } from '../../../platform/common/utils/platform';
 import { findPreferredPythonEnvironment } from '../preferredKernelConnectionService.node';
 import { Commands } from '../../../platform/common/constants';
 import { createDeferred } from '../../../platform/common/utils/async';
@@ -58,6 +59,15 @@ export class LocalPythonKernelSelector extends DisposableBase {
                 DataScience.quickPickSelectPythonEnvironmentTitle
             )
         );
+        // Add "Find..." command to browse the filesystem for a Python interpreter.
+        this.pythonEnvPicker.addCommand(
+            {
+                label: `$(folder-opened) ${DataScience.browseForPythonInterpreter}`,
+                tooltip: DataScience.browseForPythonInterpreterTooltip
+            },
+            this.browseForPythonInterpreter.bind(this)
+        );
+
         let createEnvCommand: IDisposable | undefined;
         const addCreationCommand = () => {
             if (createEnvCommand) {
@@ -184,6 +194,37 @@ export class LocalPythonKernelSelector extends DisposableBase {
             interpreter: interpreter,
             id: getKernelId(spec, interpreter)
         });
+    }
+
+    private async browseForPythonInterpreter(): Promise<Environment | InputFlowAction | undefined> {
+        const uris = await window.showOpenDialog({
+            canSelectFiles: true,
+            canSelectFolders: false,
+            canSelectMany: false,
+            openLabel: DataScience.browseForPythonInterpreter,
+            filters: getOSType() === OSType.Windows ? { Python: ['exe'] } : undefined
+        });
+        if (!uris || uris.length === 0) {
+            // User cancelled the file dialog; return to the quick pick.
+            return undefined;
+        }
+        const selectedPath = uris[0].fsPath;
+        const apiProvider = ServiceContainer.instance.get<IPythonApiProvider>(IPythonApiProvider);
+        const api = await apiProvider.getNewApi();
+        if (!api) {
+            logger.warn('Python API not available when browsing for interpreter');
+            return undefined;
+        }
+        // Resolve the selected path through the Python extension API so it
+        // becomes a fully recognized Environment with an id.
+        const resolved = await api.environments.resolveEnvironment(selectedPath);
+        if (!resolved) {
+            logger.warn(`Could not resolve environment for path: ${selectedPath}`);
+            return undefined;
+        }
+        // resolveEnvironment returns a ResolvedEnvironment which extends Environment,
+        // so it can be returned directly and will be picked up by selectKernel().
+        return resolved;
     }
 
     private async createNewEnvironment(): Promise<Environment | InputFlowAction | undefined> {
