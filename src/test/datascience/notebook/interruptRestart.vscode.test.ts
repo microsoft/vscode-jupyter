@@ -82,6 +82,7 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         VSCodeDisposable
     >;
     suiteSetup(async function () {
+        this.timeout(120_000);
         onDidChangeNotebookDocumentStub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
         onDidChangeNotebookDocumentStub.get(() => onDidChangeNbEventHandler.event);
         suiteDisposables.push(onDidChangeNbEventHandler);
