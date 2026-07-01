@@ -336,6 +336,9 @@ async function shutdownRemoteKernels() {
     const cancelToken = new CancellationTokenSource();
     let sessionManager: JupyterLabHelper | undefined;
     try {
+        // Cap the entire remote-server interaction at 30 s so a slow or unresponsive Jupyter
+        // server cannot cause the test teardown (120 s budget) to time out.  The finally block
+        // still runs to dispose the session manager regardless of whether we timed out.
         await raceTimeout(
             30_000,
             (async () => {
