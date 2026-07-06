@@ -109,7 +109,9 @@ suite('Smoke Tests', function () {
         await jupyterExt?.activate();
         await jupyterExt.exports.openNotebook(nb.uri, pythonEnv);
 
-        await vscode.commands.executeCommand<void>('notebook.execute');
+        void vscode.commands
+            .executeCommand<void>('notebook.execute')
+            .then(undefined, (ex: unknown) => logger.error('Failed to execute notebook in smoke test', ex));
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
 

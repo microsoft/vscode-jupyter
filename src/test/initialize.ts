@@ -48,6 +48,10 @@ async function closeWindowsAndNotebooks(): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     while (vscode.window.activeNotebookEditor || vscode.window.activeTextEditor) {
         await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+        // Give VS Code time to update the active editor state before the next iteration;
+        // without a sleep here the loop can spin indefinitely if the editor state does not
+        // change synchronously after the close command (matches the pattern in helper.ts closeNotebooks).
+        await sleep(50);
     }
     // Work around VS Code issues (sometimes notebooks do not get closed).
     // Hence keep trying.

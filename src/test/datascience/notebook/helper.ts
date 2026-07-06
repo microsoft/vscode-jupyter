@@ -82,7 +82,7 @@ import { dispose } from '../../../platform/common/utils/lifecycle';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeout, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isWeb } from '../../../platform/common/utils/misc';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
@@ -336,11 +336,19 @@ async function shutdownRemoteKernels() {
     const cancelToken = new CancellationTokenSource();
     let sessionManager: JupyterLabHelper | undefined;
     try {
-        const connection = await jupyterConnection.createConnectionInfo(serverUriStorage.all[0].provider);
-        sessionManager = JupyterLabHelper.create(connection.settings);
-        const liveKernels = await sessionManager.getRunningKernels();
-        await Promise.all(
-            liveKernels.filter((item) => item.id).map((item) => KernelAPI.shutdownKernel(item.id!).catch(noop))
+        // Cap the entire remote-server interaction at 30 s so a slow or unresponsive Jupyter
+        // server cannot cause the test teardown (120 s budget) to time out.  The finally block
+        // still runs to dispose the session manager regardless of whether we timed out.
+        await raceTimeout(
+            30_000,
+            (async () => {
+                const connection = await jupyterConnection.createConnectionInfo(serverUriStorage.all[0].provider);
+                sessionManager = JupyterLabHelper.create(connection.settings);
+                const liveKernels = await sessionManager.getRunningKernels();
+                await Promise.all(
+                    liveKernels.filter((item) => item.id).map((item) => KernelAPI.shutdownKernel(item.id!).catch(noop))
+                );
+            })()
         );
     } catch {
         // ignore
