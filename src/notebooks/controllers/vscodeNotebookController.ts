@@ -83,6 +83,7 @@ import { getVersion } from '../../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker, trackControllerCreation } from '../../kernels/telemetry/notebookTelemetry';
 import { IJupyterVariablesProvider } from '../../kernels/variables/types';
 import type { INotebookMetadata } from '@jupyterlab/nbformat';
+import { notebookCellExecutions } from '../../platform/notebooks/cellExecutionStateService';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -391,6 +392,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!workspace.isTrusted) {
             return;
         }
+        notebookCellExecutions.requestNotebookCellExecution(cells);
         logger.debug(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         telemetryTracker?.stop();

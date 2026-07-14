@@ -3,6 +3,7 @@
 
 import { Event, NotebookCell, NotebookCellOutput } from 'vscode';
 import { IKernelSession } from '../types';
+import { NotebookCellExecutionResult } from '../../platform/notebooks/cellExecutionStateService';
 
 export type IExecution = ICellExecution | ICodeExecution;
 
@@ -19,6 +20,8 @@ export interface ICellExecution {
      * Without having to wait for the roundtrip to complete.
      */
     executionOrder?: number;
+    /** The terminal result once this execution has completed. */
+    completionResult?: NotebookCellExecutionResult;
     start(session: IKernelSession): Promise<void>;
     cancel(forced?: boolean): Promise<void>;
     dispose(): void;

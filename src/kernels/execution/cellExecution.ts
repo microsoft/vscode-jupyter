@@ -91,6 +91,10 @@ export class CellExecution implements ICellExecution, IDisposable {
     public get executionOrder() {
         return this._executionOrder;
     }
+    private _completionResult?: 'success' | 'failed' | 'cancelled';
+    public get completionResult() {
+        return this._completionResult;
+    }
     private constructor(
         public readonly cell: NotebookCell,
         private readonly codeOverride: string | undefined,
@@ -328,7 +332,7 @@ export class CellExecution implements ICellExecution, IDisposable {
             }
         }
 
-        this.endCellTask('failed', completedTime);
+        this.endCellTask('failed', completedTime, this.cancelRequested || this.disposed ? 'cancelled' : 'failed');
         traceCellMessage(this.cell, 'Completed with errors, & resolving');
         this._result.reject(error);
     }
@@ -342,11 +346,16 @@ export class CellExecution implements ICellExecution, IDisposable {
         traceCellMessage(this.cell, `Completed successfully & resolving with status = ${success}`);
         this._result.resolve();
     }
-    private endCellTask(success: 'success' | 'failed' | 'cancelled', completedTime = new Date().getTime()) {
+    private endCellTask(
+        success: 'success' | 'failed' | 'cancelled',
+        completedTime = new Date().getTime(),
+        completionResult: 'success' | 'failed' | 'cancelled' = success
+    ) {
         if (this._completed) {
             return;
         }
         this._completed = true;
+        this._completionResult = completionResult;
         if (this.isEmptyCodeCell) {
             // Undefined for not success or failures
             if (this.execution) {

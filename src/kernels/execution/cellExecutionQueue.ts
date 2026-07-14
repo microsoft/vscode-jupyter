@@ -238,7 +238,8 @@ export class CellExecutionQueue implements Disposable {
                     notebookCellExecutions.changeCellState(
                         itemToExecute.cell,
                         NotebookCellExecutionState.Idle,
-                        itemToExecute.executionOrder
+                        itemToExecute.executionOrder,
+                        itemToExecute.completionResult
                     );
                 }
             }
