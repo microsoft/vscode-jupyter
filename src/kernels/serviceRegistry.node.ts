@@ -48,8 +48,13 @@ import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
 import { KernelChatStartupCodeProvider } from './chat/kernelStartupCodeProvider';
 import { KernelWorkingDirectory } from './raw/session/kernelWorkingDirectory.node';
+import { CellCompletionNotificationService } from './execution/cellCompletionNotificationService';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        CellCompletionNotificationService
+    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ServerPreload);
     serviceManager.addSingleton<IRawNotebookSupportedService>(

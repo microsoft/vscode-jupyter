@@ -1482,6 +1482,45 @@
                     "default": true,
                     "description": "%jupyter.configuration.jupyter.askForKernelRestart.description%"
                 },
+                "jupyter.cellCompletionNotificationMode": {
+                    "type": "string",
+                    "default": "off",
+                    "enum": [
+                        "off",
+                        "windowNotFocused",
+                        "always"
+                    ],
+                    "enumDescriptions": [
+                        "%jupyter.configuration.jupyter.cellCompletionNotificationMode.off%",
+                        "%jupyter.configuration.jupyter.cellCompletionNotificationMode.windowNotFocused%",
+                        "%jupyter.configuration.jupyter.cellCompletionNotificationMode.always%"
+                    ],
+                    "description": "%jupyter.configuration.jupyter.cellCompletionNotificationMode.description%",
+                    "scope": "resource"
+                },
+                "jupyter.cellCompletionNotificationFailureMode": {
+                    "type": "string",
+                    "default": "off",
+                    "enum": [
+                        "off",
+                        "windowNotFocused",
+                        "always"
+                    ],
+                    "enumDescriptions": [
+                        "%jupyter.configuration.jupyter.cellCompletionNotificationFailureMode.off%",
+                        "%jupyter.configuration.jupyter.cellCompletionNotificationFailureMode.windowNotFocused%",
+                        "%jupyter.configuration.jupyter.cellCompletionNotificationFailureMode.always%"
+                    ],
+                    "description": "%jupyter.configuration.jupyter.cellCompletionNotificationFailureMode.description%",
+                    "scope": "resource"
+                },
+                "jupyter.cellCompletionNotificationMinimumDuration": {
+                    "type": "number",
+                    "default": 60,
+                    "minimum": 1,
+                    "description": "%jupyter.configuration.jupyter.cellCompletionNotificationMinimumDuration.description%",
+                    "scope": "resource"
+                },
                 "jupyter.exportWithOutputEnabled": {
                     "type": "boolean",
                     "default": false,

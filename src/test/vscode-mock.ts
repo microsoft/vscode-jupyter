@@ -181,6 +181,7 @@ mockedVSCode.PortAttributes = vscodeMocks.vscMockExtHostedTypes.PortAttributes;
 mockedVSCode.NotebookRendererScript = vscodeMocks.vscMockExtHostedTypes.NotebookRendererScript;
 mockedVSCode.NotebookEdit = vscodeMocks.vscMockExtHostedTypes.NotebookEdit;
 mockedVSCode.NotebookRange = vscodeMocks.vscMockExtHostedTypes.NotebookRange;
+(mockedVSCode as any).NotebookEditorRevealType = { InCenter: 1 };
 mockedVSCode.QuickPickItemKind = vscodeMocks.vscMockExtHostedTypes.QuickPickItemKind;
 (mockedVSCode as any).LogLevel = vscodeMocks.vscMockExtHostedTypes.LogLevel;
 (mockedVSCode.NotebookCellData as any) = vscodeMocks.vscMockExtHostedTypes.NotebookCellData;

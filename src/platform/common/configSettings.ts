@@ -13,6 +13,7 @@ import {
 } from 'vscode';
 import { isTestExecution } from './constants';
 import {
+    CellCompletionNotificationMode,
     IExperiments,
     InteractiveWindowMode,
     InteractiveWindowViewColumn,
@@ -88,6 +89,9 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public enableExtendedPythonKernelCompletions: boolean = false;
     public formatStackTraces: boolean = false;
     public interactiveReplNotebook: boolean = false;
+    public cellCompletionNotificationMode: CellCompletionNotificationMode = 'off';
+    public cellCompletionNotificationFailureMode: CellCompletionNotificationMode = 'off';
+    public cellCompletionNotificationMinimumDuration: number = 60;
     // Privates should start with _ so that they are not read from the settings.json
     private _changeEmitter = new EventEmitter<void>();
     private _workspaceRoot: Resource;

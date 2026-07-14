@@ -100,6 +100,9 @@ export interface IJupyterSettings {
     readonly interactiveReplNotebook: boolean;
     /** Used only for debugging, logs the kernel messages */
     readonly logKernelMessages: boolean;
+    readonly cellCompletionNotificationMode: CellCompletionNotificationMode;
+    readonly cellCompletionNotificationFailureMode: CellCompletionNotificationMode;
+    readonly cellCompletionNotificationMinimumDuration: number;
 }
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {
@@ -125,6 +128,8 @@ export interface IExperiments {
 export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
+
+export type CellCompletionNotificationMode = 'off' | 'windowNotFocused' | 'always';
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com' | string;
 
