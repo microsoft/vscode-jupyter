@@ -189,6 +189,8 @@ function ensureOrigNBFormatIsOptional() {
  * installed uuid version against each package's declared range and reports `uuid@11.x` as invalid,
  * failing with ELSPROBLEMS. Widen the declared range in these packages so the forced version
  * satisfies it and packaging succeeds.
+ *
+ * Note: These packages haven't been updated to resolve the CG issues for a while, updating upstream would be a better solution, but this is a quick fix to unblock packaging & easier.
  */
 function widenNteractUuidRange() {
     const pkgs = ['@nteract/messaging', '@nteract/types', '@nteract/commutable'];
