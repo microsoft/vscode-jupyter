@@ -77,6 +77,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
                             SVGBackground={'transparent'}
                             background={plotBackground}
                             detectWheel={true}
+                            preventPanOutside={false}
                         >
                             <svg width={this.props.size.width} height={this.props.size.height}>
                                 <SvgLoader svgXML={this.props.svg} />
