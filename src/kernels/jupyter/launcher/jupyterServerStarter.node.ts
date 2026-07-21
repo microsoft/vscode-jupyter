@@ -11,7 +11,7 @@ import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { logger } from '../../../platform/logging';
 import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
-import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
@@ -46,6 +46,19 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         @named(JUPYTER_OUTPUT_CHANNEL)
         private readonly jupyterOutputChannel: IOutputChannel
     ) {}
+
+    private async getPortArguments(resource: Resource): Promise<string[]> {
+        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const settings = configService.getSettings(resource);
+        const startPort = settings.kernelPortRangeStartPort;
+
+        // Only add port argument if it's different from the default (9000)
+        // This allows Jupyter to use its own port selection when using default
+        if (startPort && startPort !== 9000) {
+            return [`--port=${startPort}`];
+        }
+        return [];
+    }
     public dispose() {
         while (this.disposables.length > 0) {
             const disposable = this.disposables.shift();
@@ -77,6 +90,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
             tempDirPromise.then((dir) => this.disposables.push(dir)).catch(noop);
             // Before starting the notebook process, make sure we generate a kernel spec
             const args = await this.generateArguments(
+                resource,
                 useDefaultConfig,
                 customCommandLine,
                 tempDirPromise,
@@ -176,6 +190,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
     }
 
     private async generateDefaultArguments(
+        resource: Resource,
         useDefaultConfig: boolean,
         tempDirPromise: Promise<TemporaryDirectory>,
         workingDirectory: string
@@ -190,7 +205,11 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         // Modify the data rate limit if starting locally. The default prevents large dataframes from being returned.
         promisedArgs.push(Promise.resolve('--NotebookApp.iopub_data_rate_limit=10000000000.0'));
 
-        const [args, dockerArgs] = await Promise.all([Promise.all(promisedArgs), this.getDockerArguments()]);
+        const [args, dockerArgs, portArgs] = await Promise.all([
+            Promise.all(promisedArgs),
+            this.getDockerArguments(),
+            this.getPortArguments(resource)
+        ]);
 
         // Check for the debug environment variable being set. Setting this
         // causes Jupyter to output a lot more information about what it's doing
@@ -198,7 +217,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         const debugArgs = process.env && process.env.VSCODE_JUPYTER_DEBUG_JUPYTER ? ['--debug'] : [];
 
         // Use this temp file and config file to generate a list of args for our command
-        return [...args, ...dockerArgs, ...debugArgs];
+        return [...args, ...dockerArgs, ...portArgs, ...debugArgs];
     }
 
     private async generateCustomArguments(customCommandLine: string[]): Promise<string[]> {
@@ -217,13 +236,14 @@ export class JupyterServerStarter implements IJupyterServerStarter {
     }
 
     private async generateArguments(
+        resource: Resource,
         useDefaultConfig: boolean,
         customCommandLine: string[],
         tempDirPromise: Promise<TemporaryDirectory>,
         workingDirectory: string
     ): Promise<string[]> {
         if (!customCommandLine || customCommandLine.length === 0) {
-            return this.generateDefaultArguments(useDefaultConfig, tempDirPromise, workingDirectory);
+            return this.generateDefaultArguments(resource, useDefaultConfig, tempDirPromise, workingDirectory);
         }
         return this.generateCustomArguments(customCommandLine);
     }
