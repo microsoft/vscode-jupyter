@@ -21,6 +21,7 @@ import {
 import {
     CodeSnippets,
     Identifiers,
+    logKernelMessages,
     WIDGET_MIMETYPE,
     WIDGET_VERSION_NON_PYTHON_KERNELS
 } from '../platform/common/constants';
@@ -683,6 +684,28 @@ abstract class BaseKernel implements IBaseKernel {
                 token: this.startCancellation.token,
                 creator: this.creator
             });
+
+            // Hook up kernel message logging if enabled via jupyter.logKernelMessages setting.
+            // This logs all incoming (recv) and outgoing (send) messages with their serialized payloads,
+            // including message types, IDs, and parent message IDs for tracking message chains.
+            // This is particularly useful for debugging kernel protocol issues and understanding
+            // the sequence of messages during notebook execution.
+            if (logKernelMessages) {
+                const jupyterLabSerialize =
+                    require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
+                session.anyMessage.connect((_, msg: IAnyMessageArgs) => {
+                    const direction = msg.direction === 'recv' ? 'incoming message << ' : 'outgoing message >> ';
+                    const payload = jupyterLabSerialize.serialize(msg.msg);
+                    const parentId = msg.msg.parent_header?.msg_id;
+                    const parentMsgId = parentId ? ` (Parent Msg Id: ${parentId})` : '';
+                    logger.trace(
+                        `${direction} ${msg.msg.header.msg_type}.${msg.msg.header.msg_id} for ${getDisplayPath(
+                            this.uri
+                        )} with ${parentMsgId}`,
+                        payload
+                    );
+                });
+            }
             if (this.disposing) {
                 throw new CancellationError();
             }
@@ -871,6 +894,8 @@ abstract class BaseKernel implements IBaseKernel {
             try {
                 logger.debug('Requesting Kernel info');
                 this._info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento);
+                // Log the kernel info status to help track kernel initialization state
+                logger.debug(`Got Kernel info ${this._info?.status}`);
             } catch (ex) {
                 logger.warn('Failed to request KernelInfo', ex);
             }
