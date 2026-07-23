@@ -473,6 +473,10 @@ export namespace DataScience {
     export const createPythonEnvironmentInQuickPickTooltip = l10n.t(
         'Create an isolated Python Environment per workspace folder'
     );
+    export const browseForPythonInterpreter = l10n.t('Find...');
+    export const browseForPythonInterpreterTooltip = l10n.t(
+        'Browse the file system to find a Python interpreter'
+    );
 
     export const selectDifferentJupyterInterpreter = l10n.t('Change Interpreter');
     export const pandasTooOldForViewingFormat = (currentVersion: string, requiredVersion: string) =>
