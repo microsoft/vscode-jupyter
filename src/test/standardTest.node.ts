@@ -16,6 +16,7 @@ import {
 } from '../platform/common/constants';
 import { DownloadPlatform } from '@vscode/test-electron/out/download';
 import { arch } from 'os';
+import { resolveDownloadedVSCodeExecutablePath } from './vscodeTestUtils.node';
 
 // Support for passing grep (specially for models or Copilot Coding Agent)
 // Local Copilot or Copilot Coding Agent can use `--grep=XYZ` or `--grep XYZ`
@@ -218,7 +219,10 @@ async function start() {
     // Ensure temp directories created by `tmp` are cleaned up when the process exits.
     tmp.setGracefulCleanup();
     const platform = computePlatform();
-    const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform);
+    const vscodeExecutablePath = resolveDownloadedVSCodeExecutablePath(
+        await downloadAndUnzipVSCode(channel, platform),
+        platform
+    );
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
     const userDataDirectory = await createSettings();
     const extensionsDir = await getExtensionsDir();
