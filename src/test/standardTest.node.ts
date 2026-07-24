@@ -214,9 +214,49 @@ async function getExtensionsDir(): Promise<string> {
     });
 }
 
+/**
+ * On macOS, the built-in `unzip` command does not properly restore symbolic links stored
+ * in zip archives (it silently skips them). Recent VS Code builds store
+ * `Contents/MacOS/Electron` as a symbolic link, so after `unzip` extraction the binary
+ * is missing and spawning it fails with ENOENT.
+ *
+ * This function places a thin `unzip` wrapper script — backed by `ditto`, which handles
+ * macOS app-bundle zip archives correctly — at the front of `PATH` so that
+ * `@vscode/test-electron`'s internal `spawn('unzip', ...)` call picks it up automatically.
+ */
+function ensureDittoBasedUnzipOnMacOS(): void {
+    if (process.platform !== 'darwin') {
+        return;
+    }
+    const wrapperBinDir = tmp.dirSync({ unsafeCleanup: true }).name;
+    const wrapperPath = path.join(wrapperBinDir, 'unzip');
+    // Minimal POSIX shell wrapper: parse the `unzip -q <file> -d <dir>` invocation
+    // used by @vscode/test-electron and delegate to `ditto -x -k` instead.
+    fs.writeFileSync(
+        wrapperPath,
+        [
+            '#!/bin/sh',
+            '# ditto-based unzip wrapper for macOS app bundle extraction (handles symlinks)',
+            'DESTDIR="" SRCFILE=""',
+            'while [ "$#" -gt 0 ]; do',
+            '  case "$1" in',
+            '    -q|-o) shift ;;',
+            '    -d) DESTDIR="$2"; shift 2 ;;',
+            '    *) SRCFILE="$1"; shift ;;',
+            '  esac',
+            'done',
+            'exec ditto -x -k "$SRCFILE" "$DESTDIR/"'
+        ].join('\n'),
+        { mode: 0o755 }
+    );
+    process.env.PATH = `${wrapperBinDir}:${process.env.PATH ?? ''}`;
+}
+
 async function start() {
     // Ensure temp directories created by `tmp` are cleaned up when the process exits.
     tmp.setGracefulCleanup();
+    // Must be called before downloadAndUnzipVSCode so the ditto wrapper is on PATH.
+    ensureDittoBasedUnzipOnMacOS();
     const platform = computePlatform();
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform);
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
