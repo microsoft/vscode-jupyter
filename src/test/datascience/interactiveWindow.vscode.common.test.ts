@@ -58,6 +58,8 @@ import { getNotebookUriFromInputBoxUri } from '../../standalone/intellisense/not
 
 suite(`Interactive window execution @iw`, async function () {
     this.timeout(120_000);
+    // Raw kernel communication can occasionally stall in CI even after the kernel reports as ready.
+    this.retries(1);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
