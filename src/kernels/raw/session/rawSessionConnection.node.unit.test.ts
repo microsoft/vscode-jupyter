@@ -238,6 +238,35 @@ suite('Raw Session & Raw Kernel Connection', () => {
             when(kernel.status).thenReturn('idle');
             assert.strictEqual(session.status, 'idle');
         });
+        test('Verify startup does not wait more than 3 seconds for an IOPub message', async () => {
+            const clock = sinon.useFakeTimers();
+            disposables.push(new Disposable(() => clock.restore()));
+            const kernelInfoRequested = createDeferred<void>();
+            when(kernel.requestKernelInfo()).thenCall(async () => {
+                kernelInfoRequested.resolve();
+                return kernelInfoResponse;
+            });
+            session = new RawSessionConnection(
+                Uri.file('one.ipynb'),
+                instance(kernelLauncher),
+                Uri.file(''),
+                kernelConnectionMetadata,
+                60_000,
+                'notebook'
+            );
+
+            let completed = false;
+            const promise = session.startKernel({ token: startupToken.token }).then(() => (completed = true));
+            await kernelInfoRequested.promise;
+            await clock.tickAsync(3_000);
+            if (!completed) {
+                startupToken.cancel();
+                await clock.tickAsync(0);
+            }
+            await promise.catch(noop);
+
+            assert.isTrue(completed);
+        }).timeout(2_000);
         test('Verify startup times out', async () => {
             const clock = sinon.useFakeTimers();
             disposables.push(new Disposable(() => clock.restore()));
