@@ -370,6 +370,7 @@ export class CommonMessageCoordinator {
             this.cachedMessages.push(data);
             return;
         }
+        logger.ci(`${ConsoleForegroundColors.Green}Sending messages (listeners present)`);
         this.cachedMessages.forEach((item) => this.postEmitter.fire(item));
         this.cachedMessages = [];
         this.postEmitter.fire(data);
