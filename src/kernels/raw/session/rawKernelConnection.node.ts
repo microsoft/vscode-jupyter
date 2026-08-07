@@ -586,8 +586,9 @@ async function postStartKernel(
     };
     try {
         const stopWatch = new StopWatch();
+        const kernelInfoTimeout = Math.min(launchTimeout, 3_000);
         let attempts = 0;
-        while (stopWatch.elapsedTime < launchTimeout * 1000) {
+        while (stopWatch.elapsedTime < kernelInfoTimeout) {
             attempts += 1;
             try {
                 logger.debug('Sending request for kernelInfo');
