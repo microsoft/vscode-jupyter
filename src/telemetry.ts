@@ -1499,6 +1499,15 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
+     * Cell Edit Command in Interactive Window
+     */
+    [Telemetry.ChangeCellToRaw]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
      * Cell Navigation Command in Interactive Window
      */
     [Telemetry.GotoNextCellInFile]: TelemetryEventInfo<DurationMeasurement> = {

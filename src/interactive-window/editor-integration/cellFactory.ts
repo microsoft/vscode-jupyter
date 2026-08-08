@@ -37,12 +37,17 @@ function generateMarkdownCell(code: string[]) {
     return new NotebookCellData(NotebookCellKind.Markup, generateMarkdownFromCodeLines(code).join('\n'), 'markdown');
 }
 
+function generateRawCell(code: string[], matcher: CellMatcher) {
+    const lines = matcher.isCell(code[0]) && code.length > 1 ? code.slice(1) : code;
+    return new NotebookCellData(NotebookCellKind.Markup, lines.join('\n'), 'raw');
+}
+
 export function generateCells(
     settings: IJupyterSettings | undefined,
     code: string,
     splitMarkdown: boolean
 ): NotebookCellData[] {
-    // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
+    // Determine if we have a markdown cell/ raw cell/ or code cell
     const split = splitLines(code, { trim: false });
     const firstLine = split[0];
     const matcher = new CellMatcher(settings);
@@ -70,6 +75,9 @@ export function generateCells(
             // Just a single markdown cell
             return [generateMarkdownCell(split)];
         }
+    } else if (matcher.isRaw(firstLine)) {
+        // Just a raw cell
+        return [generateRawCell(split, matcher)];
     } else {
         // Just code
         return [generateCodeCell(split, matcher)];
