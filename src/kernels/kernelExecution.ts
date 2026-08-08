@@ -9,7 +9,8 @@ import {
     NotebookDocument,
     workspace,
     CancellationToken,
-    NotebookCellOutput
+    NotebookCellOutput,
+    Disposable
 } from 'vscode';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IDisposable, IExtensionContext } from '../platform/common/types';
@@ -33,7 +34,7 @@ import { SessionDisposedError } from '../platform/errors/sessionDisposedError';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { noop } from '../platform/common/utils/misc';
 import { createDeferred, createDeferredFromPromise } from '../platform/common/utils/async';
-import { dispose } from '../platform/common/utils/lifecycle';
+import { DisposableStore, dispose } from '../platform/common/utils/lifecycle';
 import { POWER_TOYS_EXTENSION_ID, JVSC_EXTENSION_ID } from '../platform/common/constants';
 import type { IMessage } from '@jupyterlab/services/lib/kernel/messages';
 import type { KernelMessage } from '@jupyterlab/services';
@@ -48,8 +49,12 @@ import { NotebookCellExecutionState, notebookCellExecutions } from '../platform/
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
+ *
+ * Extends DisposableStore to provide proper disposal of all resources managed by this class.
+ * This ensures that when the kernel execution is disposed, all related event listeners,
+ * subscriptions, and resources are properly cleaned up to prevent memory leaks.
  */
-export class NotebookKernelExecution implements INotebookKernelExecution {
+export class NotebookKernelExecution extends DisposableStore implements INotebookKernelExecution {
     private readonly disposables: IDisposable[] = [];
     get executionCount(): number {
         return this._visibleExecutionCount;
@@ -67,13 +72,19 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         formatters: ITracebackFormatter[],
         private readonly notebook: NotebookDocument
     ) {
+        super();
         const requestListener = new CellExecutionMessageHandlerService(
             kernel.controller,
             context,
             formatters,
             notebook
         );
+        // Register disposal of all disposables tracked in this class.
+        // This ensures proper cleanup when the execution instance is disposed.
+        this.add(new Disposable(() => dispose(this.disposables)));
         this.disposables.push(requestListener);
+        // Ensure the display update event emitter is disposed to prevent memory leaks
+        this.disposables.push(this._onDidReceiveDisplayUpdate);
         this.executionFactory = new CellExecutionFactory(kernel.controller, requestListener);
         notebookCellExecutions.onDidChangeNotebookCellExecutionState((e) => {
             if (
