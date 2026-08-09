@@ -150,6 +150,7 @@
     "jupyter.configuration.jupyter.notebookFileRoot.description": "Set the root directory for Jupyter Notebooks and the Interactive Window running locally.  \n\n**Note:** This does not apply to Remote Jupyter Kernels.",
     "jupyter.configuration.jupyter.useDefaultConfigForJupyter.description": "When running Jupyter locally, create a default empty Jupyter config",
     "jupyter.configuration.jupyter.jupyterInterruptTimeout.description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
+    "jupyter.configuration.jupyter.kernels.portRange.startPort.description": "Starting port number for Jupyter kernel port allocation. The extension will search for available ports starting from this number when launching local kernels and Jupyter servers. Valid range: 1024-65535.",
     "jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.description": "When pressing shift+enter, send selected code in a Python file to the Jupyter interactive window as opposed to the Python terminal.",
     "jupyter.configuration.jupyter.normalizeSelectionForInteractiveWindow.description": "Selected text will be normalized before it is executed in the Interactive Window.",
     "jupyter.configuration.jupyter.splitRunFileIntoCells.description": "A file run in the Interactive Window will be run in individual cells if it has them.",
