@@ -29,6 +29,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/loc
 import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptDaemon.node';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.node';
 import { ITrustedKernelPaths } from './raw/finder/types';
+import { IKernelEnvVarsContributorRegistry, KernelEnvVarsContributorRegistry } from './raw/launcher/kernelEnvVarsContributor';
 import { KernelEnvironmentVariablesService } from './raw/launcher/kernelEnvVarsService.node';
 import { KernelLauncher } from './raw/launcher/kernelLauncher.node';
 import { RawKernelSessionFactory } from './raw/session/rawKernelSessionFactory.node';
@@ -65,6 +66,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<KernelEnvironmentVariablesService>(
         KernelEnvironmentVariablesService,
         KernelEnvironmentVariablesService
+    );
+    serviceManager.addSingleton<IKernelEnvVarsContributorRegistry>(
+        IKernelEnvVarsContributorRegistry,
+        KernelEnvVarsContributorRegistry
     );
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
