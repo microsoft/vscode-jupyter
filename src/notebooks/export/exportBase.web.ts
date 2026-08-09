@@ -8,7 +8,7 @@ import { Uri, CancellationToken, NotebookDocument } from 'vscode';
 import * as path from '../../platform/vscode-path/path';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { generateUuid } from '../../platform/common/uuid';
-import { executeSilently, jvscIdentifier } from '../../kernels/helpers';
+import { executeSilently, executeSilentlyWithRetry, jvscIdentifier } from '../../kernels/helpers';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { concatMultilineString } from '../../platform/common/utils';
 import { IFileSystem } from '../../platform/common/platform/types';
@@ -258,7 +258,7 @@ export class ExportBase implements IExportBase {
         if (!kernel.session?.kernel) {
             throw new SessionDisposedError();
         }
-        const outputs = await executeSilently(kernel.session.kernel, `import os;os.getcwd();`);
+        const outputs = await executeSilentlyWithRetry(kernel.session.kernel, `import os;os.getcwd();`);
         if (outputs.length === 0) {
             return;
         }
