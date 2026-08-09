@@ -18,6 +18,7 @@ export class ConfigMigration {
         sendSelectionToInteractiveWindow: 'interactiveWindow.textEditor.executeSelection',
         normalizeSelectionForInteractiveWindow: 'interactiveWindow.textEditor.normalizeSelection',
         magicCommandsAsComments: 'interactiveWindow.textEditor.magicCommandsAsComments',
+        magicCommandsRegex: 'interactiveWindow.textEditor.magicCommandsRegex',
         enableAutoMoveToNextCell: 'interactiveWindow.textEditor.autoMoveToNextCell',
         newCellOnRunLast: 'interactiveWindow.textEditor.autoAddNewCell',
         pythonCellFolding: 'interactiveWindow.textEditor.cellFolding',
