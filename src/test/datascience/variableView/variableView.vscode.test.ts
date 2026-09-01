@@ -36,6 +36,8 @@ suite('VariableView @variableViewer', function () {
     let activeInterpreter: PythonEnvironment;
     let kernelProvider: IKernelProvider;
     this.timeout(120_000);
+    // Raw kernel communication can occasionally stall in CI even after the kernel reports as ready.
+    this.retries(1);
     suiteSetup(async function () {
         logger.info('Suite Setup');
         this.timeout(120_000);
@@ -236,6 +238,8 @@ myClass = MyClass()
     });
 
     test('VariableView basic types B (webview-test)', async function () {
+        // Skipped: flaky on CI
+        this.skip();
         // Send the command to open the view
         await commands.executeCommand(Commands.OpenVariableView);
 

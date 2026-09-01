@@ -5,6 +5,7 @@ import {
     ensureKernelSelectedAndStarted,
     getToolResponseForConfiguredNotebook,
     hasKernelStartedOrIsStarting,
+    KernelStartTimeoutError,
     selectKernelAndStart
 } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
@@ -69,7 +70,24 @@ export class ConfigurePythonNotebookTool extends BaseTool<IConfigurePythonNotebo
         }
 
         logger.trace(`ConfigurePythonNotebookTool: Start kernel for notebook ${getDisplayPath(notebook.uri)}`);
-        const kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
+        let kernel;
+        try {
+            kernel = await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
+        } catch (ex) {
+            if (ex instanceof KernelStartTimeoutError) {
+                logger.warn(
+                    `ConfigurePythonNotebookTool: Timed out waiting for kernel to start for notebook ${getDisplayPath(
+                        notebook.uri
+                    )}`
+                );
+                return new LanguageModelToolResult([
+                    new LanguageModelTextPart(
+                        'The kernel is taking longer than expected to start and is still starting in the background. Please try invoking this tool again in a few moments to check whether the kernel is ready.'
+                    )
+                ]);
+            }
+            throw ex;
+        }
         if (kernel) {
             logger.trace(
                 `ConfigurePythonNotebookTool: Kernel selected for notebook ${getDisplayPath(notebook.uri)}, status = ${

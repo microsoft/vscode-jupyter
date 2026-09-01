@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type TelemetryReporter from '@vscode/extension-telemetry';
+import type { TelemetryReporter } from '@vscode/extension-telemetry';
 import { AppinsightsKey, Telemetry, isTestExecution, isUnitTestExecution } from '../common/constants';
 import { logger } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -87,8 +87,8 @@ export function getTelemetryReporter(): TelemetryReporter {
     if (telemetryReporter) {
         return telemetryReporter;
     }
-    const TelemetryReporrerClass = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
-    return (telemetryReporter = new TelemetryReporrerClass(AppinsightsKey));
+    const TelemetryReporterClass = require('@vscode/extension-telemetry').TelemetryReporter as typeof TelemetryReporter;
+    return (telemetryReporter = new TelemetryReporterClass(AppinsightsKey));
 }
 
 function sanitizeProperties(eventName: string, data: Record<string, any>) {

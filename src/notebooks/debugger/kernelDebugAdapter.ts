@@ -22,9 +22,9 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             const response = await this.session.customRequest('dumpCell', {
                 code: cell.document.getText().replace(/\r\n/g, '\n')
             });
-            const norm = path.normalize((response as IDumpCellResponse).sourcePath);
-            this.fileToCell.set(norm, cell.document.uri);
-            this.cellToFile.set(cell.document.uri.toString(), norm);
+            const sourcePath = (response as IDumpCellResponse).sourcePath;
+            this.fileToCell.set(sourcePath, cell.document.uri);
+            this.cellToFile.set(cell.document.uri.toString(), sourcePath);
 
             // If there are empty lines, then ipykernel will strip leading empty lines.
             // Take that offset into account when mapping back the stack trace and the like.

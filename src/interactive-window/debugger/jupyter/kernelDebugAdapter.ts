@@ -87,8 +87,8 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             const response = await this.session.customRequest('dumpCell', { code });
 
             // We know jupyter will strip out leading white spaces, hence take that into account.
-            const norm = path.normalize((response as IDumpCellResponse).sourcePath);
-            this.fileToCell.set(norm, Uri.parse(metadata.interactive.uristring));
+            const sourcePath = (response as IDumpCellResponse).sourcePath;
+            this.fileToCell.set(sourcePath, Uri.parse(metadata.interactive.uristring));
 
             // If this cell doesn't have a cell marker, then
             // Jupyter will strip out any leading whitespace.
@@ -98,7 +98,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
                 numberOfStrippedLines = metadata.generatedCode.firstNonBlankLineIndex;
             }
             this.cellToDebugFileSortedInReverseOrderByLineNumber.push({
-                debugFilePath: norm,
+                debugFilePath: sourcePath,
                 interactiveWindow: Uri.parse(metadata.interactive.uristring),
                 metadata,
                 lineOffset:

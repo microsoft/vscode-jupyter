@@ -5,7 +5,8 @@ import {
     ensureKernelSelectedAndStarted,
     getPrimaryLanguageOfNotebook,
     getToolResponseForConfiguredNotebook,
-    hasKernelStartedOrIsStarting
+    hasKernelStartedOrIsStarting,
+    KernelStartTimeoutError
 } from './helper.node';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import {
@@ -35,7 +36,18 @@ export class ConfigureNonPythonNotebookTool extends BaseTool<IBaseToolParams> {
         notebook: NotebookDocument,
         token: CancellationToken
     ) {
-        await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
+        try {
+            await ensureKernelSelectedAndStarted(notebook, this.controllerRegistration, token);
+        } catch (ex) {
+            if (ex instanceof KernelStartTimeoutError) {
+                return new LanguageModelToolResult([
+                    new LanguageModelTextPart(
+                        'The kernel is taking longer than expected to start and is still starting in the background. Please try invoking this tool again in a few moments to check whether the kernel is ready.'
+                    )
+                ]);
+            }
+            throw ex;
+        }
 
         const selectedController = this.controllerRegistration.getSelected(notebook);
         const kernel = this.kernelProvider.get(notebook);

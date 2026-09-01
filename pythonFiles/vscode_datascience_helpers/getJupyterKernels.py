@@ -5,7 +5,6 @@ import json
 import jupyter_client.kernelspec
 import sys
 
-
 specs = jupyter_client.kernelspec.KernelSpecManager().get_all_specs()
 all_specs = {"kernelspecs": specs}
 

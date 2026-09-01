@@ -126,12 +126,21 @@ export class CellExecutionCreator {
         let cellExecution: NotebookCellExecutionWrapper | undefined;
         cellExecution = this.get(cell);
         if (!cellExecution) {
+            logger.trace(
+                `CellExecutionCreator.getOrCreate creating new wrapper cellIndex=${cell.index} controllerId=${controller.id}`
+            );
             cellExecution = CellExecutionCreator.create(cell, controller, clearOutputOnStartWithTime);
         } else {
+            logger.trace(
+                `CellExecutionCreator.getOrCreate reusing wrapper cellIndex=${cell.index} existingControllerId=${cellExecution.controllerId} requestedControllerId=${controller.id}`
+            );
             // Cell execution may already exist, but its controller may be different
             if (cellExecution.controllerId !== controller.id) {
                 // Stop the old execution so we don't have more than one for a cell at a time.
                 const oldExecution = cellExecution;
+                logger.trace(
+                    `CellExecutionCreator.getOrCreate replacing wrapper for cellIndex=${cell.index} (controller mismatch)`
+                );
                 oldExecution.end(undefined);
 
                 // Create a new one with the new controller

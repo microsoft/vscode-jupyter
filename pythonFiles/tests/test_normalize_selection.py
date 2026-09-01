@@ -22,34 +22,26 @@ class TestNormalizationScript(object):
         assert ret == "if True:\n\n"
 
     def test_commentsGone(self):
-        src = textwrap.dedent(
-            """\
+        src = textwrap.dedent("""\
             # Some rando comment
             x = 3
-            """
-        )
-        expectedResult = textwrap.dedent(
-            """\
+            """)
+        expectedResult = textwrap.dedent("""\
             x = 3
-            """
-        )
+            """)
         ret = normalizeSelection.normalize_lines(src)
         assert ret == expectedResult
 
     def test_lineAfterMultiline(self):
-        src = textwrap.dedent(
-            """\
+        src = textwrap.dedent("""\
             def show_something():
                 print("Something")
-            """
-        )
-        expectedResult = textwrap.dedent(
-            """\
+            """)
+        expectedResult = textwrap.dedent("""\
             def show_something():
                 print("Something")
 
-            """
-        )
+            """)
         ret = normalizeSelection.normalize_lines(src)
         assert ret == expectedResult
 
@@ -58,19 +50,16 @@ class TestNormalizationScript(object):
             def show_something():
                 print("Something")
             """
-        expectedResult = textwrap.dedent(
-            """\
+        expectedResult = textwrap.dedent("""\
             def show_something():
                 print("Something")
 
-            """
-        )
+            """)
         ret = normalizeSelection.normalize_lines(src)
         assert ret == expectedResult
 
     def test_withHangingIndent(self):
-        src = textwrap.dedent(
-            """\
+        src = textwrap.dedent("""\
             x = 22
             y = 30
             z = -10
@@ -78,10 +67,8 @@ class TestNormalizationScript(object):
 
             if result == 42:
                 print("The answer to life, the universe, and everything")
-            """
-        )
-        expectedResult = textwrap.dedent(
-            """\
+            """)
+        expectedResult = textwrap.dedent("""\
             x = 22
             y = 30
             z = -10
@@ -89,14 +76,12 @@ class TestNormalizationScript(object):
             if result == 42:
                 print("The answer to life, the universe, and everything")
 
-            """
-        )
+            """)
         ret = normalizeSelection.normalize_lines(src)
         assert ret == expectedResult
 
     def test_clearOutExtraneousNewlines(self):
-        src = textwrap.dedent(
-            """\
+        src = textwrap.dedent("""\
             value_x = 22
 
             value_y = 30
@@ -105,22 +90,18 @@ class TestNormalizationScript(object):
 
             print(value_x + value_y + value_z)
 
-            """
-        )
-        expectedResult = textwrap.dedent(
-            """\
+            """)
+        expectedResult = textwrap.dedent("""\
             value_x = 22
             value_y = 30
             value_z = -10
             print(value_x + value_y + value_z)
-            """
-        )
+            """)
         ret = normalizeSelection.normalize_lines(src)
         assert ret == expectedResult
 
     def test_clearOutExtraLinesAndWhitespace(self):
-        src = textwrap.dedent(
-            """\
+        src = textwrap.dedent("""\
             if True:
                 x = 22
 
@@ -130,44 +111,35 @@ class TestNormalizationScript(object):
 
             print(x + y + z)
 
-            """
-        )
-        expectedResult = textwrap.dedent(
-            """\
+            """)
+        expectedResult = textwrap.dedent("""\
             if True:
                 x = 22
                 y = 30
                 z = -10
 
             print(x + y + z)
-            """
-        )
+            """)
         ret = normalizeSelection.normalize_lines(src)
         assert ret == expectedResult
 
     def test_semicolon(self):
-        src = textwrap.dedent(
-            """\
+        src = textwrap.dedent("""\
             a = 3; b = 4
-            """
-        )
+            """)
         ret = normalizeSelection.normalize_lines(src)
         assert ret == src
 
     def test_syntaxerror(self):
-        src = textwrap.dedent(
-            """\
+        src = textwrap.dedent("""\
             for x in range(4):
                 if x > 3:
-            """
-        )
-        expectedResult = textwrap.dedent(
-            """\
+            """)
+        expectedResult = textwrap.dedent("""\
             for x in range(4):
                 if x > 3:
 
 
-            """
-        )
+            """)
         ret = normalizeSelection.normalize_lines(src)
         assert ret == expectedResult

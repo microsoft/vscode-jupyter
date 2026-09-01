@@ -49,11 +49,9 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     let kernelExecution: INotebookKernelExecution;
     const suiteDisposables: IDisposable[] = [];
     let previousTestFailed: boolean | undefined = false;
-    async function initSuite() {
+    let previousTestTitle: string | undefined;
+    async function startKernel() {
         try {
-            logger.info(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
-            await startJupyterServer();
-            await closeNotebooksAndCleanUpAfterTests();
             notebook = new TestNotebookDocument();
             const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
             const metadata = await getDefaultKernelConnection();
@@ -72,6 +70,12 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
             throw ex;
         }
     }
+    async function initSuite() {
+        logger.info(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
+        await startJupyterServer();
+        await closeNotebooksAndCleanUpAfterTests();
+        await startKernel();
+    }
     const onDidChangeNbEventHandler = new EventEmitter<NotebookDocumentChangeEvent>();
     let onDidChangeNotebookDocumentStub: sinon.SinonStub<
         [
@@ -82,6 +86,7 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         VSCodeDisposable
     >;
     suiteSetup(async function () {
+        this.timeout(120_000);
         onDidChangeNotebookDocumentStub = sinon.stub(workspace, 'onDidChangeNotebookDocument');
         onDidChangeNotebookDocumentStub.get(() => onDidChangeNbEventHandler.event);
         suiteDisposables.push(onDidChangeNbEventHandler);
@@ -94,10 +99,12 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     setup(async function () {
         logger.info(`Start Test ${this.currentTest?.title}`);
         deleteAllCellsAndNotify(notebook, onDidChangeNbEventHandler);
-        if (previousTestFailed) {
+        const isRetry = this.currentTest?.title === previousTestTitle;
+        previousTestTitle = this.currentTest?.title;
+        if (previousTestFailed || isRetry) {
             logger.info(`Start Running Test Suite again for ${this.currentTest?.title}`);
-            await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
-            await initSuite();
+            await kernel.dispose().catch(noop);
+            await startKernel();
         }
         notebook.cells.length = 0;
         // Disable the prompt (when attempting to restart kernel).

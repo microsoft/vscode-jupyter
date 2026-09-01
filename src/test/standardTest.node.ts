@@ -96,6 +96,29 @@ async function createTempDir() {
 }
 
 /**
+ * Creates a temporary user data directory with extension signature verification disabled.
+ * This is needed in CI environments (e.g. macOS ARM64 with VS Code Insiders) where the
+ * extension signature verification service may be unreachable, causing all extension
+ * installations to fail with 'Signature verification failed with UnknownError'.
+ */
+async function createInstallUserDataDir(): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+        tmp.dir({ unsafeCleanup: true }, (err, dir) => {
+            if (err) {
+                return reject(err);
+            }
+            const settingsDir = path.join(dir, 'User');
+            fs.mkdirSync(settingsDir, { recursive: true });
+            fs.writeFileSync(
+                path.join(settingsDir, 'settings.json'),
+                JSON.stringify({ 'extensions.verifySignature': false })
+            );
+            resolve(dir);
+        });
+    });
+}
+
+/**
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
 async function installPythonExtension(vscodeExecutablePath: string, extensionsDir: string, platform: DownloadPlatform) {
@@ -104,13 +127,18 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
         return;
     }
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
-    await installExtension(PythonExtension, cliPath, extensionsDir, ['--pre-release']);
+    // Use a dedicated user data dir with signature verification disabled to avoid
+    // failures caused by the VS Code extension signature verification service being
+    // unreachable in CI environments.
+    const installUserDataDir = await createInstallUserDataDir();
+    const installArgs = ['--user-data-dir', installUserDataDir];
+    await installExtension(PythonExtension, cliPath, extensionsDir, ['--pre-release', ...installArgs]);
 
     // Make sure pylance is there too as we'll use it for intellisense tests
-    await installExtension(PylanceExtension, cliPath, extensionsDir);
+    await installExtension(PylanceExtension, cliPath, extensionsDir, installArgs);
 
     // Make sure renderers is there too as we'll use it for widget tests
-    await installExtension(RendererExtension, cliPath, extensionsDir);
+    await installExtension(RendererExtension, cliPath, extensionsDir, installArgs);
 }
 
 // Make sure renderers is there too as we'll use it for widget tests
@@ -131,9 +159,8 @@ async function installExtension(extension: string, cliPath: string, extensionsDi
     if (output.error) {
         throw output.error;
     }
-    if (output.stderr) {
-        console.error(`Error installing ${extension} Extension to ${extensionsDir}`);
-        console.error(output.stderr);
+    if (output.status !== 0) {
+        throw new Error(`Failed to install extension ${extension} (exit code ${output.status})`);
     }
 }
 
@@ -188,6 +215,8 @@ async function getExtensionsDir(): Promise<string> {
 }
 
 async function start() {
+    // Ensure temp directories created by `tmp` are cleaned up when the process exits.
+    tmp.setGracefulCleanup();
     const platform = computePlatform();
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform);
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
