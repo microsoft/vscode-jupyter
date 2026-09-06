@@ -15,6 +15,7 @@ import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { logger } from '../../../platform/logging';
 import { IPyWidgetMessageDispatcherFactory } from '../../../notebooks/controllers/ipywidgets/message/ipyWidgetMessageDispatcherFactory';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 
 type WidgetData = {
     model_id: string;
@@ -33,6 +34,7 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         private readonly ipywidgetMessageDispatcher: IPyWidgetMessageDispatcherFactory
     ) {}
     private readonly widgetOutputsPerNotebook = new WeakMap<NotebookDocument, Set<string>>();
+    private readonly pendingModelQueries = new WeakMap<NotebookDocument, Map<string, Deferred<boolean>[]>>();
     public dispose() {
         dispose(this.disposables);
     }
@@ -100,6 +102,17 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         const set = this.widgetOutputsPerNotebook.get(notebook) || new Set<string>();
         set.add(modelId);
         this.widgetOutputsPerNotebook.set(notebook, set);
+
+        const pending = this.pendingModelQueries.get(notebook);
+        const waiters = pending?.get(modelId);
+        if (waiters) {
+            pending!.delete(modelId);
+            waiters.forEach((d) => {
+                if (!d.completed) {
+                    d.resolve(true);
+                }
+            });
+        }
     }
     private trackModelId(
         notebook: NotebookDocument,
@@ -136,12 +149,75 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         const availableModels = this.widgetOutputsPerNotebook.get(editor.notebook);
         const kernelSelected = !!this.controllers.getSelected(editor.notebook);
         const hasWidgetState = !!availableModels?.has(message.model_id);
-        comms
-            .postMessage(
-                { command: 'query-widget-state', model_id: message.model_id, hasWidgetState, kernelSelected },
-                editor
-            )
-            .then(noop, noop);
+
+        if (hasWidgetState || !kernelSelected) {
+            comms
+                .postMessage(
+                    { command: 'query-widget-state', model_id: message.model_id, hasWidgetState, kernelSelected },
+                    editor
+                )
+                .then(noop, noop);
+            return;
+        }
+
+        const kernel = this.kernelProvider.get(editor.notebook);
+        if (!kernel || (kernel.status !== 'starting' && kernel.status !== 'unknown')) {
+            comms
+                .postMessage(
+                    { command: 'query-widget-state', model_id: message.model_id, hasWidgetState: false, kernelSelected },
+                    editor
+                )
+                .then(noop, noop);
+            return;
+        }
+
+        const deferred = createDeferred<boolean>();
+        let pending = this.pendingModelQueries.get(editor.notebook);
+        if (!pending) {
+            pending = new Map<string, Deferred<boolean>[]>();
+            this.pendingModelQueries.set(editor.notebook, pending);
+        }
+        const waiters = pending.get(message.model_id) || [];
+        waiters.push(deferred);
+        pending.set(message.model_id, waiters);
+
+        const disposables: IDisposable[] = [
+            kernel.onStatusChanged((status) => {
+                if ((status === 'idle' || status === 'dead') && !deferred.completed) {
+                    const isNowAvailable = !!this.widgetOutputsPerNotebook.get(editor.notebook)?.has(message.model_id);
+                    deferred.resolve(isNowAvailable);
+                }
+            }),
+            kernel.onDisposed(() => {
+                if (!deferred.completed) {
+                    deferred.resolve(false);
+                }
+            })
+        ];
+
+        deferred.promise
+            .then((result) => {
+                comms
+                    .postMessage(
+                        { command: 'query-widget-state', model_id: message.model_id, hasWidgetState: result, kernelSelected },
+                        editor
+                    )
+                    .then(noop, noop);
+            })
+            .finally(() => {
+                dispose(disposables);
+                const pendingMap = this.pendingModelQueries.get(editor.notebook);
+                const list = pendingMap?.get(message.model_id);
+                if (list) {
+                    const remaining = list.filter((d) => d !== deferred);
+                    if (remaining.length) {
+                        pendingMap!.set(message.model_id, remaining);
+                    } else {
+                        pendingMap!.delete(message.model_id);
+                    }
+                }
+            })
+            .catch(noop);
     }
     private sendWidgetVersionAndState(comms: NotebookRendererMessaging, editor: NotebookEditor) {
         // Support for loading Widget state from ipynb files.
