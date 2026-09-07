@@ -10,5 +10,8 @@ export interface IRemoteKernelFinderController {
         serverProviderHandle: JupyterServerProviderHandle,
         displayName: string
     ): IRemoteKernelFinder;
-    activateJupyterServer(collection: JupyterServerCollection, serverId: string): Promise<void>;
+    startJupyterServerKernelDiscovery(
+        collection: JupyterServerCollection,
+        serverId: string
+    ): Promise<IRemoteKernelFinder>;
 }

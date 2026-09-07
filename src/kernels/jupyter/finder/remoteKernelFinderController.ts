@@ -32,6 +32,7 @@ import { trackRemoteServerDisplayName } from '../connection/jupyterServerProvide
 @injectable()
 export class RemoteKernelFinderController implements IRemoteKernelFinderController, IExtensionSyncActivationService {
     private serverFinderMapping: Map<string, RemoteKernelFinder> = new Map<string, RemoteKernelFinder>();
+    private readonly serverFinderCreationPromises = new Map<string, Promise<IRemoteKernelFinder>>();
     private readonly serversBeingActivated = new Set<string>();
 
     constructor(
@@ -231,32 +232,57 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         }
         return this.serverFinderMapping.get(serverId)!;
     }
-    public async activateJupyterServer(collection: JupyterServerCollection, serverId: string): Promise<void> {
-        const tokenSource = new CancellationTokenSource();
-        try {
-            const servers = await Promise.resolve(collection.serverProvider.provideJupyterServers(tokenSource.token));
-            const server = servers?.find((item) => item.id === serverId);
-            if (!server) {
-                throw new Error(`Jupyter Server '${serverId}' was not found in collection '${collection.id}'.`);
-            }
-
-            const serverProviderHandle: JupyterServerProviderHandle = {
-                extensionId: collection.extensionId,
-                id: collection.id,
-                handle: server.id
-            };
-            const finderId = generateIdFromRemoteProvider(serverProviderHandle);
-            this.serversBeingActivated.add(finderId);
-            try {
-                trackRemoteServerDisplayName(serverProviderHandle, server.label);
-                await this.serverUriStorage.add(serverProviderHandle);
-                this.getOrCreateRemoteKernelFinder(serverProviderHandle, server.label);
-            } finally {
-                this.serversBeingActivated.delete(finderId);
-            }
-        } finally {
-            tokenSource.dispose();
+    public startJupyterServerKernelDiscovery(
+        collection: JupyterServerCollection,
+        serverId: string
+    ): Promise<IRemoteKernelFinder> {
+        const serverProviderHandle: JupyterServerProviderHandle = {
+            extensionId: collection.extensionId,
+            id: collection.id,
+            handle: serverId
+        };
+        const finderId = generateIdFromRemoteProvider(serverProviderHandle);
+        const existingFinder = this.serverFinderMapping.get(finderId);
+        if (existingFinder) {
+            return Promise.resolve(existingFinder);
         }
+        const existingOperation = this.serverFinderCreationPromises.get(finderId);
+        if (existingOperation) {
+            return existingOperation;
+        }
+
+        let operation: Promise<IRemoteKernelFinder>;
+        operation = Promise.resolve()
+            .then(async () => {
+                const tokenSource = new CancellationTokenSource();
+                try {
+                    const servers = await Promise.resolve(
+                        collection.serverProvider.provideJupyterServers(tokenSource.token)
+                    );
+                    const server = servers?.find((item) => item.id === serverId);
+                    if (!server) {
+                        throw new Error(`Jupyter Server '${serverId}' was not found in collection '${collection.id}'.`);
+                    }
+
+                    this.serversBeingActivated.add(finderId);
+                    try {
+                        trackRemoteServerDisplayName(serverProviderHandle, server.label);
+                        await this.serverUriStorage.add(serverProviderHandle);
+                        return this.getOrCreateRemoteKernelFinder(serverProviderHandle, server.label);
+                    } finally {
+                        this.serversBeingActivated.delete(finderId);
+                    }
+                } finally {
+                    tokenSource.dispose();
+                }
+            })
+            .finally(() => {
+                if (this.serverFinderCreationPromises.get(finderId) === operation) {
+                    this.serverFinderCreationPromises.delete(finderId);
+                }
+            });
+        this.serverFinderCreationPromises.set(finderId, operation);
+        return operation;
     }
     createRemoteKernelFinder(serverProviderHandle: JupyterServerProviderHandle, displayName: string) {
         this.getOrCreateRemoteKernelFinder(serverProviderHandle, displayName);
