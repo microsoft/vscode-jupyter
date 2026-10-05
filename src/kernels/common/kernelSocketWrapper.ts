@@ -47,6 +47,20 @@ export type IWebSocketLike = {
  */
 
 /**
+ * A text frame reaches `handleEvent` as a Node `Buffer`: we intercept at the ws `EventEmitter`
+ * layer, and `ws` converts text frames to a string only in its `addEventListener` wrapper, which
+ * runs later. Receive hooks deserialize the payload, and `new DataView(buffer)` throws for a
+ * `Buffer`, so hand the hooks a string for text frames.
+ */
+function normalizeReceivedData(args: any[]) {
+    const [data, isBinary] = args;
+    if (isBinary === true || typeof data === 'string' || !data || typeof data.toString !== 'function') {
+        return data;
+    }
+    return data.toString();
+}
+
+/**
  * Adds send/receive hooks to a WebSocketLike object. These are necessary for things like IPyWidgets support.
  * @param SuperClass The class to mix into
  * @returns
@@ -99,9 +113,12 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
                 // b) Event fires
                 // c) Next message happens after this one (so this side can handle the message before another event goes through)
                 this.msgChain = this.msgChain
-                    .then(() => Promise.all(this.receiveHooks.map((p) => p(args[0]))))
-                    .then(() => superHandler(event, ...args))
-                    .catch((e) => logger.error(`Exception while handling messages: ${e}`));
+                    .then(() => Promise.all(this.receiveHooks.map((p) => p(normalizeReceivedData(args)))))
+                    // A failing hook must not swallow the message: if this `catch` sat after the
+                    // `superHandler` call, a throwing hook would skip delivery entirely and the
+                    // kernel would look connected while staying silent forever.
+                    .catch((e) => logger.error(`Exception while handling messages: ${e}`))
+                    .then(() => superHandler(event, ...args));
                 // True value indicates there were handlers. We definitely have 'message' handlers.
                 return true;
             } else {
