@@ -381,7 +381,7 @@ function extractComments(lines: string[]): string[] {
 
 export function generateMarkdownFromCodeLines(lines: string[]) {
     // Generate markdown by stripping out the comments and markdown header
-    return appendLineFeed(extractComments(lines.slice(lines.length > 1 ? 1 : 0)));
+    return extractComments(lines.slice(lines.length > 1 ? 1 : 0));
 }
 
 export function removeLinesFromFrontAndBackNoConcat(lines: string[]): string[] {
