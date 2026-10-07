@@ -16,7 +16,8 @@ import {
     getKernelService,
     getReady,
     openNotebook,
-    registerRemoteServerProvider
+    registerRemoteServerProvider,
+    startJupyterServerKernelDiscovery
 } from './unstable';
 import { INotebookPythonEnvironmentService } from '../../notebooks/types';
 
@@ -45,6 +46,8 @@ export function buildApi(
         getKernelService: () => getKernelService(serviceContainer),
         addRemoteJupyterServer: (providerId: string, handle: string) =>
             addRemoteJupyterServer(providerId, handle, serviceContainer),
+        startJupyterServerKernelDiscovery: (collectionId: string, serverId: string) =>
+            startJupyterServerKernelDiscovery(collectionId, serverId, serviceContainer),
         openNotebook: async (uri: Uri, kernelOrPythonEnvId: string | EnvironmentPath) =>
             openNotebook(uri, kernelOrPythonEnvId, serviceContainer),
         createJupyterServerCollection: (id: string, label: string, serverProvider: JupyterServerProvider) => {
