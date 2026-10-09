@@ -60,6 +60,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public debugpyDistPath: string = '';
     public stopOnFirstLineWhileDebugging: boolean = false;
     public magicCommandsAsComments: boolean = false;
+    public magicCommandsRegex: string = '^#\\s*!';
     public pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert' = 'direct';
     public stopOnError: boolean = false;
     public addGotoCodeLenses: boolean = false;

@@ -10,8 +10,17 @@ import { splitLines } from '../../platform/common/helpers';
 import { isSysInfoCell } from '../systemInfoCell';
 import { getCellMetadata } from '../../platform/common/utils';
 
-export function uncommentMagicCommands(line: string): string {
-    // Uncomment lines that are shell assignments (starting with #!),
+export function uncommentMagicCommands(line: string, settings?: Pick<IJupyterSettings, 'magicCommandsRegex'>): string {
+    // If a custom regex pattern is configured, use it to identify and strip the magic comment prefix.
+    // This supports alternative magic comment formats such as Databricks-style "# MAGIC %run".
+    if (settings?.magicCommandsRegex) {
+        const customPattern = new RegExp(settings.magicCommandsRegex);
+        if (customPattern.test(line)) {
+            return line.replace(customPattern, '');
+        }
+        return line;
+    }
+    // Default: uncomment lines that are shell assignments (starting with #!),
     // line magic (starting with #!%) or cell magic (starting with #!%%).
     if (/^#\s*!/.test(line)) {
         // If the regex test passes, it's either line or cell magic.

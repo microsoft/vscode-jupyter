@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { generateCells } from './cellFactory';
+import { generateCells, uncommentMagicCommands } from './cellFactory';
 import { splitLines } from '../../platform/common/helpers';
 import { removeLinesFromFrontAndBack, stripComments } from '../../platform/common/utils';
 
@@ -228,5 +228,31 @@ test("dude")`;
         assert.equal(removed, expected4);
         removed = removeLinesFromFrontAndBack(entry5);
         assert.equal(removed, expected5);
+    });
+});
+
+suite('uncommentMagicCommands', () => {
+    test('leaves regular Python code unchanged', () => {
+        assert.equal(uncommentMagicCommands('x = 1'), 'x = 1');
+    });
+    test('uncomments shell assignment (#!)', () => {
+        assert.equal(uncommentMagicCommands('#! echo hello'), '! echo hello');
+    });
+    test('uncomments line magic (#!%)', () => {
+        assert.equal(uncommentMagicCommands('#!%timeit'), '%timeit');
+    });
+    test('uncomments cell magic (#!%%)', () => {
+        assert.equal(uncommentMagicCommands('#!%%bash'), '%%bash');
+    });
+    test('uses custom regex when provided (Databricks style)', () => {
+        const settings = { magicCommandsRegex: '^#\\s*MAGIC\\s*' };
+        assert.equal(uncommentMagicCommands('# MAGIC %run ./notebook', settings), '%run ./notebook');
+    });
+    test('leaves non-matching line unchanged with custom regex', () => {
+        const settings = { magicCommandsRegex: '^#\\s*MAGIC\\s*' };
+        assert.equal(uncommentMagicCommands('# regular comment', settings), '# regular comment');
+    });
+    test('falls back to default behavior when no settings provided', () => {
+        assert.equal(uncommentMagicCommands('#!%matplotlib inline'), '%matplotlib inline');
     });
 });
