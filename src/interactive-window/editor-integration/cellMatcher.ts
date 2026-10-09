@@ -13,9 +13,11 @@ import { noop } from '../../platform/common/utils/misc';
 export class CellMatcher {
     public codeExecRegEx: RegExp;
     public markdownExecRegEx: RegExp;
+    public rawExecRegEx: RegExp;
 
     private codeMatchRegEx: RegExp;
     private markdownMatchRegEx: RegExp;
+    private rawMatchRegEx: RegExp;
     private defaultCellMarker: string;
 
     constructor(settings?: IJupyterSettings) {
@@ -27,17 +29,26 @@ export class CellMatcher {
             settings ? settings.markdownRegularExpression : undefined,
             RegExpValues.PythonMarkdownCellMarker
         );
+        this.rawMatchRegEx = this.createRegExp(
+            undefined, // No setting for raw cells yet
+            RegExpValues.PythonRawCellMarker
+        );
         this.codeExecRegEx = new RegExp(`${this.codeMatchRegEx.source}(.*)`);
         this.markdownExecRegEx = new RegExp(`${this.markdownMatchRegEx.source}(.*)`);
+        this.rawExecRegEx = new RegExp(`${this.rawMatchRegEx.source}(.*)`);
         this.defaultCellMarker = settings?.defaultCellMarker ? settings.defaultCellMarker : '# %%';
     }
 
     public isCell(code: string): boolean {
-        return this.isCode(code) || this.isMarkdown(code);
+        return this.isCode(code) || this.isMarkdown(code) || this.isRaw(code);
     }
 
     public isMarkdown(code: string): boolean {
         return this.markdownMatchRegEx.test(code.trim());
+    }
+
+    public isRaw(code: string): boolean {
+        return this.rawMatchRegEx.test(code.trim());
     }
 
     public isCode(code: string): boolean {
@@ -45,7 +56,13 @@ export class CellMatcher {
     }
 
     public getCellType(code: string): string {
-        return this.isMarkdown(code) ? 'markdown' : 'code';
+        if (this.isMarkdown(code)) {
+            return 'markdown';
+        } else if (this.isRaw(code)) {
+            return 'raw';
+        } else {
+            return 'code';
+        }
     }
 
     public isEmptyCell(code: string): boolean {

@@ -203,6 +203,11 @@
                 "when": "editorTextFocus && jupyter.hascodecells && !notebookEditorFocused"
             },
             {
+                "command": "jupyter.changeCellToRaw",
+                "key": "ctrl+; r",
+                "when": "editorTextFocus && jupyter.hascodecells && !notebookEditorFocused"
+            },
+            {
                 "command": "jupyter.gotoNextCellInFile",
                 "key": "ctrl+alt+]",
                 "when": "editorTextFocus && jupyter.hascodecells && !notebookEditorFocused"
