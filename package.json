@@ -614,6 +614,11 @@
                 "enablement": "!jupyter.webExtension"
             },
             {
+                "command": "jupyter.notebookeditor.gotocell",
+                "title": "%jupyter.command.jupyter.notebookeditor.gotocell.title%",
+                "category": "Notebook"
+            },
+            {
                 "command": "jupyter.expandallcells",
                 "title": "%jupyter.command.jupyter.expandallcells.title%",
                 "shortTitle": "%jupyter.command.jupyter.expandallcells.shorttitle%",
@@ -1223,6 +1228,12 @@
                     "title": "%jupyter.command.jupyter.notebookeditor.addcellbelow.title%",
                     "category": "Notebook",
                     "when": "jupyter.isnativeactive && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.gotocell",
+                    "title": "%jupyter.command.jupyter.notebookeditor.gotocell.title%",
+                    "category": "Notebook",
+                    "when": "jupyter.isnativeactive"
                 },
                 {
                     "command": "jupyter.expandallcells",
