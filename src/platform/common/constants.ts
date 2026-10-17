@@ -196,6 +196,7 @@ export namespace Commands {
     export const NotebookEditorRunAllCells = 'jupyter.notebookeditor.runallcells';
     export const NotebookEditorRunSelectedCell = 'jupyter.notebookeditor.runselectedcell';
     export const NotebookEditorAddCellBelow = 'jupyter.notebookeditor.addcellbelow';
+    export const NotebookEditorGoToCell = 'jupyter.notebookeditor.gotocell';
     export const ExpandAllCells = 'jupyter.expandallcells';
     export const CollapseAllCells = 'jupyter.collapseallcells';
     export const ExecSelectionInInteractiveWindow = 'jupyter.execSelectionInteractive';
