@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 import {
-    Uri,
     Disposable,
-    MarkdownString,
     Event,
+    FileChangeType,
     LogOutputChannel,
-    ThemeIcon,
-    Terminal,
+    MarkdownString,
     TaskExecution,
+    Terminal,
     TerminalOptions,
-    FileChangeType
+    ThemeIcon,
+    Uri
 } from 'vscode';
 
 /**
@@ -333,7 +333,7 @@ export interface QuickCreateConfig {
  */
 export interface EnvironmentManager {
     /**
-     * The name of the environment manager.
+     * The name of the environment manager. Allowed characters (a-z, A-Z, 0-9, -, _).
      */
     readonly name: string;
 
@@ -564,7 +564,7 @@ export interface DidChangePackagesEventArgs {
  */
 export interface PackageManager {
     /**
-     * The name of the package manager.
+     * The name of the package manager. Allowed characters (a-z, A-Z, 0-9, -, _).
      */
     name: string;
 
@@ -707,16 +707,20 @@ export interface PythonProjectCreator {
     readonly iconPath?: IconPath;
 
     /**
+     * Creates a new Python project(s) or, if files are not a project, returns Uri(s) to the created files.
+     * Anything that needs its own python environment constitutes a project.
+     * @param options Optional parameters for creating the Python project.
+     * @returns A promise that resolves to one of the following:
+     *   - PythonProject or PythonProject[]: when a single or multiple projects are created.
+     *   - Uri or Uri[]: when files are created that do not constitute a project.
+     *   - undefined: if project creation fails.
+     */
+    create(options?: PythonProjectCreatorOptions): Promise<PythonProject | PythonProject[] | Uri | Uri[] | undefined>;
+
+    /**
      * A flag indicating whether the project creator supports quick create where no user input is required.
      */
     readonly supportsQuickCreate?: boolean;
-
-    /**
-     * Creates a new Python project or projects.
-     * @param options - Optional parameters for creating the Python project.
-     * @returns A promise that resolves to a Python project, an array of Python projects, or undefined.
-     */
-    create(options?: PythonProjectCreatorOptions): Promise<PythonProject | PythonProject[] | undefined>;
 }
 
 /**
