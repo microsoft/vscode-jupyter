@@ -1,0 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+ipykernel==7.3.0
+pyzmq==27.1.0
+jupyter-client==8.10.0

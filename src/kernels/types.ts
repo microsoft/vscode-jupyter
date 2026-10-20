@@ -742,7 +742,18 @@ export interface IKernelSessionFactory {
     create(options: KernelSessionCreationOptions): Promise<IKernelSession>;
 }
 
+export interface IKernelStartup {
+    readonly remainingTime: number;
+    readonly token: CancellationToken;
+    readonly error?: Error;
+    run<T>(operation: (token: CancellationToken) => Promise<T>, token: CancellationToken): Promise<T>;
+    complete(ready: () => Promise<unknown>, token: CancellationToken): Promise<void>;
+    discardRequest(id: string): void;
+    dispose(): void;
+}
+
 export interface IKernelSocket {
+    readonly startup?: IKernelStartup;
     /**
      * Used to configure the protocol for WebSocket messages in Jupyter Lab.
      * Empty string means no protocol (old behavior, this is simpler for raw sockets as we just want to serialize to JSON and back).

@@ -3,10 +3,12 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { IKernelSession, KernelConnectionMetadata, isRemoteConnection } from './types';
-import { Memento } from 'vscode';
+import { CancellationToken, Memento } from 'vscode';
 import { logger } from '../platform/logging';
 import { noop } from '../platform/common/utils/misc';
 import { sleep } from '../platform/common/utils/async';
+import { Cancellation, raceCancellationError } from '../platform/common/cancellation';
+import { JupyterInvalidKernelError } from './errors/jupyterInvalidKernelError';
 
 type CachedKernelInfo = {
     id: string;
@@ -20,8 +22,10 @@ const CACHE_EXPIRY_IN_MS = 1000 * 60 * 60 * 24 * 2;
 export async function getKernelInfo(
     session: IKernelSession,
     kernelConnectionMetadata: KernelConnectionMetadata,
-    workspaceMemento: Memento
+    workspaceMemento: Memento,
+    options?: { requireFresh: boolean; token: CancellationToken }
 ) {
+    Cancellation.throwIfCanceled(options?.token);
     const promises: Promise<
         KernelMessage.IReplyErrorContent | KernelMessage.IReplyAbortContent | KernelMessage.IInfoReply | undefined
     >[] = [];
@@ -36,9 +40,12 @@ export async function getKernelInfo(
         status: 'ok'
     };
     if (!session.kernel) {
+        if (options?.requireFresh) {
+            throw new JupyterInvalidKernelError(kernelConnectionMetadata);
+        }
         return;
     }
-    if (session.kernel?.info) {
+    if (session.kernel?.info && !options?.requireFresh) {
         promises.push(session.kernel.info);
         session.kernel.info
             .then((content) => cacheKernelInfo(workspaceMemento, kernelConnectionMetadata, content))
@@ -65,7 +72,7 @@ export async function getKernelInfo(
             promises.push(sleep(5_000).then(() => defaultResponse));
         }
     }
-    const content = await Promise.race(promises);
+    const content = await raceCancellationError(options?.token, Promise.race(promises));
     if (content === defaultResponse) {
         logger.warn('Failed to Kernel info in a timely manner, defaulting to empty info!');
     } else {
