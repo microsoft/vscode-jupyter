@@ -105,6 +105,38 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 
 ...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).
 
+### Raw Python startup native contract (without VS Code)
+
+The startup recovery unit tests run with `npm run test:unittests`. The complementary
+native contract uses the actual ipykernel shell-reply sender and real extension
+transport, Services futures, startup initialization, and a first execution. It
+does not apply the Python-side readiness correction or launch VS Code.
+
+Use Python **3.14.6** and a private virtual environment:
+
+```powershell
+$venv = Join-Path $env:TEMP ("jupyter-startup-tests-" + [guid]::NewGuid())
+py -3.14.6 -m venv $venv
+$env:RAW_KERNEL_STARTUP_PYTHON = Join-Path $venv 'Scripts\python.exe'
+& $env:RAW_KERNEL_STARTUP_PYTHON -m pip install -r build\ci\requirements-raw-startup.txt
+npm run compile
+npm run test:raw-kernel-startup
+```
+
+The command fails if the interpreter or pinned dependencies are missing. The
+controlled case must establish queued input with an unreadable notification FD,
+recover the original execution exactly once through production Node code, and
+run the first cell inside its assertion bound. A missing fixture condition is a
+failure, not a skip. Each fixture owns and cleans its kernel/runtime directory;
+cleanup after a failing assertion is never counted as a successful recovery.
+
+Set `RAW_KERNEL_STARTUP_RESULTS` to a private directory to preserve sanitized
+fixture states and resource outcomes. Connection files and signing keys are not
+included. The Windows `raw_kernel_startup_windows` CI job runs the command twenty
+times in fresh processes, using the existing Mocha runner without forced exit.
+Keep diagnostic profiles and comparison variants isolated from normal user
+profiles and other worktrees.
+
 ### Running Integration Tests (with VS Code)
 
 Note: Integration tests are those in files with extension `*.vscode.test*.ts`.

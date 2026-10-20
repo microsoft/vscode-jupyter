@@ -9,13 +9,12 @@ import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import {
     getDisplayNameOrNameOfKernelConnection,
     getNameOfKernelConnection,
-    isUserRegisteredKernelSpecConnection
+    isUserRegisteredKernelSpecConnection,
+    isPythonKernelConnection
 } from '../../../kernels/helpers';
-import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSocket } from './rawSocket.node';
-import { IKernelSocket, LocalKernelConnectionMetadata } from '../../types';
-import { suppressShutdownErrors } from '../../common/baseJupyterSession';
+import { LocalKernelConnectionMetadata } from '../../types';
 import { Signal } from '@lumino/signaling';
 import type {
     IInterruptRequestMsg,
@@ -30,7 +29,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { Telemetry } from '../../../telemetry';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import { createDeferred, raceTimeout, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import {
     isCancellationError,
@@ -74,6 +73,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     public readonly username = generateUuid();
     private isRestarting?: boolean;
     private isShuttingDown?: boolean;
+    private shutdownPromise?: Promise<void>;
     private hasShutdown?: boolean;
     public get status(): KernelMessage.Status {
         if (this.isDisposed || this.hasShutdown) {
@@ -108,7 +108,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     private kernelProcess?: IKernelProcess;
     private exitHandler?: IDisposable;
     private realKernel?: Kernel.IKernelConnection;
-    private socket: IKernelSocket & IWebSocketLike & IDisposable;
+    private socket: RawSocket;
     private restartToken?: CancellationTokenSource;
 
     constructor(
@@ -119,6 +119,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
 
         private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata
     ) {
+        this.infoDeferred.promise.catch(noop);
         this.name = getNameOfKernelConnection(kernelConnectionMetadata) || 'python3';
         this.model = {
             name: this.name,
@@ -163,6 +164,8 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         }
     }
     public async start(token: CancellationToken): Promise<void> {
+        await this.shutdownPromise;
+        this.shutdownPromise = undefined;
         const disposables: IDisposable[] = [];
         const postStartToken = wrapCancellationTokens(token);
         disposables.push(postStartToken);
@@ -191,7 +194,13 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 throw new CancellationError();
             }
             this.hookupKernelProcessExitHandler(kernelProcess);
-            const result = newRawKernel(this.kernelProcess, this.clientId, this.username, this.model);
+            const result = newRawKernel(
+                this.kernelProcess,
+                this.clientId,
+                this.username,
+                this.model,
+                this.launchTimeout
+            );
             this.kernelProcess = result.kernelProcess;
             this.realKernel = result.realKernel;
             this.socket = result.socket;
@@ -218,12 +227,18 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 DataScience.waitingForJupyterSessionToBeIdle,
                 () => {
                     const tracker = getNotebookTelemetryTracker(this.resource)?.kernelReady();
-                    return postStartKernel(
-                        postStartToken.token,
-                        this.launchTimeout,
-                        this.resource,
-                        this.kernelConnectionMetadata,
-                        result.realKernel
+                    const start = (token: CancellationToken) =>
+                        postStartKernel(
+                            token,
+                            this.launchTimeout,
+                            this.resource,
+                            this.kernelConnectionMetadata,
+                            result.realKernel
+                        );
+                    return (
+                        this.socket.startup
+                            ? this.socket.startup.run(start, postStartToken.token)
+                            : start(postStartToken.token)
                     ).finally(() => tracker?.stop());
                 }
             );
@@ -233,38 +248,32 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             if (token.isCancellationRequested) {
                 throw new CancellationError();
             }
+            this.socket.startup?.beginInitialization();
             this.startHandleKernelMessages();
             this.isRestarting = false;
             // Pretend like an open occurred. This will prime the real kernel to be connected
             this.statusChanged.emit(this.status);
         } catch (error) {
-            await Promise.all([
-                this.kernelProcess ? disposeAsync(this.kernelProcess) : Promise.resolve(),
-                this.realKernel
-                    ?.shutdown()
-                    .catch((ex) =>
-                        postStartToken.token.isCancellationRequested
-                            ? undefined
-                            : logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex)
-                    )
-            ]);
-            if (kernelExitedError) {
-                throw kernelExitedError;
-            }
-            if (
-                isCancellationError(error) &&
+            const initiatingError =
+                (this.socket?.startup?.error instanceof KernelConnectionTimeoutError
+                    ? this.socket.startup.error
+                    : undefined) ||
+                kernelExitedError ||
+                this.socket?.startup?.error ||
+                (isCancellationError(error) &&
                 postStartToken.token.isCancellationRequested &&
                 !token.isCancellationRequested
-            ) {
-                // This happens when we timeout waiting for the kernel to connect.
-                throw new KernelConnectionTimeoutError(this.kernelConnectionMetadata);
-            }
+                    ? new KernelConnectionTimeoutError(this.kernelConnectionMetadata)
+                    : error);
+            await this.shutdown().catch((cleanupError) =>
+                logger.warn('Failed to clean up a raw kernel startup failure', cleanupError)
+            );
             if (isCancellationError(error) || token.isCancellationRequested) {
                 logger.debug('Starting of raw session cancelled by user');
             } else {
                 logger.error(`Failed to connect raw kernel session: ${error}`);
             }
-            throw error;
+            throw initiatingError;
         } finally {
             dispose(disposables);
         }
@@ -313,25 +322,45 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             })
             .catch(noop);
     }
-    public async shutdown(): Promise<void> {
-        if (this.isShuttingDown || this.hasShutdown) {
-            return;
+    public shutdown(): Promise<void> {
+        if (this.shutdownPromise) {
+            return this.shutdownPromise;
+        }
+        if (this.hasShutdown) {
+            return Promise.resolve();
         }
         this.isShuttingDown = true;
         this.restartToken?.cancel();
         this.restartToken?.dispose();
-        suppressShutdownErrors(this.realKernel);
-        await (this.kernelProcess ? disposeAsync(this.kernelProcess).catch(noop) : Promise.resolve());
-        this.socket.dispose();
-        this.stopHandlingKernelMessages();
-        this.isShuttingDown = false;
-        this.hasShutdown = true;
-        // Before triggering any status events ensure this is marked as disposed.
-        if (this.isDisposing) {
-            this._isDisposed = true;
-        }
-        this.statusChanged.emit(this.status);
-        this.connectionStatusChanged.emit('disconnected');
+        const kernelProcess = this.kernelProcess;
+        const socket = this.socket;
+        const kernel = this.realKernel;
+        this.shutdownPromise = (async () => {
+            try {
+                if (kernelProcess) {
+                    await disposeAsync(kernelProcess);
+                }
+            } finally {
+                socket?.dispose();
+                if (kernel && KernelSocketMap.get(kernel.id) === socket) {
+                    KernelSocketMap.delete(kernel.id);
+                }
+                kernel?.dispose();
+                if (this.realKernel === kernel) {
+                    if (kernel) {
+                        this.stopHandlingKernelMessages();
+                    }
+                    this.isShuttingDown = false;
+                    this.hasShutdown = true;
+                    if (this.isDisposing) {
+                        this._isDisposed = true;
+                    }
+                    this.statusChanged.emit(this.status);
+                    this.connectionStatusChanged.emit('disconnected');
+                }
+            }
+        })();
+        return this.shutdownPromise;
     }
     public createComm(targetName: string, commId?: string): Kernel.IComm {
         return this.realKernel!.createComm(targetName, commId);
@@ -533,7 +562,7 @@ async function postStartKernel(
     try {
         // Wait for it to be ready
         logger.debug('Waiting for Raw Session to be ready in postStartRawSession');
-        await raceCancellationError(token, waitForReady(kernel, kernelConnectionMetadata, launchTimeout));
+        await waitForReady(kernel, kernelConnectionMetadata, launchTimeout, token);
         logger.debug('Successfully waited for Raw Session to be ready in postStartRawSession');
     } catch (ex) {
         logger.error('Failed waiting for Raw Session to be ready', ex);
@@ -546,14 +575,7 @@ async function postStartKernel(
     // Attempt to get kernel to respond to requests (this is what jupyter does today).
     // Kinda warms up the kernel communication & ensure things are in the right state.
     logger.debug(`Kernel status is '${kernel?.status}' before requesting kernel info and after ready`);
-    // Lets wait for the response (max of 3s), like jupyter (python code) & jupyter client (jupyter lab npm) does.
-    // Lets not wait for full timeout, we don't want to slow kernel startup.
-    // Note: in node_modules/@jupyterlab/services/lib/kernel/default.js we only wait for 3s.
-    // Hence we'll try for a max of 3 seconds (1.5s for first try & then another 1.5s for the second attempt),
-    // Note: jupyter (python code) tries this a couple f times).
-    // Note: We don't yet want to do what Jupyter does today, it could slow the startup of kernels.
-    // Lets try this and see (hence the telemetry to see the cost of this check).
-    // We know 10s is way too slow, see https://github.com/microsoft/vscode-jupyter/issues/8917
+    // Both a reply and matching idle are needed. Retry until readiness or the startup deadline.
     const gotIoPubMessage = createDeferred<boolean>();
     const kernelInfoRequestHandled = createDeferred<boolean>();
     const iopubHandler = () => gotIoPubMessage.resolve(true);
@@ -587,8 +609,10 @@ async function postStartKernel(
     try {
         const stopWatch = new StopWatch();
         let attempts = 0;
-        while (stopWatch.elapsedTime < launchTimeout * 1000) {
+        while (stopWatch.elapsedTime < launchTimeout) {
             attempts += 1;
+            const retry = createDeferred<void>();
+            const retryTimer = setTimeout(() => retry.resolve(), Math.min(launchTimeout, 500));
             try {
                 logger.debug('Sending request for kernelInfo');
                 // In jupyter_server/services/kernels/connection/channels.py,
@@ -598,15 +622,17 @@ async function postStartKernel(
                 sendKernelInfoRequestOnShellChannel();
                 await raceCancellationError(
                     token,
-                    Promise.all([gotIoPubMessage.promise, kernelInfoRequestHandled.promise]),
+                    Promise.all([gotIoPubMessage.promise, kernelInfoRequestHandled.promise]).then(noop),
                     // Jupyter lab too waits for 500ms before trying again.
-                    sleep(Math.min(launchTimeout, 500)).then(noop)
+                    retry.promise
                 );
             } catch (ex) {
                 if (!token.isCancellationRequested) {
                     logger.error('Failed to request kernel info', ex);
                 }
                 throw ex;
+            } finally {
+                clearTimeout(retryTimer);
             }
 
             if (gotIoPubMessage.completed && kernelInfoRequestHandled.completed) {
@@ -622,9 +648,7 @@ async function postStartKernel(
                 `Successfully completed postStartRawSession after ${attempts} attempt(s) in ${stopWatch.elapsedTime}ms`
             );
         } else {
-            logger.warn(
-                `Didn't get response for requestKernelInfo after ${attempts} attempt(s) in ${stopWatch.elapsedTime}ms.`
-            );
+            throw new KernelConnectionTimeoutError(kernelConnectionMetadata);
         }
         sendKernelTelemetryEvent(
             resource,
@@ -672,17 +696,29 @@ async function postStartKernel(
         */
 }
 
-function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username: string, model: Kernel.IModel) {
+function newRawKernel(
+    kernelProcess: IKernelProcess,
+    clientId: string,
+    username: string,
+    model: Kernel.IModel,
+    launchTimeout: number
+) {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize =
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
 
     // Dummy websocket we give to the underlying real kernel
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let socketInstance: IKernelSocket & IWebSocketLike & IDisposable;
+    let socketInstance: RawSocket;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(kernelProcess.connection, jupyterLabSerialize.serialize);
+            super(
+                kernelProcess.connection,
+                jupyterLabSerialize.serialize,
+                isPythonKernelConnection(kernelProcess.kernelConnectionMetadata)
+                    ? { timeout: launchTimeout, metadata: kernelProcess.kernelConnectionMetadata }
+                    : undefined
+            );
             socketInstance = this;
         }
     }
@@ -734,8 +770,12 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
 async function waitForReady(
     kernel: Kernel.IKernelConnection,
     kernelConnectionMetadata: LocalKernelConnectionMetadata,
-    launchTimeout: number
+    launchTimeout: number,
+    token: CancellationToken
 ): Promise<void> {
+    if (token.isCancellationRequested) {
+        throw new CancellationError();
+    }
     logger.debug(`Waiting for Raw session to be ready, status: ${kernel.connectionStatus}`);
     // When our kernel connects and gets a status message it triggers the ready promise
     const deferred = createDeferred<'connected'>();
@@ -753,11 +793,15 @@ async function waitForReady(
         deferred.resolve(kernel.connectionStatus);
     }
 
-    const result = await raceTimeout(launchTimeout, deferred.promise);
-    kernel.connectionStatusChanged.disconnect(handler);
-    logger.debug(`Waited for Raw session to be ready & got status: ${result}`);
-
-    if (result !== 'connected') {
-        throw new KernelConnectionTimeoutError(kernelConnectionMetadata);
+    const cancellation = token.onCancellationRequested(() => deferred.reject(new CancellationError()));
+    try {
+        const result = await raceTimeout(launchTimeout, deferred.promise);
+        logger.debug(`Waited for Raw session to be ready & got status: ${result}`);
+        if (result !== 'connected') {
+            throw new KernelConnectionTimeoutError(kernelConnectionMetadata);
+        }
+    } finally {
+        cancellation.dispose();
+        kernel.connectionStatusChanged.disconnect(handler);
     }
 }

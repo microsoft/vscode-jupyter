@@ -4,7 +4,7 @@
 import * as path from '../platform/vscode-path/path';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { IJupyterKernelSpec, IKernelSession, isLocalConnection, KernelConnectionMetadata } from './types';
-import { Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { logger } from '../platform/logging';
 import { Resource } from '../platform/common/types';
 import { concatMultilineString } from '../platform/common/utils';
@@ -13,11 +13,14 @@ import { areInterpreterPathsSame } from '../platform/pythonEnvironments/info/int
 import { executeSilently, isPythonKernelConnection } from './helpers';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { StopWatch } from '../platform/common/utils/stopWatch';
+import { Cancellation, raceCancellationError, wrapCancellationTokens } from '../platform/common/cancellation';
+import { KernelSocketMap } from './kernelSocket';
 
 export async function sendTelemetryForPythonKernelExecutable(
     session: IKernelSession,
     resource: Resource,
-    kernelConnection: KernelConnectionMetadata
+    kernelConnection: KernelConnectionMetadata,
+    token?: CancellationToken
 ) {
     if (
         !kernelConnection.interpreter ||
@@ -35,10 +38,22 @@ export async function sendTelemetryForPythonKernelExecutable(
         return;
     }
     const stopWatch = new StopWatch();
+    const startup = KernelSocketMap.get(session.kernel.id)?.startup;
+    const cap = startup ? Math.min(5000, Math.max(0, startup.remainingTime - 1000)) : undefined;
+    if (cap === 0) {
+        logger.trace('Skipping executable telemetry to preserve the remaining startup budget');
+        return;
+    }
+    const cancellation = wrapCancellationTokens(
+        ...[token, startup?.token].filter((item): item is CancellationToken => !!item)
+    );
+    const timer = cap === undefined ? undefined : setTimeout(() => cancellation.cancel(), cap);
     try {
         const outputs = await executeSilently(
             session.kernel,
-            'import sys as _VSCODE_sys\nprint(_VSCODE_sys.executable); del _VSCODE_sys'
+            'import sys as _VSCODE_sys\nprint(_VSCODE_sys.executable); del _VSCODE_sys',
+            undefined,
+            cancellation.token
         );
         if (outputs.length === 0) {
             return;
@@ -50,9 +65,20 @@ export async function sendTelemetryForPythonKernelExecutable(
         }
         const sysExecutable = concatMultilineString(output.text).trim().toLowerCase();
         const match = areInterpreterPathsSame(kernelConnection.interpreter.uri, Uri.file(sysExecutable));
-        await trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
+        Cancellation.throwIfCanceled(cancellation.token);
+        await raceCancellationError(
+            cancellation.token,
+            trackKernelResourceInformation(resource, { interpreterMatchesKernel: match })
+        );
     } catch (ex) {
-        logger.error(`Failed to compare interpreters after ${stopWatch.elapsedTime}ms`, ex);
+        if (cancellation.token.isCancellationRequested) {
+            logger.trace(`Executable telemetry capture cancelled after ${stopWatch.elapsedTime}ms`);
+        } else {
+            logger.error(`Failed to compare interpreters after ${stopWatch.elapsedTime}ms`, ex);
+        }
+    } finally {
+        clearTimeout(timer);
+        cancellation.dispose();
     }
 }
 
