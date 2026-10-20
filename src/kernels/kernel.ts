@@ -57,9 +57,15 @@ import {
     IKernelSessionFactory,
     type IStartOptions,
     isLocalConnection,
-    IKernelWorkingDirectory
+    IKernelWorkingDirectory,
+    IRawKernelStartupRecovery
 } from './types';
-import { Cancellation, isCancellationError } from '../platform/common/cancellation';
+import {
+    Cancellation,
+    isCancellationError,
+    raceCancellationError,
+    wrapCancellationTokens
+} from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
@@ -67,12 +73,13 @@ import dedent from 'dedent';
 import type { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getKernelInfo } from './kernelInfo';
 import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
+import { KernelConnectionTimeoutError } from './errors/kernelConnectionTimeoutError';
 import { dispose } from '../platform/common/utils/lifecycle';
 import { getCachedVersion, getEnvironmentType } from '../platform/interpreter/helpers';
 import { getNotebookTelemetryTracker } from './telemetry/notebookTelemetry';
 import { AsyncEmitter } from '../platform/common/utils/events';
 import { toPythonSafePath } from '../platform/common/utils/encoder';
-import { IRawNotebookSupportedService } from './raw/types';
+import { IRawNotebookSupportedService, rawStartupTermination, type RawStartupTerminationCarrier } from './raw/types';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**
@@ -200,6 +207,7 @@ abstract class BaseKernel implements IBaseKernel {
     }
     private readonly _onDisposed = new EventEmitter<void>();
     private _jupyterSessionPromise?: Promise<IKernelSession>;
+    private rawStartupTerminationBarrier?: { readonly termination: Promise<void> };
     private readonly hookedSessionForEvents = new WeakSet<IKernelSession>();
     private hooks = new Map<KernelHooks, Set<Hook>>();
     private startCancellation = new CancellationTokenSource();
@@ -265,6 +273,9 @@ abstract class BaseKernel implements IBaseKernel {
         return disposable;
     }
     public async start(options?: IStartOptions): Promise<IKernelSession> {
+        if (this.rawStartupTerminationBarrier) {
+            throw new KernelConnectionTimeoutError(this.kernelConnectionMetadata);
+        }
         // Possible this cancellation was cancelled previously.
         if (this.startCancellation.token.isCancellationRequested) {
             this.startCancellation.dispose();
@@ -374,13 +385,17 @@ abstract class BaseKernel implements IBaseKernel {
             this.startCancellation.cancel(); // Cancel any pending starts.
             this.startCancellation.dispose();
             const stopWatch = new StopWatch();
+            let restartSession: IKernelSession | undefined;
+            let restartSessionPromise: Promise<IKernelSession> | undefined;
+            let initializedDuringStart = false;
+            let rawRestartInitializationCancellation: CancellationTokenSource | undefined;
             try {
                 // Check if the session was started already.
                 // Note, it could be empty if we were starting this and it got cancelled due to us
                 // cancelling the token earlier.
-                const session = this._jupyterSessionPromise
-                    ? await this._jupyterSessionPromise.catch(() => undefined)
-                    : undefined;
+                restartSessionPromise = this._jupyterSessionPromise;
+                const session = restartSessionPromise ? await restartSessionPromise.catch(() => undefined) : undefined;
+                restartSession = session;
 
                 if (session) {
                     // We already have a session, now try to restart that session instead of starting a whole new one.
@@ -397,11 +412,15 @@ abstract class BaseKernel implements IBaseKernel {
                     await this._restartPromise;
 
                     // Re-create the cancel token as we cancelled this earlier in this method.
+                    this.startCancellation.cancel();
+                    this.startCancellation.dispose();
                     this.startCancellation = new CancellationTokenSource();
                 } else {
                     // If the session died, then start a new session.
                     // Or possible the previously pending start was cancelled above.
-                    await this.start(new DisplayOptions(false));
+                    restartSession = await this.start(new DisplayOptions(false));
+                    restartSessionPromise = this._jupyterSessionPromise;
+                    initializedDuringStart = restartSession.kind === 'localRaw';
                 }
                 sendKernelTelemetryEvent(
                     this.resourceUri,
@@ -409,33 +428,59 @@ abstract class BaseKernel implements IBaseKernel {
                     { duration: stopWatch.elapsedTime },
                     { resourceType }
                 );
+
+                if (restartSession?.kind === 'localRaw' && !initializedDuringStart) {
+                    // Interactive window needs a restart sys info.
+                    const restartCancellation = this.startCancellation;
+                    rawRestartInitializationCancellation = restartCancellation;
+                    await this.initializeSession(restartSession, restartCancellation);
+                }
             } catch (ex) {
                 logger.error(`Restart failed ${getDisplayPath(this.uri)}`, ex);
-                this._ignoreJupyterSessionDisposedErrors = true;
-                // If restart fails, kill the associated session.
-                const session = this._session;
-                this._session = undefined;
-                this._jupyterSessionPromise = undefined;
-                this._postInitializedOnStartPromise = undefined;
-                // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
-                // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
-                sendKernelTelemetryEvent(
-                    this.resourceUri,
-                    Telemetry.NotebookRestart,
-                    { duration: stopWatch.elapsedTime },
-                    undefined,
-                    ex
-                );
+                const staleRawInitializer =
+                    restartSession?.kind === 'localRaw' &&
+                    rawRestartInitializationCancellation !== undefined &&
+                    (rawRestartInitializationCancellation !== this.startCancellation ||
+                        rawRestartInitializationCancellation.token.isCancellationRequested);
+                if (!staleRawInitializer) {
+                    this._ignoreJupyterSessionDisposedErrors = true;
+                    try {
+                        if (this._session === restartSession) {
+                            this._session = undefined;
+                        }
+                        if (this._jupyterSessionPromise === restartSessionPromise) {
+                            this._jupyterSessionPromise = undefined;
+                            this._postInitializedOnStartPromise = undefined;
+                        }
+                        // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
+                        // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
+                        sendKernelTelemetryEvent(
+                            this.resourceUri,
+                            Telemetry.NotebookRestart,
+                            { duration: stopWatch.elapsedTime },
+                            undefined,
+                            ex
+                        );
 
-                if (session) {
-                    await disposeAsync(session, this.disposables);
+                        if (restartSession) {
+                            if (restartSession.kind === 'localRaw') {
+                                await this.disposeFailedRawSession(restartSession);
+                            } else {
+                                await disposeAsync(restartSession, this.disposables);
+                            }
+                        }
+                    } finally {
+                        this._ignoreJupyterSessionDisposedErrors = false;
+                    }
                 }
-                this._ignoreJupyterSessionDisposedErrors = false;
                 throw ex;
             }
 
-            // Interactive window needs a restart sys info
-            await this.initializeAfterStart(this._session);
+            const restartCancellation = this.startCancellation;
+            if (restartSession?.kind !== 'localRaw') {
+                await this.initializeSession(this._session, restartCancellation);
+            }
+            this.throwIfAttemptInactive(restartCancellation);
 
             // Indicate a restart occurred if it succeeds
             this._onRestarted.fire();
@@ -517,9 +562,11 @@ abstract class BaseKernel implements IBaseKernel {
 
         if (!this._jupyterSessionPromise) {
             const stopWatch = new StopWatch();
-            this._jupyterSessionPromise = this.createJupyterSession();
+            const cancellation = this.startCancellation;
+            const starting = this.createJupyterSession(cancellation);
+            this._jupyterSessionPromise = starting;
             try {
-                const session = await this._jupyterSessionPromise;
+                const session = await starting;
                 sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, {
                     duration: stopWatch.elapsedTime
                 });
@@ -531,8 +578,10 @@ abstract class BaseKernel implements IBaseKernel {
                     );
                 }
                 // If we fail also clear the promise.
-                this.startCancellation.cancel();
-                this._jupyterSessionPromise = undefined;
+                if (this._jupyterSessionPromise === starting) {
+                    cancellation.cancel();
+                    this._jupyterSessionPromise = undefined;
+                }
                 throw ex;
             }
         }
@@ -654,7 +703,7 @@ abstract class BaseKernel implements IBaseKernel {
         });
     }
 
-    private async createJupyterSession(): Promise<IKernelSession> {
+    private async createJupyterSession(cancellation: CancellationTokenSource): Promise<IKernelSession> {
         const notebook = workspace.notebookDocuments.find((item) => item.uri.toString() === this.uri.toString());
         const telemetryTracker = notebook
             ? getNotebookTelemetryTracker(notebook)?.jupyterSessionTelemetry()
@@ -669,34 +718,37 @@ abstract class BaseKernel implements IBaseKernel {
         if (this.disposing) {
             throw new CancellationError();
         }
-        Cancellation.throwIfCanceled(this.startCancellation.token);
+        this.throwIfAttemptInactive(cancellation);
         let disposables: Disposable[] = [];
+        let session: IKernelSession | undefined;
         try {
             logger.info(`Starting Kernel ${getKernelStartupLogMessage(this, this.startupUI)}`);
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
             this._onStatusChanged.fire('starting');
-            const session = await this.sessionCreator.create({
+            session = await this.sessionCreator.create({
                 resource: this.resourceUri,
                 ui: this.startupUI,
                 kernelConnection: this.kernelConnectionMetadata,
-                token: this.startCancellation.token,
+                token: cancellation.token,
                 creator: this.creator
             });
             if (this.disposing) {
                 throw new CancellationError();
             }
-            Cancellation.throwIfCanceled(this.startCancellation.token);
-            await this.initializeAfterStart(session);
-            if (this.disposing) {
-                throw new CancellationError();
-            }
+            this.throwIfAttemptInactive(cancellation);
+            await this.initializeSession(session, cancellation);
+            this.throwIfAttemptInactive(cancellation);
             this.sendKernelStartedTelemetry();
             this._session = session;
             this._onStarted.fire();
             logger.info(`Kernel successfully started`);
             return session;
         } catch (ex) {
+            this.retainRawStartupTerminationBarrierFromError(ex);
+            if (session?.kind === 'localRaw' && session !== this._session) {
+                await this.disposeFailedRawSession(session);
+            }
             // Don't log errors if UI is disabled (e.g. auto starting a kernel)
             // Else we just pollute the logs with lots of noise.
             if (this.startupUI.disableUI) {
@@ -710,10 +762,13 @@ abstract class BaseKernel implements IBaseKernel {
                     ex
                 );
             }
-            Cancellation.throwIfCanceled(this.startCancellation.token);
+            if (cancellation.token.isCancellationRequested || this.startCancellation !== cancellation) {
+                throw new CancellationError();
+            }
             if (ex instanceof JupyterConnectError) {
                 throw ex;
             }
+
             // Provide a user friendly message in case `ex` is some error thats not throw by us.
             const message = DataScience.sessionStartFailedWithKernel(
                 getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
@@ -723,6 +778,104 @@ abstract class BaseKernel implements IBaseKernel {
             dispose(disposables);
         }
     }
+    private throwIfAttemptInactive(cancellation: CancellationTokenSource) {
+        Cancellation.throwIfCanceled(cancellation.token);
+        if (this.startCancellation !== cancellation || this.disposing || this.disposed) {
+            throw new CancellationError();
+        }
+    }
+
+    private retainRawStartupTerminationBarrier(termination: Promise<void> | undefined) {
+        if (!termination) {
+            return;
+        }
+        const barrier = { termination };
+        this.rawStartupTerminationBarrier = barrier;
+        void barrier.termination.then(
+            () => {
+                if (this.rawStartupTerminationBarrier === barrier) {
+                    this.rawStartupTerminationBarrier = undefined;
+                }
+            },
+            (error) => logger.error('Failed to observe raw kernel termination after startup cleanup timed out', error)
+        );
+    }
+    private retainRawStartupTerminationBarrierFromError(error: unknown) {
+        if (error instanceof Error) {
+            this.retainRawStartupTerminationBarrier((error as RawStartupTerminationCarrier)[rawStartupTermination]);
+        }
+    }
+    private async disposeFailedRawSession(session: IKernelSession, isCurrent: () => boolean = () => true) {
+        try {
+            const strictCleanup = session.kind === 'localRaw' ? session.shutdownAfterFailedStartup?.() : undefined;
+            if (strictCleanup) {
+                await strictCleanup;
+                if (!isCurrent()) {
+                    return;
+                }
+                if (session.kind === 'localRaw' && session.hasPendingFailedStartupTermination) {
+                    this.retainRawStartupTerminationBarrier(session.failedStartupTermination);
+                }
+            } else if (isCurrent() && !session.isDisposed) {
+                await session.shutdown();
+            }
+            if (!isCurrent()) {
+                return;
+            }
+            if (!session.isDisposed) {
+                await disposeAsync(session);
+            }
+        } catch (error) {
+            if (isCurrent() && session.kind === 'localRaw' && session.hasPendingFailedStartupTermination) {
+                this.retainRawStartupTerminationBarrier(session.failedStartupTermination);
+            }
+            logger.error('Failed to finish raw startup cleanup while preserving the initialization failure', error);
+        }
+    }
+
+    private async initializeSession(session: IKernelSession | undefined, cancellation: CancellationTokenSource) {
+        if (!session || session.kind !== 'localRaw') {
+            return this.initializeAfterStart(session, cancellation.token);
+        }
+        const initialization = wrapCancellationTokens(cancellation.token);
+        const recovery = session.createStartupRecovery?.(initialization.token);
+        try {
+            recovery?.throwIfFailed();
+            const starting = this.initializeAfterStart(session, initialization.token, recovery);
+            await raceCancellationError(initialization.token, starting, ...(recovery ? [recovery.failure] : []));
+            if (recovery) {
+                await raceCancellationError(
+                    initialization.token,
+                    recovery.finish(async () => {
+                        recovery.throwIfFailed();
+                        this._info = await getKernelInfo(
+                            session,
+                            this.kernelConnectionMetadata,
+                            this.workspaceMemento,
+                            true
+                        );
+                        await recovery.waitForIdle();
+                    }),
+                    recovery.failure
+                );
+            }
+            recovery?.throwIfFailed();
+            this.throwIfAttemptInactive(cancellation);
+        } catch (error) {
+            initialization.cancel();
+            const ownsFailedInitialization = () =>
+                recovery?.isCurrent() !== false &&
+                (session !== this._session || cancellation === this.startCancellation);
+            if (ownsFailedInitialization()) {
+                await this.disposeFailedRawSession(session, ownsFailedInitialization);
+            }
+            throw error;
+        } finally {
+            recovery?.dispose();
+            initialization.dispose();
+        }
+    }
+
     private uiWasDisabledWhenKernelStartupTelemetryWasLastSent?: boolean;
     private startTelemetrySent?: boolean;
     protected sendKernelStartedTelemetry(): void {
@@ -777,16 +930,19 @@ abstract class BaseKernel implements IBaseKernel {
         }
     }
 
-    private async initializeAfterStart(session: IKernelSession | undefined) {
+    private async initializeAfterStart(
+        session: IKernelSession | undefined,
+        token: CancellationToken,
+        recovery?: IRawKernelStartupRecovery
+    ) {
         const nb = workspace.notebookDocuments.find((nb) => nb.uri.toString() === this.uri.toString());
         const tracker = getNotebookTelemetryTracker(nb);
         const postInitialization = nb ? tracker?.postKernelStartup() : undefined;
         try {
             await Promise.all(
-                Array.from(this.hooks.get('didStart') || new Set<Hook>()).map((h) =>
-                    h(session, this.startCancellation.token).catch(noop)
-                )
+                Array.from(this.hooks.get('didStart') || new Set<Hook>()).map((h) => h(session, token).catch(noop))
             );
+            Cancellation.throwIfCanceled(token);
             logger.trace(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
             if (!session) {
                 logger.trace('Not running kernel initialization');
@@ -796,6 +952,9 @@ abstract class BaseKernel implements IBaseKernel {
                 this.hookedSessionForEvents.add(session);
                 session.onDidKernelSocketChange((e) => this._onDidKernelSocketChange.fire(e));
                 session.onDidDispose(() => {
+                    if (this._session !== session) {
+                        return;
+                    }
                     logger.ci(
                         `Kernel got disposed as a result of session.onDisposed (1) ${getDisplayPath(
                             this.resourceUri || this.uri
@@ -854,31 +1013,47 @@ abstract class BaseKernel implements IBaseKernel {
                 // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
                 // And the longer we wait, the more data we need to hold onto in memory that later needs to be sent to the kernel in renderer.
                 await this.determineVersionOfIPyWidgets(session);
+                Cancellation.throwIfCanceled(token);
 
                 // Gather all of the startup code at one time and execute as one cell
                 const startupCode = await this.gatherInternalStartupCode();
+                Cancellation.throwIfCanceled(token);
                 await this.executeSilently(session, startupCode, {
                     traceErrors: true,
                     traceErrorsMessage: 'Error executing jupyter extension internal startup code'
                 });
+                Cancellation.throwIfCanceled(token);
                 // Run user specified startup commands
                 await this.executeSilently(session, this.getUserStartupCommands(), { traceErrors: false });
             }
+            Cancellation.throwIfCanceled(token);
 
             postInitialization?.stop();
             // Then request our kernel info (indicates kernel is ready to go)
             const kernelInfo = tracker?.kernelInfo();
             try {
                 logger.debug('Requesting Kernel info');
-                this._info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento);
+                this._info = await getKernelInfo(
+                    session,
+                    this.kernelConnectionMetadata,
+                    this.workspaceMemento,
+                    recovery !== undefined
+                );
             } catch (ex) {
+                if (recovery) {
+                    throw ex;
+                }
                 logger.warn('Failed to request KernelInfo', ex);
             }
             kernelInfo?.stop();
             const kernelIdle = tracker?.kernelIdle();
             if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
                 logger.trace('End running kernel initialization, now waiting for idle');
-                await session.waitForIdle(this.kernelSettings.launchTimeout, this.startCancellation.token);
+                if (recovery) {
+                    await recovery.waitForIdle();
+                } else {
+                    await session.waitForIdle(this.kernelSettings.launchTimeout, token);
+                }
                 logger.trace('End running kernel initialization, session is idle');
             }
             kernelIdle?.stop();

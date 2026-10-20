@@ -256,6 +256,10 @@ jobs:
         id: test_unittests
         run: npm run test:unittests
 
+      - name: Run raw startup transport regressions
+        if: runner.os == 'Windows'
+        run: npm run test:raw-startup:transport
+
       - name: Verify there are no unhandled errors
         run: npx gulp verifyUnhandledErrors
 

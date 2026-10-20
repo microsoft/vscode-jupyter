@@ -11,6 +11,12 @@ import {
 } from '../types';
 import type { ObservableDisposable } from '../../platform/common/utils/lifecycle';
 
+export const rawStartupTermination = Symbol('rawStartupTermination');
+export const rawStartupTerminationTimeout = 5_000;
+export type RawStartupTerminationCarrier = Error & {
+    [rawStartupTermination]?: Promise<void>;
+};
+
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
     launch(
@@ -39,6 +45,10 @@ export interface IKernelProcess extends ObservableDisposable {
     readonly pid?: number;
     readonly connection: Readonly<IKernelConnection>;
     readonly kernelConnectionMetadata: Readonly<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
+    /**
+     * Completes only when the owned child has actually exited or its process handle has closed.
+     */
+    readonly termination: Promise<void>;
     /**
      * This event is triggered if the process is exited
      */

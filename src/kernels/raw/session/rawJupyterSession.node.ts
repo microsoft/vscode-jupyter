@@ -52,6 +52,18 @@ export class RawJupyterSessionWrapper
     public override dispose() {
         void this.shutdown().finally(() => super.dispose());
     }
+    public createStartupRecovery(token: CancellationToken) {
+        return this.session.createStartupRecovery(token);
+    }
+    public get failedStartupTermination(): Promise<void> | undefined {
+        return this.session.failedStartupTermination;
+    }
+    public get hasPendingFailedStartupTermination(): boolean {
+        return this.session.hasPendingFailedStartupTermination;
+    }
+    public shutdownAfterFailedStartup(): Promise<void> {
+        return this.session.shutdownAfterFailedStartup();
+    }
 
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         try {

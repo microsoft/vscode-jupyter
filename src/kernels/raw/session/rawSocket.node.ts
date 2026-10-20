@@ -14,6 +14,9 @@ import type { Channel } from '@jupyterlab/services/lib/kernel/messages';
 import { getZeroMQ } from './zeromq.node';
 import type { IDisposable } from '../../../platform/common/types';
 import { generateUuid } from '../../../platform/common/uuid';
+import { CancellationToken, EventEmitter } from 'vscode';
+import { Cancellation } from '../../../platform/common/cancellation';
+import type { StartupRecoveryRequestEvent } from '../../kernelStartupRecovery';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
     const portDelimiter = config.transport === 'tcp' ? ':' : '-';
@@ -29,6 +32,7 @@ interface IChannels {
     stdin: Dealer;
     iopub: Subscriber;
 }
+type Closable = { close(): void; readonly closed: boolean };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
@@ -46,6 +50,10 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private sendChain: Promise<any> = Promise.resolve();
     private channels: IChannels;
     private closed = false;
+    private readonly posted = new EventEmitter<KernelMessage.IMessage>();
+    public readonly onDidPostMessage = this.posted.event;
+    private readonly recoveryPeers = new Set<Dealer>();
+    public supportsStartupRecovery = false;
     /**
      * Used to configure the protocol for WebSocket messages in Jupyter Lab.
      * Empty string means no protocol (old behavior, this is simpler for raw sockets as we just want to serialize to JSON and back).
@@ -66,6 +74,9 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
 
     public close(): void {
+        if (this.closed) {
+            return;
+        }
         this.closed = true;
         // When the socket is completed / disposed, close all the event
         // listeners and shutdown the socket
@@ -76,10 +87,131 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 logger.error(`Error during socket shutdown`, ex);
             }
         };
+        this.recoveryPeers.forEach((peer) => {
+            if (!peer.closed) {
+                closer(peer);
+            }
+            if (peer.closed) {
+                this.recoveryPeers.delete(peer);
+            }
+        });
+        this.posted.dispose();
         closer(this.channels.control);
         closer(this.channels.iopub);
         closer(this.channels.shell);
         closer(this.channels.stdin);
+    }
+
+    public closeAfterFailedStartup(): void {
+        if (!this.closed) {
+            this.close();
+        }
+        const remaining: string[] = [];
+        const close = (name: string, closable: Closable) => {
+            if (closable.closed) {
+                return;
+            }
+            try {
+                closable.close();
+            } catch (error) {
+                logger.error(`Failed to close raw kernel ${name} transport during failed startup cleanup`, error);
+            }
+            if (!closable.closed) {
+                remaining.push(name);
+            }
+        };
+
+        this.recoveryPeers.forEach((peer) => {
+            close('startup recovery peer', peer);
+            if (peer.closed) {
+                this.recoveryPeers.delete(peer);
+            }
+        });
+        close('control', this.channels.control);
+        close('iopub', this.channels.iopub);
+        close('shell', this.channels.shell);
+        close('stdin', this.channels.stdin);
+
+        if (remaining.length) {
+            throw new Error(`Raw kernel failed-start cleanup left ${remaining.join(', ')} transport handle(s) open`);
+        }
+    }
+
+    public async wakeUp(
+        token: CancellationToken,
+        timeout: number,
+        observe: (event: StartupRecoveryRequestEvent) => void
+    ): Promise<void> {
+        Cancellation.throwIfCanceled(token);
+        const zmq = getZeroMQ();
+        const peer = new zmq.Dealer({
+            routingId: generateUuid(),
+            linger: 0,
+            immediate: true,
+            sendTimeout: timeout,
+            // Closing this peer does not retire kernel work already submitted through it.
+            receiveTimeout: timeout
+        });
+        this.recoveryPeers.add(peer);
+        const cancellation = token.onCancellationRequested(() => {
+            if (!peer.closed) {
+                peer.close();
+            }
+        });
+        let requestId: string | undefined;
+        try {
+            if (this.closed) {
+                throw new Error('Raw kernel transport is closed');
+            }
+            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+            const request = jupyterLab.KernelMessage.createMessage({
+                msgType: 'kernel_info_request',
+                channel: 'shell',
+                username: generateUuid(),
+                session: generateUuid(),
+                content: {}
+            });
+            peer.connect(formConnectionString(this.connection, 'shell'));
+            Cancellation.throwIfCanceled(token);
+            requestId = request.header.msg_id;
+            observe({ requestId, phase: 'created' });
+            await peer.send(
+                wireProtocol.encode(
+                    { header: request.header, content: request.content, metadata: request.metadata, buffers: [] },
+                    this.connection.key,
+                    this.connection.signature_scheme
+                )
+            );
+            observe({ requestId, phase: 'sent' });
+            const response = wireProtocol.decode(
+                await peer.receive(),
+                this.connection.key,
+                this.connection.signature_scheme
+            );
+            Cancellation.throwIfCanceled(token);
+            if (
+                response.header.msg_type !== 'kernel_info_reply' ||
+                response.parent_header.msg_id !== request.header.msg_id
+            ) {
+                throw new Error('Unexpected reply to the raw kernel startup recovery request');
+            }
+            observe({ requestId, phase: 'reply' });
+        } finally {
+            cancellation.dispose();
+            if (!peer.closed) {
+                try {
+                    peer.close();
+                } catch (error) {
+                    logger.error('Failed to close raw kernel startup recovery peer', error);
+                }
+            }
+            if (peer.closed) {
+                this.recoveryPeers.delete(peer);
+            }
+            if (requestId) {
+                observe({ requestId, phase: 'closed' });
+            }
+        }
     }
 
     public emit(event: string | symbol, ...args: any[]): boolean {
@@ -220,6 +352,18 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
         // Make sure it has a channel on it
         message.channel = channel;
+        if (
+            message.header.msg_type === 'kernel_info_reply' &&
+            typeof message.content === 'object' &&
+            message.content !== null &&
+            'implementation' in message.content &&
+            message.content.implementation === 'ipython' &&
+            'supported_features' in message.content &&
+            Array.isArray(message.content.supported_features) &&
+            message.content.supported_features.includes('kernel subshells')
+        ) {
+            this.supportsStartupRecovery = true;
+        }
 
         if (this.receiveHooks.length) {
             // Stick the receive hooks into the message chain. We use chain
@@ -264,7 +408,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 .then(() => Promise.all(this.sendHooks.map((s) => s(hookData, noop))))
                 .then(async () => {
                     try {
-                        await this.postToSocket(msg.channel, data);
+                        await this.postToSocket(msg, data);
                     } catch (ex) {
                         logger.error(`Failed to write data to the kernel channel ${msg.channel}`, data, ex);
                         // No point throwing this error, as that would mean nothing else works from here on end.
@@ -275,16 +419,18 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 });
         } else {
             this.sendChain = this.sendChain.then(() => {
-                this.postToSocket(msg.channel, data);
+                this.postToSocket(msg, data);
             });
         }
         // Ensure we don't have any unhandled exceptions (swallow exceptions as we're not awaiting on this promise).
         this.sendChain.catch(noop);
     }
 
-    private postToSocket(channel: Channel, data: any) {
+    private postToSocket(message: KernelMessage.IMessage, data: any) {
+        const channel = message.channel;
         const socket = this.channels[channel];
         if (socket) {
+            this.posted.fire(message);
             (socket as Dealer).send(data).catch((exc) => {
                 logger.error(`Error communicating with the kernel`, exc);
             });

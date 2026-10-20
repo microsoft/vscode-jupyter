@@ -8,7 +8,7 @@ import * as path from '../../../platform/vscode-path/path';
 import { promisify } from 'util';
 import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { Cancellation, raceCancellationError } from '../../../platform/common/cancellation';
+import { raceCancellationError } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -22,7 +22,14 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
-import { IKernelLauncher, IKernelProcess, IKernelConnection } from '../types';
+import {
+    IKernelLauncher,
+    IKernelProcess,
+    IKernelConnection,
+    rawStartupTermination,
+    rawStartupTerminationTimeout,
+    type RawStartupTerminationCarrier
+} from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { KernelProcess } from './kernelProcess.node';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
@@ -41,8 +48,12 @@ import { isPythonKernelConnection } from '../../helpers';
 import { once } from '../../../platform/common/utils/events';
 import { getNotebookTelemetryTracker } from '../../telemetry/notebookTelemetry';
 import { generateUuid } from '../../../platform/common/uuid';
+import { raceTimeout } from '../../../platform/common/utils/async';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
+interface PendingRawStartupTermination {
+    readonly termination: Promise<void>;
+}
 // Launches and returns a kernel process given a resource or python interpreter.
 // If the given interpreter is undefined, it will try to use the selected interpreter.
 // If the selected interpreter doesn't have a kernel, it will find a kernel on disk and use that.
@@ -50,6 +61,10 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
     private portChain: Promise<number[]> | undefined;
+    private readonly failedLaunchCleanups = new WeakMap<
+        IKernelProcess,
+        Promise<PendingRawStartupTermination | undefined>
+    >();
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
@@ -138,9 +153,10 @@ export class KernelLauncher implements IKernelLauncher {
         try {
             await raceCancellationError(cancelToken, kernelProcess.launch(workingDirectory, timeout, cancelToken));
         } catch (ex) {
-            await kernelProcess.dispose();
-            Cancellation.throwIfCanceled(cancelToken);
-            throw ex;
+            const primary = cancelToken.isCancellationRequested ? new CancellationError() : ex;
+            const pendingTermination = await this.cleanupFailedLaunch(kernelProcess);
+            this.attachRawStartupTermination(primary, pendingTermination);
+            throw primary;
         }
 
         const disposable = once(kernelProcess.exited)(
@@ -166,8 +182,10 @@ export class KernelLauncher implements IKernelLauncher {
 
         // Double check for cancel
         if (cancelToken?.isCancellationRequested) {
-            await kernelProcess.dispose();
-            throw new CancellationError();
+            const primary = new CancellationError();
+            const pendingTermination = await this.cleanupFailedLaunch(kernelProcess);
+            this.attachRawStartupTermination(primary, pendingTermination);
+            throw primary;
         }
         /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
         sendTelemetryEvent(
@@ -177,6 +195,57 @@ export class KernelLauncher implements IKernelLauncher {
         );
 
         return kernelProcess;
+    }
+
+    private attachRawStartupTermination(error: unknown, pendingTermination: PendingRawStartupTermination | undefined) {
+        if (pendingTermination && error instanceof Error) {
+            (error as RawStartupTerminationCarrier)[rawStartupTermination] = pendingTermination.termination;
+        }
+    }
+
+    private cleanupFailedLaunch(kernelProcess: IKernelProcess): Promise<PendingRawStartupTermination | undefined> {
+        const existing = this.failedLaunchCleanups.get(kernelProcess);
+        if (existing) {
+            return existing;
+        }
+        const startedAt = performance.now();
+        const cleanup = (async (): Promise<PendingRawStartupTermination | undefined> => {
+            const termination = kernelProcess.termination;
+            try {
+                kernelProcess.dispose();
+            } catch (error) {
+                logger.error('Failed to request raw kernel process disposal after launch failed', error);
+            }
+
+            let terminationFailure: unknown;
+            const terminated = await raceTimeout(
+                Math.max(0, rawStartupTerminationTimeout - (performance.now() - startedAt)),
+                false,
+                termination.then(
+                    () => true,
+                    (error) => {
+                        terminationFailure = error;
+                        return false;
+                    }
+                )
+            );
+            if (terminated) {
+                return undefined;
+            }
+            if (terminationFailure) {
+                logger.error(
+                    'Failed to observe actual raw kernel process termination after launch failed',
+                    terminationFailure
+                );
+            } else {
+                logger.error(
+                    `Timed out waiting ${rawStartupTerminationTimeout}ms for actual raw kernel process termination after launch failed`
+                );
+            }
+            return { termination };
+        })();
+        this.failedLaunchCleanups.set(kernelProcess, cleanup);
+        return cleanup;
     }
 
     private async chainGetConnectionPorts(): Promise<number[]> {
