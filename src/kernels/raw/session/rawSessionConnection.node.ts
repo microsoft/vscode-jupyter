@@ -7,7 +7,7 @@ import { logger } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { Telemetry } from '../../../telemetry';
 import { LocalKernelConnectionMetadata } from '../../types';
-import { IKernelLauncher } from '../types';
+import { IKernelLauncher, rawStartupTermination, type RawStartupTerminationCarrier } from '../types';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { noop } from '../../../platform/common/utils/misc';
 import { getNameOfKernelConnection } from '../../helpers';
@@ -110,8 +110,29 @@ export class RawSessionConnection implements Session.ISessionConnection {
         this._kernel.disposed.connect(this.onDisposed, this);
     }
     public async startKernel(options: { token: CancellationToken }): Promise<void> {
-        await trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
-        await this._kernel.start(options.token);
+        try {
+            await trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
+            await this._kernel.start(options.token);
+            this._didShutDownOnce = false;
+        } catch (error) {
+            const termination = this._kernel.failedStartupTermination;
+            if (termination && error instanceof Error) {
+                (error as RawStartupTerminationCarrier)[rawStartupTermination] = termination;
+            }
+            throw error;
+        }
+    }
+    public createStartupRecovery(token: CancellationToken) {
+        return this._kernel.createStartupRecovery(token);
+    }
+    public get failedStartupTermination(): Promise<void> | undefined {
+        return this._kernel.failedStartupTermination;
+    }
+    public get hasPendingFailedStartupTermination(): boolean {
+        return this._kernel.hasPendingFailedStartupTermination;
+    }
+    public shutdownAfterFailedStartup(): Promise<void> {
+        return this._kernel.shutdownAfterFailedStartup();
     }
     public dispose() {
         this._isDisposing = true;

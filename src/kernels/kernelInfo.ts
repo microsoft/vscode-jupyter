@@ -20,7 +20,8 @@ const CACHE_EXPIRY_IN_MS = 1000 * 60 * 60 * 24 * 2;
 export async function getKernelInfo(
     session: IKernelSession,
     kernelConnectionMetadata: KernelConnectionMetadata,
-    workspaceMemento: Memento
+    workspaceMemento: Memento,
+    requireFreshReply = false
 ) {
     const promises: Promise<
         KernelMessage.IReplyErrorContent | KernelMessage.IReplyAbortContent | KernelMessage.IInfoReply | undefined
@@ -65,7 +66,7 @@ export async function getKernelInfo(
             promises.push(sleep(5_000).then(() => defaultResponse));
         }
     }
-    const content = await Promise.race(promises);
+    const content = requireFreshReply ? await kernelInfoPromise : await Promise.race(promises);
     if (content === defaultResponse) {
         logger.warn('Failed to Kernel info in a timely manner, defaulting to empty info!');
     } else {

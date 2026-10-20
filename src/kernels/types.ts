@@ -615,7 +615,30 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
 }
 
 export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {}
-export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
+export interface IRawKernelStartupRecovery extends IDisposable {
+    readonly failure: Promise<never>;
+    readonly remainingBudget: number;
+    isCurrent(): boolean;
+    throwIfFailed(): void;
+    finish(ready?: () => Promise<void>): Promise<void>;
+    waitForIdle(): Promise<void>;
+}
+
+export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {
+    createStartupRecovery?(token: CancellationToken): IRawKernelStartupRecovery | undefined;
+    /**
+     * Starts the bounded cleanup of a failed raw startup and joins the existing cleanup for that transport.
+     */
+    shutdownAfterFailedStartup?(): Promise<void>;
+    /**
+     * Completes only after the failed startup's owned process terminated and its raw transport closed.
+     */
+    readonly failedStartupTermination?: Promise<void>;
+    /**
+     * Indicates that a failed startup still owns an unconfirmed process termination.
+     */
+    readonly hasPendingFailedStartupTermination?: boolean;
+}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
 export interface IJupyterKernelSpec {

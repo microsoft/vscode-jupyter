@@ -88,6 +88,8 @@ export class TcpPortUsage {
 export class KernelProcess extends ObservableDisposable implements IKernelProcess {
     private _pid?: number;
     private _disposingPromise?: Promise<void>;
+    private readonly actualTermination = createDeferred<void>();
+    public readonly termination = this.actualTermination.promise;
     public get pid() {
         return this._pid;
     }
@@ -141,6 +143,27 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
     ) {
         super();
         this._kernelConnectionMetadata = kernelConnectionMetadata;
+    }
+    private completeActualTermination() {
+        this.actualTermination.resolve();
+    }
+    private observeActualTermination(process: ChildProcess) {
+        const hasActuallyExited = () => typeof process.exitCode === 'number' || Boolean(process.signalCode);
+        if (hasActuallyExited()) {
+            this.completeActualTermination();
+            return;
+        }
+        const complete = () => this.completeActualTermination();
+        process.on('exit', complete);
+        process.on('close', complete);
+        process.on('error', (error) => {
+            if (!process.pid || hasActuallyExited()) {
+                // A spawn error has no live child whose exit can be observed.
+                this.completeActualTermination();
+            } else {
+                logger.warn(`Raw kernel process ${process.pid} reported an error before it exited`, error);
+            }
+        });
     }
     public async interrupt(): Promise<void> {
         if (!this.canInterrupt) {
@@ -349,7 +372,13 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
             return;
         }
         if (this.isDisposed) {
+            if (!this._process) {
+                this.completeActualTermination();
+            }
             return;
+        }
+        if (!this._process) {
+            this.completeActualTermination();
         }
         const pid = this._process?.pid;
         logger.debug(`Dispose Kernel process ${pid}.`);
@@ -622,7 +651,6 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
                 cwd: wdExists ? workingDirectory : process.cwd(),
                 env
             });
-            Cancellation.throwIfCanceled(cancelToken);
         } else {
             // If we are not python just use the ProcessExecutionFactory
             // First part of argument is always the executable.
@@ -651,10 +679,12 @@ export class KernelProcess extends ObservableDisposable implements IKernelProces
         }
 
         if (!exeObs.proc) {
+            this.completeActualTermination();
             throw new WrappedError('KernelProcess failed to launch', undefined, 'kernelProcessFailedToLaunch');
         }
         this._process = exeObs.proc;
         this._pid = exeObs.proc.pid;
+        this.observeActualTermination(exeObs.proc);
         return exeObs;
     }
 

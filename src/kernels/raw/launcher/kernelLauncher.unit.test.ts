@@ -29,6 +29,7 @@ import { KernelProcess } from './kernelProcess.node';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/interpreter/types.node';
 import { UsedPorts } from '../../common/usedPorts';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
+import { rawStartupTermination, type RawStartupTerminationCarrier } from '../types';
 
 suite('kernel Launcher', () => {
     let disposables: IDisposable[] = [];
@@ -78,8 +79,8 @@ suite('kernel Launcher', () => {
         disposables = dispose(disposables);
         resetVSCodeMocks();
     });
-    async function launchKernel() {
-        const kernelSpec = PythonKernelConnectionMetadata.create({
+    function createKernelSpec() {
+        return PythonKernelConnectionMetadata.create({
             id: '1',
             interpreter: {
                 id: '2',
@@ -92,6 +93,9 @@ suite('kernel Launcher', () => {
                 name: 'python3'
             }
         });
+    }
+    async function launchKernel() {
+        const kernelSpec = createKernelSpec();
         const cancellation = new CancellationTokenSource();
         const launchStub = sinon.stub(KernelProcess.prototype, 'launch');
         const exitedStub = sinon.stub(KernelProcess.prototype, 'exited');
@@ -133,5 +137,37 @@ suite('kernel Launcher', () => {
             const portForwardingIgnored = results.some((r) => r?.autoForwardAction === PortAutoForwardAction.Ignore);
             assert.isTrue(portForwardingIgnored, `Kernel Port ${port} should not be forwarded`);
         }
+    });
+    test('failed launch carries its pending actual termination after one cleanup deadline', async () => {
+        const clock = sinon.useFakeTimers();
+        const cancellation = new CancellationTokenSource();
+        const primary = new Error('Owned kernel process launch failed');
+        const launchStub = sinon.stub(KernelProcess.prototype, 'launch').rejects(primary);
+        const disposeStub = sinon.stub(KernelProcess.prototype, 'dispose');
+        const portsStub = sinon.stub(KernelLauncher, 'findNextFreePort').resolves([1, 2, 3, 4, 5]);
+        disposables.push(
+            new Disposable(() => {
+                clock.restore();
+                cancellation.dispose();
+                launchStub.restore();
+                disposeStub.restore();
+                portsStub.restore();
+            })
+        );
+
+        const launching = kernelLauncher.launch(createKernelSpec(), 10_000, undefined, __dirname, cancellation.token);
+        let rejected = false;
+        void launching.catch(() => (rejected = true));
+        await clock.tickAsync(0);
+        assert.isTrue(disposeStub.calledOnce);
+        await clock.tickAsync(4999);
+        assert.isFalse(rejected);
+        await clock.tickAsync(1);
+
+        const failure = await launching.catch((error: unknown) => error);
+        assert.strictEqual(failure, primary);
+        const termination = (failure as RawStartupTerminationCarrier)[rawStartupTermination];
+        assert.isDefined(termination);
+        assert.isFunction(termination?.then);
     });
 });
