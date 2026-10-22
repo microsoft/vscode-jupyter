@@ -69,7 +69,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -96,7 +96,7 @@ jobs:
         uses: ./.github/actions/build-vsix
         id: build-vsix
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
           path: 'ms-toolsai-jupyter-insiders.vsix'
@@ -112,7 +112,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -201,7 +201,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -422,7 +422,7 @@ jobs:
           PYTHON_VERSION: ${{matrix.pythonVersion}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -770,7 +770,7 @@ jobs:
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
 
       - name: Upload VS code logs
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}-${{matrix.ipywidgetsVersion}}
@@ -782,7 +782,7 @@ jobs:
         run: npx gulp printTestResults
 
       - name: Upload test result, screenshots files
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}-${{matrix.ipywidgetsVersion}}
@@ -823,7 +823,7 @@ jobs:
         run: echo "CI_PYTHON_PATH=${{ steps.setupPythonVersion.outputs.python-path }}" >> $GITHUB_ENV
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -831,7 +831,7 @@ jobs:
         run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Download VSIX
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
 
