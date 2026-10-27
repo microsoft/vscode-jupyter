@@ -99,6 +99,7 @@ suite('Kernel Execution @kernelCore', function () {
         }
         logger.info('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
+
         try {
             api = await initialize();
             // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
