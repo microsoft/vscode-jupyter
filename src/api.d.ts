@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { CancellationToken, ProviderResult, CancellationError, Event, Uri } from 'vscode';
+import type { CancellationToken, Disposable, ProviderResult, CancellationError, Event, Uri } from 'vscode';
 
 export interface Jupyter {
     /**
@@ -239,5 +239,37 @@ export interface Kernels {
      * Only kernels which have already been started by the user and belonging to Notebooks that are currently opened will be returned.
      */
     getKernel(uri: Uri): Thenable<Kernel | undefined>;
+    /**
+     * Registers a provider that can contribute additional environment variables
+     * to kernel processes.  The provider is called every time a kernel is
+     * started or restarted, receiving the notebook/resource URI so it can
+     * return per-notebook values.
+     *
+     * Variables returned by the provider are merged **after** all other
+     * sources (process.env, .env files, interpreter activation, kernelspec
+     * env), so they take highest priority.
+     */
+    registerEnvironmentVariablesProvider(
+        provider: KernelEnvironmentVariablesProvider
+    ): Disposable;
+}
+
+/**
+ * A provider that contributes environment variables to kernel processes.
+ */
+export interface KernelEnvironmentVariablesProvider {
+    /**
+     * Called before a kernel process is spawned.
+     *
+     * @param resource The URI of the notebook or interactive window that
+     *   owns the kernel, or `undefined` for kernels without a resource.
+     * @param token Cancellation token.
+     * @returns A map of environment variable names to values, or
+     *   `undefined`/`null` to contribute nothing.
+     */
+    provideEnvironmentVariables(
+        resource: Uri | undefined,
+        token?: CancellationToken
+    ): ProviderResult<Record<string, string>>;
 }
 // #endregion Kernels API

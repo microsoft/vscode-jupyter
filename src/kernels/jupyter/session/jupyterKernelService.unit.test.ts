@@ -24,6 +24,7 @@ import { ConfigurationService } from '../../../platform/common/configuration/ser
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { KernelEnvironmentVariablesService } from '../../raw/launcher/kernelEnvVarsService.node';
+import { KernelEnvVarsContributorRegistry } from '../../raw/launcher/kernelEnvVarsContributor';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
@@ -447,7 +448,8 @@ suite('JupyterKernelService', () => {
             instance(appEnv),
             variablesService,
             instance(customEnvVars),
-            instance(configService)
+            instance(configService),
+            new KernelEnvVarsContributorRegistry()
         );
         testWorkspaceFolder = Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience'));
         const jupyterPaths = mock<JupyterPaths>();
