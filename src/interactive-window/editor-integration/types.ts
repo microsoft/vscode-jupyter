@@ -50,6 +50,7 @@ export interface ICodeWatcher extends IDisposable {
     moveCellsDown(): Promise<void>;
     changeCellToMarkdown(): void;
     changeCellToCode(): void;
+    changeCellToRaw(): void;
     debugCurrentCell(): Promise<void>;
     gotoNextCell(): void;
     gotoPreviousCell(): void;

@@ -694,6 +694,13 @@ export class CodeWatcher implements ICodeWatcher {
         });
     }
 
+    @capturePerfTelemetry(Telemetry.ChangeCellToRaw)
+    public changeCellToRaw() {
+        this.applyToCells((editor, cell, _) => {
+            return this.changeCellTo(editor, cell, 'raw');
+        });
+    }
+
     @capturePerfTelemetry(Telemetry.GotoNextCellInFile)
     public gotoNextCell() {
         const editor = window.activeTextEditor;
@@ -743,11 +750,6 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private changeCellTo(editor: TextEditor, cell: ICellRange, toCellType: nbformat.CellType) {
-        // change cell from code -> markdown or markdown -> code
-        if (toCellType === 'raw') {
-            throw Error('Cell Type raw not implemented');
-        }
-
         // don't change cell type if already that type
         if (cell.cell_type === toCellType) {
             return;
@@ -758,18 +760,37 @@ export class CodeWatcher implements ICodeWatcher {
 
         // new definition text
         const cellMarker = this.getDefaultCellMarker(editor.document.uri);
-        const definitionMatch =
-            toCellType === 'markdown'
-                ? cellMatcher.codeExecRegEx.exec(definitionText) // code -> markdown
-                : cellMatcher.markdownExecRegEx.exec(definitionText); // markdown -> code
+        
+        // Determine which regex to use based on current cell type
+        let definitionMatch: RegExpExecArray | null = null;
+        if (cellMatcher.isMarkdown(definitionText)) {
+            definitionMatch = cellMatcher.markdownExecRegEx.exec(definitionText);
+        } else if (cellMatcher.isRaw(definitionText)) {
+            definitionMatch = cellMatcher.rawExecRegEx.exec(definitionText);
+        } else {
+            definitionMatch = cellMatcher.codeExecRegEx.exec(definitionText);
+        }
+        
         if (!definitionMatch) {
             return;
         }
+        
         const definitionExtra = definitionMatch[definitionMatch.length - 1];
-        const newDefinitionText =
-            toCellType === 'markdown'
-                ? `${cellMarker} [markdown]${definitionExtra}` // code -> markdown
-                : `${cellMarker}${definitionExtra}`; // markdown -> code
+        
+        // Create the new definition text based on target cell type
+        let newDefinitionText: string;
+        switch (toCellType) {
+            case 'markdown':
+                newDefinitionText = `${cellMarker} [markdown]${definitionExtra}`;
+                break;
+            case 'raw':
+                newDefinitionText = `${cellMarker} [raw]${definitionExtra}`;
+                break;
+            case 'code':
+            default:
+                newDefinitionText = `${cellMarker}${definitionExtra}`;
+                break;
+        }
 
         editor
             .edit(async (editBuilder) => {
