@@ -183,6 +183,31 @@ function ensureOrigNBFormatIsOptional() {
     }
 }
 
+/**
+ * The @nteract/* packages declare `uuid: ^8.0.0`, but we force `uuid` up to 11.x via the
+ * `overrides` in package.json. `npm ls` (run internally by vsce during packaging) validates the
+ * installed uuid version against each package's declared range and reports `uuid@11.x` as invalid,
+ * failing with ELSPROBLEMS. Widen the declared range in these packages so the forced version
+ * satisfies it and packaging succeeds.
+ *
+ * Note: These packages haven't been updated to resolve the CG issues for a while, updating upstream would be a better solution, but this is a quick fix to unblock packaging & easier.
+ */
+function widenNteractUuidRange() {
+    const pkgs = ['@nteract/messaging', '@nteract/types', '@nteract/commutable'];
+    for (const pkg of pkgs) {
+        const filePath = path.join(constants.ExtensionRootDir, 'node_modules', pkg, 'package.json');
+        if (!fs.existsSync(filePath)) {
+            continue;
+        }
+        const json = JSON.parse(fs.readFileSync(filePath, { encoding: 'utf8' }));
+        if (json.dependencies && json.dependencies.uuid && !json.dependencies.uuid.includes('11')) {
+            json.dependencies.uuid = '^8.0.0 || ^11.0.0';
+            fs.writeFileSync(filePath, JSON.stringify(json, null, 2) + EOL);
+            console.log(colors.green(filePath + ' uuid range widened (by Jupyter VSC)'));
+        }
+    }
+}
+
 function commentOutInvalidExport() {
     // Others have run into the same problem https://github.com/uber/baseweb/issues/4129
     const stringToReplace = 'import { bpfrpt_proptype_WindowScroller } from "../WindowScroller.js";';
@@ -206,6 +231,7 @@ fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
 ensureOrigNBFormatIsOptional();
 commentOutInvalidExport();
+widenNteractUuidRange();
 downloadZmqBinaries()
     .then(() => process.exit(0))
     .catch((ex) => {
