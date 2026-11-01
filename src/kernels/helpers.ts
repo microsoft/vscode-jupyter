@@ -13,7 +13,7 @@ import {
     PythonKernelConnectionMetadata,
     IJupyterKernelSpec
 } from './types';
-import { NotebookCellOutput, Uri, workspace } from 'vscode';
+import { CancellationToken, NotebookCellOutput, Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { logger } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
@@ -37,6 +37,8 @@ import {
 import { cellOutputToVSCCellOutput } from './execution/helpers';
 import { handleTensorBoardDisplayDataOutput } from './execution/executionHelpers';
 import { once } from '../platform/common/utils/functional';
+import { Cancellation, raceCancellationError } from '../platform/common/cancellation';
+import { KernelSocketMap } from './kernelSocket';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -636,8 +638,10 @@ export type SilentExecutionErrorOptions = {
 export async function executeSilently(
     kernelConnection: Kernel.IKernelConnection,
     code: string,
-    errorOptions?: SilentExecutionErrorOptions
+    errorOptions?: SilentExecutionErrorOptions,
+    token?: CancellationToken
 ): Promise<nbformat.IOutput[]> {
+    Cancellation.throwIfCanceled(token);
     logger.trace(
         `Executing silently Code (${kernelConnection.status}) = ${splitLines(code.substring(0, 100)).join('\\n')}`
     );
@@ -715,7 +719,18 @@ export async function executeSilently(
             logger.ci(`Got io pub message (${msg.header.msg_type})`);
         }
     };
-    await request.done;
+    const subscription = token?.onCancellationRequested(() => {
+        KernelSocketMap.get(kernelConnection.id)?.startup?.discardRequest(request.msg.header.msg_id);
+        request.dispose();
+    });
+    try {
+        await raceCancellationError(token, request.done);
+    } finally {
+        subscription?.dispose();
+        if (token?.isCancellationRequested && !request.isDisposed) {
+            request.dispose();
+        }
+    }
 
     const codeForLogging = splitLines(code.substring(0, 100)).join('\\n');
 

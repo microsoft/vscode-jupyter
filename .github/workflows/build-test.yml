@@ -259,6 +259,52 @@ jobs:
       - name: Verify there are no unhandled errors
         run: npx gulp verifyUnhandledErrors
 
+  raw_kernel_startup_windows:
+    name: Raw Python kernel startup (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    if: github.repository == 'microsoft/vscode-jupyter'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{env.NODE_VERSION}}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14.6'
+      - run: npm ci --ignore-scripts --prefer-offline --no-audit
+      - run: npm run postinstall
+      - run: npm run compile
+      - name: Create private pinned kernel environment
+        shell: pwsh
+        run: |
+          $venv = Join-Path $env:RUNNER_TEMP 'raw-kernel-startup-venv'
+          python -m venv $venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $python = Join-Path $venv 'Scripts\python.exe'
+          & $python -m pip install -r build\ci\requirements-raw-startup.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "RAW_KERNEL_STARTUP_PYTHON=$python" >> $env:GITHUB_ENV
+          "RAW_KERNEL_STARTUP_RESULTS=$env:RUNNER_TEMP\raw-kernel-startup-results" >> $env:GITHUB_ENV
+      - name: Verify native startup in fresh processes
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force $env:RAW_KERNEL_STARTUP_RESULTS | Out-Null
+          for ($iteration = 0; $iteration -lt 20; $iteration++) {
+            npm run test:raw-kernel-startup 2>&1 |
+              Tee-Object -FilePath "$env:RAW_KERNEL_STARTUP_RESULTS\run-$iteration.log"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Preserve native contract evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: raw-kernel-startup-windows
+          path: ${{runner.temp}}/raw-kernel-startup-results
+          if-no-files-found: error
+
   vscodeTests:
     name: Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}

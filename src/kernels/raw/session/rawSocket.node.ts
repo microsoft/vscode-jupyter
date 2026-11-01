@@ -14,6 +14,10 @@ import type { Channel } from '@jupyterlab/services/lib/kernel/messages';
 import { getZeroMQ } from './zeromq.node';
 import type { IDisposable } from '../../../platform/common/types';
 import { generateUuid } from '../../../platform/common/uuid';
+import { CancellationError, CancellationToken } from 'vscode';
+import { KernelStartupRecovery } from '../../kernelStartupRecovery';
+import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
+import type { LocalKernelConnectionMetadata } from '../../types';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
     const portDelimiter = config.transport === 'tcp' ? ':' : '-';
@@ -36,6 +40,7 @@ interface IChannels {
  * it does all serialization/deserialization itself.
  */
 export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
+    public readonly startup?: KernelStartupRecovery;
     public onopen: (event: { target: any }) => void = noop;
     public onerror: (event: { error: any; message: string; type: string; target: any }) => void = noop;
     public onclose: (event: { wasClean: boolean; code: number; reason: string; target: any }) => void = noop;
@@ -53,10 +58,18 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     public readonly protocol = '';
     constructor(
         private connection: IKernelConnection,
-        private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer
+        private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
+        startup?: { timeout: number; metadata: LocalKernelConnectionMetadata }
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
+        if (startup) {
+            this.startup = new KernelStartupRecovery(
+                startup.timeout,
+                new KernelConnectionTimeoutError(startup.metadata),
+                (token) => this.probeStartup(token)
+            );
+        }
     }
 
     public dispose() {
@@ -66,6 +79,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
 
     public close(): void {
+        this.startup?.dispose();
         this.closed = true;
         // When the socket is completed / disposed, close all the event
         // listeners and shutdown the socket
@@ -103,6 +117,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
     public send(data: any, _callback: any): void {
         // This comes directly from the jupyter lab kernel. It should be a message already
+        this.startup?.sent(data as KernelMessage.IMessage);
         this.sendMessage(data as KernelMessage.IMessage, false);
     }
 
@@ -220,6 +235,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
         // Make sure it has a channel on it
         message.channel = channel;
+        this.startup?.received(message);
 
         if (this.receiveHooks.length) {
             // Stick the receive hooks into the message chain. We use chain
@@ -290,6 +306,78 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             });
         } else {
             logger.error(`Attempting to send message on invalid channel: ${channel}`);
+        }
+    }
+
+    private async probeStartup(token: CancellationToken) {
+        const zmq = getZeroMQ();
+        const socket = new zmq.Dealer({
+            routingId: generateUuid(),
+            linger: 0,
+            immediate: true,
+            sendTimeout: Math.min(1000, this.startup!.remainingTime),
+            receiveTimeout: Math.min(1000, this.startup!.remainingTime)
+        });
+        const cancelled = token.onCancellationRequested(() => {
+            if (!socket.closed) {
+                socket.close();
+            }
+        });
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+        const message = jupyterLab.KernelMessage.createMessage({
+            msgType: 'kernel_info_request',
+            channel: 'shell',
+            username: 'startup-recovery',
+            session: generateUuid(),
+            content: {}
+        });
+        let sent = false;
+        try {
+            if (token.isCancellationRequested || this.closed) {
+                throw new CancellationError();
+            }
+            socket.connect(formConnectionString(this.connection, 'shell'));
+            this.startup!.auxiliarySent(message.header.msg_id);
+            await socket.send(
+                wireProtocol.encode(
+                    {
+                        header: message.header,
+                        metadata: {},
+                        content: {}
+                    },
+                    this.connection.key,
+                    this.connection.signature_scheme
+                )
+            );
+            sent = true;
+            const reply = wireProtocol.decode(
+                await socket.receive(),
+                this.connection.key,
+                this.connection.signature_scheme
+            );
+            if (reply.header.msg_type !== 'kernel_info_reply' || reply.parent_header.msg_id !== message.header.msg_id) {
+                throw new Error('Unexpected reply to kernel startup recovery request');
+            }
+            this.startup!.auxiliaryReplied(message.header.msg_id);
+        } catch (error) {
+            if (token.isCancellationRequested) {
+                throw new CancellationError();
+            }
+            if (error.code === 'EAGAIN') {
+                if (!sent) {
+                    this.startup!.auxiliaryNotSent(message.header.msg_id);
+                }
+                logger.trace('Kernel startup recovery request has not replied');
+            } else {
+                logger.error('Kernel startup recovery request failed', error);
+                throw error;
+            }
+        } finally {
+            cancelled.dispose();
+            if (!socket.closed) {
+                socket.close();
+            }
         }
     }
 }

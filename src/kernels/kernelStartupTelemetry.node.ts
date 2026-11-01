@@ -6,6 +6,7 @@ import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IDisposableRegistry } from '../platform/common/types';
 import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
 import { IKernel, IKernelProvider, IKernelSession } from './types';
+import type { CancellationToken } from 'vscode';
 
 @injectable()
 export class KernelStartupTelemetry implements IExtensionSyncActivationService {
@@ -20,12 +21,13 @@ export class KernelStartupTelemetry implements IExtensionSyncActivationService {
     private addOnStartHooks(kernel: IKernel) {
         kernel.addHook(
             'didStart',
-            async (session: IKernelSession | undefined) => {
+            async (session: IKernelSession | undefined, token: CancellationToken) => {
                 if (session) {
                     await sendTelemetryForPythonKernelExecutable(
                         session,
                         kernel.resourceUri,
-                        kernel.kernelConnectionMetadata
+                        kernel.kernelConnectionMetadata,
+                        token
                     );
                 }
             },

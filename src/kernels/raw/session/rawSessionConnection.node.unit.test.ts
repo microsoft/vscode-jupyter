@@ -114,7 +114,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             control_port: 1,
             hb_port: 2,
             iopub_port: 3,
-            ip: '123',
+            ip: '127.0.0.1',
             key: '',
             shell_port: 4,
             signature_scheme: 'hmac-sha256',
