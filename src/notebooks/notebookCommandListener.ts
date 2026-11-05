@@ -9,6 +9,7 @@ import {
     NotebookCellData,
     NotebookCellKind,
     NotebookEdit,
+    NotebookEditorRevealType,
     NotebookRange,
     Uri,
     commands,
@@ -34,6 +35,20 @@ import { KernelConnector } from './controllers/kernelConnector';
 import { IControllerRegistration } from './controllers/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IKernelStatusProvider } from '../kernels/kernelStatusProvider';
+
+/**
+ * Parses a 1-based cell number such as `38` or `cell 38` (the format tools like ruff use in diagnostics).
+ * Cells are counted from the top, including Markdown cells.
+ * Returns the 0-based cell index, or `undefined` if the value doesn't name a cell in the notebook.
+ */
+export function parseCellNumber(value: string, cellCount: number): number | undefined {
+    const match = /^\s*(?:cell\s*)?(\d+)\s*$/i.exec(value);
+    if (!match) {
+        return;
+    }
+    const cellNumber = parseInt(match[1], 10);
+    return cellNumber >= 1 && cellNumber <= cellCount ? cellNumber - 1 : undefined;
+}
 
 export const INotebookCommandHandler = Symbol('INotebookCommandHandler');
 export interface INotebookCommandHandler {
@@ -71,6 +86,7 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
         this.disposableRegistry.push(
             commands.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
         );
+        this.disposableRegistry.push(commands.registerCommand(Commands.NotebookEditorGoToCell, () => this.goToCell()));
         this.disposableRegistry.push(
             commands.registerCommand(Commands.RestartKernelAndRunUpToSelectedCell, () =>
                 this.restartKernelAndRunUpToSelectedCell()
@@ -118,6 +134,29 @@ export class NotebookCommandListener implements INotebookCommandHandler, IExtens
         if (window.activeNotebookEditor) {
             commands.executeCommand('notebook.cell.insertCodeCellBelow').then(noop, noop);
         }
+    }
+
+    private async goToCell() {
+        const editor = window.activeNotebookEditor;
+        const cellCount = editor?.notebook.cellCount ?? 0;
+        if (!editor || cellCount === 0) {
+            return;
+        }
+        const value = await window.showInputBox({
+            prompt: DataScience.goToCellPrompt(cellCount),
+            validateInput: (input) =>
+                input.trim() === '' || parseCellNumber(input, cellCount) !== undefined
+                    ? undefined
+                    : DataScience.goToCellInvalidNumber(cellCount)
+        });
+        // The notebook may have changed while the input box was open, so validate against the current cell count.
+        const index = value === undefined ? undefined : parseCellNumber(value, editor.notebook.cellCount);
+        if (index === undefined) {
+            return;
+        }
+        const range = new NotebookRange(index, index + 1);
+        editor.selections = [range];
+        editor.revealRange(range, NotebookEditorRevealType.InCenterIfOutsideViewport);
     }
 
     private removeAllCells() {

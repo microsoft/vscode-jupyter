@@ -92,6 +92,7 @@
         "message": "Add Empty Cell to Notebook File",
         "comment": ["{Locked='Notebook'}"]
     },
+    "jupyter.command.jupyter.notebookeditor.gotocell.title": "Go to Cell...",
     "jupyter.command.jupyter.interruptkernel.title": "Interrupt Kernel",
     "jupyter.command.jupyter.interruptkernel.shorttitle": "Interrupt",
     "jupyter.command.jupyter.restartkernel.title": "Restart Kernel",

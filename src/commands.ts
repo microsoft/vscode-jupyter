@@ -59,6 +59,7 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.NotebookEditorRemoveAllCells]: [];
     [DSCommands.NotebookEditorRunAllCells]: [];
     [DSCommands.NotebookEditorAddCellBelow]: [];
+    [DSCommands.NotebookEditorGoToCell]: [];
     [DSCommands.ExpandAllCells]: [];
     [DSCommands.CollapseAllCells]: [];
     [DSCommands.AddCellBelow]: [];

@@ -214,6 +214,13 @@ export namespace DataScience {
     );
     export const restartKernelMessageYes = l10n.t('Restart');
     export const restartKernelMessageDontAskAgain = l10n.t("Don't Ask Again");
+    export const goToCellPrompt = (cellCount: number) =>
+        l10n.t(
+            'Enter a cell number from 1 to {0}. Cells are counted from the top, including Markdown cells.',
+            cellCount
+        );
+    export const goToCellInvalidNumber = (cellCount: number) =>
+        l10n.t('Not a cell in this notebook. Enter a number from 1 to {0}.', cellCount);
     export const automaticallyReconnectingToAKernelProgressMessage = (kernelName: string) =>
         l10n.t('Reconnecting to the kernel {0}', kernelName);
     export const restartingKernelStatus = (kernelName: string) => l10n.t('Restarting Kernel {0}', kernelName);
