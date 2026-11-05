@@ -116,7 +116,7 @@ suite(`Interactive window Execution @iw`, async function () {
         await vscode.commands.executeCommand('python.clearWorkspaceInterpreter');
     }
 
-    test.skip('Export Interactive window to Notebook', async () => {
+    test('Export Interactive window to Notebook', async () => {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await waitForInteractiveWindow(activeInteractiveWindow);
 
@@ -156,7 +156,7 @@ suite(`Interactive window Execution @iw`, async function () {
         await waitForTextOutput(cells[0], 'first');
     });
 
-    test.skip('Switching active interpreter on a python file changes kernel in use', async function () {
+    test('Switching active interpreter on a python file changes kernel in use', async function () {
         // Virtual environments are not available in conda
         if (IS_CONDA_TEST() || IS_REMOTE_NATIVE_TEST()) {
             this.skip();
