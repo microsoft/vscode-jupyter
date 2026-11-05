@@ -29,6 +29,7 @@ import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers
 import { waitForCondition } from '../../../test/common';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import { RawSessionConnection } from './rawSessionConnection.node';
+import { RawSocket } from './rawSocket.node';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../../../test/vscode-mock';
 import type { IFileSystem } from '../../../platform/common/platform/types';
@@ -49,6 +50,8 @@ suite('Raw Session & Raw Kernel Connection', () => {
         stderr: string;
     }>;
     let onDidDispose: EventEmitter<void>;
+    let termination = createDeferred<void>();
+    let resolveTerminationOnDispose = true;
     const launchTimeout = 1_000;
     let disposables: IDisposable[] = [];
     let kernelConnectionMetadata: LocalKernelSpecConnectionMetadata;
@@ -114,7 +117,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             control_port: 1,
             hb_port: 2,
             iopub_port: 3,
-            ip: '123',
+            ip: '127.0.0.1',
             key: '',
             shell_port: 4,
             signature_scheme: 'hmac-sha256',
@@ -125,8 +128,12 @@ suite('Raw Session & Raw Kernel Connection', () => {
         when(kernelProcess.dispose()).thenCall(() => {
             disposed = true;
             onDidDispose.fire();
+            if (resolveTerminationOnDispose) {
+                termination.resolve();
+            }
         });
         when(kernelProcess.exited).thenReturn(exitedEvent.event);
+        when(kernelProcess.termination).thenReturn(termination.promise);
         when(kernelProcess.onDidDispose).thenReturn(onDidDispose.event);
         when(kernelProcess.canInterrupt).thenReturn(true);
         when(kernelProcess.interrupt()).thenResolve();
@@ -193,6 +200,8 @@ suite('Raw Session & Raw Kernel Connection', () => {
         disposables.push(exitedEvent);
         onDidDispose = new EventEmitter<void>();
         disposables.push(onDidDispose);
+        termination = createDeferred<void>();
+        resolveTerminationOnDispose = true;
         jupyterLabKernel.KernelConnection = OldKernelConnectionClass;
         const workspaceConfig = mock<WorkspaceConfiguration>();
         when(workspaceConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
@@ -330,6 +339,91 @@ suite('Raw Session & Raw Kernel Connection', () => {
             assert.deepEqual(statuses, ['dead']);
             assert.strictEqual(disposed, false);
             verify(kernelProcess.dispose()).once();
+        });
+        test('review regression: failed-start cleanup uses one deadline and blocks retry until actual termination', async () => {
+            const clock = sinon.useFakeTimers();
+            disposables.push(new Disposable(() => clock.restore()));
+            resolveTerminationOnDispose = false;
+            await session.shutdown();
+            const firstCleanup = session.shutdownAfterFailedStartup();
+            const secondCleanup = session.shutdownAfterFailedStartup();
+            assert.strictEqual(
+                firstCleanup,
+                secondCleanup,
+                'Repeated failed-start cleanup must join the original deadline'
+            );
+
+            let cleanupCompleted = false;
+            void firstCleanup.then(() => (cleanupCompleted = true));
+            await clock.tickAsync(4999);
+            assert.isFalse(cleanupCompleted, 'The strict cleanup budget must not complete early');
+            await clock.tickAsync(1);
+            assert.isTrue(cleanupCompleted, 'The strict cleanup must finish at its 5000ms deadline');
+            await firstCleanup;
+            assert.isTrue(session.hasPendingFailedStartupTermination);
+            verify(kernelProcess.dispose()).once();
+
+            const retryToken = new CancellationTokenSource();
+            disposables.push(retryToken);
+            await assert.isRejected(
+                session.startKernel({ token: retryToken.token }),
+                new KernelConnectionTimeoutError(kernelConnectionMetadata).message
+            );
+
+            termination.resolve();
+            await clock.tickAsync(0);
+            assert.isFalse(session.hasPendingFailedStartupTermination);
+
+            const newKernel = createKernel();
+            const newKernelProcess = createKernelProcess();
+            when(kernelLauncher.launch(anything(), anything(), anything(), anything(), anything())).thenResolve(
+                resolvableInstance(newKernelProcess)
+            );
+            await session.startKernel({ token: retryToken.token });
+            when(newKernel.status).thenReturn('idle');
+            assert.strictEqual(session.status, 'idle');
+        });
+        test('review regression: failed-start transport close failure retains the retry barrier', async () => {
+            resolveTerminationOnDispose = false;
+            const strictClose = sinon
+                .stub(RawSocket.prototype, 'closeAfterFailedStartup')
+                .throws(new Error('Raw transport remained open'));
+            disposables.push(new Disposable(() => strictClose.restore()));
+            const cleanup = session.shutdownAfterFailedStartup();
+            cleanup.catch(noop);
+
+            termination.resolve();
+            const failure = await cleanup.catch((error: unknown) => error);
+            assert.instanceOf(failure, Error);
+            assert.strictEqual(strictClose.callCount, 2);
+            assert.isTrue(session.hasPendingFailedStartupTermination);
+
+            const retryToken = new CancellationTokenSource();
+            disposables.push(retryToken);
+            await assert.isRejected(
+                session.startKernel({ token: retryToken.token }),
+                new KernelConnectionTimeoutError(kernelConnectionMetadata).message
+            );
+        });
+        test('review regression: actual exit releases a transient transport-close failure', async () => {
+            resolveTerminationOnDispose = false;
+            const originalClose = RawSocket.prototype.closeAfterFailedStartup;
+            let calls = 0;
+            const strictClose = sinon.stub(RawSocket.prototype, 'closeAfterFailedStartup').callsFake(function (
+                this: RawSocket
+            ) {
+                calls += 1;
+                if (calls === 1) {
+                    throw new Error('Transient raw transport close failure');
+                }
+                return originalClose.call(this);
+            });
+            disposables.push(new Disposable(() => strictClose.restore()));
+            const cleanup = session.shutdownAfterFailedStartup();
+            termination.resolve();
+            await cleanup;
+            assert.strictEqual(calls, 2);
+            assert.isFalse(session.hasPendingFailedStartupTermination);
         });
         test('Restart', async () => {
             const newKernel = createKernel();

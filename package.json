@@ -2217,6 +2217,8 @@
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js",
         "test": "npm run test:unittests",
         "test:unittests": "mocha --config ./build/.mocha.unittests.js.json ./out/**/*.unit.test.js",
+        "test:raw-startup": "mocha --no-config --require source-map-support/register --require ./out/test/unittests.js --ui tdd ./out/kernels/raw/session/rawKernelStartup*.node.test.js",
+        "test:raw-startup:transport": "mocha --no-config --require source-map-support/register --require ./out/test/unittests.js --ui tdd ./out/kernels/raw/session/rawKernelStartup.node.test.js ./out/kernels/raw/session/rawKernelStartup.lifecycle.node.test.js",
         "test:cover:report": "nyc report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "pretest:integration": "node ./out/test/datascience/dsTestSetup.js",
         "test:integration": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test node ./out/test/standardTest.node.js",

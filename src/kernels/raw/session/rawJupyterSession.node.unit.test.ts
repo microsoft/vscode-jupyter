@@ -14,6 +14,7 @@ import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IDisposable } from '../../../platform/common/types';
 import { RawSessionConnection } from './rawSessionConnection.node';
 import { disposeAsync } from '../../../platform/common/utils';
+import { createDeferred } from '../../../platform/common/utils/async';
 
 suite('Raw Jupyter Session Wrapper', () => {
     let sessionWrapper: RawJupyterSessionWrapper;
@@ -99,5 +100,21 @@ suite('Raw Jupyter Session Wrapper', () => {
         verify(session.shutdown()).once();
         assert.strictEqual(sessionWrapper.status, 'dead');
         assert.deepEqual(statuses, ['terminating', 'dead']);
+    });
+    test('failed-start cleanup bypasses an ordinary shutdown that already completed', async () => {
+        const actualTermination = createDeferred<void>();
+        when(session.shutdownAfterFailedStartup()).thenReturn(actualTermination.promise);
+
+        await sessionWrapper.shutdown();
+        const cleanup = sessionWrapper.shutdownAfterFailedStartup();
+        let completed = false;
+        void cleanup.then(() => (completed = true));
+        await Promise.resolve();
+        assert.isFalse(completed);
+
+        actualTermination.resolve();
+        await cleanup;
+        assert.isTrue(completed);
+        verify(session.shutdownAfterFailedStartup()).once();
     });
 });

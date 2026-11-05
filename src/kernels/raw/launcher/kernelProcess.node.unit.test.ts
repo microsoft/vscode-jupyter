@@ -27,7 +27,7 @@ import {
     IJupyterSettings,
     IOutputChannel
 } from '../../../platform/common/types';
-import { CancellationTokenSource, Uri } from 'vscode';
+import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
 import { dispose } from '../../../platform/common/utils/lifecycle';
 import { noop } from '../../../test/core';
 import { ChildProcess } from 'child_process';
@@ -75,6 +75,7 @@ suite('Kernel Process', () => {
                 let observableOutput: ReturnType<typeof createObservable<Output<string>>>;
                 let daemon: PythonKernelInterruptDaemon;
                 let proc: ChildProcess;
+                let childProcessEvents: EventEmitter;
                 let jupyterPaths: JupyterPaths;
                 const jupyterRuntimeDir = Uri.file(path.join('hello', 'jupyter', 'runtime'));
                 setup(() => {
@@ -110,7 +111,22 @@ suite('Kernel Process', () => {
                         }
                     });
                     jupyterPaths = mock<JupyterPaths>();
-                    when(proc.on).thenReturn(noop as any);
+                    childProcessEvents = new EventEmitter();
+                    disposables.push({
+                        dispose: () => {
+                            childProcessEvents.removeAllListeners();
+                        }
+                    });
+                    when(proc.exitCode).thenReturn(null);
+                    when(proc.signalCode).thenReturn(null);
+                    when(proc.pid).thenReturn(Number.MAX_SAFE_INTEGER);
+                    when((proc as any).on(anything(), anything())).thenCall(
+                        (event: string, listener: (...args: any[]) => void) => {
+                            childProcessEvents.on(event, listener);
+                            return instance(proc);
+                        }
+                    );
+                    when(proc.kill()).thenReturn(true);
                     when(proc.stdout).thenReturn(eventEmitter as any);
                     when(proc.stderr).thenReturn(eventEmitter as any);
                     when(processServiceFactory.create(anything())).thenResolve(instance(processService));
@@ -180,6 +196,101 @@ suite('Kernel Process', () => {
                     verify(fs.writeFile(anything(), anything())).atLeast(1);
                     const kernelJson = capture(fs.writeFile).first()[0];
                     assert.ok(kernelJson.fsPath.startsWith(jupyterRuntimeDir.fsPath));
+                });
+                test('actual termination waits for the child exit after a synthetic disposal event', async () => {
+                    const kernelSpec: IJupyterKernelSpec = {
+                        argv: ['dotnet', 'csharp', '{connection_file}'],
+                        display_name: 'C# .NET',
+                        name: 'csharp',
+                        executable: 'dotnet'
+                    };
+                    when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
+                    when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
+
+                    await kernelProcess.launch('', 0, token.token);
+                    let exited = false;
+                    const listener = kernelProcess.exited(() => (exited = true));
+                    let terminated = false;
+                    void kernelProcess.termination.then(() => (terminated = true));
+
+                    kernelProcess.dispose();
+                    await waitForCondition(() => exited, 1000, 'Synthetic process disposal event was not raised');
+                    assert.isFalse(terminated, 'Synthetic disposal must not complete actual child termination');
+
+                    childProcessEvents.emit('exit', 0);
+                    await kernelProcess.termination;
+                    assert.isTrue(terminated);
+                    listener.dispose();
+                });
+                test('actual termination ignores a live child process error until exit', async () => {
+                    const kernelSpec: IJupyterKernelSpec = {
+                        argv: ['dotnet', 'csharp', '{connection_file}'],
+                        display_name: 'C# .NET',
+                        name: 'csharp',
+                        executable: 'dotnet'
+                    };
+                    when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
+                    when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
+
+                    await kernelProcess.launch('', 0, token.token);
+                    let terminated = false;
+                    void kernelProcess.termination.then(() => (terminated = true));
+
+                    childProcessEvents.emit('error', new Error('Kernel kill request failed'));
+                    await Promise.resolve();
+                    assert.isFalse(terminated, 'A live child process error must not confirm termination');
+
+                    childProcessEvents.emit('exit', 0);
+                    await kernelProcess.termination;
+                    assert.isTrue(terminated);
+                });
+                test('actual termination completes when disposal has no launched child', async () => {
+                    kernelProcess.dispose();
+                    await kernelProcess.termination;
+                });
+                test('captures a Python child before cancellation requested by execObservable', async () => {
+                    const kernelSpec: IJupyterKernelSpec = {
+                        argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                        display_name: 'Python 3',
+                        executable: 'python',
+                        language: 'python',
+                        name: 'python3'
+                    };
+                    when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
+                    when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
+                    when(connectionMetadata.interpreter).thenReturn({
+                        id: 'fixture-python',
+                        uri: Uri.file('python')
+                    } as any);
+                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                    when(pythonProcess.execObservable(anything(), anything())).thenCall(() => {
+                        token.cancel();
+                        return {
+                            dispose: noop,
+                            out: observableOutput,
+                            proc: instance(proc)
+                        };
+                    });
+
+                    await assert.isRejected(kernelProcess.launch('', 0, token.token), new CancellationError().message);
+                    assert.strictEqual(kernelProcess.pid, Number.MAX_SAFE_INTEGER);
+                    let terminated = false;
+                    void kernelProcess.termination.then(() => (terminated = true));
+
+                    kernelProcess.dispose();
+                    await waitForCondition(
+                        () => {
+                            verify(proc.kill()).once();
+                            return true;
+                        },
+                        1000,
+                        'Captured Python child was not targeted by disposal'
+                    );
+                    assert.isFalse(terminated, 'Synthetic disposal must not complete the captured child termination');
+
+                    childProcessEvents.emit('exit', 0);
+                    await kernelProcess.termination;
+                    assert.isTrue(terminated);
                 });
                 test('Ensure kernelspec json file is created with the connection info in it', async () => {
                     const kernelSpec: IJupyterKernelSpec = {

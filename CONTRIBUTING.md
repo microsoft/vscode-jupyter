@@ -93,6 +93,42 @@ npm run test:unittests  # runs all unit tests
 npm run test:unittests -- --grep='<NAME-OF-SUITE>'
 ```
 
+#### Raw kernel startup recovery regressions
+
+After `npm run compile`, `npm run test:raw-startup` runs the dedicated Windows native transport
+regressions. They exercise the real raw session, startup hooks, first execution, restart,
+cancellation, and resource cleanup. The Node protocol fixture deterministically holds a request
+until a fresh shell peer arrives; it models the dispatch failure rather than reproducing Python's
+notification-descriptor race.
+
+The Node-only subset, `npm run test:raw-startup:transport`, also runs in Windows CI without
+requiring Python. It includes delayed auxiliary server work and repeated readiness-barrier
+regressions: closing a client socket must not be mistaken for cancelling a queued kernel request.
+
+Failed raw-startup cleanup has a separate 5,000 ms budget. It must confirm the owned kernel
+process has exited and close its transport; wrapper disposal flags are not exit confirmation.
+If cleanup cannot be confirmed, the original startup failure is retained with an explicit
+cleanup diagnostic, and retries through the same owner remain blocked until termination is
+confirmed. This budget does not limit healthy acknowledged startup work or change ordinary
+shutdown responsiveness. The regressions also cover cold restart without duplicate initialization.
+
+The separate Python-process tests stage and assert the actual queued-input/unreadable-descriptor
+condition using ipykernel's unmodified sender. Set `VSC_JUPYTER_TEST_PYTHON` to a private Python
+environment containing ipykernel 7.3.0, pyzmq 27.1.0, and Tornado before running the native target:
+
+```powershell
+$env:VSC_JUPYTER_TEST_PYTHON = 'C:\path\to\private\venv\Scripts\python.exe'
+npm run compile
+npm run test:raw-startup
+```
+
+These tests are Windows-only and the Python prerequisite is required, not silently skipped.
+Pure budget, acknowledgement, input, and correlation policy tests remain in the ordinary unit suite.
+The opt-in `@startupRecoveryHost` integration suite additionally requires
+`VSC_JUPYTER_TEST_RAW_STARTUP_RECOVERY=1`, the Python extension, and an isolated VS Code profile,
+extension directory, workspace, and Jupyter configuration/runtime directories. It exercises real
+notebook cells and cancellation without modifying installed Python sources or the user's profile.
+
 _To run only a specific test suite for unit tests:_
 Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the `grep` field:
 

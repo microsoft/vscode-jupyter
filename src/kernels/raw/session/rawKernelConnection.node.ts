@@ -9,12 +9,18 @@ import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import {
     getDisplayNameOrNameOfKernelConnection,
     getNameOfKernelConnection,
-    isUserRegisteredKernelSpecConnection
+    isUserRegisteredKernelSpecConnection,
+    isPythonKernelConnection
 } from '../../../kernels/helpers';
-import { IWebSocketLike } from '../../common/kernelSocketWrapper';
-import { IKernelLauncher, IKernelProcess } from '../types';
+import {
+    IKernelLauncher,
+    IKernelProcess,
+    rawStartupTermination,
+    rawStartupTerminationTimeout,
+    type RawStartupTerminationCarrier
+} from '../types';
 import { RawSocket } from './rawSocket.node';
-import { IKernelSocket, LocalKernelConnectionMetadata } from '../../types';
+import { LocalKernelConnectionMetadata } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { Signal } from '@lumino/signaling';
 import type {
@@ -45,8 +51,16 @@ import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError'
 import { once } from '../../../platform/common/utils/functional';
 import { disposeAsync } from '../../../platform/common/utils';
 import { generateUuid } from '../../../platform/common/uuid';
+import { KernelStartupRecovery } from '../../kernelStartupRecovery';
 
 let jupyterLabKernel: typeof import('@jupyterlab/services/lib/kernel/default');
+
+interface FailedStartupCleanup {
+    readonly generation: number;
+    readonly termination: Promise<void>;
+    readonly completion: Promise<void>;
+    readonly safeToRetry: Promise<void>;
+}
 
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface
@@ -108,8 +122,50 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     private kernelProcess?: IKernelProcess;
     private exitHandler?: IDisposable;
     private realKernel?: Kernel.IKernelConnection;
-    private socket: IKernelSocket & IWebSocketLike & IDisposable;
+    private socket: RawSocket;
     private restartToken?: CancellationTokenSource;
+    private startupRecovery?: KernelStartupRecovery;
+    private recoveryLease?: symbol;
+    private generation = 0;
+    private transportCreatedAt = 0;
+    private cleaningUpStart = false;
+    private failedStartupCleanup?: FailedStartupCleanup;
+    private readonly processDisposals = new WeakMap<IKernelProcess, Promise<void>>();
+
+    public get failedStartupTermination(): Promise<void> | undefined {
+        return this.failedStartupCleanup?.safeToRetry;
+    }
+    public get hasPendingFailedStartupTermination(): boolean {
+        return this.failedStartupCleanup !== undefined;
+    }
+
+    public createStartupRecovery(token: CancellationToken) {
+        this.startupRecovery?.abort(new CancellationError());
+        this.startupRecovery = undefined;
+        this.recoveryLease = undefined;
+        if (
+            process.platform !== 'win32' ||
+            !isPythonKernelConnection(this.kernelConnectionMetadata) ||
+            !this.socket?.supportsStartupRecovery ||
+            !this.realKernel
+        ) {
+            return;
+        }
+        const generation = this.generation;
+        const socket = this.socket;
+        const lease = Symbol();
+        this.recoveryLease = lease;
+        this.startupRecovery = new KernelStartupRecovery(
+            this.realKernel,
+            socket.onDidPostMessage,
+            this.launchTimeout - (performance.now() - this.transportCreatedAt),
+            token,
+            (recoveryToken, timeout, observe) => socket.wakeUp(recoveryToken, timeout, observe),
+            () => generation === this.generation && this.recoveryLease === lease && !this.hasShutdown,
+            this.kernelConnectionMetadata
+        );
+        return this.startupRecovery;
+    }
 
     constructor(
         private readonly resource: Resource,
@@ -124,6 +180,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             name: this.name,
             id: this.id
         };
+        this.infoDeferred.promise.catch(noop);
     }
     commsOverSubshells?: CommsOverSubshells | undefined;
     requestCreateSubshell(
@@ -163,6 +220,15 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         }
     }
     public async start(token: CancellationToken): Promise<void> {
+        if (this.failedStartupCleanup) {
+            logger.error('Raw kernel launch was blocked while failed-start cleanup awaits actual process termination');
+            throw new KernelConnectionTimeoutError(this.kernelConnectionMetadata);
+        }
+        this.generation += 1;
+        this.isShuttingDown = false;
+        this.hasShutdown = false;
+        this.startupRecovery?.abort(new CancellationError());
+        this.startupRecovery = undefined;
         const disposables: IDisposable[] = [];
         const postStartToken = wrapCancellationTokens(token);
         disposables.push(postStartToken);
@@ -191,6 +257,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 throw new CancellationError();
             }
             this.hookupKernelProcessExitHandler(kernelProcess);
+            this.transportCreatedAt = performance.now();
             const result = newRawKernel(this.kernelProcess, this.clientId, this.username, this.model);
             this.kernelProcess = result.kernelProcess;
             this.realKernel = result.realKernel;
@@ -238,18 +305,21 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             // Pretend like an open occurred. This will prime the real kernel to be connected
             this.statusChanged.emit(this.status);
         } catch (error) {
-            await Promise.all([
-                this.kernelProcess ? disposeAsync(this.kernelProcess) : Promise.resolve(),
-                this.realKernel
-                    ?.shutdown()
-                    .catch((ex) =>
-                        postStartToken.token.isCancellationRequested
-                            ? undefined
-                            : logger.warn(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex)
-                    )
-            ]);
-            if (kernelExitedError) {
-                throw kernelExitedError;
+            const exitedBeforeCleanup = kernelExitedError;
+            this.cleaningUpStart = true;
+            const launcherTermination =
+                error instanceof Error ? (error as RawStartupTerminationCarrier)[rawStartupTermination] : undefined;
+            try {
+                if (launcherTermination) {
+                    await this.adoptFailedStartupTermination(launcherTermination);
+                } else {
+                    await this.shutdownAfterFailedStartup();
+                }
+            } catch (cleanupError) {
+                logger.error('Failed to verify raw transport cleanup after startup failed', cleanupError);
+            }
+            if (exitedBeforeCleanup) {
+                throw exitedBeforeCleanup;
             }
             if (
                 isCancellationError(error) &&
@@ -266,17 +336,149 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             }
             throw error;
         } finally {
+            this.cleaningUpStart = false;
             dispose(disposables);
+        }
+    }
+    public shutdownAfterFailedStartup(): Promise<void> {
+        if (this.failedStartupCleanup) {
+            return this.failedStartupCleanup.completion;
+        }
+
+        const process = this.kernelProcess;
+        const socket = this.socket;
+        const realKernel = this.realKernel;
+        if (!process) {
+            try {
+                this.closeTransport(socket, realKernel, true);
+            } catch (error) {
+                logger.error('Failed to verify raw transport cleanup after startup failed', error);
+                throw error;
+            }
+            void this.shutdown().catch((error) =>
+                logger.warn('Failed to finish raw-session cleanup after startup failed', error)
+            );
+            return Promise.resolve();
+        }
+
+        const generation = this.generation;
+        const termination = process.termination;
+        const startedAt = performance.now();
+        const safeToRetry = termination.then(() => this.closeTransport(socket, realKernel, true));
+        let terminationFailure: unknown;
+        const completion = (async () => {
+            void this.disposeKernelProcess(process).catch((error) =>
+                logger.warn('Failed to request process disposal after raw startup failed', error)
+            );
+            void realKernel
+                ?.shutdown()
+                .catch((error) =>
+                    logger.warn(
+                        `Failed to shutdown raw kernel after startup failed, ${this.kernelConnectionMetadata.id}`,
+                        error
+                    )
+                );
+            try {
+                this.closeTransport(socket, realKernel, true);
+            } catch (error) {
+                logger.error('Failed to verify raw transport cleanup after startup failed', error);
+            }
+            void this.shutdown().catch((error) =>
+                logger.warn('Failed to finish raw-session cleanup after startup failed', error)
+            );
+
+            const terminated = await raceTimeout(
+                Math.max(0, rawStartupTerminationTimeout - (performance.now() - startedAt)),
+                false,
+                termination.then(
+                    () => true,
+                    (error) => {
+                        terminationFailure = error;
+                        return false;
+                    }
+                )
+            );
+            if (!terminated) {
+                if (terminationFailure) {
+                    logger.error(
+                        'Failed to observe actual raw kernel process termination after startup failed',
+                        terminationFailure
+                    );
+                } else {
+                    logger.error(
+                        `Timed out waiting ${rawStartupTerminationTimeout}ms for actual raw kernel process termination after startup failed`
+                    );
+                }
+                return;
+            }
+            await safeToRetry;
+        })();
+        return this.retainFailedStartupCleanup(generation, termination, completion, safeToRetry).completion;
+    }
+    private adoptFailedStartupTermination(termination: Promise<void>): Promise<void> {
+        return this.retainFailedStartupCleanup(this.generation, termination, Promise.resolve(), termination).completion;
+    }
+    private retainFailedStartupCleanup(
+        generation: number,
+        termination: Promise<void>,
+        completion: Promise<void>,
+        safeToRetry: Promise<void>
+    ): FailedStartupCleanup {
+        if (this.failedStartupCleanup) {
+            return this.failedStartupCleanup;
+        }
+        const cleanup: FailedStartupCleanup = { generation, termination, completion, safeToRetry };
+        this.failedStartupCleanup = cleanup;
+        void safeToRetry.then(
+            () => {
+                if (this.failedStartupCleanup === cleanup && cleanup.generation === generation) {
+                    this.failedStartupCleanup = undefined;
+                }
+            },
+            (error) => logger.error('Failed to verify raw transport cleanup after startup failed', error)
+        );
+        return cleanup;
+    }
+    private disposeKernelProcess(process: IKernelProcess): Promise<void> {
+        let disposal = this.processDisposals.get(process);
+        if (!disposal) {
+            disposal = disposeAsync(process);
+            this.processDisposals.set(process, disposal);
+        }
+        return disposal;
+    }
+    private closeTransport(
+        socket: RawSocket | undefined,
+        realKernel: Kernel.IKernelConnection | undefined,
+        strict = false
+    ) {
+        let socketCloseError: unknown;
+        try {
+            if (strict) {
+                socket?.closeAfterFailedStartup();
+            } else {
+                socket?.dispose();
+            }
+        } catch (error) {
+            socketCloseError = error;
+        }
+        if (realKernel) {
+            this.stopHandlingKernelMessages(realKernel);
+            realKernel.dispose();
+        }
+        if (socketCloseError) {
+            throw socketCloseError;
         }
     }
     private hookupKernelProcessExitHandler(kernelProcess: IKernelProcess) {
         const oldExitHandler = this.exitHandler;
         this.exitHandler = undefined;
         oldExitHandler?.dispose();
-        this.exitHandler = kernelProcess.exited((e: { exitCode?: number | undefined; reason?: string | undefined }) => {
+        this.exitHandler = kernelProcess.exited((e: { exitCode?: number; reason?: string; stderr?: string }) => {
             if (
                 // We have a new process, and the old is being shutdown.
                 kernelProcess !== this.kernelProcess ||
+                this.cleaningUpStart ||
                 this.isDisposing ||
                 !this.kernelProcess ||
                 this.status === 'dead' ||
@@ -286,6 +488,13 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             }
 
             logger.error(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
+            this.startupRecovery?.abort(
+                new KernelProcessExitedError(
+                    e.exitCode || -1,
+                    e.stderr || e.reason || '',
+                    this.kernelConnectionMetadata
+                )
+            );
             // Send telemetry so we know why the kernel process exited,
             // as this affects our kernel startup success
             sendKernelTelemetryEvent(
@@ -317,13 +526,20 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         if (this.isShuttingDown || this.hasShutdown) {
             return;
         }
+        const generation = this.generation;
+        const process = this.kernelProcess;
+        const socket = this.socket;
+        const realKernel = this.realKernel;
         this.isShuttingDown = true;
+        this.startupRecovery?.abort(new CancellationError());
         this.restartToken?.cancel();
         this.restartToken?.dispose();
-        suppressShutdownErrors(this.realKernel);
-        await (this.kernelProcess ? disposeAsync(this.kernelProcess).catch(noop) : Promise.resolve());
-        this.socket.dispose();
-        this.stopHandlingKernelMessages();
+        suppressShutdownErrors(realKernel);
+        await (process ? this.disposeKernelProcess(process).catch(noop) : Promise.resolve());
+        this.closeTransport(socket, realKernel);
+        if (generation !== this.generation) {
+            return;
+        }
         this.isShuttingDown = false;
         this.hasShutdown = true;
         // Before triggering any status events ensure this is marked as disposed.
@@ -495,13 +711,16 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         this.realKernel!.pendingInput.connect(this.onPendingInput, this);
         this.realKernel!.disposed.connect(this.onDisposed, this);
     }
-    private stopHandlingKernelMessages() {
-        this.realKernel!.anyMessage.disconnect(this.onAnyMessage, this);
-        this.realKernel!.iopubMessage.disconnect(this.onIOPubMessage, this);
-        this.realKernel!.unhandledMessage.disconnect(this.onUnhandledMessage, this);
-        this.realKernel!.pendingInput.disconnect(this.onPendingInput, this);
-        this.realKernel!.statusChanged.disconnect(this.onStatusChanged, this);
-        this.realKernel!.disposed.disconnect(this.onDisposed, this);
+    private stopHandlingKernelMessages(kernel: Kernel.IKernelConnection | undefined = this.realKernel) {
+        if (!kernel) {
+            return;
+        }
+        kernel.anyMessage.disconnect(this.onAnyMessage, this);
+        kernel.iopubMessage.disconnect(this.onIOPubMessage, this);
+        kernel.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+        kernel.pendingInput.disconnect(this.onPendingInput, this);
+        kernel.statusChanged.disconnect(this.onStatusChanged, this);
+        kernel.disposed.disconnect(this.onDisposed, this);
     }
     private onAnyMessage(_connection: Kernel.IKernelConnection, msg: Kernel.IAnyMessageArgs) {
         this.anyMessage.emit(msg);
@@ -679,7 +898,7 @@ function newRawKernel(kernelProcess: IKernelProcess, clientId: string, username:
 
     // Dummy websocket we give to the underlying real kernel
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let socketInstance: IKernelSocket & IWebSocketLike & IDisposable;
+    let socketInstance: RawSocket;
     class RawSocketWrapper extends RawSocket {
         constructor() {
             super(kernelProcess.connection, jupyterLabSerialize.serialize);
