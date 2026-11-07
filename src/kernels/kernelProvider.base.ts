@@ -150,6 +150,32 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     protected disposeOldKernel(notebook: NotebookDocument, reason: 'notebookClosed' | 'createNewKernel') {
         const kernelToDispose = this.kernelsByNotebook.get(notebook);
         if (kernelToDispose) {
+            // Check if this kernel is marked for migration due to a file rename
+            const migrationTarget = (kernelToDispose.kernel as any)._migrationTarget;
+            if (migrationTarget && reason === 'notebookClosed') {
+                logger.debug(
+                    `Kernel ${kernelToDispose.kernel.id} associated with ${getDisplayPath(
+                        notebook.uri
+                    )} is marked for migration to ${migrationTarget}, attempting to migrate instead of disposing`
+                );
+
+                // Attempt to find the new notebook document
+                const targetNotebook = workspace.notebookDocuments.find(
+                    (doc) => doc.uri.toString() === migrationTarget
+                );
+                if (targetNotebook) {
+                    logger.debug(`Found target notebook for migration: ${getDisplayPath(targetNotebook.uri)}`);
+
+                    // Migrate the kernel to the new notebook
+                    this.migrateKernel(notebook, targetNotebook, kernelToDispose.kernel, kernelToDispose.options);
+                    return;
+                } else {
+                    logger.debug(`Target notebook not found for migration, proceeding with disposal`);
+                    // Clear the migration flag and proceed with normal disposal
+                    delete (kernelToDispose.kernel as any)._migrationTarget;
+                }
+            }
+
             logger.debug(
                 `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${
                     notebook.isClosed
@@ -164,6 +190,42 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                 .catch(noop);
         }
         this.kernelsByNotebook.delete(notebook);
+    }
+
+    /**
+     * Migrates a kernel from one notebook to another during file rename operations.
+     * This preserves the kernel session instead of disposing and recreating it.
+     */
+    protected migrateKernel(
+        oldNotebook: NotebookDocument,
+        newNotebook: NotebookDocument,
+        kernel: IKernel,
+        options: KernelOptions
+    ) {
+        logger.debug(
+            `Migrating kernel ${kernel.id} from ${getDisplayPath(oldNotebook.uri)} to ${getDisplayPath(
+                newNotebook.uri
+            )}`
+        );
+
+        // Remove the old mappings
+        this.kernelsByNotebook.delete(oldNotebook);
+
+        // Update the kernel's internal notebook reference if possible
+        if ((kernel as any).notebook) {
+            (kernel as any).notebook = newNotebook;
+        }
+        if ((kernel as any).uri) {
+            (kernel as any).uri = newNotebook.uri;
+        }
+
+        // Create new mappings for the target notebook
+        this.kernelsByNotebook.set(newNotebook, { options, kernel });
+
+        // Clear the migration flag
+        delete (kernel as any)._migrationTarget;
+
+        logger.debug(`Successfully migrated kernel ${kernel.id} to ${getDisplayPath(newNotebook.uri)}`);
     }
 
     protected handleServerRemoval(servers: JupyterServerProviderHandle[]) {
