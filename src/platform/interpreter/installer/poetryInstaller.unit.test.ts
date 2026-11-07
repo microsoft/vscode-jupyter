@@ -133,7 +133,29 @@ suite('Module Installer - Poetry', () => {
 
         const info = await poetryInstaller.getExecutionArgs('something', interpreter);
 
-        assert.deepEqual(info, { args: ['poetry path', 'add', '--dev', 'something'], cwd: null, useShellExec: true });
+        assert.deepStrictEqual(info, { exe: 'poetry path', args: ['add', '--dev', 'something'], cwd: undefined });
+    });
+    test('Get executable info preserves workspace and literal arguments', async () => {
+        const uri = Uri.file(project1);
+        const interpreter: PythonEnvironment = {
+            uri: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')),
+            id: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')).fsPath
+        };
+        const settings = mock(JupyterSettings);
+        const poetryPath = path.join(project1, 'poetry tools', 'poetry');
+        const moduleName = 'some-package; echo "literal argument"';
+
+        when(configurationService.getSettings(undefined)).thenReturn(instance(settings));
+        when(settings.poetryPath).thenReturn(poetryPath);
+        when(mockedVSCodeNamespaces.workspace.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
+
+        const info = await poetryInstaller.getExecutionArgs(moduleName, interpreter);
+
+        assert.deepStrictEqual(info, {
+            exe: poetryPath,
+            args: ['add', '--dev', moduleName],
+            cwd: uri.fsPath
+        });
     });
     test('Is supported returns true if selected interpreter is related to the workspace', async () => {
         const uri = Uri.file(project1);

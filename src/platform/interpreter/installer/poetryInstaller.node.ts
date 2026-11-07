@@ -74,15 +74,11 @@ export class PoetryInstaller extends ModuleInstaller {
         interpreter: PythonEnvironment | Environment
     ): Promise<ExecutionInstallArgs> {
         const execPath = this.configurationService.getSettings(undefined).poetryPath;
-        const args = [execPath, 'add', '--dev', moduleName];
+        const args = ['add', '--dev', moduleName];
         const cwd = getInterpreterWorkspaceFolder(interpreter)?.fsPath;
 
-        // TODO: We have to shell exec this because child_process.spawn will die
-        // for poetry.
-        // See issue:
-        // https://github.com/microsoft/vscode-jupyter/issues/9265
         return {
-            useShellExec: true,
+            exe: execPath,
             args,
             cwd
         };
