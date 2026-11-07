@@ -1,6 +1,6 @@
 # Jupyter Extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today, and allows any Python environment to be used as a Jupyter kernel. This is _**NOT a Jupyter kernel**_--you must have Python environment in which you've installed the [Jupyter package](https://pypi.org/project/jupyter/), though many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today, and allows any Python environment to be used as a Jupyter kernel. This is _**NOT a Jupyter kernel**_--you must have a Python environment in which you've installed the [Jupyter package](https://pypi.org/project/jupyter/), though many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
 ![NotebookUI](./images/Jupyter%20README/notebookui.png)
 
@@ -23,7 +23,7 @@ The Jupyter Extension will automatically install the following extensions by def
 - [Jupyter Notebook Renderers](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter-renderers) - to provide renderers for MIME types such as latex, plotly, vega, etc.
 - [Jupyter Cell Tags](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.vscode-jupyter-cell-tags) and [Jupyter Slide Show](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.vscode-jupyter-slideshow) - to provide the ability to tag cells in notebooks and support for presentations
 
-You can also install the [Jupyter PowerToys](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.vscode-jupyter-powertoys) extension to try out experimental features (_not_ installed by default). Extensions installed through the marketplace are subject to the [Marketplace Terms of Use](https://cdn.vsassets.io/v/M146_20190123.39/_content/Microsoft-Visual-Studio-Marketplace-Terms-of-Use.pdfhttps://cdn.vsassets.io/v/M146_20190123.39/_content/Microsoft-Visual-Studio-Marketplace-Terms-of-Use.pdf), and any or all of these extensions can be [disabled](https://code.visualstudio.com/docs/editor/extension-marketplace#_disable-an-extension) or [uninstalled](https://code.visualstudio.com/docs/editor/extension-marketplace#_uninstall-an-extension).
+You can also install the [Jupyter PowerToys](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.vscode-jupyter-powertoys) extension to try out experimental features (_not_ installed by default). Extensions installed through the marketplace are subject to the [Marketplace Terms of Use](https://cdn.vsassets.io/v/M146_20190123.39/_content/Microsoft-Visual-Studio-Marketplace-Terms-of-Use.pdf), and any or all of these extensions can be [disabled](https://code.visualstudio.com/docs/editor/extension-marketplace#_disable-an-extension) or [uninstalled](https://code.visualstudio.com/docs/editor/extension-marketplace#_uninstall-an-extension).
 
 ## Working with Python
 
@@ -31,7 +31,6 @@ You can also install the [Jupyter PowerToys](https://marketplace.visualstudio.co
 
 -   **Step 1.** Install [VS Code](https://code.visualstudio.com/)
 -   **Step 2.** Install [Anaconda](https://docs.anaconda.com/anaconda/install/index.html)/[Miniconda](https://docs.conda.io/en/latest/miniconda.html) or another Python environment in which you've installed the Jupyter package
--   Since not working with Python, make sure to have a [Jupyter Kernel](https://docs.jupyter.org/en/latest/install/kernels.html) that corresponds to the language you would like to use installed on your machine.
 -   **Step 3.** Install the [Jupyter Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) and the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 -   **Step 4.** Open or create a notebook file by opening the Command Palette (`Ctrl+Shift+P`) and select `Jupyter: Create New Jupyter Notebook`.<br><img src="https://code.visualstudio.com/assets/docs/datascience/data-science-tutorial/create-notebook.png">
 -   **Step 5.** Select your kernel by clicking on the kernel picker in the top right of the notebook or by invoking the `Notebook: Select Notebook Kernel` command and start coding!<br><img src="https://code.visualstudio.com/assets/docs/datascience/data-science-tutorial/select-kernel.png">
@@ -68,7 +67,8 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 | `Jupyter: Create New Jupyter Notebook`           | Creates a new Jupyter Notebook                                         |
 | `Notebook: Select Notebook Kernel`               | Select or switch kernels within your notebook                          |
 | `Notebook: Change Cell Language`                 | Change the language of the cell currently in focus                     |
-| `Jupyter: Export to HTML Jupyter: Export to PDF` | Create a presentation-friendly version of your notebook in HTML or PDF |
+| `Jupyter: Export to HTML`                        | Create a presentation-friendly version of your notebook in HTML        |
+| `Jupyter: Export to PDF`                         | Create a presentation-friendly version of your notebook in PDF         |
 
 To see all available Jupyter Notebook commands, open the Command Palette and type `Jupyter` or `Notebook`.
 
