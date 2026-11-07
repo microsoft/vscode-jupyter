@@ -48,8 +48,18 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // If the selected interpreter doesn't have a kernel, it will find a kernel on disk and use that.
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
-    private static startPortPromise = KernelLauncher.computeStartPort();
+    private static startPortPromise: Promise<number> | undefined;
+    private static cachedStartPort: number | undefined;
     private portChain: Promise<number[]> | undefined;
+
+    /**
+     * Reset the cached start port (for testing purposes)
+     * @internal
+     */
+    public static resetStartPort(): void {
+        KernelLauncher.startPortPromise = undefined;
+        KernelLauncher.cachedStartPort = undefined;
+    }
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
@@ -64,10 +74,11 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {}
 
-    private static async computeStartPort(): Promise<number> {
+    private static async computeStartPort(configuredStartPort?: number): Promise<number> {
+        const defaultStartPort = configuredStartPort || 9_000;
         if (isTestExecution()) {
             // Since multiple instances of a test may be running, write our best guess to a shared file
-            let portStart = 9_000;
+            let portStart = defaultStartPort;
             let result = 0;
             while (result === 0 && portStart < 65_000) {
                 try {
@@ -86,7 +97,7 @@ export class KernelLauncher implements IKernelLauncher {
 
             return result;
         } else {
-            return 9_000;
+            return defaultStartPort;
         }
     }
 
@@ -200,7 +211,16 @@ export class KernelLauncher implements IKernelLauncher {
     }
 
     private async getConnectionPorts(): Promise<number[]> {
+        // Get the configured start port from settings
+        const settings = this.configService.getSettings(undefined);
+        const configuredStartPort = settings.kernelPortRangeStartPort;
+
         // Have to wait for static port lookup (it handles case where two VS code instances are running)
+        // Re-initialize if the configured port has changed
+        if (!KernelLauncher.startPortPromise || KernelLauncher.cachedStartPort !== configuredStartPort) {
+            KernelLauncher.cachedStartPort = configuredStartPort;
+            KernelLauncher.startPortPromise = KernelLauncher.computeStartPort(configuredStartPort);
+        }
         const startPort = await KernelLauncher.startPortPromise;
 
         // Then get the next set starting at that point
