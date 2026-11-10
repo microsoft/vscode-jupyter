@@ -114,6 +114,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             registerRemoteServerProvider: () => ({ dispose: noop }),
             getKernelService: () => Promise.resolve(undefined),
             addRemoteJupyterServer: () => Promise.resolve(undefined),
+            startJupyterServerKernelDiscovery: () => Promise.reject(new Error('Jupyter extension activation failed.')),
             openNotebook: () => Promise.reject(),
             createJupyterServerCollection: () => {
                 throw new Error('Not Implemented');
