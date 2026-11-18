@@ -21,6 +21,7 @@ import {
 import {
     CodeSnippets,
     Identifiers,
+    logKernelMessages,
     WIDGET_MIMETYPE,
     WIDGET_VERSION_NON_PYTHON_KERNELS
 } from '../platform/common/constants';
@@ -683,6 +684,22 @@ abstract class BaseKernel implements IBaseKernel {
                 token: this.startCancellation.token,
                 creator: this.creator
             });
+            if (logKernelMessages) {
+                const jupyterLabSerialize =
+                    require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
+                session.anyMessage.connect((_, msg: IAnyMessageArgs) => {
+                    const direction = msg.direction === 'recv' ? 'incoming message << ' : 'outgoing message >> ';
+                    const payload = jupyterLabSerialize.serialize(msg.msg);
+                    const parentId = msg.msg.parent_header?.msg_id;
+                    const parentMsgId = parentId ? ` (Parent Msg Id: ${parentId})` : '';
+                    logger.trace(
+                        `${direction} ${msg.msg.header.msg_type}.${msg.msg.header.msg_id} for ${getDisplayPath(
+                            this.uri
+                        )} with ${parentMsgId}`,
+                        payload
+                    );
+                });
+            }
             if (this.disposing) {
                 throw new CancellationError();
             }
@@ -871,6 +888,7 @@ abstract class BaseKernel implements IBaseKernel {
             try {
                 logger.debug('Requesting Kernel info');
                 this._info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento);
+                logger.debug(`Got Kernel info ${this._info?.status}`);
             } catch (ex) {
                 logger.warn('Failed to request KernelInfo', ex);
             }

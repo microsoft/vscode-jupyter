@@ -128,7 +128,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     /**
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
      */
-    protected deleteMappingIfKernelIsDisposed(kernel: IKernel) {
+    protected deleteMappingIfKernelIsDisposed(kernel: IKernel, execution: INotebookKernelExecution) {
         kernel.onDisposed(
             () => {
                 // If the same kernel is associated with this document & it was disposed, then delete it.
@@ -140,6 +140,10 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                             kernel.uri
                         )}`
                     );
+                }
+                if (this.executions.get(kernel) === execution) {
+                    execution.dispose();
+                    this.executions.delete(kernel);
                 }
                 this.pendingDisposables.delete(kernel);
             },
