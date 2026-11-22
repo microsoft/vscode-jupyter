@@ -120,7 +120,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             },
             kernels: {
                 getKernel: () => Promise.resolve(undefined),
-                onDidStart: () => ({ dispose: noop })
+                onDidStart: () => ({ dispose: noop }),
+                registerEnvironmentVariablesProvider: () => ({ dispose: noop })
             },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onDidChangePythonEnvironment: undefined as any,

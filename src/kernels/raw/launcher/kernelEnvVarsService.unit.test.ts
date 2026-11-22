@@ -13,6 +13,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
+import { IKernelEnvVarsContributorRegistry, KernelEnvVarsContributorRegistry } from './kernelEnvVarsContributor';
 import { IJupyterKernelSpec } from '../../types';
 import { Uri } from 'vscode';
 import { IConfigurationService, IWatchableJupyterSettings, type ReadWrite } from '../../../platform/common/types';
@@ -29,6 +30,7 @@ suite('Kernel Environment Variables Service', () => {
     let interpreterService: IInterpreterService;
     let configService: IConfigurationService;
     let settings: IWatchableJupyterSettings;
+    let envVarsContributors: IKernelEnvVarsContributorRegistry;
     const pathFile = Uri.joinPath(Uri.file('foobar'), 'bar');
     const interpreter: PythonEnvironment = {
         uri: pathFile,
@@ -53,13 +55,15 @@ suite('Kernel Environment Variables Service', () => {
         variablesService = new EnvironmentVariablesService(instance(fs));
         configService = mock<IConfigurationService>();
         settings = mock(JupyterSettings);
+        envVarsContributors = new KernelEnvVarsContributorRegistry();
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         kernelVariablesService = new KernelEnvironmentVariablesService(
             instance(interpreterService),
             instance(envActivation),
             variablesService,
             instance(customVariablesService),
-            instance(configService)
+            instance(configService),
+            envVarsContributors
         );
         if (process.platform === 'win32') {
             // Win32 will generate upper case all the time
@@ -228,6 +232,43 @@ suite('Kernel Environment Variables Service', () => {
         assert.strictEqual(vars!['TWO'], `2`);
         assert.strictEqual(vars!['THREE'], `HELLO_1`);
         assert.strictEqual(vars!['PATH'], `some_path;pathInInterpreterEnv;1`);
+    });
+
+    test('Contributed env vars are merged with highest priority', async () => {
+        process.env['HELLO_VAR'] = 'original';
+        delete kernelSpec.interpreterPath;
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+            HELLO_VAR: 'from_dotenv'
+        });
+        const resource = Uri.file('/path/to/notebook.ipynb');
+        envVarsContributors.register({
+            provideEnvironmentVariables(res) {
+                return { HELLO_VAR: 'from_contributor', NOTEBOOK_PATH: res?.fsPath || '' };
+            }
+        });
+
+        const vars = await kernelVariablesService.getEnvironmentVariables(resource, undefined, kernelSpec);
+
+        assert.strictEqual(vars!['HELLO_VAR'], 'from_contributor');
+        assert.strictEqual(vars!['NOTEBOOK_PATH'], '/path/to/notebook.ipynb');
+    });
+
+    test('Contributed env vars disposable unregisters the provider', async () => {
+        delete kernelSpec.interpreterPath;
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve();
+        const disposable = envVarsContributors.register({
+            provideEnvironmentVariables() {
+                return { MY_VAR: 'hello' };
+            }
+        });
+
+        let vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
+        assert.strictEqual(vars!['MY_VAR'], 'hello');
+
+        disposable.dispose();
+
+        vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
+        assert.isUndefined(vars!['MY_VAR']);
     });
 
     async function testPYTHONNOUSERSITE(_envType: EnvironmentType, shouldBeSet: boolean) {
