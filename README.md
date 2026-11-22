@@ -2,6 +2,8 @@
 
 A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today, and allows any Python environment to be used as a Jupyter kernel. This is _**NOT a Jupyter kernel**_--you must have Python environment in which you've installed the [Jupyter package](https://pypi.org/project/jupyter/), though many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
+> Bring the power of Jupyter notebooks to your favorite editor.
+
 ![NotebookUI](./images/Jupyter%20README/notebookui.png)
 
 | Link                                                                            | Description                                                                      |
