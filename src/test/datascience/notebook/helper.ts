@@ -48,6 +48,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import {
     CellOutputMimeTypes,
     NotebookCellStateTracker,
+    cellExecutionStateToString,
     getTextOutputValue,
     hasErrorOutput
 } from '../../../kernels/execution/helpers';
@@ -960,7 +961,9 @@ export async function waitForExecutionCompletedSuccessfully(
                     cell.notebook.uri
                 )} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
                     cell
-                )}, & state = ${NotebookCellStateTracker.getCellState(cell)}, ${additionalMessage}, Notebook has ${
+                )}, & state = ${cellExecutionStateToString(
+                    NotebookCellStateTracker.getCellState(cell)
+                )}, ${additionalMessage}, Notebook has ${
                     cell.notebook.cellCount
                 } cells and cell Content = ${cell.document.getText()}`
         ),

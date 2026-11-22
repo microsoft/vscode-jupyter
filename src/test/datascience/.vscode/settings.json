@@ -36,5 +36,5 @@
         "npm": true
     },
     "jupyter.interactiveWindow.creationMode": "multiple",
-    "jupyter.interactiveWindow.textEditor.magicCommandsAsComments": false,
+    "jupyter.interactiveWindow.textEditor.magicCommandsAsComments": false,"jupyter.REPORT_SERVER_PORT": 52119,
 }

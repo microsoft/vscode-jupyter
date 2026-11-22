@@ -127,8 +127,12 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     }
     /**
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
+     * Also ensures the associated execution instance is properly disposed to prevent memory leaks.
+     *
+     * @param kernel - The kernel instance to monitor for disposal
+     * @param execution - The execution instance associated with this kernel that needs to be disposed
      */
-    protected deleteMappingIfKernelIsDisposed(kernel: IKernel) {
+    protected deleteMappingIfKernelIsDisposed(kernel: IKernel, execution: INotebookKernelExecution) {
         kernel.onDisposed(
             () => {
                 // If the same kernel is associated with this document & it was disposed, then delete it.
@@ -140,6 +144,12 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                             kernel.uri
                         )}`
                     );
+                }
+                // Clean up the execution instance if it's still mapped to this kernel.
+                // This ensures proper disposal of execution resources when the kernel is disposed.
+                if (this.executions.get(kernel) === execution) {
+                    execution.dispose();
+                    this.executions.delete(kernel);
                 }
                 this.pendingDisposables.delete(kernel);
             },

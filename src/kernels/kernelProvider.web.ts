@@ -94,11 +94,15 @@ export class KernelProvider extends BaseCoreKernelProvider {
             this,
             this.disposables
         );
-        this.executions.set(kernel, new NotebookKernelExecution(kernel, this.context, this.formatters, notebook));
+        // Create and track the execution instance for this kernel.
+        // The execution instance manages cell execution state and must be disposed
+        // when the kernel is disposed to prevent memory leaks.
+        const execution = new NotebookKernelExecution(kernel, this.context, this.formatters, notebook);
+        this.executions.set(kernel, execution);
         this.asyncDisposables.push(kernel);
         this.storeKernel(notebook, options, kernel);
-
-        this.deleteMappingIfKernelIsDisposed(kernel);
+        // Ensure execution is disposed when kernel is disposed
+        this.deleteMappingIfKernelIsDisposed(kernel, execution);
         return kernel;
     }
 }
