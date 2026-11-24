@@ -14,7 +14,7 @@ import {
 } from '../../../kernels/helpers';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSocket } from './rawSocket.node';
-import { LocalKernelConnectionMetadata } from '../../types';
+import { IKernelStartup, LocalKernelConnectionMetadata } from '../../types';
 import { Signal } from '@lumino/signaling';
 import type {
     IInterruptRequestMsg,
@@ -110,6 +110,10 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     private realKernel?: Kernel.IKernelConnection;
     private socket: RawSocket;
     private restartToken?: CancellationTokenSource;
+
+    public get startup(): IKernelStartup | undefined {
+        return this.socket?.startup;
+    }
 
     constructor(
         private readonly resource: Resource,

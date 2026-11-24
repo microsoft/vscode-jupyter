@@ -32,6 +32,16 @@ suite('Kernel Startup Recovery Budget', () => {
             content: { execution_state }
         });
 
+    const reply = (original: KernelMessage.IExecuteRequestMsg) =>
+        KernelMessage.createMessage<KernelMessage.IExecuteReplyMsg>({
+            msgType: 'execute_reply',
+            channel: 'shell',
+            username: 'test',
+            session: 'kernel',
+            parentHeader: original.header,
+            content: { status: 'ok', execution_count: 1, payload: [], user_expressions: {} }
+        });
+
     setup(() => {
         clock = sinon.useFakeTimers();
         parent = new CancellationTokenSource();
@@ -61,12 +71,114 @@ suite('Kernel Startup Recovery Budget', () => {
         assert.strictEqual(probe.callCount, 2);
     });
 
-    test('acknowledged busy work suppresses probes but cannot suspend the deadline', async () => {
+    test('acknowledged busy work pauses the budget and suppresses probes until idle', async () => {
+        const probe = sinon.stub().resolves();
+        startup = new KernelStartupRecovery(3000, failure, probe);
+        const original = request();
+        const other = request();
+        startup.sent(original);
+        startup.received(status(original, 'busy'));
+        startup.sent(other);
+        startup.auxiliarySent('pending-peer');
+        let completed = false;
+        const operation = startup.complete(async () => undefined, parent.token).then(() => (completed = true));
+        await clock.tickAsync(10000);
+        assert.strictEqual(probe.callCount, 0);
+        assert.isFalse(completed);
+        assert.isUndefined(startup.error);
+        assert.strictEqual(startup.remainingTime, 3000);
+        startup.discardRequest(other.header.msg_id);
+        startup.auxiliaryReplied('pending-peer');
+        startup.received(reply(original));
+        startup.received(status(original, 'idle'));
+        await operation;
+        assert.isTrue(completed);
+        assert.isUndefined(startup.error);
+    });
+
+    test('a shell reply alone pauses the budget and suppresses probes until idle', async () => {
+        const probe = sinon.stub().resolves();
+        startup = new KernelStartupRecovery(3000, failure, probe);
+        const original = request();
+        startup.sent(original);
+        startup.received(reply(original));
+        let completed = false;
+        const operation = startup.complete(async () => undefined, parent.token).then(() => (completed = true));
+        await clock.tickAsync(10000);
+        assert.strictEqual(probe.callCount, 0);
+        assert.isFalse(completed);
+        assert.isUndefined(startup.error);
+        assert.strictEqual(startup.remainingTime, 3000);
+        startup.received(status(original, 'idle'));
+        await operation;
+        assert.isTrue(completed);
+    });
+
+    test('a stalled request is recovered when the fresh-peer probe delivers its reply and idle', async () => {
+        const original = request();
+        const probe = sinon.stub().callsFake(async () => {
+            // The fresh peer wakes the kernel, which now answers the original request.
+            startup.received(reply(original));
+            startup.received(status(original, 'idle'));
+        });
+        startup = new KernelStartupRecovery(5000, failure, probe);
+        startup.sent(original);
+        let completed = false;
+        const operation = startup.complete(async () => undefined, parent.token).then(() => (completed = true));
+        await clock.tickAsync(1000);
+        await operation;
+        assert.isAbove(probe.callCount, 0);
+        assert.isTrue(completed);
+        assert.isUndefined(startup.error);
+    });
+
+    test('does not publish on idle until the matching shell reply arrives', async () => {
         const probe = sinon.stub().resolves();
         startup = new KernelStartupRecovery(3000, failure, probe);
         const original = request();
         startup.sent(original);
         startup.received(status(original, 'busy'));
+        startup.received(status(original, 'idle'));
+        let completed = false;
+        const operation = startup.complete(async () => undefined, parent.token).then(() => (completed = true));
+        await clock.tickAsync(2000);
+        assert.isFalse(completed);
+        assert.isUndefined(startup.error);
+        startup.received(reply(original));
+        await operation;
+        assert.isTrue(completed);
+    });
+
+    test('communication budget charges only while unacknowledged and is not replenished by progress', async () => {
+        startup = new KernelStartupRecovery(5000, failure, async () => undefined);
+        const first = request();
+        const second = request();
+        startup.sent(first);
+        await clock.tickAsync(1200);
+        assert.strictEqual(startup.remainingTime, 3800);
+        startup.received(status(first, 'busy'));
+        startup.sent(second);
+        await clock.tickAsync(8000);
+        assert.strictEqual(startup.remainingTime, 3800);
+        startup.received(reply(first));
+        startup.received(status(first, 'idle'));
+        await clock.tickAsync(1000);
+        assert.strictEqual(startup.remainingTime, 2800);
+        startup.received(status(second, 'busy'));
+        await clock.tickAsync(3000);
+        assert.strictEqual(startup.remainingTime, 2800);
+        startup.received(reply(second));
+        startup.received(status(second, 'idle'));
+        await clock.tickAsync(2000);
+        assert.strictEqual(startup.remainingTime, 2800);
+        startup.sent(request());
+        await clock.tickAsync(1000);
+        assert.strictEqual(startup.remainingTime, 1800);
+        assert.isUndefined(startup.error);
+    });
+
+    test('an unacknowledged primary request fails when the communication budget is exhausted', async () => {
+        startup = new KernelStartupRecovery(3000, failure, async () => undefined);
         startup.sent(request());
         const operation = startup
             .run((token) => raceCancellationError(token, createDeferred<void>().promise), parent.token)
@@ -74,23 +186,23 @@ suite('Kernel Startup Recovery Budget', () => {
         let result: unknown;
         void operation.then((value) => (result = value));
         await clock.tickAsync(2999);
-        assert.strictEqual(probe.callCount, 0);
+        assert.isUndefined(result);
         await clock.tickAsync(1);
-        assert.strictEqual(result, failure, 'Acknowledged work escaped the configured deadline');
+        assert.strictEqual(result, failure);
     });
 
-    test('raw readiness and initialization share the original remaining budget', async () => {
+    test('an unanswered auxiliary request exhausts the communication budget', async () => {
         startup = new KernelStartupRecovery(3000, failure, async () => undefined);
-        await startup.run(async () => undefined, parent.token);
-        await clock.tickAsync(2000);
-        assert.strictEqual(startup.remainingTime, 1000);
+        startup.auxiliarySent('pending-peer');
         const operation = startup
             .run((token) => raceCancellationError(token, createDeferred<void>().promise), parent.token)
             .catch((error) => error);
         let result: unknown;
         void operation.then((value) => (result = value));
-        await clock.tickAsync(1000);
-        assert.strictEqual(result, failure, 'Initialization incorrectly reset the original deadline');
+        await clock.tickAsync(2999);
+        assert.isUndefined(result);
+        await clock.tickAsync(1);
+        assert.strictEqual(result, failure);
     });
 
     test('normal completion cancels monitoring without creating a failure', async () => {

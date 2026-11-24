@@ -5,7 +5,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { logger } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { raceTimeout } from '../../../platform/common/utils/async';
-import { IRawKernelSession, LocalKernelConnectionMetadata } from '../../types';
+import { IRawKernelSession, IKernelStartup, LocalKernelConnectionMetadata } from '../../types';
 import { noop } from '../../../platform/common/utils/misc';
 import { waitForIdleOnSession } from '../../common/helpers';
 import { BaseJupyterSessionConnection } from '../../common/baseJupyterSessionConnection';
@@ -48,6 +48,9 @@ export class RawJupyterSessionWrapper
         // Dispose the latest version of session, don't register `this.session`
         this._register(new Disposable(() => this.session.dispose()));
         this.initializeKernelSocket();
+    }
+    public get startup(): IKernelStartup | undefined {
+        return this.session.startup;
     }
     public override dispose() {
         void this.shutdown().finally(() => super.dispose());

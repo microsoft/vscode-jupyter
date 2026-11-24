@@ -606,6 +606,11 @@ export enum InterruptResult {
 export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
     extends Session.ISessionConnection {
     readonly kind: T;
+    /**
+     * Startup-recovery coordinator for this session's current kernel, when one is active (local raw kernels only).
+     * Exposed as a typed accessor so callers avoid reaching through the global `KernelSocketMap`.
+     */
+    readonly startup?: IKernelStartup;
     readonly status: KernelMessage.Status;
     readonly onDidKernelSocketChange: Event<void>;
     onDidDispose: Event<void>;

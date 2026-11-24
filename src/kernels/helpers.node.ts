@@ -14,7 +14,6 @@ import { executeSilently, isPythonKernelConnection } from './helpers';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { Cancellation, raceCancellationError, wrapCancellationTokens } from '../platform/common/cancellation';
-import { KernelSocketMap } from './kernelSocket';
 
 export async function sendTelemetryForPythonKernelExecutable(
     session: IKernelSession,
@@ -38,7 +37,7 @@ export async function sendTelemetryForPythonKernelExecutable(
         return;
     }
     const stopWatch = new StopWatch();
-    const startup = KernelSocketMap.get(session.kernel.id)?.startup;
+    const startup = session.startup;
     const cap = startup ? Math.min(5000, Math.max(0, startup.remainingTime - 1000)) : undefined;
     if (cap === 0) {
         logger.trace('Skipping executable telemetry to preserve the remaining startup budget');

@@ -292,9 +292,14 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force $env:RAW_KERNEL_STARTUP_RESULTS | Out-Null
-          for ($iteration = 0; $iteration -lt 20; $iteration++) {
+          $env:RAW_KERNEL_STARTUP_ITERATIONS = '18'
+          npm run test:raw-kernel-startup 2>&1 |
+            Tee-Object -FilePath "$env:RAW_KERNEL_STARTUP_RESULTS\consolidated.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:RAW_KERNEL_STARTUP_ITERATIONS = '1'
+          for ($iteration = 0; $iteration -lt 2; $iteration++) {
             npm run test:raw-kernel-startup 2>&1 |
-              Tee-Object -FilePath "$env:RAW_KERNEL_STARTUP_RESULTS\run-$iteration.log"
+              Tee-Object -FilePath "$env:RAW_KERNEL_STARTUP_RESULTS\cold-$iteration.log"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
       - name: Preserve native contract evidence

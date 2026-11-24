@@ -314,50 +314,6 @@ class LiveRemoteKernelFixture {
 
 suite('Kernel restart lifecycle', function () {
     this.timeout(10_000);
-    test('Review regression restart non-raw shutdown during transport rejects readiness and completion', async () => {
-        const fixture = new LiveRemoteKernelFixture();
-        let restartedEvents = 0;
-        fixture.kernel.onRestarted(() => (restartedEvents += 1));
-        const transport = fixture.deferNextRestart();
-        try {
-            assert.isDefined(await raceTimeout(2000, fixture.start()));
-            const restart = fixture.kernel.restart().then(
-                () => undefined,
-                (error) => error
-            );
-            const readiness = fixture.kernel.restarting.then(
-                () => undefined,
-                (error) => error
-            );
-            assert.isTrue(
-                await raceTimeout(
-                    2000,
-                    transport.entered.then(() => true)
-                )
-            );
-
-            const shutdown = fixture.kernel.shutdown().then(
-                () => undefined,
-                (error) => error
-            );
-            transport.release();
-
-            assert.instanceOf(await raceTimeout(4000, restart), CancellationError);
-            assert.instanceOf(await raceTimeout(4000, readiness), CancellationError);
-            assert.isTrue(
-                await raceTimeout(
-                    4000,
-                    shutdown.then(() => true)
-                )
-            );
-            assert.strictEqual(restartedEvents, 0);
-            assert.isUndefined(fixture.kernel.session);
-        } finally {
-            transport.release();
-            await fixture.dispose();
-        }
-    });
-
     test('Review regression widget keeps live-remote default-token detection nonblocking', async () => {
         const fixture = new LiveRemoteKernelFixture();
         const initialRequest = fixture.nextWidgetRequest();

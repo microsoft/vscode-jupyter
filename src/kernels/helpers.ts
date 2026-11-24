@@ -38,7 +38,6 @@ import { cellOutputToVSCCellOutput } from './execution/helpers';
 import { handleTensorBoardDisplayDataOutput } from './execution/executionHelpers';
 import { once } from '../platform/common/utils/functional';
 import { Cancellation, raceCancellationError } from '../platform/common/cancellation';
-import { KernelSocketMap } from './kernelSocket';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -720,7 +719,6 @@ export async function executeSilently(
         }
     };
     const subscription = token?.onCancellationRequested(() => {
-        KernelSocketMap.get(kernelConnection.id)?.startup?.discardRequest(request.msg.header.msg_id);
         request.dispose();
     });
     try {

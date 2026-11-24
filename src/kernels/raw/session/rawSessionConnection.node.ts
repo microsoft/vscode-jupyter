@@ -6,7 +6,7 @@ import { Signal } from '@lumino/signaling';
 import { logger } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { Telemetry } from '../../../telemetry';
-import { LocalKernelConnectionMetadata } from '../../types';
+import { IKernelStartup, LocalKernelConnectionMetadata } from '../../types';
 import { IKernelLauncher } from '../types';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { noop } from '../../../platform/common/utils/misc';
@@ -79,6 +79,10 @@ export class RawSessionConnection implements Session.ISessionConnection {
     // Return the current kernel for this session
     get kernel(): Kernel.IKernelConnection | null {
         return this._kernel as Kernel.IKernelConnection | null;
+    }
+
+    public get startup(): IKernelStartup | undefined {
+        return this._kernel.startup;
     }
 
     constructor(

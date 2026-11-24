@@ -55,6 +55,12 @@ export function getNativeStartupPython() {
     return python;
 }
 
+export function getNativeStartupIterations() {
+    const configured = process.env.RAW_KERNEL_STARTUP_ITERATIONS;
+    const parsed = configured && /^\d+$/.test(configured) ? Number(configured) : 1;
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
 export class NativeStartupProcess extends ObservableDisposable implements IKernelProcess {
     public readonly canInterrupt = false;
     public readonly exitedEmitter = this._register(
