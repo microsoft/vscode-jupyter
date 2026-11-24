@@ -1696,6 +1696,12 @@
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.magicCommandsAsComments.description%"
                 },
+                "jupyter.interactiveWindow.textEditor.magicCommandsRegex": {
+                    "type": "string",
+                    "default": "^#\\s*!",
+                    "markdownDescription": "Regular expression pattern to identify magic line comments in the interactive window text editor. The matched prefix is stripped when executing code. Default (`^#\\s*!`) handles standard `#!` style. Example for Databricks: `^#\\s*MAGIC\\s*`.",
+                    "scope": "resource"
+                },
                 "jupyter.pythonExportMethod": {
                     "type": "string",
                     "enum": [
