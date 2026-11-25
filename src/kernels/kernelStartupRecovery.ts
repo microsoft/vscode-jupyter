@@ -165,8 +165,10 @@ export class KernelStartupRecovery implements IKernelStartup {
             request.acknowledged = true;
             if (message.channel === 'shell') {
                 request.reply = true;
-            } else if (status) {
-                request.idle = status === 'idle';
+            } else if (status === 'idle') {
+                // `idle` is historical evidence of the IOPub terminal half; once seen it must never be
+                // reset by a later non-idle status (e.g. a stray `busy`).
+                request.idle = true;
             }
             if (request.reply && request.idle) {
                 this.requests.delete(id);
@@ -317,9 +319,9 @@ export class KernelStartupRecovery implements IKernelStartup {
             await this.wait(Math.min(1000, Math.max(1, this.remainingTime / 2)));
             this.check();
             this.updateBudget();
-            if ([...this.requests.values()].some((request) => request.acknowledged && !request.idle)) {
-                continue;
-            }
+            // No explicit busy-skip here: while a request is genuinely executing, updateBudget() clears
+            // `eligibleSince`, and the `eligibleSince === undefined` guard below already suppresses probing.
+            // Removing it lets a reply-but-no-idle request (now eligible) actually be probed.
             if (!this.requests.size && !this.auxiliary.size) {
                 continue;
             }
@@ -388,11 +390,18 @@ export class KernelStartupRecovery implements IKernelStartup {
             this.remaining -= Math.max(0, now - this.lastUpdate);
         }
         this.lastUpdate = now;
-        const states = [...this.requests.values()];
-        const pausedByAck = states.some((request) => request.acknowledged && !request.idle);
-        const unacknowledged = states.some((request) => !request.acknowledged);
-        const pendingAuxiliary = this.auxiliary.size > 0;
-        const eligible = !pausedByAck && (unacknowledged || pendingAuxiliary);
+        // A request is only genuinely executing (real progress -> pause the no-progress budget) while it
+        // has been acknowledged but has received NEITHER terminal half. Once either the shell reply or the
+        // IOPub idle has arrived, a still-incomplete request is an incomplete reply/idle pair (e.g. a lost
+        // idle from the XPUB subscription race), which must RESUME budget charging and probing so it is
+        // recovered by a fresh-peer probe or times out, instead of being mistaken for busy work and hanging.
+        const activelyExecuting = [...this.requests.values()].some(
+            (request) => request.acknowledged && !request.reply && !request.idle
+        );
+        // Retained requests are always incomplete (deleted only once reply && idle), so `requests.size > 0`
+        // already covers both unacknowledged and half-complete requests. The busy veto is global: while any
+        // request is genuinely executing, the kernel is making progress and nothing is charged or probed.
+        const eligible = !activelyExecuting && (this.requests.size > 0 || this.auxiliary.size > 0);
         if (eligible && this.eligibleSince === undefined) {
             this.eligibleSince = now;
         } else if (!eligible) {

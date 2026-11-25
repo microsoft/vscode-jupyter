@@ -42,6 +42,16 @@ suite('Kernel Startup Recovery Budget', () => {
             content: { status: 'ok', execution_count: 1, payload: [], user_expressions: {} }
         });
 
+    const stream = (original: KernelMessage.IMessage) =>
+        KernelMessage.createMessage<KernelMessage.IStreamMsg>({
+            msgType: 'stream',
+            channel: 'iopub',
+            username: 'test',
+            session: 'kernel',
+            parentHeader: original.header,
+            content: { name: 'stdout', text: 'output' }
+        });
+
     setup(() => {
         clock = sinon.useFakeTimers();
         parent = new CancellationTokenSource();
@@ -108,22 +118,139 @@ suite('Kernel Startup Recovery Budget', () => {
         assert.isUndefined(startup.error);
     });
 
-    test('a shell reply alone pauses the budget and suppresses probes until idle', async () => {
+    test('a request with only a shell reply is recovered when the probe delivers the missing idle', async () => {
+        const original = request();
+        const probe = sinon.stub().callsFake(async () => {
+            // The fresh peer nudges the kernel; the previously-dropped IOPub idle is now delivered.
+            startup.received(status(original, 'idle'));
+        });
+        startup = new KernelStartupRecovery(5000, failure, probe);
+        startup.sent(original);
+        startup.received(reply(original));
+        let completed = false;
+        const operation = startup.complete(async () => undefined, parent.token).then(() => (completed = true));
+        await clock.tickAsync(1000);
+        await operation;
+        assert.isAbove(probe.callCount, 0);
+        assert.isTrue(completed);
+        assert.isUndefined(startup.error);
+    });
+
+    test('a request with only a shell reply times out when the idle never arrives', async () => {
         const probe = sinon.stub().resolves();
         startup = new KernelStartupRecovery(3000, failure, probe);
         const original = request();
         startup.sent(original);
         startup.received(reply(original));
+        const outcome = startup
+            .complete(async () => undefined, parent.token)
+            .then(
+                () => 'completed',
+                (error) => error
+            );
+        await clock.tickAsync(4000);
+        assert.strictEqual(await outcome, failure);
+        assert.strictEqual(startup.error, failure);
+        assert.isAbove(probe.callCount, 0);
+    });
+
+    test('a request with only an IOPub idle is recovered when the shell reply arrives', async () => {
+        const original = request();
+        const probe = sinon.stub().callsFake(async () => {
+            startup.received(reply(original));
+        });
+        startup = new KernelStartupRecovery(5000, failure, probe);
+        startup.sent(original);
+        startup.received(status(original, 'idle'));
         let completed = false;
         const operation = startup.complete(async () => undefined, parent.token).then(() => (completed = true));
+        await clock.tickAsync(1000);
+        await operation;
+        assert.isAbove(probe.callCount, 0);
+        assert.isTrue(completed);
+        assert.isUndefined(startup.error);
+    });
+
+    test('a request with only an IOPub idle times out when the shell reply never arrives', async () => {
+        const probe = sinon.stub().resolves();
+        startup = new KernelStartupRecovery(3000, failure, probe);
+        const original = request();
+        startup.sent(original);
+        startup.received(status(original, 'idle'));
+        const outcome = startup
+            .complete(async () => undefined, parent.token)
+            .then(
+                () => 'completed',
+                (error) => error
+            );
+        await clock.tickAsync(4000);
+        assert.strictEqual(await outcome, failure);
+        assert.isAbove(probe.callCount, 0);
+    });
+
+    test('an observed idle is not erased by a later busy status', async () => {
+        const probe = sinon.stub().resolves();
+        startup = new KernelStartupRecovery(3000, failure, probe);
+        const original = request();
+        startup.sent(original);
+        startup.received(status(original, 'idle'));
+        startup.received(status(original, 'busy')); // Must not erase the already-observed idle.
+        let completed = false;
+        const operation = startup.complete(async () => undefined, parent.token).then(() => (completed = true));
+        startup.received(reply(original));
+        await operation;
+        assert.isTrue(completed);
+        assert.isUndefined(startup.error);
+    });
+
+    test('a correlated non-status message keeps the request classified as executing', async () => {
+        const probe = sinon.stub().resolves();
+        startup = new KernelStartupRecovery(3000, failure, probe);
+        const original = request();
+        startup.sent(original);
+        // A correlated output acknowledges the request but is neither terminal half: the kernel is
+        // producing output, i.e. genuinely executing, so recovery must stay paused.
+        startup.received(stream(original));
+        let completed = false;
+        void startup
+            .complete(async () => undefined, parent.token)
+            .then(() => (completed = true))
+            .catch(() => undefined);
         await clock.tickAsync(10000);
         assert.strictEqual(probe.callCount, 0);
         assert.isFalse(completed);
         assert.isUndefined(startup.error);
         assert.strictEqual(startup.remainingTime, 3000);
-        startup.received(status(original, 'idle'));
+        // The pending completion stays unresolved (the kernel looks busy); teardown disposes it and the
+        // `.catch` above handles the resulting cancellation.
+    });
+
+    test('a genuinely busy request pauses recovery for a half-complete sibling until it progresses', async () => {
+        const probe = sinon.stub().resolves();
+        startup = new KernelStartupRecovery(3000, failure, probe);
+        const busyRequest = request();
+        const halfRequest = request();
+        startup.sent(busyRequest);
+        startup.received(status(busyRequest, 'busy')); // A: genuinely executing.
+        startup.sent(halfRequest);
+        startup.received(reply(halfRequest)); // B: reply only (missing idle).
+        let completed = false;
+        const operation = startup
+            .complete(async () => undefined, parent.token)
+            .then(() => (completed = true))
+            .catch(() => undefined);
+        await clock.tickAsync(10000);
+        // While A is genuinely executing the global busy veto holds: no probe, budget paused.
+        assert.strictEqual(probe.callCount, 0);
+        assert.isFalse(completed);
+        assert.strictEqual(startup.remainingTime, 3000);
+        // A makes progress and both requests get their terminal halves -> startup drains.
+        startup.received(reply(busyRequest));
+        startup.received(status(busyRequest, 'idle'));
+        startup.received(status(halfRequest, 'idle'));
         await operation;
         assert.isTrue(completed);
+        assert.isUndefined(startup.error);
     });
 
     test('a stalled request is recovered when the fresh-peer probe delivers its reply and idle', async () => {
