@@ -15,6 +15,38 @@ import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { Cancellation, raceCancellationError, wrapCancellationTokens } from '../platform/common/cancellation';
 
+/**
+ * Best-effort telemetry: runs a tiny `print(sys.executable)` in the kernel and records whether the
+ * running interpreter matches the interpreter we think we started (`interpreterMatchesKernel`). This
+ * helps us detect environment/interpreter mismatches in the wild. It is purely diagnostic — nothing
+ * about startup correctness depends on it.
+ *
+ * Why this function is careful about *when* it runs:
+ * This probe is fired from the `didStart` hook, which runs *inside* kernel initialization, i.e. while
+ * the raw startup-recovery coordinator is still watching the kernel (see
+ * {@link IKernelStartup}/`KernelStartupRecovery` and issue #17481). That means the `executeSilently`
+ * request below is a real shell request the coordinator tracks, and because the hook is awaited it
+ * can hold up `start()`. On a healthy kernel this is instant, but a kernel that acknowledges the
+ * request and then stalls (or stalls during the telemetry bookkeeping) could otherwise wedge startup.
+ * So we deliberately bound this optional work by the remaining startup budget:
+ *
+ *   - `cap` = how long we're willing to spend here, derived from the coordinator's remaining budget
+ *     (leaving a 1s safety margin, and never more than 5s). When there is no coordinator
+ *     (non-raw/non-Python), `cap` is `undefined` and we behave as before (no extra timing bound).
+ *   - `cap === 0` means there's essentially no budget left, so we skip the probe entirely rather than
+ *     risk eating into startup — returning here is the whole point: optional diagnostics must never
+ *     delay getting the user a working kernel.
+ *   - Otherwise a timer cancels the probe once `cap` elapses, and we also honor both the caller's
+ *     token and the coordinator's token, so disposing the kernel or exhausting the budget aborts it.
+ *
+ * Trade-off we accept: capping the probe can occasionally drop a telemetry sample on very slow
+ * starts. That's fine — a missing sample is far better than a diagnostic probe slowing kernel startup.
+ *
+ * @param session The kernel session to probe (only local raw Python sessions carry a `startup` budget).
+ * @param resource The notebook/resource used to attribute the telemetry.
+ * @param kernelConnection Connection metadata; the probe only runs for local Python kernels.
+ * @param token Optional cancellation (e.g. the init/hook token) to abort the probe early.
+ */
 export async function sendTelemetryForPythonKernelExecutable(
     session: IKernelSession,
     resource: Resource,
@@ -37,15 +69,26 @@ export async function sendTelemetryForPythonKernelExecutable(
         return;
     }
     const stopWatch = new StopWatch();
+    // Only local raw sessions have a startup-recovery coordinator with a time budget. For everything
+    // else `startup` is undefined and we don't apply any extra time bound (`cap` stays undefined).
     const startup = session.kind === 'localRaw' ? session.startup : undefined;
+    // How long we're willing to spend on this optional probe, derived from the coordinator's remaining
+    // budget: leave a 1s safety margin for the kernel to finish starting, and never spend more than 5s.
     const cap = startup ? Math.min(5000, Math.max(0, startup.remainingTime - 1000)) : undefined;
     if (cap === 0) {
+        // No startup budget left. Bail out *before* sending any request to the kernel so this
+        // diagnostic telemetry can never delay (or wedge) the user's kernel startup. Example: a slow
+        // kernel is 59s into a 60s budget — we'd rather skip the sample than risk the final second.
         logger.trace('Skipping executable telemetry to preserve the remaining startup budget');
         return;
     }
+    // Abort the probe if the caller cancels (e.g. kernel disposed) or the coordinator's token fires
+    // (e.g. the startup budget is exhausted), whichever happens first.
     const cancellation = wrapCancellationTokens(
         ...[token, startup?.token].filter((item): item is CancellationToken => !!item)
     );
+    // Hard stop: even if the kernel acknowledges the request and then stalls, cancel after `cap` ms so
+    // an awaited, optional telemetry probe can't hold up initialization. (No cap => no timer.)
     const timer = cap === undefined ? undefined : setTimeout(() => cancellation.cancel(), cap);
     try {
         const outputs = await executeSilently(
