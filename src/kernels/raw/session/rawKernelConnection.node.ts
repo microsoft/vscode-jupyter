@@ -179,6 +179,11 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     public async start(token: CancellationToken): Promise<void> {
         await this.shutdownPromise;
         this.shutdownPromise = undefined;
+        // Re-clear the shutdown-complete flag *after* any in-flight shutdown has finished. A shutdown
+        // triggered (e.g. by a process exit) while a restart is starting can set `hasShutdown` back to
+        // true as it completes during the await above; if left set, a later failure path's shutdown()
+        // would short-circuit and the freshly launched kernel would be treated as already shut down.
+        this.hasShutdown = false;
         const disposables: IDisposable[] = [];
         const postStartToken = wrapCancellationTokens(token);
         disposables.push(postStartToken);

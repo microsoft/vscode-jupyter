@@ -640,7 +640,10 @@ abstract class BaseKernel implements IBaseKernel {
             const postInitialized = this._onPostInitialized.fireAsync({}, this.startCancellation.token);
             this._postInitializedOnStartPromise = postInitialized;
             void postInitialized.finally(() => {
-                if (this._postInitializedOnStartPromise === postInitialized) {
+                // Clear the "in progress" flag when this handler was the current one, OR when there is
+                // no current handler at all (the promise was invalidated by shutdown/disposal without a
+                // replacement). The identity guard still prevents clearing a *newer* handler's state.
+                if (this._postInitializedOnStartPromise === postInitialized || !this._postInitializedOnStartPromise) {
                     this._isPostInitializedInProgress = false;
                 }
             });
@@ -800,7 +803,10 @@ abstract class BaseKernel implements IBaseKernel {
             // success path above). If initialization failed after creation, dispose it so we don't
             // leak the kernel process and its sockets. This matters more now that recovery makes the
             // post-create initialization window longer and cancellable.
-            if (session) {
+            // Skip the wait if the session already disposed itself (e.g. waitForIdle() failing shuts the
+            // session down before rethrowing): disposeAsync() would otherwise wait for an onDidDispose
+            // event that has already fired and will never fire again, hanging this failure path.
+            if (session && !session.isDisposed) {
                 await disposeAsync(session).catch((error) =>
                     logger.warn('Failed to dispose unpublished kernel session', error)
                 );
