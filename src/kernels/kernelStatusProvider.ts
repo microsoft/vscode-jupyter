@@ -57,6 +57,10 @@ export class KernelStatusProvider implements IExtensionSyncActivationService, IK
             'willRestart',
             async () => {
                 if (this.restartProgressToHide.has(kernel)) {
+                    // A hidden restart still supersedes any currently visible restart spinner; dispose it so
+                    // it cannot leak (the superseded restart no longer fires a mop-up `restartCompleted`).
+                    this.restartProgress.get(kernel)?.dispose();
+                    this.restartProgress.delete(kernel);
                     return;
                 }
                 this.restartProgress.get(kernel)?.dispose();

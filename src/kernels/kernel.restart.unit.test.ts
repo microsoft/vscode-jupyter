@@ -446,4 +446,95 @@ suite('Kernel restart lifecycle', function () {
             await fixture.dispose();
         }
     });
+
+    test('A superseded warm restart is released promptly while the latest attempt completes once', async () => {
+        const fixture = new LiveRemoteKernelFixture();
+        try {
+            assert.isDefined(await raceTimeout(2000, fixture.start()));
+            let restartCompletedCount = 0;
+            fixture.kernel.addHook('restartCompleted', async () => {
+                restartCompletedCount += 1;
+            });
+
+            const gate = fixture.deferNextRestart();
+            const restartA = fixture.kernel.restart().then(
+                () => 'resolved',
+                (error) => error
+            );
+            // Wait until the in-place session restart is actually in-flight (transport held open).
+            await raceTimeout(2000, gate.entered);
+
+            // A newer restart supersedes A. A must be released immediately with a CancellationError,
+            // without waiting for the held transport to settle.
+            const restartB = fixture.kernel.restart().then(
+                () => 'resolved',
+                (error) => error
+            );
+            const resultA = await raceTimeout(2000, restartA);
+            assert.instanceOf(resultA, CancellationError);
+            // The superseded attempt must not fire the restart-completed cleanup.
+            assert.strictEqual(restartCompletedCount, 0);
+
+            // B still waits on the shared (held) transport.
+            assert.isUndefined(
+                await raceTimeout(
+                    300,
+                    restartB.then(() => true)
+                )
+            );
+
+            gate.release();
+            assert.strictEqual(await raceTimeout(2000, restartB), 'resolved');
+            // Only the latest attempt fires restart-completed, and exactly once.
+            assert.strictEqual(restartCompletedCount, 1);
+        } finally {
+            await fixture.dispose();
+        }
+    });
+
+    test('A warm restart wait is released promptly when the kernel is shut down', async () => {
+        const fixture = new LiveRemoteKernelFixture();
+        try {
+            assert.isDefined(await raceTimeout(2000, fixture.start()));
+            const gate = fixture.deferNextRestart();
+            const restartA = fixture.kernel.restart().then(
+                () => 'resolved',
+                (error) => error
+            );
+            await raceTimeout(2000, gate.entered);
+
+            const shutdown = fixture.kernel.shutdown().then(() => true);
+            // Shutdown cancels the restart lifecycle, so the held warm wait is released immediately.
+            const resultA = await raceTimeout(2000, restartA);
+            assert.instanceOf(resultA, CancellationError);
+
+            gate.release();
+            assert.isTrue(await raceTimeout(2000, shutdown));
+        } finally {
+            await fixture.dispose();
+        }
+    });
+
+    test('A warm restart wait is released promptly when the kernel is disposed', async () => {
+        const fixture = new LiveRemoteKernelFixture();
+        try {
+            assert.isDefined(await raceTimeout(2000, fixture.start()));
+            const gate = fixture.deferNextRestart();
+            const restartA = fixture.kernel.restart().then(
+                () => 'resolved',
+                (error) => error
+            );
+            await raceTimeout(2000, gate.entered);
+
+            const disposal = fixture.kernel.dispose().then(() => true);
+            // Dispose cancels the restart lifecycle, so the held warm wait is released immediately.
+            const resultA = await raceTimeout(2000, restartA);
+            assert.instanceOf(resultA, CancellationError);
+
+            gate.release();
+            assert.isTrue(await raceTimeout(2000, disposal));
+        } finally {
+            await fixture.dispose();
+        }
+    });
 });

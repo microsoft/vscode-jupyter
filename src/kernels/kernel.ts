@@ -434,7 +434,10 @@ abstract class BaseKernel implements IBaseKernel {
                         this._restartPromise = restartSession.restart();
                         this._restartPromise.finally(() => (this._restartPromise = undefined)).catch(noop);
                     }
-                    await this._restartPromise;
+                    // Race the caller's wait against this restart's lifecycle so a superseded or disposed
+                    // restart is released promptly (and a never-settling transport cannot block it). The
+                    // shared `_restartPromise` and its cleanup stay attached to the real transport completion.
+                    await raceCancellationError(lifecycle.token, this._restartPromise);
                     this.throwIfRestartSuperseded(attempt, lifecycle);
                 } else {
                     // Cold path: the session died (or the previously pending start was cancelled
@@ -541,7 +544,14 @@ abstract class BaseKernel implements IBaseKernel {
             logger.error(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
         } finally {
-            Promise.all(Array.from(this.hooks.get('restartCompleted') || new Set<Hook>()).map((h) => h())).catch(noop);
+            // Only the latest restart fires `restartCompleted`, so a superseded attempt cannot tear down the
+            // newer restart's progress UI. A newer restart replaces `_restartLifecycle`; shutdown/dispose
+            // cancel it WITHOUT replacing it, so they still fire the completion cleanup.
+            if (this._restartLifecycle === lifecycle) {
+                Promise.all(Array.from(this.hooks.get('restartCompleted') || new Set<Hook>()).map((h) => h())).catch(
+                    noop
+                );
+            }
         }
     }
 
