@@ -186,6 +186,7 @@ abstract class BaseKernel implements IBaseKernel {
     }
     private _disposed?: boolean;
     private _disposing?: boolean;
+    private _restartLifecycle?: CancellationTokenSource;
     private _postInitializedOnStartPromise?: Promise<void>;
     private readonly _onDidKernelSocketChange = new EventEmitter<void>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
@@ -335,6 +336,7 @@ abstract class BaseKernel implements IBaseKernel {
             return this.disposingPromise;
         }
         this.startCancellation.cancel();
+        this._restartLifecycle?.cancel();
         const disposeImpl = async () => {
             const promises: Promise<void>[] = [];
             promises.push(
@@ -373,35 +375,41 @@ abstract class BaseKernel implements IBaseKernel {
         this.startCancellation.cancel();
         this.startCancellation.dispose();
         const attempt = (this.startCancellation = new CancellationTokenSource());
-        return this.restartImpl(attempt);
+        // Lifecycle token: cancelled only by genuine external events (a newer restart here, shutdown,
+        // dispose) — never by a failed start's self-cancel of startCancellation — so a real startup
+        // failure surfaces its actual error instead of being masked as a cancellation.
+        this._restartLifecycle?.cancel();
+        this._restartLifecycle?.dispose();
+        const lifecycle = (this._restartLifecycle = new CancellationTokenSource());
+        return this.restartImpl(attempt, lifecycle);
     }
 
     /** Throws `CancellationError` if `attempt` is no longer the active restart (superseded), or the kernel is disposing/disposed/cancelled. */
-    private throwIfRestartSuperseded(attempt: CancellationTokenSource) {
+    private throwIfRestartSuperseded(attempt: CancellationTokenSource, lifecycle: CancellationTokenSource) {
         if (
             this.startCancellation !== attempt ||
             this._disposing ||
             this._disposed ||
-            attempt.token.isCancellationRequested
+            lifecycle.token.isCancellationRequested
         ) {
             throw new CancellationError();
         }
     }
 
-    private async restartImpl(attempt: CancellationTokenSource): Promise<void> {
+    private async restartImpl(attempt: CancellationTokenSource, lifecycle: CancellationTokenSource): Promise<void> {
         const attemptToken = attempt.token;
         try {
             const resourceType = getResourceType(this.resourceUri);
             logger.info(`Restart requested ${getDisplayPath(this.uri)}`);
             await raceCancellationError(
-                attemptToken,
+                lifecycle.token,
                 Promise.all(
                     Array.from(this.hooks.get('willRestart') || new Set<Hook>()).map((h) =>
                         h(this._jupyterSessionPromise)
                     )
                 )
             );
-            this.throwIfRestartSuperseded(attempt);
+            this.throwIfRestartSuperseded(attempt, lifecycle);
             const stopWatch = new StopWatch();
             let initializedDuringStart = false;
             let restartSession: IKernelSession | undefined;
@@ -411,11 +419,11 @@ abstract class BaseKernel implements IBaseKernel {
                 // canceled pending start may not have produced a session.
                 restartSession = this._jupyterSessionPromise
                     ? await raceCancellationError(
-                          attemptToken,
+                          lifecycle.token,
                           this._jupyterSessionPromise.catch(() => undefined)
                       )
                     : undefined;
-                this.throwIfRestartSuperseded(attempt);
+                this.throwIfRestartSuperseded(attempt, lifecycle);
 
                 if (restartSession) {
                     // Warm path: we already have a live session, so restart that session in place
@@ -427,13 +435,16 @@ abstract class BaseKernel implements IBaseKernel {
                         this._restartPromise.finally(() => (this._restartPromise = undefined)).catch(noop);
                     }
                     await this._restartPromise;
-                    this.throwIfRestartSuperseded(attempt);
+                    this.throwIfRestartSuperseded(attempt, lifecycle);
                 } else {
                     // Cold path: the session died (or the previously pending start was cancelled
                     // above), so start fresh.
                     // start() already runs initialization, including the single-use raw coordinator.
-                    restartSession = await raceCancellationError(attemptToken, this.start(new DisplayOptions(false)));
-                    this.throwIfRestartSuperseded(attempt);
+                    restartSession = await raceCancellationError(
+                        lifecycle.token,
+                        this.start(new DisplayOptions(false))
+                    );
+                    this.throwIfRestartSuperseded(attempt, lifecycle);
                     initializedDuringStart = true;
                 }
                 sendKernelTelemetryEvent(
@@ -443,7 +454,7 @@ abstract class BaseKernel implements IBaseKernel {
                     { resourceType }
                 );
             } catch (ex) {
-                this.throwIfRestartSuperseded(attempt);
+                this.throwIfRestartSuperseded(attempt, lifecycle);
                 logger.error(`Restart failed ${getDisplayPath(this.uri)}`, ex);
                 const session = restartSession || this._session;
                 // Owned-cleanup boundary: only tear down the session if we are still the active restart
@@ -451,7 +462,7 @@ abstract class BaseKernel implements IBaseKernel {
                 // over and must not have its session disposed out from under it.
                 if (
                     this.startCancellation === attempt &&
-                    !attemptToken.isCancellationRequested &&
+                    !lifecycle.token.isCancellationRequested &&
                     !this._disposing &&
                     !this._disposed &&
                     session &&
@@ -476,13 +487,13 @@ abstract class BaseKernel implements IBaseKernel {
             if (!initializedDuringStart) {
                 if (session?.kind === 'localRaw') {
                     try {
-                        await raceCancellationError(attemptToken, this.initializeSession(session, attemptToken));
-                        this.throwIfRestartSuperseded(attempt);
+                        await raceCancellationError(lifecycle.token, this.initializeSession(session, attemptToken));
+                        this.throwIfRestartSuperseded(attempt, lifecycle);
                     } catch (ex) {
                         // Same owned-cleanup boundary as above, for a failure during raw re-initialization.
                         if (
                             this.startCancellation === attempt &&
-                            !attemptToken.isCancellationRequested &&
+                            !lifecycle.token.isCancellationRequested &&
                             !this._disposing &&
                             !this._disposed &&
                             this._session === session
@@ -501,16 +512,16 @@ abstract class BaseKernel implements IBaseKernel {
                     }
                 } else {
                     // Interactive window needs a restart sys info.
-                    await raceCancellationError(attemptToken, this.initializeSession(session, attemptToken));
-                    this.throwIfRestartSuperseded(attempt);
+                    await raceCancellationError(lifecycle.token, this.initializeSession(session, attemptToken));
+                    this.throwIfRestartSuperseded(attempt, lifecycle);
                 }
             } else if (session?.kind !== 'localRaw') {
                 // Preserve baseline's extra non-raw initialization, but never re-run the raw coordinator.
-                await raceCancellationError(attemptToken, this.initializeSession(session, attemptToken));
-                this.throwIfRestartSuperseded(attempt);
+                await raceCancellationError(lifecycle.token, this.initializeSession(session, attemptToken));
+                this.throwIfRestartSuperseded(attempt, lifecycle);
             }
 
-            this.throwIfRestartSuperseded(attempt);
+            this.throwIfRestartSuperseded(attempt, lifecycle);
             // Final publish: re-check ownership before each observable side effect (firing restarted,
             // running didStart hooks) so a restart superseded mid-flight never emits events for a
             // session that is no longer the active one.
@@ -521,11 +532,11 @@ abstract class BaseKernel implements IBaseKernel {
             // Verify we are still the active restart (and still own this session) BEFORE firing the
             // didStart hooks, rather than firing them first and checking afterwards: once the hooks
             // run we cannot un-run them, so the only useful guard is the one that precedes them.
-            this.throwIfRestartSuperseded(attempt);
+            this.throwIfRestartSuperseded(attempt, lifecycle);
             if (this._session !== session) {
                 throw new CancellationError();
             }
-            await raceCancellationError(attemptToken, this.triggerOnDidStartKernel(false, true));
+            await raceCancellationError(lifecycle.token, this.triggerOnDidStartKernel(false, true));
         } catch (ex) {
             logger.error(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
@@ -541,6 +552,8 @@ abstract class BaseKernel implements IBaseKernel {
             // Cancel any pending starts
             this.startCancellation.cancel();
             this.startCancellation.dispose();
+            // Abort any in-flight restart (its lifecycle is separate from startCancellation).
+            this._restartLifecycle?.cancel();
 
             // Get the current session if it exists
             const session = this._jupyterSessionPromise
