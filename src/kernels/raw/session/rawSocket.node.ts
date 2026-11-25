@@ -40,7 +40,17 @@ interface IChannels {
  * kernel with a fresh peer (see issue #17481).
  */
 export interface RawSocketStartupOptions {
-    /** No-progress startup budget in ms (the configured kernel launch timeout). */
+    /**
+     * The startup time budget in ms (the configured kernel launch timeout).
+     *
+     * This is a *no-progress* budget, not a flat wall-clock timeout: the clock only counts down while
+     * the kernel looks unresponsive (an outstanding request the kernel has not acknowledged). The
+     * moment the kernel acknowledges a request and starts working (goes busy), the countdown pauses,
+     * so a slow-but-working kernel (e.g. long startup commands) is never failed. Startup only fails if
+     * the kernel stays unresponsive for this cumulative duration. Example: with a 60s budget, a kernel
+     * that is silent for 60s fails, but a kernel that acks and then spends 5 minutes running startup
+     * code does not. See {@link KernelStartupRecovery}.
+     */
     timeout: number;
     /** Metadata for the kernel being started, used to build the timeout error. */
     metadata: LocalKernelConnectionMetadata;
@@ -345,6 +355,9 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
      */
     private async probeStartup(token: CancellationToken) {
         const zmq = getZeroMQ();
+        // A fresh, throwaway Dealer (new routingId) — connecting a NEW peer is what re-triggers the
+        // kernel's XPUB subscription state. Bounded send/receive (<=1s, capped by the remaining budget)
+        // and linger:0 so this probe never outlives the attempt.
         const socket = new zmq.Dealer({
             routingId: generateUuid(),
             linger: 0,
@@ -359,6 +372,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         });
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+        // A standard signed kernel_info_request. `session` is a throwaway id; `username` is a benign label.
         const message = jupyterLab.KernelMessage.createMessage({
             msgType: 'kernel_info_request',
             channel: 'shell',
@@ -371,6 +385,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             if (token.isCancellationRequested || this.closed) {
                 throw new CancellationError();
             }
+            // 1. Connect the fresh peer, 2. tell the coordinator we have an in-flight probe request,
+            //    3. send the signed request.
             socket.connect(formConnectionString(this.connection, 'shell'));
             this.startup!.auxiliarySent(message.header.msg_id);
             await socket.send(
@@ -385,6 +401,9 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 )
             );
             sent = true;
+            // 4. Wait for the reply and verify it is the matching kernel_info_reply for OUR request
+            //    (correct msg_type and parent msg_id, implicitly correctly signed or decode would throw).
+            //    A mismatched/forged reply must not be accepted as evidence of recovery.
             const reply = wireProtocol.decode(
                 await socket.receive(),
                 this.connection.key,
@@ -393,11 +412,14 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             if (reply.header.msg_type !== 'kernel_info_reply' || reply.parent_header.msg_id !== message.header.msg_id) {
                 throw new Error('Unexpected reply to kernel startup recovery request');
             }
+            // 5. Valid reply: the kernel is alive and the probe round-trip succeeded.
             this.startup!.auxiliaryReplied(message.header.msg_id);
         } catch (error) {
             if (token.isCancellationRequested) {
                 throw new CancellationError();
             }
+            // EAGAIN = the bounded send/receive timed out (no reply yet). That's expected while the
+            // kernel is still stuck; stop tracking this probe and let the coordinator schedule another.
             if (error.code === 'EAGAIN') {
                 if (!sent) {
                     this.startup!.auxiliaryNotSent(message.header.msg_id);

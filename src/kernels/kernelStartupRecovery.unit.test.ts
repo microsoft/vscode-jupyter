@@ -193,7 +193,10 @@ suite('Kernel Startup Recovery Budget', () => {
         startup = new KernelStartupRecovery(3000, failure, async () => undefined);
         startup.sent(request());
         const operation = startup
-            .run((token) => raceCancellationError(token, createDeferred<void>().promise), parent.token)
+            .superviseInitialization(
+                (token) => raceCancellationError(token, createDeferred<void>().promise),
+                parent.token
+            )
             .catch((error) => error);
         let result: unknown;
         void operation.then((value) => (result = value));
@@ -207,7 +210,10 @@ suite('Kernel Startup Recovery Budget', () => {
         startup = new KernelStartupRecovery(3000, failure, async () => undefined);
         startup.auxiliarySent('pending-peer');
         const operation = startup
-            .run((token) => raceCancellationError(token, createDeferred<void>().promise), parent.token)
+            .superviseInitialization(
+                (token) => raceCancellationError(token, createDeferred<void>().promise),
+                parent.token
+            )
             .catch((error) => error);
         let result: unknown;
         void operation.then((value) => (result = value));
@@ -237,7 +243,7 @@ suite('Kernel Startup Recovery Budget', () => {
     test('parent cancellation terminates a swallowed or never-settling operation', async () => {
         startup = new KernelStartupRecovery(3000, failure, async () => undefined);
         const operation = startup
-            .run(async () => createDeferred<void>().promise, parent.token)
+            .superviseInitialization(async () => createDeferred<void>().promise, parent.token)
             .then(
                 () => undefined,
                 (error) => error
@@ -278,7 +284,10 @@ suite('Kernel Startup Recovery Budget', () => {
         startup = new KernelStartupRecovery(3000, failure, async () => undefined, report);
         startup.sent(request());
         const operation = startup
-            .run((token) => raceCancellationError(token, createDeferred<void>().promise), parent.token)
+            .superviseInitialization(
+                (token) => raceCancellationError(token, createDeferred<void>().promise),
+                parent.token
+            )
             .catch((error) => error);
         await clock.tickAsync(3000);
         await operation;

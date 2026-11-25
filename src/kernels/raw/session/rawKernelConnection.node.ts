@@ -122,6 +122,14 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         private readonly launchTimeout: number,
 
         private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata,
+        /**
+         * When true, this connection wraps post-start readiness in the startup-recovery coordinator
+         * (see {@link IKernelStartup}/`KernelStartupRecovery` and issue #17481): if the kernel appears
+         * stuck during startup, a fresh ZMQ peer re-sends a kernel_info_request to nudge a kernel that
+         * silently missed the IOPub startup handshake. When false, startup behaves exactly as before.
+         * Currently this is only enabled on Windows (the OS where the ipykernel 7 IOPub/XPUB race was
+         * observed); the caller decides the gate and passes the result here.
+         */
         private readonly enableStartupRecovery: boolean
     ) {
         this.infoDeferred.promise.catch(noop);
@@ -229,10 +237,14 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             );
             const timeout = setTimeout(() => postStartToken.cancel(), this.launchTimeout);
             disposables.push({ dispose: () => clearTimeout(timeout) });
-            // Overall deadline for the post-start readiness phase: if the kernel is not ready within
-            // launchTimeout, cancel `postStartToken` so the readiness wait below aborts. When startup
-            // recovery is active it runs under this token and converts a timeout into a recovery
-            // attempt before giving up.
+            // Overall deadline for the post-start readiness phase: if the kernel has not reported ready
+            // within launchTimeout, cancel `postStartToken` so the readiness wait below aborts.
+            // When startup recovery is enabled, that readiness wait runs *inside* the recovery
+            // coordinator (see KernelStartupRecovery / issue #17481). "Recovery" here means: instead of
+            // just giving up when the kernel looks stuck, the coordinator opens a brand-new ZMQ peer and
+            // re-sends a kernel_info_request to nudge a kernel that silently missed the IOPub startup
+            // handshake. A "recovery attempt" is one such nudge. Startup only actually fails once the
+            // no-progress budget (see below / KernelStartupRecovery) is exhausted despite these nudges.
             await KernelProgressReporter.wrapAndReportProgress(
                 this.resource,
                 DataScience.waitingForJupyterSessionToBeIdle,
@@ -248,7 +260,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                         );
                     return (
                         this.socket.startup
-                            ? this.socket.startup.run(start, postStartToken.token)
+                            ? this.socket.startup.superviseInitialization(start, postStartToken.token)
                             : start(postStartToken.token)
                     ).finally(() => tracker?.stop());
                 }

@@ -750,19 +750,36 @@ export interface IKernelSessionFactory {
 
 /**
  * Coordinates recovery of a stuck raw Python kernel startup (Windows + ipykernel 7 IOPub/XPUB race,
- * issue #17481). Exposed so the session/kernel can run initialization under a no-progress budget and
- * have a fresh-peer probe nudge a kernel that silently missed the startup handshake.
- * Implemented by `KernelStartupRecovery`.
+ * issue #17481). Implemented by `KernelStartupRecovery`.
+ *
+ * The "startup budget" it enforces is a *no-progress* time allowance, not a flat timeout: the clock
+ * only counts down while the kernel is unresponsive (an outstanding request with no acknowledgement).
+ * As soon as the kernel acknowledges a request and goes busy, the countdown pauses — a slow-but-working
+ * kernel (e.g. long startup commands) is never penalised. While the kernel looks stuck, a fresh-peer
+ * probe nudges a kernel that silently missed the startup handshake. Startup only fails once the budget
+ * is fully spent.
  */
 export interface IKernelStartup {
-    /** Remaining no-progress budget in ms; only counts down while the kernel appears unresponsive. */
+    /**
+     * Remaining startup budget in ms (see the interface summary for what "budget" means). Only counts
+     * down while the kernel appears unresponsive; it hits 0 once the kernel has been unresponsive for
+     * the whole configured budget, at which point startup fails.
+     */
     readonly remainingTime: number;
     /** Cancellation token that fires when startup fails, times out, or completes. */
     readonly token: CancellationToken;
     /** The failure/timeout/cancellation reason once startup has failed, otherwise undefined. */
     readonly error?: Error;
-    /** Runs the initialization `operation` under the recovery token while probes run concurrently. */
-    run<T>(operation: (token: CancellationToken) => Promise<T>, token: CancellationToken): Promise<T>;
+    /**
+     * Runs one initialization step (`operation`) under the recovery token and budget, while the
+     * coordinator concurrently watches the kernel and fires fresh-peer probes. This does NOT start the
+     * kernel; it *supervises* an initialization operation so a stuck kernel gets nudged/aborted instead
+     * of hanging forever. Rejects if the budget is exhausted or the parent token is cancelled.
+     */
+    superviseInitialization<T>(
+        operation: (token: CancellationToken) => Promise<T>,
+        token: CancellationToken
+    ): Promise<T>;
     /** Waits for the kernel to quiesce, runs the fresh readiness check, then stops monitoring. */
     complete(ready: () => Promise<unknown>, token: CancellationToken): Promise<void>;
     /** Tears down monitoring; before success this is treated as a cancellation. */

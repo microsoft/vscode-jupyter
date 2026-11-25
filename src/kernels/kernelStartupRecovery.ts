@@ -239,7 +239,10 @@ export class KernelStartupRecovery implements IKernelStartup {
      * budget timeout or cancellation unblocks it. The monitor probes concurrently while this runs.
      * Fails the recovery (and rethrows) if the parent cancels or the operation throws.
      */
-    public async run<T>(operation: (token: CancellationToken) => Promise<T>, parent: CancellationToken): Promise<T> {
+    public async superviseInitialization<T>(
+        operation: (token: CancellationToken) => Promise<T>,
+        parent: CancellationToken
+    ): Promise<T> {
         if (parent.isCancellationRequested) {
             this.fail(new CancellationError());
         }
@@ -263,7 +266,7 @@ export class KernelStartupRecovery implements IKernelStartup {
      * changed, so it loops until a stable pass with no new probe attempts. Then stops the monitor.
      */
     public async complete(ready: () => Promise<unknown>, parent: CancellationToken) {
-        await this.run(async () => {
+        await this.superviseInitialization(async () => {
             do {
                 await this.waitForRequests();
                 const attempts = this.attempts;
