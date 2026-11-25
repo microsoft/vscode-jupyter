@@ -771,6 +771,11 @@ export interface IKernelStartup {
     /** The failure/timeout/cancellation reason once startup has failed, otherwise undefined. */
     readonly error?: Error;
     /**
+     * Fail the startup with its configured timeout error. Call this when an external readiness deadline
+     * elapses so the failure is classified (and reported) as a timeout rather than a cancellation.
+     */
+    failTimeout(): void;
+    /**
      * Runs one initialization step (`operation`) under the recovery token and budget, while the
      * coordinator concurrently watches the kernel and fires fresh-peer probes. This does NOT start the
      * kernel; it *supervises* an initialization operation so a stuck kernel gets nudged/aborted instead

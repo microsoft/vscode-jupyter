@@ -216,6 +216,16 @@ export class KernelStartupRecovery implements IKernelStartup {
         this.notify();
     }
 
+    /**
+     * Fail the startup with its configured timeout error. Used when an *external* readiness deadline
+     * (e.g. the raw connection's launch-timeout timer) elapses: recording the timeout here — before the
+     * deadline cancels the shared token — ensures the failure is classified as a timeout (and reported
+     * as such in telemetry) instead of a generic cancellation.
+     */
+    public failTimeout() {
+        this.fail(this.timeoutError);
+    }
+
     /** Emit the telemetry report exactly once, classifying the outcome from the terminal state. */
     private finalize() {
         if (this.reported) {
@@ -300,7 +310,11 @@ export class KernelStartupRecovery implements IKernelStartup {
      */
     private async monitor() {
         while (!this.stopped && !this.failure) {
-            await this.wait(1000);
+            // Poll roughly every second, but never wait longer than half the remaining budget. This
+            // keeps the usual ~1s cadence for normal (e.g. 60s) startups, while guaranteeing that even
+            // a short launch timeout (<=1s) — or a request that becomes eligible late — still gets an
+            // eligible check/probe before the budget/deadline elapses.
+            await this.wait(Math.min(1000, Math.max(1, this.remainingTime / 2)));
             this.check();
             this.updateBudget();
             if ([...this.requests.values()].some((request) => request.acknowledged && !request.idle)) {

@@ -188,6 +188,10 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         const postStartToken = wrapCancellationTokens(token);
         disposables.push(postStartToken);
         let kernelExitedError: KernelProcessExitedError | undefined = undefined;
+        // Coordinator for THIS start attempt only. `this.socket` may still reference a previous
+        // generation's coordinator until `this.socket = result.socket` below, so error selection and the
+        // readiness-deadline timeout must consult this attempt-local reference, not `this.socket`.
+        let attemptStartup: IKernelStartup | undefined;
         try {
             const oldKernelProcess = this.kernelProcess;
             this.kernelProcess = undefined;
@@ -224,6 +228,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             this.kernelProcess = result.kernelProcess;
             this.realKernel = result.realKernel;
             this.socket = result.socket;
+            attemptStartup = result.socket.startup;
             result.realKernel.info.then(
                 (info) => this.infoDeferred.resolve(info),
                 (ex) => this.infoDeferred.reject(ex)
@@ -240,7 +245,13 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 this,
                 disposables
             );
-            const timeout = setTimeout(() => postStartToken.cancel(), this.launchTimeout);
+            const timeout = setTimeout(() => {
+                // Record a timeout on this attempt's coordinator BEFORE cancelling the token, so the
+                // failure is classified/reported as a timeout rather than the generic cancellation that
+                // the token's cancellation would otherwise produce (see failTimeout / issue #17481).
+                attemptStartup?.failTimeout();
+                postStartToken.cancel();
+            }, this.launchTimeout);
             disposables.push({ dispose: () => clearTimeout(timeout) });
             // Overall deadline for the post-start readiness phase: if the kernel has not reported ready
             // within launchTimeout, cancel `postStartToken` so the readiness wait below aborts.
@@ -282,12 +293,12 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             // Pretend like an open occurred. This will prime the real kernel to be connected
             this.statusChanged.emit(this.status);
         } catch (error) {
+            // Consult this attempt's coordinator (not `this.socket`, which may be a stale generation).
+            const attemptStartupError = attemptStartup?.error;
             const initiatingError =
-                (this.socket?.startup?.error instanceof KernelConnectionTimeoutError
-                    ? this.socket.startup.error
-                    : undefined) ||
+                (attemptStartupError instanceof KernelConnectionTimeoutError ? attemptStartupError : undefined) ||
                 kernelExitedError ||
-                this.socket?.startup?.error ||
+                attemptStartupError ||
                 (isCancellationError(error) &&
                 postStartToken.token.isCancellationRequested &&
                 !token.isCancellationRequested

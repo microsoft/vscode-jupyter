@@ -294,4 +294,27 @@ suite('Kernel Startup Recovery Budget', () => {
         assert.strictEqual(report.callCount, 1);
         assert.strictEqual(report.firstCall.args[0].outcome, 'timeout');
     });
+
+    test('a short startup budget still probes before its deadline even for a late request', async () => {
+        // timeout 800 => interval 400. The adaptive poll (<= remaining/2) must still get an eligible
+        // probe in before the 800ms budget/deadline, even when the request arrives after the first poll
+        // would have fired. A fixed 1s (or fixed first) poll would miss the window and never probe.
+        const probe = sinon.stub().resolves();
+        startup = new KernelStartupRecovery(800, failure, probe);
+        await clock.tickAsync(100);
+        startup.sent(request());
+        await clock.tickAsync(650);
+        assert.isAbove(probe.callCount, 0, 'A stalled short-budget startup must still get a probe before its deadline');
+    });
+
+    test('failTimeout fails with the timeout error and reports a timeout outcome', async () => {
+        // Models the raw connection's readiness-deadline timer: it must classify as a timeout (not a
+        // cancellation) so error reporting and telemetry are accurate.
+        const report = sinon.stub();
+        startup = new KernelStartupRecovery(3000, failure, async () => undefined, report);
+        startup.failTimeout();
+        assert.strictEqual(startup.error, failure);
+        assert.strictEqual(report.callCount, 1);
+        assert.strictEqual(report.firstCall.args[0].outcome, 'timeout');
+    });
 });
